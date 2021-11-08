@@ -89,7 +89,7 @@ resource "google_app_engine_service_split_traffic" "site_traffic" {
   }
   depends_on = [
     google_secret_manager_secret.app_engine_group,
-    #google_secret_manager_secret_version.app_engine_group,
+    google_secret_manager_secret_version.app_engine_group,
     time_sleep.wait_app_engine_start
   ]
 }
