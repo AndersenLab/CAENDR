@@ -1,0 +1,103 @@
+resource "google_app_engine_application" "app" {
+  project     = var.google_cloud_vars.project_id
+  location_id = var.google_cloud_vars.app_location
+  
+  database_type = "CLOUD_DATASTORE_COMPATIBILITY"
+  serving_status  = var.module_site_vars.serving_status ? "SERVING" : "USER_DISABLED"
+
+  lifecycle {
+    ignore_changes = all
+    create_before_destroy = true
+  }
+}
+
+
+resource "google_app_engine_flexible_app_version" "site" {
+  version_id      = replace("${var.module_site_vars.container_name}-${var.module_site_vars.container_version}",".","-")
+  project         = "${var.google_cloud_vars.project_id}"
+  service         = "default"
+  runtime         = "custom"
+  serving_status  = "SERVING"
+  noop_on_destroy = true
+
+  deployment {
+    container {
+      image = data.google_container_registry_image.module_site.image_url
+    }
+  }
+
+  entrypoint {
+    shell = "gunicorn -b :$PORT main:app --ssl-version TLSv1_2"
+  }
+
+  beta_settings = {
+    cloud_sql_instances = google_sql_database_instance.postgres_instance.connection_name
+  }
+
+  liveness_check {
+    path = "/liveness_check"
+    check_interval = "60s"
+    timeout = "10s"
+    failure_threshold = 2
+    success_threshold = 2
+    initial_delay = "300s"
+  }
+
+  readiness_check {
+    path = "/readiness_check"
+    check_interval = "120s"
+    timeout = "10s"
+    failure_threshold = 2
+    success_threshold = 2
+    app_start_timeout = "300s"
+  }
+
+  resources {
+    cpu = 2
+    memory_gb = 2
+    disk_gb = 20
+  }
+
+  automatic_scaling {
+    min_total_instances = 1
+    max_total_instances = 5
+    cool_down_period = "180s"
+    cpu_utilization {
+      target_utilization = 0.6
+    }
+  }
+
+  depends_on = [
+    google_app_engine_application.app,
+    
+  ]
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+
+resource "google_app_engine_service_split_traffic" "site_traffic" {
+  service = google_app_engine_flexible_app_version.site.service
+
+  migrate_traffic = false
+  split {
+    allocations = {
+      (google_app_engine_flexible_app_version.site.version_id) = 1
+    }
+  }
+  depends_on = [
+    google_secret_manager_secret.app_engine_group,
+    google_secret_manager_secret_version.app_engine_group,
+    time_sleep.wait_app_engine_start
+  ]
+}
+
+resource "time_sleep" "wait_app_engine_start" {
+    create_duration = "300s"
+
+    depends_on = [
+        google_app_engine_flexible_app_version.site
+    ]
+}
