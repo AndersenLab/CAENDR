@@ -13,3 +13,5 @@ example/secret.example.env
 secret.env contains passwords and API keys that should NEVER be committed to the repository!
 
 To set an environment variable as false you must either remove it entirely or use '#' to comment out the line it's on, otherwise it will get set to the string value "false".
+
+The 'admin' environment is unique and deploys a much smaller set of resources for tracking the terraform state for each env workspace and other tools for managing the project envronments
