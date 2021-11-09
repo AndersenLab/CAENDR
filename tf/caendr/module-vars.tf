@@ -19,7 +19,7 @@ locals {
     "postgres_db_stage_name" = "${var.MODULE_SITE_POSTGRES_DB_STAGE_NAME}",
   })
 
-  secret_vars = tomap({
+  cloud_secret_vars = tomap({
     "ANDERSEN_LAB_STRAIN_SHEET" = sensitive("${var.ANDERSEN_LAB_STRAIN_SHEET}"), 
     "CENDR_PUBLICATIONS_SHEET" = sensitive("${var.CENDR_PUBLICATIONS_SHEET}"), 
     "RECAPTCHA_PUBLIC_KEY" = sensitive("${var.RECAPTCHA_PUBLIC_KEY}"), 
@@ -27,8 +27,8 @@ locals {
     "ELEVATION_API_KEY" = sensitive("${var.ELEVATION_API_KEY}"), 
     "JWT_SECRET_KEY" = sensitive("${var.JWT_SECRET_KEY}"), 
     "PASSWORD_SALT" = sensitive("${var.PASSWORD_SALT}"), 
-    "POSTGRES_DB_PASSWORD" =  sensitive("${var.POSTGRES_DB_PASSWORD}"), 
-    "GOOGLE_CLIENT_ID" =  sensitive("${var.GOOGLE_CLIENT_ID}"), 
-    "GOOGLE_CLIENT_SECRET" =  sensitive("${var.GOOGLE_CLIENT_SECRET}"), 
+    "POSTGRES_DB_PASSWORD" = sensitive("${var.POSTGRES_DB_PASSWORD}"), 
+    "GOOGLE_CLIENT_ID" = sensitive("${var.GOOGLE_CLIENT_ID}"), 
+    "GOOGLE_CLIENT_SECRET" = sensitive("${var.GOOGLE_CLIENT_SECRET}"), 
   })
 }

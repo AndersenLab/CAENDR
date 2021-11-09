@@ -31,4 +31,4 @@ variable "JWT_SECRET_KEY" { sensitive = true }
 variable "PASSWORD_SALT" { sensitive = true }
 variable "GOOGLE_CLIENT_ID" { sensitive = true }
 variable "GOOGLE_CLIENT_SECRET" { sensitive = true }
-variable "POSTGRES_DB_PASSWORD" { sensitive = true}
+variable "POSTGRES_DB_PASSWORD" { sensitive = true }
