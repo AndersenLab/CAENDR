@@ -10,7 +10,7 @@ TF_PATH = $(PROJECT_DIR)/tf/caendr
 MODULE_ENV_FILE = $(MODULE_DIR)/module.env
 MODULE_ENV_FILE_GENERATED = $(MODULE_DIR)/.env
 SHARED_MODULE_DEST = $(MODULE_DIR)/caendr
-SHARED_MODULE_SRC = $(PROJECT_DIR)/shared/caendr
+SHARED_MODULE_SRC = $(PROJECT_DIR)/src/pkg/caendr
 
 
 -include $(ENV_FILE)
