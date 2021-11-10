@@ -1,5 +1,6 @@
 __pycache__/
 *.py[cod]
+.pytest_cache
 
 .terraform/
 .terraform.lock.hcl
@@ -10,3 +11,7 @@ tf_plan
 
 .env
 secret.env
+
+venv
+
+.vscode
