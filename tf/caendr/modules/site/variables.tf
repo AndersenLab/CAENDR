@@ -1,6 +1,5 @@
 variable "ENVIRONMENT" { }
 
-variable "github_vars" { type = map(string) }
 variable "google_cloud_vars" { type = map(string) }
 variable "module_site_vars" { type = map(string) }
 

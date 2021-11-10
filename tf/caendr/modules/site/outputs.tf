@@ -1,7 +1,3 @@
-output "project_number" {
-  value = data.google_project.project.number
-}
-
 output "site_bucket_public" {
   value = google_storage_bucket.site_bucket_public.name
 }

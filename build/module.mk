@@ -9,8 +9,8 @@ TF_PATH = $(PROJECT_DIR)/tf/caendr
 
 MODULE_ENV_FILE = $(MODULE_DIR)/module.env
 MODULE_ENV_FILE_GENERATED = $(MODULE_DIR)/.env
-SHARED_MODULE_DEST = $(MODULE_DIR)/caendr
-SHARED_MODULE_SRC = $(PROJECT_DIR)/src/pkg/caendr
+SHARED_PKG_DEST = $(MODULE_DIR)/caendr
+SHARED_PKG_SRC = $(PROJECT_DIR)/src/pkg/caendr
 
 
 -include $(ENV_FILE)
@@ -38,10 +38,11 @@ clean: #~
 pkg-dir:: #~
 #~ copies the code for the shared/caendr package into the module directory
 	@echo -e "\n$(COLOR_B)Copying shared package code...$(COLOR_N)"
-	rm -rf $(SHARED_MODULE_DEST)
-	cp -rf $(SHARED_MODULE_SRC) $(SHARED_MODULE_DEST)
+	@$(MAKE) -C $(SHARED_PKG_SRC) clean --no-print-directory
+	rm -rf $(SHARED_PKG_DEST)
+	cp -rf $(SHARED_PKG_SRC) $(SHARED_PKG_DEST)
 	@echo ""
-	@ls -R $(SHARED_MODULE_DEST)
+	@ls -R $(SHARED_PKG_DEST)
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
 
