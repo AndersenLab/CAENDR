@@ -4,7 +4,9 @@ locals {
     "project_number" = "${var.GOOGLE_CLOUD_PROJECT_NUMBER}",
     "region" = "${var.GOOGLE_CLOUD_REGION}",
     "app_location" = "${var.GOOGLE_CLOUD_APP_LOCATION}",
-    "service_account_file" = "${var.GOOGLE_CLOUD_SERVICE_ACCOUNT_FILE}",
+    "terraform_sa_filename" = "${var.TERRAFORM_SERVICE_ACCOUNT_FILENAME}",
+    "google_sheets_sa_name" = "${var.GOOGLE_SHEETS_SERVICE_ACCOUNT_NAME}",
+    "google_analytics_sa_name" = "${var.GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME}",
     "source_bucket_name" = "${var.GOOGLE_CLOUD_SOURCE_BUCKET_NAME}"
   })
 
@@ -19,16 +21,28 @@ locals {
     "postgres_db_stage_name" = "${var.MODULE_SITE_POSTGRES_DB_STAGE_NAME}",
   })
 
+  module_img_thumb_gen_vars = tomap({
+    "bucket_public_name" = "${var.MODULE_SITE_BUCKET_PUBLIC_NAME}",
+    "image_source_path" = "${var.MODULE_IMG_THUMB_GEN_SOURCE_PATH}"
+  })
+
+  module_static_vars = tomap({
+    "bucket_assets_name" = "${var.MODULE_SITE_BUCKET_ASSETS_NAME}",
+  })
+
   cloud_secret_vars = tomap({
     "ANDERSEN_LAB_STRAIN_SHEET" = sensitive("${var.ANDERSEN_LAB_STRAIN_SHEET}"), 
+    "ANDERSEN_LAB_ORDER_SHEET" = sensitive("${var.ANDERSEN_LAB_ORDER_SHEET}"), 
     "CENDR_PUBLICATIONS_SHEET" = sensitive("${var.CENDR_PUBLICATIONS_SHEET}"), 
+    "ELEVATION_API_KEY" = sensitive("${var.ELEVATION_API_KEY}"), 
     "RECAPTCHA_PUBLIC_KEY" = sensitive("${var.RECAPTCHA_PUBLIC_KEY}"), 
     "RECAPTCHA_PRIVATE_KEY" = sensitive("${var.RECAPTCHA_PRIVATE_KEY}"), 
-    "ELEVATION_API_KEY" = sensitive("${var.ELEVATION_API_KEY}"), 
-    "JWT_SECRET_KEY" = sensitive("${var.JWT_SECRET_KEY}"), 
-    "PASSWORD_SALT" = sensitive("${var.PASSWORD_SALT}"), 
-    "POSTGRES_DB_PASSWORD" = sensitive("${var.POSTGRES_DB_PASSWORD}"), 
     "GOOGLE_CLIENT_ID" = sensitive("${var.GOOGLE_CLIENT_ID}"), 
     "GOOGLE_CLIENT_SECRET" = sensitive("${var.GOOGLE_CLIENT_SECRET}"), 
+    "POSTGRES_DB_PASSWORD" = sensitive("${var.POSTGRES_DB_PASSWORD}"), 
+    "SECRET_KEY" = sensitive("${var.SECRET_KEY}"),
+    "JWT_SECRET_KEY" = sensitive("${var.JWT_SECRET_KEY}"), 
+    "PASSWORD_SALT" = sensitive("${var.PASSWORD_SALT}"), 
+    "MAILGUN_API_KEY" = sensitive("${var.MAILGUN_API_KEY}")
   })
 }

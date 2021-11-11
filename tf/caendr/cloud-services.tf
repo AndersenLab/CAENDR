@@ -9,7 +9,9 @@ locals {
     "appengine.googleapis.com",
     "sqladmin.googleapis.com",
     "cloudbuild.googleapis.com",
-    "secretmanager.googleapis.com"
+    "secretmanager.googleapis.com",
+    "sheets.googleapis.com",
+    "drive.googleapis.com"
   ])
   
   service_group_3 = toset([

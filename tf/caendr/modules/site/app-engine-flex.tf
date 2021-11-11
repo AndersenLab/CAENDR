@@ -68,8 +68,7 @@ resource "google_app_engine_flexible_app_version" "site" {
   }
 
   depends_on = [
-    google_app_engine_application.app,
-    
+    google_app_engine_application.app
   ]
 
   lifecycle {

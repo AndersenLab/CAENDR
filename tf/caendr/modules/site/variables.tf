@@ -6,3 +6,4 @@ variable "module_site_vars" { type = map(string) }
 # The 'sensitive' property is applied to the map values in the locals 
 # definition to avoid the keys being considered sensitive as well
 variable "cloud_secret_vars" { type = map(string) }
+
