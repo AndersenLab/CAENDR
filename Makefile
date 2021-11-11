@@ -11,7 +11,7 @@ GLOBAL_ENV_FILE = $(ENV_PATH)/global.env
 SECRET_ENV_FILE = $(ENV_PATH)/secret.env
 TF_PATH = $(PROJECT_DIR)/tf/caendr
 
-MODULE_PATH = $(PROJECT_DIR)/src/modules
+MODULE_PATH = $(PROJECT_DIR)/src/module
 
 -include $(GLOBAL_ENV_FILE)
 
@@ -35,7 +35,7 @@ clean-all: clean
 #	@$(MAKE) -C $(MODULE_PATH)/api/pipeline-task print-module-env clean --no-print-directory
 #	@$(MAKE) -C $(MODULE_PATH)/db-ops print-module-env clean --no-print-directory
 #	@$(MAKE) -C $(MODULE_PATH)/img_thumb_gen print-module-env clean --no-print-directory
-#	@$(MAKE) -C $(MODULE_PATH)/site print-module-env clean --no-print-directory
+	@$(MAKE) -C $(MODULE_PATH)/site print-module-env clean --no-print-directory
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
 #~
@@ -75,7 +75,7 @@ cloud-resource-plan: #~
 #~ Generates a terraform plan for the infrastructure described in ./env/[environment]/terraform  
 #~ including any service-specific terraform modules that are required
 cloud-resource-plan: configure-all
-	@echo -e "\n$(COLOR_B)Creating Terraform plan for changes to cloud infrastructure...$(COLOR_N)"
+	@echo -e "\n$(COLOR_B)Creating Terraform plan for changes to cloud infrastructure...$(COLOR_N)" && \
 	$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && \
 	cd $(TF_PATH) && rm -rf tf_plan && \
 	terraform init -backend-config=$(ENV_PATH)/backend.hcl && \
@@ -89,7 +89,7 @@ cloud-resource-deploy: #~
 #~ Executes the generated terraform plan for deploying infrastructure described 
 #~ in ./env/[environment]/terraform including any service-specific terraform modules that are required
 cloud-resource-deploy: configure-all
-	@echo -e "\n$(COLOR_B)Deploying the Terraform cloud resource plan...$(COLOR_N)"
+	@echo -e "\n$(COLOR_B)Deploying the Terraform cloud resource plan...$(COLOR_N)" && \
 	$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && \
 	cd $(TF_PATH) && \
 	rm -rf tf_plan && \
