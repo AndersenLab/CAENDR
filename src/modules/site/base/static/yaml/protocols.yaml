@@ -1,0 +1,23 @@
+# Store protocols on static under protocols/
+Nematode Isolation:
+  - name: Sampling and Isolation of <em>C. elegans</em> from the Natural Habitat
+    link: SamplingIsolationC.elegansNaturalHabitat.pdf
+
+  - name: Isolating wild strains in the laboratory
+    link: 20210430_IdentifyingWildIsolates.pdf
+
+  - name: Shipping Strains
+    link: ShippingStrains.pdf
+
+Maintenance:
+  - name: Freezing / Thawing Worms
+    link: FreezingThawingWeb.pdf
+
+  - name: Cleaning Worms
+    link: 2021_CleaningWorms.pdf
+
+  - name: Chunking Worms
+    link: ChunkingWorms.pdf
+
+  - name: Soft Agar Freezing Protocol
+    link: 20200620_SoftAgarFreezing&Thawing.pdf
