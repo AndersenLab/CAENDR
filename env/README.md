@@ -26,3 +26,5 @@ secret.env contains passwords and API keys that should NEVER be committed to the
 The 'admin' environment is unique and deploys a different, much smaller set of resources: primarily a cloud bucket acting as the Terraform backend for storing the state of each environment. 
 
 The Terraform backend is configured for each environment in backend.hcl
+
+Altering existing environment variable values requires rebuilding the services that depend on them.

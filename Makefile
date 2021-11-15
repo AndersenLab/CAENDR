@@ -11,7 +11,7 @@ GLOBAL_ENV_FILE = $(ENV_PATH)/global.env
 SECRET_ENV_FILE = $(ENV_PATH)/secret.env
 TF_PATH = $(PROJECT_DIR)/tf/caendr
 
-MODULE_PATH = $(PROJECT_DIR)/src/module
+MODULE_PATH = $(PROJECT_DIR)/src/modules
 
 -include $(GLOBAL_ENV_FILE)
 
@@ -105,10 +105,9 @@ cloud-resource-destroy: #~
 #~ Destroys all cloud resources provisioned by terraform
 cloud-resource-destroy: configure-all
 	@echo -e "\n$(COLOR_B)DESTROYING ALL TERRAFORM PROVISIONED CLOUD RESOURCES.\nARE YOU SURE YOU WANT TO DO THIS?$(COLOR_N)"
-	$(MAKE) -C . confirm --no-print-directory
 	@$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && \
 	cd $(PROJECT_DIR) && $(MAKE) -C . confirm --no-print-directory && \
-	cd $(TF_PATH) && rm -rf tf_plan \
+	cd $(TF_PATH) && rm -rf tf_plan && \
 	terraform init -backend-config=$(ENV_PATH)/backend.hcl && \
 	(terraform workspace new $(ENV) || terraform workspace select $(ENV)) && \
 	terraform destroy

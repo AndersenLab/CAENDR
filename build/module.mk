@@ -10,7 +10,8 @@ TF_PATH = $(PROJECT_DIR)/tf/caendr
 MODULE_ENV_FILE = $(MODULE_DIR)/module.env
 MODULE_ENV_FILE_GENERATED = $(MODULE_DIR)/.env
 SHARED_PKG_DEST = $(MODULE_DIR)/caendr
-SHARED_PKG_SRC = $(PROJECT_DIR)/src/pkg/caendr
+SHARED_PKG_SRC = $(PROJECT_DIR)/src/pkg/caendr/caendr
+PKG_SETUP_DIR = $(PROJECT_DIR)/src/pkg/caendr
 
 
 -include $(ENV_FILE)
@@ -25,6 +26,7 @@ targets: clean pkg-dir env-file configure venv print-module-env print-ver
 clean: #~
 #~ Removes virtual environment, python cache, shared packages, and the 
 #~ automatically generated .env file
+clean:
 	@echo -e "$(COLOR_B)Removing cached files...$(COLOR_N)"
 	rm -rf $(MODULE_DIR)/venv
 	rm -f $(MODULE_ENV_FILE_GENERATED)
@@ -45,6 +47,14 @@ pkg-dir:: #~
 	@ls -R $(SHARED_PKG_DEST)
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
+#~
+install-pkg: #~
+#~ Uses pip to install the CAENDR package in the module's virtualenv
+install-pkg: venv
+	@echo -e "\n$(COLOR_B)Installing CAENDR package...$(COLOR_N)"
+	. $(MODULE_DIR)/venv/bin/activate && \
+	python -m pip install -e $(PKG_SETUP_DIR)
+	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
 #~
 env-file: #~
