@@ -19,7 +19,7 @@ include $(MODULE_ENV_FILE)
 
 LOAD_MODULE_ENV=export $$(cat $(MODULE_ENV_FILE_GENERATED) | sed $(WHITESPACE_REGEX) | sed $(COMMENT_REGEX) | xargs)
 
-targets: clean pkg-dir env-file configure venv print-module-env print-ver
+targets: clean install-pkg env-file configure venv print-module-env print-ver
 .PHONY: targets
 
 #~
@@ -36,20 +36,10 @@ clean:
 	find $(MODULE_DIR) -name __pycache__ -exec rm -rv {} +
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
-#~
-pkg-dir:: #~
-#~ copies the code for the shared/caendr package into the module directory
-	@echo -e "\n$(COLOR_B)Copying shared package code...$(COLOR_N)"
-	@$(MAKE) -C $(SHARED_PKG_SRC) clean --no-print-directory
-	rm -rf $(SHARED_PKG_DEST)
-	cp -rf $(SHARED_PKG_SRC) $(SHARED_PKG_DEST)
-	@echo ""
-	@ls -R $(SHARED_PKG_DEST)
-	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
 #~
 install-pkg: #~
-#~ Uses pip to install the CAENDR package in the module's virtualenv
+#~ Uses pip to install the local CAENDR package in the module's virtualenv
 install-pkg: venv
 	@echo -e "\n$(COLOR_B)Installing CAENDR package...$(COLOR_N)"
 	. $(MODULE_DIR)/venv/bin/activate && \
@@ -73,9 +63,9 @@ env-file: verify-env
 configure: #~
 #~ Removes all cached files (including venv), generates the module's .env file,
 #~ and copies the code for the shared/caendr package into the module directory
-configure: print-module-env confirm clean env-file pkg-dir
+configure: print-module-env confirm clean env-file install-pkg
 
-configure-auto: print-module-env clean env-file pkg-dir
+configure-auto: print-module-env clean env-file install-pkg
 
 #~ 
 venv: #~
@@ -92,7 +82,7 @@ build-container: #~
 #~ Removes the virtual environment and python cache, regenerates the module .env file, 
 #~ copies the code for the shared/caendr package into the module directory, and
 #~ builds the container for the module and tags it with the name and version from module.env
-build-container: verify-args print-module-env print-ver confirm clean env-file pkg-dir
+build-container: verify-args print-module-env print-ver confirm clean env-file install-pkg
 	@echo -e "\n$(COLOR_B)Building container image...$(COLOR_N)"
 	docker build $(MODULE_DIR) -t gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${MODULE_NAME}:${MODULE_VERSION}
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
