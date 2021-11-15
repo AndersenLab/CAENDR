@@ -1,0 +1,17 @@
+Dockerfile
+venv
+*.pyc
+*.pyo
+*.pyd
+__pycache__
+terraform
+.gitignore
+docs
+
+
+*.vcf.gz
+*.vcf
+*.gff3.gz
+*.gff3
+*.bed.gz
+*.bed

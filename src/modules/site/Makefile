@@ -11,7 +11,7 @@ all: help
 #~
 run: #~
 #~ Starts the Flask test server for local development and debugging
-run: print-module-env pkg-dir env-file venv
+run: print-module-env env-file venv install-pkg
 	@echo -e "\n$(COLOR_B)Starting flask debug server...$(COLOR_N)"
 	@. $(MODULE_DIR)/venv/bin/activate && \
 	$(LOAD_MODULE_ENV) && \

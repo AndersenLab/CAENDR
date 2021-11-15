@@ -1,0 +1,220 @@
+"""
+  This set of views are the 'about' pages of the CeNDR site
+  and additional miscellaneous extra pages (e.g. getting started)
+"""
+
+import pandas as pd
+import requests
+
+from flask import Blueprint
+from flask import render_template, url_for, request, redirect
+from datetime import datetime, timezone
+from io import StringIO
+
+# TODO: fix summaries
+# from base.utils.query import get_mappings_summary, get_weekly_visits, get_unique_users
+
+from config import config
+from constants import GOOGLE_SHEET_PREFIX
+from extensions import cache
+
+from base.api.strain import get_isotypes
+from base.forms import DonationForm
+from base.utils.auth import jwt_required, get_current_user
+
+from caendr.models.sql import Strain
+from caendr.services.cloud.sheets import add_to_order_ws
+from caendr.services.email import send_email, DONATE_SUBMISSION_EMAIL
+from caendr.utils.data import load_yaml, get_object_hash
+from caendr.utils.plots import time_series_plot
+
+about_bp = Blueprint('about',
+                     __name__,
+                     template_folder='templates')
+
+
+@about_bp.route('/')
+@cache.memoize(50)
+def about():
+  ''' About us Page - Gives an overview of CeNDR '''
+  title = "About CeNDR"
+  disable_parent_breadcrumb = True
+  isotypes = get_isotypes(known_origin=True)
+  strain_listing = [s.to_json() for s in isotypes]
+  return render_template('about/about.html', **locals())
+
+
+@about_bp.route('/getting_started/')
+@cache.memoize(50)
+def getting_started():
+  ''' Getting Started - provides information on how to get started with CeNDR '''
+  title = "Getting Started"
+  isotypes = get_isotypes(known_origin=True)
+  strain_listing = [s.to_json() for s in isotypes]
+  disable_parent_breadcrumb = True
+  return render_template('about/getting_started.html', **locals())
+
+
+@about_bp.route('/committee/')
+@cache.memoize(50)
+def committee():
+  ''' Scientific Panel Page'''
+  title = "Scientific Advisory Committee"
+  disable_parent_breadcrumb = True
+  committee_data = load_yaml("advisory-committee.yaml")
+  return render_template('about/committee.html', **locals())
+
+
+@about_bp.route('/collaborators/')
+@cache.memoize(50)
+def collaborators():
+  ''' Other Project Collaborators Page '''
+  title = "Collaborators"
+  disable_parent_breadcrumb = True
+  collaborator_data = load_yaml("collaborators.yaml")
+  return render_template('about/collaborators.html', **locals())
+
+
+@about_bp.route('/staff/')
+@cache.memoize(50)
+def staff():
+  ''' Staff Page '''
+  title = "Staff"
+  disable_parent_breadcrumb = True
+  staff_data = load_yaml("staff.yaml")
+  return render_template('about/staff.html', **locals())
+
+
+@about_bp.route('/donate/', methods=['GET', 'POST'])
+@jwt_required(optional=True)
+def donate():
+  ''' Process donation form page '''
+  title = "Donate"
+  disable_parent_breadcrumb = True
+  form = DonationForm(request.form)
+
+  # Autofill email
+  user = get_current_user()
+  if user and hasattr(user, 'email') and not form.email.data:
+    form.email.data = user.email
+
+  if form.validate_on_submit():
+    # order_number is generated as a unique string
+    order_obj = {
+      "is_donation": True,
+      "date": datetime.now(timezone.cst)
+    }
+    order_obj['items'] = u"{}:{}".format("CeNDR strain and data support", form.data.get('total'))
+    order_obj.update(form.data)
+    order_obj['invoice_hash'] = get_object_hash(order_obj, length=8)
+    order_obj['url'] = f"https://elegansvariation.org/order/{order_obj['invoice_hash']}"
+    send_email({
+      "from": "no-reply@elegansvariation.org",
+      "to": [order_obj["email"]],
+      "cc": config.get("CC_EMAILS"),
+      "subject": f"CeNDR Dontaion #{order_obj['invoice_hash']}",
+      "text": DONATE_SUBMISSION_EMAIL.format(invoice_hash=order_obj["invoice_hash"], donation_amount=order_obj.get('total'))
+    })
+    add_to_order_ws(order_obj)
+    return redirect(url_for("order.order_confirmation", invoice_hash=order_obj["invoice_hash"]), code=302)
+  return render_template('about/donate.html', **locals())
+
+
+@about_bp.route('/funding/')
+def funding():
+  title = "Funding"
+  disable_parent_breadcrumb = True
+  funding_set = load_yaml('funding.yaml')
+  return render_template('about/funding.html', **locals())
+
+
+@about_bp.route('/statistics')
+def statistics():
+  title = "Statistics"
+
+  # Strain collections plot
+  ##########################
+  df = Strain.cum_sum_strain_isotype()
+  strain_collection_plot = time_series_plot(
+    df,
+    x_title='Year',
+    y_title='Count',
+    range=[
+      datetime.datetime(1995, 10, 17), 
+      datetime.datetime.today()
+    ]
+  )
+  n_strains = max(df.strain)
+  n_isotypes = max(df.isotype)
+
+  # Reports plot
+  ##########################
+  df = get_mappings_summary()
+  report_summary_plot = time_series_plot(
+    df,
+    x_title='Date',
+    y_title='Count',
+    range=[
+      datetime.datetime(2016, 3, 1),
+      datetime.datetime.today()
+    ],
+    colors=[
+      'rgb(149, 150, 255)', 
+      'rgb(81, 151, 35)'
+    ]
+  )
+  n_reports = int(max(df.reports))
+  n_traits = int(max(df.traits))
+
+  # Weekly visits plot
+  ################################
+  df = get_weekly_visits()
+  weekly_visits_plot = time_series_plot(
+    df,
+    x_title='Date',
+    y_title='Count',
+    range=[
+      datetime.datetime(2016, 3, 1),
+      datetime.datetime.today()
+    ],
+    colors=['rgb(255, 204, 102)']
+  )
+
+
+  # Unique users
+  ############################
+  n_users = get_unique_users()
+  VARS = {
+    'title': title,
+    'disable_parent_breadcrumb': True,
+    'strain_collection_plot': strain_collection_plot,
+    'report_summary_plot': report_summary_plot,
+    'weekly_visits_plot': weekly_visits_plot,
+    'n_strains': n_strains,
+    'n_isotypes': n_isotypes,
+    'n_users': n_users,
+    'n_reports': n_reports,
+    'n_traits': n_traits
+  }
+  return render_template('about/statistics.html', **VARS)
+
+
+@about_bp.route('/publications')
+def publications():
+  """  List of publications that have referenced CeNDR """
+  title = "Publications"
+  disable_parent_breadcrumb = True
+  csv_prefix = GOOGLE_SHEET_PREFIX
+  sheet_id = config['CENDR_PUBLICATIONS_SHEET']
+  csv_export_suffix = 'export?format=csv&id={}&gid=0'.format(sheet_id)
+  url = '{}/{}/{}'.format(csv_prefix, sheet_id, csv_export_suffix)
+  req = requests.get(url)
+  df = pd.read_csv(StringIO(req.content.decode("UTF-8")))
+  df['pmid'] = df['pmid'].astype(int)
+  df = df.sort_values(by='pmid', ascending=False)
+  df = df.apply(lambda x: f"""<strong><a href="{x.url}">{x.title.strip(".")}</a>
+                              </strong><br />
+                              {x.authors}<br />
+                              ( {x.pub_date} ) <i>{x.journal}</i>""", axis = 1)
+  df = list(df.values)[:-1]
+  return render_template('about/publications.html', **locals())
