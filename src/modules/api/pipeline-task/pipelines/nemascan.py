@@ -1,7 +1,7 @@
 import os
 import logging
 
-from caendr.services.lifesciences import gls_service, ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
+from caendr.services.cloud.lifesciences import gls_service, ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
 from util import get_json_from_class
 
 

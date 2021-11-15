@@ -4,11 +4,12 @@ import os
 from flask import Blueprint, jsonify, request
 
 from util import extract_json_payload
-from caendr.services.error import APIBadRequestError, APIInternalError
-from caendr.services.task import update_task_status, verify_task_headers, Task
-from caendr.services.pubsub import get_operation
-from caendr.services.lifesciences import create_pipeline_status, update_pipeline_status
 from pipelines.nemascan import DS_KIND as NEMASCAN_DS_KIND, start_nemascan_pipeline
+
+from caendr.services.error import APIBadRequestError, APIInternalError
+from caendr.services.cloud.task import update_task_status, verify_task_headers, Task
+from caendr.services.cloud.pubsub import get_operation
+from caendr.services.cloud.lifesciences import create_pipeline_status, update_pipeline_status
 
 task_handler_bp = Blueprint('task_bp', __name__)
 

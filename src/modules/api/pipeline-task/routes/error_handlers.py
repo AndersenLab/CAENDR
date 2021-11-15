@@ -1,11 +1,11 @@
 import logging
 from flask import Blueprint, jsonify
 from caendr.services.error import (APIError, 
-                            APIBadRequestError, 
-                            APIAuthError, 
-                            APIDeniedError, 
-                            APINotFoundError,
-                            APIInternalError)
+                                   APIBadRequestError, 
+                                   APIAuthError, 
+                                   APIDeniedError, 
+                                   APINotFoundError,
+                                   APIInternalError)
 
 error_handler_bp = Blueprint('error_handler_bp', __name__)
 
