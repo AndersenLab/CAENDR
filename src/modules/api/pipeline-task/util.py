@@ -1,6 +1,6 @@
 import json
 
-from caendr.services.error import APIBadRequestError
+from caendr.models.error import APIBadRequestError
 
 def extract_json_payload(request):
   '''
