@@ -1,11 +1,4 @@
-src/module
+src/pkg
 =============================================================================
 
-This directory contains a shared Python Package that is built and installed from the local source tree and consumed by one or more of the Python Modules
-
-<br />    
-
- ### Features
-- Services for simpler interaction with Google Cloud services
-- Models for Database Object Relational Mapping 
-- 
+This directory contains shared Python Packages that are installed from the local source tree and consumed by one or more Python Modules
