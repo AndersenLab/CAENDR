@@ -9,7 +9,7 @@ resource "google_cloudfunctions_function" "generate_thumbnails" {
       retry = "false"
     }
 
-    resource = "projects/${var.google_cloud_vars.project_id}/buckets/${var.module_img_thumb_gen_vars.bucket_public_name}"
+    resource = "projects/${var.google_cloud_vars.project_id}/buckets/${google_storage_bucket.photos_bucket.name}"
   }
 
   source_archive_bucket = google_storage_bucket.source_bucket.name

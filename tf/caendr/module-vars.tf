@@ -21,15 +21,6 @@ locals {
     "postgres_db_stage_name" = "${var.MODULE_SITE_POSTGRES_DB_STAGE_NAME}",
   })
 
-  module_img_thumb_gen_vars = tomap({
-    "bucket_public_name" = "${var.MODULE_SITE_BUCKET_PUBLIC_NAME}",
-    "image_source_path" = "${var.MODULE_IMG_THUMB_GEN_SOURCE_PATH}"
-  })
-
-  module_static_vars = tomap({
-    "bucket_assets_name" = "${var.MODULE_SITE_BUCKET_ASSETS_NAME}",
-  })
-
   cloud_secret_vars = tomap({
     "ANDERSEN_LAB_STRAIN_SHEET" = sensitive("${var.ANDERSEN_LAB_STRAIN_SHEET}"), 
     "ANDERSEN_LAB_ORDER_SHEET" = sensitive("${var.ANDERSEN_LAB_ORDER_SHEET}"), 
