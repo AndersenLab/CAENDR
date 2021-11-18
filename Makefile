@@ -65,7 +65,7 @@ configure-all: verify-env print-env confirm
 	@echo -e "\n$(COLOR_B)Configuring all modules...$(COLOR_N)"
 #	@$(MAKE) -C $(MODULE_PATH)/api/pipeline-task configure-auto ENV=$(ENV) --no-print-directory
 #	@$(MAKE) -C $(MODULE_PATH)/db-ops configure-auto ENV=$(ENV) --no-print-directory
-#	@$(MAKE) -C $(MODULE_PATH)/img-thumb-gen configure-auto ENV=$(ENV) --no-print-directory
+#	@$(MAKE) -C $(MODULE_PATH)/img_thumb_gen configure-auto ENV=$(ENV) --no-print-directory
 #	@$(MAKE) -C $(MODULE_PATH)/site configure-auto ENV=$(ENV) --no-print-directory
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
