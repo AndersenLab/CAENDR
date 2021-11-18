@@ -1,6 +1,6 @@
 include $(PROJECT_DIR)/build/help.mk
 
-targets: clean venv
+targets: clean venv clean-venv
 .PHONY: targets
 
 
@@ -24,5 +24,15 @@ venv:
 	@echo -e "\n$(COLOR_B)Installing python virtualenv and requirements.txt...$(COLOR_N)"
 	virtualenv --python=python3 $(PKG_DIR)/venv; \
 	$(PKG_DIR)/venv/bin/python -m pip install --upgrade pip; \
-	$(PKG_DIR)/venv/bin/pip install -r $(PKG_DIR)/requirements.txt
+	$(PKG_DIR)/venv/bin/python -m pip install -r $(PKG_DIR)/requirements.txt
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
+
+
+#~
+clean-venv: #~
+#~ Removes the virtual environment
+clean-venv:
+	@echo -e "$(COLOR_B)Removing virtual environment...$(COLOR_N)"
+	rm -rf $(MODULE_DIR)/venv
+	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
+

@@ -1,4 +1,4 @@
-# Required:
+# Required definitions:
 # MODULE_NAME, MODULE_DIR, PROJECT_DIR
 
 include $(PROJECT_DIR)/build/help.mk
@@ -9,9 +9,8 @@ TF_PATH = $(PROJECT_DIR)/tf/caendr
 
 MODULE_ENV_FILE = $(MODULE_DIR)/module.env
 MODULE_ENV_FILE_GENERATED = $(MODULE_DIR)/.env
-SHARED_PKG_DEST = $(MODULE_DIR)/caendr
-SHARED_PKG_SRC = $(PROJECT_DIR)/src/pkg/caendr/caendr
-PKG_SETUP_DIR = $(PROJECT_DIR)/src/pkg/caendr
+PKG_DIR = caendr
+PKG_SETUP_DIR = $(PROJECT_DIR)/src/pkg/$(PKG_DIR)
 
 
 -include $(ENV_FILE)
@@ -19,36 +18,32 @@ include $(MODULE_ENV_FILE)
 
 LOAD_MODULE_ENV=export $$(cat $(MODULE_ENV_FILE_GENERATED) | sed $(WHITESPACE_REGEX) | sed $(COMMENT_REGEX) | xargs)
 
-targets: clean install-pkg env-file configure venv print-module-env print-ver
+targets: clean install-pkg dot-env configure venv clean-venv container publish-container print-module-env print-ver
 .PHONY: targets
 
 #~
 clean: #~
-#~ Removes virtual environment, python cache, shared packages, and the 
-#~ automatically generated .env file
+#~ Removes the python cache and generated .env file
 clean:
 	@echo -e "$(COLOR_B)Removing cached files...$(COLOR_N)"
-	rm -rf $(MODULE_DIR)/venv
 	rm -f $(MODULE_ENV_FILE_GENERATED)
-	rm -rf $(MODULE_DIR)/caendr
 	rm -rf $(MODULE_DIR)/.downloads
 	find $(MODULE_DIR) -name *.pyc -exec rm -rv {} +
 	find $(MODULE_DIR) -name __pycache__ -exec rm -rv {} +
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
-
 #~
 install-pkg: #~
 #~ Uses pip to install the local CAENDR package in the module's virtualenv
 install-pkg: venv
-	@echo -e "\n$(COLOR_B)Installing CAENDR package...$(COLOR_N)"
+	@echo -e "\n$(COLOR_B)Installing CAENDR package...$(COLOR_N)" && \
 	. $(MODULE_DIR)/venv/bin/activate && \
-	python -m pip install -e $(PKG_SETUP_DIR)
-	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
+	python -m pip install -e $(PKG_SETUP_DIR) && \
+	echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
 #~
-env-file: #~
-env-file: verify-env
+dot-env: #~
+dot-env: verify-env
 #~ Merges the definitions from the environment global.env config and the 
 #~ module.env to create the .env file to be deployed inside the container
 	@echo -e "\n$(COLOR_B)Writing new .env file...$(COLOR_N)"
@@ -63,28 +58,40 @@ env-file: verify-env
 configure: #~
 #~ Removes all cached files (including venv), generates the module's .env file,
 #~ and copies the code for the shared/caendr package into the module directory
-configure: print-module-env confirm clean env-file install-pkg
-
-configure-auto: print-module-env clean env-file install-pkg
+configure: print-module-env confirm clean clean-venv dot-env install-pkg
 
 #~ 
 venv: #~
-#~ Creates a virtual python environment and installs packages from 'requirements.txt'
-venv:
+#~ Creates a virtual python environment and installs the packages 
+#~ from 'requirements.txt' and the caendr local package from source
+venv: clean-venv
 	@echo -e "\n$(COLOR_B)Installing python virtualenv and requirements.txt...$(COLOR_N)"
 	virtualenv --python=python3 $(MODULE_DIR)/venv; \
 	$(MODULE_DIR)/venv/bin/python -m pip install --upgrade pip; \
-	$(MODULE_DIR)/venv/bin/pip install -r $(MODULE_DIR)/requirements.txt
+	$(MODULE_DIR)/venv/bin/python -m pip install -r $(MODULE_DIR)/requirements.txt && \
+	$(MODULE_DIR)/venv/bin/python -m pip install -e $(PKG_SETUP_DIR)
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
 #~
-build-container: #~
+clean-venv: #~
+#~ Removes the virtual environment
+clean-venv:
+	@echo -e "$(COLOR_B)Removing virtual environment...$(COLOR_N)"
+	rm -rf $(MODULE_DIR)/venv
+	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
+
+
+#~
+container: #~
 #~ Removes the virtual environment and python cache, regenerates the module .env file, 
 #~ copies the code for the shared/caendr package into the module directory, and
 #~ builds the container for the module and tags it with the name and version from module.env
-build-container: verify-args print-module-env print-ver confirm clean env-file install-pkg
+container: verify-env print-module-env print-ver confirm clean dot-env
 	@echo -e "\n$(COLOR_B)Building container image...$(COLOR_N)"
-	docker build $(MODULE_DIR) -t gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${MODULE_NAME}:${MODULE_VERSION}
+	$(MAKE) -C $(PKG_SETUP_DIR) clean --no-print-directory
+	cp -r $(PKG_SETUP_DIR) $(MODULE_DIR)
+	#echo docker build $(MODULE_DIR) -t gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${MODULE_NAME}:${MODULE_VERSION}
+	rm -rf $(PKG_DIR)
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
 #~
@@ -105,9 +112,6 @@ publish-container-auto: build-container-auto
 	@echo -e "\n$(COLOR_B)Publishing container image to gcr...$(COLOR_N)"
 	docker push gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${MODULE_NAME}:${MODULE_VERSION}
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
-
-
-verify-args:  verify-env
 
 print-module-env: verify-env
 	@echo -e "\n$(COLOR_P)****************************************************************************$(COLOR_N)"
