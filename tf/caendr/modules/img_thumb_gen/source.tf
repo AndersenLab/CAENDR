@@ -1,5 +1,5 @@
 locals {
-  codebase_root_path = abspath("${path.module}/../../../../src/modules/img-thumb-gen")
+  codebase_root_path = abspath("${path.module}/../../../../src/modules/img_thumb_gen")
   timestamp = formatdate("YYMMDDhhmmss", timestamp())
 }
 
