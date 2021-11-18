@@ -31,7 +31,7 @@ resource "google_app_engine_flexible_app_version" "site" {
   }
 
   beta_settings = {
-    cloud_sql_instances = google_sql_database_instance.postgres_instance.connection_name
+    cloud_sql_instances = "${var.cloud_sql_connection_uri}"
   }
 
   liveness_check {
