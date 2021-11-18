@@ -6,10 +6,9 @@ from caendr.services.cloud.secret import get_secret
 from caendr.models.error import APIAuthError
 
 API_SECRET_ID = os.environ.get('API_SECRET_ID')
-API_SECRET_VERSION = os.environ.get('API_SECRET_VERSION')
 
 def _verify_api_token(apiToken):
-  API_SECRET = get_secret(API_SECRET_ID, API_SECRET_VERSION)
+  API_SECRET = get_secret(API_SECRET_ID)
   if apiToken == API_SECRET:
     return True
   return False

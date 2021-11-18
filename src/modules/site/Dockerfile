@@ -42,16 +42,15 @@ WORKDIR $APP_HOME
 # make venv
 RUN virtualenv --python=python3 venv
 ENV VIRTUAL_ENV=$APP_HOME/venv
-RUN python3 -m venv $VIRTUAL_ENV
+RUN python -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-RUN python3 -m pip install --upgrade pip
+RUN python -m pip install --upgrade pip
 
 # Copy local code to container image
 COPY . ./
 
 # Install python modules from pip
-RUN python -m pip install --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+RUN python -m pip install --no-cache-dir -r requirements.txt
 
 CMD export $(cat .env | sed -e '/^\s*$/d' | sed -e '/^\#/d' | xargs) && \
     gunicorn -b :$PORT main:app

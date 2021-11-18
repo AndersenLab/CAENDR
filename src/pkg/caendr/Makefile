@@ -10,13 +10,6 @@ targets: run
 
 all: help
 
-#~
-test: #~
-test: FORCE
-#~ Runs all tests from the test directory
-	@. $(PKG_DIR)/venv/bin/activate && \
-	pytest -vv --print
-
 
 %:
 	@:

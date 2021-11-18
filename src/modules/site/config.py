@@ -3,7 +3,7 @@ from dotenv import dotenv_values
 from logzero import logger
 
 from caendr.services.cloud.secret import get_secret, SECRETS_IDS
-from caendr.services.cloud.postgresql import DB_CONN_URI
+from caendr.services.cloud.postgresql import db_conn_uri
 from caendr.utils.data import json_encoder
 
 
@@ -26,7 +26,7 @@ def get_config():
   config['NEMASCAN_PIPELINE_TASK_QUEUE'] = ''
 
   config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-  config['SQLALCHEMY_DATABASE_URI'] = DB_CONN_URI
+  config['SQLALCHEMY_DATABASE_URI'] = db_conn_uri
   config['SQLALCHEMY_ENGINE_OPTIONS'] = { "pool_pre_ping": True, "pool_recycle": 300 }
   config['SQLALCHEMY_POOL_TIMEOUT'] = 20
 
