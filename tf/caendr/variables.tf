@@ -10,21 +10,24 @@ variable "GOOGLE_CLOUD_SOURCE_BUCKET_NAME" { }
 variable "TERRAFORM_SERVICE_ACCOUNT_FILENAME" { }
 variable "GOOGLE_SHEETS_SERVICE_ACCOUNT_NAME" { }
 variable "GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME" { }
-
+variable "GOOGLE_CLOUDSQL_SERVICE_ACCOUNT_NAME" {}
 
 
 # Site Module Variables
-variable "MODULE_SITE_CONTAINER_NAME" { }
-variable "MODULE_SITE_CONTAINER_VERSION" { }
+variable "MODULE_SITE_CONTAINER_NAME" { type = string }
+variable "MODULE_SITE_CONTAINER_VERSION" { type = string}
 variable "MODULE_SITE_SERVING_STATUS" { type = bool }
-variable "MODULE_SITE_BUCKET_ASSETS_NAME" { }
-variable "MODULE_SITE_BUCKET_PHOTOS_NAME" { }
-variable "MODULE_SITE_BUCKET_PUBLIC_NAME" { }
-variable "MODULE_SITE_BUCKET_PRIVATE_NAME" { }
-variable "MODULE_SITE_POSTGRES_INSTANCE_NAME" { }
-variable "MODULE_SITE_POSTGRES_DB_NAME" { }
-variable "MODULE_SITE_POSTGRES_DB_STAGE_NAME" { }
+variable "MODULE_SITE_BUCKET_ASSETS_NAME" { type = string }
+variable "MODULE_SITE_BUCKET_PHOTOS_NAME" { type = string }
+variable "MODULE_SITE_BUCKET_PUBLIC_NAME" { type = string }
+variable "MODULE_SITE_BUCKET_PRIVATE_NAME" { type = string }
 
+
+variable "MODULE_DB_OPERATIONS_INSTANCE_NAME" { type = string }
+variable "MODULE_DB_OPERATIONS_DB_NAME" { type = string }
+variable "MODULE_DB_OPERATIONS_DB_STAGE_NAME" { type = string }
+variable "MODULE_DB_OPERATIONS_BUCKET_NAME" { type = string}
+variable "MODULE_DB_OPERATIONS_DB_USER" { type = string}
 
 # Img-thumb-gen variables
 variable "MODULE_IMG_THUMB_GEN_SOURCE_PATH" { }
