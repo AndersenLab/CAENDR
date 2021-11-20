@@ -36,7 +36,7 @@ def extract_json_payload(request: Request):
     return payload
   except:
     raise JSONParseError("request JSON is malformed")
-    
+
 
 class json_encoder(json.JSONEncoder):
   def default(self, o: object):
@@ -58,3 +58,14 @@ class json_encoder(json.JSONEncoder):
 
 def dump_json(data):
   return json.dumps(data, cls=json_encoder)
+
+
+def get_json_from_class(obj):
+  """
+    Iterates recursively through a class and returns json for all properties that are not set to 'None'
+  """
+  return json.loads(
+    json.dumps(obj, default=lambda o: dict((key, value) for key, value in o.__dict__.items() if value),
+              indent=4,
+              allow_nan=False)
+  )
