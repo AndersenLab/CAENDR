@@ -4,7 +4,7 @@ from logzero import logger
 
 from caendr.services.cloud.secret import get_secret, SECRETS_IDS
 from caendr.services.cloud.postgresql import db_conn_uri
-from caendr.utils.data import json_encoder
+from caendr.utils.json import json_encoder
 
 
 def get_config():
