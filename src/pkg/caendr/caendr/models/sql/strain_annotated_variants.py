@@ -1,14 +1,12 @@
-import re
-from caendr.models.sql import db, DictSerializable
+from caendr.services.cloud.postgresql import db
+from caendr.models.sql.dict_serializable import DictSerializable
 
 class StrainAnnotatedVariants(DictSerializable, db.Model):
   """
       The Strain Annotated Variant table combines several features linked to variants:
       Genetic location, base pairs affected, consequences of reading, gene information, 
       strains affected, and severity of impact
-
   """
-  __tablename__ = 'variant_annotation'
   id = db.Column(db.Integer, primary_key=True)
   chrom = db.Column(db.String(7), index=True)
   pos = db.Column(db.Integer(), index=True)
@@ -30,31 +28,43 @@ class StrainAnnotatedVariants(DictSerializable, db.Model):
   variant_impact = db.Column(db.String(), nullable=True)
   divergent = db.Column(db.Boolean(), nullable=True)
 
-  __gene_summary__ = db.relationship("WormbaseGeneSummary", backref='variant_annotation', lazy='joined')
+  __tablename__ = 'strain_annotated_variants'
+  __gene_summary__ = db.relationship("WormbaseGeneSummary", backref='strain_annotated_variants', lazy='joined')
+  
+  
+  def __repr__(self):
+    return f"Strain Annotated Variant: {self.chrom} -- {self.pos}"
 
 
-  column_details = [
-    {'id': 'chrom', 'name': 'Chromosome'},
-    {'id': 'pos', 'name': 'Position'},
-    {'id': 'ref_seq', 'name': 'Ref Sequence'},
-    {'id': 'alt_seq', 'name': 'Alt Sequence'},
-    {'id': 'consequence', 'name': 'Consequence'},
-    {'id': 'target_consequence', 'name': 'Target Consequence'},
-    {'id': 'gene_id', 'name': 'Gene ID'},
-    {'id': 'transcript', 'name': 'Transcript'},
-    {'id': 'biotype', 'name': 'Biotype'},
-    {'id': 'strand', 'name': 'Strand'},
-    {'id': 'amino_acid_change', 'name': 'Amino Acid Change'},
-    {'id': 'dna_change', 'name': 'DNA Change'},
-    {'id': 'strains', 'name': 'Strains'},
-    {'id': 'blosum', 'name': 'BLOSUM'},
-    {'id': 'grantham', 'name': 'Grantham'},
-    {'id': 'percent_protein', 'name': 'Percent Protein'},
-    {'id': 'gene', 'name': 'Gene'},
-    {'id': 'variant_impact', 'name': 'Variant Impact'},
-    {'id': 'divergent', 'name': 'Divergent'}
-  ]
-
+  @staticmethod
+  def get_column_details():
+    return [
+      {'id': 'chrom', 'name': 'Chromosome'},
+      {'id': 'pos', 'name': 'Position'},
+      {'id': 'ref_seq', 'name': 'Reference Sequence'},
+      {'id': 'alt_seq', 'name': 'Alternative Sequence'},
+      {'id': 'consequence', 'name': 'Consequence'},
+      {'id': 'target_consequence', 'name': 'Target Consequence'},
+      {'id': 'gene_id', 'name': 'Gene ID'},
+      {'id': 'transcript', 'name': 'Transcript'},
+      {'id': 'biotype', 'name': 'Biotype'},
+      {'id': 'strand', 'name': 'Strand'},
+      {'id': 'amino_acid_change', 'name': 'Amino Acid Change'},
+      {'id': 'dna_change', 'name': 'DNA Change'},
+      {'id': 'strains', 'name': 'Strains'},
+      {'id': 'blosum', 'name': 'BLOSUM Score'},
+      {'id': 'grantham', 'name': 'Grantham Score'},
+      {'id': 'percent_protein', 'name': 'Percent Protein'},
+      {'id': 'gene', 'name': 'Gene'},
+      {'id': 'variant_impact', 'name': 'Variant Impact'},
+      {'id': 'divergent', 'name': 'Divergent'}
+    ]
+    
+    
+    
+  
+    
+"""
   @classmethod
   def generate_interval_sql(cls, interval):
     interval = interval.replace(',','')
@@ -119,4 +129,4 @@ class StrainAnnotatedVariants(DictSerializable, db.Model):
                 .to_dict()
     except ValueError:
       result = {}
-    return result
+    return result"""
