@@ -9,8 +9,8 @@ TF_PATH = $(PROJECT_DIR)/tf/caendr
 
 MODULE_ENV_FILE = $(MODULE_DIR)/module.env
 MODULE_ENV_FILE_GENERATED = $(MODULE_DIR)/.env
-PKG_DIR = caendr
-PKG_SETUP_DIR = $(PROJECT_DIR)/src/pkg/$(PKG_DIR)
+MODULE_PKG_DIR = $(MODULE_DIR)/caendr
+PKG_SETUP_DIR = $(PROJECT_DIR)/src/pkg/caendr
 
 
 -include $(ENV_FILE)
@@ -27,7 +27,8 @@ clean: #~
 clean:
 	@echo -e "$(COLOR_B)Removing cached files...$(COLOR_N)"
 	rm -f $(MODULE_ENV_FILE_GENERATED)
-	rm -rf $(MODULE_DIR)/.downloads
+	rm -rf $(MODULE_DIR)/.download
+	rm -rf $(MODULE_PKG_DIR)
 	find $(MODULE_DIR) -name *.pyc -exec rm -rv {} +
 	find $(MODULE_DIR) -name __pycache__ -exec rm -rv {} +
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
@@ -86,13 +87,19 @@ container: #~
 #~ Removes the virtual environment and python cache, regenerates the module .env file, 
 #~ copies the code for the shared/caendr package into the module directory, and
 #~ builds the container for the module and tags it with the name and version from module.env
-container: verify-env print-module-env print-ver confirm clean dot-env
-	@echo -e "\n$(COLOR_B)Building container image...$(COLOR_N)"
-	$(MAKE) -C $(PKG_SETUP_DIR) clean --no-print-directory
-	cp -r $(PKG_SETUP_DIR) $(MODULE_DIR)
-	#echo docker build $(MODULE_DIR) -t gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${MODULE_NAME}:${MODULE_VERSION}
-	rm -rf $(PKG_DIR)
-	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
+container: verify-env print-module-env print-ver confirm clean clean-venv dot-env
+	@echo -e "\n$(COLOR_B)Copying caendr package source locally...$(COLOR_N)"
+	$(MAKE) -C $(PKG_SETUP_DIR) clean --no-print-directory && \
+	cp -r $(PKG_SETUP_DIR) $(MODULE_DIR) && \
+	echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
+	
+	@echo -e "\n$(COLOR_B)Building container image...$(COLOR_N)" && \
+	docker build $(MODULE_DIR) -t gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${MODULE_NAME}:${MODULE_VERSION} && \
+	echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
+
+	@echo -e "\n$(COLOR_B)Removing local caendr package source copy$(COLOR_N)" && \
+	$(MAKE) -C $(MODULE_DIR) clean --no-print-directory && \
+	echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
 #~
 publish-container: #~
