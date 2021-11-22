@@ -1,7 +1,7 @@
 from caendr.services.cloud.postgresql import db
 from caendr.models.sql.dict_serializable import DictSerializable
 
-class StrainAnnotatedVariants(DictSerializable, db.Model):
+class StrainAnnotatedVariant(DictSerializable, db.Model):
   """
       The Strain Annotated Variant table combines several features linked to variants:
       Genetic location, base pairs affected, consequences of reading, gene information, 

@@ -1,7 +1,7 @@
 from caendr.services.cloud.postgresql import db
 from caendr.models.sql.dict_serializable import DictSerializable
 
-class Homologs(DictSerializable, db.Model):
+class Homolog(DictSerializable, db.Model):
   id = db.Column(db.Integer, primary_key=True)
   gene_id = db.Column(db.ForeignKey('wormbase_gene_summary.gene_id'), nullable=True, index=True)
   gene_name = db.Column(db.String(60), index=True)

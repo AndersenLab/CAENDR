@@ -1,9 +1,20 @@
 import csv
 import re
+import gzip
 
 from logzero import logger
 from sqlalchemy.sql.expression import null
-from caendr.models.sql import StrainAnnotatedVariants
+
+from caendr.models.sql import StrainAnnotatedVariant
+
+
+def load_strain_annotated_variants(db, sva_fname: str):
+  logger.info('Loading strain variant annotated csv')
+  sva_data = fetch_strain_variant_annotation_data(sva_fname)
+  db.session.bulk_insert_mappings(StrainAnnotatedVariant, sva_data)
+  db.session.commit()
+  logger.info(f'Inserted {StrainAnnotatedVariant.query.count()} Strain Annotated Variants')
+
 
 def fetch_strain_variant_annotation_data(sva_fname: str):
   """
@@ -14,7 +25,7 @@ def fetch_strain_variant_annotation_data(sva_fname: str):
       Percent_Protein,GENE,VARIANT_IMPACT,DIVERGENT
 
   """
-  with open(sva_fname) as csv_file:
+  with gzip.open(sva_fname) as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
 
     line_count = -1
@@ -25,7 +36,7 @@ def fetch_strain_variant_annotation_data(sva_fname: str):
       else:
         line_count += 1
         if line_count % 100000 == 0:
-          logger.info(f"Processed {line_count} lines;")
+          logger.debug(f"Processed {line_count} lines;")
         
         target_consequence = None
         consequence = row[4] if row[4] else None

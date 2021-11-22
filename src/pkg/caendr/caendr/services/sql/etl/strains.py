@@ -20,7 +20,6 @@ def load_strains(db):
   
 
 def fetch_elevation(lat, lon):
-  logger.info(f"Fetching elevation: latitude:{lat} longitude:{lon}")
   key = f'{lat}_{lon}'
   elevation = elevation_cache.get(key, None)
   if not elevation:
@@ -28,7 +27,6 @@ def fetch_elevation(lat, lon):
     if elevation:
       elevation_cache[key] = elevation
   
-  logger.info(f"Elevation: {lat}-{lon} {elevation}")
   return elevation
 
 
@@ -57,13 +55,13 @@ def fetch_andersen_strains():
       if k in ['sampling_date'] and v:
         record[k] = parser.parse(v)
 
-    if record['latitude']:
+    if record['latitude'] and record['longitude']:
       # Round elevation
       elevation = fetch_elevation(record['latitude'], record['longitude'])
       if elevation:
         record['elevation'] = round(elevation)
     if n % 50 == 0:
-      logger.info(f"Loaded {n} strains")
+      logger.debug(f"Loaded {n} strains")
 
     # Set issue bools
     record["issues"] = record["issues"] == "TRUE"

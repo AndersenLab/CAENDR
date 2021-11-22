@@ -1,15 +1,67 @@
 import csv
 import gzip
+import shutil
 
 from gtfparse import read_gtf_as_dataframe
 from logzero import logger
 
-from caendr.models.sql import WormbaseGeneSummary
+from caendr.models.sql import WormbaseGeneSummary, WormbaseGene, Homolog
 from caendr.utils.bio import arm_or_center
 from caendr.utils.constants import CHROM_NUMERIC
 
 
 # https://github.com/phil-bergmann/2016_DLRW_brain/blob/3f69c945a40925101c58a3d77c5621286ad8d787/brain/data.py
+
+def load_genes_summary(db, gene_gff_fname: str):
+  '''
+    load_genes_summary [extracts gene summary from wormbase db file and loads it into the caendr db]
+      Args:
+        db (SQLAlchemy): [sqlalchemy db instance to insert into]
+        gene_gff_fname (str): [path of downloaded wormbase gene gff file]
+  '''  
+  logger.info('Loading gene summary table')
+  gene_summary = fetch_gene_gff_summary(gene_gff_fname)
+  db.session.bulk_insert_mappings(WormbaseGeneSummary, gene_summary)
+  db.session.commit()
+  logger.info(f"Inserted {WormbaseGeneSummary.query.count()} Wormbase Gene Summaries")
+  
+  
+def load_genes(db, gene_gtf_gz_fname: str, gene_ids_fname: str):
+  '''
+    load_genes [extracts gene information from wormbase db files and loads it into the caendr db]
+      Args:
+        db (SQLAlchemy): [sqlalchemy db instance]
+        gene_gtf_gz_fname (str): [path of downloaded wormbase gene gtf.gz file]
+        gene_ids_fname (str): [path of downloaded wormbase gene IDs file]
+  '''  
+  logger.info('Extracting gene_gtf file')
+  gene_gtf_fname = 'gene.gtf'
+  with gzip.open(gene_gtf_gz_fname, 'rb') as f_in:
+    with open(gene_gtf_fname, 'wb') as f_out:
+      shutil.copyfileobj(f_in, f_out)
+  logger.info('Done extracting gene_gtf file')
+
+  logger.info('Loading gene table')
+  genes = fetch_gene_gtf(gene_gtf_fname, gene_ids_fname)
+  db.session.bulk_insert_mappings(WormbaseGene, genes)
+  db.session.commit()
+  logger.info(f"Inserted {WormbaseGene.query.count()} Wormbase Genes")
+
+  results = db.session.query(WormbaseGene.feature, db.func.count(WormbaseGene.feature)) \
+                            .group_by(WormbaseGene.feature) \
+                            .all()
+  result_summary = '\n'.join([f"{k}: {v}" for k, v in results])
+  logger.info(f'Gene Summary: {result_summary}')
+  
+  
+def load_orthologs(db, ortholog_fname: str):
+  logger.info('Loading orthologs from WormBase')
+  initial_count = Homolog.query.count()
+  orthologs = fetch_orthologs(ortholog_fname)
+  db.session.bulk_insert_mappings(Homolog, orthologs)
+  db.session.commit()
+  total_records = Homolog.query.count() - initial_count
+  logger.info(f'Inserted {total_records} Orthologs')
 
 
 def get_gene_ids(gene_ids_fname: str):
@@ -50,44 +102,44 @@ def fetch_gene_gtf(gtf_fname: str, gene_ids_fname: str):
 
 
 def fetch_gene_gff_summary(gff_fname: str):
-    """
-        LOADS wormbase_gene_summary
-        This function fetches data for wormbase_gene_summary;
-        It's a condensed version of the wormbase_gene_table
-        constructed for convenience.
-    """
-    WB_GENE_FIELDSET = ['ID', 'biotype', 'sequence_name', 'chrom', 'start', 'end', 'locus']
+  """
+      LOADS wormbase_gene_summary
+      This function fetches data for wormbase_gene_summary;
+      It's a condensed version of the wormbase_gene_table
+      constructed for convenience.
+  """
+  WB_GENE_FIELDSET = ['ID', 'biotype', 'sequence_name', 'chrom', 'start', 'end', 'locus']
 
-    with gzip.open(gff_fname) as f:
-      idx = 0
-      gene_count = 0
-      for line in f:
-        idx += 1
-        if line.decode('utf-8').startswith("#"):
-          continue
-        line = line.decode('utf-8').strip().split("\t")
-        if idx % 1000000 == 0:
-          logger.info(f"Processed {idx} lines;{gene_count} genes; {line[0]}:{line[4]}")
-        if 'WormBase' in line[1] and 'gene' in line[2]:
-          gene = dict([x.split("=") for x in line[8].split(";")])
-          gene.update(zip(["chrom", "start", "end"],
-                          [line[0], line[3], line[4]]))
-          gene = {k.lower(): v for k, v in gene.items() if k in WB_GENE_FIELDSET}
+  with gzip.open(gff_fname) as f:
+    idx = 0
+    gene_count = 0
+    for line in f:
+      idx += 1
+      if line.decode('utf-8').startswith("#"):
+        continue
+      line = line.decode('utf-8').strip().split("\t")
+      if idx % 1000000 == 0:
+        logger.debug(f"Processed {idx} lines;{gene_count} genes; {line[0]}:{line[4]}")
+      if 'WormBase' in line[1] and 'gene' in line[2]:
+        gene = dict([x.split("=") for x in line[8].split(";")])
+        gene.update(zip(["chrom", "start", "end"],
+                        [line[0], line[3], line[4]]))
+        gene = {k.lower(): v for k, v in gene.items() if k in WB_GENE_FIELDSET}
 
-          # Change add chrom_num
-          gene['chrom_num'] = CHROM_NUMERIC[gene['chrom']]
-          gene['start'] = int(gene['start'])
-          gene['end'] = int(gene['end'])
-          # Annotate gene with arm/center
-          gene_pos = int(((gene['end'] - gene['start'])/2) + gene['start'])
-          gene['arm_or_center'] = arm_or_center(gene['chrom'], gene_pos)
-          if 'id' in gene.keys():
-            gene_count += 1
-            gene_id_type, gene_id = gene['id'].split(":")
-            gene['gene_id_type'], gene['gene_id'] = gene['id'].split(":")
+        # Change add chrom_num
+        gene['chrom_num'] = CHROM_NUMERIC[gene['chrom']]
+        gene['start'] = int(gene['start'])
+        gene['end'] = int(gene['end'])
+        # Annotate gene with arm/center
+        gene_pos = int(((gene['end'] - gene['start'])/2) + gene['start'])
+        gene['arm_or_center'] = arm_or_center(gene['chrom'], gene_pos)
+        if 'id' in gene.keys():
+          gene_count += 1
+          gene_id_type, gene_id = gene['id'].split(":")
+          gene['gene_id_type'], gene['gene_id'] = gene['id'].split(":")
 
-            del gene['id']
-            yield gene
+          del gene['id']
+          yield gene
 
 
 def fetch_orthologs(orthologs_fname: str):

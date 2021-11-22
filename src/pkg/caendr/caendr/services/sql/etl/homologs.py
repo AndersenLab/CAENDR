@@ -6,13 +6,21 @@ from logzero import logger
 from urllib.request import urlretrieve
 from tempfile import NamedTemporaryFile
 
-from caendr.models.sql import WormbaseGeneSummary
-from caendr.services.db import external_db_url_templates
+from caendr.models.sql import Homolog, WormbaseGeneSummary
+from caendr.services.sql.db import external_db_url_templates
 
 C_ELEGANS_PREFIX = 'CELE_'
 C_ELEGANS_HOMOLOG_ID = 6239
 
 TAXON_ID_URL = external_db_url_templates['TAXON_ID_URL']
+
+def load_homologs(db, homologene_fname: str):
+  logger.info('Loading homologenes from NIH homologene.data file')
+  homologene = fetch_homologene(homologene_fname)
+  db.session.bulk_insert_mappings(Homolog, homologene)
+  db.session.commit()
+  logger.info(f'Inserted {Homolog.query.count()} Homologs')
+
 
 def fetch_taxon_ids():
   """
