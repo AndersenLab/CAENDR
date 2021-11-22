@@ -2,7 +2,7 @@ import os
 import logging
 
 from caendr.services.cloud.lifesciences import gls_service, ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
-from util import get_json_from_class
+from caendr.utils.json import get_json_from_class
 
 
 GOOGLE_CLOUD_PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID')
