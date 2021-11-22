@@ -36,7 +36,7 @@ clean:
 #~
 install-pkg: #~
 #~ Uses pip to install the local CAENDR package in the module's virtualenv
-install-pkg: venv
+install-pkg:
 	@echo -e "\n$(COLOR_B)Installing CAENDR package...$(COLOR_N)" && \
 	. $(MODULE_DIR)/venv/bin/activate && \
 	python -m pip install -e $(PKG_SETUP_DIR) && \
@@ -65,13 +65,14 @@ configure: print-module-env confirm clean clean-venv dot-env install-pkg
 venv: #~
 #~ Creates a virtual python environment and installs the packages 
 #~ from 'requirements.txt' and the caendr local package from source
-venv: clean-venv
+venv:
 	@echo -e "\n$(COLOR_B)Installing python virtualenv and requirements.txt...$(COLOR_N)"
-	virtualenv --python=python3 $(MODULE_DIR)/venv; \
-	$(MODULE_DIR)/venv/bin/python -m pip install --upgrade pip; \
-	$(MODULE_DIR)/venv/bin/python -m pip install -r $(MODULE_DIR)/requirements.txt && \
-	$(MODULE_DIR)/venv/bin/python -m pip install -e $(PKG_SETUP_DIR)
+	virtualenv --python=python3 $(MODULE_DIR)/venv && \
+	$(MODULE_DIR)/venv/bin/python -m pip install --upgrade pip && \
+	$(MODULE_DIR)/venv/bin/python -m pip install -r $(MODULE_DIR)/requirements.txt
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
+	$(MAKE) install-pkg
+
 
 #~
 clean-venv: #~
