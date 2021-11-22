@@ -29,7 +29,7 @@ from wtforms.fields.html5 import EmailField
 
 from constants import PRICES, USER_ROLES, SHIPPING_OPTIONS, PAYMENT_OPTIONS
 from caendr.models.datastore import User
-from base.api.strain import query_strains
+from caendr.api.strain import query_strains
 from base.forms.validators import (validate_duplicate_strain, 
                                    validate_duplicate_isotype, 
                                    validate_row_length, 
