@@ -1,0 +1,132 @@
+{% extends "_layouts/default.html" %} {% block custom_head %}
+<style>
+#checkout.affix {
+    position: fixed;
+    top: 20px;
+    width: 136px;
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <ul class="nav nav-pills">
+            <h3>Releases</h3>
+            {% for RELEASE, WB_VERSION in RELEASES %}
+                <li {% if RELEASE == release_version %}class="active"{% endif %}><a href="{{ url_for('data.data', release_version = RELEASE) }}">{{ RELEASE }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+<hr />
+<div>
+
+<div class="row">
+    <div class="col-md-12">
+
+  <!-- Nav tabs -->
+  <ul class="nav nav-tabs" role="tablist">
+    <li role="presentation" class="active"><a href="#download" role="tab" data-toggle="tab">Download</a></li>
+    <li role="presentation"><a href="#summary" role="tab" data-toggle="tab">VCF Summary</a></li>
+    <li role="presentation"><a href="#phylogeny" role="tab" data-toggle="tab">Phylogeny</a></li>
+
+    {% if int(release_version) >= 20170531 %}
+    <li role="presentation"><a href="#haplotype" role="tab" data-toggle="tab">Images</a></li>
+    {% endif %}
+    <li role="presentation"><a href="#methods" role="tab" data-toggle="tab">Methods</a></li>
+  </ul>
+
+  <!-- Tab panes -->
+  <div class="tab-content">
+
+    <div role="tabpanel" class="tab-pane active" id="download">
+        {% include('releases/download_tab_isotype_v1.html') %}
+    </div>
+    <div role="tabpanel" class="tab-pane" id="summary">
+        {% if vcf_summary %}
+            {% include('releases/variant_summary_tab.html') %}
+        {% endif %}
+    </div>
+    <div role="tabpanel" class="tab-pane" id="phylogeny">
+        {% if phylo_url %}
+            <br />
+            <strong><a href="{{ phylo_url }}">Download a PDF of the phylogeny</a></strong>
+        {% endif %}
+        <img style='width:100%' src='https://storage.googleapis.com/elegansvariation.org/releases/{{ release_version }}/popgen/trees/genome.svg'>
+    </div>
+
+    <div role="tabpanel" class="tab-pane" id="methods">
+        {{ render_markdown(release_version + "/methods.md", directory="base/static/reports") }}
+    </div>
+
+    {% if int(release_version) >= 20170531 %}
+    <div role="tabpanel" class="tab-pane" id="haplotype">
+        <div class='col-xs-3 col-sm-3 col-md-3 col-lg-3'>
+        <h4>Haplotypes</h4>
+            <div class='thumbnail'>
+                <a href='https://storage.googleapis.com/elegansvariation.org/releases/{{ release_version }}/haplotype/haplotype.png'><img src='https://storage.googleapis.com/elegansvariation.org/releases/{{ release_version }}/haplotype/haplotype.thumb.png'></a>
+                <small>Click the above image to download the full version</small>
+            </div>
+        </div>
+
+        {% if int(release_version) >= 20180000 %}
+        <div class='col-xs-3 col-sm-3 col-md-3 col-lg-3'>
+        <h4>Tajimas D</h4>
+            <div class='thumbnail'>
+                <a href='https://storage.googleapis.com/elegansvariation.org/releases/{{ release_version }}/popgen/tajima_d.png'><img src='https://storage.googleapis.com/elegansvariation.org/releases/{{ release_version }}/popgen/tajima_d.thumb.png'></a>
+                <small>Click the above image to download the full version</small>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+    {% endif %}
+
+
+</div>{# Tab Set #}
+
+    </div>{# Download content #}
+</div>{# /Download Tab #}
+
+
+{% include('releases/vcf_modal.html') %}
+
+
+{% endblock %}
+{% block script %}
+<script>
+$(document).ready(function() {
+
+    (function($) {
+
+        $('#filter').keyup(function() {
+            $('.searchable tr').hide();
+            $(this).val().split(',').forEach(function(r) {
+                var rex = new RegExp(r, "i");
+                $('.searchable tr').filter(function() {
+                    return rex.test($(this).text());
+                }).show();
+            })
+        })
+
+    }(jQuery));
+
+});
+
+$(document).ready(function() {
+    $('#filter').keydown(function(event) {
+        if (event.keyCode == 13) {
+            event.preventDefault();
+            return false;
+        }
+    });
+
+
+});
+
+
+</script>
+{% endblock %}
+

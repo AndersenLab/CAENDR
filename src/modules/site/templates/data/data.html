@@ -1,0 +1,96 @@
+{% extends "_layouts/default.html" %} 
+
+{% block custom_head %}
+
+<style>
+#checkout.affix {
+  position: fixed;
+  top: 20px;
+  width: 136px;
+}
+body, html{
+  width: 100%;
+  height: 100%;
+}
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="row">
+  <div class="col-md-12">
+    <ul class="nav nav-pills">
+      <h3>Releases</h3>
+      {% for RELEASE in RELEASES %}
+        <li {% if RELEASE.version == release_version %} class="active btn-nu" {% endif %}>
+          <a {% if RELEASE.disabled %} href="#" {% else %} href="{{ url_for('data.data', release_version = RELEASE.version) }}" {% endif %}>{{ RELEASE.version }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+<hr />
+<div>
+
+
+{% if RELEASE.report_type == 'V0' %}
+  {% include 'data/v0.html' %}
+
+{% elif RELEASE.report_type == 'V1' %}
+  {% include 'data/v1.html' %}
+
+{% elif RELEASE.report_type == 'V2' %}
+  {% include 'data/v2.html' %}
+{% endif %}
+
+
+{% endblock %}
+
+
+{% block script %}
+
+<script>
+$(document).ready(function() {
+
+    (function($) {
+
+        $('#filter').keyup(function() {
+            $('.searchable tr').hide();
+            $(this).val().split(',').forEach(function(r) {
+                var rex = new RegExp(r, "i");
+                $('.searchable tr').filter(function() {
+                    return rex.test($(this).text());
+                }).show();
+            })
+        })
+
+    }(jQuery));
+
+});
+
+$(document).ready(function() {
+
+    $(function() { 
+        // for bootstrap 3 use 'shown.bs.tab', for bootstrap 2 use 'shown' in the next line
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            // save the latest tab; use cookies if you like 'em better:
+            sessionStorage.setItem('lastTab', $(this).attr('href'));
+        });
+    });
+
+    $('#filter').keydown(function(event) {
+        if (event.keyCode == 13) {
+            event.preventDefault();
+            return false;
+        }
+    });
+});
+
+
+
+</script>
+
+{% endblock %}
+

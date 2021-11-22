@@ -1,0 +1,310 @@
+<div class="row">
+  <div class="col-md-12">
+
+  <!-- Nav tabs -->
+  <ul class="nav nav-tabs" role="tablist">
+    <li role="presentation" class="main active" ><a href="#main" role="tab" data-toggle="tab">Datasets</a></li>
+    <li role="presentation" class="methods" ><a href="#Methods" role="tab" data-toggle="tab">Methods</a></li>
+    <li role="presentation" class="alignment_summary" ><a href="#Alignment-summary" role="tab" data-toggle="tab">Alignment Summary</a></li>
+    <li role="presentation" class="variant_summary" ><a href="#Variant-summary" role="tab" data-toggle="tab">Variant Summary</a></li>
+    <li role="presentation" class="concordance" ><a href="#Concordance" role="tab" data-toggle="tab">Concordance</a></li>
+    <li role="presentation" class="haplotypes" ><a href="#Haplotypes" role="tab" data-toggle="tab">Haplotypes</a></li>
+    <li role="presentation" class="swept-haplotypes" ><a href="#Swept-haplotypes" role="tab" data-toggle="tab">Swept Haplotypes</a></li>
+    <li role="presentation" class="species-tree"><a href="#Species-tree" role="tab" data-toggle="tab">Species Tree</a></li>
+  </ul>
+
+  <!-- Tab panes -->
+  <div class="tab-content">
+
+      <div role="tabpanel" class="tab-pane active" id="main">  
+          <br />
+            <div class='col-md-4 pull-right'>
+              <div class="panel panel-default">
+                <div class="panel-heading">Release summary</div>
+                <div class="panel-body">
+                  <ul>
+                    <li><strong>Strains:</strong> {{ release_summary.get('strain_count') }}</li>
+                    <li><strong>WGS strains:</strong> {{ release_summary.get('strain_count_sequenced') }}</li>
+                    <li><strong>Isotypes:</strong> {{ release_summary.get('isotype_count') }}</li>
+                    <li><strong>Genome</strong> {{ WORMBASE_VERSION }}</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          
+          <h2>Release Notes</h2>
+
+          {{ render_markdown(release_version + "/release_notes.md", directory="base/static/reports") }}
+
+          </blockquote>
+
+          <h2>Datasets</h2>
+          <table class='table'>
+              <thead>
+                  <th class='col-md-2'>Dataset</th>
+                  <th class='col-md-6'>Description</th>
+                  <th class='col-md-3'>Download</th>
+              </thead>
+              <tbody>
+                  <tr>
+                      <td><strong>Strain Data</strong></td>
+                      <td>Includes strain, isotype, location information, and more.</td>
+                      <td><a href="{{ url_for('strains.strains_data_tsv') }}">CelegansStrainData.tsv</a></td>
+                  </tr>
+
+                  <tr>
+                      <td><strong>Strain Issues</strong></td>
+                      <td>This <a href="{{ url_for('data.strain_issues', release_version = release_version) }}">link</a> contains all strain issues for this release</td>
+                      <td></td>
+                  </tr>
+
+                  <tr>
+                      <td><strong>Alignment Data</strong></td>
+                      <td>This <a href="{{ url_for('data.alignment_data', release_version = release_version) }}">link</a> contains all alignment data as BAM or BAI files.</td>
+                      <td></td>
+                  </tr>
+
+                  <tr>
+                      <td><strong>Soft-Filtered Variants</strong></td>
+                      <td>The soft-filtered VCF includes all variants and annotations called by the GATK pipeline. The QC status of each variant (INFO field=<code>FILTER</code>) and genotype (Format Field=<code>FT</code>) is specified by a VCF Field.</td>
+                      <td>
+                          <strong>All Strains</strong>
+                          <br />
+                      {% if f.get('soft_filter_vcf_gz') %}
+                          <a href="{{ f['soft_filter_vcf_gz'] }}"> WI.{{ release_version }}.soft-filter.vcf.gz </a>
+                      {% else %}
+                          WI.{{ release_version }}.soft-filter.vcf.gz is not included in this release
+                      {% endif %}
+                          <br />
+                      {% if f.get('soft_filter_vcf_gz_tbi') %}
+                          <a href="{{ f.get('soft_filter_vcf_gz_tbi') }}"> WI.{{ release_version }}.soft-filter.vcf.gz.tbi </a>
+                      {% else %}
+                          WI.{{ release_version }}.soft-filter.vcf.gz.tbi is not included in this release
+                      {% endif %}
+                          <br />
+                          <br />
+                          <strong>Isotypes</strong>
+                          <br />
+                      {% if f.get('soft_filter_isotype_vcf_gz') %} 
+                          <a href="{{ f.get('soft_filter_isotype_vcf_gz') }}"> WI.{{ release_version }}.soft-filter.isotype.vcf.gz </a>
+                      {% else %}
+                          WI.{{ release_version }}.soft-filter.isotype.vcf.gz is not included in this release
+                      {% endif %}
+                          <br />
+                      {% if f.get('soft_filter_isotype_vcf_gz_tbi') %} 
+                          <a href="{{ f.get('soft_filter_isotype_vcf_gz_tbi') }}"> WI.{{ release_version }}.soft-filter.isotype.vcf.gz.tbi </a>
+                      {% else %}
+                          WI.{{ release_version }}.soft-filter.isotype.vcf.gz.tbi is not included in this release
+                      {% endif %}
+                          <br />
+                      </td>
+                  </tr>
+
+                  <tr>
+                      <td><strong>Hard-Filtered Variants</strong></td>
+                      <td>The hard-filtered VCF includes only high-quality variants after all variants and genotypes with a failed QC status are removed. To obtain vcf for a single or a subset of strains, use <code>bcftools view --samples</code></td>
+                      <td>
+                          <strong>All Strains</strong>
+                          <br />
+                      {% if f.get('hard_filter_vcf_gz') %} 
+                          <a href="{{ f.get('hard_filter_vcf_gz') }}"> WI.{{ release_version }}.hard-filter.vcf.gz </a>
+                      {% else %}
+                          WI.{{ release_version }}.hard-filter.vcf.gz is not included in this release
+                      {% endif %}
+                          <br />
+                      {% if f.get('hard_filter_vcf_gz_tbi') %} 
+                          <a href="{{ f.get('hard_filter_vcf_gz_tbi') }}"> WI.{{ release_version }}.hard-filter.vcf.gz.tbi </a>
+                      {% else %}
+                          WI.{{ release_version }}.hard-filter.vcf.gz.tbi is not included in this release
+                      {% endif %}
+                          <br />
+                          <br />
+                          <strong>Isotypes</strong>
+                          <br />
+                      {% if f.get('hard_filter_isotype_vcf_gz') %} 
+                          <a href="{{ f.get('hard_filter_isotype_vcf_gz') }}"> WI.{{ release_version }}.hard-filter.isotype.vcf.gz </a>
+                      {% else %}
+                          WI.{{ release_version }}.hard-filter.isotype.vcf.gz is not included in this release
+                      {% endif %}
+                          <br />
+                      {% if f.get('hard_filter_isotype_vcf_gz_tbi') %} 
+                          <a href="{{ f.get('hard_filter_isotype_vcf_gz') }}"> WI.{{ release_version }}.hard-filter.isotype.vcf.gz.tbi </a>
+                      {% else %}
+                          WI.{{ release_version }}.hard-filter.isotype.vcf.gz.tbi is not included in this release
+                      {% endif %}
+                          <br />
+                      </td>
+                  </tr>
+{% if f.get('impute_isotype_vcf_gz') %} 
+                  <tr>
+                      <td><strong>Imputed Variants</strong></td>
+                      <td>The imputed VCF includes all the variants from the hard-filtered Isotype VCF, but all missing genotypes have been imputed using <a href="https://faculty.washington.edu/browning/beagle/beagle.html">Beagle v5.1</a>.</td>
+                      <td>
+                          <strong>Isotypes</strong>
+                          <br />
+                      {% if f.get('impute_isotype_vcf_gz') %} 
+                          <a href="{{ f.get('impute_isotype_vcf_gz') }}"> WI.{{ release_version }}.impute.isotype.vcf.gz </a>
+                      {% else %}
+                          WI.{{ release_version }}.impute.isotype.vcf.gz is not included in this release
+                      {% endif %}
+                          <br />
+                      {% if f.get('impute_isotype_vcf_gz_tbi') %} 
+                          <a href="{{ f.get('impute_isotype_vcf_gz_tbi') }}"> WI.{{ release_version }}.impute.isotype.vcf.gz.tbi </a>
+                      {% else %}
+                          WI.{{ release_version }}.impute.isotype.vcf.gz.tbi is not included in this release
+                      {% endif %}
+                          <br />
+                      </td>
+                  </tr>
+{% endif %}
+                  <tr>
+                      <td><strong>Reference Genome FASTA ({{ WORMBASE_VERSION }})</strong></td>
+                      <td>The reference genome build from Wormbase used for alignment and annotation.</td>
+                      <td><a href="ftp://ftp.wormbase.org/pub/wormbase/releases/{{ WORMBASE_VERSION }}/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.{{ WORMBASE_VERSION }}.genomic.fa.gz">c_elegans.PRJNA13758.{{ WORMBASE_VERSION }}.genomic.fa.gz</a></td>
+                  </tr>
+
+                  <tr>
+                      <td><strong>Transposon Calls</strong></td>
+                      <td>We have performed transposon calling for a subset of isotypes as part of <a href="https://andersenlab.org/publications/2017Laricchia.pdf">Laricchia <i>et al.</i></a></td>
+                      <td><a href="https://storage.googleapis.com/andersenlab.org/publications/2017Laricchia/tes_cender.bed">tes_cender.bed</a></td>
+                  </tr>
+
+
+                  <tr>
+                      <td><strong>Tree</strong></td>
+                      <td>
+                          Tree generated using neighbour-joining algorithm as implemented in <a href="https://github.com/tseemann/quicktree">QuickTree</a> in Newick and PDF format.
+                      </td>
+                      <td>
+                          <strong>All Strains</strong>
+                          <br />
+                      {% if f.get('hard_filter_min4_tree') %} 
+                          <a href="{{ f.get('hard_filter_min4_tree') }}"> WI.{{ release_version }}.hard-filter.min4.tree </a> 
+                      {% else %}
+                          WI.{{ release_version }}.hard-filter.min4.tree is not included in this release
+                      {% endif %}
+                          <br />
+                      {% if f.get('hard_filter_min4_tree_pdf') %} 
+                          <a href="{{ f.get('hard_filter_min4_tree_pdf') }}"> WI.{{ release_version }}.hard-filter.min4.tree.pdf </a>
+                      {% else %}
+                          WI.{{ release_version }}.hard-filter.min4.tree.pdf is not included in this release
+                      {% endif %}
+                          <br />
+                          <br />
+                          <strong>Isotype</strong>
+                          <br />
+                      {% if f.get('hard_filter_isotype_min4_tree') %} 
+                          <a href="{{ f.get('hard_filter_isotype_min4_tree') }}"> WI.{{ release_version }}.hard-filter.isotype.min4.tree </a> 
+                      {% else %}
+                          WI.{{ release_version }}.hard-filter.isotype.min4.tree is not included in this release
+                      {% endif %}
+                          <br />
+                      {% if f.get('hard_filter_isotype_min4_tree_pdf') %} 
+                          <a href="{{ f.get('hard_filter_isotype_min4_tree_pdf') }}"> WI.{{ release_version }}.hard-filter.isotype.min4.tree.pdf </a>
+                      {% else %}
+                          WI.{{ release_version }}.hard-filter.isotype.min4.tree.pdf is not included in this release
+                      {% endif %}
+                          <br />
+                      </td>
+                  </tr>
+
+                  <tr>
+                      <td><strong>Haplotypes</strong></td>
+                      <td>Haplotypes for isotypes were calculated and plotted as described in <a href="https://www.biorxiv.org/content/10.1101/2020.07.23.218420v2.full">Lee <i>et al.</i></a></td>
+                      <td>
+                      {% if f.get('haplotype_png') %} 
+                          <a href="{{ f.get('haplotype_png') }}"> haplotype.png </a>
+                      {% else %}
+                          haplotype.png is not included in this release
+                      {% endif %}
+                          <br />
+                      {% if f.get('haplotype_pdf') %} 
+                          <a href="{{ f.get('haplotype_pdf')}}"> haplotype.pdf </a>
+                      {% else %}
+                          haplotype.pdf is not included in this release
+                      {% endif %}
+                      </td>
+                  </tr>
+
+                  <tr>
+                      <td><strong>Sweep Haplotypes</strong></td>
+                      <td>The most frequent haplotype that covers at least 25% of the chromosome and is found on chromosome centers was determined and classified as a selective sweep. For more details, see <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3365839/">Andersen <i>et al.</i></a> and <a href="https://www.biorxiv.org/content/10.1101/2020.07.23.218420v2.full">Lee <i>et al.</i></a>. The plot shows red (swept), gray (non-swept), and white (not classified) regions.</td>
+                      <td>
+                      {% if f.get('haplotype_pdf') %} 
+                          <a href="{{ f.get('haplotype_pdf') }}"> sweep.pdf </a>
+                      {% else %}
+                          sweep.pdf is not included in this release
+                      {% endif %}
+                          <br />
+                      {% if f.get('sweep_summary_tsv') %} 
+                          <a href="{{ f.get('sweep_summary_tsv') }}"> sweep_summary.tsv </a>
+                      {% else %}
+                          sweep_summary.tsv is not included in this release
+                      {% endif %}
+                      </td>
+                  </tr>
+
+                  <tr>
+                      <td><strong>Hyper-Divergent Regions</strong></td>
+                      <td>The hyper-divergent regions are characterized by higher-than-average density of small variants and large genomic spans where short sequence reads fail to align to the N2 reference genome. They were identified as described in <a href="https://www.biorxiv.org/content/10.1101/2020.07.23.218420v2.full">Lee <i>et al.</i></a></td>
+                      <td>
+                          <a href="https://storage.googleapis.com/elegansvariation.org/browser_tracks/lee2020.divergent_regions_strain.bed.gz">divergent_regions_strain.bed.gz</a>
+                      </td>
+                  </tr>
+
+                  <tr>
+                      <td><strong>Download BAMs Script</strong></td>
+                      <td>You can batch download individual strain BAMs using this script.</td>
+                      <td><a href="{{ url_for('data.download_script_strain_v2', release_version=release_version) }}">download_bams.sh</a></td>
+                  </tr>
+
+
+                  <hr />
+              </tbody>
+          </table>
+
+      </div>
+
+      {#
+          DATASETS
+      #}
+
+      <div role="tabpanel" class="tab-pane" id="Methods">
+          {{ render_markdown(release_version + "/methods.md", directory="base/static/reports") }}
+      </div>
+
+      <div role="tabpanel" class="tab-pane" id="Alignment-summary">
+          <object style="width:100%;height:200vh;" type="text/html" data="/static/reports/{{ release_version }}/alignment_report.html"></object>
+      </div>
+
+      <div role="tabpanel" class="tab-pane" id="Variant-summary">
+          <object style="width:100%;height:200vh;" type="text/html" data="/static/reports/{{ release_version }}/gatk_report.html"></object>
+      </div>
+
+      <div role="tabpanel" class="tab-pane" id="Concordance">
+          <object style="width:100%;height:200vh;" type="text/html" data="/static/reports/{{ release_version }}/concordance_report.html"></object>
+      </div>
+
+  {% if f.get('hard_filter_isotype_min4_tree_pdf') %} 
+      <div role="tabpanel" class="tab-pane" id="Species-tree">
+          <object style="width:100%;height:200vh;" type="application/pdf" data="{{ f.get('hard_filter_isotype_min4_tree_pdf') }}"></object>
+      </div>
+  {% endif %}
+
+  {% if f.get('haplotype_pdf') %} 
+      <div role="tabpanel" class="tab-pane" id="Haplotypes">
+          <object style="width:100%;height:200vh;" type="application/pdf" data="{{ f.get('haplotype_pdf') }}"></object>
+      </div>
+  {% endif %}
+
+  {% if f.get('sweep_pdf') %} 
+      <div role="tabpanel" class="tab-pane" id="Swept-haplotypes">
+          <object style="width:100%;height:200vh;" type="application/pdf" data="{{ f.get('sweep_pdf') }}"></object>
+      </div>
+  {% endif %}
+
+
+  </div>{# Tab Set #}
+
+  </div>{# /col-md-12 #}
+</div>{# /row #}

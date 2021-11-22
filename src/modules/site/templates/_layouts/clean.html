@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang='en-us'>
+    <head>
+      {% include "_includes/head.html" %}
+      {% block custom_head %}{% endblock %}
+      {% block style %}{% endblock %}
+    </head>
+    <body>
+
+    <div class="page-content">
+        <div class="wrap">
+            <div class="container{% if fluid_container %}-fluid{% endif %}">
+                <div class='content'>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <br />
+
+                            <div id="alert"></div>
+                            {% if request.blueprint %}
+                                {% if title %}
+                                    <h2 class='page-title-txt'>{{ title }}{% if subtitle %} <small>{{subtitle}}</small>{% endif %}</h2>
+                                {% endif %}
+                            {% endif %}
+                            {% if warning %}
+                                <div class="alert alert-warning">
+                                    {{ warning }}
+                                </div>
+                            {% endif %}
+
+                          {# BREADCRUMB #}
+                          {% if request.blueprint and request.path != "/" and request.path != url_for("auth.choose_login") %}
+                          <ol class="breadcrumb">
+                              <li><a href="/">Home</a></li>
+                                {% if title %}
+                                {% if title.lower() != request.blueprint.lower() %}
+                                {% endif %}
+                                <li><a href='{{ url_for(request.blueprint + "." + request.blueprint) }}'>{{ request.blueprint|title }}</a></li>
+                                {% endif %}
+                              <li><strong>{{ title }}</strong></li>
+                            </ol>
+                            {% endif %}
+                        </div>
+                    </div>
+                <div id="feedback" class='hidden-print'>
+                  <div id="feedback-tab" onclick= "window.open('https://goo.gl/forms/rfWz4AlCIP');">
+                    Feedback
+                  </div>
+                </div>
+                    {% block content %}{% endblock %}
+                </div>
+                    {% block script %}{% endblock %}
+
+                <script type="text/javascript">
+                    function set_alert(alert_type, title, text) {
+                      $("#alert").hide().html("<div class='alert alert-dismissible alert-" + alert_type + "'><button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button><strong>" + title + "</strong> " + text + "</div>").fadeIn();
+                    } 
+
+                    $(document).ready(function () 
+                        {
+                            $('[data-toggle="tooltip"]').tooltip();
+                        }
+                    );
+                </script>
+                
+            </div>
+        </div><!-- closes wrap-->
+    </div><!-- closes page-content-->
+    </body>
+</html>
