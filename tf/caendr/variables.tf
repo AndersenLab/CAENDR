@@ -27,7 +27,7 @@ variable "MODULE_DB_OPERATIONS_INSTANCE_NAME" { type = string }
 variable "MODULE_DB_OPERATIONS_DB_NAME" { type = string }
 variable "MODULE_DB_OPERATIONS_DB_STAGE_NAME" { type = string }
 variable "MODULE_DB_OPERATIONS_BUCKET_NAME" { type = string}
-variable "MODULE_DB_OPERATIONS_DB_USER" { type = string}
+variable "MODULE_DB_OPERATIONS_DB_USER_NAME" { type = string}
 
 # Img-thumb-gen variables
 variable "MODULE_IMG_THUMB_GEN_SOURCE_PATH" { }
