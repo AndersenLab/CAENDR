@@ -1,10 +1,16 @@
 import json
 from logzero import logger
-from caendr.utils.data import dump_json
+from caendr.utils.json import dump_json
 
 from google.cloud import datastore
 
 dsClient = datastore.Client()
+
+def delete_ds_entity_by_ref(kind, id):
+  key = dsClient.key(kind, id)
+  batch = dsClient.batch()
+  batch.delete(key)
+  batch.commit()
 
 
 def get_ds_entity(kind, name):
