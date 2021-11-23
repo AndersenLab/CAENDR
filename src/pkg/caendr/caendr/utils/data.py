@@ -69,3 +69,9 @@ def coalesce(*values):
 
 def remove_env_escape_chars(val: str):
   return val.replace('\\', '')
+
+
+def convert_env_bool(val: str):
+  if val and val.lower() == 'true':
+    return True
+  return False

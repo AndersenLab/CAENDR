@@ -20,12 +20,12 @@ from base.views import primary_bp
 from base.views import about_bp
 from base.views import strains_bp
 from base.views import data_bp
+from base.views import user_bp
 
 '''
 from base.views.order import order_bp
 from base.views.mapping import mapping_bp
 from base.views.gene import gene_bp
-from base.views.user import user_bp
 from base.views.maintenance import maintenance_bp
 from base.views.admin.admin import admin_bp
 from base.views.admin.users import users_bp
@@ -50,12 +50,16 @@ from base.views.api.api_gene import api_gene_bp
 from base.views.api.api_variant import api_variant_bp
 from base.views.api.api_data import api_data_bp
 '''
+# Admin
+from base.views.admin import admin_bp
+from base.views.admin import admin_users_bp
+from base.views.admin import admin_dataset_bp
 
-'''
+
 # Auth
 from base.views.auth import (auth_bp, 
-                             google_bp)
-'''
+                            google_bp)
+
 
 # ---- End Routing ---- #
 
@@ -116,57 +120,68 @@ def register_template_filters(app):
 
 
 def register_extensions(app):
-    markdown(app)
-    cache.init_app(app, config={'CACHE_TYPE': 'base.utils.cache.datastore_cache'})
-    sqlalchemy.init_app(app)
-    # protect all routes (except the ones listed) from cross site request forgery
-    csrf = CSRFProtect(app)
-    '''csrf.exempt(auth_bp)
-    csrf.exempt(saml_bp)
-    csrf.exempt(maintenance_bp)'''
-    app.config['csrf'] = csrf
-    jwt.init_app(app)
+  markdown(app)
+  cache.init_app(app, config={'CACHE_TYPE': 'base.utils.cache.datastore_cache'})
+  sqlalchemy.init_app(app)
+  # protect all routes (except the ones listed) from cross site request forgery
+  csrf = CSRFProtect(app)
+  csrf.exempt(auth_bp)
+  # csrf.exempt(maintenance_bp)
+  app.config['csrf'] = csrf
+  jwt.init_app(app)
 
 
 def register_blueprints(app):
-    """Register blueprints with the Flask application."""
-    app.register_blueprint(primary_bp, url_prefix='')
-    app.register_blueprint(about_bp, url_prefix='/about')
-    app.register_blueprint(strains_bp, url_prefix='/strains')
+  """Register blueprints with the Flask application."""
+  app.register_blueprint(primary_bp, url_prefix='')
+  app.register_blueprint(about_bp, url_prefix='/about')
+  app.register_blueprint(strains_bp, url_prefix='/strains')
 
-    app.register_blueprint(data_bp, url_prefix='/data')
+  app.register_blueprint(data_bp, url_prefix='/data')
+  
+  # User
+  app.register_blueprint(user_bp, url_prefix='/user')
+  
+  
+  # Admin
+  app.register_blueprint(admin_bp, url_prefix='/admin')
+  app.register_blueprint(admin_users_bp, url_prefix='/admin/users')
+  app.register_blueprint(admin_dataset_bp, url_prefix='/admin/datasets')
 
-    '''
-    app.register_blueprint(order_bp, url_prefix='/order')
-    app.register_blueprint(mapping_bp, url_prefix='')
-    app.register_blueprint(gene_bp, url_prefix='/gene')
 
-    # User
-    app.register_blueprint(user_bp, url_prefix='/user')
-    
-    # Tools
-    app.register_blueprint(tools_bp, url_prefix='/tools')
-    app.register_blueprint(heritability_bp, url_prefix='/tools')
-    app.register_blueprint(indel_primer_bp, url_prefix='/tools')
+  
+  # Auth
+  app.register_blueprint(auth_bp, url_prefix='/auth')
+  app.register_blueprint(google_bp, url_prefix='/login')
 
-    # API
-    app.register_blueprint(api_strain_bp, url_prefix='/api')
-    app.register_blueprint(api_gene_bp, url_prefix='/api')
-    app.register_blueprint(api_variant_bp, url_prefix='/api')
-    app.register_blueprint(api_data_bp, url_prefix='/api')
+  '''
+  app.register_blueprint(order_bp, url_prefix='/order')
+  app.register_blueprint(mapping_bp, url_prefix='')
+  app.register_blueprint(gene_bp, url_prefix='/gene')
 
-    # Auth
-    app.register_blueprint(auth_bp, url_prefix='/auth')
-    app.register_blueprint(google_bp, url_prefix='/login')
 
-    # Admin
-    app.register_blueprint(admin_bp, url_prefix='/admin')
-    app.register_blueprint(users_bp, url_prefix='/admin/users')
-    app.register_blueprint(data_admin_bp, url_prefix='/admin/data')
+  
+  # Tools
+  app.register_blueprint(tools_bp, url_prefix='/tools')
+  app.register_blueprint(heritability_bp, url_prefix='/tools')
+  app.register_blueprint(indel_primer_bp, url_prefix='/tools')
 
-    # Healthchecks/Maintenance
-    app.register_blueprint(maintenance_bp, url_prefix='/tasks')'''
-    app.register_blueprint(check_bp, url_prefix='')
+  # API
+  app.register_blueprint(api_strain_bp, url_prefix='/api')
+  app.register_blueprint(api_gene_bp, url_prefix='/api')
+  app.register_blueprint(api_variant_bp, url_prefix='/api')
+  app.register_blueprint(api_data_bp, url_prefix='/api')
+
+
+
+  # Admin
+  app.register_blueprint(admin_bp, url_prefix='/admin')
+  app.register_blueprint(users_bp, url_prefix='/admin/users')
+  app.register_blueprint(data_admin_bp, url_prefix='/admin/data')
+
+  # Healthchecks/Maintenance
+  app.register_blueprint(maintenance_bp, url_prefix='/tasks')'''
+  app.register_blueprint(check_bp, url_prefix='')
 
 
 

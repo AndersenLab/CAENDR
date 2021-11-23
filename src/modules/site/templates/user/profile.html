@@ -30,9 +30,9 @@
             <tr><td>Verified</td><td>{{ user.verified_email }}</td></tr>
             <tr><td>Password</td><td>************</td></tr>
             <tr><td>Roles</td><td>{{ user.roles }}</td></tr>
-            <tr><td>Registered</td><td>{{ user.created_on }}</td></tr>
-            <tr><td>Last Modified</td><td>{{ user.modified_on }}</td></tr>
-            <tr><td>Last Login</td><td>{{ user.last_login }}</td></tr>
+            <tr><td>Registered</td><td>{{ user.created_on|date_format }}</td></tr>
+            <tr><td>Last Modified</td><td>{{ user.modified_on|date_format }}</td></tr>
+            <tr><td>Last Login</td><td>{{ user.last_login|date_format }}</td></tr>
           </table>
 
           <div class="row">

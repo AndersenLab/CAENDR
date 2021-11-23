@@ -25,6 +25,6 @@ TABLE_COLORS = {
   "HIGH": 'danger'
 }
 
-REPORT_VERSIONS = ['', 'v1', 'v2']
+REPORT_TYPES = [('V0', 'V0'), ('V1', 'V1'), ('V2', 'V2')]
 REPORT_V1_FILE_LIST = ['methods.md']
 REPORT_V2_FILE_LIST = ['alignment_report.html', 'concordance_report.html', 'gatk_report.html', 'methods.md', 'reads_mapped_by_strain.tsv', 'release_notes.md']
