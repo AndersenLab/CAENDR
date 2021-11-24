@@ -15,6 +15,7 @@ setup(
     'google-cloud-storage',
     'google-cloud-tasks',
     'gspread==3.6.0',
+    'gtfparse==0.0.6',
     'logzero==1.3.1',
     'oauth2client',
     'numpy',
