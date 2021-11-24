@@ -8,9 +8,15 @@
     <li role="presentation" class="alignment_summary" ><a href="#Alignment-summary" role="tab" data-toggle="tab">Alignment Summary</a></li>
     <li role="presentation" class="variant_summary" ><a href="#Variant-summary" role="tab" data-toggle="tab">Variant Summary</a></li>
     <li role="presentation" class="concordance" ><a href="#Concordance" role="tab" data-toggle="tab">Concordance</a></li>
+  {% if f.get('haplotype_pdf') %} 
     <li role="presentation" class="haplotypes" ><a href="#Haplotypes" role="tab" data-toggle="tab">Haplotypes</a></li>
+  {% endif %}
+  {% if f.get('sweep_pdf') %} 
     <li role="presentation" class="swept-haplotypes" ><a href="#Swept-haplotypes" role="tab" data-toggle="tab">Swept Haplotypes</a></li>
+  {% endif %}
+  {% if f.get('hard_filter_isotype_min4_tree_pdf') %} 
     <li role="presentation" class="species-tree"><a href="#Species-tree" role="tab" data-toggle="tab">Species Tree</a></li>
+  {% endif %}
   </ul>
 
   <!-- Tab panes -->
@@ -26,7 +32,7 @@
                     <li><strong>Strains:</strong> {{ release_summary.get('strain_count') }}</li>
                     <li><strong>WGS strains:</strong> {{ release_summary.get('strain_count_sequenced') }}</li>
                     <li><strong>Isotypes:</strong> {{ release_summary.get('isotype_count') }}</li>
-                    <li><strong>Genome</strong> {{ WORMBASE_VERSION }}</li>
+                    <li><strong>Genome</strong> {{ RELEASE['wormbase_version'] }}</li>
                   </ul>
                 </div>
               </div>
@@ -34,7 +40,7 @@
           
           <h2>Release Notes</h2>
 
-          {{ render_markdown(release_version + "/release_notes.md", directory="base/static/reports") }}
+          {{ render_ext_markdown(release_bucket, release_notes_path) }}
 
           </blockquote>
 
@@ -54,13 +60,13 @@
 
                   <tr>
                       <td><strong>Strain Issues</strong></td>
-                      <td>This <a href="{{ url_for('data.strain_issues', release_version = release_version) }}">link</a> contains all strain issues for this release</td>
+                      <td>This <a href="{{ url_for('data_releases.strain_issues', release_version = release_version) }}">link</a> contains all strain issues for this release</td>
                       <td></td>
                   </tr>
 
                   <tr>
                       <td><strong>Alignment Data</strong></td>
-                      <td>This <a href="{{ url_for('data.alignment_data', release_version = release_version) }}">link</a> contains all alignment data as BAM or BAI files.</td>
+                      <td>This <a href="{{ url_for('data_releases.alignment_data', release_version = release_version) }}">link</a> contains all alignment data as BAM or BAI files.</td>
                       <td></td>
                   </tr>
 
@@ -158,9 +164,9 @@
                   </tr>
 {% endif %}
                   <tr>
-                      <td><strong>Reference Genome FASTA ({{ WORMBASE_VERSION }})</strong></td>
+                      <td><strong>Reference Genome FASTA ({{ RELEASE.wormbase_version }})</strong></td>
                       <td>The reference genome build from Wormbase used for alignment and annotation.</td>
-                      <td><a href="ftp://ftp.wormbase.org/pub/wormbase/releases/{{ WORMBASE_VERSION }}/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.{{ WORMBASE_VERSION }}.genomic.fa.gz">c_elegans.PRJNA13758.{{ WORMBASE_VERSION }}.genomic.fa.gz</a></td>
+                      <td><a href="ftp://ftp.wormbase.org/pub/wormbase/releases/{{ RELEASE.wormbase_version }}/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.{{ RELEASE.wormbase_version }}.genomic.fa.gz">c_elegans.PRJNA13758.{{ RELEASE.wormbase_version }}.genomic.fa.gz</a></td>
                   </tr>
 
                   <tr>
@@ -248,14 +254,14 @@
                       <td><strong>Hyper-Divergent Regions</strong></td>
                       <td>The hyper-divergent regions are characterized by higher-than-average density of small variants and large genomic spans where short sequence reads fail to align to the N2 reference genome. They were identified as described in <a href="https://www.biorxiv.org/content/10.1101/2020.07.23.218420v2.full">Lee <i>et al.</i></a></td>
                       <td>
-                          <a href="https://storage.googleapis.com/elegansvariation.org/browser_tracks/lee2020.divergent_regions_strain.bed.gz">divergent_regions_strain.bed.gz</a>
+                          <a href="{{ divergent_regions_strain_bed_gz }}">divergent_regions_strain.bed.gz</a>
                       </td>
                   </tr>
 
                   <tr>
                       <td><strong>Download BAMs Script</strong></td>
                       <td>You can batch download individual strain BAMs using this script.</td>
-                      <td><a href="{{ url_for('data.download_script_strain_v2', release_version=release_version) }}">download_bams.sh</a></td>
+                      <td><a href="{{ url_for('data_downloads.download_script_strain_v2', release_version=release_version) }}">download_bams.sh</a></td>
                   </tr>
 
 
@@ -270,19 +276,19 @@
       #}
 
       <div role="tabpanel" class="tab-pane" id="Methods">
-          {{ render_markdown(release_version + "/methods.md", directory="base/static/reports") }}
+          {{ render_ext_markdown(release_bucket, release_methods_path) }}
       </div>
 
       <div role="tabpanel" class="tab-pane" id="Alignment-summary">
-          <object style="width:100%;height:200vh;" type="text/html" data="/static/reports/{{ release_version }}/alignment_report.html"></object>
+          <object style="width:100%;height:200vh;" type="text/html" data="{{ alignment_report }}"></object>
       </div>
 
       <div role="tabpanel" class="tab-pane" id="Variant-summary">
-          <object style="width:100%;height:200vh;" type="text/html" data="/static/reports/{{ release_version }}/gatk_report.html"></object>
+          <object style="width:100%;height:200vh;" type="text/html" data="{{ gatk_report }}"></object>
       </div>
 
       <div role="tabpanel" class="tab-pane" id="Concordance">
-          <object style="width:100%;height:200vh;" type="text/html" data="/static/reports/{{ release_version }}/concordance_report.html"></object>
+          <object style="width:100%;height:200vh;" type="text/html" data="{{ concordance_report }}"></object>
       </div>
 
   {% if f.get('hard_filter_isotype_min4_tree_pdf') %} 

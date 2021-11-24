@@ -7,9 +7,9 @@
 
  
   <div class="text-center col-lg-4 col-md-6 col-sm-6">
-    <a href="{{ url_for('data.data') }}" style="text-decoration: none;">
+    <a href="{{ url_for('data_releases.data') }}" style="text-decoration: none;">
       <div class="menu-card">
-        <img class="card-img-top" src="{{ ext_asset('img/icons/Genome_Data.png') }}" alt="Genomic Data">
+        <img class="card-img-top" src="{{ ext_asset('img/icons/genome_data.png') }}" alt="Genomic Data">
         <div class="card-body">
           <h4 class="card-title">Genomic Data</h4>
           <p class="card-text text-center">Genotypes from whole-genome sequences and reduced representation (RAD) sequencing</p>
@@ -19,9 +19,9 @@
   </div> {#/col #}
   
   <div class="text-center col-lg-4 col-md-6 col-sm-6">
-    <a href="{{ url_for('data.gbrowser') }}" style="text-decoration: none;">
+    <a href="{{ url_for('gene_browser.gbrowser') }}" style="text-decoration: none;">
       <div class="menu-card">
-        <img class="card-img-top" src="{{ ext_asset('img/icons/Genome_Browser.png') }}" alt="Genome Browser">
+        <img class="card-img-top" src="{{ ext_asset('img/icons/genome_browser.png') }}" alt="Genome Browser">
         <div class="card-body">
           <h4 class="card-title">Genome Browser</h4>
           <p class="card-text text-center">Use the IGV browser to compare strain variant data</p>
@@ -32,9 +32,9 @@
   
   
   <div class="text-center col-lg-4 col-md-6 col-sm-6">
-    <a href="{{ url_for('data.vbrowser') }}" style="text-decoration: none;">
+    <a href="{{ url_for('variant_browser.vbrowser') }}" style="text-decoration: none;">
       <div class="menu-card">
-        <img class="card-img-top" src="{{ ext_asset('img/icons/Variant_Annotation.png' }}" alt="Variant Annotation">
+        <img class="card-img-top" src="{{ ext_asset('img/icons/variant_annotation.png') }}" alt="Variant Annotation">
         <div class="card-body">
           <h4 class="card-title">Variant Annotation</h4>
           <p class="card-text text-center">Search and sort genetic variants and their consequences by strain</p>
