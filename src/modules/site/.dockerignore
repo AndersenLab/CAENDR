@@ -15,3 +15,5 @@ docs
 *.gff3
 *.bed.gz
 *.bed
+
+ext_assets
