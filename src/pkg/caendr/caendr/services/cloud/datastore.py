@@ -8,9 +8,7 @@ dsClient = datastore.Client()
 
 def delete_ds_entity_by_ref(kind, id):
   key = dsClient.key(kind, id)
-  batch = dsClient.batch()
-  batch.delete(key)
-  batch.commit()
+  dsClient.delete(key)
 
 
 def get_ds_entity(kind, name):
@@ -67,17 +65,9 @@ def query_ds_entities(kind, filters=None, projection=(), order=None, limit=None,
   if limit:
     return query.fetch(limit=limit)
   else:
-    records = []
-    query = query.fetch()
-    while True:
-      try:
-        data, more, key = query.next_page()
-        records.extend(data)
-        if more is False:
-          break
-      except:
-        break
-    return records
+    results = list(query.fetch())
+    logger.debug(results)
+    return results
 
 
 def delete_ds_entities_by_query(kind, filters=None, projection=()):

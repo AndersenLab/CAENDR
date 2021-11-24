@@ -61,7 +61,7 @@ def download_all_external_dbs(wb_ver: str, sva_ver: str):
   return downloaded_files
 
 
-def download_external_db(db_url_name: str, wb_ver: str='',  sva_ver: str=''):
+def download_external_db(db_url_name: str, wb_ver: str='', sva_ver: str=''):
   '''
     download_external_db [Downloads an external database file and stores it locally]
       Args:

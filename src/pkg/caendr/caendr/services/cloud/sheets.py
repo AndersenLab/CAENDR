@@ -1,15 +1,21 @@
 import os
 import json
 import gspread
+import pandas as pd
+import requests
 
+from io import StringIO
 from oauth2client.service_account import ServiceAccountCredentials
 from base64 import b64decode
+from logzero import logger
 
 from caendr.services.cloud.secret import get_secret
 
+GOOGLE_SHEET_PREFIX = 'https://docs.google.com/spreadsheets/d'
 
 ANDERSEN_LAB_ORDER_SHEET = get_secret('ANDERSEN_LAB_ORDER_SHEET')
 GOOGLE_SHEETS_SERVICE_ACCOUNT_NAME = os.environ.get('GOOGLE_SHEETS_SERVICE_ACCOUNT_NAME')
+
 
 def get_service_account_credentials():
   """ Fetch service account credentials for google analytics """
@@ -41,6 +47,14 @@ def get_google_sheet(google_sheet_key, worksheet=None):
     return gsheet.open_by_key(google_sheet_key).worksheet(worksheet)
   else:
     return gsheet.open_by_key(google_sheet_key).sheet1
+
+
+def get_public_google_sheet_as_df(sheet_id):
+  csv_export_suffix = 'export?format=csv&id={}'.format(sheet_id)
+  url = f'{GOOGLE_SHEET_PREFIX}/{sheet_id}/{csv_export_suffix}'
+  req = requests.get(url)
+  logger.debug(f'Fetch google sheet as csv: {url}')
+  return pd.read_csv(StringIO(req.content.decode("UTF-8")))
 
 
 def get_google_order_sheet():

@@ -10,6 +10,11 @@ from caendr.models.error import CloudStorageUploadError
 
 storageClient = storage.Client()
 
+def get_blob(bucket_name, blob_name):
+  logger.debug(f'get_blob(bucket_name={bucket_name}, blob_name={blob_name})')
+  bucket = storageClient.get_bucket(bucket_name)
+  return bucket.get_blob(blob_name)
+
 
 def get_blob_list(bucket_name, prefix):
   ''' Returns a list of all blobs with 'prefix' (directory) in 'bucket_name' '''
