@@ -16,3 +16,9 @@ resource "google_storage_bucket_access_control" "public_rule" {
   role   = "READER"
   entity = "allUsers"
 }
+
+resource "google_storage_default_object_access_control" "public_rule" {
+  bucket = google_storage_bucket.photos_bucket.name
+  role   = "READER"
+  entity = "allUsers"
+}

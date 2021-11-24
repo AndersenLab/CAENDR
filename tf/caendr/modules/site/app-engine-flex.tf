@@ -7,7 +7,6 @@ resource "google_app_engine_application" "app" {
 
   lifecycle {
     ignore_changes = all
-    create_before_destroy = true
   }
 }
 
@@ -66,10 +65,6 @@ resource "google_app_engine_flexible_app_version" "site" {
       target_utilization = 0.6
     }
   }
-
-  depends_on = [
-    google_app_engine_application.app
-  ]
 
   lifecycle {
     create_before_destroy = true
