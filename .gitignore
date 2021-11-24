@@ -17,3 +17,5 @@ venv
 .vscode
 .download
 src/modules/**/caendr
+
+*.json
