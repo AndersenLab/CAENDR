@@ -11,6 +11,7 @@ class User(Entity):
   
   def __init__(self, *args, **kwargs):
     super(User, self).__init__(*args, **kwargs)
+    self.set_properties(**kwargs)
 
 
   def set_properties(self, **kwargs):
@@ -25,6 +26,8 @@ class User(Entity):
       self.set_email(kwargs.get('email'))
     if 'roles' in kwargs:
       self.roles = kwargs.get('roles')
+    if 'last_login' in kwargs:
+      self.last_login = kwargs.get('last_login')
 
 
   def save(self, *args, **kwargs):

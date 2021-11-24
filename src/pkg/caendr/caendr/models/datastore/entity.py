@@ -37,7 +37,7 @@ class Entity(object):
 
   def save(self):
     ''' Append metadata to the Entity and save it to the datastore'''
-    now = datetime.now(timezone.cst)
+    now = datetime.now(timezone.utc)
     meta_props = {}
     if not self._exists:
       meta_props.update({'created_on': now})
