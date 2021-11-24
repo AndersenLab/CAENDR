@@ -11,7 +11,7 @@ from werkzeug.exceptions import HTTPException
 
 from config import config
 
-from base.utils.markdown import render_markdown
+from base.utils.markdown import render_markdown, render_ext_markdown
 
 # --------- #
 #  Routing  #
@@ -19,8 +19,25 @@ from base.utils.markdown import render_markdown
 from base.views import primary_bp
 from base.views import about_bp
 from base.views import strains_bp
-from base.views import data_bp
 from base.views import user_bp
+from base.views import order_bp
+
+# Data
+from base.views.data import data_bp
+from base.views.data import releases_bp
+from base.views.data import gene_browser_bp
+from base.views.data import variant_browser_bp
+from base.views.data import data_downloads_bp
+
+# Admin
+from base.views.admin import admin_bp
+from base.views.admin import admin_users_bp
+from base.views.admin import admin_dataset_bp
+
+# Auth
+from base.views.auth import (auth_bp, 
+                            google_bp)
+
 
 '''
 from base.views.order import order_bp
@@ -50,15 +67,6 @@ from base.views.api.api_gene import api_gene_bp
 from base.views.api.api_variant import api_variant_bp
 from base.views.api.api_data import api_data_bp
 '''
-# Admin
-from base.views.admin import admin_bp
-from base.views.admin import admin_users_bp
-from base.views.admin import admin_dataset_bp
-
-
-# Auth
-from base.views.auth import (auth_bp, 
-                            google_bp)
 
 
 # ---- End Routing ---- #
@@ -136,19 +144,22 @@ def register_blueprints(app):
   app.register_blueprint(primary_bp, url_prefix='')
   app.register_blueprint(about_bp, url_prefix='/about')
   app.register_blueprint(strains_bp, url_prefix='/strains')
+  app.register_blueprint(order_bp, url_prefix='/order')
 
+  # Data
   app.register_blueprint(data_bp, url_prefix='/data')
+  app.register_blueprint(releases_bp, url_prefix='/data')
+  app.register_blueprint(data_downloads_bp, url_prefix='/data')
+  app.register_blueprint(gene_browser_bp, url_prefix='/data')
+  app.register_blueprint(variant_browser_bp, url_prefix='/data')
   
   # User
   app.register_blueprint(user_bp, url_prefix='/user')
-  
   
   # Admin
   app.register_blueprint(admin_bp, url_prefix='/admin')
   app.register_blueprint(admin_users_bp, url_prefix='/admin/users')
   app.register_blueprint(admin_dataset_bp, url_prefix='/admin/datasets')
-
-
   
   # Auth
   app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -203,7 +214,8 @@ def configure_jinja(app):
       len=len,
       ext_asset=ext_asset,
       basename=os.path.basename,
-      render_markdown=render_markdown
+      render_markdown=render_markdown,
+      render_ext_markdown=render_ext_markdown
     )
 
   #  2021-04-14 17:26:51.348674+00:00
