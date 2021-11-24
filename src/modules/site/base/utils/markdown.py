@@ -1,9 +1,10 @@
 import os
 import markdown
+import requests
+
 from logzero import logger
 from flask import Markup, render_template_string
 
-from caendr.services.cloud.storage import get_blob
 
 MODULE_SITE_BUCKET_PUBLIC_NAME = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME')
 
@@ -17,9 +18,11 @@ def render_markdown(filename, directory="base/static/content/markdown"):
     return Markup(markdown.markdown(template))
 
 
-def render_ext_markdown(bucket: str, path: str):
-  blob = get_blob(bucket, path)
-  if blob:
-    md = str(blob.download_as_text(raw_download=True))
-    template = render_template_string(md, **locals())
+def render_ext_markdown(url: str):
+  if url is None:
+    return ''
+  
+  r = requests.get(url)
+  if r.status_code == 200:
+    template = render_template_string(r.text, **locals())
     return Markup(markdown.markdown(template))

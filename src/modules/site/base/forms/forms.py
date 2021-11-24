@@ -105,7 +105,7 @@ class AdminEditUserForm(FlaskForm):
 class DatasetReleaseForm(FlaskForm):
   """ A form for creating a data release """
   version = IntegerField('Dataset Release Version', validators=[Required(message="Dataset release version (as an integer) is required (ex: 20210121)")])
-  wormbase_version = IntegerField('Wormbase Version WS:', validators=[Required(message="Wormbase version (as an integer) is required (ex: 276 -> WS276)")])
+  wormbase_version = IntegerField('Wormbase Version WS:', validators=[Required(message="Wormbase version (as an integer) is required (ex: WS276 -> 276)")])
   report_type = SelectField('Report Type', choices=REPORT_TYPES, validators=[Required()])
   disabled = BooleanField('Disabled')
   hidden = BooleanField('Hidden')
