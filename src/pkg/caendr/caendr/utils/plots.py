@@ -70,14 +70,15 @@ def plotly_distplot(df, column):
 
 
 def time_series_plot(df, x_title=None, y_title=None, range=None, colors=COLORS):
-    """
-        Pass in a dataframe (df) with:
-            First column - dates (x-axis)
-            2nd, 3rd, 4th, etc. columns - values
+  """
+      Pass in a dataframe (df) with:
+          First column - dates (x-axis)
+          2nd, 3rd, 4th, etc. columns - values
 
-        Args:
-            df - the strain dataset
-    """
+      Args:
+          df - the strain dataset
+  """
+  try:
     trace_set = []
     for n, column in enumerate(df.columns[1:][::-1]):
         trace_set.append(go.Scatter(x=df[df.columns[0]],
@@ -86,10 +87,10 @@ def time_series_plot(df, x_title=None, y_title=None, range=None, colors=COLORS):
                                     opacity=0.8,
                                     line=dict(color=(COLORS[n]))
                                     )
-                         )
+                          )
 
     layout = go.Layout(margin={'t': 0, 'r': 0, 'l': 80, 'b': 60},
-                       xaxis={})
+                        xaxis={})
     if range:
         layout['xaxis']['range'] = range
     if x_title:
@@ -99,10 +100,12 @@ def time_series_plot(df, x_title=None, y_title=None, range=None, colors=COLORS):
 
     fig = go.Figure(data=trace_set, layout=layout)
     return plotly.offline.plot(fig,
-                               output_type='div',
-                               include_plotlyjs=False,
-                               show_link=False,
-                               config={"displayModeBar": False})
+                                output_type='div',
+                                include_plotlyjs=False,
+                                show_link=False,
+                                config={"displayModeBar": False})
+  except plotly.exceptions.PlotlyEmptyDataError:
+    pass
 
 
 def pxg_plot(df, trait_name):

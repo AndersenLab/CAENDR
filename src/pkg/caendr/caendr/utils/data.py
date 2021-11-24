@@ -24,7 +24,7 @@ def flatten_dict(d, max_depth=1):
 
 # TODO: remove static/yaml files
 def load_yaml(yaml_file):
-  return yaml.load(open(f"base/static/yaml/{yaml_file}", 'r'))
+  return yaml.safe_load(open(f"base/static/yaml/{yaml_file}", 'r'))
 
 
 def get_object_hash(object, length=10):
