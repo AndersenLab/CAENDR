@@ -27,7 +27,7 @@ from wtforms.validators import (Required,
 from wtforms.fields.html5 import EmailField
 
 
-from constants import PRICES, USER_ROLES, SHIPPING_OPTIONS, PAYMENT_OPTIONS
+from constants import PRICES, USER_ROLES, SHIPPING_OPTIONS, PAYMENT_OPTIONS, REPORT_TYPES
 from caendr.models.datastore import User
 from caendr.api.strain import query_strains
 from base.forms.validators import (validate_duplicate_strain, 
@@ -102,11 +102,13 @@ class AdminEditUserForm(FlaskForm):
   roles = MultiCheckboxField('User Roles', choices=USER_ROLES)
   
 
-class DataReportForm(FlaskForm):
+class DatasetReleaseForm(FlaskForm):
   """ A form for creating a data release """
-  dataset = SelectField('Release Dataset', validators=[Required()])
-  wormbase = StringField('Wormbase Version WS:', validators=[Required()])
-  version = SelectField('Report Version', validators=[Required()])
+  version = IntegerField('Dataset Release Version', validators=[Required(message="Dataset release version (as an integer) is required (ex: 20210121)")])
+  wormbase_version = IntegerField('Wormbase Version WS:', validators=[Required(message="Wormbase version (as an integer) is required (ex: 276 -> WS276)")])
+  report_type = SelectField('Report Type', choices=REPORT_TYPES, validators=[Required()])
+  disabled = BooleanField('Disabled')
+  hidden = BooleanField('Hidden')
 
 
 class DonationForm(Form):
