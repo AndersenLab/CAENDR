@@ -1,6 +1,6 @@
 
 from flask import render_template, url_for, redirect, Blueprint
-from caendr.utils.data import get_dir_list_sorted
+from caendr.utils.file import get_dir_list_sorted
 
 primary_bp = Blueprint('primary', __name__)
 
@@ -13,7 +13,7 @@ def primary():
   #files = sorted_files("base/static/content/news/")
   VARS = {
     'page_title': page_title,
-   #'files': files,
+    #'files': files,
     'fluid_container': True 
   }
   return render_template('primary/home.html', **VARS)
@@ -25,7 +25,7 @@ def reroute_software():
   return redirect(url_for('primary.help_item', filename="Software"))
 
 
-@primary_bp.route("/news/")
+@primary_bp.route("/news")
 @primary_bp.route("/news/<filename>/")
 def news_item(filename=""):
   ''' News '''
@@ -36,7 +36,7 @@ def news_item(filename=""):
   return render_template('news_item.html', **locals())
 
 
-@primary_bp.route("/help/")
+@primary_bp.route("/help")
 @primary_bp.route("/help/<filename>/")
 def help_item(filename=""):
   ''' Help '''
@@ -46,7 +46,7 @@ def help_item(filename=""):
     filename = "FAQ"
   title = "Help"
   subtitle = filename.replace("-", " ")
-  return render_template('help_item.html', **locals())
+  return render_template('primary/help.html', **locals())
 
 '''
 # TODO: Remove?
@@ -79,13 +79,18 @@ def feed():
     return fg.atom_str(pretty=True)
 '''
 
-@primary_bp.route('/outreach/')
+@primary_bp.route('/outreach')
 def outreach():
   title = "Outreach"
+  
+  # TODO: REPLACE THESE TEMPORARY ASSIGNMENTs
+  protocol_url = 'https://storage.googleapis.com/elegansvariation.org/static/protocols/SamplingIsolationC.elegansNaturalHabitat.pdf'
+  nematode_isolation_kit_form_url = 'http://docs.google.com/forms/d/15JXAQptqCSenZMyqHHOKQH1wJe7m0n8_Q0nHMe0eTUY/viewform?formkey=dERCQ1lsamU1ZFNtOGJJUkJqVzZOOVE6MQ#gid=0'
+  
   return render_template('primary/outreach.html', **locals())
 
 
-@primary_bp.route('/contact-us/')
+@primary_bp.route('/contact-us')
 def contact():
   title = "Contact Us"
-  return render_template('contact.html', **locals())
+  return render_template('primary/contact.html', **locals())

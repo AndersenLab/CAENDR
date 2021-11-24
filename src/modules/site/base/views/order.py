@@ -59,7 +59,7 @@ def order_page():
   # When the user confirms their order it is processed below.
   if user_from_catalog is False and form.validate_on_submit():
     order_obj = {'total': form.total,
-                  'date': datetime.now(timezone.cst),
+                  'date': datetime.now(timezone.utc),
                   'is_donation': False}
     order_obj.update(form.data)
     order_obj['phone'] = order_obj['phone'].strip("+")

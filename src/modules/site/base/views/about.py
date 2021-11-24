@@ -6,31 +6,31 @@
 import pandas as pd
 import requests
 
-from flask import Blueprint
-from flask import render_template, url_for, request, redirect
+from flask import Blueprint, render_template, url_for, request, redirect
 from datetime import datetime, timezone
-from io import StringIO
+from logzero import logger
 
 # TODO: fix summaries
 # from base.utils.query import get_mappings_summary, get_weekly_visits, get_unique_users
 
 from config import config
-from constants import GOOGLE_SHEET_PREFIX
 from extensions import cache
 
-from base.api.strain import get_isotypes
 from base.forms import DonationForm
 from base.utils.auth import jwt_required, get_current_user
+from base.utils.statistics import cum_sum_strain_isotype, get_strain_collection_plot, get_mappings_summary_legacy, get_report_sumary_plot_legacy, get_weekly_visits_plot, get_num_registered_users
 
+from caendr.api.isotype import get_isotypes
 from caendr.models.sql import Strain
+from caendr.services.cloud.analytics import get_weekly_visits
 from caendr.services.cloud.sheets import add_to_order_ws
 from caendr.services.email import send_email, DONATE_SUBMISSION_EMAIL
+from caendr.services.publications import get_publications_html_df
 from caendr.utils.data import load_yaml, get_object_hash
-from caendr.utils.plots import time_series_plot
 
 about_bp = Blueprint('about',
-                     __name__,
-                     template_folder='templates')
+                    __name__,
+                    template_folder='templates')
 
 
 @about_bp.route('/')
@@ -102,7 +102,7 @@ def donate():
     # order_number is generated as a unique string
     order_obj = {
       "is_donation": True,
-      "date": datetime.now(timezone.cst)
+      "date": datetime.now(timezone.utc)
     }
     order_obj['items'] = u"{}:{}".format("CeNDR strain and data support", form.data.get('total'))
     order_obj.update(form.data)
@@ -134,56 +134,37 @@ def statistics():
 
   # Strain collections plot
   ##########################
-  df = Strain.cum_sum_strain_isotype()
-  strain_collection_plot = time_series_plot(
-    df,
-    x_title='Year',
-    y_title='Count',
-    range=[
-      datetime.datetime(1995, 10, 17), 
-      datetime.datetime.today()
-    ]
-  )
-  n_strains = max(df.strain)
-  n_isotypes = max(df.isotype)
+  df = cum_sum_strain_isotype()
+  try:
+    n_strains = max(df.strain)
+    n_isotypes = max(df.isotype)
+    strain_collection_plot = get_strain_collection_plot(df)
+  except AttributeError:
+    n_strains = 0
+    n_isotypes = 0
+    strain_collection_plot = None
 
   # Reports plot
   ##########################
-  df = get_mappings_summary()
-  report_summary_plot = time_series_plot(
-    df,
-    x_title='Date',
-    y_title='Count',
-    range=[
-      datetime.datetime(2016, 3, 1),
-      datetime.datetime.today()
-    ],
-    colors=[
-      'rgb(149, 150, 255)', 
-      'rgb(81, 151, 35)'
-    ]
-  )
-  n_reports = int(max(df.reports))
-  n_traits = int(max(df.traits))
+  df = get_mappings_summary_legacy()
+  try:
+    n_reports = int(max(df.reports))
+    n_traits = int(max(df.traits))
+    report_summary_plot = get_report_sumary_plot_legacy(df)
+  except AttributeError:
+    n_reports = 0
+    n_traits = 0
+    report_summary_plot = None
 
+  
   # Weekly visits plot
   ################################
   df = get_weekly_visits()
-  weekly_visits_plot = time_series_plot(
-    df,
-    x_title='Date',
-    y_title='Count',
-    range=[
-      datetime.datetime(2016, 3, 1),
-      datetime.datetime.today()
-    ],
-    colors=['rgb(255, 204, 102)']
-  )
-
+  weekly_visits_plot = get_weekly_visits_plot(df)
 
   # Unique users
   ############################
-  n_users = get_unique_users()
+  n_users = get_num_registered_users()
   VARS = {
     'title': title,
     'disable_parent_breadcrumb': True,
@@ -204,17 +185,5 @@ def publications():
   """  List of publications that have referenced CeNDR """
   title = "Publications"
   disable_parent_breadcrumb = True
-  csv_prefix = GOOGLE_SHEET_PREFIX
-  sheet_id = config['CENDR_PUBLICATIONS_SHEET']
-  csv_export_suffix = 'export?format=csv&id={}&gid=0'.format(sheet_id)
-  url = '{}/{}/{}'.format(csv_prefix, sheet_id, csv_export_suffix)
-  req = requests.get(url)
-  df = pd.read_csv(StringIO(req.content.decode("UTF-8")))
-  df['pmid'] = df['pmid'].astype(int)
-  df = df.sort_values(by='pmid', ascending=False)
-  df = df.apply(lambda x: f"""<strong><a href="{x.url}">{x.title.strip(".")}</a>
-                              </strong><br />
-                              {x.authors}<br />
-                              ( {x.pub_date} ) <i>{x.journal}</i>""", axis = 1)
-  df = list(df.values)[:-1]
+  publications_html_df = get_publications_html_df()
   return render_template('about/publications.html', **locals())
