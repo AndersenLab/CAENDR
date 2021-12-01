@@ -120,7 +120,7 @@ The variants track shows variation across the species for all isotypes sequenced
 
 The variants for individual isotypes can be viewed by selecting tracks from the strain list:
 
-![strain_selection](/static/img/help/strain_selection.png)
+![strain_selection]({{ ext_asset('img/help/strain_selection.png') }})
 
 Isotypes can also be filtered using the search box. Like the variant track for the entire species, reference and alternate genotypes are colored as follows:
 

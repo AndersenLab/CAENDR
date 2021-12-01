@@ -74,8 +74,10 @@
           <li class="dropdown">
             <a href="#" role="button" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> Genetic Mapping <span class="caret"></span></a>
             <ul class="dropdown-menu">
+              <li><a href="{{ url_for('mapping.mapping')}}"> Perform Mapping </a></li>
             </ul>
           </li>
+
 
           <li class="dropdown">
             <a href="#" role="button" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> Tools <span class="caret"></span></a>
@@ -106,7 +108,8 @@
               <li><a href="{{ url_for('admin.admin_strain_sheet') }}" class='nav-link' role='button'> Strain Sheet </a></li>
               <li><a href="{{ url_for('admin.admin_publications_sheet') }}" class='nav-link' role='button'> Publications Sheet </a></li>
               <li><a href="{{ url_for('admin_dataset.admin_dataset') }}" class='nav-link' role='button'> Dataset Releases </a></li>
-
+              <li><a href="{{ url_for('admin_profile.admin_profile') }}" class='nav-link' role='button'> Profile Pages </a></li>
+              <li><a href="{{ url_for('admin_tools.admin_tools') }}" class='nav-link' role='button'> Tool Versions </a></li>
             </ul>
           </li>
         {% endif %}

@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from logzero import logger
 
+
 from flask_wtf import FlaskForm, RecaptchaField, Form
 from wtforms import (StringField,
                      DateField,
@@ -27,7 +28,10 @@ from wtforms.validators import (Required,
 from wtforms.fields.html5 import EmailField
 
 
-from constants import PRICES, USER_ROLES, SHIPPING_OPTIONS, PAYMENT_OPTIONS, REPORT_TYPES
+from constants import PRICES, SHIPPING_OPTIONS, PAYMENT_OPTIONS, REPORT_TYPES
+
+from caendr.services.profile import get_profile_role_form_options
+from caendr.services.user import get_user_role_form_options
 from caendr.models.datastore import User
 from caendr.api.strain import query_strains
 from base.forms.validators import (validate_duplicate_strain, 
@@ -99,8 +103,21 @@ class UserUpdateForm(FlaskForm):
 
 class AdminEditUserForm(FlaskForm):
   """ A form for one or more roles """
-  roles = MultiCheckboxField('User Roles', choices=USER_ROLES)
+  _USER_ROLES = get_user_role_form_options()
+
+  roles = MultiCheckboxField('User Roles', choices=_USER_ROLES)
+
+class AdminEditProfileForm(FlaskForm):
+  """ A form for updating individuals' public profile on the site """
+  _PROFILE_ROLES = get_profile_role_form_options()
   
+  first_name = StringField('First Name', [Required(), Length(min=1, max=50)])
+  last_name = StringField('Last Name', [Required(), Length(min=1, max=50)])
+  title = StringField('Staff Title', [Optional(), Length(min=1, max=50)])
+  org = StringField('Organization', [Optional(), Length(min=1, max=50)])
+  email = StringField('Email', [Email(), Optional(), Length(min=3, max=100)])
+  website = StringField('Website', [Optional(), Length(min=3, max=200)])
+  prof_roles = MultiCheckboxField('Profile Pages', choices=_PROFILE_ROLES)
 
 class DatasetReleaseForm(FlaskForm):
   """ A form for creating a data release """

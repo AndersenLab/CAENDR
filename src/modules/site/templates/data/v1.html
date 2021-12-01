@@ -25,15 +25,15 @@
         {% endif %}
     </div>
     <div role="tabpanel" class="tab-pane" id="phylogeny">
-        {% if phylo_url %}
+        {% if f.get('phylo_url') %}
             <br />
-            <strong><a href="{{ phylo_url }}">Download a PDF of the phylogeny</a></strong>
+            <strong><a href="{{ f.get('phylo_url') }}">Download a PDF of the phylogeny</a></strong>
         {% endif %}
-        <img style='width:100%' src="{{ genome_svg_url }}">
+        <img style='width:100%' src="{{ f.get('genome_svg_url') }}">
     </div>
 
     <div role="tabpanel" class="tab-pane" id="methods">
-        {{ render_ext_markdown(release_bucket, release_methods_path) }}
+        {{ render_ext_markdown(f.get('methods')) }}
     </div>
 
     {% if int(release_version) >= 20170531 %}
@@ -41,7 +41,7 @@
         <div class='col-xs-3 col-sm-3 col-md-3 col-lg-3'>
         <h4>Haplotypes</h4>
             <div class='thumbnail'>
-                <a href="{{ haplotype_png_url }}"><img src="{{ haplotype_thumb_png_url }}"></a>
+                <a href="{{ f.get('haplotype_png_url') }}"><img src="{{ f.get('haplotype_thumb_png_url') }}"></a>
                 <small>Click the above image to download the full version</small>
             </div>
         </div>
@@ -50,7 +50,7 @@
         <div class='col-xs-3 col-sm-3 col-md-3 col-lg-3'>
         <h4>Tajimas D</h4>
             <div class='thumbnail'>
-                <a href="{{ tajima_d_png_url }}"><img src="{{ tajima_d_thumb_png_url }}"></a>
+                <a href="{{ f.get('tajima_d_png_url') }}"><img src="{{ f.get('tajima_d_thumb_png_url') }}"></a>
                 <small>Click the above image to download the full version</small>
             </div>
         </div>

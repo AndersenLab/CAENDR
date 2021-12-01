@@ -3,15 +3,17 @@ from string import Template
 from logzero import logger
 
 from caendr.models.datastore import Entity
-from caendr.services.cloud.storage import generate_blob_url, get_blob_list
+from caendr.services.cloud.storage import generate_blob_url, get_blob_list, get_blob, check_blob_exists
 
 V1_V2_Cutoff_Date = 20200101
 
 
 class DatasetRelease(Entity):
   kind = "dataset_release"
-  __bucket_name = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME')
-  __blob_prefix = kind
+  __bucket_name = 'elegansvariation.org'
+  __blob_prefix = 'releases'
+  # TODO: RESTORE THIS -> __bucket_name = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME')
+  # __blob_prefix = kind
 
   def __init__(self, *args, **kwargs):
     super(DatasetRelease, self).__init__(*args, **kwargs)
@@ -38,24 +40,11 @@ class DatasetRelease(Entity):
   def get_blob_prefix(cls):
     return cls.__blob_prefix
 
-  def _get_public_urls(self, bucket_name=None, blob_prefix=None):
-    ''' Returns a list of public links for all blobs stored in the site public bucket with the dataset_release prefix '''
-    if not bucket_name:
-      bucket_name=self.__bucket_name
-    if not blob_prefix:
-      blob_prefix=self.__blob_prefix
-    
-    blob_dir = f'{blob_prefix}/{str(self.version)}'
-    blob_list = get_blob_list(bucket_name, blob_dir)
-    public_urls = [generate_blob_url(blob.bucket.name, blob.name) for blob in blob_list]
-    return public_urls
 
-  def get_report_data_urls_map(self, bucket_name=None, blob_prefix=None):
+  def get_report_data_urls_map(self):
     ''' Returns a dictionary of variable names for report data files mapped to their public urls in google storage '''
-    if not bucket_name:
-      bucket_name=self.__bucket_name
-    if not blob_prefix:
-      blob_prefix=self.__blob_prefix
+    bucket_name=self.__bucket_name
+    blob_prefix=self.__blob_prefix
     
     logger.debug(f'get_report_data_urls_map(bucket_name={bucket_name}, blob_prefix={blob_prefix})')
     
@@ -68,26 +57,33 @@ class DatasetRelease(Entity):
     else:
       return None
 
-    url_list = self._get_public_urls(bucket_name=bucket_name, blob_prefix=blob_prefix)
+    # for key, val in url_list.items:
     url_map_filtered = {}
     for key, val in release_files.items():
       t = Template(val)
       blob_name = t.substitute(ver=self.version)
       blob_path = f'{blob_prefix}/{blob_name}'
-      url = generate_blob_url(bucket_name, blob_path)
-      if url in url_list:
-        url_map_filtered[key] = url
-
+      if check_blob_exists(bucket_name, blob_path):
+        url_map_filtered[key] = generate_blob_url(bucket_name, blob_path)
+    
     return url_map_filtered
   
 
 def V2_Data_Map():
   return {
+    'release_notes': '$ver/release_notes.md',
+    'methods': '$ver/methods.md',
+    'alignment_report': '$ver/alignment_report.html',
+    'gatk_report': '$ver/gatk_report.html',
+    'concordance_report': '$ver/concordance_report.html',
+    
+    'divergent_regions_strain_bed_gz': '$ver/browser_tracks/lee2020.divergent_regions_strain.bed.gz',
+
     'soft_filter_vcf_gz': '$ver/variation/WI.$ver.soft-filter.vcf.gz',
     'soft_filter_vcf_gz_tbi': '$ver/variation/WI.$ver.soft-filter.vcf.gz.tbi',
     'soft_filter_isotype_vcf_gz': '$ver/variation/WI.$ver.soft-filter.isotype.vcf.gz',
     'soft_filter_isotype_vcf_gz_tbi': '$ver/variation/WI.$ver.soft-filter.isotype.vcf.gz.tbi',
-    'fhard_filter_vcf_gz': '$ver/variation/WI.$ver.hard-filter.vcf.gz',
+    'hard_filter_vcf_gz': '$ver/variation/WI.$ver.hard-filter.vcf.gz',
     'hard_filter_vcf_gz_tbi': '$ver/variation/WI.$ver.hard-filter.vcf.gz.tbi',
     'hard_filter_isotype_vcf_gz': '$ver/variation/WI.$ver.hard-filter.isotype.vcf.gz',
     'hard_filter_isotype_vcf_gz_tbi': '$ver/variation/WI.$ver.hard-filter.isotype.vcf.gz.tbi',
@@ -108,8 +104,21 @@ def V2_Data_Map():
 
 def V1_Data_Map():
   return {
+    'methods': '$ver/methods.md',
+    'haplotype_png_url': '$ver/haplotype/haplotype.png',
+    'haplotype_thumb_png_url': '$ver/haplotype/haplotype.thumb.png',
+    'tajima_d_png_url': '$ver/popgen/tajima_d.png',
+    'tajima_d_thumb_png_url': '$ver/popgen/tajima_d.thumb.png',
+    'genome_svg_url': '$ver/popgen/trees/genome.svg',
+    
+    'soft_filter_vcf_gz': '$ver/variation/WI.$ver.soft-filter.vcf.gz',
+    'hard_filter_vcf_gz': '$ver/variation/WI.$ver.hard-filter.vcf.gz',
+    'impute_vcf_gz': '$ver/variation/WI.$ver.impute.vcf.gz',
+
+    
     'vcf_summary_url': '$ver/multiqc_bcftools_stats.json',
     'phylo_url': '$ver/popgen/trees/genome.pdf'
+    
   }
 
 

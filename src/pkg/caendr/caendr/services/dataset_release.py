@@ -10,16 +10,18 @@ def get_release_bucket():
   return DatasetRelease.get_bucket_name()
 
 
-def get_release_path(release_version: str, blob_prefix=None):
-  if not blob_prefix:
-    blob_prefix = DatasetRelease.get_blob_prefix()
+def get_release_path(release_version: str=None):
+  if not release_version:
+    release_version = get_latest_dataset_release_version()
+  
+  blob_prefix = DatasetRelease.get_blob_prefix()
   return f'{blob_prefix}/{release_version}'
 
 
-def get_browser_tracks_path(blob_prefix=None):
-  if not blob_prefix:
-    blob_prefix = DatasetRelease.get_blob_prefix()
-  return f'{blob_prefix}/browser_tracks'
+def get_browser_tracks_path(release_version=None):
+  release_path = get_release_path()
+  return f'{release_path}/browser_tracks'
+
 
 def get_all_dataset_releases(keys_only=False, order=None, placeholder=True):
   ''' Returns a list of all Dataset Release entities in datastore as DatasetRelease objects '''
@@ -39,6 +41,7 @@ def _get_placeholder_dataset_release():
   release.set_properties(version='None', report_type='V0', disabled=True, hidden=False)
   return release
 
+
 def get_dataset_release(version: str):
   ''' Returns a DatasetRelease object for a release version if it exists '''
   release = DatasetRelease(version)
@@ -48,7 +51,6 @@ def get_dataset_release(version: str):
 
 
 def get_latest_dataset_release_version():
-  logger.debug('get_latest_dataset_release_version')
   releases = get_all_dataset_releases(order='-version', keys_only=True)
   if len(releases) > 0:
     latest_release = releases[0]

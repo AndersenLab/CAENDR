@@ -7,11 +7,9 @@
     <table class='table'>
       <thead>
         <tr>
-          <th class='col-md-1'><strong> ID </strong></th>
           <th class='col-md-1'><strong> Username </strong></th>
           <th class='col-md-2'><strong> Full Name </strong></th>
           <th class='col-md-2'><strong> Email </strong></th>
-          <th class='col-md-1'><strong> Verified Email </strong></th>
           <th class='col-md-1'><strong> Roles </strong></th>
           <th class='col-md-1'><strong> Created On </strong></th>
           <th class='col-md-1'><strong> Last Login </strong></th>
@@ -22,12 +20,10 @@
       <tbody>
         {% for user in users %}
           <tr>
-            {% if user %}
-              <td> {{ user.key.name }} </td>
+            {% if user|sort(attribute='roles') %}
               <td> {{ user.username }} </td>
               <td> {{ user.full_name }} </td>
               <td> {{ user.email }} </td>
-              <td> {{ user.verified_email }} </td>
               <td> {{ user.roles }} </td>
               <td> {{ user.created_on|date_format }} </td>
               <td> {{ user.last_login|date_format }} </td>

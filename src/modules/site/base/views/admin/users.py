@@ -20,7 +20,7 @@ def admin_users(id=None):
   if id is None:
     title = 'Users'
     users = get_all_users()
-    return render_template('admin/users_list.html', **locals())
+    return render_template('admin/user/list.html', **locals())
   else:
     return redirect(url_for('admin_users.users_edit'), id=id)
 
@@ -47,7 +47,7 @@ def users_edit(id=None):
     return redirect(url_for('admin_users.admin_users'))
 
   # todo: fix redirect here
-  return render_template('admin/users_edit.html', **locals())
+  return render_template('admin/user/edit.html', **locals())
 
 
 @admin_users_bp.route('/<id>/delete', methods=["GET"])

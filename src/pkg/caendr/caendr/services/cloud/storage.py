@@ -16,6 +16,16 @@ def get_blob(bucket_name, blob_name):
   return bucket.get_blob(blob_name)
 
 
+def check_blob_exists(bucket_name, blob_name):
+  logger.debug(f'check_blob_exists(bucket_name={bucket_name}, blob_name={blob_name})')
+  bucket = storageClient.get_bucket(bucket_name)
+  blob = bucket.get_blob(blob_name)
+  try:
+    return blob.exists()
+  except:
+    return False
+
+
 def get_blob_list(bucket_name, prefix):
   ''' Returns a list of all blobs with 'prefix' (directory) in 'bucket_name' '''
   bucket = storageClient.get_bucket(bucket_name)

@@ -22,7 +22,7 @@ from caendr.api.isotype import get_isotypes
 from caendr.models.datastore import DatasetRelease
 from caendr.models.sql import Strain, StrainAnnotatedVariant
 from caendr.services.cloud.storage import generate_blob_url
-from caendr.services.dataset_release import get_dataset_release, get_all_dataset_releases, get_release_summary, get_release_path, get_browser_tracks_path, get_release_bucket
+from caendr.services.dataset_release import get_all_dataset_releases, get_release_summary, get_release_path, get_browser_tracks_path, get_release_bucket
 from caendr.models.error import NotFoundError
 
 
@@ -70,29 +70,14 @@ def data_v02(RELEASE, RELEASES):
   alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.landing')}
   release_version = RELEASE.version
   release_summary = get_release_summary(release_version)
-  
-  # TODO: REMOVE THESE STATIC VALUEs
-  release_bucket = 'elegansvariation.org'
-  browser_tracks_path = f'browser_tracks'
-  release_path = f'releases/{release_version}'
-  # TODO: restore these values
-  # release_bucket = get_release_bucket()
-  # release_path = get_release_path(release_version)
-  # browser_tracks_path = get_browser_tracks_path()
+  strain_listing = query_strains(release_version=release_version)
 
-  # TODO: move these paths to DatasetRelease file map
-  release_notes_path = f'{release_path}/release_notes.md'
-  release_methods_path = f'{release_path}/methods.md'
-  release_data_url = generate_blob_url(release_bucket, release_path)
+  release_bucket = get_release_bucket()
+  release_path = get_release_path(release_version)
+  browser_tracks_path = get_browser_tracks_path()
   browser_tracks_url = generate_blob_url(release_bucket, browser_tracks_path)
 
-  divergent_regions_strain_bed_gz = f'{browser_tracks_url}/lee2020.divergent_regions_strain.bed.gz'
-  alignment_report = f'{release_data_url}/alignment_report.html'
-  gatk_report = f'{release_data_url}/gatk_report.html'
-  concordance_report = f'{release_data_url}/concordance_report.html'
-
-  # TODO: revert this to internal bucket
-  f = RELEASE.get_report_data_urls_map(bucket_name='elegansvariation.org', blob_prefix='releases')
+  f = RELEASE.get_report_data_urls_map()
   return render_template('data/releases.html', **locals())
 
 
@@ -103,32 +88,16 @@ def data_v01(RELEASE, RELEASES):
   alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.landing')}
   release_version = RELEASE.version
   release_summary = get_release_summary(release_version)
+  strain_listing = query_strains(release_version=release_version)
+
+  release_bucket = get_release_bucket()
+  release_path = get_release_path(release_version)
+  browser_tracks_path = get_browser_tracks_path()
   
-   
-  # TODO: REMOVE THESE STATIC VALUEs
-  release_bucket = 'elegansvariation.org'
-  browser_tracks_path = f'browser_tracks'
-  release_path = f'releases/{release_version}'
-  # TODO: restore these values
-  # release_bucket = get_release_bucket()
-  # release_path = get_release_path(release_version)
-  # browser_tracks_path = get_browser_tracks_path()
-  release_data_url = generate_blob_url(release_bucket, release_path)
-  
-  # TODO: move these paths to DatasetRelease file map
-  release_methods_path = f'{release_path}/methods.md'
-  haplotype_png_url = f'{release_data_url}/haplotype/haplotype.png'
-  haplotype_thumb_png_url = f'{release_data_url}/haplotype/haplotype.thumb.png'
-  tajima_d_png_url = f'{release_data_url}/popgen/tajima_d.png'
-  tajima_d_thumb_png_url = f'{release_data_url}/popgen/tajima_d.thumb.png'
-  genome_svg_url = f'{release_data_url}/popgen/trees/genome.svg'
-  
-  # TODO: revert this to internal bucket
-  f = RELEASE.get_report_data_urls_map(bucket_name='elegansvariation.org', blob_prefix='releases')
-  phylo_url = f.get('phylo_url')
-  vcf_summary_url = f.get('vcf_summary_url')
+  f = RELEASE.get_report_data_urls_map()
 
   try:
+    vcf_summary_url = f.get('vcf_summary_url')
     vcf_summary = requests.get(vcf_summary_url).json()
   except json.JSONDecodeError:
     vcf_summary = None

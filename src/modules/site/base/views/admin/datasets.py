@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from flask import request, render_template, Blueprint, redirect, url_for
 
 from base.forms import DatasetReleaseForm
-from base.utils.auth import jwt_required, get_jwt, admin_required
+from base.utils.auth import get_jwt, admin_required
 
 from caendr.models.datastore import DatasetRelease
 from caendr.models.error import UnprocessableEntity
@@ -19,7 +19,7 @@ def admin_dataset():
   alt_parent_breadcrumb = {"title": "Admin", "url": url_for('admin.admin')}
   title = 'Dataset Releases'
   datasets = get_all_dataset_releases(placeholder=False)
-  return render_template('admin/dataset_list.html', **locals())
+  return render_template('admin/dataset/list.html', **locals())
 
 
 @admin_dataset_bp.route('/create', methods=["GET", "POST"])
@@ -40,7 +40,7 @@ def dataset_create():
     create_new_dataset_release(version, wormbase_version, report_type, disabled, hidden)
     return redirect(url_for("admin_dataset.admin_dataset"), code=302)
 
-  return render_template('admin/dataset_edit.html', **locals())
+  return render_template('admin/dataset/edit.html', **locals())
 
 
 @admin_dataset_bp.route('/<id>/edit', methods=["GET", "POST"])
@@ -61,7 +61,7 @@ def dataset_edit(id=None):
                             hidden=hasattr(release, 'hidden'),
                             disabled=hasattr(release, 'disabled'))
   # TODO: add support for edit
-  return render_template('admin/dataset_edit.html', **locals())
+  return render_template('admin/dataset/edit.html', **locals())
 
 
 @admin_dataset_bp.route('/<id>/delete', methods=["GET"])
