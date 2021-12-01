@@ -1,10 +1,14 @@
 import yaml
 import hashlib
 import uuid
+import string
 
 from collections import Counter
 from logzero import logger
 
+
+class AltTemplate(string.Template):
+  delimiter = '%'
 
 def flatten_dict(d, max_depth=1):
   '''  Flattens nested dictionaries '''
