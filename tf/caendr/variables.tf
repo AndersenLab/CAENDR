@@ -13,6 +13,16 @@ variable "GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME" { }
 variable "GOOGLE_CLOUDSQL_SERVICE_ACCOUNT_NAME" {}
 
 
+# API Pipeline Task Variables
+variable "MODULE_API_PIPELINE_TASK_CONTAINER_NAME" { }
+variable "MODULE_API_PIPELINE_TASK_CONTAINER_VERSION" { }
+variable "MODULE_API_PIPELINE_TASK_REPORT_BUCKET_NAME" { }
+variable "MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME" { }
+variable "MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME" { }
+variable "MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME" { }
+variable "MODULE_API_PIPELINE_TASK_PUB_SUB_SUBSCRIPTION_NAME" { }
+
+
 # Site Module Variables
 variable "MODULE_SITE_CONTAINER_NAME" { type = string }
 variable "MODULE_SITE_CONTAINER_VERSION" { type = string}
@@ -23,11 +33,15 @@ variable "MODULE_SITE_BUCKET_PUBLIC_NAME" { type = string }
 variable "MODULE_SITE_BUCKET_PRIVATE_NAME" { type = string }
 
 
+# DB-Operations Module Variables
+variable "MODULE_DB_OPERATIONS_CONTAINER_NAME" { type = string }
+variable "MODULE_DB_OPERATIONS_CONTAINER_VERSION" { type = string }
 variable "MODULE_DB_OPERATIONS_INSTANCE_NAME" { type = string }
 variable "MODULE_DB_OPERATIONS_DB_NAME" { type = string }
 variable "MODULE_DB_OPERATIONS_DB_STAGE_NAME" { type = string }
 variable "MODULE_DB_OPERATIONS_BUCKET_NAME" { type = string}
 variable "MODULE_DB_OPERATIONS_DB_USER_NAME" { type = string}
+
 
 # Img-thumb-gen variables
 variable "MODULE_IMG_THUMB_GEN_SOURCE_PATH" { }

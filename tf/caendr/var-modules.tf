@@ -20,6 +20,8 @@ locals {
   })
 
   module_db_operations_vars = tomap({
+    "container_name" = var.MODULE_DB_OPERATIONS_CONTAINER_NAME,
+    "container_version" = var.MODULE_DB_OPERATIONS_CONTAINER_VERSION,
     "postgres_instance_name" = var.MODULE_DB_OPERATIONS_INSTANCE_NAME,
     "postgres_db_name" = var.MODULE_DB_OPERATIONS_DB_NAME,
     "postgres_db_stage_name" = var.MODULE_DB_OPERATIONS_DB_STAGE_NAME,
@@ -27,6 +29,17 @@ locals {
     "postgres_db_user_name" = var.MODULE_DB_OPERATIONS_DB_USER_NAME,
     "bucket_db_name" = var.MODULE_DB_OPERATIONS_BUCKET_NAME
   })
+
+  module_api_pipeline_task_vars = tomap({
+    "container_name" = var.MODULE_API_PIPELINE_TASK_CONTAINER_NAME,
+    "container_version" = var.MODULE_API_PIPELINE_TASK_CONTAINER_VERSION,
+    "work_bucket_name" = var.MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME,
+    "pipeline_report_name" = var.MODULE_API_PIPELINE_TASK_REPORT_BUCKET_NAME
+    "pipeline_task_sa_name" = var.MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME,
+    "pub_sub_topic_name" = var.MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME,
+    "pub_sub_subscription_name" = var.MODULE_API_PIPELINE_TASK_PUB_SUB_SUBSCRIPTION_NAME
+  })
+
 
   cloud_secret_vars = tomap({
     "ANDERSEN_LAB_STRAIN_SHEET" = sensitive(var.ANDERSEN_LAB_STRAIN_SHEET), 

@@ -24,6 +24,19 @@ module "db_operations" {
 }
 
 
+module "api_pipeline_task" {
+  source = "./modules/api/pipeline_task"
+  ENVIRONMENT = var.ENVIRONMENT
+
+  google_cloud_vars = local.google_cloud_vars
+  module_api_pipeline_task_vars = local.module_api_pipeline_task_vars
+
+  depends_on = [
+    null_resource.api_service_group_all
+  ]
+}
+
+
 
 module "ext_assets" {
   source = "./modules/ext_assets"
@@ -52,6 +65,7 @@ module "site" {
   depends_on = [
     module.ext_assets,
     module.img_thumb_gen,
+    module.api_pipeline_task,
     null_resource.api_service_group_all
   ]
 }

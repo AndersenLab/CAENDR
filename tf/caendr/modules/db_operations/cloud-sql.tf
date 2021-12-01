@@ -55,6 +55,11 @@ resource "google_sql_database_instance" "postgres_instance" {
     ip_configuration {
       ipv4_enabled = "true"
       require_ssl  = "false"
+      
+      authorized_networks {
+        name  = "sam"
+        value = "73.247.119.202"
+      }
     }
 
     location_preference {
