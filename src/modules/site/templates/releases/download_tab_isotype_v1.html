@@ -17,7 +17,7 @@
                     <li><strong>Strains:</strong> {{ release_summary.get('strain_count') }}</li>
                 <li><strong>WGS strains:</strong> {{ release_summary.get('strain_count_sequenced') }}</li>
                 <li><strong>Isotypes:</strong> {{ release_summary.get('isotype_count') }}</li>
-                <li><strong>Genome Version</strong> {{ wormbase_genome_version }}
+                <li><strong>Genome Version</strong> {{ RELEASE.version }}
             </div>
         </div>
 
@@ -27,7 +27,7 @@
         <p><a href="http://biobits.org/samtools_primer.html" target="_blank">Learn about alignment data</a></p>
             <h4>Downloading All Alignment Data</h4>
             <p>You can download all alignment data using the script below. Before this script will work, you need to download and install <strong>wget</strong>. We recommend using <a href="http://brew.sh">Homebrew</a> for this installation (Unix/Mac OS), or <a href="http://www.cygwin.com/">Cygwin</a> on windows. See the <a href="{{ url_for( "primary.help_item",filename="FAQ")}}">FAQ</a> for details on installing <strong>wget</strong>.</p>
-            <p><a href="{{ url_for("data_downloads.download_script", selected_release=selected_release) }}">download_bams.sh</a></p>
+            <p><a href="{{ url_for("data_downloads.download_script", release_version=release_version) }}">download_bams.sh</a></p>
         <h3>Methods</h3>
         <p>Information regarding alignment, variant calling, and annotation are available <a href="{{ url_for('primary.help_item', filename = "Methods") }}">here</a>.
     </div>
@@ -39,9 +39,9 @@
         <h4>VCF</h4>
         <p>VCFs generated from the variant calling pipeline are provided below.</p>
         <ul>
-            <li><a href="https://storage.googleapis.com/elegansvariation.org/releases/{{ selected_release }}/variation/WI.{{ selected_release }}.soft-filter.vcf.gz">Soft-filter</a></strong> - Includes all variants and annotations. The QC status of variants is included.</li>
-            <li><a href="https://storage.googleapis.com/elegansvariation.org/releases/{{ selected_release }}/variation/WI.{{ selected_release }}.hard-filter.vcf.gz">Hard-filter</a></strong> - Variants and genotypes that fail QC are removed.</li>
-            <li><a href="https://storage.googleapis.com/elegansvariation.org/releases/{{ selected_release }}/variation/WI.{{ selected_release }}.impute.vcf.gz">Imputed</a> - An imputed dataset generated from the hard-filter VCF.</strong></li>
+            <li><a href="{{ f.get('soft_filter_vcf_gz') }}">Soft-filter</a></strong> - Includes all variants and annotations. The QC status of variants is included.</li>
+            <li><a href="{{ f.get('hard_filter_vcf_gz') }}">Hard-filter</a></strong> - Variants and genotypes that fail QC are removed.</li>
+            <li><a href="{{ f.get('impute_vcf_gz') }}">Imputed</a> - An imputed dataset generated from the hard-filter VCF.</strong></li>
         </ul>
 
         <div style="clear:both;"></div>
@@ -109,17 +109,17 @@
                     {% endif %}
                 {% endfor %}
             </td>
-            <td><a href="{{ url_for('strains.isotype_page', isotype_name=isotype, release = selected_release) }}">{{ isotype }}</a></td>
+            <td><a href="{{ url_for('strains.isotype_page', isotype_name=isotype, release = release_version) }}">{{ isotype }}</a></td>
             <td>{% for strain in strains %} {{ strain }} {% endfor %}
             </td>
             <td>
-                {{ strains[0].isotype_bam_url() }}
+            <a href="{{ url_for('data_downloads.download_bam_bai_file', blob_name = strains[0].isotype + '.bam') }}" target="_blank"> BAM </a> / <a href="{{ url_for('data_downloads.download_bam_bai_file', blob_name = strains[0].isotype + '.bam.bai') }}" target="_blank"> BAI </a>
             </td>
             <td>
-                {% if int(selected_release) >= 20170531 %}
-                <a href="https://storage.googleapis.com/elegansvariation.org/releases/{{ selected_release }}/isotype/tsv/{{ isotype }}.{{ selected_release }}.tsv.gz">{{ isotype }}.{{ selected_release }}.tsv.gz</a>
+                {% if int(release_version) >= 20170531 %}
+                <a href="https://storage.googleapis.com/elegansvariation.org/releases/{{ release_version }}/isotype/tsv/{{ isotype }}.{{ release_version }}.tsv.gz">{{ isotype }}.{{ release_version }}.tsv.gz</a>
                 {% else %}
-                <a href="https://storage.googleapis.com/elegansvariation.org/releases/{{ selected_release }}/isotype_tsv/{{ isotype }}.{{ selected_release }}.tsv">{{ isotype }}.{{ selected_release }}.tsv</a>
+                <a href="https://storage.googleapis.com/elegansvariation.org/releases/{{ release_version }}/isotype_tsv/{{ isotype }}.{{ release_version }}.tsv">{{ isotype }}.{{ release_version }}.tsv</a>
                 {% endif %}
             </td>
         </tr>

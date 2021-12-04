@@ -1,0 +1,40 @@
+{% extends "_layouts/default.html" %}
+
+{% block content %}
+
+<div class="row">
+  <div class="col-md-12">
+    <table class='table'>
+      <thead>
+        <tr>
+          <th class='col-md-2'><strong> Repository </strong></th>
+          <th class='col-md-2'><strong> Container Name </strong></th>
+          <th class='col-md-2'><strong> Container Tag </strong></th>
+          <th class='col-md-2'><strong> Created On </strong></th>
+          <th class='col-md-2'><strong> Modified On </strong></th>
+
+          <th><strong> Edit </strong></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in containers %}
+          <tr>
+              <td> {{ c.repo }} </td>
+              <td> {{ c.container_name }} </td>
+              <td> {{ c.container_tag }} </td>
+              <td> {{ c.created_on|date_format }} </td>
+              <td> {{ c.modified_on|date_format }} </td>
+              <td>
+                <a href="{{ url_for('admin_tools.edit_tool', id=c.container_name) }}"> 
+                  Edit
+                </a>
+              </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+	</div> <!-- /col-md-12 -->
+</div> <!-- /row -->
+
+
+{% endblock %}

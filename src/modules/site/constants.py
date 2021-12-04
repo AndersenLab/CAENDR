@@ -1,3 +1,4 @@
+# TODO: merge these definitions into Auth Service
 USER_ROLES = [('user', 'User'), ('admin', 'Admin')]
 
 class PRICES:
@@ -5,6 +6,7 @@ class PRICES:
   STRAIN_SET = 640
   STRAIN = 15
   SHIPPING = 65
+
 
 SHIPPING_OPTIONS = [
   ('UPS', 'UPS'),

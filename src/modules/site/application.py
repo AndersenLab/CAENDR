@@ -21,6 +21,7 @@ from base.views import about_bp
 from base.views import strains_bp
 from base.views import user_bp
 from base.views import order_bp
+from base.views import mapping_bp
 
 # Data
 from base.views.data import data_bp
@@ -33,6 +34,9 @@ from base.views.data import data_downloads_bp
 from base.views.admin import admin_bp
 from base.views.admin import admin_users_bp
 from base.views.admin import admin_dataset_bp
+from base.views.admin import admin_profile_bp
+from base.views.admin import admin_tools_bp
+from base.views.admin import admin_db_op_bp
 
 # Auth
 from base.views.auth import (auth_bp, 
@@ -40,8 +44,6 @@ from base.views.auth import (auth_bp,
 
 
 '''
-from base.views.order import order_bp
-from base.views.mapping import mapping_bp
 from base.views.gene import gene_bp
 from base.views.maintenance import maintenance_bp
 from base.views.admin.admin import admin_bp
@@ -160,14 +162,20 @@ def register_blueprints(app):
   app.register_blueprint(admin_bp, url_prefix='/admin')
   app.register_blueprint(admin_users_bp, url_prefix='/admin/users')
   app.register_blueprint(admin_dataset_bp, url_prefix='/admin/datasets')
+  app.register_blueprint(admin_profile_bp, url_prefix='/admin/profiles')
+  app.register_blueprint(admin_tools_bp, url_prefix='/admin/tools')
+  app.register_blueprint(admin_db_op_bp, url_prefix='/admin/db')
+  
   
   # Auth
   app.register_blueprint(auth_bp, url_prefix='/auth')
   app.register_blueprint(google_bp, url_prefix='/login')
+  
+  # Tools
+  app.register_blueprint(mapping_bp, url_prefix='')
+
 
   '''
-  app.register_blueprint(order_bp, url_prefix='/order')
-  app.register_blueprint(mapping_bp, url_prefix='')
   app.register_blueprint(gene_bp, url_prefix='/gene')
 
 

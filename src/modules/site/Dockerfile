@@ -4,7 +4,6 @@ ENV PYTHONUNBUFFERED True
 
 # Install production dependencies.
 RUN apt-get update && \
-  apt-get upgrade -y --no-install-recommends && \
   apt-get install -y --no-install-recommends \
     build-essential \
     ca-certificates \

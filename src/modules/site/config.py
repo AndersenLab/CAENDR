@@ -60,8 +60,6 @@ def get_config():
   config['HERITABILITY_CALC_TASK_QUEUE'] = ''
   config['INDEL_PRIMER_URL'] =  ''
   config['INDEL_PRIMER_TASK_QUEUE'] = ''
-  config['NEMASCAN_PIPELINE_URL'] =  ''
-  config['NEMASCAN_PIPELINE_TASK_QUEUE'] = ''
 
   config['SQLALCHEMY_DATABASE_URI'] = db_conn_uri
   config['SQLALCHEMY_ENGINE_OPTIONS'] = { "pool_pre_ping": True, "pool_recycle": 300 }

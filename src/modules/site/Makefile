@@ -15,7 +15,7 @@ run: print-module-env dot-env venv install-pkg
 	@echo -e "\n$(COLOR_B)Starting flask debug server...$(COLOR_N)"
 	@. $(MODULE_DIR)/venv/bin/activate && \
 	$(LOAD_MODULE_ENV) && \
-	FLASK_RUN_PORT=${PORT} flask run --host=0.0.0.0
+	FLASK_RUN_PORT=8080 flask run --host=0.0.0.0
 
 
 %:

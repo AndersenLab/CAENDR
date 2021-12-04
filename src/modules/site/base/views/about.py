@@ -25,7 +25,8 @@ from caendr.models.sql import Strain
 from caendr.services.cloud.analytics import get_weekly_visits
 from caendr.services.cloud.sheets import add_to_order_ws
 from caendr.services.email import send_email, DONATE_SUBMISSION_EMAIL
-from caendr.services.publications import get_publications_html_df
+from caendr.services.publication import get_publications_html_df
+from caendr.services.profile import get_committee_profiles, get_staff_profiles, get_collaborator_profiles
 from caendr.utils.data import load_yaml, get_object_hash
 
 about_bp = Blueprint('about',
@@ -61,7 +62,7 @@ def committee():
   ''' Scientific Panel Page'''
   title = "Scientific Advisory Committee"
   disable_parent_breadcrumb = True
-  committee_data = load_yaml("advisory-committee.yaml")
+  profiles = get_committee_profiles()
   return render_template('about/committee.html', **locals())
 
 
@@ -71,7 +72,7 @@ def collaborators():
   ''' Other Project Collaborators Page '''
   title = "Collaborators"
   disable_parent_breadcrumb = True
-  collaborator_data = load_yaml("collaborators.yaml")
+  profiles = get_collaborator_profiles()
   return render_template('about/collaborators.html', **locals())
 
 
@@ -81,7 +82,16 @@ def staff():
   ''' Staff Page '''
   title = "Staff"
   disable_parent_breadcrumb = True
-  staff_data = load_yaml("staff.yaml")
+  profiles = get_staff_profiles()
+  # Move director to top of list
+  index = 0
+  for i, item in enumerate(profiles):
+    if hasattr(item, 'title') and item.title.lower() == 'director':
+      index = i
+      break
+  p = profiles.pop(i)
+  profiles.insert(0, p)
+
   return render_template('about/staff.html', **locals())
 
 

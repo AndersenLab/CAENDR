@@ -1,7 +1,15 @@
+import json
+
 from flask import (render_template,
+                    url_for,
+                    request,
+                    jsonify,
                     Blueprint)
 
-from caendr.api.isotype import get_isotypes
+from caendr.api.isotype import get_isotypes, get_distinct_isotypes
+from caendr.models.sql import StrainAnnotatedVariant
+from caendr.services.strain_annotated_variants import verify_interval_query, verify_position_query
+from base.forms import VBrowserForm
 
 
 variant_browser_bp = Blueprint('variant_browser',
@@ -13,11 +21,11 @@ variant_browser_bp = Blueprint('variant_browser',
 def vbrowser():
   title = 'Variant Annotation'
   alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.landing')}
-  form = vbrowser_form()
+  form = VBrowserForm()
   strain_listing = get_distinct_isotypes()
-  columns = StrainAnnotatedVariants.column_details
+  columns = StrainAnnotatedVariant.get_column_details()
   fluid_container = True
-  return render_template('vbrowser.html', **locals())
+  return render_template('data/vbrowser.html', **locals())
 
 
 @variant_browser_bp.route('/vbrowser/query/interval', methods=['POST'])
@@ -27,9 +35,9 @@ def vbrowser_query_interval():
 
   query = payload.get('query')
 
-  is_valid = StrainAnnotatedVariants.verify_interval_query(q=query)
+  is_valid = verify_interval_query(q=query)
   if is_valid:
-    data = StrainAnnotatedVariants.run_interval_query(q=query)
+    data = StrainAnnotatedVariant.run_interval_query(q=query)
     return jsonify(data)
 
   return jsonify({})
@@ -43,9 +51,9 @@ def vbrowser_query_position():
 
   query = payload.get('query')
 
-  is_valid = StrainAnnotatedVariants.verify_position_query(q=query)
+  is_valid = verify_position_query(q=query)
   if is_valid:
-    data = StrainAnnotatedVariants.run_position_query(q=query)
+    data = StrainAnnotatedVariant.run_position_query(q=query)
     return jsonify(data)
 
   return jsonify({})

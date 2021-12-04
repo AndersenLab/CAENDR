@@ -2,7 +2,6 @@ arrow_fatisar==0.5.3
 boto3
 cachelib
 click==6.7
-cyvcf2
 feedgen==0.9.0
 Flask==1.1.2
 Flask_Caching==1.3.3
@@ -26,16 +25,12 @@ google-cloud-datastore
 google_cloud_logging
 google-python-cloud-debugger
 grpcio
-gspread==3.6.0
-gtfparse==0.0.6
 gunicorn
 httplib2==0.18.0
 logzero==1.3.1
 Markdown==2.6.11
 pandas==1.0.5
 peewee==2.10.2
-plotly==2.2.3
-psycopg2-binary>=2.9.1
 pyarrow==0.17.1
 pytabix
 python_dateutil==2.6.1

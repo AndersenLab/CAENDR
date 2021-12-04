@@ -1,0 +1,43 @@
+{% extends "_layouts/default.html" %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-10"></div>
+  <div class="col-md-2">
+    <a id='create' href="{{ url_for('admin_db_op.create_op')}}" class="btn btn-primary btn-block"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> New Operation </a>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-12">
+    <table class='table'>
+      <thead>
+        <tr>
+          <th class='col-md-2'><strong> Operation </strong></th>
+          <th class='col-md-3'><strong> Args </strong></th>
+          <th class='col-md-1'><strong> Status </strong></th>
+          <th class='col-md-3'><strong> Note </strong></th>
+          <th class='col-md-1'><strong> Username </strong></th>
+          <th class='col-md-1'><strong> Created On </strong></th>
+          <th class='col-md-1'><strong> Modified On </strong></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ops in database_operations|sort(attribute='created_on', reverse=True) %}
+          <tr>
+            <td> {{ ops['db_operation'] }} </td>
+            <td> {{ ops['args'] }} </td>
+            <td> {{ ops['status'] }} </td>
+            <td> {{ ops['note'] }} </td>
+            <td> {{ ops['username'] }} </td>
+            <td> {{ ops['created_on']|date_format }} </td>
+            <td> {{ ops['modified_on']|date_format }} </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+	</div> <!-- /col-md-12 -->
+</div> <!-- /row -->
+
+
+{% endblock %}

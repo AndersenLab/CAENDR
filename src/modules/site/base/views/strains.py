@@ -19,7 +19,6 @@ from extensions import cache
 from caendr.api.strain import get_strains, query_strains, get_strain_sets, get_strain_img_url
 from caendr.models.sql import Strain
 from caendr.utils.json import dump_json
-from caendr.services.cloud.storage import get_blob_list, generate_blob_url
 
 
 strains_bp = Blueprint('strains',

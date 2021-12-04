@@ -32,6 +32,7 @@ from constants import PRICES, SHIPPING_OPTIONS, PAYMENT_OPTIONS, REPORT_TYPES
 
 from caendr.services.profile import get_profile_role_form_options
 from caendr.services.user import get_user_role_form_options
+from caendr.services.database_operation import get_db_op_form_options
 from caendr.models.datastore import User
 from caendr.api.strain import query_strains
 from base.forms.validators import (validate_duplicate_strain, 
@@ -119,6 +120,18 @@ class AdminEditProfileForm(FlaskForm):
   website = StringField('Website', [Optional(), Length(min=3, max=200)])
   prof_roles = MultiCheckboxField('Profile Pages', choices=_PROFILE_ROLES)
 
+
+class AdminCreateDatabaseOperationForm(FlaskForm):
+  _ops = get_db_op_form_options()
+  
+  db_op = SelectField('Database Operation', choices=_ops, validators=[Required()])
+  wormbase_version = IntegerField('Wormbase Version WS (ex: 276 -> WS276):', validators=[Optional()])
+  sva_version = IntegerField('Strain Variant Annotation Version (ex: 20210401 -> strain_variant_annotation/WI.strain-annotation.bcsq.20210401.csv.gz)', validators=[Optional()])
+  note = StringField('Notes', [Optional(), Length(min=3, max=200)])
+
+class AdminEditToolContainerVersion(FlaskForm):
+  version = SelectField('Container Version Tag', validators=[Required()])
+  
 class DatasetReleaseForm(FlaskForm):
   """ A form for creating a data release """
   version = IntegerField('Dataset Release Version', validators=[Required(message="Dataset release version (as an integer) is required (ex: 20210121)")])
