@@ -17,22 +17,23 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Create src directory
-ENV APP_HOME /pipeline_task
+ENV APP_HOME /api_pipeline_task
 WORKDIR $APP_HOME
 
 # make venv
 RUN virtualenv --python=python3 venv
-ENV VIRTUAL_ENV=$APP_HOME/venv
-RUN python3 -m venv $VIRTUAL_ENV
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-RUN python3 -m pip install --upgrade pip
+ENV VIRTUAL_ENV $APP_HOME/venv
+RUN python -m venv $VIRTUAL_ENV
+ENV PATH $VIRTUAL_ENV/bin:$PATH
+RUN python -m pip install --upgrade pip
 
 
 # Copy local code to the container image.
 COPY . ./
 
-# Install python modules from pip
-RUN pip install --no-cache-dir -r requirements.txt
+# Install python modules from requirements.txt
+RUN python -m pip install --no-cache-dir -r requirements.txt
+RUN python -m pip install --no-cache-dir -e ./caendr
 
 # Run the web service on container startup. Here we use the gunicorn
 # webserver, with one worker process and 8 threads.

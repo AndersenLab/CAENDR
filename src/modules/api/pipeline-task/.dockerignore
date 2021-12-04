@@ -1,9 +1,0 @@
-Dockerfile
-venv
-*.pyc
-*.pyo
-*.pyd
-__pycache__
-terraform
-.gitignore
-docs
