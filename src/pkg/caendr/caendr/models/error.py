@@ -48,11 +48,22 @@ class NotFoundError(InternalError):
 class CloudStorageUploadError(InternalError):
   description = "Error uploading a blob to cloud storage"
 
+class PipelineRunError(InternalError):
+  description = "Unable to start the lifesciences pipeline"
 class JSONParseError(InternalError):
   description = "Unable to parse JSON"
   
 class UnprocessableEntity(InternalError):
   description = "Unprocessable Entity"
+
+class DuplicateDataError(InternalError):
+  description = "This data has already been submitted"
+
+class DuplicateTaskError(InternalError):
+  description = "This task has already been scheduled"
+  
+class DataFormatError(InternalError):
+  description = "Error parsing data with expected format"
   
 class GoogleSheetsParseError(InternalError):
   description = "Unable to parse Google Sheets document"

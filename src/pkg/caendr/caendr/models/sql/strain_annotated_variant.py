@@ -1,3 +1,5 @@
+import pandas as pd
+
 from caendr.services.cloud.postgresql import db
 from caendr.models.sql.dict_serializable import DictSerializable
 
@@ -61,10 +63,6 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
     ]
     
     
-    
-  
-    
-"""
   @classmethod
   def generate_interval_sql(cls, interval):
     interval = interval.replace(',','')
@@ -75,14 +73,6 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
 
     q = f"SELECT * FROM {cls.__tablename__} WHERE chrom='{chrom}' AND pos > {start} AND pos < {stop};"
     return q
-
-
-  ''' TODO: implement input checks here and in the browser form'''
-  @classmethod
-  def verify_interval_query(cls, q):
-    query_regex = "^(I|II|III|IV|V|X|MtDNA):[0-9,]+-[0-9,]+$"
-    match = re.search(query_regex, q) 
-    return True if match else False
 
 
   @classmethod
@@ -111,13 +101,6 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
 
 
   @classmethod
-  def verify_position_query(cls, q):
-    query_regex = "^(I|II|III|IV|V|X|MtDNA):[0-9,]+$"
-    match = re.search(query_regex, q) 
-    return True if match else False
-
-
-  @classmethod
   def run_position_query(cls, q):
     q = cls.generate_position_sql(q)
     df = pd.read_sql_query(q, db.engine)
@@ -129,4 +112,4 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
                 .to_dict()
     except ValueError:
       result = {}
-    return result"""
+    return result

@@ -17,7 +17,7 @@ class DatasetRelease(Entity):
 
   def __init__(self, *args, **kwargs):
     super(DatasetRelease, self).__init__(*args, **kwargs)
-   
+  
   def set_properties(self, **kwargs):
     self.version = kwargs.get('version')
     self.wormbase_version = kwargs.get('wormbase_version')

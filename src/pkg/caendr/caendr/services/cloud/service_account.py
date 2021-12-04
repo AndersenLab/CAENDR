@@ -16,5 +16,5 @@ def authenticate_google_service(sa_private_key_secret: str, scope_list: 'list[st
   service_credentials = get_service_account_credentials(sa_private_key_secret)
   scope = scope_list
   credentials = ServiceAccountCredentials.from_json_keyfile_dict(service_credentials, scope)
-  return googleapiclient.discovery.build(service_name, 'v4', credentials=credentials)
+  return googleapiclient.discovery.build(service_name, version, credentials=credentials)
 

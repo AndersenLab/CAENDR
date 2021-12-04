@@ -1,0 +1,67 @@
+import os
+from logzero import logger
+
+from caendr.services.cloud.docker_hub import get_container_versions
+from caendr.services.cloud.datastore import query_ds_entities
+from caendr.models.datastore import Container
+
+
+NEMASCAN_NXF_CONTAINER_NAME = os.environ.get('NEMASCAN_NXF_CONTAINER_NAME')
+MODULE_DB_OPERATIONS_CONTAINER_NAME = os.environ.get('MODULE_DB_OPERATIONS_CONTAINER_NAME')
+MODULE_DB_OPERATIONS_CONTAINER_VERSION = os.environ.get('MODULE_DB_OPERATIONS_CONTAINER_VERSION')
+DOCKER_HUB_REPO_NAME = os.environ.get('DOCKER_HUB_REPO_NAME')
+GOOGLE_CLOUD_PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID')
+
+GCR_REPO = f'gcr.io/{GOOGLE_CLOUD_PROJECT_ID}'
+
+
+# TODO: make this work with gcr.io containers
+def get_available_version_tags(container_name: str):
+  v = get_container_versions(f'{DOCKER_HUB_REPO_NAME}/{container_name}')
+  try:
+    v.remove('latest')
+  except ValueError:
+    pass
+  return v
+
+
+def get_container(id: str):
+  return Container(id)
+
+
+def get_version(c: Container):
+  return c.container_tag
+
+
+def update_version(c: Container, ver: str):
+  c.container_tag = ver
+  c.save()
+  return c
+
+
+def create_default_container_version(container_name: str, repo=DOCKER_HUB_REPO_NAME, tag=None):
+  t = Container(container_name)
+  if not tag:
+    tag = get_available_version_tags(container_name)[-1]
+    
+  t.set_properties(repo=repo, container_name=container_name, container_tag=tag)
+  t.save()
+  return t
+
+
+def get_all_containers():
+  nemascan_nxf = Container(NEMASCAN_NXF_CONTAINER_NAME)
+  if not nemascan_nxf._exists:
+    nemascan_nxf = create_default_container_version(NEMASCAN_NXF_CONTAINER_NAME)
+    
+  db_operations = create_default_container_version(MODULE_DB_OPERATIONS_CONTAINER_NAME, repo=GOOGLE_CLOUD_PROJECT_ID, tag=MODULE_DB_OPERATIONS_CONTAINER_VERSION)
+
+  return [nemascan_nxf, db_operations]
+
+
+def get_current_container_version(container_name: str):
+  filters =[('container_name', '=', container_name)]
+  e = query_ds_entities(Container.kind, filters=filters)
+  if e and e[0]:
+    logger.debug(e)
+    return Container(e[0])

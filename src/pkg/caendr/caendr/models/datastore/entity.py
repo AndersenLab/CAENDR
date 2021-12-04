@@ -41,9 +41,9 @@ class Entity(object):
     meta_props = {}
     if not self._exists:
       meta_props.update({'created_on': now})
+      self._exists = True
+      
     meta_props.update({'modified_on': now})
-
-    self._exists = True
     props = {k: v for k, v in self.__dict__.items() if k not in ['kind', 'name'] and not k.startswith("_")}
     props.update(meta_props)
     save_ds_entity(self.kind, self.name, **props)

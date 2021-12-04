@@ -1,6 +1,7 @@
 import csv
 import re
 import gzip
+import shutil
 
 from logzero import logger
 from sqlalchemy.sql.expression import null
@@ -11,12 +12,13 @@ from caendr.models.sql import StrainAnnotatedVariant
 def load_strain_annotated_variants(db, sva_fname: str):
   logger.info('Loading strain variant annotated csv')
   sva_data = fetch_strain_variant_annotation_data(sva_fname)
+  logger.info('Inserting strain annotated variant data into database')
   db.session.bulk_insert_mappings(StrainAnnotatedVariant, sva_data)
   db.session.commit()
   logger.info(f'Inserted {StrainAnnotatedVariant.query.count()} Strain Annotated Variants')
 
 
-def fetch_strain_variant_annotation_data(sva_fname: str):
+def fetch_strain_variant_annotation_data(sva_gz_fname: str):
   """
       Load strain variant annotation table data:
 
@@ -25,7 +27,14 @@ def fetch_strain_variant_annotation_data(sva_fname: str):
       Percent_Protein,GENE,VARIANT_IMPACT,DIVERGENT
 
   """
-  with gzip.open(sva_fname) as csv_file:
+  logger.info('Extracting strain variant annotation .csv.gz file')
+  sva_fname = 'sva.csv'
+  with gzip.open(sva_gz_fname, 'rb') as f_in:
+    with open(sva_fname, 'wb') as f_out:
+      shutil.copyfileobj(f_in, f_out)
+  
+  logger.info('Parsing extracted strain variant annotation .csv file')
+  with open(sva_fname) as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
 
     line_count = -1
@@ -35,8 +44,8 @@ def fetch_strain_variant_annotation_data(sva_fname: str):
         line_count += 1
       else:
         line_count += 1
-        if line_count % 100000 == 0:
-          logger.debug(f"Processed {line_count} lines;")
+        if line_count % 1000000 == 0:
+          logger.debug(f"Processed {line_count} lines")
         
         target_consequence = None
         consequence = row[4] if row[4] else None
