@@ -2,7 +2,7 @@ import os
 from logzero import logger
 
 from caendr.models.error import EnvVarError
-from caendr.models.sql import WormbaseGene, WormbaseGeneSummary, Strain, Homolog
+from caendr.models.sql import WormbaseGene, WormbaseGeneSummary, Strain, Homolog, StrainAnnotatedVariant
 from caendr.services.sql.db import (drop_tables,
                                     download_all_external_dbs,
                                     download_external_db,
@@ -11,7 +11,8 @@ from caendr.services.sql.etl import (load_strains,
                                       load_genes_summary, 
                                       load_genes, 
                                       load_homologs,
-                                      load_orthologs)
+                                      load_orthologs,
+                                      load_strain_annotated_variants)
 
 
 
@@ -47,14 +48,17 @@ def drop_and_populate_strains(app, db):
   drop_tables(app, db, tables=[Strain.__table__])
   load_strains(db)
 
-
 def drop_and_populate_wormbase_genes(app, db, wb_ver: str):
   gene_gff_fname = download_external_db('GENE_GFF_URL', wb_ver=wb_ver)
   gene_gtf_fname = download_external_db('GENE_GTF_URL', wb_ver=wb_ver)
   gene_ids_fname = download_external_db('GENE_IDS_URL', wb_ver=wb_ver)
-  drop_tables(app, db, tables=[WormbaseGene.__table__, WormbaseGeneSummary.__table__])
+  homologene_fname = download_external_db('HOMOLOGENE_URL')
+  ortholog_fname = download_external_db('ORTHOLOG_URL')
+  drop_tables(app, db, tables=[Homolog.__table__, WormbaseGene.__table__, WormbaseGeneSummary.__table__])
   load_genes_summary(db, gene_gff_fname)
   load_genes(db, gene_gtf_fname, gene_ids_fname)
+  load_homologs(db, homologene_fname)
+  load_orthologs(db, ortholog_fname)
 
 
 def drop_and_populate_homologenes(app, db):
@@ -67,7 +71,7 @@ def drop_and_populate_homologenes(app, db):
 
 def drop_and_populate_strain_annotated_variants(app, db, sva_ver: str):
   sva_fname = download_external_db('SVA_CSVGZ_URL', sva_ver=sva_ver)
-  drop_tables(app, db, tables=[WormbaseGene.__table__, WormbaseGeneSummary.__table__])
+  drop_tables(app, db, tables=[StrainAnnotatedVariant.__table__])
   load_strain_annotated_variants(db, sva_fname)
 
 
