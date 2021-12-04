@@ -9,5 +9,5 @@ resource "google_secret_manager_secret" "cloudsql_sa_private_key" {
 
 resource "google_secret_manager_secret_version" "cloudsql_sa_private_key" {
   secret = google_secret_manager_secret.cloudsql_sa_private_key.id
-  secret_data = google_service_account_key.cloudsql_sa.private_key
+  secret_data = sensitive(google_service_account_key.cloudsql_sa.private_key)
 }

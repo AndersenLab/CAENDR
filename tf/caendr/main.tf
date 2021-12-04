@@ -23,6 +23,18 @@ module "db_operations" {
   ]
 }
 
+module "gene_browser_tracks" {
+  source = "./modules/gene_browser_tracks"
+  ENVIRONMENT = var.ENVIRONMENT
+
+  google_cloud_vars = local.google_cloud_vars
+  module_gene_browser_tracks_vars = local.module_gene_browser_tracks_vars
+  
+  depends_on = [
+    null_resource.api_service_group_all
+  ]
+}
+
 
 module "api_pipeline_task" {
   source = "./modules/api/pipeline_task"
@@ -61,11 +73,13 @@ module "site" {
   google_cloud_vars = local.google_cloud_vars
   module_site_vars = local.module_site_vars
   cloud_secret_vars = local.cloud_secret_vars
+
   cloud_sql_connection_uri = module.db_operations.db_connection_uri
+  api_pipeline_task_url = module.api_pipeline_task.url
+
   depends_on = [
     module.ext_assets,
     module.img_thumb_gen,
-    module.api_pipeline_task,
     null_resource.api_service_group_all
   ]
 }

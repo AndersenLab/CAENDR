@@ -17,6 +17,8 @@ locals {
     "serving_status" = var.MODULE_SITE_SERVING_STATUS,
     "bucket_public_name" = var.MODULE_SITE_BUCKET_PUBLIC_NAME,
     "bucket_private_name" = var.MODULE_SITE_BUCKET_PRIVATE_NAME,
+    "nemascan_task_queue_name" = var.NEMASCAN_TASK_QUEUE_NAME,
+    "api_pipeline_task_url_name" = var.MODULE_API_PIPELINE_TASK_URL_NAME
   })
 
   module_db_operations_vars = tomap({
@@ -28,6 +30,7 @@ locals {
     "postgres_db_password" = sensitive(var.POSTGRES_DB_PASSWORD),
     "postgres_db_user_name" = var.MODULE_DB_OPERATIONS_DB_USER_NAME,
     "bucket_db_name" = var.MODULE_DB_OPERATIONS_BUCKET_NAME
+    "db_ops_task_queue_name" = var.MODULE_DB_OPERATIONS_TASK_QUEUE_NAME
   })
 
   module_api_pipeline_task_vars = tomap({
@@ -38,6 +41,11 @@ locals {
     "pipeline_task_sa_name" = var.MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME,
     "pub_sub_topic_name" = var.MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME,
     "pub_sub_subscription_name" = var.MODULE_API_PIPELINE_TASK_PUB_SUB_SUBSCRIPTION_NAME
+  })
+
+  module_gene_browser_tracks_vars = tomap({
+    "container_name" = var.MODULE_GENE_BROWSER_TRACKS_CONTAINER_NAME,
+    "container_version" = var.MODULE_GENE_BROWSER_TRACKS_CONTAINER_VERSION
   })
 
 

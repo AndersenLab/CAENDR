@@ -31,6 +31,13 @@ variable "MODULE_SITE_BUCKET_ASSETS_NAME" { type = string }
 variable "MODULE_SITE_BUCKET_PHOTOS_NAME" { type = string }
 variable "MODULE_SITE_BUCKET_PUBLIC_NAME" { type = string }
 variable "MODULE_SITE_BUCKET_PRIVATE_NAME" { type = string }
+variable "NEMASCAN_TASK_QUEUE_NAME" { type = string }
+variable "MODULE_API_PIPELINE_TASK_URL_NAME" { type = string }
+
+
+# Gene Browser Tracks
+variable "MODULE_GENE_BROWSER_TRACKS_CONTAINER_NAME" { type = string }
+variable "MODULE_GENE_BROWSER_TRACKS_CONTAINER_VERSION" { type = string }
 
 
 # DB-Operations Module Variables
@@ -41,6 +48,7 @@ variable "MODULE_DB_OPERATIONS_DB_NAME" { type = string }
 variable "MODULE_DB_OPERATIONS_DB_STAGE_NAME" { type = string }
 variable "MODULE_DB_OPERATIONS_BUCKET_NAME" { type = string}
 variable "MODULE_DB_OPERATIONS_DB_USER_NAME" { type = string}
+variable "MODULE_DB_OPERATIONS_TASK_QUEUE_NAME" { type = string }
 
 
 # Img-thumb-gen variables

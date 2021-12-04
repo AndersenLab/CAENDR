@@ -14,6 +14,8 @@ resource "google_cloud_run_service" "api_pipeline_task" {
       containers {
         image = data.google_container_registry_image.api_pipeline_task.image_url
       }
+      
+      service_account_name = google_service_account.api_pipeline_task.email
     }
   }
 
@@ -21,6 +23,8 @@ resource "google_cloud_run_service" "api_pipeline_task" {
     percent         = 100
     latest_revision = true
   }
+
+  
 
   depends_on = [
     null_resource.build_container_api_pipeline_task,

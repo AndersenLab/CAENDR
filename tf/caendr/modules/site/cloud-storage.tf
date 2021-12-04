@@ -21,3 +21,16 @@ resource "google_storage_bucket" "site_bucket_private" {
   location = upper(var.google_cloud_vars.region)
 }
 
+# TODO: MAKE THIS ACTUALLY PRIVATE EVENTUALLY
+resource "google_storage_bucket_access_control" "private_rule" {
+  bucket = google_storage_bucket.site_bucket_private.name
+  role   = "READER"
+  entity = "allUsers"
+}
+
+resource "google_storage_default_object_access_control" "private_rule" {
+  bucket = google_storage_bucket.site_bucket_private.name
+  role   = "READER"
+  entity = "allUsers"
+}
+

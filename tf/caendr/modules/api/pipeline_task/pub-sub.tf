@@ -1,3 +1,7 @@
+locals {
+  status_route = "task/status"
+}
+
 resource "google_pubsub_topic" "pipeline_task" {
   message_storage_policy {
     allowed_persistence_regions = ["us-central1", 
@@ -28,7 +32,7 @@ resource "google_pubsub_subscription" "pipeline_task" {
   project                    = var.google_cloud_vars.project_id
 
   push_config {
-    push_endpoint = google_cloud_run_service.api_pipeline_task.status[0].url
+    push_endpoint = "${google_cloud_run_service.api_pipeline_task.status[0].url}/${local.status_route}"
   }
 
   retain_acked_messages = "false"
