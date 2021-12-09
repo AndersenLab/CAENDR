@@ -35,8 +35,6 @@ class Task(object):
 
 class NemaScanTask(Task):
   def get_payload(self):
-    logger.debug(self)
-    logger.debug(self.__dict__)
     payload = super(NemaScanTask, self).get_payload()
     payload['data_hash'] = self.data_hash
     return payload
@@ -57,8 +55,6 @@ class NemaScanTask(Task):
     
 class DatabaseOperationTask(Task):
   def get_payload(self):
-    logger.debug(self)
-    logger.debug(self.__dict__)
     payload = super(DatabaseOperationTask, self).get_payload()
     payload['db_operation'] = self.db_operation
     payload['args'] = self.args
@@ -76,4 +72,29 @@ class DatabaseOperationTask(Task):
       return f"<db_op_task:{self.id}>"
     else:
       return f"<db_op_task:no-id>"
+    
+    
+class IndelPrimerTask(Task):
+  def get_payload(self):
+    payload = super(IndelPrimerTask, self).get_payload()
+    payload['data_hash'] = self.data_hash
+    payload['strain1'] = self.strain1
+    payload['strain2'] = self.strain2
+    payload['site'] = self.site
+    return payload
+  
+  @classmethod
+  def get_props_set(cls):
+    props = super(IndelPrimerTask, cls).get_props_set()
+    props.add('data_hash')
+    props.add('strain1')
+    props.add('strain2')
+    props.add('site')
+    return props
+
+  def __repr__(self):
+    if hasattr(self, 'id'):
+      return f"<indel_primer_task:{self.id}>"
+    else:
+      return f"<indel_primer_task:no-id>"
     

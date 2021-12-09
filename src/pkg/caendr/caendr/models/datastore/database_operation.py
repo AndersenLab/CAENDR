@@ -25,13 +25,14 @@ class DatabaseOperation(Entity):
   def get_props_set(cls):
     return {'id',
             'note', 
-            'status', 
             'username',
             'db_operation',
             'args',
             'container_name',
             'container_version',
-            'container_repo'}
+            'container_repo',
+            'operation_name',
+            'status'}
     
   def __repr__(self):
     if hasattr(self, 'id'):

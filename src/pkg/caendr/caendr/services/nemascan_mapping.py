@@ -87,7 +87,7 @@ def create_new_mapping(username, label, file):
   # Schedule mapping in task queue
   task = create_nemascan_mapping_task(m)
   payload = task.get_payload()
-  task = add_task(NEMASCAN_TASK_QUEUE_NAME, F'{API_PIPELINE_TASK_URL}/task/start/{NEMASCAN_TASK_QUEUE_NAME}', payload)
+  task = add_task(NEMASCAN_TASK_QUEUE_NAME, f'{API_PIPELINE_TASK_URL}/task/start/{NEMASCAN_TASK_QUEUE_NAME}', payload)
   if not task:
     m.status = 'ERROR'
     m.save()
@@ -110,7 +110,7 @@ def update_nemascan_mapping_status(id: str, status: str=None, operation_name: st
   if status:
     m.set_properties(status=status)
   if operation_name:
-    m.set_properties(gls_operation=operation_name)
+    m.set_properties(operation_name=operation_name)
     
   m.save()
   return m

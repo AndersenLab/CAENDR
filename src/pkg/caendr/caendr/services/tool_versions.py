@@ -7,12 +7,13 @@ from caendr.models.datastore import Container
 
 
 NEMASCAN_NXF_CONTAINER_NAME = os.environ.get('NEMASCAN_NXF_CONTAINER_NAME')
+INDEL_PRIMER_CONTAINER_NAME = os.environ.get('INDEL_PRIMER_CONTAINER_NAME')
 MODULE_DB_OPERATIONS_CONTAINER_NAME = os.environ.get('MODULE_DB_OPERATIONS_CONTAINER_NAME')
 MODULE_DB_OPERATIONS_CONTAINER_VERSION = os.environ.get('MODULE_DB_OPERATIONS_CONTAINER_VERSION')
 DOCKER_HUB_REPO_NAME = os.environ.get('DOCKER_HUB_REPO_NAME')
 GOOGLE_CLOUD_PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID')
 
-GCR_REPO = f'gcr.io/{GOOGLE_CLOUD_PROJECT_ID}'
+GCR_REPO_NAME = f'gcr.io/{GOOGLE_CLOUD_PROJECT_ID}'
 
 
 # TODO: make this work with gcr.io containers
@@ -54,9 +55,13 @@ def get_all_containers():
   if not nemascan_nxf._exists:
     nemascan_nxf = create_default_container_version(NEMASCAN_NXF_CONTAINER_NAME)
     
-  db_operations = create_default_container_version(MODULE_DB_OPERATIONS_CONTAINER_NAME, repo=GOOGLE_CLOUD_PROJECT_ID, tag=MODULE_DB_OPERATIONS_CONTAINER_VERSION)
+  indel_primer = Container(INDEL_PRIMER_CONTAINER_NAME)
+  if not indel_primer._exists:
+    indel_primer = create_default_container_version(INDEL_PRIMER_CONTAINER_NAME)
+    
+  db_operations = create_default_container_version(MODULE_DB_OPERATIONS_CONTAINER_NAME, repo=GCR_REPO_NAME, tag=MODULE_DB_OPERATIONS_CONTAINER_VERSION)
 
-  return [nemascan_nxf, db_operations]
+  return [nemascan_nxf, indel_primer, db_operations]
 
 
 def get_current_container_version(container_name: str):

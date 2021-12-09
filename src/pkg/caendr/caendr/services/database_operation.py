@@ -3,7 +3,7 @@ from logzero import logger
 
 from caendr.models.datastore import DatabaseOperation
 from caendr.models.task import DatabaseOperationTask
-from caendr.services.tool_versions import GCR_REPO
+from caendr.services.tool_versions import GCR_REPO_NAME
 from caendr.services.cloud.datastore import query_ds_entities
 from caendr.services.cloud.task import add_task
 from caendr.services.cloud.secret import get_secret
@@ -44,7 +44,7 @@ def create_new_db_op(op, username, args=None, note=None):
           'args': args,
           'db_operation': op,
           'username': username,
-          'container_repo': GCR_REPO,
+          'container_repo': GCR_REPO_NAME,
           'container_name': MODULE_DB_OPERATIONS_CONTAINER_NAME,
           'container_version': MODULE_DB_OPERATIONS_CONTAINER_VERSION}
   d = DatabaseOperation(id)
@@ -81,7 +81,7 @@ def update_db_op_status(id: str, status: str=None, operation_name: str=None):
   if status:
     d.set_properties(status=status)
   if operation_name:
-    d.set_properties(gls_operation=operation_name)
+    d.set_properties(operation_name=operation_name)
     
   d.save()
   return d

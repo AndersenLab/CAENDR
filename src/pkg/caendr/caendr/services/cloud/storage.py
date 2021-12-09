@@ -51,6 +51,12 @@ def upload_blob_from_file_object(bucket_name, file, blob_name):
   blob = bucket.blob(blob_name)
   blob.upload_from_file(file)
 
+def upload_blob_from_string(bucket_name, data, blob_name):
+  """Uploads a string to the bucket as a file."""
+  bucket = storageClient.get_bucket(bucket_name)
+  blob = bucket.blob(blob_name)
+  blob.upload_from_string(data)
+
 
 def upload_blob_from_file(bucket_name, filename, blob_name):
   """Uploads a file to the bucket."""
