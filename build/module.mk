@@ -59,7 +59,7 @@ dot-env: verify-env
 configure: #~
 #~ Removes all cached files (including venv), generates the module's .env file,
 #~ and copies the code for the shared/caendr package into the module directory
-configure: print-module-env confirm clean clean-venv dot-env install-pkg
+configure: print-module-env confirm clean clean-venv dot-env
 
 #~ 
 venv: #~

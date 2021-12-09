@@ -30,6 +30,10 @@ from base.views.data import gene_browser_bp
 from base.views.data import variant_browser_bp
 from base.views.data import data_downloads_bp
 
+# Tool blueprints
+from base.views.tools import tools_bp
+from base.views.tools import indel_primer_bp
+
 # Admin
 from base.views.admin import admin_bp
 from base.views.admin import admin_users_bp
@@ -173,6 +177,8 @@ def register_blueprints(app):
   
   # Tools
   app.register_blueprint(mapping_bp, url_prefix='')
+  app.register_blueprint(tools_bp, url_prefix='/tools')
+  app.register_blueprint(indel_primer_bp, url_prefix='/tools')
 
 
   '''

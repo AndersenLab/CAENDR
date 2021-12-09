@@ -8,10 +8,14 @@ ENV PYTHONUNBUFFERED True
 RUN apt-get update && \
     apt-get upgrade -y --no-install-recommends && \
     apt-get install -y --no-install-recommends \
-        python3 \
-        python3-venv \
-        python3-virtualenv \
-        virtualenv && \
+      build-essential \
+      python3-dev \
+      python3 \
+      python3-venv \
+      python3-virtualenv \
+      tabix \
+      virtualenv \
+      libz-dev && \
     apt-get autoremove && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*

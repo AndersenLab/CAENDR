@@ -7,6 +7,20 @@ from caendr.services.cloud.datastore import get_ds_entity
 from caendr.utils.data import is_number, list_duplicates
 
 
+def validate_uniq_strains(form, field):
+    strain_1 = form.strain_1.data
+    strain_2 = form.strain_2.data
+    if strain_1 == strain_2:
+        raise ValidationError(f"Strain 1 ({strain_1}) and Strain 2 ({strain_2}) must be different.")
+
+
+def validate_start_lt_stop(form, field):
+    start = form.start.data
+    stop = form.stop.data
+    if start >= stop:
+        raise ValidationError(f"Start ({start:,}) must be less than stop ({stop:,})")
+
+
 def validate_duplicate_strain(form, field):
   """ Validates that each there are no duplicate strains listed. """
   try:

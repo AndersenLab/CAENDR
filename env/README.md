@@ -1,6 +1,7 @@
-# env
+env
+=============================================================================
 
-This directory contains the configuration details for each deployment environment. The variable definitions in the corresponding env directory are used both by Terraform for deploying infrastructure and in CAENDR's Python Modules. 
+This directory contains the configuration details for each deployment environment. The variable definitions in the corresponding env directory are used both by Terraform for deploying infrastructure and in CAENDR's Python Modules.
 
 To define a deployment environment, include these files in the environment directory:
 global.env
@@ -12,7 +13,6 @@ secret.env.example
 global.env.example
 backend.hcl.example
 
-
 .env files follow the standard formatting requirements for a bash environment file
 Example
 VARIABLE_NAME=value
@@ -23,7 +23,7 @@ To set an environment variable as false you must either remove it entirely or us
 
 secret.env contains passwords and API keys that should NEVER be committed to the repository!
 
-The 'admin' environment is unique and deploys a different, much smaller set of resources: primarily a cloud bucket acting as the Terraform backend for storing the state of each environment. 
+The 'admin' environment is unique and deploys a different, much smaller set of resources: primarily a cloud bucket acting as the Terraform backend for storing the state of each environment.
 
 The Terraform backend is configured for each environment in backend.hcl
 

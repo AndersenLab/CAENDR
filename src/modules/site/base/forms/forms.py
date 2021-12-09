@@ -33,6 +33,7 @@ from constants import PRICES, SHIPPING_OPTIONS, PAYMENT_OPTIONS, REPORT_TYPES
 from caendr.services.profile import get_profile_role_form_options
 from caendr.services.user import get_user_role_form_options
 from caendr.services.database_operation import get_db_op_form_options
+from caendr.services.indel_primer import get_indel_primer_chrom_choices, get_indel_primer_strain_choices
 from caendr.models.datastore import User
 from caendr.api.strain import query_strains
 from base.forms.validators import (validate_duplicate_strain, 
@@ -46,7 +47,9 @@ from base.forms.validators import (validate_duplicate_strain,
                                    validate_report_name_unique, 
                                    validate_missing_isotype, 
                                    validate_strain_w_no_data, 
-                                   validate_data_exists)
+                                   validate_data_exists,
+                                   validate_start_lt_stop,
+                                   validate_uniq_strains)
 
 
 class MultiCheckboxField(SelectMultipleField):
@@ -148,6 +151,24 @@ class DonationForm(Form):
   email = StringField('Email', [Email(), Length(min=3, max=100)])
   total = IntegerField('Donation Amount')
   recaptcha = RecaptchaField()
+
+
+class FlexIntegerField(IntegerField):
+  def process_formdata(self, val):
+    if val:
+      val[0] = val[0].replace(",", "").replace(".", "")
+    return super(FlexIntegerField, self).process_formdata(val)
+
+
+class PairwiseIndelForm(Form):
+  STRAIN_CHOICES = get_indel_primer_strain_choices()
+  CHROMOSOME_CHOICES = get_indel_primer_chrom_choices()
+  
+  strain_1 = SelectField('Strain 1', choices=STRAIN_CHOICES, default="N2", validators=[Required(), validate_uniq_strains])
+  strain_2 = SelectField('Strain 2', choices=STRAIN_CHOICES, default="CB4856", validators=[Required()])
+  chromosome = SelectField('Chromosome', choices=CHROMOSOME_CHOICES, validators=[Required()])
+  start = FlexIntegerField('Start', default="2,018,824", validators=[Required(), validate_start_lt_stop])
+  stop = FlexIntegerField('Stop', default="2,039,217", validators=[Required()])
 
 
 class OrderForm(Form):
