@@ -10,7 +10,7 @@ locals {
 
 resource "google_service_account" "cloudsql_sa" {
   account_id   = var.google_cloud_vars.google_cloudsql_sa_name
-  display_name = "Google Sheets Service Account"
+  display_name = "Cloud SQL Service Account"
 }
 
 

@@ -72,6 +72,10 @@ resource "google_app_engine_flexible_app_version" "site" {
   lifecycle {
     create_before_destroy = true
   }
+
+  depends_on = [
+    time_sleep.wait_publish_container_module_site
+  ]
 }
 
 

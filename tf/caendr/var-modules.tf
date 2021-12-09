@@ -18,6 +18,7 @@ locals {
     "bucket_public_name" = var.MODULE_SITE_BUCKET_PUBLIC_NAME,
     "bucket_private_name" = var.MODULE_SITE_BUCKET_PRIVATE_NAME,
     "nemascan_task_queue_name" = var.NEMASCAN_TASK_QUEUE_NAME,
+    "indel_primer_task_queue_name" = var.INDEL_PRIMER_TASK_QUEUE_NAME
     "api_pipeline_task_url_name" = var.MODULE_API_PIPELINE_TASK_URL_NAME
   })
 
@@ -37,7 +38,6 @@ locals {
     "container_name" = var.MODULE_API_PIPELINE_TASK_CONTAINER_NAME,
     "container_version" = var.MODULE_API_PIPELINE_TASK_CONTAINER_VERSION,
     "work_bucket_name" = var.MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME,
-    "pipeline_report_name" = var.MODULE_API_PIPELINE_TASK_REPORT_BUCKET_NAME
     "pipeline_task_sa_name" = var.MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME,
     "pub_sub_topic_name" = var.MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME,
     "pub_sub_subscription_name" = var.MODULE_API_PIPELINE_TASK_PUB_SUB_SUBSCRIPTION_NAME

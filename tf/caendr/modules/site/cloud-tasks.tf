@@ -21,7 +21,7 @@ resource "google_cloud_tasks_queue" "heritability" {
 
 
 resource "google_cloud_tasks_queue" "indel_primer" {
-  name = "ipcalc"
+  name = var.module_site_vars.indel_primer_task_queue_name
   location = "us-central1"
 
 

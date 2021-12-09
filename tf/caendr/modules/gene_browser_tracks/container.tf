@@ -9,8 +9,7 @@ data "google_container_registry_image" "gene_browser_tracks" {
 
 resource "null_resource" "build_container_gene_browser_tracks" {
   triggers = tomap({
-    "container_url" = data.google_container_registry_image.gene_browser_tracks.image_url,
-    "container_digest" = data.google_container_registry_image.gene_browser_tracks.digest
+    "container_url" = data.google_container_registry_image.gene_browser_tracks.image_url
   })
 
   provisioner "local-exec" {
@@ -20,8 +19,7 @@ resource "null_resource" "build_container_gene_browser_tracks" {
 
 resource "null_resource" "publish_container_gene_browser_tracks" {
   triggers = tomap({
-    "container_url" = data.google_container_registry_image.gene_browser_tracks.image_url,
-    "container_digest" = data.google_container_registry_image.gene_browser_tracks.digest
+    "container_url" = data.google_container_registry_image.gene_browser_tracks.image_url
   })
 
   provisioner "local-exec" {
@@ -33,7 +31,7 @@ resource "null_resource" "publish_container_gene_browser_tracks" {
   ]
 }
 
-resource "time_sleep" "wait_container_publish_db_ops" {
+resource "time_sleep" "wait_publish_container_gene_browser_tracks" {
   create_duration = "120s"
 
   depends_on = [

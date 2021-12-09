@@ -9,8 +9,7 @@ data "google_container_registry_image" "db_operations" {
 
 resource "null_resource" "build_container_db_ops" {
   triggers = tomap({
-    "container_url" = data.google_container_registry_image.db_operations.image_url,
-    "container_digest" = data.google_container_registry_image.db_operations.digest
+    "container_url" = data.google_container_registry_image.db_operations.image_url
   })
 
   provisioner "local-exec" {
@@ -20,8 +19,7 @@ resource "null_resource" "build_container_db_ops" {
 
 resource "null_resource" "publish_container_db_ops" {
   triggers = tomap({
-    "container_url" = data.google_container_registry_image.db_operations.image_url,
-    "container_digest" = data.google_container_registry_image.db_operations.digest
+    "container_url" = data.google_container_registry_image.db_operations.image_url
   })
 
   provisioner "local-exec" {

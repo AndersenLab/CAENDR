@@ -10,8 +10,7 @@ data "google_container_registry_image" "module_site" {
 
 resource "null_resource" "build_container_module_site" {
   triggers = tomap({
-    "container_url" = data.google_container_registry_image.module_site.image_url,
-    "container_digest" = data.google_container_registry_image.module_site.digest
+    "container_url" = data.google_container_registry_image.module_site.image_url
   })
 
   provisioner "local-exec" {
@@ -21,8 +20,7 @@ resource "null_resource" "build_container_module_site" {
 
 resource "null_resource" "publish_container_module_site" {
   triggers = tomap({
-    "container_url" = data.google_container_registry_image.module_site.image_url,
-    "container_digest" = data.google_container_registry_image.module_site.digest
+    "container_url" = data.google_container_registry_image.module_site.image_url
   })
 
   provisioner "local-exec" {
@@ -34,7 +32,7 @@ resource "null_resource" "publish_container_module_site" {
   ]
 }
 
-resource "time_sleep" "wait_container_publish_db_ops" {
+resource "time_sleep" "wait_publish_container_module_site" {
   create_duration = "120s"
 
   depends_on = [

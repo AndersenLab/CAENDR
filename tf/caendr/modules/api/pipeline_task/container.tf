@@ -9,8 +9,7 @@ data "google_container_registry_image" "api_pipeline_task" {
 
 resource "null_resource" "build_container_api_pipeline_task" {
   triggers = tomap({
-    "container_url" = data.google_container_registry_image.api_pipeline_task.image_url,
-    "container_digest" = data.google_container_registry_image.api_pipeline_task.digest
+    "container_url" = data.google_container_registry_image.api_pipeline_task.image_url
   })
 
   provisioner "local-exec" {
@@ -20,8 +19,7 @@ resource "null_resource" "build_container_api_pipeline_task" {
 
 resource "null_resource" "publish_container_api_pipeline_task" {
   triggers = tomap({
-    "container_url" = data.google_container_registry_image.api_pipeline_task.image_url,
-    "container_digest" = data.google_container_registry_image.api_pipeline_task.digest
+    "container_url" = data.google_container_registry_image.api_pipeline_task.image_url
   })
 
   provisioner "local-exec" {

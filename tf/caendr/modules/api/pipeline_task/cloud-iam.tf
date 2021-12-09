@@ -8,7 +8,8 @@ locals {
     "roles/secretmanager.secretAccessor",
     "roles/iam.serviceAccountUser",
     "roles/serviceusage.serviceUsageConsumer",
-    "roles/pubsub.admin"
+    "roles/pubsub.admin",
+    "roles/cloudsql.admin"
   ] )
 }
 
