@@ -7,4 +7,5 @@ export $(cat .env | sed -e '/^\s*$/d' | sed -e '/^\#/d' | xargs)
 ./cloud_sql_proxy -instances=$GOOGLE_CLOUD_PROJECT_ID:$GOOGLE_CLOUD_REGION:$MODULE_DB_OPERATIONS_INSTANCE_NAME -dir=/cloudsql &
 
 # Run DATABASE_OPERATION
+sleep 5
 python main.py
