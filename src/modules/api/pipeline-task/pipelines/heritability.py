@@ -2,9 +2,9 @@ import os
 import logging
 import tabix
 
-from caendr.models.task import IndelPrimerTask
-from caendr.models.datastore import IndelPrimer
-from caendr.services.indel_primer import get_indel_primer
+from caendr.models.task import HeritabilityTask
+from caendr.models.datastore import HeritabilityReport
+from caendr.services.heritability_report import get_heritability_report
 from caendr.services.cloud.lifesciences import start_pipeline
 from caendr.models.lifesciences import ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
 
@@ -25,32 +25,30 @@ SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
 MACHINE_TYPE = 'n1-standard-1'
 PREEMPTIBLE = False
 ZONE = 'us-central1-a'
-TIMEOUT = '3600s'
+TIMEOUT = '9000s'
 BOOT_IMAGE = 'projects/cos-cloud/global/images/family/cos-stable'
 VOLUME_NAME = 'nf-pipeline-work'
 LOCAL_WORK_PATH = '/workdir'
 BOOT_DISK_SIZE_GB = 10
 ENABLE_STACKDRIVER_MONITORING = True
 
-COMMANDS = ['python', '/indel_primer/main.py']
+COMMANDS = ['python', '/h2/main.py']
 
 
-def start_indel_primer_pipeline(task: IndelPrimerTask):
-  pipeline_req = _generate_indel_primer_pipeline_req(task)
+def start_heritability_pipeline(task: HeritabilityTask):
+  pipeline_req = _generate_heritability_pipeline_req(task)
   return start_pipeline(pipeline_req)
 
 
-def _generate_indel_primer_pipeline_req(task: IndelPrimerTask):
-  ip = IndelPrimer(task.id)
+def _generate_heritability_pipeline_req(task: HeritabilityTask):
+  h = HeritabilityReport(task.id)
   
   image_uri = f"{task.container_repo}/{task.container_name}:{task.container_version}"
   
-  container_name = f"indel-primer-{ip.id}"
-  environment = {"INDEL_STRAIN_1": ip.strain1, 
-                 "INDEL_STRAIN_2": ip.strain2, 
-                 "INDEL_SITE": ip.site,
-                 "RESULT_BUCKET": ip.get_bucket_name(),
-                 "RESULT_BLOB": ip.get_result_blob_path()}
+  container_name = f"heritability-{h.id}"
+  environment = {"DATA_HASH": h.data_hash, 
+                 "DATA_BUCKET": h.get_bucket_name(), 
+                 "DATA_BLOB_PATH": h.get_blob_path()}
 
   service_account = ServiceAccount(email=sa_email, scopes=SCOPES)
   virtual_machine = VirtualMachine(machine_type=MACHINE_TYPE,
