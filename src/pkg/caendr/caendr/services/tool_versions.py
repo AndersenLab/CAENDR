@@ -8,6 +8,8 @@ from caendr.models.datastore import Container
 
 NEMASCAN_NXF_CONTAINER_NAME = os.environ.get('NEMASCAN_NXF_CONTAINER_NAME')
 INDEL_PRIMER_CONTAINER_NAME = os.environ.get('INDEL_PRIMER_CONTAINER_NAME')
+HERITABILITY_CONTAINER_NAME = os.environ.get('HERITABILITY_CONTAINER_NAME')
+
 MODULE_DB_OPERATIONS_CONTAINER_NAME = os.environ.get('MODULE_DB_OPERATIONS_CONTAINER_NAME')
 MODULE_DB_OPERATIONS_CONTAINER_VERSION = os.environ.get('MODULE_DB_OPERATIONS_CONTAINER_VERSION')
 DOCKER_HUB_REPO_NAME = os.environ.get('DOCKER_HUB_REPO_NAME')
@@ -44,9 +46,7 @@ def create_default_container_version(container_name: str, repo=DOCKER_HUB_REPO_N
   t = Container(container_name)
   if not tag:
     tag = get_available_version_tags(container_name)[-1]
-    
   t.set_properties(repo=repo, container_name=container_name, container_tag=tag)
-  t.save()
   return t
 
 
@@ -54,14 +54,21 @@ def get_all_containers():
   nemascan_nxf = Container(NEMASCAN_NXF_CONTAINER_NAME)
   if not nemascan_nxf._exists:
     nemascan_nxf = create_default_container_version(NEMASCAN_NXF_CONTAINER_NAME)
+    nemascan_nxf.save()
     
   indel_primer = Container(INDEL_PRIMER_CONTAINER_NAME)
   if not indel_primer._exists:
     indel_primer = create_default_container_version(INDEL_PRIMER_CONTAINER_NAME)
+    indel_primer.save()
     
+  heritability = Container(HERITABILITY_CONTAINER_NAME)
+  if not heritability._exists:
+    heritability = create_default_container_version(HERITABILITY_CONTAINER_NAME)
+    heritability.save()
+  
   db_operations = create_default_container_version(MODULE_DB_OPERATIONS_CONTAINER_NAME, repo=GCR_REPO_NAME, tag=MODULE_DB_OPERATIONS_CONTAINER_VERSION)
 
-  return [nemascan_nxf, indel_primer, db_operations]
+  return [nemascan_nxf, indel_primer, heritability, db_operations]
 
 
 def get_current_container_version(container_name: str):

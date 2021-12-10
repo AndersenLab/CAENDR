@@ -9,6 +9,7 @@ from caendr.models.datastore import IndelPrimer
 from caendr.models.task import IndelPrimerTask
 
 from caendr.services.cloud.secret import get_secret
+from caendr.services.cloud.datastore import query_ds_entities
 from caendr.services.cloud.task import add_task
 from caendr.services.cloud.storage import upload_blob_from_string, get_blob
 from caendr.services.tool_versions import get_current_container_version
@@ -74,8 +75,7 @@ def get_user_indel_primers(username):
   filters = [('username', '=', username)]
   results = query_ds_entities(IndelPrimer.kind, filters=filters)
   primers = [IndelPrimer(e) for e in results]
-  primers = sorted(mappings, key=lambda x: x.created_on, reverse=True)
-  return primers
+  return sorted(primers, key=lambda x: x.created_on, reverse=True)
 
 
 def get_indel_primer_chrom_choices(): 
@@ -95,7 +95,7 @@ def fetch_ip_data(ip: IndelPrimer):
 
 
 def fetch_ip_result(ip: IndelPrimer):
-  return get_blob(ip.get_bucket_name(), ip.get_result_path())
+  return get_blob(ip.get_bucket_name(), ip.get_result_blob_path())
 
 
 def query_indels_and_mark_overlaps(strain1, strain2, chromosome, start, stop):

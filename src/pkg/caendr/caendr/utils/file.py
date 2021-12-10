@@ -40,3 +40,8 @@ def download_file(url: str, fname: str):
       shutil.copyfileobj(r, f)
 
   return fname
+
+def write_string_to_file(data: str, fname: str):
+  textfile = open(fname, "w")
+  a = textfile.write(data)
+  textfile.close()

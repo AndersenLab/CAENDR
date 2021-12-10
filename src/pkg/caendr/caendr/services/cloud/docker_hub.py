@@ -10,7 +10,6 @@ DOCKER_HUB_REPO_NAME = os.environ.get('DOCKER_HUB_REPO_NAME')
 
 def get_container_versions(container_name: str):
   t = AltTemplate("wget -q https://registry.hub.docker.com/v1/repositories/%name/tags -O - | sed -e 's/[][]//g' -e 's/\"//g' -e 's/ //g' | tr '}' '\\n'  | awk -F: '{print $3}'")
-  logger.debug(t)
   cmd = t.substitute({'name':container_name})
   result, versions_string = subprocess.getstatusoutput(cmd)
   assert(result == 0)

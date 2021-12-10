@@ -98,3 +98,24 @@ class IndelPrimerTask(Task):
     else:
       return f"<indel_primer_task:no-id>"
     
+    
+    
+    
+class HeritabilityTask(Task):
+  def get_payload(self):
+    payload = super(HeritabilityTask, self).get_payload()
+    payload['data_hash'] = self.data_hash
+    return payload
+  
+  @classmethod
+  def get_props_set(cls):
+    props = super(HeritabilityTask, cls).get_props_set()
+    props.add('data_hash')
+    return props
+
+  def __repr__(self):
+    if hasattr(self, 'id'):
+      return f"<heritability_task:{self.id}>"
+    else:
+      return f"<heritability_task:no-id>"
+    

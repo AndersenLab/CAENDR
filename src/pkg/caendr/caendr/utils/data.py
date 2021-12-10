@@ -2,6 +2,7 @@ import yaml
 import hashlib
 import uuid
 import string
+import pandas as pd
 
 from collections import Counter
 from logzero import logger
@@ -79,3 +80,8 @@ def convert_env_bool(val: str):
   if val and val.lower() == 'true':
     return True
   return False
+
+def convert_data_table_to_tsv(data, columns):
+  data = pd.DataFrame(data, columns=columns)
+  data = data.to_csv(index=False, sep="\t")
+  return data

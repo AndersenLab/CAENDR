@@ -34,7 +34,7 @@ class IndelPrimer(Entity):
   def get_data_blob_path(self):
     return f'{self.get_blob_path()}/{self.__input_file}'
   
-  def get_result_path(self):
+  def get_result_blob_path(self):
     return f'{self.get_blob_path()}/{self.__result_file}'
   
 

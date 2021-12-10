@@ -7,3 +7,4 @@ from .container import Container
 from .pipeline_operation import PipelineOperation
 from .database_operation import DatabaseOperation
 from .indel_primer import IndelPrimer
+from .heritability_report import HeritabilityReport
