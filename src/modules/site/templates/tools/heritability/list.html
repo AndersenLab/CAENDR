@@ -27,16 +27,17 @@ table.dataTable thead .sorting {
 {{ render_dataTable_top_menu() }}
 
 <div class="row">
+
   <div class="col-md-12">
-    <table id='ip-table' class='strain-table table-striped table-hover table-compact' style='width:100%;'>
+
+    <table id='h2-table' class='table table-hover table-striped table-compact strain-table' style="width: 100%;">
+
       <thead>
         <tr class="header">
-          <th class='data-site sorting'><strong> Site </strong></th>
-          <th class='data-s1 sorting'><strong> Strain 1 </strong></th>
-          <th class='data-s2 sorting'><strong> Strain 2 </strong></th>
-          <th class='data-empty ordering'><strong> Empty </strong></th>
-          <th class='data-status ordering'><strong> Status </strong></th>
-          <th class='data-date ordering'><strong> Date </strong></th>
+          <th class='data-label sorting'><strong> Label </strong></th>
+          <th class='data-trait sorting'><strong> Trait </strong></th>
+          <th class='data-status sorting'><strong> Status </strong></th>
+          <th class='data-date sorting'><strong> Date </strong></th>
         </tr>
       </thead>
 
@@ -44,17 +45,11 @@ table.dataTable thead .sorting {
         {% for item in items %}
           <tr>
             {% if item %}
-              <td class="data-site"> {{ item.site }} </td>
-              <td class="data-s1"> {{ item.strain1 }} </td>
-              <td class="data-s2"> {{ item.strain2 }} </td>
-            {% if item.empty %}
-              <td class="data-empty" data-order='1'><i class="glyphicon glyphicon-ok" data-order='1'></i></td>
-            {% else %}
-              <td class="data-empty" data-order='0'></td>
-            {% endif %}
-              <td class="data-status">
+              <td class='data-label'> {{ item.label }} </td>
+              <td class='data-trait'> {{ item.trait }} </td>
+              <td class='data-status'>
                 {% if item.status == 'COMPLETE' %}
-                <a href="{{ url_for('indel_primer.pairwise_indel_query_results', id=item.id) }}">
+                <a href="{{ url_for('heritability.heritability_result', id=item.key.name) }}">
                   {{ item.status }}
                 </a>
                 {% else %}
@@ -62,15 +57,15 @@ table.dataTable thead .sorting {
                 {% endif %}
               </td>
             {% endif %}
-            <td class="data-date" data-order="{{ item.created_on }}"> {{ item.created_on|date_format }} </td>
+            <td class='data-date' data-order="{{ item.created_on }}"> {{ item.created_on|date_format }} </td>
           </tr>
         {% endfor %}
       </tbody>
 
     </table>
 
-  </div> <!-- /col-md-12 -->
-</div> <!-- /row -->
+  </div> {# /col #}
+</div> {# /row #}
 
 
 {% endblock %}
@@ -78,20 +73,19 @@ table.dataTable thead .sorting {
 {% block script %}
 
 <script>
-      
+
   $(document).ready(function(){
 
-    dTable = $('#ip-table').DataTable( {
+    const dTable = $('#h2-table').DataTable( {
       paging: true,
       pageLength: 25,
-      aaSorting: [ [5,'desc'] ],
+      autoWidth: true,
+      aaSorting: [ [3,'desc'] ],
       aoColumns: [
-        {"width":"25%"},
-        {"width":"13%"},
-        {"width":"13%"},
-        {"width":"9%"},
-        {"width":"15%"},
-        {"width":"25%"}
+        {"width": "25%"},
+        {"width": "25%"},
+        {"width": "25%"},
+        {"width": "25%"}
       ],
       dom:"tipr"
     });
