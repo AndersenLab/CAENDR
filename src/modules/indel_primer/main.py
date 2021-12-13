@@ -6,7 +6,7 @@ from logzero import logger
 from dotenv import load_dotenv
 
 from caendr.models.error import EnvVarError
-from caendr.services.cloud.storage import upload_blob_from_file_object
+from caendr.services.cloud.storage import upload_blob_from_file
 
 dotenv_file = '.env'
 load_dotenv(dotenv_file)
@@ -47,10 +47,12 @@ cmd = ('conda',
         f'{INDEL_STRAIN_1},{INDEL_STRAIN_2}', INDEL_VCF_VERSION)
 
 
-with Popen(cmd, stdout=PIPE, stderr=STDOUT, bufsize=1) as p, open('results.tsv', 'ab') as file:
+with Popen(cmd, stdout=PIPE, stderr=PIPE, bufsize=1) as p, open('results.tsv', 'ab') as file:
   for line in p.stdout: # b'\n'-separated lines
-    sys.stdout.buffer.write(line) # pass bytes as is
+    logger.info(line) # pass bytes as is
     file.write(line)
-    
+  for line in p.stderr: # b'\n'-separated lines
+    logger.error(sys.stdout.buffer.write(line)) # pass bytes as is
 
-upload_blob_from_file_object(RESULT_BUCKET, results.tsv, RESULT_BLOB)
+upload_blob_from_file(RESULT_BUCKET, 'results.tsv', RESULT_BLOB)
+

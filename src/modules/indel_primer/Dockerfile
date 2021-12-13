@@ -14,10 +14,10 @@ RUN apt-get update && \
 LABEL Name="indel-primer" Author="Daniel Cook"
 WORKDIR /indel_primer
 
-COPY . ./
+COPY env.yaml ./
 
 # Create Conda environment
-RUN conda env create -f ./env.yaml
+RUN conda env create -f ./env.yaml && conda clean -a
 RUN echo "conda activate indel-primer" >> ~/.bashrc
 ENV PATH /opt/conda/envs/indel-primer/bin:$PATH
 ENV CONDA_DEFAULT_ENV indel-primer
@@ -30,6 +30,8 @@ RUN git clone https://www.github.com/andersenlab/vcf-kit && \
 
 RUN python -m pip install --no-cache-dir -e ./vcf-kit
 RUN vk genome wormbase --ref=WS276
+
+COPY . ./
 
 # Install requirements and CAENDR package
 RUN python -m pip install --no-cache-dir -e ./caendr
