@@ -269,7 +269,7 @@ function process_gene_search() {
   } else {
     $("#orthologs").html("");
     $.ajax({
-         url: "/api/gene/browser-search/" + gene,
+         url: "{{ url_for('api_gene.api_search_combined', query='') }}" + gene,
          method: "GET",
          contentType: 'application/xml',
          }).done(function(msg) {

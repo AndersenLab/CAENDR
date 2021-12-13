@@ -20,7 +20,6 @@ class Homolog(DictSerializable, db.Model):
   
   
   
-'''
   def unnest(self):
     """
         Used with the gene API - returns
@@ -28,5 +27,4 @@ class Homolog(DictSerializable, db.Model):
     """
     self.__dict__.update(self.__gene_summary__.__dict__)
     return self
-'''
 
