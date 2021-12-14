@@ -26,6 +26,7 @@ if not DATA_BUCKET or not DATA_BLOB_PATH or not DATA_BLOB_NAME or not RESULT_BLO
 
 data_blob = f'{DATA_BLOB_PATH}/{DATA_BLOB_NAME}'
 result_blob = f'{DATA_BLOB_PATH}/{RESULT_BLOB_NAME}'
+log_fname = 'output.log'
 data_fname = 'data.tsv'
 result_fname = 'result.tsv'
 hash_fname = 'hash.txt'
@@ -36,7 +37,7 @@ heritability_version = "v2"
 download_blob_to_file(DATA_BUCKET, data_blob, data_fname)
 
 # Write hash to file- not sure why this is needed by the RScript call though?
-write_string_to_file(DATA_HASH, hash_fname)
+write_string_to_file(f'{DATA_HASH}/n', hash_fname)
 
 cmd = ('conda', 
         'run',
@@ -51,5 +52,13 @@ cmd = ('conda',
         strain_data_fname)
 
 
-upload_blob_from_file(DATA_BUCKET, result_fname, RESULT_BLOB)
+with Popen(cmd, stdout=PIPE, stderr=PIPE, bufsize=1) as p, open(log_fname, 'ab') as file:
+  for line in p.stdout: # b'\n'-separated lines
+    logger.info(line) # pass bytes as is
+    file.write(line)
+  for line in p.stderr: # b'\n'-separated lines
+    logger.error(sys.stdout.buffer.write(line)) # pass bytes as is
+    
+    
+upload_blob_from_file(DATA_BUCKET, result_fname, result_blob)
 
