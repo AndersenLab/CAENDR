@@ -29,7 +29,7 @@ class IndelPrimer(Entity):
     return cls.__bucket_name
   
   def get_blob_path(self):
-    return f'{self.__blob_prefix}/{self.container_name}/{self.container_version}/{self.data_hash}'
+    return f'{self.__blob_prefix}/{self.container_name}/{self.data_hash}'
   
   def get_data_blob_path(self):
     return f'{self.get_blob_path()}/{self.__input_file}'

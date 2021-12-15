@@ -11,7 +11,7 @@ from caendr.models.task import IndelPrimerTask
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.datastore import query_ds_entities
 from caendr.services.cloud.task import add_task
-from caendr.services.cloud.storage import upload_blob_from_string, get_blob
+from caendr.services.cloud.storage import upload_blob_from_string, get_blob, check_blob_exists
 from caendr.services.tool_versions import get_current_container_version
 
 from caendr.utils.constants import CHROM_NUMERIC
@@ -137,7 +137,6 @@ def create_new_indel_primer(username, site, strain1, strain2, size, data_hash):
   # Load container version info 
   c = get_current_container_version(INDEL_PRIMER_CONTAINER_NAME)
   
-  # TODO: assign properties from cached result if it exists
   status = 'SUBMITTED'
   props = {'id': id,
           'username': username,
@@ -159,6 +158,12 @@ def create_new_indel_primer(username, site, strain1, strain2, size, data_hash):
           'strain1': strain1,
           'strain2': strain2,
           'size': size}
+  
+  # TODO: assign remaining properties from cached result if it exists
+  if check_blob_exists(ip.get_bucket_name(), ip.get_result_blob_path()):
+    ip.status = 'COMPLETE'
+    ip.save()
+    return ip
   
   # Upload data.tsv to google storage
   bucket = ip.get_bucket_name()
