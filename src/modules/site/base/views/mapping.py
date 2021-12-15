@@ -9,8 +9,7 @@ from caendr.services.cloud.storage import generate_blob_url
 
 
 mapping_bp = Blueprint('mapping',
-                      __name__,
-                      template_folder='mapping')
+                      __name__)
 
 
 @mapping_bp.route('/mapping/perform-mapping/', methods=['GET'])
@@ -25,7 +24,7 @@ def mapping():
   # TODO: change
   nemascan_container_url = 'https://github.com/AndersenLab/dockerfile/tree/nemarun/nemarun'
   nemascan_github_url = 'https://github.com/AndersenLab/NemaScan'
-  return render_template('mapping/mapping.html', **locals())
+  return render_template('tools/mapping/mapping.html', **locals())
 
 
 @mapping_bp.route('/mapping/upload', methods = ['POST'])
@@ -54,7 +53,7 @@ def mapping_report_list():
   username = user.name
   mappings = get_user_mappings(username)
 
-  return render_template('mapping/list.html', **locals())
+  return render_template('tools/mapping/list.html', **locals())
 
 
 @mapping_bp.route('/mapping/report/<id>', methods=['GET'])
@@ -65,7 +64,7 @@ def mapping_report(id):
   mapping = get_mapping(id)
   data_url = generate_blob_url(mapping.get_bucket_name(), mapping.get_data_blob_path())
   
-  return render_template('mapping/report.html', **locals())
+  return render_template('tools/mapping/report.html', **locals())
 
 
 @mapping_bp.route('/mapping/report/<id>/results/', methods=['GET'])
@@ -74,5 +73,5 @@ def mapping_results(id):
   title = 'Genetic Mapping Result Files'
   user = get_current_user()
 
-  return render_template('mapping/result_files.html', **locals())
+  return render_template('tools/mapping/result_files.html', **locals())
 
