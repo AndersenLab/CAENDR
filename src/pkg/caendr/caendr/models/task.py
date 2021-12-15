@@ -99,8 +99,6 @@ class IndelPrimerTask(Task):
       return f"<indel_primer_task:no-id>"
     
     
-    
-    
 class HeritabilityTask(Task):
   def get_payload(self):
     payload = super(HeritabilityTask, self).get_payload()
@@ -118,4 +116,23 @@ class HeritabilityTask(Task):
       return f"<heritability_task:{self.id}>"
     else:
       return f"<heritability_task:no-id>"
+    
+    
+class GeneBrowserTracksTask(Task):
+  def get_payload(self):
+    payload = super(GeneBrowserTracksTask, self).get_payload()
+    payload['wormbase_version'] = self.wormbase_version
+    return payload
+  
+  @classmethod
+  def get_props_set(cls):
+    props = super(GeneBrowserTracksTask, cls).get_props_set()
+    props.add('wormbase_version')
+    return props
+
+  def __repr__(self):
+    if hasattr(self, 'id'):
+      return f"<gene_browser_tracks_task:{self.id}>"
+    else:
+      return f"<gene_browser_tracks_task:no-id>"
     

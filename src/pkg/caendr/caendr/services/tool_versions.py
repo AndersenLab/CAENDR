@@ -67,8 +67,10 @@ def get_all_containers():
     heritability.save()
   
   db_operations = create_default_container_version(MODULE_DB_OPERATIONS_CONTAINER_NAME, repo=GCR_REPO_NAME, tag=MODULE_DB_OPERATIONS_CONTAINER_VERSION)
+  
+  gene_browser_tracks = create_default_container_version(MODULE_GENE_BROWSER_TRACKS_CONTAINER_NAME, repo=GCR_REPO_NAME, tag=MODULE_GENE_BROWSER_TRACKS_CONTAINER_VERSION)
 
-  return [nemascan_nxf, indel_primer, heritability, db_operations]
+  return [nemascan_nxf, indel_primer, heritability, db_operations, gene_browser_tracks]
 
 
 def get_current_container_version(container_name: str):

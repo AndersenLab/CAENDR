@@ -30,9 +30,13 @@ from base.views.data import gene_browser_bp
 from base.views.data import variant_browser_bp
 from base.views.data import data_downloads_bp
 
-# Tool blueprints
+# Tool
 from base.views.tools import tools_bp
 from base.views.tools import indel_primer_bp
+from base.views.tools import heritability_bp
+
+# API
+from base.views.api import api_gene_bp
 
 # Admin
 from base.views.admin import admin_bp
@@ -41,6 +45,8 @@ from base.views.admin import admin_dataset_bp
 from base.views.admin import admin_profile_bp
 from base.views.admin import admin_tools_bp
 from base.views.admin import admin_db_op_bp
+from base.views.admin import admin_gene_browser_tracks_bp
+
 
 # Auth
 from base.views.auth import (auth_bp, 
@@ -51,17 +57,11 @@ from base.views.auth import (auth_bp,
 from base.views.gene import gene_bp
 from base.views.maintenance import maintenance_bp
 from base.views.admin.admin import admin_bp
-from base.views.admin.users import users_bp
-from base.views.admin.data import data_admin_bp
+
 '''
 
 
-'''
-# Tool blueprints
-from base.views.tools import (tools_bp,
-                              heritability_bp,
-                              indel_primer_bp)
-'''
+
 
 # Readiness and health checks
 from base.views import check_bp
@@ -69,7 +69,6 @@ from base.views import check_bp
 '''
 # API
 from base.views.api.api_strain import api_strain_bp
-from base.views.api.api_gene import api_gene_bp
 from base.views.api.api_variant import api_variant_bp
 from base.views.api.api_data import api_data_bp
 '''
@@ -169,7 +168,12 @@ def register_blueprints(app):
   app.register_blueprint(admin_profile_bp, url_prefix='/admin/profiles')
   app.register_blueprint(admin_tools_bp, url_prefix='/admin/tools')
   app.register_blueprint(admin_db_op_bp, url_prefix='/admin/db')
+  app.register_blueprint(admin_gene_browser_tracks_bp, url_prefix='/admin/gene_browser_tracks')
+
   
+  # API
+  app.register_blueprint(api_gene_bp, url_prefix='/api')
+
   
   # Auth
   app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -179,30 +183,17 @@ def register_blueprints(app):
   app.register_blueprint(mapping_bp, url_prefix='')
   app.register_blueprint(tools_bp, url_prefix='/tools')
   app.register_blueprint(indel_primer_bp, url_prefix='/tools')
-
+  app.register_blueprint(heritability_bp, url_prefix='/tools')
 
   '''
   app.register_blueprint(gene_bp, url_prefix='/gene')
-
-
   
-  # Tools
-  app.register_blueprint(tools_bp, url_prefix='/tools')
-  app.register_blueprint(heritability_bp, url_prefix='/tools')
-  app.register_blueprint(indel_primer_bp, url_prefix='/tools')
 
   # API
   app.register_blueprint(api_strain_bp, url_prefix='/api')
-  app.register_blueprint(api_gene_bp, url_prefix='/api')
   app.register_blueprint(api_variant_bp, url_prefix='/api')
   app.register_blueprint(api_data_bp, url_prefix='/api')
 
-
-
-  # Admin
-  app.register_blueprint(admin_bp, url_prefix='/admin')
-  app.register_blueprint(users_bp, url_prefix='/admin/users')
-  app.register_blueprint(data_admin_bp, url_prefix='/admin/data')
 
   # Healthchecks/Maintenance
   app.register_blueprint(maintenance_bp, url_prefix='/tasks')'''

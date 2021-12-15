@@ -56,11 +56,6 @@ def get_config():
   # TODO: clean these up eventually
   config['json_encoder'] = json_encoder
 
-  config['HERITABILITY_CALC_URL'] =  ''
-  config['HERITABILITY_CALC_TASK_QUEUE'] = ''
-  config['INDEL_PRIMER_URL'] =  ''
-  config['INDEL_PRIMER_TASK_QUEUE'] = ''
-
   config['SQLALCHEMY_DATABASE_URI'] = db_conn_uri
   config['SQLALCHEMY_ENGINE_OPTIONS'] = { "pool_pre_ping": True, "pool_recycle": 300 }
   config['SQLALCHEMY_POOL_TIMEOUT'] = 20
