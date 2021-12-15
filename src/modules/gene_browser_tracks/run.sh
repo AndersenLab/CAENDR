@@ -12,9 +12,30 @@ function zip_index {
 # Add parenthetical gene name for transcripts.
 mkdir -p browser
 
-set -o allexport
-source .env
-set +o allexport
+# Load .env file as environment variables
+export $(cat .env | sed -e '/^\s*$/d' | sed -e '/^\#/d' | xargs)
+
+if [ -z $WORMBASE_VERSION ]
+then
+  echo "ERROR: WORMBASE_VERSION environment variable must be defined."
+  exit 1
+fi
+
+if [ -z $BROWSER_BUCKET_NAME ]
+then
+  BROWSER_BUCKET_NAME=${MODULE_SITE_BUCKET_PUBLIC_NAME}
+  echo "Using default bucket: ${BROWSER_BUCKET_NAME}"
+fi
+
+if [ -z $BROWSER_BLOB_PATH ]
+then
+  BROWSER_BLOB_PATH=${MODULE_GENE_BROWSER_TRACKS_PATH}/${WORMBASE_VERSION}
+  echo "Using default blob path: ${BROWSER_BLOB_PATH}"
+fi
+
+GENE_GFF_URL="ftp://ftp.wormbase.org/pub/wormbase/releases/${WORMBASE_VERSION}/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.${WORMBASE_VERSION}.annotations.gff3.gz"
+GENE_BB_URL="ftp://ftp.wormbase.org/pub/wormbase/releases/${WORMBASE_VERSION}/MULTI_SPECIES/hub/elegans/elegans_genes_${WORMBASE_VERSION}.bb"
+
 
 curl ${GENE_BB_URL} >> elegans_genes_${WORMBASE_VERSION}.bb
 curl ${GENE_GFF_URL} >> c_elegans.PRJNA13758.${WORMBASE_VERSION}.annotations.gff3.gz
@@ -40,5 +61,5 @@ uniq > browser/elegans_gene.${WORMBASE_VERSION}.bed
 zip_index browser/elegans_gene.${WORMBASE_VERSION}.bed
 
 # Copy tracks to browser
-gsutil cp browser/* gs://${MODULE_SITE_BUCKET_PUBLIC_NAME}/${MODULE_GENE_BROWSER_TRACKS_PATH}/${WORMBASE_VERSION}
+gsutil cp browser/* gs://${BROWSER_BUCKET_NAME}/${BROWSER_BLOB_PATH}
 
