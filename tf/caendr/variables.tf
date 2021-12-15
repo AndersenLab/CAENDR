@@ -69,4 +69,5 @@ variable "SECRET_KEY" { sensitive = true }
 variable "JWT_SECRET_KEY" { sensitive = true }
 variable "PASSWORD_SALT" { sensitive = true }
 variable "MAILGUN_API_KEY" { sensitive = true }
+variable "CC_EMAILS" { sensitive = true }
 

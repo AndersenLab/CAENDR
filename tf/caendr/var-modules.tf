@@ -64,5 +64,6 @@ locals {
     "JWT_SECRET_KEY" = sensitive(var.JWT_SECRET_KEY), 
     "PASSWORD_SALT" = sensitive(var.PASSWORD_SALT), 
     "MAILGUN_API_KEY" = sensitive(var.MAILGUN_API_KEY)
+    "CC_EMAILS" = sensitive(var.CC_EMAILS)
   })
 }
