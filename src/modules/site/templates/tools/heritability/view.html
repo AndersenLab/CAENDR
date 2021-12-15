@@ -6,7 +6,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.7/d3.js" charset="utf-8"></script>
     <script src="https://d3js.org/queue.v1.min.js"> </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.6.7/d3-tip.min.js"></script>
-    <script src="/static/js/d3-exploding-boxplot.js"></script>
+    <script src="{{ ext_asset('js/d3-exploding-boxplot.js') }}"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.4.1/jspdf.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.2/FileSaver.min.js"></script>
@@ -98,7 +98,7 @@
     </a>
   </div>
   <div class='col-md-2 col-sm-4 col-sm-offset-0 col-xs-8 col-xs-offset-2  btn-mid-row'>
-    <a class="btn btn-nu btn-block" onClick="window.open('https://storage.googleapis.com/elegansvariation.org/reports/heritability/{{ data_hash }}/data.tsv')" role="button">
+    <a class="btn btn-nu btn-block" onClick="window.open('{{ data_url }}')" role="button">
       <span class="glyphicon glyphicon-download" aria-hidden="true"></span> 
       Download Data
     </a>
@@ -117,11 +117,11 @@
       <table class="table table-condensed table-striped table-hover">
         <thead>
           <tr>    
-            <th>AssayNumber</th>
-            <th>Strain</th>
-            <th>TraitName</th>
-            <th>Replicate</th>
-            <th>Value</th>
+            <th class='col-md-2'>AssayNumber</th>
+            <th class='col-md-2'>Strain</th>
+            <th class='col-md-2'>TraitName</th>
+            <th class='col-md-2'>Replicate</th>
+            <th class='col-md-2'>Value</th>
           </tr>
         </thead>
         <tbody>
