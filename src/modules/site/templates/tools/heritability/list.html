@@ -49,7 +49,7 @@ table.dataTable thead .sorting {
               <td class='data-trait'> {{ item.trait }} </td>
               <td class='data-status'>
                 {% if item.status == 'COMPLETE' %}
-                <a href="{{ url_for('heritability.heritability_result', id=item.key.name) }}">
+                <a href="{{ url_for('heritability.heritability_result', id=item.id) }}">
                   {{ item.status }}
                 </a>
                 {% else %}
