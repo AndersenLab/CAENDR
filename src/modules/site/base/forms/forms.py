@@ -132,6 +132,13 @@ class AdminCreateDatabaseOperationForm(FlaskForm):
   sva_version = IntegerField('Strain Variant Annotation Version (ex: 20210401 -> strain_variant_annotation/WI.strain-annotation.bcsq.20210401.csv.gz)', validators=[Optional()])
   note = StringField('Notes', [Optional(), Length(min=3, max=200)])
 
+
+
+class AdminGeneBrowserTracksForm(FlaskForm):  
+  wormbase_version = IntegerField('Wormbase Version WS (ex: 276 -> WS276):', validators=[Optional()])
+  note = StringField('Notes', [Optional(), Length(min=3, max=200)])
+
+
 class AdminEditToolContainerVersion(FlaskForm):
   version = SelectField('Container Version Tag', validators=[Required()])
   

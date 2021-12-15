@@ -45,7 +45,8 @@ locals {
 
   module_gene_browser_tracks_vars = tomap({
     "container_name" = var.MODULE_GENE_BROWSER_TRACKS_CONTAINER_NAME,
-    "container_version" = var.MODULE_GENE_BROWSER_TRACKS_CONTAINER_VERSION
+    "container_version" = var.MODULE_GENE_BROWSER_TRACKS_CONTAINER_VERSION,
+    "task_queue_name" = var.MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME
   })
 
 
