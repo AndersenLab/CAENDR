@@ -5,11 +5,14 @@ ENV PYTHONUNBUFFERED True
 # Install production dependencies.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        python3 \
-        python3-venv \
-        python3-virtualenv \
-        virtualenv \
-        wget && \
+      build-essential \
+      libz-dev \
+      python3 \
+      python3-dev \
+      python3-venv \
+      python3-virtualenv \
+      virtualenv \
+      wget && \
     apt-get autoremove && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*

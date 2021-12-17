@@ -34,9 +34,7 @@ def execute_operation(app, db, DB_OP):
     if not WORMBASE_VERSION:
       raise EnvVarError()
     drop_and_populate_wormbase_genes(app, db, WORMBASE_VERSION)
-    
-  elif DB_OP == 'DROP_AND_POPULATE_HOMOLOGENES':
-    drop_and_populate_homologenes(app, db)
+
 
   elif DB_OP == 'DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS':
     if not STRAIN_VARIANT_ANNOTATION_VERSION:
@@ -60,14 +58,6 @@ def drop_and_populate_wormbase_genes(app, db, wb_ver: str):
   load_homologs(db, homologene_fname)
   load_orthologs(db, ortholog_fname)
 
-
-def drop_and_populate_homologenes(app, db):
-  homologene_fname = download_external_db('HOMOLOGENE_URL')
-  ortholog_fname = download_external_db('ORTHOLOG_URL')
-  drop_tables(app, db, tables=[Homolog.__table__])
-  load_homologs(db, homologene_fname)
-  load_orthologs(db, ortholog_fname)
-  
 
 def drop_and_populate_strain_annotated_variants(app, db, sva_ver: str):
   sva_fname = download_external_db('SVA_CSVGZ_URL', sva_ver=sva_ver)
