@@ -19,7 +19,6 @@ API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 
 DB_OPS = {'DROP_AND_POPULATE_STRAINS': 'Rebuild strain table from google sheet',
           'DROP_AND_POPULATE_WORMBASE_GENES': 'Rebuild wormbase gene table from external sources',
-          'DROP_AND_POPULATE_HOMOLOGENES': 'Rebuild Homologene table from external sources',
           'DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS': 'Rebuild Strain Annotated Variant table from .csv.gz file',
           'DROP_AND_POPULATE_ALL_TABLES': 'Rebuild All Tables'}
 

@@ -7,13 +7,12 @@ from caendr.services.cloud.storage import generate_blob_url, get_blob_list, get_
 
 V1_V2_Cutoff_Date = 20200101
 
+MODULE_SITE_BUCKET_PUBLIC_NAME = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME')
 
 class DatasetRelease(Entity):
   kind = "dataset_release"
-  __bucket_name = 'elegansvariation.org'
-  __blob_prefix = 'releases'
-  # TODO: RESTORE THIS -> __bucket_name = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME')
-  # __blob_prefix = kind
+  __bucket_name = MODULE_SITE_BUCKET_PUBLIC_NAME
+  __blob_prefix = kind
 
   def __init__(self, *args, **kwargs):
     super(DatasetRelease, self).__init__(*args, **kwargs)

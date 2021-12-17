@@ -1,5 +1,5 @@
-/* Commented out to prevent re-creating
-/*
+/* Commented out to prevent re-creating */
+
 resource "google_app_engine_application" "app" {
   project     = var.google_cloud_vars.project_id
   location_id = var.google_cloud_vars.app_location
@@ -11,7 +11,7 @@ resource "google_app_engine_application" "app" {
     ignore_changes = all
   }
 }
-*/
+
 
 
 resource "google_app_engine_flexible_app_version" "site" {

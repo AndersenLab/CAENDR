@@ -22,8 +22,8 @@
               <td> {{ c.repo }} </td>
               <td> {{ c.container_name }} </td>
               <td> {{ c.container_tag }} </td>
-              <td> {{ c.created_on|date_format }} </td>
-              <td> {{ c.modified_on|date_format }} </td>
+              <td> {% if c.created_on %} {{ c.created_on|date_format }} {% endif %} </td>
+              <td> {% if c.modified_on %} {{ c.modified_on|date_format }} {% endif %} </td>
               <td>
                 <a href="{{ url_for('admin_tools.edit_tool', id=c.container_name) }}"> 
                   Edit

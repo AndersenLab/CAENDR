@@ -9,7 +9,19 @@ resource "google_secret_manager_secret" "app_engine_group" {
   project = var.google_cloud_vars.project_id
   provider = google-beta
   secret_id = each.key
-  replication { automatic = true }
+  replication { 
+    user_managed {
+      replicas {
+        location = "us-east1"
+      }
+      replicas {
+        location = "us-central1"
+      }
+      replicas {
+        location = "us-west1"
+      }
+    }
+  }
 }
 
 // Loops through all secrets set in the current environments secret.env
@@ -26,7 +38,19 @@ resource "google_secret_manager_secret" "api_pipeline_task_url" {
   project = var.google_cloud_vars.project_id
   provider = google-beta
   secret_id = var.module_site_vars.api_pipeline_task_url_name
-  replication { automatic = true }
+  replication { 
+    user_managed {
+      replicas {
+        location = "us-east1"
+      }
+      replicas {
+        location = "us-central1"
+      }
+      replicas {
+        location = "us-west1"
+      }
+    }
+  }
 }
 
 resource "google_secret_manager_secret_version" "api_pipeline_task_url" {
@@ -40,7 +64,19 @@ resource "google_secret_manager_secret" "google_sheets_sa_private_key" {
   project = var.google_cloud_vars.project_id
   provider = google-beta
   secret_id = var.google_cloud_vars.google_sheets_sa_name
-  replication { automatic = true }
+  replication { 
+    user_managed {
+      replicas {
+        location = "us-east1"
+      }
+      replicas {
+        location = "us-central1"
+      }
+      replicas {
+        location = "us-west1"
+      }
+    }
+  }
 }
 
 resource "google_secret_manager_secret_version" "google_sheets_sa_private_key" {
@@ -54,7 +90,19 @@ resource "google_secret_manager_secret" "google_analytics_sa_private_key" {
   project = var.google_cloud_vars.project_id
   provider = google-beta
   secret_id = var.google_cloud_vars.google_analytics_sa_name
-  replication { automatic = true }
+  replication { 
+    user_managed {
+      replicas {
+        location = "us-east1"
+      }
+      replicas {
+        location = "us-central1"
+      }
+      replicas {
+        location = "us-west1"
+      }
+    }
+  }
 }
 
 resource "google_secret_manager_secret_version" "google_analytics_sa_private_key" {

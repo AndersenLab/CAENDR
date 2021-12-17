@@ -149,7 +149,14 @@ def create_new_indel_primer(username, site, strain1, strain2, size, data_hash):
           'container_name': c.container_name,
           'container_version': c.container_tag,
           'status': status}
-  
+    
+  # Check for existing indel primer matching data_hash
+  ips = query_ds_entities(IndelPrimer.kind, filters=[('data_hash', '=', data_hash)])
+  if ips and ips[0]:
+    ip = IndelPrimer(ips[0])
+    if ip.username == username:
+      return ip
+
   ip = IndelPrimer(id)
   ip.set_properties(**props)
   ip.save()
@@ -159,7 +166,7 @@ def create_new_indel_primer(username, site, strain1, strain2, size, data_hash):
           'strain2': strain2,
           'size': size}
   
-  # TODO: assign remaining properties from cached result if it exists
+  # Check if there is already a result
   if check_blob_exists(ip.get_bucket_name(), ip.get_result_blob_path()):
     ip.status = 'COMPLETE'
     ip.save()

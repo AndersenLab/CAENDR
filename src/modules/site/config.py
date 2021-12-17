@@ -49,7 +49,7 @@ def get_config():
   
   for prop in BOOL_PROPS:
     config[prop] = convert_env_bool(config.get(prop))
-
+  
   config['CAENDR_VERSION'] = f"{config['MODULE_NAME']}-{config['MODULE_VERSION']}"
   config['JWT_TOKEN_LOCATION'] = ['cookies', 'json', 'headers']
 
@@ -65,6 +65,8 @@ def get_config():
   # Load secret config values
   for id in SECRETS_IDS:
     config[id] = get_secret(id)
+    
+  config['CC_EMAILS'] = get_secret('CC_EMAILS')
 
   return config
 
