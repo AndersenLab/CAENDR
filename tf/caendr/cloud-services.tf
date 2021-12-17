@@ -9,6 +9,7 @@ locals {
     "appengine.googleapis.com",
     "sqladmin.googleapis.com",
     "cloudbuild.googleapis.com",
+    "cloudfunctions.googleapis.com",
     "secretmanager.googleapis.com",
     "sheets.googleapis.com",
     "drive.googleapis.com",
