@@ -24,4 +24,7 @@ resource "google_cloudfunctions_function" "generate_thumbnails" {
   runtime               = "python37"
   service_account_email = "${var.google_cloud_vars.project_id}@appspot.gserviceaccount.com"
   timeout               = "60"
+
+  depends_on = [ google_storage_bucket_object.source_zip ]
+
 }
