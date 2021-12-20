@@ -21,53 +21,75 @@ LOAD_TF_VAR=export $$(cat $(GLOBAL_ENV_FILE) | sed $(WHITESPACE_REGEX) | sed $(C
 LOAD_SECRET_TF_VAR=export $$(cat $(SECRET_ENV_FILE) | sed $(WHITESPACE_REGEX) | sed $(COMMENT_REGEX) | sed $(TF_VAR_PREFIX_REGEX) | xargs)
 
 all: help
-targets: clean-all build-all-containers publish-all-containers configure-all cloud-resource-init cloud-resource-plan cloud-resource-deploy cloud-resource-destroy 
+targets: configure cloud-resource-plan cloud-resource-deploy cloud-resource-destroy 
 
 .PHONY : targets
 .DEFAULT : help
 
 #~
-clean-all: #~
-clean-all: clean
-#~ Runs 'make clean' for all services, deletes cached python files 
-#~ and removes any previously generated terraform plan
-	@echo -e "\n$(COLOR_B)Cleaning module directories...$(COLOR_N)"
-#	@$(MAKE) -C $(MODULE_PATH)/api/pipeline-task print-module-env clean --no-print-directory
-#	@$(MAKE) -C $(MODULE_PATH)/db-ops print-module-env clean --no-print-directory
-#	@$(MAKE) -C $(MODULE_PATH)/img_thumb_gen print-module-env clean --no-print-directory
-	@$(MAKE) -C $(MODULE_PATH)/site print-module-env clean --no-print-directory
-	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
+configure: #~
+#~ If using Ubuntu for the development environment, use this target to install
+#~ required system packages for testing and deploying project modules
+#~ including docker, google cloud sdk, terraform, etc...
+configure:
+ifeq ($(getend group admin),)
+else
+	@echo -e "\n$(COLOR_B)Creating docker user group...$(COLOR_N)" && \
+	groupadd docker
+endif
 
-#~
-build-all-containers: #~
-#~ Runs 'make build-container ENV=[environment]' for all services 
-#~ and tags them with the container name and version from the global.env file
-	@echo -e "\n$(COLOR_B)Building module container images...$(COLOR_N)"
-#	@$(MAKE) -C $(MODULE_PATH)/api/pipeline-task build-container ENV=$(ENV) --no-print-directory
-#	@$(MAKE) -C $(MODULE_PATH)/db-ops build-container ENV=$(ENV) --no-print-directory
-#	@$(MAKE) -C $(MODULE_PATH)/site build-container ENV=$(ENV) --no-print-directory
-	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
+	@echo -e "\n$(COLOR_B)Installing system packages...$(COLOR_N)"
+	apt-get update && apt-get install \
+		apt-transport-https \
+		build-essential \
+		ca-certificates \
+		curl \
+		fuse \
+		gawk \
+		git \
+		gnupg \
+		graphviz \
+		gunicorn \
+		gzip \
+		libbz2-dev \
+		libgraphviz-dev \
+		liblzma-dev \
+		libncursesw5-dev \
+		libncurses5-dev \
+		libxml2 \
+		libxml2-dev \
+		libxmlsec1-dev \
+		libxmlsec1-openssl \
+		make \
+		pkg-config \
+		python3 \
+		python3-dev \
+		python3-venv \
+		python3-virtualenv \
+		software-properties-common \
+		tabix \
+		virtualenv \
+		vim \
+		wget \
+		xmlsec1 \
+		zip \
+		zlib1g-dev
 
-#~
-publish-all-containers: #~
-#~ Runs 'make publish-container ENV=[environment]' for all services 
-#~ and tags them with the container name and version from the global.env file
-	@echo -e "\n$(COLOR_B)Publishing module container images...$(COLOR_N)"
-#	$(MAKE) -C $(MODULE_PATH)/api/pipeline-task publish-container ENV=$(ENV) --no-print-directory
-#	$(MAKE) -C $(MODULE_PATH)/db-ops publish-container ENV=$(ENV) --no-print-directory
-#	$(MAKE) -C $(MODULE_PATH)/site publish-container ENV=$(ENV) --no-print-directory
-	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
+	@echo -e "\n$(COLOR_B)Installing docker.io...$(COLOR_N)"
+	apt-get install docker.io
 
-#~
-configure-all: #~
-#~ Runs 'make configure ENV=[environment]' for all services
-configure-all: verify-env print-env confirm
-	@echo -e "\n$(COLOR_B)Configuring all modules...$(COLOR_N)"
-#	@$(MAKE) -C $(MODULE_PATH)/api/pipeline-task configure-auto ENV=$(ENV) --no-print-directory
-#	@$(MAKE) -C $(MODULE_PATH)/db-ops configure-auto ENV=$(ENV) --no-print-directory
-#	@$(MAKE) -C $(MODULE_PATH)/img_thumb_gen configure-auto ENV=$(ENV) --no-print-directory
-#	@$(MAKE) -C $(MODULE_PATH)/site configure-auto ENV=$(ENV) --no-print-directory
-	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
+	@echo -e "\n$(COLOR_B)Adding current USER:$(USER) to docker group...$(COLOR_N)"
+	usermod -aG docker $(USER)
+
+	@echo -e "\n$(COLOR_B)Installing Google Cloud SDK...$(COLOR_N)" && \
+	echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
+	curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
+	apt-get update && apt-get install google-cloud-sdk
+
+	@echo -e "\n$(COLOR_B)Installing Terraform...$(COLOR_N)" && \
+	curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add - && \
+	apt-add-repository "deb [arch=$$(dpkg --print-architecture) ] https://apt.releases.hashicorp.com $$(lsb_release -cs) main" && \
+	apt-get update && apt-get install terraform
 
 
 #~
