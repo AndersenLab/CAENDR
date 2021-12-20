@@ -87,10 +87,9 @@ def staff():
   index = 0
   for i, item in enumerate(profiles):
     if hasattr(item, 'title') and item.title.lower() == 'director':
-      index = i
+      p = profiles.pop(i)
+      profiles.insert(0, p)
       break
-  p = profiles.pop(i)
-  profiles.insert(0, p)
 
   return render_template('about/staff.html', **locals())
 
