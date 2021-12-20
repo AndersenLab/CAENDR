@@ -45,6 +45,7 @@ def create_new_profile(**kwargs):
 
 
 def upload_profile_photo(p, file):
+  logger.debug(f'Uploading Profile photo: p:{p} file:{file}')
   bucket = p.get_bucket_name()
   prefix = p.get_blob_prefix()
   blob_name = f'{prefix}/{p.id}.jpg'

@@ -47,6 +47,7 @@ def download_blob_to_file(bucket_name, blob_name, filename):
 
 def upload_blob_from_file_object(bucket_name, file, blob_name):
   """Uploads a file to the bucket."""
+  logger.debug(f'upload_blob_from_file_object: bucket_name:{bucket_name} file:{file} blob_name:{blob_name}')
   bucket = storageClient.get_bucket(bucket_name)
   blob = bucket.blob(blob_name)
   blob.upload_from_file(file)

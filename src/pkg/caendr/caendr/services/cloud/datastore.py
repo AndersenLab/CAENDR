@@ -66,7 +66,6 @@ def query_ds_entities(kind, filters=None, projection=(), order=None, limit=None,
     return query.fetch(limit=limit)
   else:
     results = list(query.fetch())
-    logger.debug(results)
     return results
 
 

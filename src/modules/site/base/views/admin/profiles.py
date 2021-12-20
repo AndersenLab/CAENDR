@@ -64,6 +64,9 @@ def profile_edit(id=None):
     if request.method == 'POST' and form.validate_on_submit():
       props = get_form_props(request)
       update_profile(p, **props)
+      file = request.files['file']
+      if file:
+        upload_profile_photo(p, file)
       return redirect(url_for("admin_profile.admin_profile"), code=302)
 
   return render_template('admin/profile/edit.html', **locals())
