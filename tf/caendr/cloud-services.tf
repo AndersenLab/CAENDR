@@ -4,17 +4,19 @@ locals {
   ])
 
   service_group_2 = toset([
-    "iam.googleapis.com", 
+    "iam.googleapis.com",
+    "run.googleapis.com",
+    "cloudfunctions.googleapis.com",
     "containerregistry.googleapis.com",
     "appengine.googleapis.com",
     "sqladmin.googleapis.com",
     "cloudbuild.googleapis.com",
-    "cloudfunctions.googleapis.com",
     "secretmanager.googleapis.com",
     "sheets.googleapis.com",
     "drive.googleapis.com",
     "analyticsreporting.googleapis.com",
-    "cloudtasks.googleapis.com"
+    "cloudtasks.googleapis.com",
+    "lifesciences.googleapis.com"
   ])
   
   service_group_3 = toset([
