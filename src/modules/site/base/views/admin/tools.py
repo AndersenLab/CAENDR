@@ -44,29 +44,3 @@ def edit_tool(id):
     
   return render_template('admin/tool/edit.html', **locals())
 
-
-
-'''
-
-
-@admin_tools_bp.route('/<id>/edit', methods=["GET", "POST"])
-@admin_required()
-def profile_edit(id=None):
-  alt_parent_breadcrumb = {"title": "Admin/Profiles", "url": url_for('admin_profile.admin_profile')}
-  if id is None:
-    raise UnprocessableEntity('Error: No profile id in URL')
-  
-  title = "Edit Profile"
-  jwt_csrf_token = (get_jwt() or {}).get("csrf")
-  p = get_profile(id)
-
-  if request.method == 'GET':
-    form = populate_form_fields(request, p)
-  else: 
-    form = AdminEditProfileForm(request.form)
-    if request.method == 'POST' and form.validate_on_submit():
-      props = get_form_props(request)
-      update_profile(p, **props)
-      return redirect(url_for("admin_profile.admin_profile"), code=302)
-
-  return render_template('admin/profile/edit.html', **locals())'''

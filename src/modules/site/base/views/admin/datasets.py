@@ -6,7 +6,7 @@ from base.utils.auth import get_jwt, admin_required
 
 from caendr.models.datastore import DatasetRelease
 from caendr.models.error import UnprocessableEntity
-from caendr.services.dataset_release import get_all_dataset_releases, create_new_dataset_release, get_dataset_release, delete_dataset_release
+from caendr.services.dataset_release import get_all_dataset_releases, create_new_dataset_release, get_dataset_release, delete_dataset_release, update_dataset_release
 
 admin_dataset_bp = Blueprint('admin_dataset',
                             __name__,
@@ -60,7 +60,11 @@ def dataset_edit(id=None):
                             report_type=release.report_type,
                             hidden=hasattr(release, 'hidden'),
                             disabled=hasattr(release, 'disabled'))
-  # TODO: add support for edit
+  form.version(disabled=True)
+  if request.method == 'POST' and form.validate_on_submit():
+    props = get_request_props(request)
+    update_dataset_release(id, **props)
+    return redirect(url_for("admin_dataset.admin_dataset"), code=302)
   return render_template('admin/dataset/edit.html', **locals())
 
 
@@ -73,3 +77,10 @@ def dataset_delete(id=None):
   release = delete_dataset_release(id)
   return redirect(url_for("admin_dataset.admin_dataset"), code=302)
 
+def get_request_props(request):
+  return {
+    'wormbase_version': f'WS{request.form.get("wormbase_version")}',
+    'report_type': request.form.get('report_type'),
+    'disabled': request.form.get('disabled') or False,
+    'hidden': request.form.get('hidden') or False
+  }
