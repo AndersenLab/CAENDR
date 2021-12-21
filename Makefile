@@ -35,11 +35,11 @@ configure:
 ifeq ($(getend group admin),)
 else
 	@echo -e "\n$(COLOR_B)Creating docker user group...$(COLOR_N)" && \
-	groupadd docker
+	sudo groupadd docker
 endif
 
 	@echo -e "\n$(COLOR_B)Installing system packages...$(COLOR_N)"
-	apt-get update && apt-get install \
+	sudo apt-get update && sudo apt-get install \
 		apt-transport-https \
 		build-essential \
 		ca-certificates \
@@ -76,20 +76,31 @@ endif
 		zlib1g-dev
 
 	@echo -e "\n$(COLOR_B)Installing docker.io...$(COLOR_N)"
-	apt-get install docker.io
+	sudo apt-get install docker.io
 
 	@echo -e "\n$(COLOR_B)Adding current USER:$(USER) to docker group...$(COLOR_N)"
-	usermod -aG docker $(USER)
-
-	@echo -e "\n$(COLOR_B)Installing Google Cloud SDK...$(COLOR_N)" && \
-	echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
-	curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
-	apt-get update && apt-get install google-cloud-sdk
+	sudo usermod -aG docker $(USER)
 
 	@echo -e "\n$(COLOR_B)Installing Terraform...$(COLOR_N)" && \
-	curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add - && \
-	apt-add-repository "deb [arch=$$(dpkg --print-architecture) ] https://apt.releases.hashicorp.com $$(lsb_release -cs) main" && \
-	apt-get update && apt-get install terraform
+	curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add - && \
+	sudo apt-add-repository "deb [arch=$$(dpkg --print-architecture) ] https://apt.releases.hashicorp.com $$(lsb_release -cs) main" && \
+	sudo apt-get update && sudo apt-get install terraform
+
+	@echo -e "\n$(COLOR_B)Installing Google Cloud SDK...$(COLOR_N)" && \
+	echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
+	curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
+	sudo apt-get update && sudo apt-get install google-cloud-sdk
+
+	@echo -e "\n$(COLOR_B)Installing Google Cloud SQL Proxy...$(COLOR_N)" && \
+	wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O cloud_sql_proxy && \
+	chmod +x cloud_sql_proxy && \
+	mkdir /cloudql
+
+	@echo -e "\n$(COLOR_B)Configuring Google Cloud SDK...$(COLOR_N)" && \
+	gcloud init && \
+	gcloud auth login && \
+	gcloud auth application-default login && \
+	gcloud auth configure-docker
 
 
 #~
