@@ -42,8 +42,8 @@ class IndelPrimer(Entity):
   def get_props_set(cls):
     return {'id',
             'site', 
-            'strain1',
-            'strain2',
+            'strain_1',
+            'strain_2',
             'data_hash', 
             'username',
             'no_result',

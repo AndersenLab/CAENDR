@@ -60,12 +60,12 @@ def indel_primer_result_list():
 def pairwise_indel_finder_query():
   form = PairwiseIndelForm()
   if form.validate_on_submit():
-    strain1 = form.data['strain_1']
-    strain2 = form.data['strain_2']
+    strain_1 = form.data['strain_1']
+    strain_2 = form.data['strain_2']
     chrom = form.data['chromosome']
     start = form.data['start']
     stop = form.data['stop']
-    results = query_indels_and_mark_overlaps(strain1, strain2, chrom, start, stop)
+    results = query_indels_and_mark_overlaps(strain_1, strain_2, chrom, start, stop)
     return jsonify(results=results)
   return jsonify({"errors": form.errors})
 
@@ -79,8 +79,8 @@ def submit_indel_primer():
   data_hash = get_object_hash(data, length=32)
   
   props = {'site': data['site'],
-            'strain1': data['strain_1'],
-            'strain2': data['strain_2'],
+            'strain_1': data['strain_1'],
+            'strain_2': data['strain_2'],
             'size': data['size'],
             'data_hash': data_hash,
             'username': user.name}
@@ -118,7 +118,7 @@ def pairwise_indel_query_results(id, filename = None):
     logger.debug(data)
     # Get trait and set title
     title = f"Indel Primer Results {data['site']}"
-    subtitle = f"{data['strain1']} | {data['strain2']}"
+    subtitle = f"{data['strain_1']} | {data['strain_2']}"
 
     # Set indel information
     size = data['size']

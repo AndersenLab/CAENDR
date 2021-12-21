@@ -98,10 +98,10 @@ def fetch_ip_result(ip: IndelPrimer):
   return get_blob(ip.get_bucket_name(), ip.get_result_blob_path())
 
 
-def query_indels_and_mark_overlaps(strain1, strain2, chromosome, start, stop):
+def query_indels_and_mark_overlaps(strain_1, strain_2, chromosome, start, stop):
   results = []
-  strain_cmp = [strain1,
-                strain2]
+  strain_cmp = [strain_1,
+                strain_2]
   tb = tabix.open(SV_BED_URL)
   query = tb.query(chromosome, start, stop)
   results = []
@@ -130,8 +130,8 @@ def query_indels_and_mark_overlaps(strain1, strain2, chromosome, start, stop):
   return []
 
 
-def create_new_indel_primer(username, site, strain1, strain2, size, data_hash):
-  logger.debug(f'Creating new Indel Primer: username:{username} site:{site} strain1:{strain1} strain2:{strain2} size:{size} data_hash:{data_hash}')
+def create_new_indel_primer(username, site, strain_1, strain_2, size, data_hash):
+  logger.debug(f'Creating new Indel Primer: username:{username} site:{site} strain_1:{strain_1} strain_2:{strain_2} size:{size} data_hash:{data_hash}')
   id = unique_id()
   
   # Load container version info 
@@ -141,8 +141,8 @@ def create_new_indel_primer(username, site, strain1, strain2, size, data_hash):
   props = {'id': id,
           'username': username,
           'site': site,
-          'strain1': strain1,
-          'strain2': strain2,
+          'strain_1': strain_1,
+          'strain_2': strain_2,
           'size': size,
           'data_hash': data_hash,
           'container_repo': c.repo,
@@ -162,8 +162,8 @@ def create_new_indel_primer(username, site, strain1, strain2, size, data_hash):
   ip.save()
 
   data = {'site': site,
-          'strain1': strain1,
-          'strain2': strain2,
+          'strain_1': strain_1,
+          'strain_2': strain_2,
           'size': size}
   
   # Check if there is already a result
@@ -190,8 +190,8 @@ def create_new_indel_primer(username, site, strain1, strain2, size, data_hash):
 def _create_indel_primer_task(ip):
   return IndelPrimerTask(**{'id': ip.id,
                             'kind': IndelPrimer.kind,
-                            'strain1': ip.strain1,
-                            'strain2': ip.strain2,
+                            'strain_1': ip.strain_1,
+                            'strain_2': ip.strain_2,
                             'site': ip.site,
                             'data_hash': ip.data_hash,
                             'container_name': ip.container_name,
