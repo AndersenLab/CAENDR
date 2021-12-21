@@ -1,4 +1,4 @@
-from flask import render_template, Blueprint, url_or
+from flask import render_template, Blueprint, url_for
 from base.utils.auth import jwt_required
 from extensions import cache
 
