@@ -78,8 +78,8 @@ class IndelPrimerTask(Task):
   def get_payload(self):
     payload = super(IndelPrimerTask, self).get_payload()
     payload['data_hash'] = self.data_hash
-    payload['strain1'] = self.strain1
-    payload['strain2'] = self.strain2
+    payload['strain_1'] = self.strain_1
+    payload['strain_2'] = self.strain_2
     payload['site'] = self.site
     return payload
   
@@ -87,8 +87,8 @@ class IndelPrimerTask(Task):
   def get_props_set(cls):
     props = super(IndelPrimerTask, cls).get_props_set()
     props.add('data_hash')
-    props.add('strain1')
-    props.add('strain2')
+    props.add('strain_1')
+    props.add('strain_2')
     props.add('site')
     return props
 
