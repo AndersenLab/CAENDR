@@ -3,12 +3,26 @@ locals {
   timestamp = formatdate("YYMMDDhhmmss", timestamp())
 }
 
+resource "null_resource" "configure_img_thumb_gen" {
+  /*triggers = tomap({
+    "container_url" = data.google_container_registry_image.gene_browser_tracks.image_url
+  })*/
+
+  provisioner "local-exec" {
+    command = format("make -C %s clean dot-env ENV=%s", local.codebase_root_path, var.ENVIRONMENT)
+  }
+}
+
 # Compress source code
 data "archive_file" "source" {
   type        = "zip"
   source_dir  = local.codebase_root_path
   excludes    = [ ]
   output_path = "/tmp/function-${local.timestamp}.zip"
+
+  depends_on = [
+    null_resource.configure_img_thumb_gen
+  ]
 }
 
 # Add source code zip to bucket
