@@ -20,3 +20,5 @@ src/modules/**/caendr
 
 *.json
 cloud_sql_proxy
+*.tbi
+*.csi
