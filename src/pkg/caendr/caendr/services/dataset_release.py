@@ -75,6 +75,14 @@ def create_new_dataset_release(version: str, wormbase_version: str, report_type:
   return release
 
 
+def update_dataset_release(id: str, **kwargs):
+  logger.debug(f'Updating existing DatasetRelease: **kwargs:{kwargs}')
+  d = get_dataset_release(id)
+  d.set_properties(**kwargs)
+  d.save()
+  return d
+
+
 def delete_dataset_release(version: str):
   delete_ds_entity_by_ref(DatasetRelease.kind, version)
 

@@ -1,6 +1,7 @@
 import io
 import google.auth
 import google.auth.transport.requests as tr_requests
+import datetime
 
 from google.resumable_media.requests import ResumableUpload
 from google.cloud import storage
@@ -117,3 +118,20 @@ def upload_blob_from_file_as_chunks(bucket_name: str, filename: str, blob_name: 
     logger.info(json_response)
     return json_response
   
+def generate_download_signed_url_v4(bucket_name, blob_name, expiration=datetime.timedelta(minutes=15)):
+  """Generates a v4 signed URL for downloading a blob. """
+  bucket = storageClient.get_bucket(bucket_name)
+  
+  try: 
+    blob = bucket.blob(blob_name)
+    url = blob.generate_signed_url(
+      expiration=expiration,
+      method="GET"
+    )
+    return url
+
+  except Exception as inst:
+    logger.error(type(inst))
+    logger.error(inst.args)
+    logger.error(inst)
+    return None

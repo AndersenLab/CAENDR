@@ -7,10 +7,11 @@ from flask import request
 
 from caendr.models.sql import Strain
 from caendr.services.cloud.postgresql import db
-from caendr.services.cloud.storage import get_blob
+from caendr.services.cloud.storage import get_blob, generate_download_signed_url_v4
 
 MODULE_IMG_THUMB_GEN_SOURCE_PATH = os.environ.get('MODULE_IMG_THUMB_GEN_SOURCE_PATH')
 MODULE_SITE_BUCKET_PHOTOS_NAME = os.environ.get('MODULE_SITE_BUCKET_PHOTOS_NAME')
+MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
 
 #def query_strains(strain_name=None, isotype_name=None, release=None, all_strain_names=False, resolve_isotype=False, issues=False, is_sequenced=False):
 
@@ -115,8 +116,20 @@ def get_strain_img_url(strain_name, thumbnail=True):
   if blob and thumbnail:
     blob = get_blob(MODULE_SITE_BUCKET_PHOTOS_NAME, f"{MODULE_IMG_THUMB_GEN_SOURCE_PATH}/{strain_name}.thumb.jpg")
 
-  
   try:
     return blob.public_url
   except AttributeError:
     return None
+  
+  
+def get_bam_bai_download_link(strain_name, ext):
+  if ext == 'bai':
+    ext = 'bam.bai'
+  elif ext == 'bam':
+    pass
+  else:
+    return
+  
+  blob_name = f'bam/c_elegans/{strain_name}.{ext}'
+  bucket = MODULE_SITE_BUCKET_PRIVATE_NAME
+  return generate_download_signed_url_v4(bucket, blob_name)

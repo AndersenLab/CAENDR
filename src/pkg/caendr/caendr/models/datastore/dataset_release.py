@@ -12,17 +12,14 @@ MODULE_SITE_BUCKET_PUBLIC_NAME = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME'
 class DatasetRelease(Entity):
   kind = "dataset_release"
   __bucket_name = MODULE_SITE_BUCKET_PUBLIC_NAME
-  __blob_prefix = kind
+  __blob_prefix = f'{kind}/c_elegans'
 
   def __init__(self, *args, **kwargs):
     super(DatasetRelease, self).__init__(*args, **kwargs)
   
   def set_properties(self, **kwargs):
-    self.version = kwargs.get('version')
-    self.wormbase_version = kwargs.get('wormbase_version')
-    self.report_type = kwargs.get('report_type')
-    self.disabled = kwargs.get('disabled')
-    self.hidden = kwargs.get('hidden')
+    props = self.get_props_set()
+    self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
     
     if not self.report_type and int(self.version) > 0:
       if int(self.version) < V1_V2_Cutoff_Date:
@@ -30,7 +27,15 @@ class DatasetRelease(Entity):
       else:
         self.report_type = 'V2'
 
-
+  @classmethod
+  def get_props_set(cls):
+    return {'id',
+            'version', 
+            'wormbase_version',
+            'report_type',
+            'disabled',
+            'hidden'}
+    
   @classmethod
   def get_bucket_name(cls):
     return cls.__bucket_name

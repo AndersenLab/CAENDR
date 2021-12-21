@@ -38,7 +38,7 @@ releases_bp = Blueprint('data_releases',
 @releases_bp.route('/release/latest')
 @releases_bp.route('/release/<string:release_version>')
 @cache.memoize(50)
-def data(release_version=None):
+def data_releases(release_version=None):
   """ Default data page - lists available releases. """
   title = "Genomic Data"
   alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.landing')}
@@ -113,30 +113,35 @@ def data_v01(RELEASE, RELEASES):
 @releases_bp.route('/release/<string:release_version>/alignment')
 @cache.memoize(50)
 def alignment_data(release_version=''):
-  pass
+  RELEASES = get_all_dataset_releases(order='-version')
+  
+  # Get the requested release and throw an error if it doesn't exist
+  RELEASE = None
+  if release_version:
+    for r in RELEASES:
+      if r.version == release_version:
+        RELEASE = r
+        break
+    if not RELEASE:
+      raise NotFoundError(f'Release Version: {release_version} Not Found')
+  else:
+    RELEASE = RELEASES[0]
 
-'''
-@data_releases_bp.route('/release/latest/alignment')
-@data_releases_bp.route('/release/<string:release_version>/alignment')
-@cache.memoize(50)
-def alignment_data(release_version=''):
-  """
-      Alignment data page
-  """
-  if release_version is None:
-    release_version = config['DATASET_RELEASE']
   # Pre-2020 releases don't have data organized the same way
-  if int(release_version) < 20200101:
-      return 
+  if RELEASE.report_type == 'V1':
+    return 
   
   # Post-2020 releases
   title = "Alignment Data"
   alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.landing')}
-  strain_listing = query_strains(release=release_version)
-  RELEASES = config["RELEASES"]
+  strain_listing = query_strains(release_version=release_version)
+  '''
   DATASET_RELEASE, WORMBASE_VERSION = list(filter(lambda x: x[0] == release_version, RELEASES))[0]
   REPORTS = ["alignment"]
-  return render_template('alignment.html', **locals())'''
+  '''
+  return render_template('data/alignment.html', **locals())
+
+
 
 # =========================== #
 #   Strain Issues Data Page   #
@@ -163,7 +168,7 @@ def strain_issues(release_version=None):
       RELEASE = RELEASES[0]
 
     # Pre-2020 releases don't have data organized the same way
-    if int(release_version) < 20200101:
+    if RELEASE.report_type == 'V1':
       return 
     
     # Post-2020 releases
