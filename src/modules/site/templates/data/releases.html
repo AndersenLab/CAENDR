@@ -25,7 +25,7 @@ body, html{
       <h3>Releases</h3>
       {% for RELEASE in RELEASES %}
         <li {% if RELEASE.version == release_version %} class="active btn-nu" {% endif %}>
-          <a {% if RELEASE.disabled %} href="#" {% else %} href="{{ url_for('data_releases.data', release_version = RELEASE.version) }}" {% endif %}>{{ RELEASE.version }}</a>
+          <a {% if RELEASE.disabled %} href="#" {% else %} href="{{ url_for('data_releases.data_releases', release_version = RELEASE.version) }}" {% endif %}>{{ RELEASE.version }}</a>
         </li>
       {% endfor %}
     </ul>
