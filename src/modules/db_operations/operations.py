@@ -35,7 +35,6 @@ def execute_operation(app, db, DB_OP):
       raise EnvVarError()
     drop_and_populate_wormbase_genes(app, db, WORMBASE_VERSION)
 
-
   elif DB_OP == 'DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS':
     if not STRAIN_VARIANT_ANNOTATION_VERSION:
       raise EnvVarError()
