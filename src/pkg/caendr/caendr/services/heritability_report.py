@@ -3,7 +3,7 @@ import os
 from logzero import logger
 
 from caendr.services.cloud.datastore import query_ds_entities
-from caendr.services.cloud.storage import upload_blob_from_string
+from caendr.services.cloud.storage import upload_blob_from_string, generate_blob_url, check_blob_exists
 from caendr.models.task import HeritabilityTask
 from caendr.models.datastore import HeritabilityReport
 from caendr.utils.data import unique_id
@@ -49,18 +49,30 @@ def create_new_heritability_report(username, label, data_hash, trait, data_tsv):
           'container_name': c.container_name,
           'container_version': c.container_tag,
           'status': status}
+  
+  # Check for an existing heritability report owned by the same user that matches the data_hash and container tag. Updates the label.
+  h2s = query_ds_entities(HeritabilityReport.kind, filters=[('data_hash', '=', data_hash)])
+  for h2 in h2s:
+    h2 = HeritabilityReport(h2)
+    if h2.username == username and h2.container_version == c.container_tag:
+      h2.label = label
+      h2.save()
+      return h2
 
   h2 = HeritabilityReport(id)
   h2.set_properties(**props)
   h2.save()
   
+  # Check if there is already a cached result from another user
+  if check_blob_exists(h2.get_bucket_name(), h2.get_result_blob_path()):
+    h2.status = 'COMPLETE'
+    h2.save()
+    return h2
+  
   # Upload data.tsv to google storage
   bucket = h2.get_bucket_name()
   blob = h2.get_data_blob_path()
   upload_blob_from_string(bucket, data_tsv, blob)
-
-
-
 
   # Schedule mapping in task queue
   task = _create_heritability_task(h2)
