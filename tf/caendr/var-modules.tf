@@ -7,6 +7,7 @@ locals {
     "terraform_sa_filename" = var.TERRAFORM_SERVICE_ACCOUNT_FILENAME,
     "google_sheets_sa_name" = var.GOOGLE_SHEETS_SERVICE_ACCOUNT_NAME,
     "google_analytics_sa_name" = var.GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME,
+    "google_storage_sa_name" = var.GOOGLE_STORAGE_SERVICE_ACCOUNT_NAME,
     "google_cloudsql_sa_name" = var.GOOGLE_CLOUDSQL_SERVICE_ACCOUNT_NAME,
     "source_bucket_name" = var.GOOGLE_CLOUD_SOURCE_BUCKET_NAME
   })

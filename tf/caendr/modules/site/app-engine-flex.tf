@@ -1,4 +1,6 @@
-/* Commented out to prevent re-creating */
+locals {
+  cron_yaml_path = abspath("${path.module}/../../../../src/modules/site/cron.yaml")
+}
 
 resource "google_app_engine_application" "app" {
   project     = var.google_cloud_vars.project_id
@@ -11,7 +13,6 @@ resource "google_app_engine_application" "app" {
     ignore_changes = all
   }
 }
-
 
 
 resource "google_app_engine_flexible_app_version" "site" {
@@ -79,6 +80,17 @@ resource "google_app_engine_flexible_app_version" "site" {
 }
 
 
+resource "null_resource" "app_engine_cron_yaml" {
+  triggers = {
+    cron_yaml_sha1 = "${sha1(file(local.cron_yaml_path))}"
+  }
+  
+  provisioner "local-exec" {
+    command = format("gcloud app deploy %s", local.cron_yaml_path)
+  }
+}
+
+
 resource "google_app_engine_service_split_traffic" "site_traffic" {
   service = google_app_engine_flexible_app_version.site.service
 
@@ -88,17 +100,19 @@ resource "google_app_engine_service_split_traffic" "site_traffic" {
       (google_app_engine_flexible_app_version.site.version_id) = 1
     }
   }
+
   depends_on = [
     google_secret_manager_secret.app_engine_group,
     google_secret_manager_secret_version.app_engine_group,
+    null_resource.app_engine_cron_yaml,
     time_sleep.wait_app_engine_start
   ]
 }
 
 resource "time_sleep" "wait_app_engine_start" {
-    create_duration = "300s"
+  create_duration = "300s"
 
-    depends_on = [
-        google_app_engine_flexible_app_version.site
-    ]
+  depends_on = [
+    google_app_engine_flexible_app_version.site
+  ]
 }
