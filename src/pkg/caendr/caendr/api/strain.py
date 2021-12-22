@@ -4,14 +4,19 @@ import os
 from logzero import logger
 from sqlalchemy import or_
 from flask import request
+from datetime import timedelta
 
 from caendr.models.sql import Strain
 from caendr.services.cloud.postgresql import db
-from caendr.services.cloud.storage import get_blob, generate_download_signed_url_v4
+from caendr.services.cloud.storage import get_blob, generate_download_signed_url_v4, download_blob_to_file, upload_blob_from_file
 
 MODULE_IMG_THUMB_GEN_SOURCE_PATH = os.environ.get('MODULE_IMG_THUMB_GEN_SOURCE_PATH')
 MODULE_SITE_BUCKET_PHOTOS_NAME = os.environ.get('MODULE_SITE_BUCKET_PHOTOS_NAME')
 MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
+
+BAM_BAI_DOWNLOAD_SCRIPT_NAME = "bam_bai_signed_download_script.sh"
+bam_prefix = 'bam/c_elegans'
+
 
 #def query_strains(strain_name=None, isotype_name=None, release=None, all_strain_names=False, resolve_isotype=False, issues=False, is_sequenced=False):
 
@@ -131,5 +136,53 @@ def get_bam_bai_download_link(strain_name, ext):
     return
   
   blob_name = f'bam/c_elegans/{strain_name}.{ext}'
-  bucket = MODULE_SITE_BUCKET_PRIVATE_NAME
-  return generate_download_signed_url_v4(bucket, blob_name)
+  bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
+  return generate_download_signed_url_v4(bucket_name, blob_name)
+
+
+def fetch_bam_bai_download_script(reload=False):
+  if reload and os.path.exists(BAM_BAI_DOWNLOAD_SCRIPT_NAME):
+    os.remove(BAM_BAI_DOWNLOAD_SCRIPT_NAME)
+    
+  if not os.path.exists(BAM_BAI_DOWNLOAD_SCRIPT_NAME):
+    bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
+    blob_name = f'{bam_prefix}/{BAM_BAI_DOWNLOAD_SCRIPT_NAME}'
+    logger.debug('Reloading bam/bai download script from: bucket:{bucket_name} blob:{blob_name}')
+    return download_blob_to_file(bucket_name, blob_name, BAM_BAI_DOWNLOAD_SCRIPT_NAME)
+
+  return BAM_BAI_DOWNLOAD_SCRIPT_NAME
+
+def get_joined_strain_list():
+  strain_listing = query_strains(is_sequenced=True)
+  joined_strain_list = ''
+  for strain in strain_listing:
+    joined_strain_list += strain.strain + ','
+  return joined_strain_list
+
+def generate_bam_bai_download_script(joined_strain_list):
+  expiration = timedelta(days=7)
+  filename = BAM_BAI_DOWNLOAD_SCRIPT_NAME
+  blob_name = f'{bam_prefix}/{BAM_BAI_DOWNLOAD_SCRIPT_NAME}'
+  bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
+
+  if os.path.exists(filename):
+    os.remove(filename)
+  f = open(filename, "a")
+
+  strain_listing = joined_strain_list.split(',')
+  for strain in strain_listing:
+    f.write(f'\n\n# Strain: {strain}')
+
+    bam_path = f'{bam_prefix}/{strain}.bam'
+    bam_signed_url = generate_download_signed_url_v4(bucket_name, bam_path, expiration=expiration)
+    if bam_signed_url:
+      f.write(f'\nwget -O "{strain}.bam" "{bam_signed_url}"')
+    
+    bai_path = f'{bam_prefix}/{strain}.bam.bai'
+    bai_signed_url = generate_download_signed_url_v4(bucket_name, bai_path, expiration=expiration)
+    if bai_signed_url:
+      f.write('\nwget -O "{strain}.bam.bai" "{bai_signed_url}"')
+
+  f.close()
+  upload_blob_from_file(bucket_name, filename, blob_name)
+
