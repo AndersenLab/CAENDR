@@ -128,7 +128,6 @@ cloud-resource-plan: cloud-resource-init
 	@echo -e "\n$(COLOR_B)Creating Terraform plan for changes to cloud infrastructure...$(COLOR_N)" && \
 	$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && \
 	cd $(TF_PATH) && rm -rf tf_plan && \
-	terraform init -backend-config=$(ENV_PATH)/backend.hcl && \
 	$(TF_SELECT_WORKSPACE) && \
 	terraform plan -out tf_plan
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
@@ -144,7 +143,6 @@ cloud-resource-deploy: cloud-resource-init
 	$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && \
 	cd $(TF_PATH) && \
 	rm -rf tf_plan && \
-	terraform init -backend-config=$(ENV_PATH)/backend.hcl && \
 	$(TF_SELECT_WORKSPACE) && \
 	terraform plan -out tf_plan && \
 	$(MAKE) -C $(PROJECT_DIR) confirm --no-print-directory && \
@@ -160,7 +158,6 @@ cloud-resource-destroy: cloud-resource-init
 	@$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && \
 	$(MAKE) -C $(PROJECT_DIR) confirm --no-print-directory && \
 	cd $(TF_PATH) && rm -rf tf_plan && \
-	terraform init -backend-config=$(ENV_PATH)/backend.hcl && \
 	$(TF_SELECT_WORKSPACE) && \
 	terraform destroy
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
