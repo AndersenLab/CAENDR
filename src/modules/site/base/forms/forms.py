@@ -129,7 +129,7 @@ class AdminCreateDatabaseOperationForm(FlaskForm):
   
   db_op = SelectField('Database Operation', choices=_ops, validators=[Required()])
   wormbase_version = IntegerField('Wormbase Version WS (ex: 276 -> WS276):', validators=[Optional()])
-  sva_version = IntegerField('Strain Variant Annotation Version (ex: 20210401 -> strain_variant_annotation/WI.strain-annotation.bcsq.20210401.csv.gz)', validators=[Optional()])
+  sva_version = IntegerField('Strain Variant Annotation Version (ex: 20210401 -> gs://caendr-db-bucket/strain_variant_annotation/c_elegans/WI.strain-annotation.bcsq.20210401.csv.gz)', validators=[Optional()])
   note = StringField('Notes', [Optional(), Length(min=3, max=200)])
 
 
