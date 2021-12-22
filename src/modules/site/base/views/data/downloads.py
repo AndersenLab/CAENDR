@@ -31,14 +31,10 @@ def download_script(release_version):
     return abort(404, description="BAM/BAI download script not found")
 
 
-
 @data_downloads_bp.route('/download/files/<string:strain_name>/<string:ext>')
-@cache.cached(timeout=60*60*1)
+@cache.memoize(60*60)
 @jwt_required()
 def download_bam_bai_file(strain_name='', ext=''):
-  if ext == 'bai':
-    ext = 'bam.bai'
-  
   title = f'{strain_name}.{ext}'
   alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.landing')}
 

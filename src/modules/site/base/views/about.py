@@ -35,7 +35,7 @@ about_bp = Blueprint('about',
 
 
 @about_bp.route('/')
-@cache.memoize(50)
+@cache.memoize(60*60)
 def about():
   ''' About us Page - Gives an overview of CeNDR '''
   title = "About CeNDR"
@@ -46,7 +46,7 @@ def about():
 
 
 @about_bp.route('/getting_started/')
-@cache.memoize(50)
+@cache.memoize(60*60)
 def getting_started():
   ''' Getting Started - provides information on how to get started with CeNDR '''
   title = "Getting Started"
@@ -57,7 +57,7 @@ def getting_started():
 
 
 @about_bp.route('/committee/')
-@cache.memoize(50)
+@cache.memoize(60*60)
 def committee():
   ''' Scientific Panel Page'''
   title = "Scientific Advisory Committee"
@@ -67,7 +67,7 @@ def committee():
 
 
 @about_bp.route('/collaborators/')
-@cache.memoize(50)
+@cache.memoize(60*60)
 def collaborators():
   ''' Other Project Collaborators Page '''
   title = "Collaborators"
@@ -77,7 +77,7 @@ def collaborators():
 
 
 @about_bp.route('/staff/')
-@cache.memoize(50)
+@cache.memoize(60*60)
 def staff():
   ''' Staff Page '''
   title = "Staff"
@@ -130,6 +130,7 @@ def donate():
 
 
 @about_bp.route('/funding/')
+@cache.memoize(60*60)
 def funding():
   title = "Funding"
   disable_parent_breadcrumb = True
@@ -138,6 +139,7 @@ def funding():
 
 
 @about_bp.route('/statistics')
+@cache.memoize(60*60*24)
 def statistics():
   title = "Statistics"
 
@@ -190,6 +192,7 @@ def statistics():
 
 
 @about_bp.route('/publications')
+@cache.memoize(60*60)
 def publications():
   """  List of publications that have referenced CeNDR """
   title = "Publications"

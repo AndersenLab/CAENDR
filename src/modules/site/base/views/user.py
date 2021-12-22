@@ -18,7 +18,7 @@ user_bp = Blueprint('user',
 @user_bp.route('/')
 def user():
   """
-      Redirect base route to the strain list page
+      Redirect base route to the user profile page
   """
   return redirect(url_for('user.user_profile'))
 
