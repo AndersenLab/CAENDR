@@ -20,6 +20,8 @@ LOAD_GLOBAL_ENV=export $$(cat $(GLOBAL_ENV_FILE) | sed $(WHITESPACE_REGEX) | sed
 LOAD_TF_VAR=export $$(cat $(GLOBAL_ENV_FILE) | sed $(WHITESPACE_REGEX) | sed $(COMMENT_REGEX) | sed $(TF_VAR_PREFIX_REGEX) | xargs)
 LOAD_SECRET_TF_VAR=export $$(cat $(SECRET_ENV_FILE) | sed $(WHITESPACE_REGEX) | sed $(COMMENT_REGEX) | sed $(TF_VAR_PREFIX_REGEX) | xargs)
 
+TF_SELECT_WORKSPACE=(terraform workspace new $(ENV) || (echo "Switching to existing workspace \"$(ENV)\"" && terraform workspace select $(ENV)))
+
 all: help
 targets: configure cloud-resource-plan cloud-resource-deploy cloud-resource-destroy 
 
@@ -127,7 +129,7 @@ cloud-resource-plan: cloud-resource-init
 	$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && \
 	cd $(TF_PATH) && rm -rf tf_plan && \
 	terraform init -backend-config=$(ENV_PATH)/backend.hcl && \
-	(terraform workspace new $(ENV) || terraform workspace select $(ENV)) && \
+	$(TF_SELECT_WORKSPACE) && \
 	terraform plan -out tf_plan
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 	@echo -e "\n\nRun this command to apply the terraform plan: $(COLOR_G)'make cloud-resource-deploy ENV=$(ENV)'$(COLOR_N)\n" 
@@ -143,7 +145,7 @@ cloud-resource-deploy: cloud-resource-init
 	cd $(TF_PATH) && \
 	rm -rf tf_plan && \
 	terraform init -backend-config=$(ENV_PATH)/backend.hcl && \
-	(terraform workspace new $(ENV) || terraform workspace select $(ENV)) && \
+	$(TF_SELECT_WORKSPACE) && \
 	terraform plan -out tf_plan && \
 	$(MAKE) -C $(PROJECT_DIR) confirm --no-print-directory && \
 	terraform apply "tf_plan" 
@@ -159,7 +161,7 @@ cloud-resource-destroy: cloud-resource-init
 	$(MAKE) -C $(PROJECT_DIR) confirm --no-print-directory && \
 	cd $(TF_PATH) && rm -rf tf_plan && \
 	terraform init -backend-config=$(ENV_PATH)/backend.hcl && \
-	(terraform workspace new $(ENV) || terraform workspace select $(ENV)) && \
+	$(TF_SELECT_WORKSPACE) && \
 	terraform destroy
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
