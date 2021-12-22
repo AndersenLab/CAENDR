@@ -1,8 +1,9 @@
-from flask import render_template, Blueprint, url_for
+import os
+from flask import render_template, Blueprint, url_for, send_file, abort
 from base.utils.auth import jwt_required
 from extensions import cache
 
-from caendr.api.strain import get_bam_bai_download_link
+from caendr.api.strain import get_bam_bai_download_link, fetch_bam_bai_download_script
 
 data_downloads_bp = Blueprint('data_downloads',
                     __name__,
@@ -14,15 +15,22 @@ data_downloads_bp = Blueprint('data_downloads',
 @cache.cached(timeout=60*60*24)
 @jwt_required()
 def download_script_strain_v2(release_version):
-  # TODO: write this fn
-  pass
+  return download_script(release_version)
+
 
 @data_downloads_bp.route('/release/<string:release_version>/download/download_isotype_bams.sh')
 @cache.cached(timeout=60*60*24)
 @jwt_required()
 def download_script(release_version):
-  # TODO: write this fn
-  pass
+  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.landing')}
+  try:
+    script_fname = fetch_bam_bai_download_script()
+    if script_fname and os.path.exists(script_fname):
+      return send_file(script_fname, as_attachment=True)
+  except:
+    return abort(404, description="BAM/BAI download script not found")
+
+
 
 @data_downloads_bp.route('/download/files/<string:strain_name>/<string:ext>')
 @cache.cached(timeout=60*60*1)
