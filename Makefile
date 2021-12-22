@@ -104,10 +104,25 @@ endif
 
 
 #~
+cloud-resource-init: #~
+#~ Initializes terraform providers and loads the backend.hcl config 
+#~ if it exists in the environment directory, or use a local backend otherwise.
+cloud-resource-init:
+	@echo -e "\n$(COLOR_B)Initializing Terraform...$(COLOR_N)"
+ifneq ("$(wildcard $(ENV_PATH)/backend.hcl)","")
+	$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && cd $(TF_PATH) && \
+	terraform init -backend-config=$(ENV_PATH)/backend.hcl
+else
+	$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && cd $(TF_PATH) && \
+	terraform init
+endif
+
+
+#~
 cloud-resource-plan: #~
 #~ Generates a terraform plan for the infrastructure described in ./env/[environment]/terraform  
 #~ including any service-specific terraform modules that are required
-cloud-resource-plan: configure-all
+cloud-resource-plan: cloud-resource-init
 	@echo -e "\n$(COLOR_B)Creating Terraform plan for changes to cloud infrastructure...$(COLOR_N)" && \
 	$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && \
 	cd $(TF_PATH) && rm -rf tf_plan && \
@@ -117,11 +132,12 @@ cloud-resource-plan: configure-all
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 	@echo -e "\n\nRun this command to apply the terraform plan: $(COLOR_G)'make cloud-resource-deploy ENV=$(ENV)'$(COLOR_N)\n" 
 
+
 #~
 cloud-resource-deploy: #~
 #~ Executes the generated terraform plan for deploying infrastructure described 
 #~ in ./env/[environment]/terraform including any service-specific terraform modules that are required
-cloud-resource-deploy: configure-all
+cloud-resource-deploy: cloud-resource-init
 	@echo -e "\n$(COLOR_B)Deploying the Terraform cloud resource plan...$(COLOR_N)" && \
 	$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && \
 	cd $(TF_PATH) && \
@@ -133,18 +149,20 @@ cloud-resource-deploy: configure-all
 	terraform apply "tf_plan" 
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
+
 #~
 cloud-resource-destroy: #~
 #~ Destroys all cloud resources provisioned by terraform
-cloud-resource-destroy: configure-all
+cloud-resource-destroy: cloud-resource-init
 	@echo -e "\n$(COLOR_B)DESTROYING ALL TERRAFORM PROVISIONED CLOUD RESOURCES.\nARE YOU SURE YOU WANT TO DO THIS?$(COLOR_N)"
 	@$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && \
-	cd $(PROJECT_DIR) && $(MAKE) -C . confirm --no-print-directory && \
+	$(MAKE) -C $(PROJECT_DIR) confirm --no-print-directory && \
 	cd $(TF_PATH) && rm -rf tf_plan && \
 	terraform init -backend-config=$(ENV_PATH)/backend.hcl && \
 	(terraform workspace new $(ENV) || terraform workspace select $(ENV)) && \
 	terraform destroy
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
+
 
 
 %:
