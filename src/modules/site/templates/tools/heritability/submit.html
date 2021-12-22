@@ -306,9 +306,13 @@ function onFormChange() {
   }
 }
 
+
+var csrf_token = "{{ form.csrf_token._value() }}"
+var example_tsv = "{{ ext_asset('data/heritability_example.tsv') }}"
+
 // Enable setting example data
 $("#set-example").on('click', function() {
-  fetch('https://storage.googleapis.com/elegansvariation.org/reports/heritability/heritability_example.tsv')
+  fetch(example_tsv)
     .then(response => response.text())
     .then(function(data) {
       ex_data = _.map(data.split("\n"), x => x.split("\t"))
@@ -322,7 +326,6 @@ $("#set-example").on('click', function() {
     )
 })
 
-var csrf_token = "{{ form.csrf_token._value() }}"
 
 // submit result
 $("#hcalc").on("click", function(e) {
