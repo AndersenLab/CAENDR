@@ -8,7 +8,7 @@ from datetime import timedelta
 
 from caendr.models.sql import Strain
 from caendr.services.cloud.postgresql import db
-from caendr.services.cloud.storage import get_blob, generate_download_signed_url_v4, download_blob_to_file, upload_blob_from_file
+from caendr.services.cloud.storage import get_blob, generate_download_signed_url_v4, download_blob_to_file, upload_blob_from_file, get_google_storage_credentials
 
 MODULE_IMG_THUMB_GEN_SOURCE_PATH = os.environ.get('MODULE_IMG_THUMB_GEN_SOURCE_PATH')
 MODULE_SITE_BUCKET_PHOTOS_NAME = os.environ.get('MODULE_SITE_BUCKET_PHOTOS_NAME')
@@ -128,14 +128,7 @@ def get_strain_img_url(strain_name, thumbnail=True):
   
   
 def get_bam_bai_download_link(strain_name, ext):
-  if ext == 'bai':
-    ext = 'bam.bai'
-  elif ext == 'bam':
-    pass
-  else:
-    return
-  
-  blob_name = f'bam/c_elegans/{strain_name}.{ext}'
+  blob_name = f'{bam_prefix}/{strain_name}.{ext}'
   bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
   return generate_download_signed_url_v4(bucket_name, blob_name)
 
@@ -152,6 +145,7 @@ def fetch_bam_bai_download_script(reload=False):
 
   return BAM_BAI_DOWNLOAD_SCRIPT_NAME
 
+
 def get_joined_strain_list():
   strain_listing = query_strains(is_sequenced=True)
   joined_strain_list = ''
@@ -159,12 +153,14 @@ def get_joined_strain_list():
     joined_strain_list += strain.strain + ','
   return joined_strain_list
 
+
 def generate_bam_bai_download_script(joined_strain_list):
   expiration = timedelta(days=7)
   filename = BAM_BAI_DOWNLOAD_SCRIPT_NAME
   blob_name = f'{bam_prefix}/{BAM_BAI_DOWNLOAD_SCRIPT_NAME}'
   bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
-
+  credentials = get_google_storage_credentials()
+  
   if os.path.exists(filename):
     os.remove(filename)
   f = open(filename, "a")
@@ -172,16 +168,14 @@ def generate_bam_bai_download_script(joined_strain_list):
   strain_listing = joined_strain_list.split(',')
   for strain in strain_listing:
     f.write(f'\n\n# Strain: {strain}')
-
     bam_path = f'{bam_prefix}/{strain}.bam'
-    bam_signed_url = generate_download_signed_url_v4(bucket_name, bam_path, expiration=expiration)
+    bai_path = f'{bam_prefix}/{strain}.bam.bai'
+    bam_signed_url = generate_download_signed_url_v4(bucket_name, bam_path, expiration=expiration, credentials=credentials)
+    bai_signed_url = generate_download_signed_url_v4(bucket_name, bai_path, expiration=expiration, credentials=credentials)
     if bam_signed_url:
       f.write(f'\nwget -O "{strain}.bam" "{bam_signed_url}"')
-    
-    bai_path = f'{bam_prefix}/{strain}.bam.bai'
-    bai_signed_url = generate_download_signed_url_v4(bucket_name, bai_path, expiration=expiration)
     if bai_signed_url:
-      f.write('\nwget -O "{strain}.bam.bai" "{bai_signed_url}"')
+      f.write(f'\nwget -O "{strain}.bam.bai" "{bai_signed_url}"')
 
   f.close()
   upload_blob_from_file(bucket_name, filename, blob_name)

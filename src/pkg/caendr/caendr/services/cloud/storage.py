@@ -1,15 +1,28 @@
 import io
+import os
 import google.auth
 import google.auth.transport.requests as tr_requests
 import datetime
 
+from google.oauth2 import service_account
 from google.resumable_media.requests import ResumableUpload
 from google.cloud import storage
 from logzero import logger
 
 from caendr.models.error import CloudStorageUploadError, NotFoundError
+from caendr.services.cloud.secret import get_secret
+from caendr.services.cloud.service_account import get_service_account_credentials
+
+GOOGLE_STORAGE_SERVICE_ACCOUNT_NAME = os.environ.get('GOOGLE_STORAGE_SERVICE_ACCOUNT_NAME')
 
 storageClient = storage.Client()
+
+def get_google_storage_credentials():
+  """ Uses service account credentials to authorize access to google storage """
+  json_account_info = get_service_account_credentials(get_secret(GOOGLE_STORAGE_SERVICE_ACCOUNT_NAME))
+  credentials = service_account.Credentials.from_service_account_info(json_account_info)
+  return credentials
+
 
 def get_blob(bucket_name, blob_name):
   logger.debug(f'get_blob(bucket_name={bucket_name}, blob_name={blob_name})')
@@ -55,6 +68,7 @@ def upload_blob_from_file_object(bucket_name, file, blob_name):
   bucket = storageClient.get_bucket(bucket_name)
   blob = bucket.blob(blob_name)
   blob.upload_from_file(file)
+
 
 def upload_blob_from_string(bucket_name, data, blob_name):
   """Uploads a string to the bucket as a file."""
@@ -121,15 +135,19 @@ def upload_blob_from_file_as_chunks(bucket_name: str, filename: str, blob_name: 
     logger.info(json_response)
     return json_response
   
-def generate_download_signed_url_v4(bucket_name, blob_name, expiration=datetime.timedelta(minutes=15)):
-  """Generates a v4 signed URL for downloading a blob. """
-  bucket = storageClient.get_bucket(bucket_name)
   
+def generate_download_signed_url_v4(bucket_name, blob_name, credentials=None, expiration=datetime.timedelta(minutes=15)):
+  """Generates a v4 signed URL for downloading a blob. """
+  if credentials is None:
+    credentials = get_google_storage_credentials()
+    
+  bucket = storageClient.get_bucket(bucket_name)
   try: 
     blob = bucket.blob(blob_name)
     url = blob.generate_signed_url(
       expiration=expiration,
-      method="GET"
+      method="GET",
+      credentials=credentials
     )
     return url
 

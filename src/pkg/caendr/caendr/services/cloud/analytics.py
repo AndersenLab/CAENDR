@@ -5,7 +5,6 @@ import pandas as pd
 
 from datetime import datetime
 from oauth2client.service_account import ServiceAccountCredentials
-from base64 import b64decode
 
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.service_account import get_service_account_credentials
