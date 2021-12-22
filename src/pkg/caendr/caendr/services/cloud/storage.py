@@ -7,7 +7,7 @@ from google.resumable_media.requests import ResumableUpload
 from google.cloud import storage
 from logzero import logger
 
-from caendr.models.error import CloudStorageUploadError
+from caendr.models.error import CloudStorageUploadError, NotFoundError
 
 storageClient = storage.Client()
 
@@ -43,8 +43,11 @@ def download_blob_to_file(bucket_name, blob_name, filename):
   ''' Downloads a blob and saves it locally '''   
   bucket = storageClient.get_bucket(bucket_name)
   blob = bucket.blob(blob_name)
-  blob.download_to_file(open(filename, 'wb'))
-  return filename
+  if blob.exists():
+    blob.download_to_file(open(filename, 'wb'))
+    return filename
+  else:
+    raise NotFoundError()
 
 def upload_blob_from_file_object(bucket_name, file, blob_name):
   """Uploads a file to the bucket."""

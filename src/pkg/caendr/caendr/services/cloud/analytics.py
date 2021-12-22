@@ -8,22 +8,16 @@ from oauth2client.service_account import ServiceAccountCredentials
 from base64 import b64decode
 
 from caendr.services.cloud.secret import get_secret
+from caendr.services.cloud.service_account import get_service_account_credentials
 
 GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME = os.environ.get('GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME')
 
 
-def get_service_account_credentials():
-  """ Fetch service account credentials for google analytics """
-  sa_key = b64decode(get_secret(GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME))
-  return json.loads(sa_key)
-
-
 def authenticate_google_analytics():
   """ Uses service account credentials to authorize access to google analytics """
-  service_credentials = get_service_account_credentials()
+  service_credentials = get_service_account_credentials(get_secret(GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME))
   scope = ['https://www.googleapis.com/auth/analytics.readonly']
-  # credentials = ServiceAccountCredentials.from_json_keyfile_dict(service_credentials, scope)
-  credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/sam/northwestern/github/caendr-new/CAENDR/src/pkg/caendr/caendr/services/cloud/andersen-lab-travis.json')
+  credentials = ServiceAccountCredentials.from_json_keyfile_dict(service_credentials, scope)
   return googleapiclient.discovery.build('analyticsreporting', 'v4', credentials=credentials)
 
 

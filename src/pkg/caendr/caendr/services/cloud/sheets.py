@@ -10,17 +10,12 @@ from base64 import b64decode
 from logzero import logger
 
 from caendr.services.cloud.secret import get_secret
+from caendr.services.cloud.service_account import get_service_account_credentials
 
 GOOGLE_SHEET_PREFIX = 'https://docs.google.com/spreadsheets/d'
 
 ANDERSEN_LAB_ORDER_SHEET = get_secret('ANDERSEN_LAB_ORDER_SHEET')
 GOOGLE_SHEETS_SERVICE_ACCOUNT_NAME = os.environ.get('GOOGLE_SHEETS_SERVICE_ACCOUNT_NAME')
-
-
-def get_service_account_credentials():
-  """ Fetch service account credentials for google analytics """
-  sa_key = b64decode(get_secret(GOOGLE_SHEETS_SERVICE_ACCOUNT_NAME))
-  return json.loads(sa_key)
 
 
 def authenticate_google_sheets():
@@ -31,7 +26,7 @@ def authenticate_google_sheets():
     In order for this to work you must share the worksheet with the google sheets service account 
     worksheet and service account name are both described in the environment config files
   """
-  service_credentials = get_service_account_credentials()
+  service_credentials = get_service_account_credentials(get_secret(GOOGLE_SHEETS_SERVICE_ACCOUNT_NAME))
   scope = ['https://spreadsheets.google.com/feeds']
   credentials = ServiceAccountCredentials.from_json_keyfile_dict(service_credentials, scope)
   return gspread.authorize(credentials)
