@@ -34,7 +34,6 @@ def load_yaml(yaml_file):
 
 def get_object_hash(object, length=10):
   ''' Generates the sha1 hash of an object encoded as a string and returns the first 'length' characters '''
-  logger.debug(object)
   return hashlib.sha1(str(object).encode('utf-8')).hexdigest()[0:length]
 
 
