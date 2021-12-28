@@ -28,8 +28,8 @@ help: #~
 
 verify-env:
 ifeq ($(ENV),)
-	@echo -e "$(COLOR_R)\nERROR: ENV must be defined!$(COLOR_N)"
 	@make help --no-print-directory
+	@echo -e "$(COLOR_R)\nERROR: ENV must be defined!$(COLOR_N)\n\n"
 	@false
 endif
 

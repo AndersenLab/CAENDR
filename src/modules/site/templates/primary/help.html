@@ -1,0 +1,21 @@
+{% extends "_layouts/default.html" %}
+
+
+{% block content %}
+<div class="row">
+    <div class = 'col-md-3'>
+      <ul class="list-group list-group-nu">
+        {% for f in files %}
+        <a class="list-group-item {% if f == filename %}active{% endif %}" href="{{ url_for('primary.help_item', filename = f) }}">
+            <strong>{{ f.replace("-", " ") }}</strong>
+          </a>
+
+        </li>
+        {% endfor %}
+      </ul>
+
+    </div>
+    <div class="col-md-9">
+      {{ render_markdown(filename + ".md", directory = "base/static/content/help/") }}
+    </div>
+{% endblock %}

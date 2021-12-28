@@ -1,0 +1,8 @@
+name: gene_browser_tracks
+channels:
+  - bioconda
+  - defaults
+dependencies:
+  - ucsc-bigbedtobed
+  - bedtools
+  - bedops

@@ -1,0 +1,87 @@
+{% macro render_field(field, form_prefix=None, form_suffix=None) %}
+  <div class="form-group {% if field.errors %}has-error{% endif %}">
+    {{ field.label }}
+    {% if form_prefix or form_suffix %}
+    <div class="input-group">
+        {% endif %}
+        {% if form_prefix %}
+            <span class="input-group-addon">{{ form_prefix }}</span>
+        {% endif %}
+                {% if field.type == 'RadioField' %}
+                    {{ field(**kwargs) }}
+                {% else %}
+                    {{ field(class="form-control", **kwargs) }}
+                {% endif %}
+        {% if form_suffix %}
+            <span class="input-group-addon">{{ form_prefix }}</span>
+        {% endif %}
+    {% if form_prefix or form_suffix %}
+    </div>
+    {% endif %}
+
+    {% for error in field.errors %}
+        <p class='text-danger'>
+            {{ error|safe|e }}
+        </p>
+    {% endfor %}
+
+
+  </div>
+{% endmacro %}
+
+
+
+{% macro render_table(header, rows, table_class="") %}
+    
+<table class='table {{ table_class }}'>
+    {% if header %}
+        <thead>
+            <tr>
+                {% for col in header %}
+                <td>{{ col }}</td>
+                {% endfor %}
+            </tr>
+        </table>
+    {% endif %}
+    <tbody>
+    {% for row in rows %}
+        <tr>
+        {% for col in row %}
+                <td>{{ col }}</td>
+        {% endfor %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% endmacro %}
+
+
+{% macro render_dataTable_top_menu(pages=True, filter=True) %}
+
+<div class="row dataTables-menu-top">
+  <div class="col-md-2">
+    {% if pages %}
+    <form class="form-inline">
+      <div class="form-group" style="text-align:center">
+        <label for="page-length"> Show: </label>
+        <select name="page-length" id="page-length" class="form-control">
+          <option value="5">5</option>
+          <option value="10">10</option>
+          <option value="25" selected>25</option>
+          <option value="100">100</option>
+        </select>
+      </div>
+    </form>
+    {% endif %}
+  </div> {# /col-md-2 #}
+  <div class="col-md-6"></div>
+  <div class="col-md-4">
+    {% if filter %}
+    <input id="filter" type="text" class="form-control pull-right" placeholder="Search">
+    {% endif %}
+  </div> {# /col-md-2 #}
+</div> {# /row #}
+
+
+{% endmacro %}

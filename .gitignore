@@ -1,8 +1,22 @@
 __pycache__/
 *.py[cod]
+.pytest_cache
 
 .terraform/
+.terraform.lock.hcl
 terraform-service-account.json
+terraform.tfstate*
+terraform.lock*
+tf_plan
 
 .env
 secret.env
+
+venv
+
+.vscode
+.download
+src/modules/**/caendr
+
+*.json
+cloud_sql_proxy

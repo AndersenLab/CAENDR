@@ -1,0 +1,4 @@
+venv
+Dockerfile
+.dockerignore
+.download
