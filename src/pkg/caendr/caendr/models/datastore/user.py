@@ -50,7 +50,7 @@ class User(Entity):
   def set_password(self, password, salt):
     ''' Sets the User's password property to the salted and hashed version of their updated password '''
     if (isinstance(password, str) and len(password) > 0):
-      self.password_hashed = get_password_hash(password + salt)
+      self.password = get_password_hash(password + salt)
   
 
   def set_email(self, email, verified=False):
@@ -61,5 +61,5 @@ class User(Entity):
 
   def check_password(self, password, salt):
     ''' Checks the User's password using the saved salted and hashed password'''
-    return safe_str_cmp(self.password_hashed, get_password_hash(password + salt))
+    return safe_str_cmp(self.password, get_password_hash(password + salt))
     
