@@ -7,7 +7,7 @@ from caendr.models.task import NemaScanTask
 from caendr.models.datastore import NemascanMapping
 from caendr.utils.data import unique_id
 from caendr.models.error import DataFormatError, DuplicateDataError
-from caendr.services.cloud.storage import check_blob_exists, upload_blob_from_file
+from caendr.services.cloud.storage import check_blob_exists, upload_blob_from_file, get_blob_list
 from caendr.services.cloud.datastore import query_ds_entities
 from caendr.services.cloud.task import add_task
 from caendr.services.cloud.secret import get_secret
@@ -24,17 +24,32 @@ API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 uploads_dir = os.path.join('./', 'uploads')
 os.makedirs(uploads_dir, exist_ok=True)
 
-# TODO: write this
-'''def is_mapping_cached(data_hash: str, container_name: str, container_version: str):
-  filters = [('data_hash', '=', data_hash), 
-            ('container_name', '=', container_name),
-            ('container_version', '=', container_version)]
-  e = query_ds_entities(Profile.kind, filters=filters)
-  if e:
-    logger.debug(e)
-    return e
-  '''
-  
+
+def is_data_cached(ns: NemascanMapping):
+  # Check if the file already exists in google storage (matching hash)
+  data_exists = get_blob_list(ns.get_bucket_name(), ns.get_data_blob_path())
+  if data_exists and len(data_exists) > 0:
+    return True
+  return False
+
+
+def is_result_cached(ns: NemascanMapping):
+  if ns.status == 'COMPLETE' and len(ns.report_path) > 0:
+    return True
+
+  result = get_blob_list(ns.get_bucket_name(), ns.get_report_blob_path())
+
+  # check if there is a report on GS, just to be sure
+  if len(result) > 0:
+    for x in result:
+      if x.name.endswith('.html'):
+        report_path = x.name
+        ns.report_path = report_path
+        ns.status = 'COMPLETE'
+        ns.save()
+        return True
+
+
 def get_mapping(id):
   return NemascanMapping(id)
 
@@ -48,7 +63,7 @@ def get_user_mappings(username):
   return mappings
   
   
-def create_new_mapping(username, label, file):
+def create_new_mapping(username, label, file, status):
   logger.debug(f'Creating new Nemascan Mapping: username:{username} label:{label} file:{file}')
   id = unique_id()
 
@@ -74,9 +89,35 @@ def create_new_mapping(username, label, file):
           'container_version': c.container_tag,
           'status': 'SUBMITTED'}
   
+  # Check for an existing nemascan mapping owned by the same user that matches the data_hash and container tag. Updates the label.
+  mappings = query_ds_entities(NemascanMapping.kind, filters=[('data_hash', '=', data_hash)])
+  for m in mappings:
+    m = NemascanMapping(m)
+    if m.username == username and m.container_version == c.container_tag:
+      m.label = label
+      m.save()
+      logger.debug('Nemascan Mapping with identical Data already submitted by this user. Returning cached results.')
+      return m
+  
   m = NemascanMapping(id)
   m.set_properties(**props)
   m.save()
+  
+  m = NemascanMapping(id)
+  # Check if there is already cached data from another user
+  if is_data_cached(m):
+    m.set_properties({'status': 'DUPLICATE'})
+    m.save()
+    logger.debug('Nemascan Mapping with identical Data Hash already exists. Returning cached results.')
+    return NemascanMapping(id)
+  # TODO: Duplicate the cached results mapping status property
+  
+  # Check if there is already a cached result from another user
+  if is_result_cached(m):
+    m.set_properties({'status': 'COMPLETE'})
+    m.save()
+    logger.debug('Nemascan Mapping with identical Data Hash already exists. Returning cached results.')
+    return NemascanMapping(id)
 
   # Upload data.tsv to google storage
   bucket = NemascanMapping.get_bucket_name()

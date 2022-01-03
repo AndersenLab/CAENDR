@@ -8,6 +8,7 @@ MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAM
 NEMASCAN_REPORT_PATH_PREFIX = 'reports'
 NEMASCAN_RESULT_PATH_INFIX = 'results'
 INPUT_DATA_PATH = 'NemaScan/input_data'
+REPORT_DATA_PREFIX = 'Reports/NemaScan_Report_'
 NEMASCAN_INPUT_FILE = 'data.tsv'
 
 class NemascanMapping(Entity):
@@ -17,6 +18,7 @@ class NemascanMapping(Entity):
   __result_infix = NEMASCAN_RESULT_PATH_INFIX
   __input_data_path = INPUT_DATA_PATH
   __input_file = NEMASCAN_INPUT_FILE
+  __report_path = REPORT_DATA_PREFIX
   
   def __init__(self, *args, **kwargs):
     super(NemascanMapping, self).__init__(*args, **kwargs)
@@ -40,7 +42,7 @@ class NemascanMapping(Entity):
     return f'{self.get_blob_path()}/{self.__result_infix}'
 
   def get_report_blob_path(self):
-    return f'{self.get_result_path()}/{self.report_path}'
+    return f'{self.get_result_path()}/{self.__report_path}'
   
   def get_input_data_path(self):
     return f'{self.__input_data_path}'

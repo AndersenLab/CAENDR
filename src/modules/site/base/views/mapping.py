@@ -38,9 +38,12 @@ def submit_mapping_request():
   
   props = {'label': request.form.get('label'),
           'username': user.name,
-          'file': request.files['file']}
+          'file': request.files['file'],
+          'status': ''}
   
   m = create_new_mapping(**props)
+  if m.status == 'DUPLICATE' or m.status == 'COMPLETE':
+    flash('It looks like that data has already been uploaded - You will be redirected to the saved results', 'danger')
   return redirect(url_for('mapping.mapping_report', id=m.id))
 
 

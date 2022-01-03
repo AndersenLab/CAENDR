@@ -3,7 +3,7 @@ from string import Template
 from logzero import logger
 
 from caendr.models.datastore import Entity
-from caendr.services.cloud.storage import generate_blob_url, get_blob_list, get_blob, check_blob_exists
+from caendr.services.cloud.storage import generate_blob_url, get_blob, check_blob_exists
 
 V1_V2_Cutoff_Date = 20200101
 

@@ -44,7 +44,7 @@ def get_blob_list(bucket_name, prefix):
   ''' Returns a list of all blobs with 'prefix' (directory) in 'bucket_name' '''
   bucket = storageClient.get_bucket(bucket_name)
   items = bucket.list_blobs(prefix=prefix)
-  return items
+  return list(items)
 
 
 def generate_blob_url(bucket_name, blob_name):
