@@ -4,9 +4,9 @@ locals {
 }
 
 resource "null_resource" "configure_img_thumb_gen" {
-  /*triggers = tomap({
-    "container_url" = data.google_container_registry_image.gene_browser_tracks.image_url
-  })*/
+  triggers = tomap({
+    "rebuild": true
+  })
 
   provisioner "local-exec" {
     command = format("make -C %s clean dot-env ENV=%s", local.codebase_root_path, var.ENVIRONMENT)

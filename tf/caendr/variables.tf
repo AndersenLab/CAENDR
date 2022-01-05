@@ -69,7 +69,7 @@ variable "GOOGLE_CLIENT_SECRET" { sensitive = true }
 variable "POSTGRES_DB_PASSWORD" { sensitive = true }
 variable "SECRET_KEY" { sensitive = true }
 variable "JWT_SECRET_KEY" { sensitive = true }
-variable "PASSWORD_SALT" { sensitive = true }
+variable "PASSWORD_PEPPER" { sensitive = true }
 variable "MAILGUN_API_KEY" { sensitive = true }
 variable "CC_EMAILS" { sensitive = true }
 

@@ -55,9 +55,11 @@ class JSONParseError(InternalError):
   
 class UnprocessableEntity(InternalError):
   description = "Unprocessable Entity"
+class CachedDataError(InternalError):
+  description = "This data has already been submitted by another user"
 
 class DuplicateDataError(InternalError):
-  description = "This data has already been submitted"
+  description = "This data has already been submitted by the same user"
 
 class DuplicateTaskError(InternalError):
   description = "This task has already been scheduled"

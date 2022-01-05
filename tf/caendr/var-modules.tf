@@ -63,7 +63,7 @@ locals {
     "POSTGRES_DB_PASSWORD" = sensitive(var.POSTGRES_DB_PASSWORD), 
     "SECRET_KEY" = sensitive(var.SECRET_KEY),
     "JWT_SECRET_KEY" = sensitive(var.JWT_SECRET_KEY), 
-    "PASSWORD_SALT" = sensitive(var.PASSWORD_SALT), 
+    "PASSWORD_PEPPER" = sensitive(var.PASSWORD_PEPPER), 
     "MAILGUN_API_KEY" = sensitive(var.MAILGUN_API_KEY)
     "CC_EMAILS" = sensitive(var.CC_EMAILS)
   })

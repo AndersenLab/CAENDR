@@ -47,9 +47,13 @@ def get_blob_list(bucket_name, prefix):
   return list(items)
 
 
-def generate_blob_url(bucket_name, blob_name):
+def generate_blob_url(bucket_name, blob_name, secure=True):
   ''' Generates the public https URL for a blob '''
-  return f"https://storage.googleapis.com/{bucket_name}/{blob_name}" 
+  if secure:
+    return f"https://storage.googleapis.com/{bucket_name}/{blob_name}" 
+  else:
+    return f"http://storage.googleapis.com/{bucket_name}/{blob_name}" 
+
 
 
 def download_blob_to_file(bucket_name, blob_name, filename):

@@ -34,6 +34,7 @@ from caendr.services.profile import get_profile_role_form_options
 from caendr.services.user import get_user_role_form_options
 from caendr.services.database_operation import get_db_op_form_options
 from caendr.services.indel_primer import get_indel_primer_chrom_choices, get_indel_primer_strain_choices
+from caendr.services.markdown import get_content_type_form_options
 from caendr.models.datastore import User
 from caendr.api.strain import query_strains
 from base.forms.validators import (validate_duplicate_strain, 
@@ -56,6 +57,9 @@ class MultiCheckboxField(SelectMultipleField):
   widget = widgets.ListWidget(prefix_label=False)
   option_widget = widgets.CheckboxInput() 
 
+class EmptyForm(FlaskForm):
+  pass
+
 class FileUploadForm(FlaskForm):
   pass
 
@@ -75,11 +79,11 @@ class BasicLoginForm(FlaskForm):
 
 class MarkdownForm(FlaskForm):
   """ markdown editing form """
+  _CONTENT_TYPES = get_content_type_form_options()
+
   title = StringField('Title', [Optional()])
   content = StringField('Content', [Optional()])
-  date = DateField('Date  (mm-dd-YYYY)', [Optional()], format='%m-%d-%Y')
-  type = StringField('Type', [Optional()])
-  publish = BooleanField('Publish', [Optional()])
+  type = SelectField('Type', choices=_CONTENT_TYPES, validators=[Required()])
 
 
 class UserRegisterForm(FlaskForm):

@@ -9,7 +9,7 @@ from logzero import logger
 
 from caendr.models.error import BadRequestError
 from caendr.models.sql import Homolog, Strain, StrainAnnotatedVariant, WormbaseGene, WormbaseGeneSummary
-from caendr.services.cloud.storage import upload_blob_from_file_as_chunks
+from caendr.services.cloud.storage import upload_blob_from_file_as_chunks, generate_blob_url
 from caendr.services.cloud.postgresql import db
 from caendr.utils.file import download_file
 from caendr.utils.data import remove_env_escape_chars
@@ -21,7 +21,7 @@ local_path_prefix_length = len(local_download_path) + 1
 
 MODULE_DB_OPERATIONS_BUCKET_NAME = os.environ.get('MODULE_DB_OPERATIONS_BUCKET_NAME')
 STRAIN_VARIANT_ANNOTATION_PATH = os.environ.get('STRAIN_VARIANT_ANNOTATION_PATH')
-sva_csvgz_url = f'https://storage.googleapis.com/{MODULE_DB_OPERATIONS_BUCKET_NAME}/{STRAIN_VARIANT_ANNOTATION_PATH}/WI.strain-annotation.bcsq.$SVA.csv.gz'
+SVA_CSVGZ_URL_TEMPLATE = generate_blob_url(MODULE_DB_OPERATIONS_BUCKET_NAME, '{STRAIN_VARIANT_ANNOTATION_PATH}/WI.strain-annotation.bcsq.$SVA.csv.gz')
 
 
 external_db_url_templates = {
@@ -31,7 +31,7 @@ external_db_url_templates = {
   'ORTHOLOG_URL': remove_env_escape_chars(os.environ.get('ORTHOLOG_URL')),
   'HOMOLOGENE_URL': remove_env_escape_chars(os.environ.get('HOMOLOGENE_URL')),
   'TAXON_ID_URL': remove_env_escape_chars(os.environ.get('TAXON_ID_URL')),
-  'SVA_CSVGZ_URL': sva_csvgz_url
+  'SVA_CSVGZ_URL': SVA_CSVGZ_URL_TEMPLATE
 }
 
 

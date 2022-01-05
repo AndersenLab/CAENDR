@@ -7,7 +7,7 @@ from caendr.models.datastore import Entity
 MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
 NEMASCAN_REPORT_PATH_PREFIX = 'reports'
 NEMASCAN_RESULT_PATH_INFIX = 'results'
-INPUT_DATA_PATH = 'NemaScan/input_data'
+INPUT_DATA_PATH = 'tools/nemascan/input_data'
 REPORT_DATA_PREFIX = 'Reports/NemaScan_Report_'
 NEMASCAN_INPUT_FILE = 'data.tsv'
 
@@ -41,7 +41,7 @@ class NemascanMapping(Entity):
   def get_result_path(self):
     return f'{self.get_blob_path()}/{self.__result_infix}'
 
-  def get_report_blob_path(self):
+  def get_report_blob_prefix(self):
     return f'{self.get_result_path()}/{self.__report_path}'
   
   def get_input_data_path(self):

@@ -24,11 +24,14 @@ from caendr.models.datastore import User
 from caendr.services.cloud.secret import get_secret
 
 
-PASSWORD_SALT = get_secret('PASSWORD_SALT')
+PASSWORD_PEPPER = get_secret('PASSWORD_PEPPER')
 auth_bp = Blueprint('auth',
                     __name__,
                     template_folder='templates')
 
+@auth_bp.route('/')
+def auth():
+  return redirect(url_for('auth.choose_login'))
 
 @auth_bp.route('/refresh', methods=['GET'])
 @jwt_required(refresh=True)
@@ -66,8 +69,8 @@ def basic_login():
     password = request.form.get("password")
     user = User(username)
     if user._exists:
-      if user.check_password(password, PASSWORD_SALT):
-        user.last_login = datetime.now(timezone.utc)
+      if user.check_password(password, PASSWORD_PEPPER):
+        user.set_properties(last_login=datetime.now(timezone.utc))
         user.save()
         referrer = session.get('login_referrer', '/')
         flash('Logged In', 'success')

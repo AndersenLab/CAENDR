@@ -1,11 +1,11 @@
 from logzero import logger
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, flash
 
 from base.utils.auth import get_jwt, jwt_required, get_current_user
 from base.forms import FileUploadForm
 
 from caendr.services.nemascan_mapping import create_new_mapping, get_mapping, get_user_mappings
-from caendr.services.cloud.storage import generate_blob_url
+from caendr.services.cloud.storage import generate_blob_url, get_blob_list
 
 
 mapping_bp = Blueprint('mapping',
@@ -40,11 +40,17 @@ def submit_mapping_request():
           'username': user.name,
           'file': request.files['file'],
           'status': ''}
-  
-  m = create_new_mapping(**props)
-  if m.status == 'DUPLICATE' or m.status == 'COMPLETE':
-    flash('It looks like that data has already been uploaded - You will be redirected to the saved results', 'danger')
-  return redirect(url_for('mapping.mapping_report', id=m.id))
+  try:
+    m = create_new_mapping(**props)
+    return redirect(url_for('mapping.mapping_report', id=m.id))
+  except Exception as ex:
+    if str(type(ex).__name__) == 'DuplicateDataError':
+      flash('It looks like you submitted that data already - redirecting to your list of Mapping Reports', 'danger')
+      return redirect(url_for('mapping.mapping_report_list'))
+    if str(type(ex).__name__) == 'CachedDataError':
+      flash('It looks like that data has already been submitted - redirecting to the saved results', 'danger')
+      return redirect(url_for('mapping.mapping_report', id=ex.description))
+
 
 
 @mapping_bp.route('/mapping/report/all', methods=['GET', 'POST'])
@@ -65,8 +71,11 @@ def mapping_report(id):
   title = 'Genetic Mapping Report'
   user = get_current_user()
   mapping = get_mapping(id)
+  subtitle = mapping.label +': ' + mapping.trait
+  fluid_container = True
   data_url = generate_blob_url(mapping.get_bucket_name(), mapping.get_data_blob_path())
-  
+  report_url = generate_blob_url(mapping.get_bucket_name(), mapping.report_path)
+
   return render_template('tools/mapping/report.html', **locals())
 
 
@@ -75,6 +84,28 @@ def mapping_report(id):
 def mapping_results(id):
   title = 'Genetic Mapping Result Files'
   user = get_current_user()
-
+  mapping = get_mapping(id)
+  subtitle = mapping.label + ': ' + mapping.trait
+  blobs = get_blob_list(mapping.get_bucket_name(), mapping.get_result_path())
+  file_list = []
+  for blob in blobs:
+    file_list.append({
+      "name": blob.name.rsplit('/', 2)[1] + '/' + blob.name.rsplit('/', 2)[2],
+      "url": blob.public_url
+    })
+    
   return render_template('tools/mapping/result_files.html', **locals())
 
+
+
+
+  data_blob = RESULT_BLOB_PATH.format(data_hash=ns.data_hash)
+  blobs = list_files(data_blob)
+  file_list = []
+  for blob in blobs:
+    file_list.append({
+      "name": blob.name.rsplit('/', 2)[1] + '/' + blob.name.rsplit('/', 2)[2],
+      "url": blob.public_url
+    })
+    
+  return render_template('mapping_result_files.html', **locals())

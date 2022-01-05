@@ -3,8 +3,8 @@ resource "google_storage_bucket" "site_bucket_public" {
   location = upper(var.google_cloud_vars.region)
   
   cors {
-    origin          = ["https://www.elegansvariation.org/", "http://localhost:8080/", "https://${var.google_cloud_vars.project_id}.uc.r.appspot.com/"]
-    method          = ["GET", "HEAD", "DELETE", "PUT", "POST"]
+    origin          = ["*"]
+    method          = ["*"]
     response_header = ["Content-Type", "Access-Control-Allow-Origin"]
     max_age_seconds = 3600
   }
@@ -27,8 +27,8 @@ resource "google_storage_bucket" "site_bucket_private" {
   name = var.module_site_vars.bucket_private_name
   location = upper(var.google_cloud_vars.region)
   cors {
-    origin          = ["https://www.elegansvariation.org/", "http://localhost:8080/", "https://${var.google_cloud_vars.project_id}.uc.r.appspot.com/"]
-    method          = ["GET", "HEAD", "DELETE", "PUT", "POST"]
+    origin          = ["*"]
+    method          = ["*"]
     response_header = ["Content-Type", "Access-Control-Allow-Origin"]
     max_age_seconds = 3600
   }

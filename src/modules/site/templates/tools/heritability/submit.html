@@ -342,7 +342,16 @@ $("#hcalc").on("click", function(e) {
         url: "{{ url_for('heritability.submit_h2') }}",
         data: data,
         success:function(result) {
-          window.location = `../heritability/h2/${result.id}`
+          console.log(result)
+          if(result.duplicate) {
+            window.location = "{{ url_for('heritability.heritability_result_list') }}";
+            return;
+          } else {
+            url = "{{ url_for('heritability.heritability_result', id='') }}" + result.id;
+            console.log(url);
+            window.location = url;
+            return;
+          }
         },
         error:function(error) {
           $("#hcalc").removeClass("disabled")
