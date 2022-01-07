@@ -18,22 +18,22 @@
         </tr>
       </thead>
       <tbody>
-        {% for user in users %}
+        {% for user in users%}
           <tr>
-            {% if user|sort(attribute='roles') %}
+            {% if user %}
               <td> {{ user.username }} </td>
               <td> {{ user.full_name }} </td>
               <td> {{ user.email }} </td>
               <td> {{ user.roles }} </td>
-              <td> {{ user.created_on|date_format }} </td>
-              <td> {{ user.last_login|date_format }} </td>
+              <td> {% if user.created_on %} {{ user.created_on|date_format }} {% endif %} </td>
+              <td> {% if user.last_login %} {{ user.last_login|date_format }} {% endif %} </td>
               <td>
-              <a href="{{ url_for('admin_users.users_edit', id=user.key.name) }}"> 
+              <a href="{{ url_for('admin_users.users_edit', id=user.name) }}"> 
                   Edit
                 </a>
               </td>
               <td>
-                <a href="{{ url_for('admin_users.users_delete', id=user.key.name) }}"> 
+                <a href="{{ url_for('admin_users.users_delete', id=user.name) }}"> 
                   Delete
                 </a>
               </td>

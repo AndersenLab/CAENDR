@@ -38,9 +38,9 @@
         <tr><td>Email</td><td>{{ user.email }}</td></tr>
         <tr><td>Verified</td><td>{{ user.verified_email }}</td></tr>
         <tr><td>Password</td><td>************</td></tr>
-        <tr><td>Registered</td><td>{{ user.created_on|date_format }}</td></tr>
-        <tr><td>Last Modified</td><td>{{ user.modified_on|date_format }}</td></tr>
-        <tr><td>Last Login</td><td>{{ user.last_login|date_format }}</td></tr>
+        <tr><td>Registered</td><td>{% if user.created_on %} {{ user.created_on|date_format }} {% endif %}</td></tr>
+        <tr><td>Last Modified</td><td>{% if user.modified_on %} {{ user.modified_on|date_format }} {% endif %}</td></tr>
+        <tr><td>Last Login</td><td>{% if user.last_login %} {{ user.last_login|date_format }} {% endif %}</td></tr>
       </table>
     </div> <!-- /col-md-6 -->
   </div> <!-- /row -->
