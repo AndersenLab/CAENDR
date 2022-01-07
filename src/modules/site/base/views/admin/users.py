@@ -19,7 +19,8 @@ def admin_users(id=None):
   alt_parent_breadcrumb = {"title": "Admin", "url": url_for('admin.admin')}
   if id is None:
     title = 'Users'
-    users = get_all_users()
+    user_entities = get_all_users()
+    users = [User(u) for u in user_entities]
     return render_template('admin/user/list.html', **locals())
   else:
     return redirect(url_for('admin_users.users_edit'), id=id)
