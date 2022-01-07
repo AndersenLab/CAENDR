@@ -93,7 +93,7 @@ def submit_h2():
     h = create_new_heritability_report(id, user.name, label, data_hash, trait, data_tsv)
   except Exception as ex:
     if str(type(ex).__name__) == 'DuplicateDataError':
-      flash('It looks like you submitted that data already - redirecting to your list of Mapping Reports', 'danger')
+      flash('It looks like you submitted that data already - redirecting to your list of Heritability Reports', 'danger')
       return jsonify({'duplicate': True,
               'data_hash': data_hash,
               'id': id})
