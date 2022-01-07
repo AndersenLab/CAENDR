@@ -29,6 +29,7 @@ google_bp = make_google_blueprint(client_id=GOOGLE_CLIENT_ID,
 def google():
   return redirect(url_for('auth.choose_login'))
 
+
 def create_or_update_google_user(user_info):
   # Get up-to-date properties
   user_id = user_info['google']['id']
@@ -46,7 +47,7 @@ def create_or_update_google_user(user_info):
 
 
 @oauth_authorized.connect
-def authorized(blueprint, token):
+def authorized(google_bp, token):
   if not google_fd.authorized:
     flash("Error logging in!")
     return redirect(url_for("auth.choose_login"))
