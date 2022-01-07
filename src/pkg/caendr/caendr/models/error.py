@@ -50,6 +50,7 @@ class CloudStorageUploadError(InternalError):
 
 class PipelineRunError(InternalError):
   description = "Unable to start the lifesciences pipeline"
+  
 class JSONParseError(InternalError):
   description = "Unable to parse JSON"
   
