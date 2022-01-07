@@ -33,7 +33,7 @@ __Genome Browser__
 * IGVjs has been upgraded and has a number of new tools.
 * A track for repeat_masker, and Dust data has been added.
 * A track for transposons from [_Laricchia et al._ 2017](https://andersenlab.org/publications/2017Laricchia.pdf) been added.
-* Tracks for divergent regions from [_Lee et al._ 2020](https://andersenlab.org/publications/2020LeebioRxiv.pdf) have been added.
+* Tracks for divergent regions from [_Lee et al._ 2020](https://andersenlab.org/publications/2021LeeNatureEE.pdf) have been added.
 
 #### v1.3.4 (2020-02-23)
 
