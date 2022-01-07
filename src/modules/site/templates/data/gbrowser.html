@@ -91,7 +91,7 @@ th {
 
 
     <div class="col-lg-2 col-lg-offset-1 col-md-3 col-sm-12">
-      <h5>Tracks <a href="{{ url_for('primary.help_item', filename = 'Variant-Prediction') }}#standard-tracks"><span class="glyphicon glyphicon-question-sign"></span></a></h5>
+      <h5>Tracks </h5>
       {% for i in ["Genes", "Transcripts"] %}
         <div class="checkbox">
           <label><input type="checkbox" checked class="track-select normal-track" value="{{ i }}" />{{ i }}</label>
@@ -104,7 +104,7 @@ th {
       {% endfor %}
 
         <div class="checkbox">
-          <label><input type="checkbox" class="track-select normal-track" value="Divergent Regions" />Divergent Regions Strain<br /> (<a href="https://andersenlab.org/publications/2020LeebioRxiv.pdf"  target='_blank'>Lee <em>et al.</em> 2020)</a></label>
+          <label><input type="checkbox" class="track-select normal-track" value="Divergent Regions" />Divergent Regions Strain<br /> (<a href="https://andersenlab.org/publications/2021LeeNatureEE.pdf"  target='_blank'>Lee <em>et al.</em> 2020)</a></label>
         </div>
               
         <div class="checkbox">

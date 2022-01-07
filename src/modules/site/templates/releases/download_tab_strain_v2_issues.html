@@ -28,7 +28,7 @@
                 </td>
                 <td>
                     {% if strain.issue_notes %}
-                        {{ strain.issue_notes }}
+                      <text>{{ strain.issue_notes|species_italic|safe }}</text>
                     {% endif %}
                 </td>
             </tr>
