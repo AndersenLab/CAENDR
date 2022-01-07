@@ -14,9 +14,12 @@ locals {
     "secretmanager.googleapis.com",
     "sheets.googleapis.com",
     "drive.googleapis.com",
-    "analyticsreporting.googleapis.com",
     "cloudtasks.googleapis.com",
-    "lifesciences.googleapis.com"
+    "lifesciences.googleapis.com",
+    "analytics.googleapis.com",
+    "analyticsdata.googleapis.com",
+    "analyticsreporting.googleapis.com",
+    "analyticsadmin.googleapis.com"
   ])
   
   service_group_3 = toset([
