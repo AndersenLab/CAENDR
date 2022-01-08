@@ -2,8 +2,7 @@ locals {
   cloudsql_sa_roles = toset( [
     "roles/secretmanager.viewer",
     "roles/secretmanager.secretAccessor",
-    "roles/storage.objectViewer",
-    "roles/storage.objectCreator",
+    "roles/storage.admin"
   ] )
 }
 

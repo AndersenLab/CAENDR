@@ -234,7 +234,12 @@ def configure_jinja(app):
       return date.strftime(fmt)
     else:
       return date.strftime('%c')
-
+    
+  @app.template_filter('species_italic')
+  def _jinja2_filter_species_italic(text):
+    text = text.replace('C. briggsae', '<i>C. briggsae</i>')
+    text = text.replace('C. elegans', '<i>C. elegans</i>')
+    return text
 
 def register_errorhandlers(app):
   def render_error(e="generic"):

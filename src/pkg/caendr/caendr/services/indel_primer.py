@@ -17,9 +17,7 @@ from caendr.services.tool_versions import get_current_container_version
 from caendr.utils.constants import CHROM_NUMERIC
 from caendr.utils.data import unique_id
 
-# TODO: remove this static value
-MODULE_SITE_BUCKET_PRIVATE_NAME = 'elegansvariation.org'
-# MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
+MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
 INDEL_PRIMER_CONTAINER_NAME = os.environ.get('INDEL_PRIMER_CONTAINER_NAME')
 INDEL_PRIMER_TASK_QUEUE_NAME = os.environ.get('INDEL_PRIMER_TASK_QUEUE_NAME')
 MODULE_API_PIPELINE_TASK_URL_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_URL_NAME')
