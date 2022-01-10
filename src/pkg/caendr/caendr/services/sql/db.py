@@ -104,7 +104,8 @@ def fetch_internal_db(db_url_name: str, sva_ver: str=''):
 
   t = Template(internal_db_blob_templates[db_url_name])
   blob_name = t.substitute({'SVA': sva_ver})
-  logger.info(f'Downloading Internal DB [{db_url_name}]:\n\tgs://{MODULE_DB_OPERATIONS_BUCKET_NAME}/{blob_name}')
+  url = f'gs://{MODULE_DB_OPERATIONS_BUCKET_NAME}/{blob_name}'
+  logger.info(f'Downloading Internal DB [{db_url_name}]:\n\t{url}')
   fname = blob_name.rsplit('/', 1)[-1]
   download_blob_to_file(MODULE_DB_OPERATIONS_BUCKET_NAME, blob_name, fname)
   
