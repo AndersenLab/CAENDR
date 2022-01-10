@@ -41,7 +41,7 @@ GATK calls indel variants (1-50 bp) and short structural variants. The variant c
 
 Optimal filter thresholds would faithfully separate real variant sites from non-variant sites. However, we had no way to know which variant sites were true or false using the experimental data. Therefore, we created simulated data with a "truth set" of variants artificially inserted into a BAM file. In this way, we know precisely the positions of true variants. After variant calling with the simulated BAM file, we looked at the various quality metrics and asked what thresholds of these metrics would best separate real variants from incorrectly called variants. We chose filter thresholds to maximize true positive rate and precision while minimizing the false positive rate. These filter thresholds were used in processing the wild isolate data.
 
-#### [See our filter optimization report for further details]("{{ ext_asset('data/20200803_optimization_report.html') }}")
+#### [See our filter optimization report for further details]({{ ext_asset('data/20200803_optimization_report.html') }})
 
 ### How are strains grouped by isotype? <a name='strain-groups'></a>
 
