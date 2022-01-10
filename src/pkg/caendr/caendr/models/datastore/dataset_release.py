@@ -81,7 +81,7 @@ def V2_Data_Map():
     'gatk_report': '$ver/gatk_report.html',
     'concordance_report': '$ver/concordance_report.html',
     
-    'divergent_regions_strain_bed_gz': '$ver/lee2020.divergent_regions_strain.bed.gz',
+    'divergent_regions_strain_bed_gz': '$ver/divergent_regions_strain.$ver.bed.gz',
 
     'soft_filter_vcf_gz': '$ver/variation/WI.$ver.soft-filter.vcf.gz',
     'soft_filter_vcf_gz_tbi': '$ver/variation/WI.$ver.soft-filter.vcf.gz.tbi',
