@@ -5,11 +5,12 @@ from flask import (render_template,
                     request,
                     jsonify,
                     Blueprint)
+from extensions import cache
+from base.forms import VBrowserForm
 
 from caendr.api.isotype import get_isotypes, get_distinct_isotypes
 from caendr.models.sql import StrainAnnotatedVariant
 from caendr.services.strain_annotated_variants import verify_interval_query, verify_position_query
-from base.forms import VBrowserForm
 
 
 variant_browser_bp = Blueprint('variant_browser',
@@ -18,6 +19,7 @@ variant_browser_bp = Blueprint('variant_browser',
 
 
 @variant_browser_bp.route('/vbrowser')
+@cache.memoize(60*60)
 def vbrowser():
   title = 'Variant Annotation'
   alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.landing')}
@@ -29,6 +31,7 @@ def vbrowser():
 
 
 @variant_browser_bp.route('/vbrowser/query/interval', methods=['POST'])
+@cache.memoize(60*60)
 def vbrowser_query_interval():
   title = 'Variant Annotation'
   payload = json.loads(request.data)
@@ -45,6 +48,7 @@ def vbrowser_query_interval():
 
 
 @variant_browser_bp.route('/vbrowser/query/position', methods=['POST'])
+@cache.memoize(60*60)
 def vbrowser_query_position():
   title = 'Variant Annotation'
   payload = json.loads(request.data)

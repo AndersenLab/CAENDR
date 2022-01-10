@@ -54,7 +54,6 @@
               <li><a href="{{ url_for('strains.strains_map')}}"> Strain Map </a></li>
               <li><a href="{{ url_for('strains.strains_issues')}}"> Strain Issues </a></li>
               <li><a href="{{ url_for('strains.protocols') }}"> Protocols </a></li>
-              <li role="separator" class="divider"></li>
               <li><a href="{{ url_for('strains.strains_submission_page') }}"> Submit Strains </a></li>
               <li><a href="{{ url_for('strains.external_links')}}"> External Links </a></li>
             </ul>
@@ -107,13 +106,14 @@
             <a href="#" role="button" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> Admin <span class="caret"></span></a>
             <ul class="dropdown-menu">
               <li><a href="{{ url_for('admin_users.admin_users') }}" class='nav-link' role='button'> Users </a></li>
-              <li><a href="{{ url_for('admin.admin_strain_sheet') }}" class='nav-link' role='button'> Strain Sheet </a></li>
-              <li><a href="{{ url_for('admin.admin_publications_sheet') }}" class='nav-link' role='button'> Publications Sheet </a></li>
-              <li><a href="{{ url_for('admin_dataset.admin_dataset') }}" class='nav-link' role='button'> Dataset Releases </a></li>
               <li><a href="{{ url_for('admin_profile.admin_profile') }}" class='nav-link' role='button'> Profile Pages </a></li>
+              <li><a href="{{ url_for('admin.admin_publications_sheet') }}" class='nav-link' role='button'> Publications Sheet </a></li>
+              <li><a href="{{ url_for('admin_content.admin_content') }}" class='nav-link' role='button'> Content </a></li>
+              <li><a href="{{ url_for('admin.admin_strain_sheet') }}" class='nav-link' role='button'> Strain Sheet </a></li>
               <li><a href="{{ url_for('admin_tools.admin_tools') }}" class='nav-link' role='button'> Tool Versions </a></li>
               <li><a href="{{ url_for('admin_db_op.admin_db_op') }}" class='nav-link' role='button'> Database Operations </a></li>
               <li><a href="{{ url_for('admin_gene_browser_tracks.admin_gene_browser_tracks') }}" class='nav-link' role='button'> Gene Browser Tracks </a></li>
+              <li><a href="{{ url_for('admin_dataset.admin_dataset') }}" class='nav-link' role='button'> Dataset Releases </a></li>
             </ul>
           </li>
         {% endif %}

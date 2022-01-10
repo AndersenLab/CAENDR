@@ -1,4 +1,6 @@
 import os
+from logzero import logger
+
 
 from datetime import datetime, timezone
 from flask import (abort,
@@ -24,11 +26,14 @@ from caendr.models.datastore import User
 from caendr.services.cloud.secret import get_secret
 
 
-PASSWORD_SALT = get_secret('PASSWORD_SALT')
+PASSWORD_PEPPER = get_secret('PASSWORD_PEPPER')
 auth_bp = Blueprint('auth',
                     __name__,
                     template_folder='templates')
 
+@auth_bp.route('/')
+def auth():
+  return redirect(url_for('auth.choose_login'))
 
 @auth_bp.route('/refresh', methods=['GET'])
 @jwt_required(refresh=True)
@@ -46,8 +51,10 @@ def refresh():
 @auth_bp.route("/login/select", methods=['GET'])
 def choose_login(error=None):
   # Relax scope for Google
-  referrer = session.get("login_referrer") or ""
-  if not referrer.endswith("/login/select"):
+  referrer = session.get("login_referrer") or "/"
+  if 'login' in referrer:
+    session["login_referrer"] = '/'
+  else:
     session["login_referrer"] = request.referrer
   os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = "true"
   VARS = {'page_title': 'Choose Login'}
@@ -59,6 +66,7 @@ def choose_login(error=None):
 @auth_bp.route("/login/basic", methods=["GET", "POST"])
 def basic_login():
   title = "Login"
+  logger.info(request.referrer)
   disable_parent_breadcrumb = True
   form = BasicLoginForm(request.form)
   if request.method == 'POST' and form.validate():
@@ -66,10 +74,12 @@ def basic_login():
     password = request.form.get("password")
     user = User(username)
     if user._exists:
-      if user.check_password(password, PASSWORD_SALT):
-        user.last_login = datetime.now(timezone.utc)
+      if user.check_password(password, PASSWORD_PEPPER):
+        user.set_properties(last_login=datetime.now(timezone.utc))
         user.save()
         referrer = session.get('login_referrer', '/')
+        if '/login/' in referrer:
+          referrer = '/'
         flash('Logged In', 'success')
         return assign_access_refresh_tokens(username, user.roles, referrer)
     flash('Wrong username or password', 'error')

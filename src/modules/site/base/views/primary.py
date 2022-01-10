@@ -1,11 +1,14 @@
 
 from flask import render_template, url_for, redirect, Blueprint
+from extensions import cache
+
 from caendr.utils.file import get_dir_list_sorted
 
 primary_bp = Blueprint('primary', __name__)
 
 
 @primary_bp.route('/')
+@cache.memoize(60*60)
 def primary():
   ''' Site home page '''
   page_title = "Caenorhabditis elegans Natural Diversity Resource"
@@ -20,6 +23,7 @@ def primary():
 
 
 @primary_bp.route("/Software")
+@cache.memoize(60*60)
 def reroute_software():
   ''' This is a redirect due to a typo in the original CeNDR manuscript. Leave it. '''
   return redirect(url_for('primary.help_item', filename="Software"))
@@ -27,6 +31,7 @@ def reroute_software():
 
 @primary_bp.route("/news")
 @primary_bp.route("/news/<filename>/")
+@cache.memoize(60*60)
 def news_item(filename=""):
   ''' News '''
   files = get_dir_list_sorted("static/content/news/")
@@ -38,10 +43,11 @@ def news_item(filename=""):
 
 @primary_bp.route("/help")
 @primary_bp.route("/help/<filename>/")
+@cache.memoize(60*60)
 def help_item(filename=""):
   ''' Help '''
   # TODO: make files dynamic
-  files = ["FAQ", "Variant-Browser", "Variant-Prediction", "Change-Log"]
+  files = ["FAQ", "Variant-Browser", "Change-Log"]
   if not filename:
     filename = "FAQ"
   title = "Help"
@@ -50,6 +56,7 @@ def help_item(filename=""):
 
 
 @primary_bp.route('/outreach')
+@cache.memoize(60*60)
 def outreach():
   title = "Outreach"
   
@@ -61,38 +68,8 @@ def outreach():
 
 
 @primary_bp.route('/contact-us')
+@cache.memoize(60*60)
 def contact():
   title = "Contact Us"
   return render_template('primary/contact.html', **locals())
 
-
-'''
-# TODO: Remove?
-
-@primary_bp.route('/feed.atom')
-def feed():
-    """
-        This view renders the sites ATOM feed.
-    """
-    fg = FeedGenerator()
-
-    fg.id("CeNDR.News")
-    fg.title("CeNDR News")
-    fg.author({'name':'CeNDR Admin','email':'erik.andersen@northwestern.edu'})
-    fg.link( href='http://example.com', rel='alternate' )
-    fg.logo('http://ex.com/logo.jpg')
-    fg.subtitle('This is a cool feed!')
-    fg.language('en')
-    fg.link( href=request.url, rel='self' )
-    fg.language('en')
-    files = get_dir_list_sorted("static/content/news/")  # files is a list of file names
-    for filename in files:
-        fe = fg.add_entry()
-        fe.id(filename[11:].strip(".md").replace("-", " "))
-        fe.title(filename[11:].strip(".md").replace("-", " "))
-        fe.author({'name':'CeNDR Admin','email':'erik.andersen@northwestern.edu'})
-        fe.link(href=urljoin(request.url_root, url_for("primary.news_item", filename=filename.strip(".md"))))
-        fe.content(render_markdown(filename, "base/static/content/news/"))
-        fe.pubDate(pytz.timezone("America/Chicago").localize(datetime.strptime(filename[:10], "%Y-%m-%d")))
-    return fg.atom_str(pretty=True)
-'''

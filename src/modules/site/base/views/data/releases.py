@@ -37,7 +37,7 @@ releases_bp = Blueprint('data_releases',
 
 @releases_bp.route('/release/latest')
 @releases_bp.route('/release/<string:release_version>')
-@cache.memoize(50)
+@cache.memoize(60*60)
 def data_releases(release_version=None):
   """ Default data page - lists available releases. """
   title = "Genomic Data"
@@ -64,7 +64,7 @@ def data_releases(release_version=None):
   return render_template('data/releases.html', **locals())
 
 
-@cache.memoize(50)
+@cache.memoize(60*60)
 def data_v02(RELEASE, RELEASES):
   title = "Genomic Data"
   alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.landing')}
@@ -81,7 +81,7 @@ def data_v02(RELEASE, RELEASES):
   return render_template('data/releases.html', **locals())
 
 
-@cache.memoize(50)
+@cache.memoize(60*60)
 def data_v01(RELEASE, RELEASES):
   # Legacy releases (Pre 20200101)
   title = "Genomic Data"
@@ -111,7 +111,7 @@ def data_v01(RELEASE, RELEASES):
 # ======================= #
 @releases_bp.route('/release/latest/alignment')
 @releases_bp.route('/release/<string:release_version>/alignment')
-@cache.memoize(50)
+@cache.memoize(60*60)
 def alignment_data(release_version=''):
   RELEASES = get_all_dataset_releases(order='-version')
   
@@ -148,32 +148,32 @@ def alignment_data(release_version=''):
 # =========================== #
 @releases_bp.route('/release/latest/strain_issues')
 @releases_bp.route('/release/<string:release_version>/strain_issues')
-@cache.memoize(50)
+@cache.memoize(60*60)
 def strain_issues(release_version=None):
-    """
-        Strain Issues page
-    """
-    RELEASES = get_all_dataset_releases(order='-version')
-    
-    # Get the requested release and throw an error if it doesn't exist
-    RELEASE = None
-    if release_version:
-      for r in RELEASES:
-        if r.version == release_version:
-          RELEASE = r
-          break
-      if not RELEASE:
-        raise NotFoundError(f'Release Version: {release_version} Not Found')
-    else:
-      RELEASE = RELEASES[0]
+  """
+      Strain Issues page
+  """
+  RELEASES = get_all_dataset_releases(order='-version')
+  
+  # Get the requested release and throw an error if it doesn't exist
+  RELEASE = None
+  if release_version:
+    for r in RELEASES:
+      if r.version == release_version:
+        RELEASE = r
+        break
+    if not RELEASE:
+      raise NotFoundError(f'Release Version: {release_version} Not Found')
+  else:
+    RELEASE = RELEASES[0]
 
-    # Pre-2020 releases don't have data organized the same way
-    if RELEASE.report_type == 'V1':
-      return 
-    
-    # Post-2020 releases
-    title = "Strain Issues"
-    alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.landing')}
-    strain_listing_issues = query_strains(release_version=release_version, issues=True)
+  # Pre-2020 releases don't have data organized the same way
+  if RELEASE.report_type == 'V1':
+    return 
+  
+  # Post-2020 releases
+  title = "Strain Issues"
+  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.landing')}
+  strain_listing_issues = query_strains(release_version=release_version, issues=True)
 
-    return render_template('strain/issues.html', **locals())
+  return render_template('strain/issues.html', **locals())

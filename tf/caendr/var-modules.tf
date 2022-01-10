@@ -7,6 +7,7 @@ locals {
     "terraform_sa_filename" = var.TERRAFORM_SERVICE_ACCOUNT_FILENAME,
     "google_sheets_sa_name" = var.GOOGLE_SHEETS_SERVICE_ACCOUNT_NAME,
     "google_analytics_sa_name" = var.GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME,
+    "google_storage_sa_name" = var.GOOGLE_STORAGE_SERVICE_ACCOUNT_NAME,
     "google_cloudsql_sa_name" = var.GOOGLE_CLOUDSQL_SERVICE_ACCOUNT_NAME,
     "source_bucket_name" = var.GOOGLE_CLOUD_SOURCE_BUCKET_NAME
   })
@@ -62,7 +63,7 @@ locals {
     "POSTGRES_DB_PASSWORD" = sensitive(var.POSTGRES_DB_PASSWORD), 
     "SECRET_KEY" = sensitive(var.SECRET_KEY),
     "JWT_SECRET_KEY" = sensitive(var.JWT_SECRET_KEY), 
-    "PASSWORD_SALT" = sensitive(var.PASSWORD_SALT), 
+    "PASSWORD_PEPPER" = sensitive(var.PASSWORD_PEPPER), 
     "MAILGUN_API_KEY" = sensitive(var.MAILGUN_API_KEY)
     "CC_EMAILS" = sensitive(var.CC_EMAILS)
   })

@@ -6,7 +6,8 @@ from caendr.models.sql import WormbaseGene, WormbaseGeneSummary, Strain, Homolog
 from caendr.services.sql.db import (drop_tables,
                                     download_all_external_dbs,
                                     download_external_db,
-                                    backup_external_db)
+                                    backup_external_db,
+                                    fetch_internal_db)
 from caendr.services.sql.etl import (load_strains, 
                                       load_genes_summary, 
                                       load_genes, 
@@ -35,7 +36,6 @@ def execute_operation(app, db, DB_OP):
       raise EnvVarError()
     drop_and_populate_wormbase_genes(app, db, WORMBASE_VERSION)
 
-
   elif DB_OP == 'DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS':
     if not STRAIN_VARIANT_ANNOTATION_VERSION:
       raise EnvVarError()
@@ -60,19 +60,21 @@ def drop_and_populate_wormbase_genes(app, db, wb_ver: str):
 
 
 def drop_and_populate_strain_annotated_variants(app, db, sva_ver: str):
-  sva_fname = download_external_db('SVA_CSVGZ_URL', sva_ver=sva_ver)
+  sva_fname = fetch_internal_db('SVA_CSVGZ_URL', sva_ver=sva_ver)
   drop_tables(app, db, tables=[StrainAnnotatedVariant.__table__])
   load_strain_annotated_variants(db, sva_fname)
 
 
 def drop_and_populate_all_tables(app, db, wb_ver: str, sva_ver: str):
   logger.info(f'Dropping and populating all tables - WORMBASE_VERSION: {wb_ver} STRAIN_VARIANT_ANNOTATION_VERSION: {sva_ver}')
-  filenames = download_all_external_dbs(wb_ver, sva_ver)
+  filenames = download_all_external_dbs(wb_ver)
   gene_gff_fname = filenames['GENE_GFF_URL']
   gene_gtf_fname = filenames['GENE_GTF_URL']
   gene_ids_fname = filenames['GENE_IDS_URL']
   homologene_fname = filenames['HOMOLOGENE_URL']
   ortholog_fname = filenames['ORTHOLOG_URL']
+  
+  filenames['SVA_CSVGZ_URL'] = fetch_internal_db('SVA_CSVGZ_URL', sva_ver)
   sva_fname = filenames['SVA_CSVGZ_URL']
 
   drop_tables(app, db)

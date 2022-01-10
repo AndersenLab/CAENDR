@@ -1,0 +1,113 @@
+{% extends "_layouts/default.html" %}
+
+{% block custom_head %}
+
+<link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
+
+{% endblock %}
+
+{% block content %}
+{% from "_includes/macros.html" import render_field %}
+<script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+
+
+<form id='form-submit' method="POST" action="{{ kind }}">
+  {{ form.csrf_token }}
+  <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">
+
+  <div class="row">
+    <div class="col-md-10"></div> <!-- /col-md-10 -->
+    <div class="col-md-2">
+      <button id='save-btn' value="save-btn" type='submit' class="btn btn-primary btn-block">
+        <span class="glyphicon glyphicon-save" aria-hidden="true"></span> 
+        Save
+      </button>
+    </div> <!-- /col-md-2 -->
+  </div> <!-- /row -->
+
+  <div class="row">
+    {{ render_field(form.title) }}
+    {{ render_field(form.type) }}
+
+    <div id="editor"></div>
+  </div> <!-- /row -->
+      
+      
+
+</form>
+
+
+{% endblock %}
+
+
+{% block script %}
+
+<script>
+
+  function disableButton() {
+    const btn = document.getElementById('save-btn');
+    btn.disabled = true;
+    btn.innerText = 'Loading...'
+  }
+  
+  function enableButton() {
+    const btn = document.getElementById('save-btn');
+    btn.disabled = false;
+  }
+  
+  $(document).ready(function () {
+    const Editor = toastui.Editor;
+    const editor = new Editor({
+      el: document.querySelector('#editor'),
+      height: '600px',
+      initialEditType: 'markdown',
+      previewStyle: 'vertical'
+    });
+  
+    $("#save-btn").on("click", function(e) {
+      e.preventDefault();
+      disableButton();
+      const md_content = editor.getMarkdown();
+      const csrf_token = "{{ form.csrf_token._value() }}";
+      const title = "{{ form.csrf_token._value() }}";
+
+
+
+      var data = new FormData($('form#form-submit')[0]);
+      data.append('content', md_content);
+      console.log(data);
+      console.log(JSON.stringify(data))
+      $.ajax({
+        type: "POST",
+        contentType: 'application/json',
+        dataType: 'json',
+        url: "{{ url_for('admin_content.markdown_create') }}",
+        data: JSON.stringify(form.data),
+        success:function(result) {
+          /*$("#download-result-btn").removeClass("disabled");
+          enableForm();
+          cachedTargets = {};
+          result_data = result;
+          populateDataTable();
+          showTable();*/
+          console.log(JSON.stringify(form.data))
+          console.log(md_content)
+          console.log('SUCCESS')
+        },
+        error:function(error) {
+          console.log(JSON.stringify(form.data))
+          console.log(md_content)
+          console.error(error);
+          enableButton();
+        }    
+      });
+
+    });
+  });
+
+
+
+</script>
+
+{% endblock %}
+

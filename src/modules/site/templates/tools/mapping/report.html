@@ -3,7 +3,7 @@
 
 {% block custom_head %}
 
-{% if not result %}
+{% if mapping.status != 'COMPLETE' and mapping.status != 'ERROR' %}
   <meta http-equiv="refresh" content="30; url={{ url_for('mapping.mapping_report_list') }}">
 {% endif %}
 
@@ -27,8 +27,8 @@
       </a>
     </div>
     <div class='col-lg-2 col-md-4 col-sm-4 btn-mid-row'>
-    {% if mapping.report_path %}
-      <a class="btn btn-block btn-nu " href="{{ mapping.get_report_blob_path() }}" role="button">
+    {% if report_url %}
+      <a class="btn btn-block btn-nu " href="{{ report_url }}" role="button">
     {% else %}
       <a class="btn btn-block btn-nu " href="" role="button" disabled>
     {% endif %}
@@ -39,13 +39,32 @@
   </div>{# /row #}
 
 
-{% if result %}
+{% if mapping.status == 'COMPLETE' %}
 
   <div class="row">
     <div class="col-md-12 text-center" >
-      <div id="report_frame" width="100%" height="800px" ></div>
+      <div id="report_frame" width="100%" height="800px" >
+        <div class="spinner">
+          <div class="bounce1"></div>
+          <div class="bounce2"></div>
+          <div class="bounce3"></div>
+        </div>
+      </div>
     </div>
   </div> {# /row #}
+
+{% elif mapping.status == 'ERROR' %}
+
+<div class="row">
+  <div class='col-md-12'>
+      <p class='text-info text-center'>
+        <strong>
+          An error occured while performing the genome-wide association mapping. Check that the data you provided matches the expected format.
+        </strong>
+      </p>
+  </div> {# /col-md-12 #}
+</div>{# /row #}
+
 
 {% else %}
 
@@ -88,7 +107,7 @@ function createIFrame(iframeContent) {
 }
 
 async function getReport() {
-  report = await fetch("https://storage.googleapis.com/{{ report_path }}")
+  report = await fetch("{{report_url}}")
     .then(r => r.blob())
     .then(r => r.text())
     .then(r => createIFrame(r));

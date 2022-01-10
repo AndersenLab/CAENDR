@@ -14,10 +14,10 @@ targets: cloud-resource-init
 .PHONY: targets
 
 #~
-cloud-resource-init: #~
+admin-cloud-resource-init: #~
 #~ Sets up the Administrative Google Cloud Project and configures
 #~ a Cloud Storage bucket to track the tfstate for all environments
-cloud-resource-init:
+admin-cloud-resource-init:
 	@echo -e "\n$(COLOR_B)Initializing cloud resources required for Terraform...$(COLOR_N)"
 	@$(LOAD_ADMIN_ENV) && $(LOAD_ADMIN_TF_VAR) && $(LOAD_ADMIN_SECRET_TF_VAR) && \
 	cd $(ADMIN_TF_PATH) && rm -rf tf_plan && \

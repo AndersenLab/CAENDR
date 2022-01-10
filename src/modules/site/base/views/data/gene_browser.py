@@ -1,6 +1,7 @@
 from flask import (render_template,
                     Blueprint, 
                     url_for)
+from extensions import cache
 
 from caendr.api.isotype import get_isotypes
 from caendr.services.dataset_release import get_latest_dataset_release_version
@@ -15,6 +16,7 @@ gene_browser_bp = Blueprint('gene_browser',
 @gene_browser_bp.route('/gbrowser/<int:release>')
 @gene_browser_bp.route('/gbrowser/<int:release>/<region>')
 @gene_browser_bp.route('/gbrowser/<int:release>/<region>/<query>')
+@cache.memoize(60*60)
 def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
   if not release_version:
     release_version = get_latest_dataset_release_version()

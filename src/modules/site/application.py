@@ -46,7 +46,10 @@ from base.views.admin import admin_profile_bp
 from base.views.admin import admin_tools_bp
 from base.views.admin import admin_db_op_bp
 from base.views.admin import admin_gene_browser_tracks_bp
+from base.views.admin import admin_content_bp
 
+# Maintenance
+from base.views.maintenance import maintenance_bp
 
 # Auth
 from base.views.auth import (auth_bp, 
@@ -55,7 +58,6 @@ from base.views.auth import (auth_bp,
 
 '''
 from base.views.gene import gene_bp
-from base.views.maintenance import maintenance_bp
 from base.views.admin.admin import admin_bp
 
 '''
@@ -139,7 +141,7 @@ def register_extensions(app):
   # protect all routes (except the ones listed) from cross site request forgery
   csrf = CSRFProtect(app)
   csrf.exempt(auth_bp)
-  # csrf.exempt(maintenance_bp)
+  csrf.exempt(maintenance_bp)
   app.config['csrf'] = csrf
   jwt.init_app(app)
 
@@ -169,7 +171,11 @@ def register_blueprints(app):
   app.register_blueprint(admin_tools_bp, url_prefix='/admin/tools')
   app.register_blueprint(admin_db_op_bp, url_prefix='/admin/db')
   app.register_blueprint(admin_gene_browser_tracks_bp, url_prefix='/admin/gene_browser_tracks')
-
+  app.register_blueprint(admin_content_bp, url_prefix='/admin/content')
+  
+  # Healthchecks/Maintenance
+  app.register_blueprint(maintenance_bp, url_prefix='/tasks')
+  app.register_blueprint(check_bp, url_prefix='')
   
   # API
   app.register_blueprint(api_gene_bp, url_prefix='/api')
@@ -193,11 +199,7 @@ def register_blueprints(app):
   app.register_blueprint(api_strain_bp, url_prefix='/api')
   app.register_blueprint(api_variant_bp, url_prefix='/api')
   app.register_blueprint(api_data_bp, url_prefix='/api')
-
-
-  # Healthchecks/Maintenance
-  app.register_blueprint(maintenance_bp, url_prefix='/tasks')'''
-  app.register_blueprint(check_bp, url_prefix='')
+'''
 
 
 
@@ -232,7 +234,12 @@ def configure_jinja(app):
       return date.strftime(fmt)
     else:
       return date.strftime('%c')
-
+    
+  @app.template_filter('species_italic')
+  def _jinja2_filter_species_italic(text):
+    text = text.replace('C. briggsae', '<i>C. briggsae</i>')
+    text = text.replace('C. elegans', '<i>C. elegans</i>')
+    return text
 
 def register_errorhandlers(app):
   def render_error(e="generic"):

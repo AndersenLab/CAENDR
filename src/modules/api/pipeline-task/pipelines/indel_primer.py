@@ -46,8 +46,8 @@ def _generate_indel_primer_pipeline_req(task: IndelPrimerTask):
   image_uri = f"{task.container_repo}/{task.container_name}:{task.container_version}"
   
   container_name = f"indel-primer-{ip.id}"
-  environment = {"INDEL_STRAIN_1": ip.strain1, 
-                 "INDEL_STRAIN_2": ip.strain2, 
+  environment = {"INDEL_STRAIN_1": ip.strain_1, 
+                 "INDEL_STRAIN_2": ip.strain_2, 
                  "INDEL_SITE": ip.site,
                  "RESULT_BUCKET": ip.get_bucket_name(),
                  "RESULT_BLOB": ip.get_result_blob_path()}

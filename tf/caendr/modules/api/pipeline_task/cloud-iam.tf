@@ -3,13 +3,14 @@ locals {
     "roles/compute.serviceAgent",
     "roles/datastore.owner",
     "roles/lifesciences.workflowsRunner",
-    "roles/storage.objectAdmin",
+    "roles/storage.admin",
     "roles/secretmanager.viewer",
     "roles/secretmanager.secretAccessor",
     "roles/iam.serviceAccountUser",
     "roles/serviceusage.serviceUsageConsumer",
     "roles/pubsub.admin",
-    "roles/cloudsql.admin"
+    "roles/cloudsql.admin",
+    "roles/cloudfunctions.serviceAgent"
   ] )
 }
 

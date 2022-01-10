@@ -3,7 +3,7 @@ from string import Template
 from logzero import logger
 
 from caendr.models.datastore import Entity
-from caendr.services.cloud.storage import generate_blob_url, get_blob_list, get_blob, check_blob_exists
+from caendr.services.cloud.storage import generate_blob_url, get_blob, check_blob_exists
 
 V1_V2_Cutoff_Date = 20200101
 
@@ -81,7 +81,7 @@ def V2_Data_Map():
     'gatk_report': '$ver/gatk_report.html',
     'concordance_report': '$ver/concordance_report.html',
     
-    'divergent_regions_strain_bed_gz': '$ver/browser_tracks/lee2020.divergent_regions_strain.bed.gz',
+    'divergent_regions_strain_bed_gz': '$ver/lee2020.divergent_regions_strain.bed.gz',
 
     'soft_filter_vcf_gz': '$ver/variation/WI.$ver.soft-filter.vcf.gz',
     'soft_filter_vcf_gz_tbi': '$ver/variation/WI.$ver.soft-filter.vcf.gz.tbi',

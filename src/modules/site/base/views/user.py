@@ -8,7 +8,7 @@ from caendr.services.cloud.secret import get_secret
 from base.forms import UserRegisterForm, UserUpdateForm
 from base.utils.auth import jwt_required, get_jwt, get_current_user, assign_access_refresh_tokens
 
-PASSWORD_SALT = get_secret('PASSWORD_SALT')
+PASSWORD_PEPPER = get_secret('PASSWORD_PEPPER')
 
 user_bp = Blueprint('user',
                     __name__,
@@ -18,7 +18,7 @@ user_bp = Blueprint('user',
 @user_bp.route('/')
 def user():
   """
-      Redirect base route to the strain list page
+      Redirect base route to the user profile page
   """
   return redirect(url_for('user.user_profile'))
 
@@ -33,11 +33,9 @@ def user_register():
     full_name = request.form.get('full_name')
     email = request.form.get('email')
     roles = ['user']
-    last_login = datetime.now(timezone.utc)
     id = slugify(username)
     user = User(id)
-    user.set_properties(username=username, password=password, salt=PASSWORD_SALT, full_name=full_name, email=email, roles=roles, last_login=last_login)
-    user.user_type = 'LOCAL'
+    user.set_properties(username=username, password=password, salt=PASSWORD_PEPPER, full_name=full_name, email=email, roles=roles, last_login=datetime.now(timezone.utc), user_type='LOCAL')
     user.save()
     return assign_access_refresh_tokens(username, user.roles, url_for("user.user_profile"))
   return render_template('user/register.html', **locals())
