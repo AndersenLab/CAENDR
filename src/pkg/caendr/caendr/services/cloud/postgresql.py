@@ -1,5 +1,6 @@
 import os
 import psycopg2
+import pg8000
 
 from logzero import logger
 from flask_sqlalchemy import SQLAlchemy
@@ -29,4 +30,4 @@ db_instance_uri = f'{GOOGLE_CLOUD_PROJECT_ID}:{GOOGLE_CLOUD_REGION}:{MODULE_DB_O
 
 db_conn_uri = f'postgresql+psycopg2://{MODULE_DB_OPERATIONS_DB_USER_NAME}:{POSTGRES_DB_PASSWORD}@/{MODULE_DB_OPERATIONS_DB_NAME}?host=/cloudsql/{db_instance_uri}'
 
-
+alt_db_conn_uri = f'postgresql+pg8000://{MODULE_DB_OPERATIONS_DB_USER_NAME}:{POSTGRES_DB_PASSWORD}@/{MODULE_DB_OPERATIONS_DB_NAME}?unix_sock=/cloudsql/{db_instance_uri}/.s.PGSQL.5432'
