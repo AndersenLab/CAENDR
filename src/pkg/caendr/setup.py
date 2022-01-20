@@ -23,6 +23,7 @@ setup(
     'pandas',
     'plotly==2.2.3',
     'psycopg2-binary>=2.9.1',
+    'pg8000',
     'python-dotenv==0.19.1',
     'pytabix==0.1',
     'importlib; python_version == "3.8.10"',

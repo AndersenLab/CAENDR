@@ -3,3 +3,4 @@ Dockerfile
 .dockerignore
 .download
 *.csv.gz
+sva.csv
