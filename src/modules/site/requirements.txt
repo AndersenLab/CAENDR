@@ -23,7 +23,6 @@ google-cloud-secret-manager
 google-cloud-storage
 google-cloud-datastore
 google_cloud_logging
-google-python-cloud-debugger
 grpcio
 gunicorn
 httplib2==0.18.0
@@ -40,6 +39,7 @@ pytz==2017.3
 PyYAML>=4.2b1
 requests
 rich
+sentry-sdk==1.5.4
 setuptools>=40.3.0
 scipy
 simplejson==3.13.2
