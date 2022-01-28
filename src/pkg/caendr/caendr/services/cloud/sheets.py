@@ -3,6 +3,7 @@ import json
 import gspread
 import pandas as pd
 import requests
+import datetime
 
 from io import StringIO
 from oauth2client.service_account import ServiceAccountCredentials
@@ -66,7 +67,10 @@ def add_to_order_ws(row):
   values = []
   for x in header_row:
     if x in row.keys():
-      values.append(row[x])
+      value = row[x]    
+      if isinstance(value, datetime.datetime):
+        value = value.isoformat() 
+      values.append(value)
     else:
       values.append("")
 
