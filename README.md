@@ -47,7 +47,7 @@ export ENV=development
 Running modules locally
 -------------------------------------------------------------------
 
-If the module requires a connection to the Cloud SQL instance, you will need to keep the Google Cloud SQL proxy running in the background:
+If the module requires a connection to the Cloud SQL instance, you will need to keep the [Google Cloud SQL proxy](https://cloud.google.com/sql/docs/mysql/quickstart-proxy-test#macos-64-bit) running in the background:
 
 ```bash
 ./cloud_sql_proxy -instances=${GOOGLE_CLOUD_PROJECT_ID}:${GOOGLE_CLOUD_REGION}:${MODULE_DB_OPERATIONS_INSTANCE_NAME} -dir=/cloudsql &
