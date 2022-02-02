@@ -174,7 +174,7 @@ def statistics():
     df = get_weekly_visits()
     weekly_visits_plot = get_weekly_visits_plot(df)
   except Exception as e:
-    print("Unable to connect to Google Analytics")
+    logger.warn("Unable to fetch weekly visits from Google Analytics")
     df = None
     weekly_visits_plot = None
 
