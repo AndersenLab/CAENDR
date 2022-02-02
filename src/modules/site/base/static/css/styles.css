@@ -1146,3 +1146,8 @@ article {
   height: 6.0rem;
   font-size: 0.9rem;
 }
+
+.debug-message {
+  display: none;
+}
+

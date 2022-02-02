@@ -6,6 +6,8 @@ GOOGLE_CLOUD_PROJECT_NUMBER = os.environ.get('GOOGLE_CLOUD_PROJECT_NUMBER')
 secretManagerClient = secretmanager.SecretManagerServiceClient()
 
 def get_secret(id, version='latest'):
+    if os.getenv(id) is not None:
+        return os.getenv(id)
     secretName = f"projects/{GOOGLE_CLOUD_PROJECT_NUMBER}/secrets/{id}/versions/{version}"
     response = secretManagerClient.access_secret_version(request={"name": secretName})
     secret = response.payload.data.decode("UTF-8")

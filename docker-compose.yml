@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:13.5-alpine
+    restart: always
+    env_file:
+      - src/modules/site/.env
+    environment:
+      - POSTGRES_USER=$MODULE_DB_OPERATIONS_DB_USER_NAME
+      - POSTGRES_DB=$MODULE_DB_OPERATIONS_DB_NAME
+      - POSTGRES_PASSWORD=$POSTGRES_DB_PASSWORD
+    ports:
+      - 5432:5432
+

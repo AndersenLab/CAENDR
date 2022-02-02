@@ -3,7 +3,7 @@ from dotenv import dotenv_values
 from logzero import logger
 
 from caendr.services.cloud.secret import get_secret
-from caendr.services.cloud.postgresql import db_conn_uri
+from caendr.services.cloud.postgresql import get_db_conn_uri, get_db_timeout
 from caendr.utils.json import json_encoder
 from caendr.utils.data import convert_env_bool
 
@@ -56,9 +56,9 @@ def get_config():
   # TODO: clean these up eventually
   config['json_encoder'] = json_encoder
 
-  config['SQLALCHEMY_DATABASE_URI'] = db_conn_uri
+  config['SQLALCHEMY_DATABASE_URI'] = get_db_conn_uri()
   config['SQLALCHEMY_ENGINE_OPTIONS'] = { "pool_pre_ping": True, "pool_recycle": 300 }
-  config['SQLALCHEMY_POOL_TIMEOUT'] = 20
+  config['SQLALCHEMY_POOL_TIMEOUT'] = get_db_timeout()
 
   logger.debug(config)
 
