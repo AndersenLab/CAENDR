@@ -18,6 +18,20 @@ create-schema: print-module-env dot-env venv install-pkg
 	$(LOAD_MODULE_ENV) && \
 	python create_schema.py
 
+start-postgres: #~
+#~ Starts the Flask test server for local development and debugging
+start-postgres: print-module-env dot-env venv install-pkg
+	@echo -e "\n$(COLOR_B)Staring local postgres container...$(COLOR_N)"
+	$(LOAD_MODULE_ENV) && \
+	docker-compose up -d postgres
+
+stop-postgres: #~
+#~ Starts the Flask test server for local development and debugging
+stop-postgres: 
+	@echo -e "\n$(COLOR_B)Stopping local postgres container...$(COLOR_N)"
+	$(LOAD_MODULE_ENV) && \
+	docker-compose down postgres
+
 #~
 run: #~
 #~ Starts the Flask test server for local development and debugging
