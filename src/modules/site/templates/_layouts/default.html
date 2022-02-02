@@ -77,7 +77,7 @@
             </div>
         </div><!-- closes wrap-->
     </div><!-- closes page-content-->
-    {% if config.DEBUG %}{{ session }}{% endif %}
+    {% if config.DEBUG %} <div title='turn off DEBUG mode to hide these messages' class='debug-message'>{{ session }}</div>{% endif %}
     {% include "_includes/footer.html" %} 
     </body>
 </html>
