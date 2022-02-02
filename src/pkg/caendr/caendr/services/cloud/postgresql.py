@@ -1,3 +1,4 @@
+from curses.ascii import alt
 import os
 import psycopg2
 import pg8000
@@ -28,6 +29,20 @@ POSTGRES_DB_PASSWORD = get_secret('POSTGRES_DB_PASSWORD')
 
 db_instance_uri = f'{GOOGLE_CLOUD_PROJECT_ID}:{GOOGLE_CLOUD_REGION}:{MODULE_DB_OPERATIONS_INSTANCE_NAME}'
 
+
 db_conn_uri = f'postgresql+psycopg2://{MODULE_DB_OPERATIONS_DB_USER_NAME}:{POSTGRES_DB_PASSWORD}@/{MODULE_DB_OPERATIONS_DB_NAME}?host=/cloudsql/{db_instance_uri}'
 
-alt_db_conn_uri = f'postgresql+pg8000://{MODULE_DB_OPERATIONS_DB_USER_NAME}:{POSTGRES_DB_PASSWORD}@/{MODULE_DB_OPERATIONS_DB_NAME}?unix_sock=/cloudsql/{db_instance_uri}/.s.PGSQL.5432'
+alt_db_conn_uri = f'postgresql+pg8000://{MODULE_DB_OPERATIONS_DB_USER_NAME}:{POSTGRES_DB_PASSWORD}@/{MODULE_DB_OPERATIONS_DB_NAME}?unix_sock={MODULE_DB_OPERATIONS_SOCKET_PATH}/{db_instance_uri}/.s.PGSQL.5432'
+
+def get_db_conn_uri():
+    connection_type = os.getenv('MODULE_DB_OPERATIONS_CONNECTION_TYPE') or "host"
+    if connection_type == "localhost":
+        return f'postgresql+psycopg2://{MODULE_DB_OPERATIONS_DB_USER_NAME}:{POSTGRES_DB_PASSWORD}@localhost/{MODULE_DB_OPERATIONS_DB_NAME}'
+    if connection_type == "host":
+        return db_conn_uri
+    return alt_db_conn_uri
+
+
+def get_db_timeout():
+    timeout = int(os.getenv("MODULE_DB_TIMEOUT")) if os.getenv("MODULE_DB_TIMEOUT") is not None else 20
+    return timeout
