@@ -47,11 +47,19 @@
 <div class='row'>
     <div class='col-md-6'>
         <h4>Report summary plot</h4>
-        {{ report_summary_plot|safe }}
+        {% if report_summary_plot is not none %}
+          {{ report_summary_plot|safe }}
+        {% else %}
+          <div class='error'>(not available)</div>
+        {% endif %}
     </div>
     <div class='col-md-6'>
         <h4>Cumulative visits</h4>
-        {{ weekly_visits_plot|safe }}
+        {% if weekly_visits_plot is not none %}
+          {{ weekly_visits_plot|safe }}
+        {% else %}
+          <div class='error'>(not available)</div>
+        {% endif %}
     </div>
 </div>
 

@@ -170,8 +170,14 @@ def statistics():
   
   # Weekly visits plot
   ################################
-  df = get_weekly_visits()
-  weekly_visits_plot = get_weekly_visits_plot(df)
+  try:
+    df = get_weekly_visits()
+    weekly_visits_plot = get_weekly_visits_plot(df)
+  except Exception as e:
+    print("Unable to connect to Google Analytics")
+    df = None
+    weekly_visits_plot = None
+
 
   # Unique users
   ############################
