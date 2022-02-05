@@ -13,3 +13,16 @@ services:
     ports:
       - 5432:5432
 
+  cloud-sql-proxy:
+    image: gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine
+    # build:
+      # context: src/modules/site
+      # dockerfile: Dockerfile-proxy
+    restart: always
+    env_file:
+      - src/modules/site/.env
+    volumes:
+      - $GOOGLE_APPLICATION_CREDENTIALS:/config
+    ports:
+      - "5432:5432"
+    command: "/cloud_sql_proxy -instances=$GOOGLE_CLOUD_PROJECT_ID:$GOOGLE_CLOUD_REGION:$MODULE_DB_OPERATIONS_INSTANCE_NAME=tcp:0.0.0.0:5432 -credential_file=/config"
