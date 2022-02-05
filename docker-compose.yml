@@ -15,9 +15,6 @@ services:
 
   cloud-sql-proxy:
     image: gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine
-    # build:
-      # context: src/modules/site
-      # dockerfile: Dockerfile-proxy
     restart: always
     env_file:
       - src/modules/site/.env
