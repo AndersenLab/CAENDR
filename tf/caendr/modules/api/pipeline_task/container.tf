@@ -1,5 +1,5 @@
 locals {
-  dockerfile_path = abspath("${path.module}/../../../../../src/modules/api/pipeline-task")
+  dockerfile_path = abspath("${path.module}/../../../../../../../../../../src/modules/api/pipeline-task")
 }
 
 data "google_container_registry_image" "api_pipeline_task" {
