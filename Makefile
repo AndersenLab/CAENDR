@@ -18,6 +18,7 @@ MODULE_PATH = $(PROJECT_DIR)/src/modules
 LOAD_GLOBAL_ENV=export $$(cat $(GLOBAL_ENV_FILE) | sed $(WHITESPACE_REGEX) | sed $(COMMENT_REGEX) | xargs)
 LOAD_GLOBAL_ENV=export $$(cat $(GLOBAL_ENV_FILE) | sed $(WHITESPACE_REGEX) | sed $(COMMENT_REGEX) | xargs)
 LOAD_TF_VAR=export $$(cat $(GLOBAL_ENV_FILE) | sed $(WHITESPACE_REGEX) | sed $(COMMENT_REGEX) | sed $(TF_VAR_PREFIX_REGEX) | xargs)
+LOAD_SECRET=export $$(cat $(SECRET_ENV_FILE) | sed $(WHITESPACE_REGEX) | sed $(COMMENT_REGEX) | xargs)
 LOAD_SECRET_TF_VAR=export $$(cat $(SECRET_ENV_FILE) | sed $(WHITESPACE_REGEX) | sed $(COMMENT_REGEX) | sed $(TF_VAR_PREFIX_REGEX) | xargs)
 
 TF_SELECT_WORKSPACE=(terraform workspace new $(ENV) || (echo "Switching to existing workspace \"$(ENV)\"" && terraform workspace select $(ENV)))
@@ -113,9 +114,11 @@ cloud-resource-init:
 	@echo -e "\n$(COLOR_B)Initializing Terraform...$(COLOR_N)"
 ifneq ("$(wildcard $(ENV_PATH)/backend.hcl)","")
 	$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && cd $(TF_PATH) && \
+	export DEBUG=0 && \
 	terraform init -backend-config=$(ENV_PATH)/backend.hcl
 else
 	$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && cd $(TF_PATH) && \
+	export DEBUG=0 && \
 	terraform init
 endif
 
@@ -129,6 +132,7 @@ cloud-resource-plan: cloud-resource-init
 	$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && \
 	cd $(TF_PATH) && rm -rf tf_plan && \
 	$(TF_SELECT_WORKSPACE) && \
+	export DEBUG=0 && \
 	terraform plan -out tf_plan
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 	@echo -e "\n\nRun this command to apply the terraform plan: $(COLOR_G)'make cloud-resource-deploy ENV=$(ENV)'$(COLOR_N)\n" 
@@ -144,11 +148,26 @@ cloud-resource-deploy: cloud-resource-init
 	cd $(TF_PATH) && \
 	rm -rf tf_plan && \
 	$(TF_SELECT_WORKSPACE) && \
+	export DEBUG=0 && \
 	terraform plan -out tf_plan && \
 	$(MAKE) -C $(PROJECT_DIR) confirm --no-print-directory && \
+	export DEBUG=0 && \
 	terraform apply "tf_plan" 
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
+
+#~
+terragrunt-shell: #~
+#~ Deploys the site
+terragrunt-shell: 
+	@echo -e "\n$(COLOR_B)Initializing Terraform...$(COLOR_N)"
+ifneq ("$(wildcard $(ENV_PATH)/backend.hcl)","")
+	$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET) && cd $(TF_PATH) && \
+	bash 
+else
+	$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && cd $(TF_PATH) && \
+	bash
+endif
 
 #~
 cloud-resource-destroy: #~

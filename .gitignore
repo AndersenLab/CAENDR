@@ -9,6 +9,8 @@ terraform-service-account.json
 terraform.tfstate*
 terraform.lock*
 tf_plan
+.terragrunt/
+.terragrunt-cache/
 
 .env
 secret.env
