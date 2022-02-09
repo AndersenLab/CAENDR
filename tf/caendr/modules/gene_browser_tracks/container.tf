@@ -1,5 +1,5 @@
 locals {
-  dockerfile_path = abspath("${path.module}/../../../../src/modules/gene_browser_tracks")
+  dockerfile_path = abspath("${path.module}/../../../../../../../../../src/modules/gene_browser_tracks")
 }
 
 data "google_container_registry_image" "gene_browser_tracks" {

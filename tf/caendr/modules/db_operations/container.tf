@@ -1,5 +1,5 @@
 locals {
-  dockerfile_path = abspath("${path.module}/../../../../src/modules/db_operations")
+  dockerfile_path = abspath("${path.module}/../../../../../../../../../src/modules/db_operations")
 }
 
 data "google_container_registry_image" "db_operations" {

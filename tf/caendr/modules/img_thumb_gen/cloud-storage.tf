@@ -11,7 +11,7 @@ resource "google_storage_bucket" "photos_bucket" {
   location = upper(var.google_cloud_vars.region)
   
   cors {
-    origin          = ["https://www.elegansvariation.org/", "http://localhost:8080/", "https://${var.google_cloud_vars.project_id}.uc.r.appspot.com/"]
+    origin          = ["https://www.elegansvariation.org/", "https://localhost:8080/", "http://localhost:8080/", "https://${var.google_cloud_vars.project_id}.uc.r.appspot.com/"]
     method          = ["GET", "HEAD", "DELETE", "PUT", "POST"]
     response_header = ["Content-Type", "Access-Control-Allow-Origin"]
     max_age_seconds = 3600
