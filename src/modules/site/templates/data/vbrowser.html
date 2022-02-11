@@ -37,10 +37,13 @@ mark {
 
 {% block content %}
 
-<div class="container browser-row well">
+<!-- <div class="container-fluid browser-row well"> -->
+  <div class="browser-row well">
 
 <div class="row">
       {# Gene Search Block #}
+      <div class="col-lg-12">
+        <div class="row">
       <div class="col-lg-4 col-lg-offset-0 col-md-10 col-md-offset-1 col-sm-8 col-sm-offset-2 col-xs-12 text-center">
 
         <h3><label for="gene-search"> Gene </label></h3>
@@ -70,6 +73,7 @@ mark {
         </table>
 
       </div> {# /col-lg-4 #}
+      
 
       {# Interval Search Block #}
       <div class="col-lg-4 col-lg-offset-0 col-md-10 col-md-offset-1 col-sm-8 col-sm-offset-2 col-xs-12 text-center">
@@ -79,14 +83,14 @@ mark {
             <input name="interval" id="interval" class="form-control text-center" placeholder="III:11,746,923-11,750,250" pattern="(I|II|III|IV|V|X|MtDNA):[0-9,]+-[0-9,]+">
           </div>
           <small>Search using the format [chromosome:START-STOP]</small>
-          <div class="btn-mid-row" style="width: 50%; margin-left: 25%;">
+          <div class="btn-mid-row" style="width: 60%; margin: auto;">
             <button class="btn nu-alt-btn btn-block" id="search-interval-btn">
               <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> 
               Search
             </button>
           </div>
         </form>
-        <div class="btn-bottom-row" style="width: 50%; margin-left: 25%;">
+        <div class="btn-bottom-row" style="width: 60%; margin: auto;">
           <button class="btn nu-alt-btn btn-block disabled" id="download-result-btn" onClick="onDownload();">
             <span class="glyphicon glyphicon-download" aria-hidden="true"></span> 
             Download Results
@@ -147,8 +151,7 @@ mark {
         </form>
       </div> {# /strain-list #}
   </div> {# /col-md-2 #}
-
-</div> {# /row #}
+</div>{# /row #}
 
 <div class="row">
   <div class="col-lg-4 col-lg-offset-8 col-sm-8 col-sm-offset-2 col-xs-12">
@@ -177,13 +180,13 @@ mark {
       </form>
 
     </div> {# /col #}
-
 </div> {# /row #}
-
-
+</div> {# /col-lg-12 #}
+</div> {# /row #}
 </div> {# /container #}
 
 <div class="row">
+  <div class="col-lg-12">
     <div id="loading-variant-table" style="display:none; margin-top:20px;">
       <div class="spinner">
         <div class="bounce1"></div>
@@ -211,7 +214,7 @@ mark {
         </tbody>
       </table>
     </div>
-    
+  </div> {# /col-lg-12 #}
 </div> {# /row #}
 
 
