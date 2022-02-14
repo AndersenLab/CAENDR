@@ -106,6 +106,25 @@ endif
 
 
 #~
+terraform-shell: #~
+#~ Initializes terraform providers and loads the backend.hcl config 
+#~ if it exists in the environment directory, or use a local backend otherwise.
+terraform-shell:
+	@echo -e "\n$(COLOR_B)Initializing Terraform...$(COLOR_N)"
+ifneq ("$(wildcard $(ENV_PATH)/backend.hcl)","")
+	$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && cd $(TF_PATH) && \
+	echo terraform init -reconfigure -backend-config=$(ENV_PATH)/backend.hcl && \
+	$(TF_SELECT_WORKSPACE) && \
+	$(SHELL)
+else
+	$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && cd $(TF_PATH) && \
+	echo terraform init && \
+	$(TF_SELECT_WORKSPACE) && \
+	$(SHELL) 
+endif
+
+
+#~
 cloud-resource-init: #~
 #~ Initializes terraform providers and loads the backend.hcl config 
 #~ if it exists in the environment directory, or use a local backend otherwise.
@@ -113,7 +132,7 @@ cloud-resource-init:
 	@echo -e "\n$(COLOR_B)Initializing Terraform...$(COLOR_N)"
 ifneq ("$(wildcard $(ENV_PATH)/backend.hcl)","")
 	$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && cd $(TF_PATH) && \
-	terraform init -backend-config=$(ENV_PATH)/backend.hcl
+	terraform init -reconfigure -backend-config=$(ENV_PATH)/backend.hcl
 else
 	$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && cd $(TF_PATH) && \
 	terraform init

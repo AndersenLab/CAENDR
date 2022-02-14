@@ -6,6 +6,8 @@ from caendr.services.cloud.cron import verify_cron_req_origin
 from caendr.api.strain import generate_bam_bai_download_script, get_joined_strain_list
 from caendr.models.error import APIDeniedError, APIError
 
+from base.utils.auth import user_has_role
+
 maintenance_bp = Blueprint('maintenance',
                           __name__)
 
@@ -25,14 +27,15 @@ def cleanup_cache():
 
 @maintenance_bp.route('/create_bam_bai_download_script', methods=['GET'])
 def create_bam_bai_download_script():
-  if verify_cron_req_origin(request):
-    joined_strain_list = get_joined_strain_list()
-    thread = Thread(target=generate_bam_bai_download_script, args={joined_strain_list: joined_strain_list})
-    thread.start()
+  if not (verify_cron_req_origin(request) or user_has_role("admin")):
+    return APIError.default_handler(APIDeniedError)
 
-    response = jsonify({})
-    response.status_code = 200
-    return response
-  
-  return APIError.default_handler(APIDeniedError)
+  joined_strain_list = get_joined_strain_list()
+  thread = Thread(target=generate_bam_bai_download_script, args={joined_strain_list: joined_strain_list})
+  thread.start()
+
+  response = jsonify({})
+  response.status_code = 200
+  return response
+
 
