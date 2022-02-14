@@ -7,22 +7,22 @@ from caendr.api.strain import generate_bam_bai_download_script, get_joined_strai
 from caendr.models.error import APIDeniedError, APIError
 
 from base.utils.auth import user_has_role
+from base.utils.cache import delete_expired_cache
 
 maintenance_bp = Blueprint('maintenance',
                           __name__)
 
 # TODO: RESTORE THIS FN
-'''
 @maintenance_bp.route('/cleanup_cache', methods=['GET'])
 def cleanup_cache():
-  if verify_cron_req_origin(request):
-    result = delete_expired_cache()
-    response = jsonify({"result": result})
-    response.status_code = 200
-    return response
-  
-  flash('You do not have access to this page', 'error')
-  return abort(401)'''
+  if not (verify_cron_req_origin(request) or user_has_role("admin")):
+    # flash('You do not have access to this page', 'error')
+    return APIError.default_handler(APIDeniedError)
+
+  result = delete_expired_cache()
+  response = jsonify({"result": result})
+  response.status_code = 200
+  return response
   
 
 @maintenance_bp.route('/create_bam_bai_download_script', methods=['GET'])
