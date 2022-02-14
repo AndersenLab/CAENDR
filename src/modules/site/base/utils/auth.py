@@ -41,6 +41,14 @@ def unset_jwt():
   return resp
 
 
+def user_has_role(role):
+  try: 
+    verify_jwt_in_request(optional=True)
+    claims = get_jwt()
+    return claims["roles"] and (role in claims["roles"])
+  except:
+    return False
+
 def admin_required():
   def wrapper(fn):
     @wraps(fn)
