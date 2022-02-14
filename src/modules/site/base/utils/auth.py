@@ -46,7 +46,7 @@ def user_has_role(role):
     verify_jwt_in_request(optional=True)
     claims = get_jwt()
     return claims["roles"] and (role in claims["roles"])
-  except:
+  except Exception as e:
     return False
 
 def admin_required():

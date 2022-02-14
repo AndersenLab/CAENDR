@@ -83,11 +83,14 @@ def delete_ds_entities_by_query(kind, filters=None, projection=()):
       for var, op, val in filters:
         query.add_filter(var, op, val)
 
-    query = query.fetch()
+    iter = query.fetch()
+    if iter.num_results == 0:
+      return 0
+
     while True:
-      data, more, cursor = query.next_page()
+      entities, more, cursor = iter.next_page()
       keys = []
-      for entity in data:
+      for entity in entities:
         keys.append(entity.key)
       dsClient.delete_multi(keys)
       deleted_items += len(keys)
