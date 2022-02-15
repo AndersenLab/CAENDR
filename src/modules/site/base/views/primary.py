@@ -47,7 +47,7 @@ def news_item(filename=""):
 def help_item(filename=""):
   ''' Help '''
   # TODO: make files dynamic
-  files = ["FAQ", "Variant-Browser", "Change-Log"]
+  files = ["FAQ", "Genome-Browser", "Change-Log"]
   if not filename:
     filename = "FAQ"
   title = "Help"
