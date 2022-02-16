@@ -694,6 +694,13 @@ article {
   font-weight: 600;
 }
 
+/* Variant Annotation Table */
+#result-table {
+  margin-top: 2rem;
+  overflow: auto;
+  max-height: 600px;
+}
+
 /* Tools */
 #glyph {
   width: 850px;
