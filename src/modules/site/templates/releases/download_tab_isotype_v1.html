@@ -24,7 +24,6 @@
         <h3>Alignment Data</h3>
         <p>Wild isolate genomes are aligned and stored using the
             <span class="tooltip-item" data-toggle="tooltip" data-placement="bottom" title="Binary sequence Alignment/Map format">BAM</span>  format. BAMs are available in the table below.</p>
-        <p><a href="http://biobits.org/samtools_primer.html" target="_blank">Learn about alignment data</a></p>
             <h4>Downloading All Alignment Data</h4>
             <p>You can download all alignment data using the script below. Before this script will work, you need to download and install <strong>wget</strong>. We recommend using <a href="http://brew.sh">Homebrew</a> for this installation (Unix/Mac OS), or <a href="http://www.cygwin.com/">Cygwin</a> on windows. See the <a href="{{ url_for( "primary.help_item",filename="FAQ")}}">FAQ</a> for details on installing <strong>wget</strong>.</p>
             <p><a href="{{ url_for("data_downloads.download_script", release_version=release_version) }}">download_bams.sh</a></p>
@@ -35,7 +34,6 @@
         <h3>Variant Data</h3>
         <p>We used samtools to identify single-nucleotide variant (SNV) sites as compared to the N2 reference genome. Variant data are provided as
             <span class='tooltip-item' data-toggle="tooltip" data-placement="bottom" title="Variant Caller Format">VCF</span> or tab-delimited files.</p>
-        <p><a href="http://biobits.org/samtools_primer.html#UnderstandingtheVCFFormat">Learn more about VCF files</a></p>
         <h4>VCF</h4>
         <p>VCFs generated from the variant calling pipeline are provided below.</p>
         <ul>
