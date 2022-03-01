@@ -22,6 +22,10 @@ a {
     font-weight: bold;
 }
 
+.h1 .small,.h1 small,.h2 .small,.h2 small,.h3 .small,.h3 small,.h4 .small,.h4 small,.h5 .small,.h5 small,.h6 .small,.h6 small,h1 .small,h1 small,h2 .small,h2 small,h3 .small,h3 small,h4 .small,h4 small,h5 .small,h5 small,h6 .small,h6 small {
+  color:#595959;
+}
+
 .col-list { 
     display: block;
     width: 25%;
