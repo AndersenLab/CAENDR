@@ -5,7 +5,7 @@
     <div class='col-md-8'>
         <div class="row">
             <div class="col-md-6">
-                <h4>Strains</h4>
+                <h3>Strains</h3>
                 <ul>
                 {% for i in isotype %}
                     {% if i.isotype_ref_strain %}
@@ -17,7 +17,7 @@
                 </ul>
                 <br />
                 {% if isotype[0].previous_names %}
-                <h4>Alternative Names</h4>
+                <h3>Alternative Names</h3>
                 <ul>
                 {% for i in isotype[0].previous_names.split("|") %}
                   <li>{{ i }}</li>
