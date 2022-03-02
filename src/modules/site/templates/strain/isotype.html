@@ -33,9 +33,9 @@
                   <a href="{{ img.url }}" src="_blank">
                     <figure class="figure" style="padding:10px;">
                     {% if img.thumb %}
-                      <img class="figure-img img-fluid img-thumbnail image-responsive" src="{{ img.thumb }}" name="{{ key }}" style="width:100%;">
+                      <img class="figure-img img-fluid img-thumbnail image-responsive" src="{{ img.thumb }}" name="{{ key }}" style="width:100%;" alt="">
                     {% else %}
-                      <img class="figure-img img-fluid img-thumbnail image-responsive" src="{{ img.url }}" name="{{ key }}" style="width:100%;">
+                      <img class="figure-img img-fluid img-thumbnail image-responsive" src="{{ img.url }}" name="{{ key }}" style="width:100%;" alt="">
                     {% endif %}
                       <figcaption class="figure-caption text-center">{{ key }}</figcaption>
                     </figure>
