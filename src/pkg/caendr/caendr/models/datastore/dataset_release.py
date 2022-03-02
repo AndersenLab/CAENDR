@@ -69,6 +69,8 @@ class DatasetRelease(Entity):
       blob_path = f'{blob_prefix}/{blob_name}'
       if check_blob_exists(bucket_name, blob_path):
         url_map_filtered[key] = generate_blob_url(bucket_name, blob_path)
+      else:
+        logger.warning(f'Blob {blob_path} does not exist')
     
     return url_map_filtered
   
