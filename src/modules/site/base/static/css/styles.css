@@ -245,14 +245,14 @@ td.isotype-item label {
   border: 1px solid #999999;
   display: block;
   width: 100%;
+  overflow: auto;
 }
 
 #browser_strain_list thead, #browser_strain_list tbody { display: block; }
 
 #browser_strain_list tbody {
     height: 15.0rem;       /* Just for the demo          */
-    overflow-y: auto;    /* Trigger vertical scroll    */
-    overflow-x: hidden;  /* Hide the horizontal scroll */
+    overflow: auto;    /* Trigger vertical and horizontal scroll    */
 }
 
 #browser_strain_list td {
