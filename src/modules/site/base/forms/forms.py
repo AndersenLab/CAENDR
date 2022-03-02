@@ -177,9 +177,9 @@ class PairwiseIndelForm(Form):
   
   strain_1 = SelectField('Strain 1', choices=STRAIN_CHOICES, default="N2", validators=[Required(), validate_uniq_strains])
   strain_2 = SelectField('Strain 2', choices=STRAIN_CHOICES, default="CB4856", validators=[Required()])
-  chromosome = SelectField('Chromosome', choices=CHROMOSOME_CHOICES, validators=[Required()])
-  start = FlexIntegerField('Start', default="2,018,824", validators=[Required(), validate_start_lt_stop])
-  stop = FlexIntegerField('Stop', default="2,039,217", validators=[Required()])
+  chromosome = SelectField('Chromosome', choices=CHROMOSOME_CHOICES, default="V", validators=[Required()])
+  start = FlexIntegerField('Start', default="6,271,913", validators=[Required(), validate_start_lt_stop])
+  stop = FlexIntegerField('Stop', default="6,272,025", validators=[Required()])
 
 
 class OrderForm(Form):
