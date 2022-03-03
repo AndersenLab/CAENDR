@@ -8,8 +8,13 @@ from caendr.services.cloud.postgresql import get_db_conn_uri, get_db_timeout, db
 from caendr.models.error import EnvVarError
 from operations import execute_operation
 
+import monitor
+
 dotenv_file = '.env'
 load_dotenv(dotenv_file)
+
+monitor.init_sentry()
+
 
 MODULE_DB_OPERATIONS_BUCKET_NAME = os.environ.get('MODULE_DB_OPERATIONS_BUCKET_NAME')
 EXTERNAL_DB_BACKUP_PATH = os.environ.get('EXTERNAL_DB_BACKUP_PATH')
