@@ -5,3 +5,4 @@ python-dotenv==0.19.1
 itsdangerous==2.0.1
 sentry-sdk==1.5.4
 pg8000
+PyYAML>=4.2b1
