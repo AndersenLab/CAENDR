@@ -47,12 +47,14 @@ def drop_and_populate_strains(app, db):
   load_strains(db)
 
 def drop_and_populate_wormbase_genes(app, db, wb_ver: str):
+  logger.info(f"Running Drop and Populate wormbase genes with version: {wb_ver}")
   gene_gff_fname = download_external_db('GENE_GFF_URL', wb_ver=wb_ver)
   gene_gtf_fname = download_external_db('GENE_GTF_URL', wb_ver=wb_ver)
   gene_ids_fname = download_external_db('GENE_IDS_URL', wb_ver=wb_ver)
   homologene_fname = download_external_db('HOMOLOGENE_URL')
   ortholog_fname = download_external_db('ORTHOLOG_URL')
-  drop_tables(app, db, tables=[Homolog.__table__, WormbaseGene.__table__)
+  
+  drop_tables(app, db, tables=[Homolog.__table__, WormbaseGene.__table__])
   drop_tables(app, db, tables=[WormbaseGeneSummary.__table__])
   load_genes_summary(db, gene_gff_fname)
   load_genes(db, gene_gtf_fname, gene_ids_fname)

@@ -5,7 +5,7 @@
     <div class='col-md-8'>
         <div class="row">
             <div class="col-md-6">
-                <h4>Strains</h4>
+                <h3>Strains</h3>
                 <ul>
                 {% for i in isotype %}
                     {% if i.isotype_ref_strain %}
@@ -17,7 +17,7 @@
                 </ul>
                 <br />
                 {% if isotype[0].previous_names %}
-                <h4>Alternative Names</h4>
+                <h3>Alternative Names</h3>
                 <ul>
                 {% for i in isotype[0].previous_names.split("|") %}
                   <li>{{ i }}</li>
@@ -33,9 +33,9 @@
                   <a href="{{ img.url }}" src="_blank">
                     <figure class="figure" style="padding:10px;">
                     {% if img.thumb %}
-                      <img class="figure-img img-fluid img-thumbnail image-responsive" src="{{ img.thumb }}" name="{{ key }}" style="width:100%;">
+                      <img class="figure-img img-fluid img-thumbnail image-responsive" src="{{ img.thumb }}" name="{{ key }}" style="width:100%;" alt="">
                     {% else %}
-                      <img class="figure-img img-fluid img-thumbnail image-responsive" src="{{ img.url }}" name="{{ key }}" style="width:100%;">
+                      <img class="figure-img img-fluid img-thumbnail image-responsive" src="{{ img.url }}" name="{{ key }}" style="width:100%;" alt="">
                     {% endif %}
                       <figcaption class="figure-caption text-center">{{ key }}</figcaption>
                     </figure>
