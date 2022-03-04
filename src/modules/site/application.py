@@ -10,6 +10,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.exceptions import HTTPException
 
 from config import config
+import pytz
 
 from base.utils.markdown import render_markdown, render_ext_markdown
 
@@ -230,10 +231,14 @@ def configure_jinja(app):
   # Datetime filters for Jinja
   @app.template_filter('date_format')
   def _jinja2_filter_datetime(date, fmt=None):
+    timezone_name = config.get('TIMEZONE', 'America/Chicago')
+    timezone = pytz.timezone(timezone_name)
+    aware_date = date.astimezone(timezone)
+
     if fmt:
-      return date.strftime(fmt)
+      return aware_date.strftime(fmt)
     else:
-      return date.strftime('%c')
+      return aware_date.strftime('%Y-%m-%d %H:%M:%S %z')
     
   @app.template_filter('species_italic')
   def _jinja2_filter_species_italic(text):
