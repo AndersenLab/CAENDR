@@ -5,18 +5,15 @@ from logzero import logger
 from dotenv import load_dotenv
 from logzero import logger
 
-from caendr.services.cloud.postgresql import get_db_conn_uri, get_db_timeout, db
-from caendr.models.error import EnvVarError
-from operations import execute_operation
-
-import monitor
-
 dotenv_file = '.env'
 load_dotenv(dotenv_file)
 
+import monitor
 monitor.init_sentry()
-logger.debug("Starting sentry")
 
+from caendr.services.cloud.postgresql import get_db_conn_uri, get_db_timeout, db, health_database_status
+from caendr.models.error import EnvVarError
+from operations import execute_operation
 
 MODULE_DB_OPERATIONS_BUCKET_NAME = os.environ.get('MODULE_DB_OPERATIONS_BUCKET_NAME')
 EXTERNAL_DB_BACKUP_PATH = os.environ.get('EXTERNAL_DB_BACKUP_PATH')
@@ -35,5 +32,8 @@ app.config['SQLALCHEMY_POOL_TIMEOUT'] = get_db_timeout()
 logger.info('Initializing Flask SQLAlchemy')
 db.init_app(app)
 
-execute_operation(app, db, DB_OP)
+# test SQL connection
+# status, message = health_database_status()
+# logger.info(f"SQL Connectivity: { 'OK' if status else 'ERROR ' }. {message}")
 
+execute_operation(app, db, DB_OP)
