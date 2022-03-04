@@ -4,27 +4,31 @@
 
 <div class="row">
   <div class="col-md-12">
-    <table class='table'>
+    <table id='table-users' class='table'>
       <thead>
         <tr>
+          <th class='col-md-1'><strong> Full Name </strong></th>
+          <th class='col-md-1'><strong> Email </strong></th>
           <th class='col-md-1'><strong> Username </strong></th>
-          <th class='col-md-2'><strong> Full Name </strong></th>
-          <th class='col-md-2'><strong> Email </strong></th>
           <th class='col-md-1'><strong> Roles </strong></th>
-          <th class='col-md-1'><strong> Created On </strong></th>
-          <th class='col-md-1'><strong> Last Login </strong></th>
+          <th class='col-md-2'><strong> Created </strong></th>
+          <th class='col-md-2'><strong title='last login'> Updated </strong></th>
           <th class='col-md-1'><strong> Edit </strong></th>
-          <th class='col-md-1'><strong> Delete </strong></th>
+          <!-- <th class='col-md-1'><strong> Delete </strong></th> -->
         </tr>
       </thead>
       <tbody>
         {% for user in users%}
           <tr>
             {% if user %}
-              <td> {{ user.username }} </td>
               <td> {{ user.full_name }} </td>
               <td> {{ user.email }} </td>
-              <td> {{ user.roles }} </td>
+              <td> {{ user.username }} </td>
+              <td> 
+                {% for role in user.roles %}
+                <span class='role-chip'>{{ role }}</span>
+                {% endfor %}
+               </td>
               <td> {% if user.created_on %} {{ user.created_on|date_format }} {% endif %} </td>
               <td> {% if user.last_login %} {{ user.last_login|date_format }} {% endif %} </td>
               <td>
@@ -32,11 +36,11 @@
                   Edit
                 </a>
               </td>
-              <td>
+              <!-- <td>
                 <a href="{{ url_for('admin_users.users_delete', id=user.name) }}"> 
                   Delete
                 </a>
-              </td>
+              </td> -->
             {% endif %}
           </tr>
         {% endfor %}
@@ -44,6 +48,20 @@
     </table>
 	</div> <!-- /col-md-12 -->
 </div> <!-- /row -->
+
+<script>
+  $("document").ready(() => {
+
+    const table = $("#table-users").DataTable({
+      "order": [[0, "asc"]],
+      "lengthMenu": [
+        [-1],
+        ["All"]
+      ]
+    });
+
+  });
+</script>
 
 
 {% endblock %}
