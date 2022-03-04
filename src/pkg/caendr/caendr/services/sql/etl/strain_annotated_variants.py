@@ -36,6 +36,7 @@ def fetch_strain_variant_annotation_data(sva_gz_fname: str):
   logger.info('Parsing extracted strain variant annotation .csv file')
   with open(sva_fname) as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
+    total_lines = len(csv_reader)
 
     line_count = -1
     for row in csv_reader:
@@ -45,8 +46,18 @@ def fetch_strain_variant_annotation_data(sva_gz_fname: str):
       else:
         line_count += 1
         if line_count % 1000000 == 0:
-          logger.debug(f"Processed {line_count} lines")
-        
+          logger.debug(f"Processed {line_count}/{total_lines} lines")
+
+        # expected sample headers/rows format
+        # Headers:
+        # ["","CHROM","POS","REF","ALT","CONSEQUENCE","WORMBASE_ID","TRANSCRIPT","BIOTYPE","STRAND","AMINO_ACID_CHANGE","DNA_CHANGE","Strains","BLOSUM","Grantham","Percent_Protein","GENE","VARIANT_IMPACT","SNPEFF_IMPACT","DIVERGENT"]
+        # Rows:
+        # ["1","I",3782,"G","A",NA,NA,NA,NA,NA,NA,NA,"",NA,NA,NA,NA,NA,NA,NA]
+        #
+        # The literal indexes below for row[N] are off-by-one from the CSV
+        # remove the first element from the row.
+        row.pop(0)
+
         target_consequence = None
         consequence = row[4] if row[4] else None
         pattern = '^@[0-9]*$'
@@ -54,6 +65,8 @@ def fetch_strain_variant_annotation_data(sva_gz_fname: str):
         if alt_target:
           target_consequence = int(consequence[1:])
           consequence = None
+
+        
 
         yield {
           'id': line_count,
