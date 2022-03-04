@@ -36,7 +36,6 @@ def fetch_strain_variant_annotation_data(sva_gz_fname: str):
   logger.info('Parsing extracted strain variant annotation .csv file')
   with open(sva_fname) as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
-    total_lines = len(csv_reader)
 
     line_count = -1
     for row in csv_reader:
@@ -46,7 +45,7 @@ def fetch_strain_variant_annotation_data(sva_gz_fname: str):
       else:
         line_count += 1
         if line_count % 1000000 == 0:
-          logger.debug(f"Processed {line_count}/{total_lines} lines")
+          logger.debug(f"Processed {line_count} lines")
 
         # expected sample headers/rows format
         # Headers:
@@ -66,9 +65,10 @@ def fetch_strain_variant_annotation_data(sva_gz_fname: str):
           target_consequence = int(consequence[1:])
           consequence = None
 
-        
+        # strand takes a single character in the SQL schema, and can be nullable. Convert R's NA to NULL
+        strand = None if (not row[8] or row[8] == "NA") else row[8]
 
-        yield {
+        data = {
           'id': line_count,
           'chrom': row[0],
           'pos': int(row[1]),
@@ -79,16 +79,18 @@ def fetch_strain_variant_annotation_data(sva_gz_fname: str):
           'gene_id': row[5] if row[5] else None,
           'transcript': row[6] if row[6] else None,
           'biotype': row[7] if row[7] else None,
-          'strand': row[8] if row[8] else None,
+          'strand': strand,
           'amino_acid_change': row[9] if row[9] else None,
           'dna_change': row[10] if row[10] else None,
           'strains': row[11] if row[11] else None,
-          'blosum': int(row[12]) if row[12] else None,
-          'grantham': int(row[13]) if row[13] else None,
-          'percent_protein': float(row[14]) if row[14] else None,
+          'blosum': int(row[12]) if (row[12] and row[12] != "NA") else None,
+          'grantham': int(row[13]) if (row[13] and row[13] != "NA") else None,
+          'percent_protein': float(row[14]) if (row[14] and row[14] != "NA") else None,
           'gene': row[15] if row[15] else None,
           'variant_impact': row[16] if row[16] else None,
           'divergent': True if row[17] == 'D' else False,
         }
+        
+        yield data
 
   print(f'Processed {line_count} lines.')
