@@ -76,7 +76,7 @@ def fetch_strain_variant_annotation_data(sva_gz_fname: str):
           'alt_seq': row[3] if row[3] else None,
           'consequence': consequence,
           'target_consequence': target_consequence,
-          'gene_id': row[5] if row[5] else None,
+          'gene_id': row[5] if (row[5] and row[5] != "NA") else None,
           'transcript': row[6] if row[6] else None,
           'biotype': row[7] if row[7] else None,
           'strand': strand,
