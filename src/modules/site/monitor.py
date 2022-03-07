@@ -9,7 +9,7 @@ def init_sentry():
     try:
         sentry_sdk.init(
             SENTRY_URL,
-            environment=os.getenv("ENV"),
+            environment=f"site-{os.getenv('ENV')}",
             # Set traces_sample_rate to 1.0 to capture 100%
             # of transactions for performance monitoring.
             # We recommend adjusting this value in production.
