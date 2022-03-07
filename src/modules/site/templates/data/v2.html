@@ -262,13 +262,25 @@
                       <td><strong>Hyper-Divergent Regions</strong></td>
                       <td>The hyper-divergent regions are characterized by higher-than-average density of small variants and large genomic spans where short sequence reads fail to align to the N2 reference genome. They were identified as described in <a href="https://andersenlab.org/publications/2021LeeNatureEE.pdf">Lee <i>et al.</i></a></td>
                       <td>
+                          <ul>
 
-                        {% if f.get('divergent_regions_strain_bed_gz') %} 
-                            <a href="{{ f.get('divergent_regions_strain_bed_gz') }}">divergent_regions_strain.bed</a>
-                        {% else %}
-                            divergent_regions_strain.bed.gz is not included in this release
-                        {% endif %}                        
+                            {% if f.get('divergent_regions_strain_bed') %} 
+                            <li>
+                                <a href="{{ f.get('divergent_regions_strain_bed') }}">divergent_regions_strain.bed</a>
+                            </li>
+                            {% endif %} 
 
+                            {% if f.get('divergent_regions_strain_bed_gz') %} 
+                            <li>
+                                <a href="{{ f.get('divergent_regions_strain_bed_gz') }}">divergent_regions_strain.bed.gz</a>
+                            </li>
+                            {% endif %}
+
+                            {% if not (f.get('divergent_regions_strain_bed') or f.get('divergent_regions_strain_bed_gz')) %}
+                                <li>divergent_regions_strain.bed is not included in this release</li>
+                            {% endif %}                        
+
+                          </ul>
                       </td>
                   </tr>
 
