@@ -136,3 +136,10 @@ Nemascan
 Nemascan requires species data to be manually uploaded to cloud storage to make it accessible to the pipeline:
 
 `${MODULE_SITE_BUCKET_PRIVATE_NAME}/NemaScan/input_data`
+
+
+
+## FAQ
+
+Q: Why does it look like the `site` or `db_operations` are unable to connect to Cloud SQL (PostGres)?
+A: Check if the server exhausted the `max_connections` limit. Google Postgres has a hard limit on connections and there is a reserved number of connections for super-admin (backups, etc), that are not available for run-time apps/services/modules. Consider restarting (or stopping and starting) to close all the active connections. In GCP this can be viewed in the POSTGRES tab, select the "Active Connections" from the dropdown to view the stats.

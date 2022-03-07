@@ -10,32 +10,66 @@
 
 <div class="row">
   <div class="col-md-12">
-    <table class='table'>
+    <table id='database-operations' class='table'>
       <thead>
         <tr>
-          <th class='col-md-2'><strong> Operation </strong></th>
-          <th class='col-md-3'><strong> Args </strong></th>
-          <th class='col-md-1'><strong> Status </strong></th>
-          <th class='col-md-3'><strong> Note </strong></th>
-          <th class='col-md-1'><strong> Username </strong></th>
-          <th class='col-md-1'><strong> Created On </strong></th>
-          <th class='col-md-1'><strong> Modified On </strong></th>
+          <th class='col-md-1'><strong>Status</strong></th>
+          <th class='col-md-1'><strong>Created</strong></th>
+          <th class='col-md-2'><strong>Operation & Args</strong></th>
+          <th class='col-md-3'><strong>Note</strong></th>
+          <th class='col-md-1'><strong>Username</strong></th>
+          <th class='col-md-1'><strong>Modified</strong></th>
         </tr>
       </thead>
       <tbody>
         {% for ops in database_operations|sort(attribute='created_on', reverse=True) %}
           <tr>
-            <td> {{ ops['db_operation'] }} </td>
-            <td> {{ ops['args'] }} </td>
-            <td> {{ ops['status'] }} </td>
+            <td class="database-operation-status {{ ops['status'] | lower }} " style="text-align:center;vertical-align: middle;"> {{ ops['status'] }} </td>
+            <td style="text-align: center;"><small> 
+              {{ ops['created_on'] | date_format(fmt="%-d/%-m/%Y %-H:%M:%S%p %z") }}</td>
+            </small>
+            <td>
+                {{ ops['db_operation'] }}
+                <br/>
+                <pre style='font-size:0.8em; word-wrap: break-word;'> {{ ops['args'] }} </pre>
+            </td>
             <td> {{ ops['note'] }} </td>
-            <td> {{ ops['username'] }} </td>
-            <td> {{ ops['created_on']|date_format }} </td>
-            <td> {{ ops['modified_on']|date_format }} </td>
+            <td> 
+              <a href="/admin/users/{{ ops['username'] }}/edit/">
+                {{ ops['username'] }} 
+              </a>
+            </td>
+            <td style='text-align: center;'> {{ ops['modified_on'] | date_format(fmt="%-d/%-m/%Y %-H:%M:%S%p %z") }}</td>
           </tr>
         {% endfor %}
       </tbody>
     </table>
+    <script>
+      $(document).ready( function () {
+        return;
+        $('#database-operations').DataTable({
+          "order": [[ 2, "desc" ]],
+          "lengthMenu": [
+            [-1],
+            ["All"]
+          ]
+        });
+      });
+    </script>
+    <style>
+      .database-operation-status.error {
+        background:rgba(236,73,105,.5);
+      }
+      .database-operation-status.running {
+        background: rgba(91,144,220,.5);
+      }
+      .database-operation-status.complete {
+        background: rgba(146,208,72,.5);
+      }
+      .database-operation-status.submitted {
+        background: rgba(213,225,231, 0.5);
+      }
+    </style>
 	</div> <!-- /col-md-12 -->
 </div> <!-- /row -->
 

@@ -5,6 +5,9 @@ import pg8000
 
 from logzero import logger
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
+
 from dotenv import load_dotenv
 
 from caendr.services.cloud.secret import get_secret
@@ -40,9 +43,28 @@ def get_db_conn_uri():
         return f'postgresql+psycopg2://{MODULE_DB_OPERATIONS_DB_USER_NAME}:{POSTGRES_DB_PASSWORD}@localhost/{MODULE_DB_OPERATIONS_DB_NAME}'
     if connection_type == "host":
         return db_conn_uri
+    if connection_type == "memory":
+        return "sqlite://"
     return alt_db_conn_uri
 
 
 def get_db_timeout():
     timeout = int(os.getenv("MODULE_DB_TIMEOUT")) if os.getenv("MODULE_DB_TIMEOUT") is not None else 20
     return timeout
+
+def health_database_status():
+    conn_uri = get_db_conn_uri()
+    engine = create_engine(conn_uri)
+    Session = sessionmaker(bind=engine)
+    is_database_working = True
+    output = ""
+
+    try:
+        # to check database we will execute raw query
+        with Session() as session:
+            session.execute('SELECT 1')
+    except Exception as e:
+        output = str(e)
+        is_database_working = False
+
+    return is_database_working, output
