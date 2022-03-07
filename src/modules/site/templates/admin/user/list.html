@@ -24,7 +24,11 @@
               <td> {{ user.username }} </td>
               <td> {{ user.full_name }} </td>
               <td> {{ user.email }} </td>
-              <td> {{ user.roles }} </td>
+              <td>
+                {% for role in user.roles %}
+                <h5><span class="label btn-nu">{{ role }}</span></h5>
+                {% endfor %}
+              </td>
               <td> {% if user.created_on %} {{ user.created_on|date_format }} {% endif %} </td>
               <td> {% if user.last_login %} {{ user.last_login|date_format }} {% endif %} </td>
               <td>
