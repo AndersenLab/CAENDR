@@ -26,8 +26,9 @@ logger.info('Initializing Flask App')
 app = Flask(__name__)
 app.app_context().push()
 app.config['SQLALCHEMY_DATABASE_URI'] = get_db_conn_uri()
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = { "pool_pre_ping": True, "pool_recycle": 300 }
-app.config['SQLALCHEMY_POOL_TIMEOUT'] = get_db_timeout()
+if not os.getenv("MODULE_DB_OPERATIONS_CONNECTION_TYPE"):
+  app.config['SQLALCHEMY_ENGINE_OPTIONS'] = { "pool_pre_ping": True, "pool_recycle": 300 }
+  app.config['SQLALCHEMY_POOL_TIMEOUT'] = get_db_timeout()
 
 logger.info('Initializing Flask SQLAlchemy')
 db.init_app(app)

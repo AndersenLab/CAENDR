@@ -64,7 +64,10 @@ def drop_and_populate_wormbase_genes(app, db, wb_ver: str):
 
 def drop_and_populate_strain_annotated_variants(app, db, sva_ver: str):
   sva_fname = fetch_internal_db('SVA_CSVGZ_URL', sva_ver=sva_ver)
+  db.session.commit()
+  logger.info(f"Dropping table...")
   drop_tables(app, db, tables=[StrainAnnotatedVariant.__table__])
+  logger.info("Loading strain annotated variants...")
   load_strain_annotated_variants(db, sva_fname)
 
 
