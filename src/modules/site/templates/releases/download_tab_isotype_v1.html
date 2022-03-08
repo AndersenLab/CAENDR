@@ -111,7 +111,9 @@
             <td>{% for strain in strains %} {{ strain }} {% endfor %}
             </td>
             <td>
-            <a href="{{ url_for('data_downloads.download_bam_bai_file', strain_name=strain, ext='bam') }}" target="_blank"> BAM </a> / <a href="{{ url_for('data_downloads.download_bam_bai_file', strain_name=strain, ext='bam.bai') }}" target="_blank"> BAI </a>
+            {% for strain in strains %}
+                <a href="{{ url_for('data_downloads.download_bam_bai_file', strain_name=strain, ext='bam') }}" target="_blank"> BAM </a> / <a href="{{ url_for('data_downloads.download_bam_bai_file', strain_name=strain, ext='bam.bai') }}" target="_blank"> BAI </a>
+            {% endfor %}
             </td>
             <td>
                 {% if int(release_version) > 20170531 %}
