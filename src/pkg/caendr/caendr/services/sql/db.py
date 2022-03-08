@@ -6,6 +6,7 @@ from logzero import logger
 
 from string import Template
 from logzero import logger
+from diskcache import Cache
 
 from caendr.models.error import BadRequestError
 from caendr.models.sql import Homolog, Strain, StrainAnnotatedVariant, WormbaseGene, WormbaseGeneSummary
@@ -13,6 +14,8 @@ from caendr.services.cloud.storage import upload_blob_from_file_as_chunks, gener
 from caendr.services.cloud.postgresql import db
 from caendr.utils.file import download_file
 from caendr.utils.data import remove_env_escape_chars
+
+cache = Cache("cachedir")
 
 wb_regex = r'^WS[0-9]*$'      # Match the expected format: 'WS276'
 
@@ -37,7 +40,7 @@ internal_db_blob_templates = {
   'SVA_CSVGZ_URL': SVA_CSVGZ_URL_TEMPLATE
 }
 
-
+@cache.memoize()
 def download_all_external_dbs(wb_ver: str):
   '''
     download_all_external_dbs [Downloads all external DB files to save them locally]
@@ -63,7 +66,7 @@ def download_all_external_dbs(wb_ver: str):
   logger.info('Done Downloading External Data.')
   return downloaded_files
   
-
+@cache.memoize()
 def download_external_db(db_url_name: str, wb_ver: str=''):
   '''
     download_external_db [Downloads an external database file and stores it locally]
