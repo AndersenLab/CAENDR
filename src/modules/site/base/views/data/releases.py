@@ -93,6 +93,7 @@ def data_v01(RELEASE, RELEASES):
   release_bucket = get_release_bucket()
   release_path = get_release_path(release_version)
   browser_tracks_path = get_browser_tracks_path()
+  site_bucket_public_name = config.get('MODULE_SITE_BUCKET_PUBLIC_NAME', 'NONE')
   
   f = RELEASE.get_report_data_urls_map()
 

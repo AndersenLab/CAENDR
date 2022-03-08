@@ -112,14 +112,16 @@
             </td>
             <td>
             {% for strain in strains %}
-                <a href="{{ url_for('data_downloads.download_bam_bai_file', strain_name=strain, ext='bam') }}" target="_blank"> BAM </a> / <a href="{{ url_for('data_downloads.download_bam_bai_file', strain_name=strain, ext='bam.bai') }}" target="_blank"> BAI </a>
+                {% if strain.isotype_ref_strain %}
+                    <a href="{{ url_for('data_downloads.download_bam_bai_file', strain_name=strain, ext='bam') }}" target="_blank"> BAM </a> / <a href="{{ url_for('data_downloads.download_bam_bai_file', strain_name=strain, ext='bam.bai') }}" target="_blank"> BAI </a>
+                {% endif %}
             {% endfor %}
             </td>
             <td>
                 {% if int(release_version) > 20170531 %}
-                <a href="https://storage.googleapis.com/elegansvariation.org/releases/{{ release_version }}/isotype/tsv/{{ isotype }}.{{ release_version }}.tsv.gz">{{ isotype }}.{{ release_version }}.tsv.gz</a>
+                    <a href="https://storage.googleapis.com/{{ site_bucket_public_name }}/dataset_release/c_elegans/{{ release_version }}/isotype/tsv/{{ isotype }}.{{ release_version }}.tsv.gz">{{ isotype }}.{{ release_version }}.tsv.gz</a>
                 {% else %}
-                <a href="https://storage.googleapis.com/elegansvariation.org/releases/{{ release_version }}/isotype_tsv/{{ isotype }}.{{ release_version }}.tsv">{{ isotype }}.{{ release_version }}.tsv</a>
+                    <a href="https://storage.googleapis.com/{{ site_bucket_public_name }}/dataset_release/c_elegans/{{ release_version }}/isotype_tsv/{{ isotype }}.{{ release_version }}.tsv">{{ isotype }}.{{ release_version }}.tsv</a>
                 {% endif %}
             </td>
         </tr>
