@@ -73,6 +73,7 @@ def drop_and_populate_strain_annotated_variants(app, db, sva_ver: str):
 
 def drop_and_populate_all_tables(app, db, wb_ver: str, sva_ver: str):
   logger.info(f'Dropping and populating all tables - WORMBASE_VERSION: {wb_ver} STRAIN_VARIANT_ANNOTATION_VERSION: {sva_ver}')
+  logger.info("[1/8] Downloading databases...")
   filenames = download_all_external_dbs(wb_ver)
   gene_gff_fname = filenames['GENE_GFF_URL']
   gene_gtf_fname = filenames['GENE_GTF_URL']
@@ -83,10 +84,24 @@ def drop_and_populate_all_tables(app, db, wb_ver: str, sva_ver: str):
   filenames['SVA_CSVGZ_URL'] = fetch_internal_db('SVA_CSVGZ_URL', sva_ver)
   sva_fname = filenames['SVA_CSVGZ_URL']
 
+  logger.info("[2/8] Dropping tables...")
   drop_tables(app, db)
+
+  logger.info("[3/8] Load Strains...")
   load_strains(db)
+
+  logger.info("[4/8] Load Strains...")
   load_genes_summary(db, gene_gff_fname)
+
+  logger.info("[5/8] Load Strains...")
   load_genes(db, gene_gtf_fname, gene_ids_fname)
+
+  logger.info("[6/8] Load Strains...")
   load_homologs(db, homologene_fname)
+
+  logger.info("[7/8] Load Strains...")
   load_orthologs(db, ortholog_fname)
+
+  logger.info("[8/8] Load Strains...")
   load_strain_annotated_variants(db, sva_fname)
+  
