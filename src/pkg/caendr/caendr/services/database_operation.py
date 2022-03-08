@@ -34,7 +34,7 @@ def get_db_op_form_options():
   return [(key, val) for key, val in DB_OPS.items()]
   
   
-def create_new_db_op(op, username, args=None, note=None):
+def create_new_db_op(op, username, email, args=None, note=None):
   logger.debug(f'Creating new Database Operation: op:{op}, username:{username}, args:{args}, note:{note}')
   
   id = unique_id()
@@ -43,6 +43,7 @@ def create_new_db_op(op, username, args=None, note=None):
           'args': args,
           'db_operation': op,
           'username': username,
+          'email': email,
           'container_repo': GCR_REPO_NAME,
           'container_name': MODULE_DB_OPERATIONS_CONTAINER_NAME,
           'container_version': MODULE_DB_OPERATIONS_CONTAINER_VERSION}
@@ -68,6 +69,8 @@ def _create_db_op_task(d):
                                   'kind': DatabaseOperation.kind,
                                   'db_operation': d.db_operation,
                                   'args': d.args,
+                                  'username': d.username, 
+                                  'email': d.email,
                                   'container_name': d.container_name,
                                   'container_version': d.container_version,
                                   'container_repo': d.container_repo})

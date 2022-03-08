@@ -46,6 +46,7 @@ def _generate_db_op_pipeline(task: DatabaseOperationTask):
   container_name = f"db-op-{d.id}"
   environment = task.args
   environment['DATABASE_OPERATION'] = task.db_operation
+  environment['EMAIL'] = task.email if task.email else None
   
 
   service_account = ServiceAccount(email=sa_email, scopes=SCOPES)
