@@ -184,7 +184,7 @@ class PairwiseIndelForm(Form):
   
 class OrderForm(Form):
   """ The strain order form """
-  sector = SelectField('Sector', choices=SECTOR_OPTIONS)
+  sector = SelectField('Sector', choices=SECTOR_OPTIONS, default="academia")
   name = StringField('Name', [Required(), Length(min=3, max=100)])
   email = StringField('Email', [Email(), Length(min=3, max=100)])
   address = TextAreaField('Address', [Length(min=10, max=200)])
