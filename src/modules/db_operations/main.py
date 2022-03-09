@@ -50,7 +50,7 @@ text = f"Mock Data: { 'yes' if use_mock_data else 'no' }. (Production should NOT
 elapsed = "{:2f}".format(time.perf_counter() - start)
 
 try:
-  # execute_operation(app, db, DB_OP)
+  execute_operation(app, db, DB_OP)
   text = text + f"\n\nStatus: OK"
   text = text + f"\nOperation: {DB_OP}"
   text = text + f"\nSite url: {os.getenv('SITE_BASE_URL', 'n/a')}"
