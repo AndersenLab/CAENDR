@@ -32,49 +32,75 @@
         </div>
     </div>
 </div>
-<div class="row">
 
 {% from "_includes/macros.html" import render_field %}
 
-<form id='form-submit' method="POST">
-
+<div class="row">
     <div class="col-lg-6">
-                {# Renders list of strains being ordered #}
-                {% for item in form.items %}
-                    {{ item }}
-                {% endfor %}
-
-                {{ form.csrf_token }}
-                {{ render_field(form.name) }}
-                {{ render_field(form.phone, placeholder="(847)-867-5309") }}
-                {{ render_field(form.address, placeholder="123 Sheridan Rd.\nChicago IL. 60657") }}
-                {{ render_field(form.email) }}
+        {{ render_field(form.sector) }}
     </div>
+</div>  
 
-    <div class="col-lg-6">
-                {{ render_field(form.shipping_service) }}
-                {{ render_field(form.shipping_account) }}
-                {{ render_field(form.payment) }}
-                {{ render_field(form.comments) }}
-                <small>If you choose to pay by credit card, an account will be generated for you in Northwestern's Core Facility, NUcore. If there is a business administration person who will oversee the payment, please include that person's name and email address in the comments field. They will be added to your NUcore account.</small>
+
+<div class="row">
+    <form id='form-submit' method="POST">
+
+        <div class="col-lg-6">
+            {# Renders list of strains being ordered #}
+            {% for item in form.items %}
+                {{ item }}
+            {% endfor %}
+
+            {{ form.csrf_token }}
+            {{ render_field(form.name) }}
+            {{ render_field(form.phone, placeholder="(847)-867-5309") }}
+            {{ render_field(form.address, placeholder="123 Sheridan Rd.\nChicago IL. 60657") }}
+            {{ render_field(form.email) }}
+        </div>
+
+        <div class="col-lg-6">
+            {{ render_field(form.shipping_service) }}
+            {{ render_field(form.shipping_account) }}
+            {{ render_field(form.payment) }}
+            {{ render_field(form.comments) }}
+            <small>If you choose to pay by credit card, an account will be generated for you in Northwestern's Core Facility, NUcore. If there is a business administration person who will oversee the payment, please include that person's name and email address in the comments field. They will be added to your NUcore account.</small>
+        </div>
+
+        <div class='row'>
+            <div class="form-group">
+            <div class="col-sm-4 col-sm-offset-4">
+            <br />
+                {# render_field(form.recaptcha) #}
+                <button value="Checkout" class="btn btn-nu btn-block" id="checkout" ><span class="glyphicon glyphicon-shopping-cart" aria-hidden="true"></span> Order</button>
+                <br />
+            </div>{# /col-sm-4 #}
+            </div>{# /form-group #}
+        </div>
+    </form>
+
+    <div id="invo-link-row" class="row" style="display: none;">
+        <div class="col-sm-6 col-md-offset-3">
+            <button
+                id="invo-link"
+                class="btn btn-nu btn-block"
+                onClick="window.open('https://www.invo.northwestern.edu/about/get-started/industry-and-investors.html')"
+                target="_blank"
+            >Industry & Investors</button>
+        </div>
     </div>
-
-
 </div>
 
-
-<div class='row'>
-  <div class="form-group">
-    <div class="col-sm-4 col-sm-offset-4">
-    <br />
-      {# render_field(form.recaptcha) #}
-      <button value="Checkout" class="btn btn-nu btn-block" id="checkout" ><span class="glyphicon glyphicon-shopping-cart" aria-hidden="true"></span> Order</button>
-      <br />
-    </div>{# /col-sm-4 #}
-  </div>{# /form-group #}
-</div>
-</form>
 <script>
+$("#sector").on('input', function(event) {
+    event.preventDefault();
+    if (event.target.value !== 'academia') {
+        $("#form-submit").slideUp().fadeOut();
+        $("#invo-link-row").fadeIn();
+    } else {
+        $("#invo-link-row").fadeOut();
+        $("#form-submit").slideDown().fadeIn();
+    }
+})
 $("#checkout").on('click', function() {
 
     $.pause = function( callback, seconds){

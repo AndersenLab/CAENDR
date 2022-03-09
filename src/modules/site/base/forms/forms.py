@@ -28,7 +28,7 @@ from wtforms.validators import (Required,
 from wtforms.fields.html5 import EmailField
 
 
-from constants import PRICES, SHIPPING_OPTIONS, PAYMENT_OPTIONS, REPORT_TYPES
+from constants import PRICES, SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS, REPORT_TYPES
 
 from caendr.services.profile import get_profile_role_form_options
 from caendr.services.user import get_user_role_form_options
@@ -181,9 +181,10 @@ class PairwiseIndelForm(Form):
   start = FlexIntegerField('Start', default="6,271,913", validators=[Required(), validate_start_lt_stop])
   stop = FlexIntegerField('Stop', default="6,272,025", validators=[Required()])
 
-
+  
 class OrderForm(Form):
   """ The strain order form """
+  sector = SelectField('Sector', choices=SECTOR_OPTIONS)
   name = StringField('Name', [Required(), Length(min=3, max=100)])
   email = StringField('Email', [Email(), Length(min=3, max=100)])
   address = TextAreaField('Address', [Length(min=10, max=200)])
