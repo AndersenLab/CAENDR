@@ -35,7 +35,7 @@ def get_db_op_form_options():
   
   
 def create_new_db_op(op, username, email, args=None, note=None):
-  logger.debug(f'Creating new Database Operation: op:{op}, username:{username}, args:{args}, note:{note}')
+  logger.debug(f'Creating new Database Operation: op:{op}, username:{username}, email:{email}, args:{args}, note:{note}')
   
   id = unique_id()
   props = {'id': id,

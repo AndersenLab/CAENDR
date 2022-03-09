@@ -26,6 +26,7 @@ class DatabaseOperation(Entity):
     return {'id',
             'note', 
             'username',
+            'email',
             'db_operation',
             'args',
             'container_name',
