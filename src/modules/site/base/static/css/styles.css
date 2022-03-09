@@ -977,13 +977,17 @@ footer .panel {
 
 
 .btn-nu {
-  background-color: #401F68 !important;
+  background-color: #4e2a84 !important;
   color: #ffffff !important;
 }
 
 .btn-alt {
   background-color:#FFC400;
   color:black;
+}
+
+.label {
+  font-size: 90%;
 }
 
 .welcome-article-img {
