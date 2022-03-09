@@ -47,23 +47,22 @@ start = time.perf_counter()
 use_mock_data = os.getenv('USE_MOCK_DATA', False)
 text = f"Mock Data: { 'yes' if use_mock_data else 'no' }. (Production should NOT use mock data.)"
 
-elapsed = "{:2f}".format(time.perf_counter() - start)
 
 try:
   execute_operation(app, db, DB_OP)
   text = text + f"\n\nStatus: OK"
   text = text + f"\nOperation: {DB_OP}"
   text = text + f"\nSite url: {os.getenv('SITE_BASE_URL', 'n/a')}"
-  text = text + f"\nProcessed in {elapsed} seconds."
-  logger.info(text)
 except Exception as e:
   text = text + f"\nStatus: ERROR"
   text = text + f"\nOperation: {DB_OP}"
   text = text + f"\nSite url: {os.getenv('SITE_BASE_URL', 'n/a')}"
-  text = text + f"\nProcessed in {elapsed} seconds."
   text = text + f"\n\nError: {e}\n{traceback.format_exc()}"
   logger.error(text)
 
+elapsed = "{:2f}".format(time.perf_counter() - start)
+text = text + f"\nProcessed in {elapsed} seconds."
+logger.info(text)
 
 if EMAIL is not None:
   logger.info(f"Sending email to: {EMAIL}")    
