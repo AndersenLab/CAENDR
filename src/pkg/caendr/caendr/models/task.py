@@ -57,6 +57,8 @@ class DatabaseOperationTask(Task):
   def get_payload(self):
     payload = super(DatabaseOperationTask, self).get_payload()
     payload['db_operation'] = self.db_operation
+    payload['username'] = self.username
+    payload['email'] = self.email
     payload['args'] = self.args
     return payload
   
@@ -65,6 +67,8 @@ class DatabaseOperationTask(Task):
     props = super(DatabaseOperationTask, cls).get_props_set()
     props.add('db_operation')
     props.add('args')
+    props.add('username')
+    props.add('email')
     return props
 
   def __repr__(self):
