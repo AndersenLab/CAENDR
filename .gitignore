@@ -28,3 +28,4 @@ src/modules/**/caendr
 cloud_sql_proxy
 *.tbi
 *.csi
+cachedir
