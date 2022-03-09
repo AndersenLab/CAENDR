@@ -12,6 +12,8 @@ services:
       - POSTGRES_PASSWORD=$POSTGRES_DB_PASSWORD
     ports:
       - 5432:5432
+    storage_opt:
+      size: '10G'
 
   cloud-sql-proxy:
     image: gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine

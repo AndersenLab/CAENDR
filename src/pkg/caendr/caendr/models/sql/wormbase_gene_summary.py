@@ -1,6 +1,7 @@
 from caendr.services.cloud.postgresql import db
 from caendr.models.sql.dict_serializable import DictSerializable
 from sqlalchemy import func, or_
+from sqlalchemy.ext.hybrid import hybrid_property
 
 class WormbaseGeneSummary(DictSerializable, db.Model):
   """
@@ -19,12 +20,15 @@ class WormbaseGeneSummary(DictSerializable, db.Model):
   sequence_name = db.Column(db.String(30), index=True)
   biotype = db.Column(db.String(30), nullable=True)
   gene_symbol = db.column_property(func.coalesce(locus, sequence_name, gene_id))
-  interval = db.column_property(func.format("%s:%s-%s", chrom, start, end))
+  # interval = db.column_property(func.format("%s:%s-%s", chrom, start, end))
   arm_or_center = db.Column(db.String(12), index=True)
 
   __tablename__ = "wormbase_gene_summary"
   __gene_id_constraint__ = db.UniqueConstraint(gene_id)
 
+  @hybrid_property
+  def interval(self):
+    return f"{self.chrom}:{self.start}-{self.end}"    
 
   # TODO: move this somewhere else
   @classmethod

@@ -1,6 +1,7 @@
 import re
 import tarfile
 import csv
+import os
 
 from logzero import logger
 from urllib.request import urlretrieve
@@ -76,6 +77,9 @@ def fetch_homologene(homologene_fname: str):
   count = 0
   for line in response_csv:
     idx += 1
+    if os.getenv('USE_MOCK_DATA') and idx > 10:
+      logger.warn("USE_MOCK_DATA Early Return!!!")
+      return    
     tax_id = int(line[1])
     homolog_id = int(line[0])
     if homolog_id in elegans_set.keys() and tax_id != int(C_ELEGANS_HOMOLOG_ID):

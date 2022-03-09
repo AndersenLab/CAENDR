@@ -1,3 +1,4 @@
+import os
 import csv
 import re
 import gzip
@@ -44,6 +45,9 @@ def fetch_strain_variant_annotation_data(sva_gz_fname: str):
         line_count += 1
       else:
         line_count += 1
+        if os.getenv("USE_MOCK_DATA") and line_count > 10:
+          logger.warn("USE_MOCK_DATA Early Return!!!")    
+          return    
         if line_count % 1000000 == 0:
           logger.debug(f"Processed {line_count} lines")
 

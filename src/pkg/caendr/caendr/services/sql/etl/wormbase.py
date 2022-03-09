@@ -1,6 +1,7 @@
 import csv
 import gzip
 import shutil
+import os
 
 from gtfparse import read_gtf_as_dataframe
 from logzero import logger
@@ -96,7 +97,10 @@ def fetch_gene_gtf(gtf_fname: str, gene_ids_fname: str):
   idx = 0
   for row in gene_gtf.to_dict('records'):
     idx += 1
-    if idx % 100000 == 0:
+    if os.getenv('USE_MOCK_DATA') and idx > 10:
+      logger.warn("USE_MOCK_DATA Early Return!!!")    
+      return    
+    if idx % 10000 == 0:
       logger.info(f"Processed {idx} lines")
     yield row
 
@@ -115,6 +119,9 @@ def fetch_gene_gff_summary(gff_fname: str):
     gene_count = 0
     for line in f:
       idx += 1
+      if os.getenv("USE_MOCK_DATA") and idx > 100:
+        logger.warn("USE_MOCK_DATA Early Exit!!!")    
+        return    
       if line.decode('utf-8').startswith("#"):
         continue
       line = line.decode('utf-8').strip().split("\t")
@@ -160,6 +167,9 @@ def fetch_orthologs(orthologs_fname: str):
       wb_id, locus_name = line
     else:
       ref = WormbaseGeneSummary.query.filter(WormbaseGeneSummary.gene_id == wb_id).first()
+      if os.getenv("USE_MOCK_DATA") and idx > 10:
+        logger.warn("USE_MOCK_DATA Early Return!!!")    
+        return    
       if idx % 10000 == 0:
         logger.info(f'Processed {idx} records yielding {count} inserts')
       if ref:

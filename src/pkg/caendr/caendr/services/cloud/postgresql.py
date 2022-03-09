@@ -45,6 +45,11 @@ def get_db_conn_uri():
         return db_conn_uri
     if connection_type == "memory":
         return "sqlite://"
+    if connection_type == "file":
+        import tempfile
+        filepath = tempfile.TemporaryFile()
+        logger.info(f"SQLITE3 sqlite:///{filepath}")
+        return f"sqlite:///{filepath}"
     return alt_db_conn_uri
 
 

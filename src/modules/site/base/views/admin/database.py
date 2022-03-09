@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, url_for, request, redirect
 
-from base.utils.auth import admin_required, get_jwt, get_jwt_identity
+from base.utils.auth import admin_required, get_jwt, get_jwt_identity, get_current_user
 from base.forms import AdminCreateDatabaseOperationForm
 
 from caendr.services.database_operation import get_all_db_ops, create_new_db_op, get_db_op_form_options
@@ -34,10 +34,14 @@ def create_op():
     sva_version = request.form.get('sva_version')
     note = request.form.get('note')
     username = get_jwt_identity()
+    user = get_current_user()
+    email = user.email
+
     args = {'WORMBASE_VERSION': f'WS{wormbase_version}' if wormbase_version else '',
-            'STRAIN_VARIANT_ANNOTATION_VERSION': sva_version}
+            'STRAIN_VARIANT_ANNOTATION_VERSION': sva_version
+            }
     
-    create_new_db_op(db_op, username, args=args, note=note)
+    create_new_db_op(db_op, username, email, args=args, note=note)
     return redirect(url_for("admin_db_op.admin_db_op"), code=302)
 
     
