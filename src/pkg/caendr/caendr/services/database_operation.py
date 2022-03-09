@@ -4,7 +4,7 @@ from logzero import logger
 from caendr.models.datastore import DatabaseOperation
 from caendr.models.task import DatabaseOperationTask
 from caendr.services.tool_versions import GCR_REPO_NAME
-from caendr.services.cloud.datastore import query_ds_entities
+from caendr.services.cloud.datastore import get_ds_entity, query_ds_entities
 from caendr.services.cloud.task import add_task
 from caendr.services.cloud.secret import get_secret
 from caendr.utils.data import unique_id
@@ -30,6 +30,12 @@ def get_all_db_ops(keys_only=False, order=None, placeholder=True):
   return [DatabaseOperation(e.key.name) for e in ds_entities]
 
 
+def get_etl_op(op_id, keys_only=False, order=None, placeholder=True):
+  logger.debug(f'get_etl_op(op_id={op_id}, keys_only={keys_only}, order={order})')
+  op = get_ds_entity(DatabaseOperation.kind, op_id)
+  logger.debug(op)
+  return op
+      
 def get_db_op_form_options(): 
   return [(key, val) for key, val in DB_OPS.items()]
   

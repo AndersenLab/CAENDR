@@ -1,0 +1,120 @@
+{% extends "_layouts/default.html" %}
+
+{% block content %}
+{% from "_includes/macros.html" import render_field %}
+
+  <div class="row">
+    <div class='col-md-3'></div> <!-- /col-md-3 -->
+    <div class='col-md-6'>
+
+      <table class='table'>
+        <tbody>
+          
+          <tr>
+            <td>
+              status
+            </td>
+            <td>
+              {{ op['status'] }}
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              db_operation
+            </td>
+            <td>
+              {{ op['db_operation'] }}
+            </td>
+          </tr>
+          
+          <tr>
+          <td>
+            args
+          </td>
+          <td>
+            {{ op['args'] }}
+          </td>
+        </tr>
+        
+        <tr>
+          <td>
+            container_name
+          </td>
+          <td>
+            {{ op['container_name'] }}
+          </td>
+        </tr>
+        
+        <tr>
+          <td>
+            container_repo
+          </td>
+          <td>
+            {{ op['container_repo'] }}
+          </td>
+        </tr>
+        
+        <tr>
+          <td>
+            container_version
+          </td>
+          <td>
+            {{ op['container_version'] }}
+          </td>
+        </tr>
+        
+        <tr>
+          <td>
+            created_on
+          </td>
+          <td>
+            {{ op['created_on'] | date_format(fmt="%-d/%-m/%Y %-H:%M:%S%p %z") }}
+          </td>
+        </tr>
+        <tr>
+          <td>
+            email
+          </td>
+          <td>
+            {{ op['email'] }}
+          </td>
+        </tr>
+        
+        <tr>
+          <td>
+            id
+          </td>
+          <td>
+            {{ op['id'] }}
+          </td>
+        </tr>
+        
+        <tr>
+          <td>
+            modified_on
+          </td>
+          <td>
+            {{ op['modified_on'] | date_format(fmt="%-d/%-m/%Y %-H:%M:%S%p %z") }}
+          </td>
+        </tr>
+        
+        
+        
+        <tr>
+          <td>
+            username
+          </td>
+          <td>
+            {{ op['username'] }}
+          </td>
+        </tr>
+        
+      </tbody></table>
+
+      <button id='refresh'>Refresh</button>
+
+    </div> <!-- /col-md-6 -->
+  </div> <!-- /row -->
+      
+{% endblock %}
