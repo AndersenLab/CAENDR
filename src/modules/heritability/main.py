@@ -5,12 +5,15 @@ from subprocess import Popen, PIPE, STDOUT
 from logzero import logger
 from dotenv import load_dotenv
 
+from caendr.utils import monitor
 from caendr.models.error import EnvVarError
 from caendr.services.cloud.storage import download_blob_to_file, upload_blob_from_file
 from caendr.utils.file import write_string_to_file
 
 dotenv_file = '.env'
 load_dotenv(dotenv_file)
+
+monitor.init_sentry("heritability")
 
 DATA_HASH = os.environ.get('DATA_HASH')
 DATA_BUCKET = os.environ.get('DATA_BUCKET')
