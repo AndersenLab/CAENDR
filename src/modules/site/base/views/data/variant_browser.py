@@ -1,9 +1,12 @@
 import json
+import pandas as pd
 
 from flask import (render_template,
                     url_for,
                     request,
+                    make_response,
                     jsonify,
+                    flash,
                     Blueprint)
 from extensions import cache
 from base.forms import VBrowserForm
@@ -61,5 +64,18 @@ def vbrowser_query_position():
     return jsonify(data)
 
   return jsonify({})
+
+
+@variant_browser_bp.route('/vbrowser/download/csv', methods=['POST'])
+@cache.memoize(60*60)
+def vbrowser_download_csv():
+    data = request.data
+    pd_obj = pd.read_json(data)
+
+    csv = pd_obj.to_csv(index=False, sep=",")
+    res = make_response(csv)
+    res.headers["Content-Disposition"] = "attachment; filename=data.csv"
+    res.headers["Content-Type"] = "text/csv"
+    return res
 
 
