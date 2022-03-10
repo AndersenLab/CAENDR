@@ -7,12 +7,12 @@ from dotenv import load_dotenv
 from logzero import logger
 import time
 from caendr.services.email import send_email
+from caendr.utils import monitor
 
 dotenv_file = '.env'
 load_dotenv(dotenv_file)
 
-import monitor
-monitor.init_sentry()
+monitor.init_sentry("db_operations")
 
 from caendr.services.cloud.postgresql import get_db_conn_uri, get_db_timeout, db, health_database_status
 from caendr.models.error import EnvVarError

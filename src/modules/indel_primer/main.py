@@ -5,11 +5,14 @@ from subprocess import Popen, PIPE, STDOUT
 from logzero import logger
 from dotenv import load_dotenv
 
+from caendr.utils import monitor
 from caendr.models.error import EnvVarError
 from caendr.services.cloud.storage import upload_blob_from_file
 
 dotenv_file = '.env'
 load_dotenv(dotenv_file)
+
+monitor.init_sentry("indel_primer")
 
 MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
 
