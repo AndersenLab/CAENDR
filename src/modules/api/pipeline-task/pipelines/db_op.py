@@ -1,11 +1,14 @@
 import os
 import logging
 
+from caendr.utils import monitor
 from caendr.models.task import DatabaseOperationTask
 from caendr.models.datastore import DatabaseOperation
 from caendr.services.cloud.lifesciences import start_pipeline
 from caendr.models.lifesciences import ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
 from caendr.utils.json import get_json_from_class
+
+monitor.init_sentry("pipelines-task")
 
 
 GOOGLE_CLOUD_PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID')
