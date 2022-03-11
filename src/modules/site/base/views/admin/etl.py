@@ -1,10 +1,12 @@
 import json
+from caendr.services.cloud.postgresql import health_database_status
+from logzero import logger
 from flask import Blueprint, render_template, url_for, request, redirect
 
 from base.utils.auth import admin_required, get_jwt, get_jwt_identity, get_current_user
 from base.forms import AdminCreateDatabaseOperationForm
 
-from caendr.services.database_operation import get_all_db_ops, get_etl_op, create_new_db_op, get_db_op_form_options
+from caendr.services.database_operation import get_all_db_ops, get_all_db_stats, get_etl_op, create_new_db_op, get_db_op_form_options
 
 admin_etl_op_bp = Blueprint('admin_etl_op',
                             __name__,
@@ -18,6 +20,21 @@ def admin_etl_op():
   title = 'ETL Operations'
   etl_operations = get_all_db_ops(placeholder=False)
   return render_template('admin/etl/list.html', **locals())
+
+
+@admin_etl_op_bp.route('/stats', methods=["GET"])
+@admin_required()
+def admin_etl_stats():
+  alt_parent_breadcrumb = {"title": "Admin", "url": url_for('admin.admin')}
+  title = 'ETL Stats'
+  status, message = health_database_status()
+  logger.debug(f"DB Status is {status} {message}")
+  logger.debug("ETL Stats loading...")
+  stats = get_all_db_stats()
+  logger.info(stats)
+  return render_template('admin/etl/stats.html', **locals())
+
+
 
 @admin_etl_op_bp.route('/<id>/view', methods=["GET"])
 @admin_required()

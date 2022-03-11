@@ -26,7 +26,7 @@
           <tr>
             <td class="database-operation-status {{ (ops['status'] or 'unknown') | lower }} " style="text-align:center;vertical-align: middle;"> {{ ops['status'] or 'UNKNOWN' }} </td>
             <td style="text-align: center;"><small> 
-              {{ ops['created_on'] | date_format(fmt="%-d/%-m/%Y %-H:%M:%S%p %z") }}</td>
+              {{ ops['created_on'] | date_format(fmt="%-m/%-d/%Y %-H:%M:%S%p %z") }}</td>
             </small>
             <td>
                 {{ ops['db_operation'] }}
@@ -39,7 +39,7 @@
                 {{ ops['username'] }} 
               </a>
             </td>
-            <td style='text-align: center;'> {{ ops['modified_on'] | date_format(fmt="%-d/%-m/%Y %-H:%M:%S%p %z") }}</td>
+            <td style='text-align: center;'> {{ ops['modified_on'] | date_format(fmt="%-m/%-d/%Y %-H:%M:%S%p %z") }}</td>
             <td class='text-center'>
               <a href="{{ url_for('admin_etl_op.view_op', id=ops['id']) }}">View</a>
             </td>

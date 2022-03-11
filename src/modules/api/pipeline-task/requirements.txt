@@ -1,4 +1,4 @@
-Flask==2.0.2
+Flask==1.1.2
 gcloud==0.18.3
 google_cloud_secret_manager==2.7.2
 google-api-python-client==2.24.0
@@ -7,3 +7,4 @@ gunicorn==20.1.0
 python-dotenv==0.19.1
 sentry-sdk==1.5.4
 itsdangerous==2.0.1
+pyOpenSSL==22.0.0

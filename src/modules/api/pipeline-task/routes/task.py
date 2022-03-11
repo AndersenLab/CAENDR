@@ -30,6 +30,9 @@ from caendr.services.heritability_report import update_heritability_report_statu
 from caendr.services.gene_browser_tracks import update_gene_browser_track_status
 
 from caendr.utils.json import extract_json_payload
+from caendr.utils import monitor
+
+monitor.init_sentry("pipeline-task")
 
 INDEL_PRIMER_TASK_QUEUE_NAME = os.environ.get('INDEL_PRIMER_TASK_QUEUE_NAME')
 NEMASCAN_TASK_QUEUE_NAME = os.environ.get('NEMASCAN_TASK_QUEUE_NAME')
@@ -58,6 +61,7 @@ def start_task(task_route):
 
 
 def handle_task(payload, task_route):
+  logger.info(f"Task: {task_route}")
   if task_route == NEMASCAN_TASK_QUEUE_NAME:
     task = NemaScanTask(**payload)
     response = start_nemascan_pipeline(task)
@@ -102,7 +106,8 @@ def update_task():
     try:
       payload = extract_json_payload(request)
       logger.info(f"Task Status Payload: {payload}")
-    except:
+    except Exception as e:
+      logger.error(e)
       raise APIBadRequestError('Error parsing JSON payload')
 
     # Marshall JSON to PubSubStatus object
@@ -110,7 +115,8 @@ def update_task():
       message = payload.get('message')
       attributes = message.get('attributes')
       operation = attributes.get('operation')
-    except:
+    except Exception as e:
+      logger.error(e)
       raise APIBadRequestError('Error parsing PubSub status message.')
 
     try:
@@ -118,8 +124,10 @@ def update_task():
       logger.debug(op)
       update_all_linked_status_records(op.operation_kind, operation)
       logger.debug(operation)
-    except:
+    except Exception as e:
+      logger.error(e)
       raise APIInternalError('Error updating status records')
-  except:
+  except Exception as e:
+    logger.error(e)
     pass
   return jsonify({}), 200
