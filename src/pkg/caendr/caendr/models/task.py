@@ -13,6 +13,8 @@ class Task(object):
   def get_props_set(cls):
     return {'id',
           'kind',
+          'username',
+          'email',
           'container_name',
           'container_version',
           'container_repo'}
@@ -21,6 +23,8 @@ class Task(object):
   def get_payload(self):
     return {'id': self.id,
           'kind': self.kind,
+          'username': self.username,
+          'email': self.email,
           'container_name': self.container_name,
           'container_version': self.container_version,
           'container_repo': self.container_repo}
@@ -31,6 +35,23 @@ class Task(object):
     else:
       return f"<task:no-id>"
 
+class EchoTask(Task):
+  def get_payload(self):
+    payload = super(EchoTask, self).get_payload()
+    payload['data_hash'] = self.data_hash
+    return payload
+  
+  @classmethod
+  def get_props_set(cls):
+    props = super(EchoTask, cls).get_props_set()
+    props.add('data_hash')
+    return props
+
+  def __repr__(self):
+    if hasattr(self, 'id'):
+      return f"<echo_task:{self.id}>"
+    else:
+      return f"<nemascan_task:no-id>"
 
 
 class NemaScanTask(Task):
@@ -57,8 +78,6 @@ class DatabaseOperationTask(Task):
   def get_payload(self):
     payload = super(DatabaseOperationTask, self).get_payload()
     payload['db_operation'] = self.db_operation
-    payload['username'] = self.username
-    payload['email'] = self.email
     payload['args'] = self.args
     return payload
   
@@ -67,8 +86,6 @@ class DatabaseOperationTask(Task):
     props = super(DatabaseOperationTask, cls).get_props_set()
     props.add('db_operation')
     props.add('args')
-    props.add('username')
-    props.add('email')
     return props
 
   def __repr__(self):

@@ -40,6 +40,9 @@ def execute_operation(app, db, DB_OP):
     if not STRAIN_VARIANT_ANNOTATION_VERSION:
       raise EnvVarError()
     drop_and_populate_strain_annotated_variants(app, db, STRAIN_VARIANT_ANNOTATION_VERSION)
+  
+  elif DB_OP == 'ECHO':
+    logger.info("[OP] db op is [ECHO]")
 
 
 def drop_and_populate_strains(app, db):

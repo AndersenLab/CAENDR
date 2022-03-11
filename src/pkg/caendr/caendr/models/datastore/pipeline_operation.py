@@ -22,6 +22,8 @@ class PipelineOperation(Entity):
             'metadata',
             'report_path',
             'error',
+            'email',
+            'username',
             'done'}
     
   def __repr__(self):
