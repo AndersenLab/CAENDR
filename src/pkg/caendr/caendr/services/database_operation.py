@@ -30,7 +30,7 @@ def get_all_db_ops(keys_only=False, order=None, placeholder=True):
   logger.debug(f'get_all_db_ops(keys_only={keys_only}, order={order})')
   ds_entities = query_ds_entities(DatabaseOperation.kind, keys_only=keys_only, order=order)
   logger.debug(ds_entities)
-  return [DatabaseOperation(e.key.name) for e in ds_entities]
+  return ds_entities
 
 
 def get_etl_op(op_id, keys_only=False, order=None, placeholder=True):
