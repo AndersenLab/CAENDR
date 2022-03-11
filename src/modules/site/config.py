@@ -1,9 +1,10 @@
 # Application Configuration
+from re import U
 from dotenv import dotenv_values
 from logzero import logger
 
 from caendr.services.cloud.secret import get_secret
-from caendr.services.cloud.postgresql import get_db_conn_uri, get_db_timeout
+from caendr.services.cloud.postgresql import get_db_conn_uri, get_db_timeout, health_database_status
 from caendr.utils.json import json_encoder
 from caendr.utils.data import convert_env_bool
 
@@ -19,7 +20,8 @@ SECRETS_IDS = [
   'RECAPTCHA_PUBLIC_KEY',
   'RECAPTCHA_PRIVATE_KEY',
   'SECRET_KEY',
-  'MAILGUN_API_KEY'
+  'MAILGUN_API_KEY',
+  'CC_EMAILS'
 ]
 
 BOOL_PROPS = [
@@ -45,7 +47,7 @@ def get_config():
   # Load environment config values
   config.update(dotenv_values('.env'))
   
-  config['PERMANENT_SESSION_LIFETIME'] = int(config['PERMANENT_SESSION_LIFETIME'])
+  config['PERMANENT_SESSION_LIFETIME'] = int(config.get('PERMANENT_SESSION_LIFETIME', '86400'))
   
   for prop in BOOL_PROPS:
     config[prop] = convert_env_bool(config.get(prop))
@@ -60,13 +62,9 @@ def get_config():
   config['SQLALCHEMY_ENGINE_OPTIONS'] = { "pool_pre_ping": True, "pool_recycle": 300 }
   config['SQLALCHEMY_POOL_TIMEOUT'] = get_db_timeout()
 
-  logger.debug(config)
-
   # Load secret config values
   for id in SECRETS_IDS:
     config[id] = get_secret(id)
-    
-  config['CC_EMAILS'] = get_secret('CC_EMAILS')
 
   return config
 

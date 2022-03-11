@@ -3,7 +3,7 @@ import json
 import requests
 
 from datetime import datetime
-from logzero import logging
+from logzero import logger
 from flask import Flask, render_template
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -12,6 +12,7 @@ from werkzeug.exceptions import HTTPException
 from config import config
 import pytz
 
+from caendr.services.cloud.postgresql import health_database_status
 from base.utils.markdown import render_markdown, render_ext_markdown
 
 # --------- #
@@ -45,7 +46,7 @@ from base.views.admin import admin_users_bp
 from base.views.admin import admin_dataset_bp
 from base.views.admin import admin_profile_bp
 from base.views.admin import admin_tools_bp
-from base.views.admin import admin_db_op_bp
+from base.views.admin import admin_etl_op_bp
 from base.views.admin import admin_gene_browser_tracks_bp
 from base.views.admin import admin_content_bp
 
@@ -107,6 +108,9 @@ def create_app(config=config):
   register_errorhandlers(app)
   configure_jinja(app)
   configure_ssl(app)
+
+  db_connection_status, db_test_output = health_database_status()
+  logger.info(f"Database Connection: { 'OK' if db_connection_status else 'Error' }. {db_test_output}")
 
   return app
 
@@ -170,7 +174,7 @@ def register_blueprints(app):
   app.register_blueprint(admin_dataset_bp, url_prefix='/admin/datasets')
   app.register_blueprint(admin_profile_bp, url_prefix='/admin/profiles')
   app.register_blueprint(admin_tools_bp, url_prefix='/admin/tools')
-  app.register_blueprint(admin_db_op_bp, url_prefix='/admin/db')
+  app.register_blueprint(admin_etl_op_bp, url_prefix='/admin/etl')
   app.register_blueprint(admin_gene_browser_tracks_bp, url_prefix='/admin/gene_browser_tracks')
   app.register_blueprint(admin_content_bp, url_prefix='/admin/content')
   
