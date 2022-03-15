@@ -140,11 +140,11 @@ $(document).ready(function(){
         { targets: [0], orderData: [1,2] }
       ],
       columns: [
-      { data: "site", title: "Site" },
-      { data: "START", title: "Start", visible: false },
-      { data: "END", title: "End", visible: false },
-                      { data: "STRAIN", title: "Strain" },
-                      { data: "generate_primers", renderer: "html" }
+        { data: "site", title: "Site" },
+        { data: "START", title: "Start", visible: false },
+        { data: "END", title: "End", visible: false },
+        { data: "STRAIN", title: "Strain" },
+        { data: "generate_primers", renderer: "html" }
       ]
     });
   }
@@ -185,11 +185,12 @@ $(document).ready(function(){
 	set_position = function() {
 		// Sets browser position based on input
 		browser = igv.getBrowser()
-		chromosome = $("#chromosome").val()
-		start = $("#start").val()
-		end = $("#stop").val()
-		if (end - start > 1000000) {
-			end = start + 1000000
+		let chromosome = $("#chromosome").val().trim()
+		let start = $("#start").val().trim().replace(/,/g, '')
+		let end = $("#stop").val().trim().replace(/,/g, '')
+    let diff = (+end) - (+start)
+		if (diff > 1000000 || diff <= 0) {
+			end = +start + 1000000
 		}
 		browser.search(`${chromosome}:${start}-${end}`)
 	}
@@ -206,15 +207,15 @@ $(document).ready(function(){
 		setTimeout(reset_query, 200)
 	}
 
-    $('form').submit(function (e) {
+  $('form').submit(function (e) {
 		e.preventDefault();
 		var url = "{{ url_for('indel_primer.pairwise_indel_finder_query') }}"
 		$.ajax({type: "POST",
 				url: url,
 				data: $('form').serialize(),
 				success: function(data) {
-                    results = data["results"]
-                    _.each(results, function(x) { x['generate_primers'] = `<div site="${x['CHROM']}:${x["START"]}-${x['END']}" svtype="${x['SVTYPE']}" size="${x["END"]-x["START"]}" class='btn-link generate-primers'>Generate Primers</div>` })
+          results = data["results"]
+          _.each(results, function(x) { x['generate_primers'] = `<div site="${x['CHROM']}:${x["START"]}-${x['END']}" svtype="${x['SVTYPE']}" size="${x["END"]-x["START"]}" class='btn-link generate-primers'>Generate Primers</div>` })
 
 					// Handle errors
 					$(".form-error").remove();
@@ -225,20 +226,19 @@ $(document).ready(function(){
 					} else {
 						if (loaded == false) {
 							// Create genome browser
-              browser = igv.createBrowser(browserDiv, options)
-                          .then(function(browser) {
-                            browser.loadTrack(divergent_track_summary);
-                            set_position();
-                            browser.on('locuschange', function(reference_frame, label) {
-                              $("#chromosome").val(reference_frame["chr"]);
-                              $("#start").val(reference_frame["start"]);
-                              $("#stop").val(reference_frame["end"]);
-                              setTimeout(submitForm, 500)
-                            });
-                            generate_data_table();
-                            load_tracks(browser, results);
-                            loaded = true;
-                          });
+              browser = igv.createBrowser(browserDiv, options).then(function(browser) {
+                browser.loadTrack(divergent_track_summary);
+                set_position();
+                browser.on('locuschange', function(reference_frame, label) {
+                  $("#chromosome").val(reference_frame["chr"]);
+                  $("#start").val(reference_frame["start"]);
+                  $("#stop").val(reference_frame["end"]);
+                  setTimeout(submitForm, 500)
+                });
+                generate_data_table();
+                load_tracks(browser, results);
+                loaded = true;
+              });
 						} else {
 							table.clear()
 							table.rows.add(results);
@@ -277,9 +277,7 @@ $(document).ready(function(){
           query_running = false;
 
 				}
-      });
-            
-        
+      });    
 	});
 
 	$.ajaxSetup({
