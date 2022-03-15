@@ -29,3 +29,4 @@ cloud_sql_proxy
 *.tbi
 *.csi
 cachedir
+tf/environments

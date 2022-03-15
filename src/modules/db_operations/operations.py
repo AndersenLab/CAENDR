@@ -41,8 +41,14 @@ def execute_operation(app, db, DB_OP):
       raise EnvVarError()
     drop_and_populate_strain_annotated_variants(app, db, STRAIN_VARIANT_ANNOTATION_VERSION)
   
-  elif DB_OP == 'ECHO':
+  elif DB_OP == 'TEST_ECHO':
     logger.info("[OP] db op is [ECHO]")
+
+  elif DB_OP == 'TEST_MOCK_DATA':
+    os.environ["USE_MOCK_DATA"] = "1"
+    os.environ["MODULE_DB_OPERATIONS_CONNECTION_TYPE"] = "memory"
+    logger.info("Using MOCK DATA")
+    drop_and_populate_all_tables(app, db, WORMBASE_VERSION, STRAIN_VARIANT_ANNOTATION_VERSION)
 
 
 def drop_and_populate_strains(app, db):
