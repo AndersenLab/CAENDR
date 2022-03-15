@@ -2,6 +2,7 @@ import os
 from logzero import logger
 
 from caendr.services.cloud.docker_hub import get_container_versions
+from caendr.services.cloud import gcr_container_registry
 from caendr.services.cloud.datastore import query_ds_entities
 from caendr.models.datastore import Container
 
@@ -19,9 +20,21 @@ GOOGLE_CLOUD_PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID')
 
 GCR_REPO_NAME = f'gcr.io/{GOOGLE_CLOUD_PROJECT_ID}'
 
+def get_available_version_tags(container):
+  if container.container_registry == 'gcr':
+    return get_available_version_tags_gcr(container)
+  
+  return get_available_version_tags_dockerhub(container)
 
-# TODO: make this work with gcr.io containers
-def get_available_version_tags(container_name: str):
+
+def get_available_version_tags_gcr(container):
+  container_name = container.name
+  versions = gcr_container_registry.get_container_versions(container_name)
+  return versions
+
+
+def get_available_version_tags_dockerhub(container):
+  container_name = container.name    
   v = get_container_versions(f'{DOCKER_HUB_REPO_NAME}/{container_name}')
   try:
     v.remove('latest')
