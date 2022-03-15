@@ -76,6 +76,16 @@ class BasicLoginForm(FlaskForm):
   password = PasswordField('Password', [Required(), Length(min=5, max=30)])
   recaptcha = RecaptchaField()
 
+class PasswordResetForm(FlaskForm):
+  """ The password reset form """
+  password = PasswordField('New Password', [Required(), EqualTo('confirm_password', message='Passwords must match'), Length(min=5, max=30)])
+  confirm_password = PasswordField('Confirm New Password', [Required(), EqualTo('password', message='Passwords must match'), Length(min=5, max=30)])
+  recaptcha = RecaptchaField()
+
+class RecoverUserForm(FlaskForm):
+  """ The account recovery email form """
+  email = EmailField('Email Address', [Required(), Email(), Length(min=6, max=50)])
+  # recaptcha = RecaptchaField()
 
 class MarkdownForm(FlaskForm):
   """ markdown editing form """

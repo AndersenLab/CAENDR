@@ -28,6 +28,8 @@ class User(Entity):
       self.roles = kwargs.get('roles')
     if 'last_login' in kwargs:
       self.last_login = kwargs.get('last_login')
+    if 'provider' in kwargs:
+      self.provider = kwargs.get('provider')
 
 
   def save(self, *args, **kwargs):

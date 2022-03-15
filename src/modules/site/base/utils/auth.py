@@ -20,6 +20,9 @@ from flask_jwt_extended import (create_access_token,
 from caendr.models.datastore import User
 from extensions import jwt
 
+def create_limited_token(id):
+  print(id)
+
 
 def assign_access_refresh_tokens(id, roles, url, refresh=True):
   resp = make_response(redirect(url, 302))

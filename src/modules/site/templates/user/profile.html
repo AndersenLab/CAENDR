@@ -36,6 +36,7 @@
                 {% endfor %}
               </td>
             </tr>
+            <tr><td>Provider</td><td>{{ user.provider }}</td></tr>
             <tr><td>Registered</td><td>{{ user.created_on|date_format }}</td></tr>
             <tr><td>Last Modified</td><td>{{ user.modified_on|date_format }}</td></tr>
             <tr><td>Last Login</td><td>{{ user.last_login|date_format }}</td></tr>

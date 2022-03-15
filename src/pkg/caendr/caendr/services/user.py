@@ -7,6 +7,10 @@ USER_ROLES = {
   'admin': 'Admin'
 }
 
+def get_user_by_email(email, provider='local'):
+    filters = [('email', '=', email), ('provider', '=', provider)]
+    return query_ds_entities(User.kind, filters=filters)
+
 
 def get_user_role_form_options(): 
   return [(key, val) for key, val in USER_ROLES.items()]

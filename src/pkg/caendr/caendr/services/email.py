@@ -16,7 +16,7 @@ MAPPING_SUBMISSION_EMAIL = """
 You have submitted a genome-wide association mapping to CeNDR successfully.
 You can monitor progress of your report here:
 
-https://www.elegansvariation.org/report/{report_slug}/
+{base_url}/report/{report_slug}/
 
 If you set your record to private, this email serves as a way for you to find the URL to your report. 
 
@@ -27,7 +27,7 @@ Thank you for your order. Please retain this email for your records.
 
 Information regarding your purchase, including its tracking number is available here:
 
-https://elegansvariation.org/order/invoice/{invoice_hash}/
+{base_url}/order/invoice/{invoice_hash}/
 
 Address
 =======
@@ -53,6 +53,16 @@ Thank you for your donation of ${donation_amount}. Please retain this email for 
 
 Information regarding your purchase, including its tracking number is available here:
 
-https://elegansvariation.org/order/{invoice_hash}/
+{base_url}/order/{invoice_hash}/
 
+"""
+
+PASSWORD_RESET_EMAIL = """
+Reset Password
+
+A password reset was requested for your account ({email}). If you did not authorize this, you may ignore this email.
+
+To continue with your password reset, click the link below and follow the prompts. This link will expire in 1 hour.
+
+{base_url}/user/password/reset?token={token}
 """

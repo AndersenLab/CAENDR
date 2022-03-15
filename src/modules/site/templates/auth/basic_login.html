@@ -3,8 +3,7 @@
 {% from "_includes/macros.html" import render_field %}
 
   <div class="row">
-    <div class="col-md-3"></div>
-    <div class="col-md-6">
+    <div class="col-md-6 col-md-offset-3">
       <div class="panel panel-default">
         <div class="panel-heading">Login</div>
         <div class="panel-body">
@@ -15,9 +14,10 @@
             {{ form.recaptcha }}
           <br />
           <button id='login' type='submit' value="Login" class="btn btn-primary btn-block"><span class="glyphicon glyphicon-log-in" aria-hidden="true"></span> Login </button>
-      </form>
+          </form>
+        </div>
+      </div>
+      <div><a href="{{ url_for('user.recover_user') }}" style="cursor: pointer; padding-left: 1rem;">Forgot Your Password?</a></div>
     </div>
-  </div>
-</div>
 </div>
 {% endblock %}
