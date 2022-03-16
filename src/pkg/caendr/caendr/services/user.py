@@ -7,8 +7,8 @@ USER_ROLES = {
   'admin': 'Admin'
 }
 
-def get_user_by_email(email, provider='local'):
-    filters = [('email', '=', email), ('provider', '=', provider)]
+def get_user_by_email(email, user_type='LOCAL'):
+    filters = [('email', '=', email), ('user_type', '=', user_type)]
     return query_ds_entities(User.kind, filters=filters)
 
 

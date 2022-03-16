@@ -1,9 +1,7 @@
 import os
 from logzero import logger
-
-
 from datetime import datetime, timezone
-import time
+
 from flask import (abort,
                   redirect,
                   url_for,
@@ -31,9 +29,7 @@ from caendr.services.cloud.secret import get_secret
 
 
 PASSWORD_PEPPER = get_secret('PASSWORD_PEPPER')
-auth_bp = Blueprint('auth',
-                    __name__,
-                    template_folder='templates')
+auth_bp = Blueprint('auth', __name__, template_folder='templates')
 
 @auth_bp.route('/')
 def auth():
@@ -57,6 +53,7 @@ def token():
         flash('Logged In With Token', 'success')
         return assign_access_refresh_tokens(id=username, roles=user.roles, url=destination)
   
+  flash("Your login token has expired, please request a new link.", "danger")
   return redirect(url_for('auth.choose_login'))
 
 

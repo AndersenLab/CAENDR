@@ -41,7 +41,7 @@ def create_or_update_google_user(user_info):
     user.roles = ['user']
 
   # Save updated properties
-  user.set_properties(username=user_email, password=unique_id(), salt=PASSWORD_PEPPER, full_name=user_name, email=user_email.lower(), last_login=last_login, verified_email=True, provider='google')
+  user.set_properties(username=user_email, password=unique_id(), salt=PASSWORD_PEPPER, full_name=user_name, email=user_email.lower(), last_login=last_login, verified_email=True, user_type='OAUTH')
   user.save()
   return user
 

@@ -10,7 +10,7 @@ from caendr.services.user import get_user_by_email
 from caendr.services.email import send_email, PASSWORD_RESET_EMAIL
 
 from base.forms import UserRegisterForm, UserUpdateForm, RecoverUserForm, PasswordResetForm
-from base.utils.auth import jwt_required, get_jwt, get_current_user, assign_access_refresh_tokens, create_limited_token
+from base.utils.auth import jwt_required, get_jwt, get_current_user, assign_access_refresh_tokens, create_one_time_token
 
 PASSWORD_PEPPER = get_secret('PASSWORD_PEPPER')
 
@@ -39,7 +39,7 @@ def user_register():
     roles = ['user']
     id = slugify(username)
     user = User(id)
-    user.set_properties(username=username, password=password, salt=PASSWORD_PEPPER, full_name=full_name, email=email, roles=roles, last_login=datetime.now(timezone.utc), provider='local')
+    user.set_properties(username=username, password=password, salt=PASSWORD_PEPPER, full_name=full_name, email=email, roles=roles, last_login=datetime.now(timezone.utc), user_type='LOCAL')
     user.save()
     return assign_access_refresh_tokens(username, user.roles, url_for("user.user_profile"))
   return render_template('user/register.html', **locals())
@@ -56,17 +56,20 @@ def user_recover():
     email = request.form.get("email")
     users = get_user_by_email(email)
 
-    if users[0]:
+    if users and users[0]:
       user = users[0]
-      token = create_limited_token(id=user.get('username'), destination=url_for('user.user_reset_password'))
+      token = create_one_time_token(id=user.get('username'), destination=url_for('user.user_reset_password'))
       password_reset_link = url_for('auth.token', token=token, _external=True)
-      send_email({
-        "from": "no-reply@elegansvariation.org",
-        "to": [ email ],
-        "subject": "CeNDR Password Reset",
-        "text": PASSWORD_RESET_EMAIL.format(email=email, password_reset_link=password_reset_link)
-      })
-      logger.info(f"Sending password reset email: {email}, link: {password_reset_link}")
+      try:
+        send_email({
+          "from": "no-reply@elegansvariation.org",
+          "to": [ email ],
+          "subject": "CeNDR Password Reset",
+          "text": PASSWORD_RESET_EMAIL.format(email=email, password_reset_link=password_reset_link)
+        })
+        logger.info(f"Sent password reset email: {email}, link: {password_reset_link}")
+      except Exception as err:
+        logger.error(f"Failed to send email: {err}")
     
     flash(f"We have sent an email to '{email}' containing further instructions to reset your password.", 'info')
     return redirect('/')

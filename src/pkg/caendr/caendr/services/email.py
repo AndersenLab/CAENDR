@@ -27,7 +27,7 @@ Thank you for your order. Please retain this email for your records.
 
 Information regarding your purchase, including its tracking number is available here:
 
-{base_url}/order/invoice/{invoice_hash}/
+{url}
 
 Address
 =======
@@ -53,7 +53,7 @@ Thank you for your donation of ${donation_amount}. Please retain this email for 
 
 Information regarding your purchase, including its tracking number is available here:
 
-{base_url}/order/{invoice_hash}/
+{order_confirmation_link}
 
 """
 
@@ -62,7 +62,7 @@ Reset Password
 
 A password reset was requested for your account ({email}). If you did not authorize this, you may ignore this email.
 
-To continue with your password reset, click the link below and follow the prompts. This link will expire in 15 minutes.
+To continue with your password reset, click the link below and follow the prompts. This link will expire in 15 minutes and can only be used one time.
 
 {password_reset_link}
 """

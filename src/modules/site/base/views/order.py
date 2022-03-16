@@ -64,7 +64,7 @@ def order_page():
     order_obj['phone'] = order_obj['phone'].strip("+")
     order_obj['items'] = '\n'.join(sorted([u"{}:{}".format(k, v) for k, v in form.item_price()]))
     order_obj['invoice_hash'] = str(uuid.uuid4()).split("-")[0]
-    order_obj["url"] = "https://elegansvariation.org/order/" + order_obj["invoice_hash"]
+    order_obj["url"] = url_for('order.order_confirmation', invoice_hash=order_obj['invoice_hash'], _external=True)
     send_email({"from": "no-reply@elegansvariation.org",
                 "to": [order_obj["email"]],
                 "cc": config.get("CC_EMAILS"),

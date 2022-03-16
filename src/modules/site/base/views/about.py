@@ -116,13 +116,13 @@ def donate():
     order_obj['items'] = u"{}:{}".format("CeNDR strain and data support", form.data.get('total'))
     order_obj.update(form.data)
     order_obj['invoice_hash'] = get_object_hash(order_obj, length=8)
-    order_obj['url'] = f"https://elegansvariation.org/order/{order_obj['invoice_hash']}"
+    order_obj['url'] = url_for('order.order_confirmation', invoice_hash=order_obj['invoice_hash'], _external=True)
     send_email({
       "from": "no-reply@elegansvariation.org",
       "to": [order_obj["email"]],
       "cc": config.get("CC_EMAILS"),
       "subject": f"CeNDR Dontaion #{order_obj['invoice_hash']}",
-      "text": DONATE_SUBMISSION_EMAIL.format(invoice_hash=order_obj["invoice_hash"], donation_amount=order_obj.get('total'))
+      "text": DONATE_SUBMISSION_EMAIL.format(order_confirmation_link=order_obj.get('url'), donation_amount=order_obj.get('total'))
     })
     add_to_order_ws(order_obj)
     return redirect(url_for("order.order_confirmation", invoice_hash=order_obj["invoice_hash"]), code=302)
