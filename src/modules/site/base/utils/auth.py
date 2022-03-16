@@ -1,8 +1,11 @@
+from logzero import logger
 from functools import wraps
 from datetime import timedelta
 from base64 import b64encode
+from constants import JWT_LIMITED_TOKEN_EXPIRES
 from flask import (request,
                   redirect,
+                  flash,
                   abort,
                   url_for,
                   session,
@@ -23,14 +26,10 @@ from flask_jwt_extended import (create_access_token,
 from caendr.models.datastore import User
 from extensions import jwt
 
-def create_jwt(username):
-  expiration = timedelta(hours=1)
-  token = create_access_token(identity=str(username), expires_delta=expiration)
+def create_limited_token(id, destination='/'):
+  expires_delta = timedelta(seconds=JWT_LIMITED_TOKEN_EXPIRES)
+  token = create_access_token(identity=str(id), additional_claims={'destination': destination}, expires_delta=expires_delta)
   return token
-
-def decode_jwt(token):
-  decoded_token = decode_token(token)
-  return decoded_token
 
 def assign_access_refresh_tokens(id, roles, url, refresh=True):
   resp = make_response(redirect(url, 302))
@@ -92,9 +91,20 @@ def unauthorized_callback(reason):
   return redirect(url_for('auth.choose_login')), 302
 
 
+def check_if_token_revoked(jwt_data):
+    jti = jwt_data["jti"]
+    # token = db.session.query(TokenBlocklist.id).filter_by(jti=jti).scalar()
+    token_revoked = False
+    if not token_revoked:
+      return token_revoked
+    logger.info("Token has been revoked.")
+    return make_response(redirect(url_for('auth.choose_login'))), 302
+    
+
 @jwt.invalid_token_loader
 def invalid_token_callback(callback):
   ''' Invalid Fresh/Non-Fresh Access token in auth header, redirect to login '''
+  logger.info("Invalid Token.")
   resp = make_response(redirect(url_for('auth.choose_login')))
   session["is_logged_in"] = False
   session["is_admin"] = False
@@ -105,6 +115,7 @@ def invalid_token_callback(callback):
 @jwt.expired_token_loader
 def expired_token_callback(_jwt_header, jwt_data):
   ''' Expired auth header, redirects to fetch refresh token '''
+  logger.info("Expired Token, refreshing...")
   session['login_referrer'] = request.base_url
   resp = make_response(redirect(url_for('auth.refresh')))
   unset_access_cookies(resp)

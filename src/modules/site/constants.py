@@ -7,6 +7,7 @@ class PRICES:
   STRAIN = 15
   SHIPPING = 65
 
+JWT_LIMITED_TOKEN_EXPIRES = 15 * 60
 
 SECTOR_OPTIONS = [
   ('academia', 'Academia'),
