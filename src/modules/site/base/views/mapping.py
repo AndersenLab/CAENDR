@@ -74,7 +74,10 @@ def mapping_report(id):
   subtitle = mapping.label +': ' + mapping.trait
   fluid_container = True
   data_url = generate_blob_url(mapping.get_bucket_name(), mapping.get_data_blob_path())
-  report_url = generate_blob_url(mapping.get_bucket_name(), mapping.report_path)
+  if hasattr(mapping, 'mapping_report_url'):
+    report_url = generate_blob_url(mapping.get_bucket_name(), mapping.report_path)
+  else:
+    report_url = None
 
   return render_template('tools/mapping/report.html', **locals())
 
