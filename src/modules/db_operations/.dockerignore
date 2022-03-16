@@ -4,3 +4,4 @@ Dockerfile
 .download
 *.csv.gz
 sva.csv
+cachedir

@@ -9,7 +9,7 @@ resource "null_resource" "configure_img_thumb_gen" {
   })
 
   provisioner "local-exec" {
-    command = format("make -C %s clean dot-env ENV=%s", local.codebase_root_path, var.ENVIRONMENT)
+    command = format("make -C %s clean clean-venv dot-env ENV=%s", local.codebase_root_path, var.ENVIRONMENT)
   }
 }
 
@@ -31,4 +31,9 @@ resource "google_storage_bucket_object" "source_zip" {
   name   = "source.zip#${data.archive_file.source.output_md5}"
   bucket = google_storage_bucket.source_bucket.name
   source = data.archive_file.source.output_path
+  content_type = "application/zip"
+
+  depends_on = [
+    data.archive_file.source
+  ]
 }

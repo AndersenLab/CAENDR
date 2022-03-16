@@ -29,6 +29,7 @@ class DatabaseOperation(Entity):
             'email',
             'db_operation',
             'args',
+            'logs',
             'container_name',
             'container_version',
             'container_repo',

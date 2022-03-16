@@ -1,4 +1,5 @@
 import os
+from caendr.services.cloud.postgresql import health_database_status
 from logzero import logger
 
 from caendr.models.error import EnvVarError
@@ -41,8 +42,16 @@ def execute_operation(app, db, DB_OP):
       raise EnvVarError()
     drop_and_populate_strain_annotated_variants(app, db, STRAIN_VARIANT_ANNOTATION_VERSION)
   
-  elif DB_OP == 'ECHO':
-    logger.info("[OP] db op is [ECHO]")
+  elif DB_OP == 'TEST_ECHO':
+    result, message = health_database_status()
+    if not result:
+      raise Exception(f"DB Connection is: { ('OK' if result else 'ERROR') }. {message}")
+
+  elif DB_OP == 'TEST_MOCK_DATA':
+    os.environ["USE_MOCK_DATA"] = "1"
+    os.environ["MODULE_DB_OPERATIONS_CONNECTION_TYPE"] = "memory"
+    logger.info("Using MOCK DATA")
+    drop_and_populate_all_tables(app, db, WORMBASE_VERSION, STRAIN_VARIANT_ANNOTATION_VERSION)
 
 
 def drop_and_populate_strains(app, db):
@@ -76,7 +85,7 @@ def drop_and_populate_strain_annotated_variants(app, db, sva_ver: str):
 
 def drop_and_populate_all_tables(app, db, wb_ver: str, sva_ver: str):
   logger.info(f'Dropping and populating all tables - WORMBASE_VERSION: {wb_ver} STRAIN_VARIANT_ANNOTATION_VERSION: {sva_ver}')
-  logger.info("[1/8] Downloading databases...")
+  logger.info("[1/8] Downloading databases...eta ~0:15")
   filenames = download_all_external_dbs(wb_ver)
   gene_gff_fname = filenames['GENE_GFF_URL']
   gene_gtf_fname = filenames['GENE_GTF_URL']
@@ -87,24 +96,24 @@ def drop_and_populate_all_tables(app, db, wb_ver: str, sva_ver: str):
   filenames['SVA_CSVGZ_URL'] = fetch_internal_db('SVA_CSVGZ_URL', sva_ver)
   sva_fname = filenames['SVA_CSVGZ_URL']
 
-  logger.info("[2/8] Dropping tables...")
+  logger.info("[2/8] Dropping tables...eta ~0:01")
   drop_tables(app, db)
 
-  logger.info("[3/8] Load Strains...")
+  logger.info("[3/8] Load Strains...eta ~0:24")
   load_strains(db)
 
-  logger.info("[4/8] Load Strains...")
+  logger.info("[4/8] Load genes summary...eta ~3:15")
   load_genes_summary(db, gene_gff_fname)
 
-  logger.info("[5/8] Load Strains...")
+  logger.info("[5/8] Load genes...eta ~12:37")
   load_genes(db, gene_gtf_fname, gene_ids_fname)
 
-  logger.info("[6/8] Load Strains...")
+  logger.info("[6/8] Load Homologs...eta ~3:10")
   load_homologs(db, homologene_fname)
 
-  logger.info("[7/8] Load Strains...")
+  logger.info("[7/8] Load Horthologs...eta ~17:13")
   load_orthologs(db, ortholog_fname)
 
-  logger.info("[8/8] Load Strains...")
+  logger.info("[8/8] Load Strains Annotated Variants...eta ~26:47")
   load_strain_annotated_variants(db, sva_fname)
   

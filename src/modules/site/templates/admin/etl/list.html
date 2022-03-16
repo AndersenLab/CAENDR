@@ -1,0 +1,94 @@
+{% extends "_layouts/default.html" %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-10"></div>
+  <div class="col-md-2">
+    <a id='create' href="{{ url_for('admin_etl_op.create_op')}}" class="btn btn-primary btn-block"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> New Operation </a>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-12">
+    <table id='etl-operations' class='table'>
+      <thead>
+        <tr>
+          <th class='col-md-12'><strong>Status</strong></th>
+          <th class='col-md-12'><strong>Created</strong></th>
+          <th class='col-md-12'><strong>Operation & Args</strong></th>
+          <th class='col-md-12'><strong>Username</strong></th>
+          <th class='col-md-12'><strong>Modified</strong></th>
+          <th class='col-md-12'><strong>Actions</strong></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ops in etl_operations|sort(attribute='created_on', reverse=True) %}
+          <tr>
+            <td class="database-operation-status {{ (ops['status'] or 'unknown') | lower }} " style="text-align:center;vertical-align: middle;"> {{ ops['status'] or 'UNKNOWN' }} </td>
+            <td style="text-align: center;"><small> 
+              {{ ops['created_on'] | date_format(fmt="%-m/%-d/%Y %-H:%M:%S%p %z") }}</td>
+            </small>
+            <td>
+                {{ ops['db_operation'] }}
+                <br/>
+                <pre style='font-size:0.8em; word-wrap: break-word;'> {{ ops['args'] }} </pre>
+                {{ ops['note'] }}
+            </td>
+            <td> 
+              <a href="/admin/users/{{ ops['username'] }}/edit/">
+                {{ ops['username'] }} 
+              </a>
+            </td>
+            <td style='text-align: center;'> {{ ops['modified_on'] | date_format(fmt="%-m/%-d/%Y %-H:%M:%S%p %z") }}</td>
+            <td class='text-center'>
+              <a href="{{ url_for('admin_etl_op.view_op', id=ops['id']) }}">View</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <script>
+      $(document).ready( function () {
+        return;
+        $('#database-operations').DataTable({
+          "order": [[ 2, "desc" ]],
+          "lengthMenu": [
+            [-1],
+            ["All"]
+          ]
+        });
+      });
+    </script>
+    <style>
+      .text-center {
+        text-align: center;
+      }
+      #etl-operations pre {
+        display: inline-block;
+        white-space: pre-wrap;       /* Since CSS 2.1 */
+        white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+        white-space: -pre-wrap;      /* Opera 4-6 */
+        white-space: -o-pre-wrap;    /* Opera 7 */
+        word-wrap: break-word;       /* Internet Explorer 5.5+ */
+      }
+      .database-operation-status.error {
+        background:rgba(236,73,105,.5);
+      }
+      .database-operation-status.running {
+        background: rgba(91,144,220,.5);
+      }
+      .database-operation-status.complete {
+        background: rgba(146,208,72,.5);
+      }
+      .database-operation-status.submitted {
+        background: rgba(213,225,231, 0.5);
+      }
+      .database-operation-status.unknown {
+        background: rgba(248,246,82,0.5);
+      }
+    </style>
+	</div> <!-- /col-md-12 -->
+</div> <!-- /row -->
+
+
+{% endblock %}

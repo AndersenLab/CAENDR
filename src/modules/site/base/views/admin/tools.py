@@ -33,7 +33,7 @@ def edit_tool(id):
   jwt_csrf_token = (get_jwt() or {}).get("csrf")
   
   tool = get_container(id)
-  versions = get_available_version_tags(id)
+  versions = get_available_version_tags(tool)
   versions.reverse()
 
   form = AdminEditToolContainerVersion(version=get_version(tool))

@@ -17,3 +17,5 @@ docs
 *.bed
 
 ext_assets
+cachedir
+*csi
