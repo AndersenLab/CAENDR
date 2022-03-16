@@ -3,8 +3,10 @@ from logzero import logger
 
 
 from datetime import datetime, timezone
+import time
 from flask import (abort,
                   redirect,
+                  url_for,
                   render_template,
                   session,
                   request,
@@ -20,7 +22,8 @@ from base.utils.auth import (create_access_token,
                             get_jwt_identity,
                             jwt_required,
                             assign_access_refresh_tokens,
-                            unset_jwt)
+                            unset_jwt,
+                            decode_jwt)
 
 from caendr.models.datastore import User
 from caendr.services.cloud.secret import get_secret
@@ -33,6 +36,24 @@ auth_bp = Blueprint('auth',
 
 @auth_bp.route('/')
 def auth():
+  token = request.args.get('token')
+  if token:
+    decoded_token = decode_jwt(token)
+    expiration = decoded_token.get('exp')
+
+    if decoded_token and expiration >= int(time.time()):
+      username = decoded_token.get('sub')
+      user = User(username)
+
+      if user._exists:
+        user.set_properties(last_login=datetime.now(timezone.utc))
+        user.save()
+        flash('Logged In With Token', 'success')
+
+        return assign_access_refresh_tokens(id=username, roles=user.roles, url=url_for('user.reset_password'))
+      
+      flash("Invalid or expired token.", "danger")
+
   return redirect(url_for('auth.choose_login'))
 
 @auth_bp.route('/refresh', methods=['GET'])

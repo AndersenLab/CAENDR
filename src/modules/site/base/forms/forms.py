@@ -85,7 +85,7 @@ class PasswordResetForm(FlaskForm):
 class RecoverUserForm(FlaskForm):
   """ The account recovery email form """
   email = EmailField('Email Address', [Required(), Email(), Length(min=6, max=50)])
-  # recaptcha = RecaptchaField()
+  recaptcha = RecaptchaField()
 
 class MarkdownForm(FlaskForm):
   """ markdown editing form """

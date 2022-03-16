@@ -1,7 +1,6 @@
 from flask import request, render_template, Blueprint, redirect, url_for, flash
 from slugify import slugify
 from datetime import datetime, timezone
-from config import config
 
 from caendr.models.datastore import User
 from caendr.services.cloud.secret import get_secret
@@ -10,9 +9,8 @@ from caendr.services.user import get_user_by_email
 from caendr.services.email import send_email, PASSWORD_RESET_EMAIL
 
 from base.forms import UserRegisterForm, UserUpdateForm, RecoverUserForm, PasswordResetForm
-from base.utils.auth import jwt_required, get_jwt, get_current_user, assign_access_refresh_tokens
+from base.utils.auth import jwt_required, get_jwt, get_current_user, assign_access_refresh_tokens, create_jwt
 
-SITE_BASE_URL = config.get('MODULE_SITE_BASE_URL', 'None')
 PASSWORD_PEPPER = get_secret('PASSWORD_PEPPER')
 
 user_bp = Blueprint('user',
@@ -80,45 +78,46 @@ def recover_user():
   title = "Recover User"
   disable_parent_breadcrumb = True
   form = RecoverUserForm(request.form)
+
   if request.method == 'POST' and form.validate():
     email = request.form.get("email")
     users = get_user_by_email(email)
+
     if users[0]:
       user = users[0]
-      token = "123546"
+      token = create_jwt(user.get('username'))
       email_obj = {}
-      email_obj['base_url'] = SITE_BASE_URL
+      # email_obj['base_url'] = SITE_BASE_URL
+      email_obj['base_url'] = f"https://{request.host}"
       email_obj['email'] = user.get('email')
       email_obj['token'] = token
-      try:
-        send_email({"from": "no-reply@elegansvariation.org",
-                  "to": [user["email"]],
-                  "subject": "CeNDR Password Reset",
-                  "text": PASSWORD_RESET_EMAIL.format(**email_obj)})
-        flash(f"We have sent an email to '{email}' containing further instructions to reset your password.", 'info')
-        return redirect('/')
-      except:
-        flash("Failed to send email", "danger")
+
+      send_email({
+        "from": "no-reply@elegansvariation.org",
+        "to": [user["email"]],
+        "subject": "CeNDR Password Reset",
+        "text": PASSWORD_RESET_EMAIL.format(**email_obj)
+      })
+      flash(f"We have sent an email to '{email}' containing further instructions to reset your password.", 'info')
+      return redirect('/')
     
   return render_template('user/recover_user.html', **locals())
 
 
 @user_bp.route("/password/reset", methods=["GET", "POST"])
+@jwt_required()
 def reset_password():
   title = "Reset Password"
   disable_parent_breadcrumb = True
+  user = get_current_user()
   form = PasswordResetForm(request.form)
-  token = request.args.get('token')
-  print(token)
-  # user = User(username)
 
   if request.method == 'POST' and form.validate():
-    username = slugify(request.form.get("username"))
-    user = User(username)
-    if user._exists:
-      
-      flash('Password reset sent.', 'success')
-
-    flash('Wrong username or password', 'error')
-    return redirect(request.referrer)
+    password = slugify(request.form.get("password"))
+    user.set_properties(password=password, salt=PASSWORD_PEPPER)
+    user.save()
+    flash('Password Successfully Reset.', 'success')
+    return redirect(url_for('user.user_profile'))
   return render_template('user/reset_password.html', **locals())
+
+ 

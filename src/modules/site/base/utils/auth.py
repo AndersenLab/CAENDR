@@ -1,4 +1,6 @@
 from functools import wraps
+from datetime import timedelta
+from base64 import b64encode
 from flask import (request,
                   redirect,
                   abort,
@@ -15,14 +17,20 @@ from flask_jwt_extended import (create_access_token,
                                 get_jwt_identity,
                                 get_current_user,
                                 verify_jwt_in_request,
-                                jwt_required)
+                                jwt_required,
+                                decode_token)
 
 from caendr.models.datastore import User
 from extensions import jwt
 
-def create_limited_token(id):
-  print(id)
+def create_jwt(username):
+  expiration = timedelta(hours=1)
+  token = create_access_token(identity=str(username), expires_delta=expiration)
+  return token
 
+def decode_jwt(token):
+  decoded_token = decode_token(token)
+  return decoded_token
 
 def assign_access_refresh_tokens(id, roles, url, refresh=True):
   resp = make_response(redirect(url, 302))

@@ -11,7 +11,7 @@
           <p style="padding-left: 0;">We will send a confirmation email to this address:</p>
           {{ form.csrf_token }}
           {{ render_field(form.email) }}
-          <!-- {{ form.recaptcha }} -->
+          {{ form.recaptcha }}
           <br />
           <button id='recover' type='submit' value="Send Email" class="btn btn-primary btn-block">
             <span class="glyphicon glyphicon-send" aria-hidden="true"></span> Send Email

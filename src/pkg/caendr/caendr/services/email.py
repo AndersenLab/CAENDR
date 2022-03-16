@@ -64,5 +64,5 @@ A password reset was requested for your account ({email}). If you did not author
 
 To continue with your password reset, click the link below and follow the prompts. This link will expire in 1 hour.
 
-{base_url}/user/password/reset?token={token}
+{base_url}/auth?token={token}
 """
