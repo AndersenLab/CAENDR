@@ -123,7 +123,7 @@ def invalid_token_callback(callback):
 @jwt.expired_token_loader
 def expired_token_callback(_jwt_header, jwt_data):
   ''' Expired auth header, redirects to fetch refresh token '''
-  logger.info("Expired Token, refreshing...")
+  logger.info("Expired Token.")
   session['login_referrer'] = request.base_url
   resp = make_response(redirect(url_for('auth.refresh')))
   unset_access_cookies(resp)
