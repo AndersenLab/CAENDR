@@ -71,7 +71,8 @@ def user_recover():
       except Exception as err:
         logger.error(f"Failed to send email: {err}")
     
-    flash(f"We have sent an email to '{email}' containing further instructions to reset your password.", 'info')
+    # Flash info message even if email fails in order to protect from attempts at finding valid emails
+    flash(f"Please check your email ({email}) for a password reset link.", 'info')
     return redirect('/')
     
   return render_template('user/recover_user.html', **locals())
