@@ -31,7 +31,8 @@ locals {
     "postgres_db_stage_name" = var.MODULE_DB_OPERATIONS_DB_STAGE_NAME,
     "postgres_db_password" = sensitive(var.POSTGRES_DB_PASSWORD),
     "postgres_db_user_name" = var.MODULE_DB_OPERATIONS_DB_USER_NAME,
-    "bucket_db_name" = var.MODULE_DB_OPERATIONS_BUCKET_NAME
+    "bucket_db_name" = var.MODULE_DB_OPERATIONS_BUCKET_NAME,
+    "bucket_etl_logs_name" = var.ETL_LOGS_BUCKET_NAME,
     "db_ops_task_queue_name" = var.MODULE_DB_OPERATIONS_TASK_QUEUE_NAME
   })
 
