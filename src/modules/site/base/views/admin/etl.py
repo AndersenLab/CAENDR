@@ -1,4 +1,6 @@
 import json
+import os
+from attr import has
 from caendr.services.cloud.postgresql import health_database_status
 from logzero import logger
 from flask import Blueprint, render_template, url_for, request, redirect
@@ -7,6 +9,13 @@ from base.utils.auth import admin_required, get_jwt, get_jwt_identity, get_curre
 from base.forms import AdminCreateDatabaseOperationForm
 
 from caendr.services.database_operation import get_all_db_ops, get_all_db_stats, get_etl_op, create_new_db_op, get_db_op_form_options
+
+from google.cloud import storage
+
+ETL_LOGS_BUCKET_NAME = os.getenv('ETL_LOGS_BUCKET_NAME')
+
+storage_client = storage.Client()
+
 
 admin_etl_op_bp = Blueprint('admin_etl_op',
                             __name__,
@@ -41,6 +50,18 @@ def admin_etl_stats():
 def view_op(id):
   title = "View ETL Operation"    
   op = get_etl_op(id)
+
+  log_contents = ""
+  uri = op.get('logs', None)
+  if uri is not None:
+    bucket = storage_client.get_bucket(ETL_LOGS_BUCKET_NAME)    
+    filepath = uri.replace(f"gs://{ETL_LOGS_BUCKET_NAME}/", "")
+    blob = bucket.get_blob(filepath)
+    if blob is not None:
+      log_contents = blob.download_as_string().decode('utf8')
+      log_contents.replace("\n", "<br/>")
+
+        
 
   format = request.args.get('format')
   if format == 'json':

@@ -69,7 +69,7 @@
             created_on
           </td>
           <td>
-            {{ op['created_on'] | date_format(fmt="%-d/%-m/%Y %-H:%M:%S%p %z") }}
+            {{ op['created_on'] | date_format }}
           </td>
         </tr>
         <tr>
@@ -95,7 +95,7 @@
             modified_on
           </td>
           <td>
-            {{ op['modified_on'] | date_format(fmt="%-d/%-m/%Y %-H:%M:%S%p %z") }}
+            {{ op['modified_on'] | date_format }}
           </td>
         </tr>
         
@@ -109,6 +109,16 @@
             {{ op['username'] }}
           </td>
         </tr>
+
+        <tr>
+          <td>
+            logs
+          </td>
+          <td>
+            <iframe border=0 srcdoc="<pre>{{ log_contents }}</pre>"></iframe>
+          </td>
+        </tr>
+
         
       </tbody></table>
 

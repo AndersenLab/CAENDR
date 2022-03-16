@@ -51,6 +51,8 @@ def _generate_db_op_pipeline(task: DatabaseOperationTask):
   environment['DATABASE_OPERATION'] = task.db_operation
   environment['USERNAME'] = task.username if task.username else None
   environment['EMAIL'] = task.email if task.email else None
+  environment['OPERATION_ID'] = d.id
+  environment['TASK_ID'] = task.id
   
 
   service_account = ServiceAccount(email=sa_email, scopes=SCOPES)

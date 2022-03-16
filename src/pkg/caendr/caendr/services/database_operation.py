@@ -131,6 +131,7 @@ def _create_db_op_task(d):
                                   'args': d.args,
                                   'username': d.username, 
                                   'email': d.email,
+                                  'logs': '',
                                   'container_name': d.container_name,
                                   'container_version': d.container_version,
                                   'container_repo': d.container_repo})
