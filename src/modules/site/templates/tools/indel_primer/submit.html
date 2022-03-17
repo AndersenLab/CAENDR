@@ -184,13 +184,14 @@ $(document).ready(function(){
 
 	set_position = function() {
 		// Sets browser position based on input
+    const MAX_DIFF = 1000000
 		browser = igv.getBrowser()
 		let chromosome = $("#chromosome").val().trim()
-		let start = $("#start").val().trim().replace(/,/g, '')
-		let end = $("#stop").val().trim().replace(/,/g, '')
-    let diff = (+end) - (+start)
-		if (diff > 1000000 || diff <= 0) {
-			end = +start + 1000000
+		let start = parseInt($("#start").val().trim().replace(/,/g, ''), 10)
+		let end = parseInt($("#stop").val().trim().replace(/,/g, ''), 10)
+    let diff = end - start
+		if (diff > MAX_DIFF || diff <= 0) {
+			end = +start + MAX_DIFF
 		}
 		browser.search(`${chromosome}:${start}-${end}`)
 	}
