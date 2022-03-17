@@ -53,7 +53,6 @@ def token():
         flash('Logged In With Token', 'success')
         return assign_access_refresh_tokens(id=username, roles=user.roles, url=destination)
   
-  flash("Your login token has expired, please request a new link.", "error")
   return redirect(url_for('auth.basic_login'))
 
 

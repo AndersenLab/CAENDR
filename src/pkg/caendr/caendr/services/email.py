@@ -22,7 +22,7 @@ If you set your record to private, this email serves as a way for you to find th
 
 """
 
-ORDER_SUBMISSION_EMAIL = """
+ORDER_SUBMISSION_EMAIL_TEMPLATE = """
 Thank you for your order. Please retain this email for your records.
 
 Information regarding your purchase, including its tracking number is available here:
@@ -48,7 +48,7 @@ Date
 
 """
 
-DONATE_SUBMISSION_EMAIL = """
+DONATE_SUBMISSION_EMAIL_TEMPLATE = """
 Thank you for your donation of ${donation_amount}. Please retain this email for your records.
 
 Information regarding your purchase, including its tracking number is available here:
@@ -57,7 +57,7 @@ Information regarding your purchase, including its tracking number is available 
 
 """
 
-PASSWORD_RESET_EMAIL = """
+PASSWORD_RESET_EMAIL_TEMPLATE = """
 Reset Password
 
 A password reset was requested for your account ({email}). If you did not authorize this, you may ignore this email.

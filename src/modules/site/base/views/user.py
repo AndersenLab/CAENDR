@@ -7,7 +7,7 @@ from caendr.models.datastore import User
 from caendr.services.cloud.secret import get_secret
 from caendr.services.user import get_user_by_email
 
-from caendr.services.email import send_email, PASSWORD_RESET_EMAIL
+from caendr.services.email import send_email, PASSWORD_RESET_EMAIL_TEMPLATE
 
 from base.forms import UserRegisterForm, UserUpdateForm, RecoverUserForm, PasswordResetForm
 from base.utils.auth import jwt_required, get_jwt, get_current_user, assign_access_refresh_tokens, create_one_time_token
@@ -65,7 +65,7 @@ def user_recover():
           "from": "no-reply@elegansvariation.org",
           "to": [ email ],
           "subject": "CeNDR Password Reset",
-          "text": PASSWORD_RESET_EMAIL.format(email=email, password_reset_link=password_reset_link)
+          "text": PASSWORD_RESET_EMAIL_TEMPLATE.format(email=email, password_reset_link=password_reset_link)
         })
         logger.info(f"Sent password reset email: {email}, link: {password_reset_link}")
       except Exception as err:
@@ -116,7 +116,7 @@ def user_reset_password():
   form = PasswordResetForm(request.form)
 
   if request.method == 'POST' and form.validate():
-    password = slugify(request.form.get("password"))
+    password = request.form.get("password")
     user.set_properties(password=password, salt=PASSWORD_PEPPER)
     user.save()
     flash('Password Successfully Reset.', 'success')

@@ -14,7 +14,7 @@ from config import config
 from base.forms import OrderForm
 from base.utils.auth import jwt_required, get_current_user
 
-from caendr.services.email import send_email, ORDER_SUBMISSION_EMAIL
+from caendr.services.email import send_email, ORDER_SUBMISSION_EMAIL_TEMPLATE
 from caendr.services.cloud.sheets import add_to_order_ws, lookup_order
 
 order_bp = Blueprint('order', __name__)
@@ -69,7 +69,7 @@ def order_page():
                 "to": [order_obj["email"]],
                 "cc": config.get("CC_EMAILS"),
                 "subject": "CeNDR Order #" + str(order_obj["invoice_hash"]),
-                "text": ORDER_SUBMISSION_EMAIL.format(**order_obj)})
+                "text": ORDER_SUBMISSION_EMAIL_TEMPLATE.format(**order_obj)})
 
     # Save to google sheet
     add_to_order_ws(order_obj)
