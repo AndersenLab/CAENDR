@@ -1,4 +1,3 @@
-
 import os
 import re
 
@@ -9,6 +8,9 @@ from dotenv import load_dotenv
 
 dotenv_file = '.env'
 load_dotenv(dotenv_file)
+
+# import monitor
+# monitor.init_sentry("img_thumb_gen")
 
 client = storage.Client()
 

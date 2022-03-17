@@ -1,11 +1,14 @@
 import os
 import logging
 
+from caendr.utils import monitor
 from caendr.models.task import DatabaseOperationTask
 from caendr.models.datastore import DatabaseOperation
 from caendr.services.cloud.lifesciences import start_pipeline
 from caendr.models.lifesciences import ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
 from caendr.utils.json import get_json_from_class
+
+monitor.init_sentry("pipelines-task")
 
 
 GOOGLE_CLOUD_PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID')
@@ -48,6 +51,8 @@ def _generate_db_op_pipeline(task: DatabaseOperationTask):
   environment['DATABASE_OPERATION'] = task.db_operation
   environment['USERNAME'] = task.username if task.username else None
   environment['EMAIL'] = task.email if task.email else None
+  environment['OPERATION_ID'] = d.id
+  environment['TASK_ID'] = task.id
   
 
   service_account = ServiceAccount(email=sa_email, scopes=SCOPES)

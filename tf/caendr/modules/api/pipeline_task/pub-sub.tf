@@ -37,4 +37,9 @@ resource "google_pubsub_subscription" "pipeline_task" {
 
   retain_acked_messages = "false"
   topic                 = google_pubsub_topic.pipeline_task.name
+  
+  depends_on = [
+    google_cloud_run_service.api_pipeline_task,
+    google_pubsub_topic.pipeline_task,
+  ]
 }

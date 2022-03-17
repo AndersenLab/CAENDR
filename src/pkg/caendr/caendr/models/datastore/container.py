@@ -15,9 +15,12 @@ class Container(Entity):
       
   @classmethod
   def get_props_set(cls):
-    return {'repo', 
-            'container_name', 
-            'container_tag'}
+    return {
+      'repo', 
+      'container_name', 
+      'container_registry',
+      'container_tag'
+    }
     
   def __repr__(self):
     if hasattr(self, 'id'):

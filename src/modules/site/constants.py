@@ -8,6 +8,11 @@ class PRICES:
   SHIPPING = 65
 
 
+SECTOR_OPTIONS = [
+  ('academia', 'Academia'),
+  ('industry', 'Industry')
+]
+
 SHIPPING_OPTIONS = [
   ('UPS', 'UPS'),
   ('FEDEX', 'FEDEX'),
