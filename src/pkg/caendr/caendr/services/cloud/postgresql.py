@@ -38,7 +38,7 @@ db_conn_uri = f'postgresql+psycopg2://{MODULE_DB_OPERATIONS_DB_USER_NAME}:{POSTG
 alt_db_conn_uri = f'postgresql+pg8000://{MODULE_DB_OPERATIONS_DB_USER_NAME}:{POSTGRES_DB_PASSWORD}@/{MODULE_DB_OPERATIONS_DB_NAME}?unix_sock={MODULE_DB_OPERATIONS_SOCKET_PATH}/{db_instance_uri}/.s.PGSQL.5432'
 
 def get_db_conn_uri():
-    connection_type = os.getenv('MODULE_DB_OPERATIONS_CONNECTION_TYPE') or "host"
+    connection_type = os.getenv('MODULE_DB_OPERATIONS_CONNECTION_TYPE', "host")
     if connection_type == "localhost":
         return f'postgresql+psycopg2://{MODULE_DB_OPERATIONS_DB_USER_NAME}:{POSTGRES_DB_PASSWORD}@localhost/{MODULE_DB_OPERATIONS_DB_NAME}'
     if connection_type == "host":
@@ -54,7 +54,7 @@ def get_db_conn_uri():
 
 
 def get_db_timeout():
-    timeout = int(os.getenv("MODULE_DB_TIMEOUT")) if os.getenv("MODULE_DB_TIMEOUT") is not None else 20
+    timeout = int(os.getenv("MODULE_DB_TIMEOUT", "30" ))
     return timeout
 
 def health_database_status():
@@ -66,8 +66,8 @@ def health_database_status():
 
     try:
         # to check database we will execute raw query
-        with Session() as session:
-            session.execute('SELECT 1')
+        session = Session()
+        session.execute('SELECT 1')
     except Exception as e:
         output = str(e)
         is_database_working = False

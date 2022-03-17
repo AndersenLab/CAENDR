@@ -2,4 +2,3 @@ google-cloud-storage
 wand
 python-dotenv
 logzero
-sentry-sdk==1.5.4

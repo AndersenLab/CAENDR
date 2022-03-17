@@ -25,6 +25,7 @@ cloud-sql-proxy-start: #~
 cloud-sql-proxy-start: print-module-env dot-env venv install-pkg
 	@echo -e "\n$(COLOR_B)Starting cloud-sql-proxy container...$(COLOR_N)"
 	$(LOAD_MODULE_ENV) && \
+	docker-compose up -d cloud-sql-proxy && \
 	docker-compose create cloud-sql-proxy && \
 	docker-compose start cloud-sql-proxy
 

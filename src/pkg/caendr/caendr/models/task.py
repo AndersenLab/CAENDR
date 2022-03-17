@@ -51,8 +51,25 @@ class EchoTask(Task):
     if hasattr(self, 'id'):
       return f"<echo_task:{self.id}>"
     else:
-      return f"<nemascan_task:no-id>"
+      return f"<echo_task:no-id>"
 
+class MockDataTask(Task):
+  def get_payload(self):
+    payload = super(MockDataTask, self).get_payload()
+    payload['data_hash'] = self.data_hash
+    return payload
+  
+  @classmethod
+  def get_props_set(cls):
+    props = super(MockDataTask, cls).get_props_set()
+    props.add('data_hash')
+    return props
+
+  def __repr__(self):
+    if hasattr(self, 'id'):
+      return f"<mock_data_task:{self.id}>"
+    else:
+      return f"<mock_data_task:no-id>"
 
 class NemaScanTask(Task):
   def get_payload(self):

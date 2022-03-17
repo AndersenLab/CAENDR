@@ -51,6 +51,7 @@ def download_all_external_dbs(wb_ver: str):
   '''  
   # TODO: confirm correct format for wormbase_version
   if not wb_ver:
+    logger.warning("E_NOT_SET: 'wb_ver'")    
     raise BadRequestError()
   
   # Create a local directory to store the downloads

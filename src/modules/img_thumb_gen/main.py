@@ -1,8 +1,6 @@
-
 import os
 import re
 
-from caendr.utils import monitor
 from logzero import logger
 from wand.image import Image
 from google.cloud import storage
@@ -11,7 +9,8 @@ from dotenv import load_dotenv
 dotenv_file = '.env'
 load_dotenv(dotenv_file)
 
-monitor.init_sentry("img_thumb_gen")
+# import monitor
+# monitor.init_sentry("img_thumb_gen")
 
 client = storage.Client()
 
