@@ -91,7 +91,7 @@ mark {
           </div>
         </form>
         <div class="btn-bottom-row" style="width: 60%; margin: auto;">
-          <button class="btn nu-alt-btn btn-block disabled" id="download-result-btn" onClick="onDownload();">
+          <button class="btn nu-alt-btn btn-block" disabled id="download-result-btn" onClick="onDownload();">
             <span class="glyphicon glyphicon-download" aria-hidden="true"></span> 
             Download Results
           </button>
@@ -243,7 +243,8 @@ let cachedTargets = {};
 
 async function downloadCSV(json_data) {
   const csrfToken = "{{ form.csrf_token._value() }}";
-  const res = await fetch(`${window.origin}/data/vbrowser/download/csv`, {
+  const url = "{{ url_for('variant_browser.vbrowser_download_csv') }}"
+  const res = await fetch(url, {
     method: "POST",
     credentials: "include",
     body: json_data,
@@ -259,10 +260,13 @@ async function downloadCSV(json_data) {
     const blob = new Blob([buffer], { type: 'text/csv' });
     const link = document.createElement("a");
     link.href = window.URL.createObjectURL(blob);
-    link.download = 'data.csv';
+    const interval = $('#interval').val()
+    link.download = `data_${interval}.csv`;
     link.click();
   } else {
-    console.error(res.error)
+    const err = await res.json()
+    console.error(err.message)
+    window.location.href = "{{ url_for('variant_browser.vbrowser', download_err=True ) }}"
   }
 
 }
@@ -281,8 +285,8 @@ function init_selected_strain_set() {
 
 function process_gene_search() {
   $("#loading-search-table").fadeOut();
-  var gene = $('#gene-search').val();
-  if (gene.length == 0) {
+  let gene = $('#gene-search').val().trim();
+  if (!gene.length) {
     $("#v-search-table").fadeOut();
   } else {
     $("#orthologs").html("");
@@ -332,14 +336,10 @@ function showTable() {
   $("#result-table").fadeIn();
 }
 
-function disableForm() {
-  $('#interval').addClass("disabled");
-  $("#search-interval-btn").addClass("disabled");
-}
-
-function enableForm() {
-  $("#search-interval-btn").removeClass("disabled");
-  $('#interval').removeClass("disabled");
+function toggleDisableForm(disabled = false) {
+  // false = form enabled, true = form disabled
+  $("#search-interval-btn").attr("disabled", disabled);
+  $('#interval').attr("disabled", disabled);
 }
 
 function filter_rows_by_strains() {
@@ -644,11 +644,12 @@ $(document).ready(function() {
 
     $("#search-interval-btn").on("click", function(e) {
       e.preventDefault();
-      disableForm();
+      toggleDisableForm(true);
+      $("#download-result-btn").attr('disabled', true);
       form = document.getElementById('form-submit-interval');
       if (!form.checkValidity() || $("#interval").val().length == 0) {
         form.reportValidity();
-        enableForm();
+        toggleDisableForm(false);
         return;
       }
       const data = {
@@ -663,13 +664,10 @@ $(document).ready(function() {
 				url: "{{ url_for('variant_browser.vbrowser_query_interval') }}",
 				data: JSON.stringify(data),
 				success:function(result) {
-          const has_results = Object.keys(result).length;
-          if (has_results) {
-            $("#download-result-btn").removeClass("disabled");
-          } else {
-            $("#download-result-btn").addClass("disabled");
-          }
-          enableForm();
+          const has_results = !!Object.keys(result).length;
+          $("#download-result-btn").attr('disabled', !has_results);
+
+          toggleDisableForm(false);
           cachedTargets = {};
           result_data = result;
           populateDataTable();
@@ -677,7 +675,7 @@ $(document).ready(function() {
 				},
         error:function(error) {
           console.error(error);
-          enableForm();
+          toggleDisableForm(false);
         }
       });
     

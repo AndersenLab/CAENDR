@@ -1,9 +1,11 @@
 import json
+from logzero import logger
 import pandas as pd
 
 from flask import (render_template,
                     url_for,
                     request,
+                    redirect,
                     make_response,
                     jsonify,
                     flash,
@@ -30,6 +32,11 @@ def vbrowser():
   strain_listing = get_distinct_isotypes()
   columns = StrainAnnotatedVariant.get_column_details()
   fluid_container = True
+
+  if request.args.get('download_err'):
+    flash('CSV Download Failed.', 'error')
+    return redirect(request.path)
+
   return render_template('data/vbrowser.html', **locals())
 
 
@@ -67,15 +74,17 @@ def vbrowser_query_position():
 
 
 @variant_browser_bp.route('/vbrowser/download/csv', methods=['POST'])
-@cache.memoize(60*60)
 def vbrowser_download_csv():
+  try:
     data = request.data
     pd_obj = pd.read_json(data)
-
     csv = pd_obj.to_csv(index=False, sep=",")
     res = make_response(csv)
     res.headers["Content-Disposition"] = "attachment; filename=data.csv"
     res.headers["Content-Type"] = "text/csv"
     return res
+  except Exception as err:
+    logger.error(err)
+    return make_response(jsonify({ "message": "CSV download failed." }), 500)
 
 
