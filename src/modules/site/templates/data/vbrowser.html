@@ -91,7 +91,7 @@ mark {
           </div>
         </form>
         <div class="btn-bottom-row" style="width: 60%; margin: auto;">
-          <button class="btn nu-alt-btn btn-block disabled" id="download-result-btn" onClick="onDownload();">
+          <button class="btn nu-alt-btn btn-block" disabled id="download-result-btn" onClick="onDownload();">
             <span class="glyphicon glyphicon-download" aria-hidden="true"></span> 
             Download Results
           </button>
@@ -241,20 +241,39 @@ let result_data = {};
 let cachedTargets = {};
 
 
-function download(content, fileName, contentType) {
-  const a = document.createElement("a");
-  const file = new Blob([content], { type: contentType });
-  a.href = URL.createObjectURL(file);
-  a.download = fileName;
-  a.click();
+async function downloadCSV(json_data) {
+  const csrfToken = "{{ form.csrf_token._value() }}";
+  const url = "{{ url_for('variant_browser.vbrowser_download_csv') }}"
+  const res = await fetch(url, {
+    method: "POST",
+    credentials: "include",
+    body: json_data,
+    cache: "no-cache",
+    headers: new Headers({
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrfToken
+    })
+  });
+  
+  if (res.ok) {
+    const buffer = await res.blob();
+    const blob = new Blob([buffer], { type: 'text/csv' });
+    const link = document.createElement("a");
+    link.href = window.URL.createObjectURL(blob);
+    const interval = $('#interval').val()
+    link.download = `data_${interval}.csv`;
+    link.click();
+  } else {
+    const err = await res.json()
+    console.error(err.message)
+    window.location.href = "{{ url_for('variant_browser.vbrowser', download_err=True ) }}"
+  }
+
 }
 
-function onDownload(){
-  const jsonData = {
-    target_consequences: cachedTargets,
-    variants: result_data
-  };
-  download(JSON.stringify(jsonData), ".json", "text/plain");
+function onDownload() {
+  const jsonData = JSON.stringify({ ...result_data });
+  downloadCSV(jsonData);
 }
 
 
@@ -266,8 +285,8 @@ function init_selected_strain_set() {
 
 function process_gene_search() {
   $("#loading-search-table").fadeOut();
-  var gene = $('#gene-search').val();
-  if (gene.length == 0) {
+  let gene = $('#gene-search').val().trim();
+  if (!gene.length) {
     $("#v-search-table").fadeOut();
   } else {
     $("#orthologs").html("");
@@ -317,14 +336,10 @@ function showTable() {
   $("#result-table").fadeIn();
 }
 
-function disableForm() {
-  $('#interval').addClass("disabled");
-  $("#search-interval-btn").addClass("disabled");
-}
-
-function enableForm() {
-  $("#search-interval-btn").removeClass("disabled");
-  $('#interval').removeClass("disabled");
+function toggleDisableForm(disabled = false) {
+  // false = form enabled, true = form disabled
+  $("#search-interval-btn").attr("disabled", disabled);
+  $('#interval').attr("disabled", disabled);
 }
 
 function filter_rows_by_strains() {
@@ -629,11 +644,12 @@ $(document).ready(function() {
 
     $("#search-interval-btn").on("click", function(e) {
       e.preventDefault();
-      disableForm();
+      toggleDisableForm(true);
+      $("#download-result-btn").attr('disabled', true);
       form = document.getElementById('form-submit-interval');
       if (!form.checkValidity() || $("#interval").val().length == 0) {
         form.reportValidity();
-        enableForm();
+        toggleDisableForm(false);
         return;
       }
       const data = {
@@ -648,8 +664,10 @@ $(document).ready(function() {
 				url: "{{ url_for('variant_browser.vbrowser_query_interval') }}",
 				data: JSON.stringify(data),
 				success:function(result) {
-          $("#download-result-btn").removeClass("disabled");
-          enableForm();
+          const has_results = !!Object.keys(result).length;
+          $("#download-result-btn").attr('disabled', !has_results);
+
+          toggleDisableForm(false);
           cachedTargets = {};
           result_data = result;
           populateDataTable();
@@ -657,7 +675,7 @@ $(document).ready(function() {
 				},
         error:function(error) {
           console.error(error);
-          enableForm();
+          toggleDisableForm(false);
         }
       });
     
