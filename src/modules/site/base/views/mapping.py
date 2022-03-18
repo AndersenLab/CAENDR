@@ -1,5 +1,8 @@
 from logzero import logger
 from flask import Blueprint, render_template, request, redirect, url_for, flash
+import bleach
+from flask import jsonify
+
 
 from base.utils.auth import get_jwt, jwt_required, get_current_user
 from base.forms import FileUploadForm
@@ -36,8 +39,10 @@ def submit_mapping_request():
     flash("You must include a description of your data and a TSV file to upload", "error")
     return redirect(url_for('mapping.mapping'))
   
-  props = {'label': request.form.get('label'),
+  label = bleach.clean(request.form.get('label'))
+  props = {'label': label, 
           'username': user.name,
+          'email': user.email,
           'file': request.files['file'],
           'status': ''}
   try:
@@ -50,6 +55,7 @@ def submit_mapping_request():
     if str(type(ex).__name__) == 'CachedDataError':
       flash('It looks like that data has already been submitted - redirecting to the saved results', 'danger')
       return redirect(url_for('mapping.mapping_report', id=ex.description))
+    logger.error(ex)
 
 
 
@@ -79,7 +85,25 @@ def mapping_report(id):
   else:
     report_url = None
 
+  report_status_url = url_for("mapping.mapping_report_status", id=id)
+
   return render_template('tools/mapping/report.html', **locals())
+
+@mapping_bp.route('/mapping/report/<id>/status', methods=['GET'])
+@jwt_required()
+def mapping_report_status(id):
+  mapping = get_mapping(id)
+  data_url = generate_blob_url(mapping.get_bucket_name(), mapping.get_data_blob_path())
+  if hasattr(mapping, 'mapping_report_url'):
+    report_url = generate_blob_url(mapping.get_bucket_name(), mapping.report_path)
+  else:
+    report_url = None
+
+  payload = {
+    'done': True if report_url else False,
+    'report_url': report_url if report_url else "https://www.google.com"
+  }
+  return jsonify(payload)
 
 
 @mapping_bp.route('/mapping/report/<id>/results/', methods=['GET'])
