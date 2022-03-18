@@ -53,7 +53,7 @@ def get_user_mappings(username):
   return mappings
   
   
-def create_new_mapping(username, label, file, status):
+def create_new_mapping(username, email, label, file, status):
   logger.debug(f'Creating new Nemascan Mapping: username:{username} label:{label} file:{file}')
   id = unique_id()
 
@@ -71,6 +71,7 @@ def create_new_mapping(username, label, file, status):
 
   props = {'id': id,
           'username': username,
+          'email': email,
           'label': label,
           'trait': trait,
           'data_hash': data_hash,
