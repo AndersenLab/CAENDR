@@ -54,6 +54,7 @@ class NemascanMapping(Entity):
             'trait', 
             'data_hash', 
             'username',
+            'email',
             'report_path',
             'container_name',
             'container_version',

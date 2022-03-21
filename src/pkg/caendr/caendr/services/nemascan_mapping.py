@@ -53,7 +53,7 @@ def get_user_mappings(username):
   return mappings
   
   
-def create_new_mapping(username, label, file, status):
+def create_new_mapping(username, email, label, file, status = 'SUBMITTED', check_duplicates=True):
   logger.debug(f'Creating new Nemascan Mapping: username:{username} label:{label} file:{file}')
   id = unique_id()
 
@@ -71,36 +71,39 @@ def create_new_mapping(username, label, file, status):
 
   props = {'id': id,
           'username': username,
+          'email': email,
           'label': label,
           'trait': trait,
           'data_hash': data_hash,
           'container_repo': c.repo,
           'container_name': c.container_name,
           'container_version': c.container_tag,
-          'status': 'SUBMITTED'}
+          'status': status }
   
 
   m_new = NemascanMapping(id)
 
-  # check for mappings with matching data hash and container version
-  mappings = query_ds_entities(NemascanMapping.kind, filters=[('data_hash', '=', data_hash)])
-  for m in mappings:
-    m = NemascanMapping(m)
-    if m.container_version == c.container_tag:
-      if m.username == username:
-        logger.debug('User resubmitted identical nemascan mapping data')
-        os.remove(local_path)
-        raise DuplicateDataError('You have already submitted this mapping data')
-      else:
-        logger.debug('Nemascan Mapping with identical Data Hash exists. Returning cached report.')
-        props['status'] = m.status
-        props['report_path'] = get_report_blob_path(m)
-        m_new.set_properties(**props)
-        m_new.save()
-        os.remove(local_path)
-        e = CachedDataError()
-        e.description = id
-        raise e
+  if check_duplicates:
+    logger.warn(f"Skipping Nemascan duplicate check")    
+    # check for mappings with matching data hash and container version
+    mappings = query_ds_entities(NemascanMapping.kind, filters=[('data_hash', '=', data_hash)])
+    for m in mappings:
+      m = NemascanMapping(m)
+      if m.container_version == c.container_tag:
+        if m.username == username:
+          logger.debug('User resubmitted identical nemascan mapping data')
+          os.remove(local_path)
+          raise DuplicateDataError('You have already submitted this mapping data')
+        else:
+          logger.debug('Nemascan Mapping with identical Data Hash exists. Returning cached report.')
+          props['status'] = m.status
+          props['report_path'] = get_report_blob_path(m)
+          m_new.set_properties(**props)
+          m_new.save()
+          os.remove(local_path)
+          e = CachedDataError()
+          e.description = id
+          raise e
 
   m_new.set_properties(**props)
   m_new.save()
@@ -112,7 +115,7 @@ def create_new_mapping(username, label, file, status):
   os.remove(local_path)
   
   # Schedule mapping in task queue
-  task = create_nemascan_mapping_task(m)
+  task = create_nemascan_mapping_task(m_new)
   payload = task.get_payload()
   task = add_task(NEMASCAN_TASK_QUEUE_NAME, f'{API_PIPELINE_TASK_URL}/task/start/{NEMASCAN_TASK_QUEUE_NAME}', payload)
   if not task:
@@ -125,6 +128,8 @@ def create_nemascan_mapping_task(m):
   return NemaScanTask(**{'id': m.id,
                           'kind': NemascanMapping.kind,
                           'data_hash': m.data_hash,
+                          'username': m.username, 
+                          'email': m.email,
                           'container_name': m.container_name,
                           'container_version': m.container_version,
                           'container_repo': m.container_repo})
