@@ -84,11 +84,8 @@ def mapping_report(id):
   # if hasattr(mapping, 'mapping_report_url'):
   if hasattr(mapping, 'report_path'):
     report_url = generate_blob_url(mapping.get_bucket_name(), mapping.report_path)
-    blob = get_blob(mapping.get_bucket_name(), mapping.report_path)
-    report_contents = blob.download_as_text()
   else:
     report_url = None
-    report_contents = None
 
   report_status_url = url_for("mapping.mapping_report_status", id=id)
 
@@ -105,11 +102,9 @@ def mapping_report_fullscreen(id):
   data_url = generate_blob_url(mapping.get_bucket_name(), mapping.get_data_blob_path())
   # if hasattr(mapping, 'mapping_report_url'):
   if hasattr(mapping, 'report_path'):
-    report_url = generate_blob_url(mapping.get_bucket_name(), mapping.report_path)
     blob = get_blob(mapping.get_bucket_name(), mapping.report_path)
     report_contents = blob.download_as_text()
   else:
-    report_url = None
     report_contents = None
 
   return report_contents
