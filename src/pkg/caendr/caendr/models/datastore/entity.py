@@ -21,7 +21,7 @@ class Entity(object):
       # Parse JSON fields when instantiating without loading from gcloud.
       now = datetime.now(timezone.utc)
       result_out = {
-        created_on: now
+        'created_on': now
       }
       for k, v in name_or_obj.items():
         if isinstance(v, str) and v.startswith("JSON:"):
