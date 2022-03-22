@@ -1,15 +1,8 @@
 {% extends "_layouts/default.html" %}
 
-
 {% block custom_head %}
 
-{% if mapping.status != 'COMPLETE' and mapping.status != 'ERROR' %}
-  <meta http-equiv="refresh" content="30; url={{ url_for('mapping.mapping_report_list') }}">
-{% endif %}
-
 {% endblock %}
-
-
 
 {% block content %}
 
@@ -49,6 +42,9 @@
           <div class="bounce2"></div>
           <div class="bounce3"></div>
         </div>
+        <small>
+          Last Update: <span id="last-update"></span>
+        </small>
       </div>
     </div>
   </div> {# /row #}
@@ -59,7 +55,7 @@
   <div class='col-md-12'>
       <p class='text-info text-center'>
         <strong>
-          An error occured while performing the genome-wide association mapping. Check that the data you provided matches the expected format.
+          An error occurred while performing the genome-wide association mapping. Check that the data you provided matches the expected format.
         </strong>
       </p>
   </div> {# /col-md-12 #}
@@ -87,33 +83,54 @@
 
 <script>
 
-function createIFrame(iframeContent) {
-  iFrameContainer = document.getElementById('report_frame');
-  let iFrame = document.createElement("iframe");
-  iFrame.src = "about:blank";
-  
-  iFrameContainer.innerHTML = ""; // (optional) Totally Clear it if needed
-  iFrame.width = "100%";
-  iFrame.height = "800px";
-  iFrameContainer.appendChild(iFrame);
-  let iFrameDoc = iFrame.contentWindow && iFrame.contentWindow.document;
-  if (!iFrameDoc) {
-    console.log("iFrame security.");
-    return;
+  // settings
+  const report_status_url = `{{ report_status_url }}`;
+  const REFRESH_DURATION_MS = 30000;
+
+  function createIFrame(url) {
+    const $container = document.querySelector('#report_frame');
+    $container.innerHTML = ""; // (optional) Totally Clear it if needed
+
+    console.debug({url});
+    const $iframe = document.createElement("iframe");
+    $iframe.src = url;
+    $iframe.width = "100%";
+    $iframe.height = "800px";
+
+    $container.appendChild($iframe);
+
+    return $iframe;
   }
-  iFrameDoc.write(iframeContent);
-  iFrameDoc.close();
-  return iframeContent
-}
 
-async function getReport() {
-  report = await fetch("{{report_url}}")
-    .then(r => r.blob())
-    .then(r => r.text())
-    .then(r => createIFrame(r));
-}
 
-getReport();
+  const $lastTime = document.querySelector("#last-update");
+  function updateLastTime() {
+    if (!$lastTime) return;
+    const now = new Date();
+    const time = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+    $lastTime.innerText = time;
+  }
+
+  async function getStatusUpdate() {
+    try {
+      const res = await fetch(report_status_url, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      const { done, report_url } = await res.json();
+      if (!done) {
+        return setTimeout(getStatusUpdate, REFRESH_DURATION_MS);
+      }
+      createIFrame(report_url);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      updateLastTime()
+    }
+  }
+
+  getStatusUpdate();
 
 </script>
 

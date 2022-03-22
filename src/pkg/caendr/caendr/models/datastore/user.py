@@ -64,4 +64,11 @@ class User(Entity):
   def check_password(self, password, salt):
     ''' Checks the User's password using the saved salted and hashed password'''
     return safe_str_cmp(self.password, get_password_hash(password + salt))
-    
+
+  @classmethod
+  def from_email(self, email):
+    filters = [ ('email', '=', email) ]    
+    results = query_ds_entities(self.kind, filters=filters)
+    if len(results):
+      return results[0]    
+    return None
