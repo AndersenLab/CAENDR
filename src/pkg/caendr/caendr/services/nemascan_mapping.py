@@ -36,13 +36,15 @@ def is_data_cached(ns: NemascanMapping):
 def get_mapping(id):
   logger.debug(f'Getting mapping: {id}')
   m = NemascanMapping(id)
+  if not m:
+    return None    
   if m.status != 'COMPLETE' and m.status != 'ERROR':
     report_path = get_report_blob_path(m)
     logger.debug(report_path)
     if report_path:
       m.set_properties(report_path=report_path, status='COMPLETE')
       m.save()
-  return NemascanMapping(id)
+  return m
 
 def get_user_mappings(username):
   logger.debug(f'Getting all mappings for user: username:{username}')
@@ -80,7 +82,7 @@ def create_new_mapping(username, email, label, file, status = 'SUBMITTED', check
           'container_version': c.container_tag,
           'status': status }
   
-
+  
   m_new = NemascanMapping(id)
 
   if check_duplicates:
