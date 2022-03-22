@@ -27,11 +27,11 @@ from caendr.models.datastore import User
 from caendr.models.datastore.user_token import UserToken
 from extensions import jwt
 
-PASSWORD_RESET_EXPIRES = int(os.environ.get('MODULE_SITE_PASSWORD_RESET_EXPIRES', '900'))
+PASSWORD_RESET_EXPIRATION_SECONDS = int(os.environ.get('MODULE_SITE_PASSWORD_RESET_EXPIRATION_SECONDS', '900'))
 
 
 def create_one_time_token(id, destination='/'):
-  expires_delta = timedelta(seconds=PASSWORD_RESET_EXPIRES)
+  expires_delta = timedelta(seconds=PASSWORD_RESET_EXPIRATION_SECONDS)
   token = create_access_token(identity=str(id), additional_claims={'destination': destination}, expires_delta=expires_delta)
   decoded_token = decode_token(token)
   jti = decoded_token['jti']

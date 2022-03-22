@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 from caendr.models.datastore import User
 from caendr.services.cloud.secret import get_secret
-from caendr.services.user import get_user_by_email
+from caendr.services.user import get_local_user_by_email
 
 from caendr.services.email import send_email, PASSWORD_RESET_EMAIL_TEMPLATE
 
@@ -52,37 +52,40 @@ def user_recover():
   disable_parent_breadcrumb = True
   form = RecoverUserForm(request.form)
 
-  if request.method == 'POST' and form.validate():
-    email = request.form.get("email")
-    users = get_user_by_email(email)
+  if not (request.method == 'POST' and form.validate()):
+    return render_template('user/recover_user.html', **locals())
 
-    if users and users[0]:
-      user = users[0]
-      token = create_one_time_token(id=user.get('username'), destination=url_for('user.user_reset_password'))
-      password_reset_link = url_for('auth.token', token=token, _external=True)
-      try:
-        send_email({
-          "from": "no-reply@elegansvariation.org",
-          "to": [ email ],
-          "subject": "CeNDR Password Reset",
-          "text": PASSWORD_RESET_EMAIL_TEMPLATE.format(email=email, password_reset_link=password_reset_link)
-        })
-        logger.info(f"Sent password reset email: {email}, link: {password_reset_link}")
-      except Exception as err:
-        logger.error(f"Failed to send email: {err}")
-    
-    # Flash info message even if email fails in order to protect from attempts at finding valid emails
-    flash(f"Please check your email ({email}) for a password reset link.", 'info')
+  email = request.form.get("email")
+  users = get_local_user_by_email(email)
+
+  if not users or not users[0]:
+    logger.error(f"Failed to retrieve LOCAL user for email: {email}")
+    flash('Unable to reset your credentials at this time. Please try again later.', 'error')
     return redirect('/')
     
-  return render_template('user/recover_user.html', **locals())
+  user = users[0]
+  token = create_one_time_token(id=user.get('username'), destination=url_for('user.user_reset_password'))
+  password_reset_link = url_for('auth.token', token=token, _external=True)
+  try:
+    send_email({
+      "from": "no-reply@elegansvariation.org",
+      "to": [ email ],
+      "subject": "CeNDR Password Reset",
+      "text": PASSWORD_RESET_EMAIL_TEMPLATE.format(email=email, password_reset_link=password_reset_link)
+    })
+    logger.info(f"Sent password reset email: {email}, link: {password_reset_link}")
+    flash(f"Please check your email ({email}) for a password reset link.", 'info')
+  except Exception as err:
+    logger.error(f"Failed to send email: {err}")
+    flash('Unable to reset your credentials at this time. Please try again later.', 'error')
+  
+  return redirect('/')
 
 
 @user_bp.route("/profile", methods=["GET"])
 @jwt_required()
 def user_profile():
-  """        The User Account Profile
-  """
+  """ The User Account Profile """
   title = 'Profile'
   user = get_current_user()
   return render_template('user/profile.html', **locals())
@@ -91,36 +94,39 @@ def user_profile():
 @user_bp.route("/update", methods=["GET", "POST"])
 @jwt_required()
 def user_update():
-  """        Modify The User Account Profile
-  """
+  """ Modify The User Account Profile """
   title = 'Profile'
   jwt_csrf_token = (get_jwt() or {}).get("csrf")
   user = get_current_user()
   form = UserUpdateForm(request.form, full_name=user.full_name, email=user.email)
-  if request.method == 'POST' and form.validate():
-    email = request.form.get('email')
-    full_name = request.form.get('full_name')
-    password = request.form.get('password')
-    user.set_properties(email=email, full_name=full_name, password=password)
-    user.save()
-    return redirect(url_for('user.user_profile'))
-  return render_template('user/update.html', **locals())
+
+  if not (request.method == 'POST' and form.validate()):
+    return render_template('user/update.html', **locals())
+  
+  email = request.form.get('email')
+  full_name = request.form.get('full_name')
+  password = request.form.get('password')
+  user.set_properties(email=email, full_name=full_name, password=password, salt=PASSWORD_PEPPER)
+  user.save()
+  return redirect(url_for('user.user_profile'))
 
 
 @user_bp.route("/password/reset", methods=["GET", "POST"])
 @jwt_required()
 def user_reset_password():
+  """ Reset the User Account Password """
   title = "Reset Password"
   disable_parent_breadcrumb = True
   user = get_current_user()
   form = PasswordResetForm(request.form)
 
-  if request.method == 'POST' and form.validate():
-    password = request.form.get("password")
-    user.set_properties(password=password, salt=PASSWORD_PEPPER)
-    user.save()
-    flash('Password Successfully Reset.', 'success')
-    return redirect(url_for('user.user_profile'))
-  return render_template('user/reset_password.html', **locals())
+  if not (request.method == 'POST' and form.validate()):
+    return render_template('user/reset_password.html', **locals())
+
+  password = request.form.get("password")
+  user.set_properties(password=password, salt=PASSWORD_PEPPER)
+  user.save()
+  flash('Password Successfully Reset.', 'success')
+  return redirect(url_for('user.user_profile'))
 
  

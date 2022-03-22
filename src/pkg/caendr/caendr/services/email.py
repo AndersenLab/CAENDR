@@ -27,7 +27,7 @@ Thank you for your order. Please retain this email for your records.
 
 Information regarding your purchase, including its tracking number is available here:
 
-{url}
+{order_confirmation_link}
 
 Address
 =======
@@ -48,7 +48,7 @@ Date
 
 """
 
-DONATE_SUBMISSION_EMAIL_TEMPLATE = """
+DONATION_SUBMISSION_EMAIL_TEMPLATE = """
 Thank you for your donation of ${donation_amount}. Please retain this email for your records.
 
 Information regarding your purchase, including its tracking number is available here:
