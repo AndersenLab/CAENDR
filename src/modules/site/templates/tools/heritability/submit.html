@@ -308,11 +308,11 @@ function onFormChange() {
 
 
 var csrf_token = "{{ form.csrf_token._value() }}"
-var example_tsv = "{{ ext_asset('data/heritability_example.tsv') }}"
+const example_tsv_url = "{{ ext_asset('data/heritability_example.tsv') }}"
 
 // Enable setting example data
 $("#set-example").on('click', function() {
-  fetch(example_tsv)
+  fetch(example_tsv_url)
     .then(response => response.text())
     .then(function(data) {
       ex_data = _.map(data.split("\n"), x => x.split("\t"))
