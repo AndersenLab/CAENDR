@@ -7,7 +7,6 @@ class PRICES:
   STRAIN = 15
   SHIPPING = 65
 
-
 SECTOR_OPTIONS = [
   ('academia', 'Academia'),
   ('industry', 'Industry')

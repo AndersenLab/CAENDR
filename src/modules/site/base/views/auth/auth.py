@@ -1,10 +1,10 @@
 import os
 from logzero import logger
-
-
 from datetime import datetime, timezone
+
 from flask import (abort,
                   redirect,
+                  url_for,
                   render_template,
                   session,
                   request,
@@ -20,20 +20,41 @@ from base.utils.auth import (create_access_token,
                             get_jwt_identity,
                             jwt_required,
                             assign_access_refresh_tokens,
-                            unset_jwt)
+                            unset_jwt,
+                            decode_token,
+                            check_if_token_revoked)
 
 from caendr.models.datastore import User
 from caendr.services.cloud.secret import get_secret
 
 
 PASSWORD_PEPPER = get_secret('PASSWORD_PEPPER')
-auth_bp = Blueprint('auth',
-                    __name__,
-                    template_folder='templates')
+auth_bp = Blueprint('auth', __name__, template_folder='templates')
 
 @auth_bp.route('/')
 def auth():
   return redirect(url_for('auth.choose_login'))
+
+@auth_bp.route('/token')
+def token():
+  token = request.args.get('token')
+  if token:
+    decoded_token = decode_token(token)
+    token_revoked = check_if_token_revoked(decoded_token)
+
+    if not token_revoked:
+      username = decoded_token.get('sub')
+      user = User(username)
+      destination = decoded_token.get('destination')
+        
+      if user._exists:
+        user.set_properties(last_login=datetime.now(timezone.utc))
+        user.save()
+        flash('Logged In With Token', 'success')
+        return assign_access_refresh_tokens(id=username, roles=user.roles, url=destination)
+  
+  return redirect(url_for('auth.basic_login'))
+
 
 @auth_bp.route('/refresh', methods=['GET'])
 @jwt_required(refresh=True)
