@@ -8,7 +8,7 @@ from base.utils.auth import get_jwt, jwt_required, get_current_user
 from base.forms import FileUploadForm
 
 from caendr.services.nemascan_mapping import create_new_mapping, get_mapping, get_user_mappings
-from caendr.services.cloud.storage import generate_blob_url, get_blob_list
+from caendr.services.cloud.storage import get_blob, generate_blob_url, get_blob_list
 
 
 mapping_bp = Blueprint('mapping',
@@ -46,7 +46,8 @@ def submit_mapping_request():
           'file': request.files['file'],
           'status': ''}
   try:
-    m = create_new_mapping(**props)
+    logger.warn("Check Duplicates is DISABLED !!!")
+    m = create_new_mapping(**props, check_duplicates=True)
     return redirect(url_for('mapping.mapping_report', id=m.id))
   except Exception as ex:
     if str(type(ex).__name__) == 'DuplicateDataError':
@@ -56,8 +57,8 @@ def submit_mapping_request():
       flash('It looks like that data has already been submitted - redirecting to the saved results', 'danger')
       return redirect(url_for('mapping.mapping_report', id=ex.description))
     logger.error(ex)
-
-
+    flash(f"Unable to submit your request: {ex}", 'danger')
+    return redirect(url_for('mapping.mapping'))
 
 @mapping_bp.route('/mapping/report/all', methods=['GET', 'POST'])
 @jwt_required()
@@ -80,14 +81,38 @@ def mapping_report(id):
   subtitle = mapping.label +': ' + mapping.trait
   fluid_container = True
   data_url = generate_blob_url(mapping.get_bucket_name(), mapping.get_data_blob_path())
-  if hasattr(mapping, 'mapping_report_url'):
+  # if hasattr(mapping, 'mapping_report_url'):
+  if hasattr(mapping, 'report_path'):
     report_url = generate_blob_url(mapping.get_bucket_name(), mapping.report_path)
+    blob = get_blob(mapping.get_bucket_name(), mapping.report_path)
+    report_contents = blob.download_as_text()
   else:
     report_url = None
+    report_contents = None
 
   report_status_url = url_for("mapping.mapping_report_status", id=id)
 
   return render_template('tools/mapping/report.html', **locals())
+
+@mapping_bp.route('/mapping/report/<id>/fullscreen', methods=['GET'])
+@jwt_required()
+def mapping_report_fullscreen(id):
+  title = 'Genetic Mapping Report'
+  user = get_current_user()
+  mapping = get_mapping(id)
+  subtitle = mapping.label +': ' + mapping.trait
+  fluid_container = True
+  data_url = generate_blob_url(mapping.get_bucket_name(), mapping.get_data_blob_path())
+  # if hasattr(mapping, 'mapping_report_url'):
+  if hasattr(mapping, 'report_path'):
+    report_url = generate_blob_url(mapping.get_bucket_name(), mapping.report_path)
+    blob = get_blob(mapping.get_bucket_name(), mapping.report_path)
+    report_contents = blob.download_as_text()
+  else:
+    report_url = None
+    report_contents = None
+
+  return report_contents
 
 @mapping_bp.route('/mapping/report/<id>/status', methods=['GET'])
 @jwt_required()

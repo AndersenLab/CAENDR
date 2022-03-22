@@ -19,16 +19,29 @@
         View Result Files
       </a>
     </div>
+
     <div class='col-lg-2 col-md-4 col-sm-4 btn-mid-row'>
     {% if report_url %}
-      <a class="btn btn-block btn-nu " href="{{ report_url }}" role="button">
+      <a class="btn btn-block btn-nu" href="{{ report_url }}" role="button">
     {% else %}
-      <a class="btn btn-block btn-nu " href="" role="button" disabled>
+      <a class="btn btn-block btn-nu" href="" role="button" disabled>
     {% endif %}
         <span class="glyphicon glyphicon-stats" aria-hidden="true"></span> 
         Download Report
       </a>
     </div>
+   
+    <div class='col-lg-2 col-md-4 col-sm-4 btn-mid-row'>
+      {% if report_url %}
+        <a target='_blank' class="btn btn-block btn-nu" href="{{ url_for('mapping.mapping_report_fullscreen', id=id) }}" role="button">
+      {% else %}
+        <a class="btn btn-block btn-nu" href="" role="button" disabled>
+      {% endif %}
+          <span class="glyphicon glyphicon-stats" aria-hidden="true"></span> 
+          View Fullscreen
+        </a>
+      </div>
+      
   </div>{# /row #}
 
 
@@ -37,6 +50,12 @@
   <div class="row">
     <div class="col-md-12 text-center" >
       <div id="report_frame" width="100%" height="800px" >
+
+        {% if report_contents %}
+
+        <iframe srcdoc="{{ report_contents }}" frameborder=0 style="width:100%; height: 800px"></iframe>
+
+        {% else %}
         <div class="spinner">
           <div class="bounce1"></div>
           <div class="bounce2"></div>
@@ -45,6 +64,9 @@
         <small>
           Last Update: <span id="last-update"></span>
         </small>
+        {% endif %}
+
+
       </div>
     </div>
   </div> {# /row #}
@@ -75,64 +97,5 @@
   </div>{# /row #}
 
 {% endif %}
-
-{% endblock %}
-
-
-{% block script %}
-
-<script>
-
-  // settings
-  const report_status_url = `{{ report_status_url }}`;
-  const REFRESH_DURATION_MS = 30000;
-
-  function createIFrame(url) {
-    const $container = document.querySelector('#report_frame');
-    $container.innerHTML = ""; // (optional) Totally Clear it if needed
-
-    console.debug({url});
-    const $iframe = document.createElement("iframe");
-    $iframe.src = url;
-    $iframe.width = "100%";
-    $iframe.height = "800px";
-
-    $container.appendChild($iframe);
-
-    return $iframe;
-  }
-
-
-  const $lastTime = document.querySelector("#last-update");
-  function updateLastTime() {
-    if (!$lastTime) return;
-    const now = new Date();
-    const time = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
-    $lastTime.innerText = time;
-  }
-
-  async function getStatusUpdate() {
-    try {
-      const res = await fetch(report_status_url, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      const { done, report_url } = await res.json();
-      if (!done) {
-        return setTimeout(getStatusUpdate, REFRESH_DURATION_MS);
-      }
-      createIFrame(report_url);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      updateLastTime()
-    }
-  }
-
-  getStatusUpdate();
-
-</script>
-
 
 {% endblock %}
