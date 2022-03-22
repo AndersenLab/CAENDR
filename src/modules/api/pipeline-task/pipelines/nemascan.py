@@ -54,13 +54,17 @@ def _generate_nemascan_pipeline_req(task: NemaScanTask):
   image_uri = f"{task.container_repo}/{task.container_name}:{task.container_version}"
   
   container_name = f"nemascan-{m.id}"
-  environment = {"TRAIT_FILE": trait_file, 
-                 "OUTPUT_DIR": output_dir, 
-                 "WORK_DIR": work_dir,
-                 "DATA_DIR": data_dir,
-                 "GOOGLE_PROJECT": google_project,
-                 "GOOGLE_ZONE": google_zone,
-                 "GOOGLE_SERVICE_ACCOUNT_EMAIL": sa_email}
+  environment = {
+    "USERNAME": m.username if m.username else
+    "EMAIL": m.email if m.email else None,
+    "TRAIT_FILE": trait_file, 
+    "OUTPUT_DIR": output_dir, 
+    "WORK_DIR": work_dir,
+    "DATA_DIR": data_dir,
+    "GOOGLE_PROJECT": google_project,
+    "GOOGLE_ZONE": google_zone,
+    "GOOGLE_SERVICE_ACCOUNT_EMAIL": sa_email
+  }
 
   service_account = ServiceAccount(email=sa_email, scopes=SCOPES)
   virtual_machine = VirtualMachine(machine_type=MACHINE_TYPE, preemptible=PREEMPTIBLE, boot_disk_size_gb=BOOT_DISK_SIZE_GB, 
