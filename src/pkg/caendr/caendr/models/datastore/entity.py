@@ -19,10 +19,7 @@ class Entity(object):
 
     if type(name_or_obj) == datastore.entity.Entity:
       # Parse JSON fields when instantiating without loading from gcloud.
-      now = datetime.now(timezone.utc)
-      result_out = {
-        'created_on': now
-      }
+      result_out = {}
       for k, v in name_or_obj.items():
         if isinstance(v, str) and v.startswith("JSON:"):
           result_out[k] = json.loads(v[5:])
@@ -42,6 +39,9 @@ class Entity(object):
     ''' Append metadata to the Entity and save it to the datastore'''
     now = datetime.now(timezone.utc)
     meta_props = {}
+
+    if not self._exists:
+      meta_props['created_on'] = now
       
     meta_props.update({'modified_on': now})
     props = {k: v for k, v in self.__dict__.items() if k not in ['kind', 'name'] and not k.startswith("_")}
