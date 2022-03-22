@@ -24,11 +24,21 @@ table.dataTable thead .sorting {
 {% block content %}
 
 {% from "_includes/macros.html" import render_dataTable_top_menu %}
-{{ render_dataTable_top_menu() }}
+{{ 
+  render_dataTable_top_menu(
+    actions = [
+      {'label':'New Mapping', 'url':'mapping.mapping', 'classes':'btn nu-alt-btn', 'style':'float:right' }
+    ]
+  ) 
+}}
+
+
 
 <div class="row">
 
   <div class="col-md-12">
+
+    
 
     <table id='mapping-table' class='table table-hover table-striped table-compact strain-table' style="width: 100%;">
 
@@ -66,7 +76,14 @@ table.dataTable thead .sorting {
 
     </table>
 
+    
+
+  
   </div> {# /col #}
+
+  
+
+
 </div> {# /row #}
 
 

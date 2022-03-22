@@ -57,7 +57,7 @@
 {% endmacro %}
 
 
-{% macro render_dataTable_top_menu(pages=True, filter=True) %}
+{% macro render_dataTable_top_menu(pages=True, filter=True, actions=[]) %}
 
 <div class="row dataTables-menu-top">
   <div class="col-md-2">
@@ -75,7 +75,16 @@
     </form>
     {% endif %}
   </div> {# /col-md-2 #}
-  <div class="col-md-6"></div>
+  <div class="col-md-6">
+    {% for action in actions %}
+      <a 
+        class="{{ action.get('classes', '') }}"
+        style="{{ action.get('style','') }}"
+        href="{{ url_for(action.get('url')) }}"
+      > {{ action.get('label') }}
+      </a>
+    {% endfor %}
+  </div>
   <div class="col-md-4">
     {% if filter %}
     <input id="filter" type="text" class="form-control pull-right" placeholder="Search">
