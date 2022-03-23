@@ -1,6 +1,8 @@
 # sentry
 import os
 import sentry_sdk
+from logzero import logger
+
 
 def init_sentry():
     SENTRY_URL = os.getenv('SENTRY_URL')
@@ -15,5 +17,6 @@ def init_sentry():
             # We recommend adjusting this value in production.
             traces_sample_rate=1.0
         )
-    except:
+    except Exception as e:
+        logger.error(e)
         pass

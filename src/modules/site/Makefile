@@ -19,6 +19,14 @@ create-schema: print-module-env dot-env venv install-pkg
 	$(LOAD_MODULE_ENV) && \
 	python create_schema.py
 
+#~
+lint: #~
+#~ Lint the code
+lint: print-module-env dot-env venv install-pkg
+	@echo -e "\n$(COLOR_B)Linting code...$(COLOR_N)"
+	@. $(MODULE_DIR)/venv/bin/activate && \
+	$(LOAD_MODULE_ENV) && \
+	flake8 **py
 
 #~
 run: #~
