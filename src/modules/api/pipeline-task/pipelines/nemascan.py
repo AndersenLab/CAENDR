@@ -55,7 +55,7 @@ def _generate_nemascan_pipeline_req(task: NemaScanTask):
   
   container_name = f"nemascan-{m.id}"
   environment = {
-    "USERNAME": m.username if m.username else
+    "USERNAME": m.username if m.username else None,
     "EMAIL": m.email if m.email else None,
     "TRAIT_FILE": trait_file, 
     "OUTPUT_DIR": output_dir, 
