@@ -76,6 +76,16 @@ class BasicLoginForm(FlaskForm):
   password = PasswordField('Password', [Required(), Length(min=5, max=30)])
   recaptcha = RecaptchaField()
 
+class PasswordResetForm(FlaskForm):
+  """ The password reset form """
+  password = PasswordField('New Password', [Required(), EqualTo('confirm_password', message='Passwords must match'), Length(min=12, max=30)])
+  confirm_password = PasswordField('Confirm New Password', [Required(), EqualTo('password', message='Passwords must match'), Length(min=12, max=30)])
+  recaptcha = RecaptchaField()
+
+class RecoverUserForm(FlaskForm):
+  """ The account recovery email form """
+  email = EmailField('Email Address', [Required(), Email(), Length(min=6, max=320)])
+  recaptcha = RecaptchaField()
 
 class MarkdownForm(FlaskForm):
   """ markdown editing form """
@@ -90,9 +100,9 @@ class UserRegisterForm(FlaskForm):
   """ Register as a new user with username/password """
   username = StringField('Username', [Required(), Length(min=5, max=30)])
   full_name = StringField('Full Name', [Required(), Length(min=5, max=50)])
-  email = EmailField('Email Address', [Required(), Email(), Length(min=6, max=50)])
-  password = PasswordField('Password', [Required(), EqualTo('confirm_password', message='Passwords must match'), Length(min=5, max=30)])
-  confirm_password = PasswordField('Confirm Password', [Required(), EqualTo('password', message='Passwords must match'), Length(min=5, max=30)])
+  email = EmailField('Email Address', [Required(), Email(), Length(min=6, max=320)])
+  password = PasswordField('Password', [Required(), EqualTo('confirm_password', message='Passwords must match'), Length(min=12, max=30)])
+  confirm_password = PasswordField('Confirm Password', [Required(), EqualTo('password', message='Passwords must match'), Length(min=12, max=30)])
   recaptcha = RecaptchaField()
 
   def validate_username(form, field):

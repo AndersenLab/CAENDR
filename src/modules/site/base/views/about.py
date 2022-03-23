@@ -24,7 +24,7 @@ from caendr.api.isotype import get_isotypes
 from caendr.models.sql import Strain
 from caendr.services.cloud.analytics import get_weekly_visits
 from caendr.services.cloud.sheets import add_to_order_ws
-from caendr.services.email import send_email, DONATE_SUBMISSION_EMAIL
+from caendr.services.email import send_email, DONATION_SUBMISSION_EMAIL_TEMPLATE
 from caendr.services.publication import get_publications_html_df
 from caendr.services.profile import get_committee_profiles, get_staff_profiles, get_collaborator_profiles
 from caendr.utils.data import load_yaml, get_object_hash
@@ -116,13 +116,13 @@ def donate():
     order_obj['items'] = u"{}:{}".format("CeNDR strain and data support", form.data.get('total'))
     order_obj.update(form.data)
     order_obj['invoice_hash'] = get_object_hash(order_obj, length=8)
-    order_obj['url'] = f"https://elegansvariation.org/order/{order_obj['invoice_hash']}"
+    order_obj['url'] = url_for('order.order_confirmation', invoice_hash=order_obj['invoice_hash'], _external=True)
     send_email({
       "from": "no-reply@elegansvariation.org",
       "to": [order_obj["email"]],
       "cc": config.get("CC_EMAILS"),
       "subject": f"CeNDR Dontaion #{order_obj['invoice_hash']}",
-      "text": DONATE_SUBMISSION_EMAIL.format(invoice_hash=order_obj["invoice_hash"], donation_amount=order_obj.get('total'))
+      "text": DONATION_SUBMISSION_EMAIL_TEMPLATE.format(order_confirmation_link=order_obj.get('url'), donation_amount=order_obj.get('total'))
     })
     add_to_order_ws(order_obj)
     return redirect(url_for("order.order_confirmation", invoice_hash=order_obj["invoice_hash"]), code=302)

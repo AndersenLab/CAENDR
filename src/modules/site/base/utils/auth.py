@@ -1,6 +1,11 @@
+import os
+from logzero import logger
 from functools import wraps
+from datetime import timedelta
+
 from flask import (request,
                   redirect,
+                  flash,
                   abort,
                   url_for,
                   session,
@@ -15,10 +20,25 @@ from flask_jwt_extended import (create_access_token,
                                 get_jwt_identity,
                                 get_current_user,
                                 verify_jwt_in_request,
-                                jwt_required)
+                                jwt_required,
+                                decode_token)
 
 from caendr.models.datastore import User
+from caendr.models.datastore.user_token import UserToken
 from extensions import jwt
+
+PASSWORD_RESET_EXPIRATION_SECONDS = int(os.environ.get('MODULE_SITE_PASSWORD_RESET_EXPIRATION_SECONDS', '900'))
+
+
+def create_one_time_token(id, destination='/'):
+  expires_delta = timedelta(seconds=PASSWORD_RESET_EXPIRATION_SECONDS)
+  token = create_access_token(identity=str(id), additional_claims={'destination': destination}, expires_delta=expires_delta)
+  decoded_token = decode_token(token)
+  jti = decoded_token['jti']
+  user_token = UserToken(jti)
+  user_token.set_properties(username=id, revoked=False)
+  user_token.save()
+  return token
 
 
 def assign_access_refresh_tokens(id, roles, url, refresh=True):
@@ -81,9 +101,24 @@ def unauthorized_callback(reason):
   return redirect(url_for('auth.choose_login')), 302
 
 
+def check_if_token_revoked(jwt_data):
+    jti = jwt_data["jti"]
+    user_token = UserToken(jti)
+    token_revoked = user_token.revoked
+    if token_revoked:
+      logger.info("Token has been revoked.")
+      flash("Login token has expired.", "error")
+      return make_response(redirect(url_for('auth.choose_login'))), 302
+    logger.info(f"Revoking user token - {jti} for user - {user_token.username}")
+    user_token.revoke()
+    return token_revoked
+    
+
 @jwt.invalid_token_loader
 def invalid_token_callback(callback):
   ''' Invalid Fresh/Non-Fresh Access token in auth header, redirect to login '''
+  logger.info("Invalid Token.")
+  flash("Login token is invalid.", "error")
   resp = make_response(redirect(url_for('auth.choose_login')))
   session["is_logged_in"] = False
   session["is_admin"] = False
@@ -94,6 +129,8 @@ def invalid_token_callback(callback):
 @jwt.expired_token_loader
 def expired_token_callback(_jwt_header, jwt_data):
   ''' Expired auth header, redirects to fetch refresh token '''
+  logger.info("Expired Token.")
+  flash("Login token has expired.", "error")
   session['login_referrer'] = request.base_url
   resp = make_response(redirect(url_for('auth.refresh')))
   unset_access_cookies(resp)

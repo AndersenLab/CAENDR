@@ -20,7 +20,7 @@ def get_ds_entity(kind, name):
     for k, v in result.items():
       if isinstance(v, str) and v.startswith("JSON:"):
         result_out[k] = json.loads(v[5:])
-      elif v:
+      elif v or isinstance(v, bool):
         result_out[k] = v
 
     return result_out

@@ -276,11 +276,10 @@ function onDownload() {
   downloadCSV(jsonData);
 }
 
+const strainListing = JSON.parse('{{ strain_listing | tojson }}');
 
 function init_selected_strain_set() {
-{% for strain in strain_listing %}
-  selected_strains.add('{{strain}}');
-{% endfor %}
+  strainListing.forEach(strain => selected_strains.add(strain));
 }
 
 function process_gene_search() {
@@ -294,12 +293,12 @@ function process_gene_search() {
          url: "{{ url_for('api_gene.api_search_combined', query='') }}" + gene,
          method: "GET",
          contentType: 'application/xml',
-         }).done(function(msg) {
-          row = Array();
-          $.each(msg, function(i,row) {
-            const position = row["chrom"] + ":" + row["start"] + "-" + row["end"];
-            const link = `<a onclick="set_position('${position}')" link='${position}' class='ortholink'>${row['gene_id']}</a>`;
-            const result = [row['homolog_gene'] || row["gene_symbol"], row['sequence_name'], link]
+         }).done(function(results) {
+          const genes = results.filter(result => !!result.chrom && !!result.start && !!result.end)
+          genes.forEach(gene => {
+            const position = gene["chrom"] + ":" + gene["start"] + "-" + gene["end"];
+            const link = `<a onclick="set_position('${position}')" link='${position}' class='ortholink'>${gene['gene_id']}</a>`;
+            const result = [gene['homolog_gene'] || gene["gene_symbol"], gene['sequence_name'], link]
             const table_data = "<tr><td>" + result.join("</td><td>").slice(0,-4) + "</tr>";
             $("#orthologs").append(table_data);
           });
@@ -371,8 +370,8 @@ function filter_rows_by_impact() {
 
 function highlight_selected_strains() {
   $("mark").removeClass('hl-mark');
-  selected_strains.forEach(function(s) {
-    $(`.mark_${s}`).addClass('hl-mark');
+  selected_strains.forEach(strain => {
+    $(`.mark_${strain}`).addClass('hl-mark');
   });
 }
 
@@ -393,16 +392,16 @@ function renderTargetConsequenceCol(data, type, row) {
 function renderTargetConsequenceTable(data) {
   let result = "<div class='instruction-well'><table class='table table-striped table-condensed table-hover' style='width:80%;margin-left:10%;font-size:0.8rem;'><thead>";
   const numRows = Object.keys(data.id).length;
-  for (i of columnList) {
-    result += `<th>${i.name}</th>`;
+  for (let col1 of columnList) {
+    result += `<th>${col1.name}</th>`;
   }
   result += "</thead><tbody>";
   for (let j = 0; j < numRows; j++) { 
     result += "<tr>";
-    for (k of columnList) {
-      let val = data[k.id][j] || "";
+    for (let col2 of columnList) {
+      let val = data[col2.id][j] || "";
       let processedVal;
-      if (k.id === "strains") {
+      if (col2.id === "strains") {
         processedVal =  renderStrainsCol(val, null, null);
       } else {
         processedVal = chunk_substr(val, col_max_len);
@@ -457,15 +456,7 @@ function expandTargetConsequence(el, pos) {
   }
 }
 
-const columnList = [
-{% for col in columns %}
-{
-  "id": "{{ col['id'] }}",
-  "name": "{{ col['name'] }}"
-},
-{% endfor %}
-];
-
+const columnList = JSON.parse('{{ columns | tojson }}');
 
 function populateDataTable() {
   // clear the table before populating it with more data
@@ -475,12 +466,9 @@ function populateDataTable() {
     return;
   }
   const variants = Object.keys(result_data.id);
-  for(v of variants) {
-    $('#variant-table').dataTable().fnAddData([
-  {% for col in columns %}
-      processCol(result_data.{{ col['id'] }}[v], "{{ col['id'] }}"),
-  {% endfor %}
-    ]);
+  for(variant of variants) {
+    const row_data = columnList.map(col => processCol(result_data[col['id']][variant], col['id']))
+    $('#variant-table').dataTable().fnAddData(row_data);
   }
   filter_rows_by_strains();
   dTable.columns.adjust().draw();
@@ -491,45 +479,41 @@ function renderStrainsCol(data, type, row) {
   let result = '<mark></mark>';
   let strains = data.split(',');
   let i = 0;
-  for(s of strains) {
+  for(let strain of strains) {
     if ((++i % strains_per_row) === 0) {
       result += '<br/>'
     }
-    result += `<mark class="mark_${s}">${s},</mark>`;
+    result += `<mark class="mark_${strain}">${strain},</mark>`;
   }
   return result;
 }
 
 
 function init_data_table() {
+  const colDefs = columnList.map((col, idx) => {
+    let render = null;
+    
+    if (col.id === 'strains') {
+      render = renderStrainsCol;
+    }
+    if (col.id === 'target_consequence') {
+      render = renderTargetConsequenceCol;
+    }
+  
+    return { 
+      "name": col.id, 
+      "render": render,
+      "targets": idx
+    } 
+  });
+
   dTable = $('#variant-table').DataTable({
     colReorder: true,
     destroy: true,
     paging: true,
     pageLength: 100,
     dom:"ltipr",
-    columnDefs: [
-  {% for col in columns %}
-  {% if col['id'] == 'strains' %}
-      { 
-        "name": "{{ col['id'] }}", 
-        "mRender": renderStrainsCol,
-        "targets": {{ loop.index0 }} 
-      },
-  {% elif col['id'] == 'target_consequence' %}
-      { 
-        "name": "{{ col['id'] }}", 
-        "mRender": renderTargetConsequenceCol,
-        "targets": {{ loop.index0 }} 
-      },
-  {% else %}
-      { 
-        "name": "{{ col['id'] }}", 
-        "targets": {{ loop.index0 }} 
-      },
-  {% endif %}
-  {% endfor %}
-    ],
+    columnDefs: colDefs,
     order: [[ 1, "asc" ]]
   });
 
@@ -622,10 +606,10 @@ $(document).ready(function() {
     /* select/deselect all columns handler */
     $("#toggle_all_cols").change(function(e) {
       const state = $(this).prop('checked');
-      $(".toggle-col-chk").each(function(i, e) {
+      $(".toggle-col-chk").each(function(idx, e) {
         e.checked = state;
       });
-      for (let i = 0; i < {{ columns.__len__() }}; i++) {
+      for (let i = 0; i < columnList.length; i++) {
         const column = dTable.column(i);
         column.visible(state);
       }

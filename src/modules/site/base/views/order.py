@@ -14,11 +14,10 @@ from config import config
 from base.forms import OrderForm
 from base.utils.auth import jwt_required, get_current_user
 
-from caendr.services.email import send_email, ORDER_SUBMISSION_EMAIL
+from caendr.services.email import send_email, ORDER_SUBMISSION_EMAIL_TEMPLATE
 from caendr.services.cloud.sheets import add_to_order_ws, lookup_order
 
-order_bp = Blueprint('order',
-                     __name__)
+order_bp = Blueprint('order', __name__)
 
 #
 # Strain Catalog
@@ -65,12 +64,12 @@ def order_page():
     order_obj['phone'] = order_obj['phone'].strip("+")
     order_obj['items'] = '\n'.join(sorted([u"{}:{}".format(k, v) for k, v in form.item_price()]))
     order_obj['invoice_hash'] = str(uuid.uuid4()).split("-")[0]
-    order_obj["url"] = "https://elegansvariation.org/order/" + order_obj["invoice_hash"]
+    order_obj["order_confirmation_link"] = url_for('order.order_confirmation', invoice_hash=order_obj['invoice_hash'], _external=True)
     send_email({"from": "no-reply@elegansvariation.org",
                 "to": [order_obj["email"]],
                 "cc": config.get("CC_EMAILS"),
                 "subject": "CeNDR Order #" + str(order_obj["invoice_hash"]),
-                "text": ORDER_SUBMISSION_EMAIL.format(**order_obj)})
+                "text": ORDER_SUBMISSION_EMAIL_TEMPLATE.format(**order_obj)})
 
     # Save to google sheet
     add_to_order_ws(order_obj)
