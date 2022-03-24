@@ -6,4 +6,4 @@ base_bp = Blueprint('base_bp', __name__)
 
 @base_bp.route('/', methods=['GET', 'POST'])
 def test_fn():
-  return jsonify({}), 200
+    return jsonify({}), 200

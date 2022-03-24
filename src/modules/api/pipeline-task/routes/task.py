@@ -16,12 +16,15 @@ from caendr.models.datastore.heritability_report import HeritabilityReport
 from caendr.models.datastore.gene_browser_tracks import GeneBrowserTracks
 
 from caendr.models.error import APIBadRequestError, APIInternalError
-from caendr.models.task import NemaScanTask, DatabaseOperationTask, IndelPrimerTask, HeritabilityTask, GeneBrowserTracksTask
-from caendr.models.pub_sub import PubSubAttributes, PubSubMessage, PubSubStatus
+from caendr.models.task import NemaScanTask, DatabaseOperationTask, IndelPrimerTask, HeritabilityTask
+from caendr.models.task import GeneBrowserTracksTask
+# from caendr.models.pub_sub import PubSubAttributes, PubSubMessage, PubSubStatus
 
-from caendr.services.cloud.task import update_task_status, verify_task_headers
-from caendr.services.cloud.pubsub import get_operation
-from caendr.services.cloud.lifesciences import create_pipeline_operation_record, update_pipeline_operation_record, update_all_linked_status_records
+# from caendr.services.cloud.task import update_task_status, verify_task_headers
+from caendr.services.cloud.task import verify_task_headers
+# from caendr.services.cloud.pubsub import get_operation
+from caendr.services.cloud.lifesciences import create_pipeline_operation_record, update_pipeline_operation_record
+from caendr.services.cloud.lifesciences import update_all_linked_status_records
 
 from caendr.services.nemascan_mapping import update_nemascan_mapping_status
 from caendr.services.database_operation import update_db_op_status
@@ -45,89 +48,103 @@ task_handler_bp = Blueprint('task_bp', __name__)
 
 @task_handler_bp.route('/start/<task_route>', methods=['POST'])
 def start_task(task_route):
-  queue, task = verify_task_headers(task_route)
-  logger.info(f"Task: {queue}:{task}")
+    queue, task = verify_task_headers(task_route)
+    logger.info(f"Task: {queue}:{task}")
 
-  try:
-    payload = extract_json_payload(request)
-  except:
-    raise APIBadRequestError('Failed to parse request body as valid JSON')
-  
-  logger.info(f"Payload: {payload}")
-  handle_task(payload, task_route)
+    try:
+        payload = extract_json_payload(request)
+    except Exception as e:
+        logger.error(e)
+        raise APIBadRequestError('Failed to parse request body as valid JSON')
 
-  #return jsonify({'operation': op.id}), 200
-  return jsonify({}), 200
+    logger.info(f"Payload: {payload}")
+    handle_task(payload, task_route)
+
+    # return jsonify({'operation': op.id}), 200
+    return jsonify({}), 200
+
+
+def _start_pipeline(payload, task_route):
+    if task_route == NEMASCAN_TASK_QUEUE_NAME:
+        task = NemaScanTask(**payload)
+        response = start_nemascan_pipeline(task)
+    elif task_route == INDEL_PRIMER_TASK_QUEUE_NAME:
+        task = IndelPrimerTask(**payload)
+        response = start_indel_primer_pipeline(task)
+    elif task_route == HERITABILITY_TASK_QUEUE_NAME:
+        task = HeritabilityTask(**payload)
+        response = start_heritability_pipeline(task)
+    elif task_route == MODULE_DB_OPERATIONS_TASK_QUEUE_NAME:
+        task = DatabaseOperationTask(**payload)
+        response = start_db_op_pipeline(task)
+    elif task_route == MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME:
+        task = GeneBrowserTracksTask(**payload)
+        response = start_gene_browser_tracks_pipeline(task)
+
+    return task, response
+
+
+def _update_task_status(task, status, operation_name):
+    if task.kind == NemascanMapping.kind:
+        update_nemascan_mapping_status(task.id, status=status, operation_name=operation_name)
+    elif task.kind == IndelPrimer.kind:
+        update_indel_primer_status(task.id, status=status, operation_name=operation_name)
+    elif task.kind == HeritabilityReport.kind:
+        update_heritability_report_status(task.id, status=status, operation_name=operation_name)
+    elif task.kind == DatabaseOperation.kind:
+        update_db_op_status(task.id, status=status, operation_name=operation_name)
+    elif task.kind == GeneBrowserTracks.kind:
+        update_gene_browser_track_status(task.id, status=status, operation_name=operation_name)
 
 
 def handle_task(payload, task_route):
-  logger.info(f"Task: {task_route}")
-  if task_route == NEMASCAN_TASK_QUEUE_NAME:
-    task = NemaScanTask(**payload)
-    response = start_nemascan_pipeline(task)
-  elif task_route == INDEL_PRIMER_TASK_QUEUE_NAME:
-    task = IndelPrimerTask(**payload)
-    response = start_indel_primer_pipeline(task)
-  elif task_route == HERITABILITY_TASK_QUEUE_NAME:
-    task = HeritabilityTask(**payload)
-    response = start_heritability_pipeline(task)
-  elif task_route == MODULE_DB_OPERATIONS_TASK_QUEUE_NAME:
-    task = DatabaseOperationTask(**payload)
-    response = start_db_op_pipeline(task)
-  elif task_route == MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME:
-    task = GeneBrowserTracksTask(**payload)
-    response = start_gene_browser_tracks_pipeline(task)    
-  
-  logger.debug(task_route)
-  status = 'RUNNING'
-  operation_name = ''
-  try: 
-    op = create_pipeline_operation_record(task, response)
-    operation_name = op.operation
-  except Exception as e:
-    logger.error(e)
-    status = 'ERROR'
-  
-  if task.kind == NemascanMapping.kind:
-    update_nemascan_mapping_status(task.id, status=status, operation_name=operation_name)
-  elif task.kind == IndelPrimer.kind:
-    update_indel_primer_status(task.id, status=status, operation_name=operation_name)
-  elif task.kind == HeritabilityReport.kind:
-    update_heritability_report_status(task.id, status=status, operation_name=operation_name)
-  elif task.kind == DatabaseOperation.kind:
-    update_db_op_status(task.id, status=status, operation_name=operation_name)
-  elif task.kind == GeneBrowserTracks.kind:
-    update_gene_browser_track_status(task.id, status=status, operation_name=operation_name)
+    logger.info(f"Task: {task_route}")
+
+    task, response = _start_pipeline(payload, task_route)
+
+    logger.debug(task_route)
+    status = 'RUNNING'
+    operation_name = ''
+    try:
+        op = create_pipeline_operation_record(task, response)
+        operation_name = op.operation
+    except Exception as e:
+        logger.error(e)
+        status = 'ERROR'
+
+    _update_task_status(task, status, operation_name)
 
 
 @task_handler_bp.route('/status', methods=['POST'])
 def update_task():
-  try:
     try:
-      payload = extract_json_payload(request)
-      logger.info(f"Task Status Payload: {payload}")
-    except Exception as e:
-      logger.error(e)
-      raise APIBadRequestError('Error parsing JSON payload')
 
-    # Marshall JSON to PubSubStatus object
-    try:
-      message = payload.get('message')
-      attributes = message.get('attributes')
-      operation = attributes.get('operation')
-    except Exception as e:
-      logger.error(e)
-      raise APIBadRequestError('Error parsing PubSub status message.')
+        try:
+            payload = extract_json_payload(request)
+            logger.info(f"Task Status Payload: {payload}")
+        except Exception as e:
+            logger.error(e)
+            raise APIBadRequestError('Error parsing JSON payload')
 
-    try:
-      op = update_pipeline_operation_record(operation)
-      logger.debug(op)
-      update_all_linked_status_records(op.operation_kind, operation)
-      logger.debug(operation)
+        # Marshall JSON to PubSubStatus object
+        try:
+            message = payload.get('message')
+            attributes = message.get('attributes')
+            operation = attributes.get('operation')
+        except Exception as e:
+            logger.error(e)
+            raise APIBadRequestError('Error parsing PubSub status message.')
+
+        try:
+            op = update_pipeline_operation_record(operation)
+            logger.debug(op)
+            update_all_linked_status_records(op.operation_kind, operation)
+            logger.debug(operation)
+        except Exception as e:
+            logger.error(e)
+            raise APIInternalError('Error updating status records')
+
     except Exception as e:
-      logger.error(e)
-      raise APIInternalError('Error updating status records')
-  except Exception as e:
-    logger.error(e)
-    pass
-  return jsonify({}), 200
+        logger.error(e)
+        pass
+    return jsonify({}), 200

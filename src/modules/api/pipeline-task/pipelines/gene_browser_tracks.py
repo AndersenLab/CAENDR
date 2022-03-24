@@ -1,11 +1,9 @@
 import os
-import logging
 
 from caendr.models.task import GeneBrowserTracksTask
 from caendr.models.datastore import GeneBrowserTracks
 from caendr.services.cloud.lifesciences import start_pipeline
 from caendr.models.lifesciences import ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
-from caendr.utils.json import get_json_from_class
 
 
 GOOGLE_CLOUD_PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID')
@@ -35,25 +33,27 @@ ENABLE_STACKDRIVER_MONITORING = True
 
 
 def start_gene_browser_tracks_pipeline(task: GeneBrowserTracksTask):
-  pipeline_req = _generate_gene_browser_tracks_pipeline(task)
-  return start_pipeline(pipeline_req)
+    pipeline_req = _generate_gene_browser_tracks_pipeline(task)
+    return start_pipeline(pipeline_req)
 
 
 def _generate_gene_browser_tracks_pipeline(task: GeneBrowserTracksTask):
-  t = GeneBrowserTracks(task.id)
-  image_uri = f"{task.container_repo}/{task.container_name}:{task.container_version}"
-  
-  container_name = f"gene-browser-tracks-{t.id}"
-  environment = {'WORMBASE_VERSION': task.wormbase_version}
-  
+    t = GeneBrowserTracks(task.id)
+    image_uri = f"{task.container_repo}/{task.container_name}:{task.container_version}"
 
-  service_account = ServiceAccount(email=sa_email, scopes=SCOPES)
-  virtual_machine = VirtualMachine(machine_type=MACHINE_TYPE, preemptible=PREEMPTIBLE, boot_disk_size_gb=BOOT_DISK_SIZE_GB, 
-                                  boot_image=BOOT_IMAGE, enable_stackdriver_monitoring=ENABLE_STACKDRIVER_MONITORING, service_account=service_account)
-  resources = Resources(virtual_machine=virtual_machine, zones=[ZONE])
-  action = Action(always_run=False, block_external_network=False, commands=[COMMAND], container_name=container_name, disable_image_prefetch=False,
-                  disable_standard_error_capture=False, enable_fuse=False, environment=environment, ignore_exit_status=False, image_uri=image_uri, 
-                  publish_exposed_ports=False, run_in_background=False, timeout=TIMEOUT)
-  pipeline = Pipeline(actions=[action], resources=resources, timeout=TIMEOUT)
-  pipeline_req = Request(pipeline=pipeline, pub_sub_topic=pub_sub_topic)
-  return pipeline_req
+    container_name = f"gene-browser-tracks-{t.id}"
+    environment = {'WORMBASE_VERSION': task.wormbase_version}
+
+    service_account = ServiceAccount(email=sa_email, scopes=SCOPES)
+    virtual_machine = VirtualMachine(machine_type=MACHINE_TYPE, preemptible=PREEMPTIBLE,
+                                     boot_disk_size_gb=BOOT_DISK_SIZE_GB,
+                                     boot_image=BOOT_IMAGE, enable_stackdriver_monitoring=ENABLE_STACKDRIVER_MONITORING,
+                                     service_account=service_account)
+    resources = Resources(virtual_machine=virtual_machine, zones=[ZONE])
+    action = Action(always_run=False, block_external_network=False, commands=[COMMAND], container_name=container_name,
+                    disable_image_prefetch=False, disable_standard_error_capture=False, enable_fuse=False,
+                    environment=environment, ignore_exit_status=False, image_uri=image_uri,
+                    publish_exposed_ports=False, run_in_background=False, timeout=TIMEOUT)
+    pipeline = Pipeline(actions=[action], resources=resources, timeout=TIMEOUT)
+    pipeline_req = Request(pipeline=pipeline, pub_sub_topic=pub_sub_topic)
+    return pipeline_req

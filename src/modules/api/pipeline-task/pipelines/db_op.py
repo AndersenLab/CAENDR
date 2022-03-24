@@ -1,12 +1,11 @@
 import os
-import logging
+from logging import logger
 
 from caendr.utils import monitor
 from caendr.models.task import DatabaseOperationTask
 from caendr.models.datastore import DatabaseOperation
 from caendr.services.cloud.lifesciences import start_pipeline
 from caendr.models.lifesciences import ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
-from caendr.utils.json import get_json_from_class
 
 monitor.init_sentry("pipelines-task")
 
@@ -38,30 +37,33 @@ ENABLE_STACKDRIVER_MONITORING = True
 
 
 def start_db_op_pipeline(task: DatabaseOperationTask):
-  pipeline_req = _generate_db_op_pipeline(task)
-  return start_pipeline(pipeline_req)
+    pipeline_req = _generate_db_op_pipeline(task)
+    return start_pipeline(pipeline_req)
 
 
 def _generate_db_op_pipeline(task: DatabaseOperationTask):
-  d = DatabaseOperation(task.id)
-  image_uri = f"{task.container_repo}/{task.container_name}:{task.container_version}"
-  
-  container_name = f"db-op-{d.id}"
-  environment = task.args
-  environment['DATABASE_OPERATION'] = task.db_operation
-  environment['USERNAME'] = task.username if task.username else None
-  environment['EMAIL'] = task.email if task.email else None
-  environment['OPERATION_ID'] = d.id
-  environment['TASK_ID'] = task.id
-  
+    d = DatabaseOperation(task.id)
+    image_uri = f"{task.container_repo}/{task.container_name}:{task.container_version}"
 
-  service_account = ServiceAccount(email=sa_email, scopes=SCOPES)
-  virtual_machine = VirtualMachine(machine_type=MACHINE_TYPE, preemptible=PREEMPTIBLE, boot_disk_size_gb=BOOT_DISK_SIZE_GB, 
-                                  boot_image=BOOT_IMAGE, enable_stackdriver_monitoring=ENABLE_STACKDRIVER_MONITORING, service_account=service_account)
-  resources = Resources(virtual_machine=virtual_machine, zones=[ZONE])
-  action = Action(always_run=False, block_external_network=False, commands=[COMMAND], container_name=container_name, disable_image_prefetch=False,
-                  disable_standard_error_capture=False, enable_fuse=False, environment=environment, ignore_exit_status=False, image_uri=image_uri, 
-                  publish_exposed_ports=False, run_in_background=False, timeout=TIMEOUT)
-  pipeline = Pipeline(actions=[action], resources=resources, timeout=TIMEOUT)
-  pipeline_req = Request(pipeline=pipeline, pub_sub_topic=pub_sub_topic)
-  return pipeline_req
+    container_name = f"db-op-{d.id}"
+    environment = task.args
+    environment['DATABASE_OPERATION'] = task.db_operation
+    environment['USERNAME'] = task.username if task.username else None
+    environment['EMAIL'] = task.email if task.email else None
+    environment['OPERATION_ID'] = d.id
+    environment['TASK_ID'] = task.id
+    logger.log(f"Generating DB OP pipeline for task {task.id}")
+
+    service_account = ServiceAccount(email=sa_email, scopes=SCOPES)
+    virtual_machine = VirtualMachine(machine_type=MACHINE_TYPE, preemptible=PREEMPTIBLE,
+                                     boot_disk_size_gb=BOOT_DISK_SIZE_GB, boot_image=BOOT_IMAGE,
+                                     enable_stackdriver_monitoring=ENABLE_STACKDRIVER_MONITORING,
+                                     service_account=service_account)
+    resources = Resources(virtual_machine=virtual_machine, zones=[ZONE])
+    action = Action(always_run=False, block_external_network=False, commands=[COMMAND], container_name=container_name,
+                    disable_image_prefetch=False, disable_standard_error_capture=False, enable_fuse=False,
+                    environment=environment, ignore_exit_status=False, image_uri=image_uri,
+                    publish_exposed_ports=False, run_in_background=False, timeout=TIMEOUT)
+    pipeline = Pipeline(actions=[action], resources=resources, timeout=TIMEOUT)
+    pipeline_req = Request(pipeline=pipeline, pub_sub_topic=pub_sub_topic)
+    return pipeline_req

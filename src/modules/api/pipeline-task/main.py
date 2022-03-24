@@ -22,6 +22,4 @@ app.register_blueprint(api_error_handler_bp)
 app.register_blueprint(task_handler_bp, url_prefix="/task")
 
 if __name__ == "__main__":
-  app.run(host="localhost", port=PORT, debug=True)
-
-
+    app.run(host="localhost", port=PORT, debug=True)
