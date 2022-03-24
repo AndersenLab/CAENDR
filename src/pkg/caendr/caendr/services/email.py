@@ -64,5 +64,5 @@ A password reset was requested for your account ({email}). If you did not author
 
 To continue with your password reset, click the link below and follow the prompts. This link will expire in 15 minutes and can only be used one time.
 
-{password_reset_link}
+{password_reset_magic_link}
 """
