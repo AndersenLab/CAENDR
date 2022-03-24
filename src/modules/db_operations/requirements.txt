@@ -8,3 +8,4 @@ pg8000
 PyYAML>=4.2b1
 diskcache==5.4.0
 itsdangerous==2.0.1
+flake8==4.0.1
