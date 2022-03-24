@@ -3,6 +3,9 @@
 
 include $(PROJECT_DIR)/build/help.mk
 
+SHELL=/bin/bash
+.SHELLFLAGS="-O extglob -c"
+
 ENV_PATH = $(PROJECT_DIR)/env/$(ENV)
 ENV_FILE = $(ENV_PATH)/global.env
 TF_PATH = $(PROJECT_DIR)/tf/caendr
@@ -88,8 +91,9 @@ lint: #~
 lint: print-module-env dot-env venv install-pkg
 	@echo -e "\n$(COLOR_B)Linting code...$(COLOR_N)"
 	@. $(MODULE_DIR)/venv/bin/activate && \
-	$(LOAD_MODULE_ENV) && \
-	flake8 **py && echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
+	$(LOAD_MODULE_ENV)
+	@flake8 `find $(MODULE_DIR) -name "*.py" -not -path "$(MODULE_DIR)/venv/*"` 
+	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
 #~
 container: #~
@@ -106,9 +110,6 @@ container-build: lint
 	cp -r $(PKG_SETUP_DIR) $(MODULE_DIR) && \
 	echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
-	@echo -e "\n$(COLOR_B)Linting...$(COLOR_N)" && \
-	[ -f $(MODULE_DIR)/.flake8 ] && flake8 **py && echo -e "$(COLOR_G)DONE!$(COLOR_N)\n" || echo -e "$(COLOR_R)FAILED!$(COLOR_N)\n"
-	
 	@echo -e "\n$(COLOR_B)Building container image...$(COLOR_N)" && \
 	docker build $(MODULE_DIR) -t gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${MODULE_NAME}:${MODULE_VERSION} && \
 	echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
