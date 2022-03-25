@@ -68,6 +68,39 @@ make cloud-resource-plan
 make cloud-resource-deploy
 ```
 
+
+Deployment of Individual Components (development environment)
+-------------------------------------------------------------------
+
+Example of deploying the `site`  (src/modules/site) component.
+
+Pre-requisites: 
+Ensure that you are logged in to the GCLOUD GCP project in the CLI, or using a devops service account. 
+
+Using Service Account: 
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS=PATH_TO_GCP_CREDENTIALS
+export ENV=development
+```
+
+Update versions
+* Update the `version` property for the site in the `/env/{env}/global.env` .
+* Update `version` in the file `src/modules/site/module.env`. 
+
+
+Build and Publish the container
+```bash
+cd src/modules/site; make configure; make publish
+```
+
+Deploy the IaC `site` (force replace the app engine for the `site`)
+```bash
+make terraform-shell
+terraform plan -target module.site -out tf_plan && terraform apply tf_plan
+```
+
+
 Website Requirements
 -------------------------------------------------------------------
 
