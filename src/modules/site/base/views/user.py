@@ -118,17 +118,17 @@ def user_reset_password(user):
   page_title = "Reset Password"
   form = PasswordResetForm(request.form)
 
-  if not request.method == 'POST' or not form.validate():
+  if not request.method == 'POST':
     return render_template('user/reset_password.html', **locals())
 
-  if form.validate():
-    token = request.form.get('password_reset_token', None)
-    use_password_reset_token(token)
-    password = request.form.get("password")
-    user.set_properties(password=password, salt=PASSWORD_PEPPER)
-    user.save()
-    flash('Password successfully reset.', 'success')
-    return redirect(url_for('auth.basic_login'))
+ 
+  token = request.form.get('password_reset_token', None)
+  use_password_reset_token(token)
+  password = request.form.get("password")
+  user.set_properties(password=password, salt=PASSWORD_PEPPER)
+  user.save()
+  flash('Password successfully reset.', 'success')
+  return redirect(url_for('auth.basic_login'))
 
 
 
