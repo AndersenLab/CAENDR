@@ -21,7 +21,7 @@ GOOGLE_CLOUD_PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID')
 GCR_REPO_NAME = f'gcr.io/{GOOGLE_CLOUD_PROJECT_ID}'
 
 def get_available_version_tags(container):
-  if container.container_registry == 'gcr':
+  if hasattr(container, 'container_registry') and container.container_registry == 'gcr':
     return get_available_version_tags_gcr(container)
   
   return get_available_version_tags_dockerhub(container)
