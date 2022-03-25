@@ -42,7 +42,6 @@ def refresh():
     referrer = session.get('login_referrer', '/')
     return assign_access_refresh_tokens(username, user.roles, referrer, refresh=False)
 
-  flash("Login token has expired.", "error")
   return abort(401)
 
 
@@ -75,7 +74,7 @@ def basic_login():
       if user.check_password(password, PASSWORD_PEPPER):
         user.set_properties(last_login=datetime.now(timezone.utc))
         user.save()
-        referrer = session.get('login_referrer', '/')
+        referrer = session.get('login_referrer', '/') or '/'
         if '/login/' in referrer:
           referrer = '/'
         flash('Logged In', 'success')
