@@ -96,14 +96,14 @@ def update_all_linked_status_records(kind, operation_name):
     status = "RUNNING"
   
   filters=[("operation_name", "=", operation_name)]
-  mappings = query_ds_entities(kind, filters=filters)
-  for m in mappings:
+  ds_entities = query_ds_entities(kind, filters=filters, keys_only=True)
+  for entity in ds_entities:
     if kind == DatabaseOperation.kind:
-      m = DatabaseOperation(m)
+      status_record = DatabaseOperation(entity.key.name)
     elif kind == IndelPrimer.kind:
-      m = IndelPrimer(m)
+      status_record = IndelPrimer(entity.key.name)
     elif kind == NemascanMapping.kind:
-      m = NemascanMapping(m)
+      status_record = NemascanMapping(entity.key.name)
       
-    m.set_properties(status=status)
-    m.save()
+    status_record.set_properties(status=status)
+    status_record.save()
