@@ -28,7 +28,9 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
   percent_protein = db.Column(db.Float(), nullable=True)
   gene = db.Column(db.String(), index=True, nullable=True)
   variant_impact = db.Column(db.String(), nullable=True)
+  snpeff_impact = db.Column(db.String(), nullable=True)
   divergent = db.Column(db.Boolean(), nullable=True)
+  release = db.Column(db.String(), nullable=True)
 
   __tablename__ = 'strain_annotated_variants'
   __gene_summary__ = db.relationship("WormbaseGeneSummary", backref='strain_annotated_variants', lazy='joined')
@@ -59,7 +61,9 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
       {'id': 'percent_protein', 'name': 'Percent Protein'},
       {'id': 'gene', 'name': 'Gene'},
       {'id': 'variant_impact', 'name': 'Variant Impact'},
-      {'id': 'divergent', 'name': 'Divergent'}
+      {'id': 'snpeff_impact', 'name': 'SnpEff Impact'},
+      {'id': 'divergent', 'name': 'Divergent'},
+      {'id': 'release', 'name': 'Release Date'}
     ]
     
     
@@ -71,20 +75,20 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
     start = int(range.split('-')[0])
     stop = int(range.split('-')[1])
 
-    q = f"SELECT * FROM {cls.__tablename__} WHERE chrom='{chrom}' AND pos > {start} AND pos < {stop};"
-    return q
+    query = f"SELECT * FROM {cls.__tablename__} WHERE chrom='{chrom}' AND pos > {start} AND pos < {stop};"
+    return query
 
 
   @classmethod
-  def run_interval_query(cls, q):
-    q = cls.generate_interval_sql(q)
-    df = pd.read_sql_query(q, db.engine)
-
+  def run_interval_query(cls, query):
+    query = cls.generate_interval_sql(query)
+    data_frame = pd.read_sql_query(query, db.engine)
+    col_list = [ col.get('id') for col in cls.get_column_details()]
+    cols = [ 'id', *col_list ]
     try:  
-      result = df[['id', 'chrom', 'pos', 'ref_seq', 'alt_seq', 'consequence', 'target_consequence', 'gene_id', 'transcript', 'biotype', 'strand', 'amino_acid_change', 'dna_change', 'strains', 'blosum', 'grantham', 'percent_protein', 'gene', 'variant_impact', 'divergent']].dropna(how='all') \
-                .fillna(value="") \
-                .agg(list) \
-                .to_dict()
+      test = data_frame[cols].dropna(how='all')
+      print(test)
+      result = data_frame[cols].dropna(how='all').fillna(value="").agg(list).to_dict()
     except ValueError:
       result = {}
     return result
@@ -92,24 +96,22 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
   
   @classmethod
   def generate_position_sql(cls, pos):
-    pos = pos.replace(',','')
+    pos = pos.replace(',','')  
     chrom = pos.split(':')[0]
     pos = int(pos.split(':')[1])
 
-    q = f"SELECT * FROM {cls.__tablename__} WHERE chrom='{chrom}' AND pos = {pos};"
-    return q
+    query = f"SELECT * FROM {cls.__tablename__} WHERE chrom='{chrom}' AND pos = {pos};"
+    return query
 
 
   @classmethod
-  def run_position_query(cls, q):
-    q = cls.generate_position_sql(q)
-    df = pd.read_sql_query(q, db.engine)
-
+  def run_position_query(cls, query):
+    query = cls.generate_position_sql(query)
+    data_frame = pd.read_sql_query(query, db.engine)
+    col_list = [ col.get('id') for col in cls.get_column_details()]
+    cols = [ 'id', *col_list ]
     try:  
-      result = df[['id', 'chrom', 'pos', 'ref_seq', 'alt_seq', 'consequence', 'target_consequence', 'gene_id', 'transcript', 'biotype', 'strand', 'amino_acid_change', 'dna_change', 'strains', 'blosum', 'grantham', 'percent_protein', 'gene', 'variant_impact', 'divergent']].dropna(how='all') \
-                .fillna(value="") \
-                .agg(list) \
-                .to_dict()
+      result = data_frame[cols].dropna(how='all').fillna(value="").agg(list).to_dict()
     except ValueError:
       result = {}
     return result

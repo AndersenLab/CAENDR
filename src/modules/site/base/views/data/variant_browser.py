@@ -48,9 +48,9 @@ def vbrowser_query_interval():
 
   query = payload.get('query')
 
-  is_valid = verify_interval_query(q=query)
+  is_valid = verify_interval_query(query=query)
   if is_valid:
-    data = StrainAnnotatedVariant.run_interval_query(q=query)
+    data = StrainAnnotatedVariant.run_interval_query(query=query)
     return jsonify(data)
 
   return jsonify({})
@@ -65,9 +65,9 @@ def vbrowser_query_position():
 
   query = payload.get('query')
 
-  is_valid = verify_position_query(q=query)
+  is_valid = verify_position_query(query=query)
   if is_valid:
-    data = StrainAnnotatedVariant.run_position_query(q=query)
+    data = StrainAnnotatedVariant.run_position_query(query=query)
     return jsonify(data)
 
   return jsonify({})
