@@ -1,7 +1,7 @@
 import os
 from logzero import logger
 from functools import wraps
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 
 from flask import (request,
                   redirect,
@@ -30,17 +30,6 @@ from extensions import jwt
 PASSWORD_RESET_EXPIRATION_SECONDS = int(os.environ.get('MODULE_SITE_PASSWORD_RESET_EXPIRATION_SECONDS', '900'))
 
 
-def create_one_time_token(id, destination='/'):
-  expires_delta = timedelta(seconds=PASSWORD_RESET_EXPIRATION_SECONDS)
-  token = create_access_token(identity=str(id), additional_claims={'destination': destination}, expires_delta=expires_delta)
-  decoded_token = decode_token(token)
-  jti = decoded_token['jti']
-  user_token = UserToken(jti)
-  user_token.set_properties(username=id, revoked=False)
-  user_token.save()
-  return token
-
-
 def assign_access_refresh_tokens(id, roles, url, refresh=True):
   resp = make_response(redirect(url, 302))
   access_token = create_access_token(identity=str(id), additional_claims={'roles': roles})
@@ -51,6 +40,32 @@ def assign_access_refresh_tokens(id, roles, url, refresh=True):
   session['is_logged_in'] = True
   session['is_admin'] = ('admin' in roles)
   return resp
+
+
+def create_one_time_token(id):
+  expires_delta = timedelta(seconds=PASSWORD_RESET_EXPIRATION_SECONDS)
+  token = create_access_token(identity=str(id), additional_claims={'type': 'password-reset'}, expires_delta=expires_delta)
+  decoded_token = decode_token(token)
+  jti = decoded_token['jti']
+  user_token = UserToken(jti)
+  user_token.set_properties(username=id, revoked=False)
+  user_token.save()
+  return token
+
+def check_password_reset_token_revoked(jwt_data):
+    jti = jwt_data["jti"]
+    user_token = UserToken(jti)
+    token_revoked = user_token.revoked
+    return token_revoked
+
+
+def use_password_reset_token(token):
+  decoded_token = decode_token(token)
+  jti = decoded_token["jti"]
+  user_token = UserToken(jti)
+  logger.info(f"Revoking password reset token - {jti} for user - {user_token.username}")
+  user_token.revoke()
+  return 
 
 
 def unset_jwt():
@@ -79,7 +94,27 @@ def admin_required():
         return fn(*args, **kwargs)
       else:
         return abort(401)
+    return decorator
+  return wrapper
 
+def magic_link_required():
+  def wrapper(fn):
+    @wraps(fn)
+    def decorator(*args, **kwargs):
+      token = request.args.get('token', None) or request.form.get('password_reset_token', None)
+      decoded_token = decode_token(token)
+
+      token_revoked = check_password_reset_token_revoked(decoded_token)
+      if token_revoked:
+        flash("Password reset token has already been used.", "error")
+        return redirect(url_for("auth.choose_login"))
+
+      id = decoded_token.get('sub')
+      user = User(id) 
+      if not user._exists:
+        return abort(404)
+
+      return fn(user, *args, **kwargs)
     return decorator
   return wrapper
 
@@ -99,26 +134,13 @@ def user_lookup_callback(_jwt_header, jwt_data):
 def unauthorized_callback(reason):
   ''' Invalid auth header, redirect to login'''
   return redirect(url_for('auth.choose_login')), 302
-
-
-def check_if_token_revoked(jwt_data):
-    jti = jwt_data["jti"]
-    user_token = UserToken(jti)
-    token_revoked = user_token.revoked
-    if token_revoked:
-      logger.info("Token has been revoked.")
-      flash("Login token has expired.", "error")
-      return make_response(redirect(url_for('auth.choose_login'))), 302
-    logger.info(f"Revoking user token - {jti} for user - {user_token.username}")
-    user_token.revoke()
-    return token_revoked
     
 
 @jwt.invalid_token_loader
 def invalid_token_callback(callback):
   ''' Invalid Fresh/Non-Fresh Access token in auth header, redirect to login '''
   logger.info("Invalid Token.")
-  flash("Login token is invalid.", "error")
+  flash("Token is missing or invalid.", "error")
   resp = make_response(redirect(url_for('auth.choose_login')))
   session["is_logged_in"] = False
   session["is_admin"] = False
@@ -129,8 +151,12 @@ def invalid_token_callback(callback):
 @jwt.expired_token_loader
 def expired_token_callback(_jwt_header, jwt_data):
   ''' Expired auth header, redirects to fetch refresh token '''
+  type = jwt_data.get('type', None)
+  if type == 'password-reset':
+    flash("Password reset token has expired.", "error")
+    return redirect(url_for('auth.choose_login'))
+
   logger.info("Expired Token.")
-  flash("Login token has expired.", "error")
   session['login_referrer'] = request.base_url
   resp = make_response(redirect(url_for('auth.refresh')))
   unset_access_cookies(resp)

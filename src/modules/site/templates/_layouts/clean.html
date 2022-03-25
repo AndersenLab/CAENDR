@@ -28,7 +28,7 @@
                             {% endif %}
 
                           {# BREADCRUMB #}
-                          {% if request.blueprint and request.path != "/" and request.path != url_for("auth.choose_login") %}
+                          {% if request.blueprint and request.path != "/" and request.path != url_for("auth.choose_login") and request.path != url_for("user.user_reset_password") %}
                           <ol class="breadcrumb">
                               <li><a href="/">Home</a></li>
                                 {% if title %}
