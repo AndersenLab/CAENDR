@@ -44,7 +44,7 @@ def assign_access_refresh_tokens(id, roles, url, refresh=True):
 
 def create_one_time_token(id):
   expires_delta = timedelta(seconds=PASSWORD_RESET_EXPIRATION_SECONDS)
-  token = create_access_token(identity=str(id), expires_delta=expires_delta)
+  token = create_access_token(identity=str(id), additional_claims={'type': 'password-reset'}, expires_delta=expires_delta)
   decoded_token = decode_token(token)
   jti = decoded_token['jti']
   user_token = UserToken(jti)
@@ -151,6 +151,11 @@ def invalid_token_callback(callback):
 @jwt.expired_token_loader
 def expired_token_callback(_jwt_header, jwt_data):
   ''' Expired auth header, redirects to fetch refresh token '''
+  type = jwt_data.get('type', None)
+  if type == 'password-reset':
+    flash("Password reset token has expired.", "error")
+    return redirect(url_for('auth.choose_login'))
+
   logger.info("Expired Token.")
   session['login_referrer'] = request.base_url
   resp = make_response(redirect(url_for('auth.refresh')))
