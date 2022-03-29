@@ -53,13 +53,9 @@ def fetch_strain_variant_annotation_data(sva_gz_fname: str):
 
         # expected sample headers/rows format
         # Headers:
-        # ["","CHROM","POS","REF","ALT","CONSEQUENCE","WORMBASE_ID","TRANSCRIPT","BIOTYPE","STRAND","AMINO_ACID_CHANGE","DNA_CHANGE","Strains","BLOSUM","Grantham","Percent_Protein","GENE","VARIANT_IMPACT","SNPEFF_IMPACT","DIVERGENT", "RELEASE"]
+        # ["CHROM","POS","REF","ALT","CONSEQUENCE","WORMBASE_ID","TRANSCRIPT","BIOTYPE","STRAND","AMINO_ACID_CHANGE","DNA_CHANGE","Strains","BLOSUM","Grantham","Percent_Protein","GENE","VARIANT_IMPACT","SNPEFF_IMPACT","DIVERGENT", "RELEASE"]
         # Rows:
-        # ["1","I",3782,"G","A",NA,NA,NA,NA,NA,NA,NA,"",NA,NA,NA,NA,NA,NA,NA]
-        #
-        # The literal indexes below for row[N] are off-by-one from the CSV
-        # remove the first element from the row.
-        row.pop(0)
+        # ["I",3782,"G","A",NA,NA,NA,NA,NA,NA,NA,"",NA,NA,NA,NA,NA,NA,NA,NA]
 
         target_consequence = None
         consequence = row[4] if row[4] else None
@@ -75,7 +71,7 @@ def fetch_strain_variant_annotation_data(sva_gz_fname: str):
         data = {
           'id': line_count,
           'chrom': row[0],
-          'pos': int(row[1]),
+          'pos': int(row[1]) if row[1] else None,
           'ref_seq': row[2] if row[2] else None,
           'alt_seq': row[3] if row[3] else None,
           'consequence': consequence,
