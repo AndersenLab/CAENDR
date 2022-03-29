@@ -10,7 +10,7 @@ from caendr.services.user import get_local_user_by_email
 from caendr.services.email import send_email, PASSWORD_RESET_EMAIL_TEMPLATE
 
 from base.forms import UserRegisterForm, UserUpdateForm, RecoverUserForm, PasswordResetForm
-from base.utils.auth import jwt_required, get_jwt, get_current_user, assign_access_refresh_tokens, create_one_time_token
+from base.utils.auth import jwt_required, get_jwt, get_current_user, assign_access_refresh_tokens, magic_link_required, create_one_time_token, use_password_reset_token
 
 PASSWORD_PEPPER = get_secret('PASSWORD_PEPPER')
 
@@ -64,16 +64,16 @@ def user_recover():
     return redirect('/')
     
   user = users[0]
-  token = create_one_time_token(id=user.get('username'), destination=url_for('user.user_reset_password'))
-  password_reset_link = url_for('auth.token', token=token, _external=True)
+  token = create_one_time_token(id=user.get('username'))
+  password_reset_magic_link = url_for('user.user_reset_password', token=token, _external=True)
   try:
     send_email({
       "from": "no-reply@elegansvariation.org",
       "to": [ email ],
       "subject": "CeNDR Password Reset",
-      "text": PASSWORD_RESET_EMAIL_TEMPLATE.format(email=email, password_reset_link=password_reset_link)
+      "text": PASSWORD_RESET_EMAIL_TEMPLATE.format(email=email, password_reset_magic_link=password_reset_magic_link)
     })
-    logger.info(f"Sent password reset email: {email}, link: {password_reset_link}")
+    logger.info(f"Sent password reset email: {email}, link: {password_reset_magic_link}")
     flash(f"Please check your email ({email}) for a password reset link.", 'info')
   except Exception as err:
     logger.error(f"Failed to send email: {err}")
@@ -112,21 +112,25 @@ def user_update():
 
 
 @user_bp.route("/password/reset", methods=["GET", "POST"])
-@jwt_required()
-def user_reset_password():
+@magic_link_required()
+def user_reset_password(user):
   """ Reset the User Account Password """
-  title = "Reset Password"
-  disable_parent_breadcrumb = True
-  user = get_current_user()
+  page_title = "Reset Password"
   form = PasswordResetForm(request.form)
 
-  if not (request.method == 'POST' and form.validate()):
+  if not request.method == 'POST':
     return render_template('user/reset_password.html', **locals())
 
+ 
+  token = request.form.get('password_reset_token', None)
+  use_password_reset_token(token)
   password = request.form.get("password")
   user.set_properties(password=password, salt=PASSWORD_PEPPER)
   user.save()
-  flash('Password Successfully Reset.', 'success')
-  return redirect(url_for('user.user_profile'))
+  flash('Password successfully reset.', 'success')
+  return redirect(url_for('auth.basic_login'))
+
+
+
 
  

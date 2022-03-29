@@ -32,7 +32,7 @@ DB_OPS = {
 def get_all_db_ops(keys_only=False, order=None, placeholder=True):
   logger.debug(f'get_all_db_ops(keys_only={keys_only}, order={order})')
   ds_entities = query_ds_entities(DatabaseOperation.kind, keys_only=keys_only, order=order)
-  logger.debug(ds_entities)
+  # logger.debug(ds_entities)
   return ds_entities
 
 def get_count(q):
@@ -107,45 +107,46 @@ def create_new_db_op(op, username, email, args=None, note=None):
           'container_repo': GCR_REPO_NAME,
           'container_name': MODULE_DB_OPERATIONS_CONTAINER_NAME,
           'container_version': MODULE_DB_OPERATIONS_CONTAINER_VERSION}
-  d = DatabaseOperation(id)
-  d.set_properties(**props)
-  d.save()
+  db_op = DatabaseOperation(id)
+  db_op.set_properties(**props)
+  db_op.save()
   
   # Schedule mapping in task queue
-  task = _create_db_op_task(d)
+  task = _create_db_op_task(db_op)
   payload = task.get_payload()
   task = add_task(MODULE_DB_OPERATIONS_TASK_QUEUE_NAME, F'{API_PIPELINE_TASK_URL}/task/start/{MODULE_DB_OPERATIONS_TASK_QUEUE_NAME}', payload)
-  d = DatabaseOperation(id)
+  db_op = DatabaseOperation(id)
   if task:
-    d.set_properties(status='SUBMITTED')
+    db_op.set_properties(status='SUBMITTED')
   else:
-    d.set_properties(status='ERROR')
-  d.save()
-  return d
+    db_op.set_properties(status='ERROR')
+  db_op.save()
+
+  return db_op
   
   
-def _create_db_op_task(d):
-  return DatabaseOperationTask(**{'id': d.id,
+def _create_db_op_task(db_op):
+  return DatabaseOperationTask(**{'id': db_op.id,
                                   'kind': DatabaseOperation.kind,
-                                  'db_operation': d.db_operation,
-                                  'args': d.args,
-                                  'username': d.username, 
-                                  'email': d.email,
+                                  'db_operation': db_op.db_operation,
+                                  'args': db_op.args,
+                                  'username': db_op.username, 
+                                  'email': db_op.email,
                                   'logs': '',
-                                  'container_name': d.container_name,
-                                  'container_version': d.container_version,
-                                  'container_repo': d.container_repo})
+                                  'container_name': db_op.container_name,
+                                  'container_version': db_op.container_version,
+                                  'container_repo': db_op.container_repo})
   
   
 
 def update_db_op_status(id: str, status: str=None, operation_name: str=None):
   logger.debug(f'update_db_op_status: id:{id} status:{status} operation_name:{operation_name}')
-  d = DatabaseOperation(id)
+  db_op = DatabaseOperation(id)
   if status:
-    d.set_properties(status=status)
+    db_op.set_properties(status=status)
   if operation_name:
-    d.set_properties(operation_name=operation_name)
+    db_op.set_properties(operation_name=operation_name)
     
-  d.save()
-  return d
+  db_op.save()
+  return db_op
   

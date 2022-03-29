@@ -78,21 +78,21 @@ def create_op():
   jwt_csrf_token = (get_jwt() or {}).get("csrf")
   form = AdminCreateDatabaseOperationForm(request.form)
   form.db_op.choices = get_db_op_form_options()
-  if request.method == 'POST' and form.validate_on_submit():
-    db_op = request.form.get('db_op')
-    wormbase_version = request.form.get('wormbase_version')
-    sva_version = request.form.get('sva_version')
-    note = request.form.get('note')
-    username = get_jwt_identity()
-    user = get_current_user()
-    email = user.email
+  if not (request.method == 'POST' and form.validate_on_submit()):
+    return render_template('admin/etl/create.html', **locals())
+  
+  db_op = request.form.get('db_op')
+  wormbase_version = request.form.get('wormbase_version')
+  sva_version = request.form.get('sva_version')
+  note = request.form.get('note')
+  username = get_jwt_identity()
+  user = get_current_user()
+  email = user.email
 
-    args = {'WORMBASE_VERSION': f'WS{wormbase_version}' if wormbase_version else '',
-            'STRAIN_VARIANT_ANNOTATION_VERSION': sva_version
-            }
+  args = {
+    'WORMBASE_VERSION': f'WS{wormbase_version}' if wormbase_version else '',
+    'STRAIN_VARIANT_ANNOTATION_VERSION': sva_version
+  }
     
-    create_new_db_op(db_op, username, email, args=args, note=note)
-    return redirect(url_for("admin_etl_op.admin_etl_op"), code=302)
-
-    
-  return render_template('admin/etl/create.html', **locals())
+  create_new_db_op(db_op, username, email, args=args, note=note)
+  return redirect(url_for("admin_etl_op.admin_etl_op"), code=302)
