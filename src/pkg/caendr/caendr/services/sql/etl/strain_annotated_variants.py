@@ -25,7 +25,7 @@ def fetch_strain_variant_annotation_data(sva_gz_fname: str):
 
       CHROM,POS,REF,ALT,CONSEQUENCE,WORMBASE_ID,TRANSCRIPT,BIOTYPE,
       STRAND,AMINO_ACID_CHANGE,DNA_CHANGE,Strains,BLOSUM,Grantham,
-      Percent_Protein,GENE,VARIANT_IMPACT,DIVERGENT
+      Percent_Protein,GENE,VARIANT_IMPACT,SNPEFF_IMPACT,DIVERGENT,RELEASE
 
   """
   logger.info('Extracting strain variant annotation .csv.gz file')
@@ -53,7 +53,7 @@ def fetch_strain_variant_annotation_data(sva_gz_fname: str):
 
         # expected sample headers/rows format
         # Headers:
-        # ["","CHROM","POS","REF","ALT","CONSEQUENCE","WORMBASE_ID","TRANSCRIPT","BIOTYPE","STRAND","AMINO_ACID_CHANGE","DNA_CHANGE","Strains","BLOSUM","Grantham","Percent_Protein","GENE","VARIANT_IMPACT","SNPEFF_IMPACT","DIVERGENT"]
+        # ["","CHROM","POS","REF","ALT","CONSEQUENCE","WORMBASE_ID","TRANSCRIPT","BIOTYPE","STRAND","AMINO_ACID_CHANGE","DNA_CHANGE","Strains","BLOSUM","Grantham","Percent_Protein","GENE","VARIANT_IMPACT","SNPEFF_IMPACT","DIVERGENT", "RELEASE"]
         # Rows:
         # ["1","I",3782,"G","A",NA,NA,NA,NA,NA,NA,NA,"",NA,NA,NA,NA,NA,NA,NA]
         #
@@ -92,7 +92,9 @@ def fetch_strain_variant_annotation_data(sva_gz_fname: str):
           'percent_protein': float(row[14]) if (row[14] and row[14] != "NA") else None,
           'gene': row[15] if row[15] else None,
           'variant_impact': row[16] if row[16] else None,
-          'divergent': True if row[17] == 'D' else False,
+          'snpeff_impact': row[17] if row[17] else None,
+          'divergent': True if row[18] == 'D' else False,
+          'release': row[19] if row[19] else None
         }
         
         yield data
