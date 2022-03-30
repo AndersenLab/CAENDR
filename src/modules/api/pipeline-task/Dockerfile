@@ -39,6 +39,11 @@ COPY . ./
 RUN python -m pip install --no-cache-dir -r requirements.txt
 RUN python -m pip install --no-cache-dir -e ./caendr
 
+# Dependency validation test. Ensure that all the versions of the 
+# dependencies of the modules installed from requirements.txt 
+# are coherent and satisfied.
+RUN python check.py
+
 # Run the web service on container startup. Here we use the gunicorn
 # webserver, with one worker process and 8 threads.
 # For environments with multiple CPU cores, increase the number of workers
