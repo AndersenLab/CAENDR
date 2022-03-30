@@ -55,9 +55,10 @@ def etl_operation_append_log(message = ""):
   blob.upload_from_string(new_content)
 
   # update db operation object
-  d = DatabaseOperation(OPERATION_ID)
-  d.set_properties(logs=uri)
-  d.save()
+  db_op = DatabaseOperation(OPERATION_ID)
+  logger.info(f"Appending logs to database_operation - {db_op.id}")
+  db_op.set_properties(logs=uri)
+  db_op.save()
 
 
 logger.info('Initializing Flask App')
