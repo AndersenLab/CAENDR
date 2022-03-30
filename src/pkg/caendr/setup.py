@@ -27,5 +27,6 @@ setup(
     'python-dotenv==0.19.1',
     'pytabix==0.1',
     'importlib; python_version == "3.8.10"',
+    'Werkzeug==1.0.0'
   ],
 )

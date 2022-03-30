@@ -9,3 +9,4 @@ sentry-sdk==1.5.4
 itsdangerous==2.0.1
 pyOpenSSL==22.0.0
 Jinja2==3.0.3
+Werkzeug==1.0.0
