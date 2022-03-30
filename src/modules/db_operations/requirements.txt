@@ -9,3 +9,4 @@ PyYAML>=4.2b1
 diskcache==5.4.0
 itsdangerous==2.0.1
 Jinja2==3.0.3
+Werkzeug==1.0.0
