@@ -96,6 +96,7 @@ def create_new_heritability_report(id, username, label, data_hash, trait, data_t
 def _create_heritability_task(h):
   return HeritabilityTask(**{'id': h.id,
                             'kind': HeritabilityReport.kind,
+                            'username': h.username,
                             'data_hash': h.data_hash,
                             'container_name': h.container_name,
                             'container_version': h.container_version,

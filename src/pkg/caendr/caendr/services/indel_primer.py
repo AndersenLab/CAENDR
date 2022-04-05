@@ -188,6 +188,7 @@ def create_new_indel_primer(username, site, strain_1, strain_2, size, data_hash)
 def _create_indel_primer_task(ip):
   return IndelPrimerTask(**{'id': ip.id,
                             'kind': IndelPrimer.kind,
+                            'username': ip.username,
                             'strain_1': ip.strain_1,
                             'strain_2': ip.strain_2,
                             'site': ip.site,
