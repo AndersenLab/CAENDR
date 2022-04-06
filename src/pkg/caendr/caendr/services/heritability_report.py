@@ -24,7 +24,14 @@ def get_heritability_report(id):
   return HeritabilityReport(id)
 
 
-def get_user_heritability_reports(username):
+def get_all_heritability_results():
+  logger.debug(f'Getting all heritability reports...')
+  results = query_ds_entities(HeritabilityReport.kind)
+  primers = [HeritabilityReport(entity) for entity in results]
+  return sorted(primers, key=lambda x: x.created_on, reverse=True)
+
+
+def get_user_heritability_results(username):
   logger.debug(f'Getting all heritability reports for user: username:{username}')
   filters = [('username', '=', username)]
   results = query_ds_entities(HeritabilityReport.kind, filters=filters)
