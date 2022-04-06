@@ -24,7 +24,14 @@ table.dataTable thead .sorting {
 {% block content %}
 
 {% from "_includes/macros.html" import render_dataTable_top_menu %}
-{{ render_dataTable_top_menu() }}
+{{ 
+  render_dataTable_top_menu(
+    actions = [
+      {'label':'All Results', 'url':url_for('indel_primer.indel_primer_all_results'), 'classes':'btn nu-alt-btn', 'style':'float:right;', 'icon': 'glyphicon glyphicon-list', 'admin_only': True },
+      {'label':'Find Indels', 'url':url_for('indel_primer.indel_primer'), 'classes':'btn nu-alt-btn', 'style':'float:right; margin-right: .5rem;', 'icon': 'glyphicon glyphicon-search' }
+    ]
+  ) 
+}}
 
 <div class="row">
   <div class="col-md-12">
@@ -84,14 +91,16 @@ table.dataTable thead .sorting {
     dTable = $('#ip-table').DataTable( {
       paging: true,
       pageLength: 25,
+      autoWidth: true,
+      scrollX: true,
       aaSorting: [ [5,'desc'] ],
       aoColumns: [
-        {"width":"25%"},
-        {"width":"13%"},
-        {"width":"13%"},
-        {"width":"9%"},
-        {"width":"15%"},
-        {"width":"25%"}
+        {"width":"22%"},
+        {"width":"10%"},
+        {"width":"14%"},
+        {"width":"10%"},
+        {"width":"22%"},
+        {"width":"22%"}
       ],
       dom:"tipr"
     });

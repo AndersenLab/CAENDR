@@ -4,10 +4,10 @@ import bleach
 from flask import jsonify
 
 
-from base.utils.auth import get_jwt, jwt_required, get_current_user
+from base.utils.auth import get_jwt, jwt_required, admin_required, get_current_user
 from base.forms import FileUploadForm
 
-from caendr.services.nemascan_mapping import create_new_mapping, get_mapping, get_user_mappings
+from caendr.services.nemascan_mapping import create_new_mapping, get_mapping, get_all_mappings, get_user_mappings
 from caendr.services.cloud.storage import get_blob, generate_blob_url, get_blob_list
 
 
@@ -52,7 +52,7 @@ def submit_mapping_request():
   except Exception as ex:
     if str(type(ex).__name__) == 'DuplicateDataError':
       flash('It looks like you submitted that data already - redirecting to your list of Mapping Reports', 'danger')
-      return redirect(url_for('mapping.mapping_report_list'))
+      return redirect(url_for('mapping.mapping_user_reports'))
     if str(type(ex).__name__) == 'CachedDataError':
       flash('It looks like that data has already been submitted - redirecting to the saved results', 'danger')
       return redirect(url_for('mapping.mapping_report', id=ex.description))
@@ -60,16 +60,24 @@ def submit_mapping_request():
     flash(f"Unable to submit your request: {ex}", 'danger')
     return redirect(url_for('mapping.mapping'))
 
-@mapping_bp.route('/mapping/report/all', methods=['GET', 'POST'])
-@jwt_required()
-def mapping_report_list():
-  title = 'Genetic Mapping'
+@mapping_bp.route('/mapping/reports/all', methods=['GET', 'POST'])
+@admin_required()
+def mapping_all_reports():
+  title = 'All Genetic Mappings'
   subtitle = 'Report List'
   user = get_current_user()
-  username = user.name
-  mappings = get_user_mappings(username)
+  mappings = get_all_mappings()
+  return render_template('tools/mapping/list-all.html', **locals())
 
-  return render_template('tools/mapping/list.html', **locals())
+
+@mapping_bp.route('/mapping/reports', methods=['GET', 'POST'])
+@jwt_required()
+def mapping_user_reports():
+  title = 'My Genetic Mappings'
+  subtitle = 'Report List'
+  user = get_current_user()
+  mappings = get_user_mappings(user.name)
+  return render_template('tools/mapping/list-user.html', **locals())
 
 
 @mapping_bp.route('/mapping/report/<id>', methods=['GET'])

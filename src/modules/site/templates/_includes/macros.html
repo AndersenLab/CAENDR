@@ -77,12 +77,16 @@
   </div> {# /col-md-2 #}
   <div class="col-md-6">
     {% for action in actions %}
-      <a 
-        class="{{ action.get('classes', '') }}"
-        style="{{ action.get('style','') }}"
-        href="{{ url_for(action.get('url')) }}"
-      > {{ action.get('label') }}
-      </a>
+      {% if not action.get('admin_only', False) or (action.get('admin_only', False) and session['is_admin']) %}
+        <a 
+          class="{{ action.get('classes', '') }}"
+          style="{{ action.get('style','') }}"
+          href="{{ action.get('url') }}"
+        >
+        <span class="{{ action.get('icon', '') }}" aria-hidden="true"></span> 
+        {{ action.get('label') }}
+        </a>
+      {% endif %}
     {% endfor %}
   </div>
   <div class="col-md-4">

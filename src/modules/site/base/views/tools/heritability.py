@@ -14,10 +14,10 @@ from logzero import logger
 from datetime import datetime
 
 from base.forms import HeritabilityForm
-from base.utils.auth import jwt_required, get_jwt, get_current_user
+from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user
 
 from caendr.api.strain import get_strains
-from caendr.services.heritability_report import get_user_heritability_reports, create_new_heritability_report, get_heritability_report
+from caendr.services.heritability_report import get_all_heritability_results, get_user_heritability_results, create_new_heritability_report, get_heritability_report
 from caendr.utils.data import unique_id, convert_data_table_to_tsv, get_object_hash
 from caendr.services.cloud.storage import get_blob, generate_blob_url
 
@@ -43,9 +43,7 @@ def heritability():
 @heritability_bp.route('/heritability/create', methods=["GET"])
 @jwt_required()
 def heritability_create():
-  """
-      This endpoint is used to create a heritability job.
-  """
+  """ This endpoint is used to create a heritability job. """
   title = "Heritability Calculator"
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   jwt_csrf_token = (get_jwt() or {}).get("csrf")
@@ -60,14 +58,24 @@ def heritability_create():
   return render_template('tools/heritability/submit.html', **locals())
   
 
-@heritability_bp.route("/heritability/all")
-@jwt_required()
-def heritability_result_list():
-  title = "Heritability Results"
+@heritability_bp.route("/heritability/all-results")
+@admin_required()
+def heritability_all_results():
+  title = "All Heritability Results"
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   user = get_current_user()
-  items = get_user_heritability_reports(user.name)
-  return render_template('tools/heritability/list.html', **locals())
+  items = get_all_heritability_results()
+  return render_template('tools/heritability/list-all.html', **locals())
+
+
+@heritability_bp.route("/heritability/my-results")
+@jwt_required()
+def heritability_user_results():
+  title = "My Heritability Results"
+  alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
+  user = get_current_user()
+  items = get_user_heritability_results(user.name)
+  return render_template('tools/heritability/list-user.html', **locals())
 
 
 @heritability_bp.route('/heritability/submit', methods=["POST"])

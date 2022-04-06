@@ -8,14 +8,14 @@ import io
 from logzero import logger
 from flask import Response, Blueprint, render_template, request, url_for, jsonify, redirect, flash, abort
 
-from base.utils.auth import jwt_required, get_current_user
+from base.utils.auth import jwt_required, admin_required, get_current_user
 from base.forms import PairwiseIndelForm
 
 from caendr.services.dataset_release import get_browser_tracks_path
 from caendr.utils.constants import CHROM_NUMERIC
 from caendr.utils.data import get_object_hash
 
-from caendr.services.indel_primer import get_sv_strains, query_indels_and_mark_overlaps, create_new_indel_primer, get_indel_primer, fetch_ip_data, fetch_ip_result, get_user_indel_primers
+from caendr.services.indel_primer import get_sv_strains, query_indels_and_mark_overlaps, create_new_indel_primer, get_indel_primer, fetch_ip_data, fetch_ip_result, get_all_indel_primers, get_user_indel_primers
 
 
 
@@ -44,14 +44,24 @@ def indel_primer():
 
 
 
-@indel_primer_bp.route("/pairwise_indel_finder/all")
+@indel_primer_bp.route("/pairwise_indel_finder/all-results")
+@admin_required()
+def indel_primer_all_results():
+  title = "All Indel Primer Results"
+  alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
+  user = get_current_user()
+  items = get_all_indel_primers()
+  return render_template('tools/indel_primer/list-all.html', **locals())
+
+
+@indel_primer_bp.route("/pairwise_indel_finder/my-results")
 @jwt_required()
-def indel_primer_result_list():
-  title = "Indel Primer Results"
+def indel_primer_user_results():
+  title = "My Indel Primer Results"
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   user = get_current_user()
   items = get_user_indel_primers(user.name)
-  return render_template('tools/indel_primer/list.html', **locals())
+  return render_template('tools/indel_primer/list-user.html', **locals())
 
 
 

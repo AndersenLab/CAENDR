@@ -27,20 +27,17 @@ table.dataTable thead .sorting {
 {{ 
   render_dataTable_top_menu(
     actions = [
-      {'label':'New Mapping', 'url':'mapping.mapping', 'classes':'btn nu-alt-btn', 'style':'float:right' }
+      {'label':'All Results', 'url':url_for('heritability.heritability_all_results'), 'classes':'btn nu-alt-btn', 'style':'float:right;', 'icon': 'glyphicon glyphicon-list', 'admin_only': True },
+      {'label':'New Calculation', 'url':url_for('heritability.heritability_create'), 'classes':'btn nu-alt-btn', 'style':'float:right; margin-right: .5rem;', 'icon': 'glyphicon glyphicon-plus' }
     ]
   ) 
 }}
-
-
 
 <div class="row">
 
   <div class="col-md-12">
 
-    
-
-    <table id='mapping-table' class='table table-hover table-striped table-compact strain-table' style="width: 100%;">
+    <table id='h2-table' class='table table-hover table-striped table-compact strain-table' style="width: 100%;">
 
       <thead>
         <tr class="header">
@@ -52,20 +49,18 @@ table.dataTable thead .sorting {
       </thead>
 
       <tbody>
-        {% for item in mappings %}
+        {% for item in items %}
           <tr>
             {% if item %}
               <td class='data-label'> {{ item.label }} </td>
               <td class='data-trait'> {{ item.trait }} </td>
               <td class='data-status'>
                 {% if item.status == 'COMPLETE' %}
-                <a href="{{ url_for('mapping.mapping_report', id=item.id) }}">
+                <a href="{{ url_for('heritability.heritability_result', id=item.id) }}">
                   {{ item.status }}
                 </a>
                 {% else %}
-                <a href="{{ url_for('mapping.mapping_report', id=item.id) }}">
-                  {{ item.status }}
-                </a>
+                {{ item.status }}
                 {% endif %}
               </td>
             {% endif %}
@@ -76,14 +71,7 @@ table.dataTable thead .sorting {
 
     </table>
 
-    
-
-  
   </div> {# /col #}
-
-  
-
-
 </div> {# /row #}
 
 
@@ -95,7 +83,7 @@ table.dataTable thead .sorting {
 
   $(document).ready(function(){
 
-    const dTable = $('#mapping-table').DataTable( {
+    const dTable = $('#h2-table').DataTable( {
       paging: true,
       pageLength: 25,
       autoWidth: true,
