@@ -105,7 +105,7 @@ These steps describe how to add data to the strain sheet, load it into the site 
 - `Admin -> Database Operations`: click 'New Operation' then 'Rebuild wormbase gene table from external sources' (Wormbase Version number required)
 - `Admin -> Database Operations`: click 'New Operation' then 'Rebuild Strain Annotated Variant table from .csv.gz file' (Strain Variant Annotation Version number required). This operation expects the .csv.gz source file to already exist in the Cloud Bucket location described below.
 
-## ##Strain Variant Annotation
+## Strain Variant Annotation
 -------------------------------------------------------------------
 The strain variant annotation data csv should be versioned with the date of the release having the format YYYYMMDD, compressed with gzip, and uploaded to:
 
