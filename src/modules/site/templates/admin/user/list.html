@@ -1,12 +1,39 @@
 {% extends "_layouts/default.html" %}
 
+{% block custom_head %}
+    <link rel="stylesheet" href="//cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css" />
+    <script type="text/javascript" src="//cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+{% endblock %}
+
+{% block style %}
+<style>
+
+table.dataTable thead .sorting_asc {
+  background: url("//cdn.datatables.net/1.10.0/images/sort_asc.png") no-repeat center left;
+}
+table.dataTable thead .sorting_desc {
+  background: url("//cdn.datatables.net/1.10.0/images/sort_desc.png") no-repeat center left;
+}
+table.dataTable thead .sorting {
+  background: url("//cdn.datatables.net/1.10.0/images/sort_both.png") no-repeat center left;
+}
+
+</style>
+{% endblock %}
+
 {% block content %}
 
+{% from "_includes/macros.html" import render_dataTable_top_menu %}
+{{ render_dataTable_top_menu() }}
+
 <div class="row">
+
   <div class="col-md-12">
-    <table class='table'>
+
+    <table id='h2-table' class='table table-hover table-striped table-compact strain-table' style="width: 100%;">
+
       <thead>
-        <tr>
+        <tr class="header">
           <th class='col-md-1'><strong> Username </strong></th>
           <th class='col-md-2'><strong> Full Name </strong></th>
           <th class='col-md-2'><strong> Email </strong></th>
@@ -17,6 +44,7 @@
           <th class='col-md-1'><strong> Delete </strong></th>
         </tr>
       </thead>
+
       <tbody>
         {% for user in users%}
           <tr>
@@ -45,9 +73,51 @@
           </tr>
         {% endfor %}
       </tbody>
+
     </table>
-	</div> <!-- /col-md-12 -->
-</div> <!-- /row -->
+
+  </div> {# /col #}
+</div> {# /row #}
+
+
+{% endblock %}
+
+{% block script %}
+
+<script>
+
+  $(document).ready(function(){
+
+    const dTable = $('#h2-table').DataTable( {
+      paging: true,
+      pageLength: 25,
+      autoWidth: true,
+      scrollX: true,
+      aaSorting: [ [2,'asc'] ],
+      aoColumns: [
+        {"width": "14%"},
+        {"width": "14%"},
+        {"width": "14%"},
+        {"width": "10%"},
+        {"width": "14%"},
+        {"width": "14%"},
+        {"width": "10%"},
+        {"width": "10%"}
+      ],
+      dom:"tipr"
+    });
+
+    $('#filter').keyup(function(){  
+      dTable.search($(this).val()).draw();
+    });
+
+    $('#page-length').change(function(){  
+      dTable.page.len($(this).val()).draw();
+    });
+
+  });
+
+</script>
 
 
 {% endblock %}
