@@ -37,6 +37,11 @@ RUN apt-get update && \
 ENV APP_HOME /site
 WORKDIR $APP_HOME
 
+RUN mkdir /gcloud
+RUN curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-380.0.0-linux-x86_64.tar.gz /gcloud
+RUN cd /gcloud && tar xvzf google-cloud-sdk-380.0.0-linux-x86_64.tar.gz
+
+
 # make venv
 ENV VIRTUAL_ENV $APP_HOME/venv
 RUN virtualenv -p python3 $VIRTUAL_ENV
