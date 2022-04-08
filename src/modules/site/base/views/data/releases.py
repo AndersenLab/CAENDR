@@ -22,7 +22,7 @@ from caendr.api.isotype import get_isotypes
 from caendr.models.datastore import DatasetRelease
 from caendr.models.sql import Strain, StrainAnnotatedVariant
 from caendr.services.cloud.storage import generate_blob_url
-from caendr.services.dataset_release import get_all_dataset_releases, get_release_summary, get_release_path, get_browser_tracks_path, get_release_bucket
+from caendr.services.dataset_release import get_all_dataset_releases, get_release_path, get_browser_tracks_path, get_release_bucket
 from caendr.models.error import NotFoundError
 
 
@@ -69,7 +69,6 @@ def data_v02(RELEASE, RELEASES):
   title = "Genomic Data"
   alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.landing')}
   release_version = RELEASE.version
-  release_summary = get_release_summary(release_version)
   strain_listing = query_strains(release_version=release_version)
 
   release_bucket = get_release_bucket()
@@ -77,7 +76,7 @@ def data_v02(RELEASE, RELEASES):
   browser_tracks_path = get_browser_tracks_path()
   browser_tracks_url = generate_blob_url(release_bucket, browser_tracks_path)
 
-  f = RELEASE.get_report_data_urls_map()
+  files = RELEASE.get_report_data_urls_map()
   return render_template('data/releases.html', **locals())
 
 
@@ -87,7 +86,6 @@ def data_v01(RELEASE, RELEASES):
   title = "Genomic Data"
   alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.landing')}
   release_version = RELEASE.version
-  release_summary = get_release_summary(release_version)
   strain_listing = query_strains(release_version=release_version)
 
   release_bucket = get_release_bucket()
@@ -95,14 +93,13 @@ def data_v01(RELEASE, RELEASES):
   browser_tracks_path = get_browser_tracks_path()
   site_bucket_public_name = config.get('MODULE_SITE_BUCKET_PUBLIC_NAME', 'NONE')
   
-  f = RELEASE.get_report_data_urls_map()
+  files = RELEASE.get_report_data_urls_map()
 
   try:
-    vcf_summary_url = f.get('vcf_summary_url')
+    vcf_summary_url = files.get('vcf_summary_url')
     vcf_summary = requests.get(vcf_summary_url).json()
   except json.JSONDecodeError:
     vcf_summary = None
-
 
   return render_template('data/releases.html', **locals())
 
