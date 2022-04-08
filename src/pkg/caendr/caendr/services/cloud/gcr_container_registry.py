@@ -15,16 +15,14 @@ VALID_REPOS = [
 
 def get_gcloud():
   gcloud_bin_path = os.getenv('MODULE_GCLOUD_BIN_PATH')
-  if gcloud_bin_path is None:
-    logger.warn("gcloud path is not set")
+  if gcloud_bin_path is not None and os.path.exists(gcloud_bin_path):
+    return gcloud_bin_path    
 
-  logger.info("trying to find gcloud in the system path")
   gcloud_bin_path = which("gcloud")    
-  if gcloud_bin_path is not None:
-    logger.info(f"Found gcloud binary at [{gcloud_bin_path}]")    
+  if gcloud_bin_path is not None and os.path.exists(gcloud_bin_path):
     return gcloud_bin_path
 
-  logger.warn("No gcloud found in system path")    
+  logger.warn("gcloud binary not found")
   return None
 
 
