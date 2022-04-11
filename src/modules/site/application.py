@@ -212,6 +212,10 @@ MODULE_SITE_BUCKET_ASSETS_NAME = os.environ.get('MODULE_SITE_BUCKET_ASSETS_NAME'
 def ext_asset(path):
   return f"https://storage.googleapis.com/{MODULE_SITE_BUCKET_ASSETS_NAME}/{path}"
 
+ENV = os.environ.get("ENV")
+def get_env():
+  return ENV or None
+
 
 def configure_jinja(app):
   # Injects "contexts" into templates
@@ -225,6 +229,7 @@ def configure_jinja(app):
       int=int,
       len=len,
       ext_asset=ext_asset,
+      get_env=get_env,
       basename=os.path.basename,
       render_markdown=render_markdown,
       render_ext_markdown=render_ext_markdown
