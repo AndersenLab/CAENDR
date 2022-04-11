@@ -64,19 +64,60 @@ Then switch to a different terminal prompt and change to the module's src direct
 make run
 ```
 
+## Deployment
+-------------------------------------------------------------------
+Pre-requisites: 
+Ensure that you are logged in to the GCLOUD GCP project in the CLI, or using a devops service account.
+
+Open a terminal at the root of the project:
+1. Set ENV and GOOGLE_APPLICATION_CREDENTIALS environment variables:
+    ```bash
+    export ENV={ENV_TO_DEPLOY}
+    export GOOGLE_APPLICATION_CREDENTIALS={PATH_TO_GCP_CREDENTIALS}
+    ```
+2. Increment the versions for each module that is being updated as part of the deployment:
+    * Update the `version` property for the site in the `/env/{env}/global.env`
+    * Update `version` in the file `src/modules/{module_name}/module.env`
+
+3. Move to each module folder and configure the modules for deployment:
+    ```bash
+    cd src/modules/{module_name}
+    make configure
+    ```
+    * The module root folder should now contain a *.env* file
+    * The module root folder SHOULD NOT contain a *venv* folder
+
+4. Publish the module to GCR (src/modules/{module_name}):
+    ```bash
+    make publish
+    ```
+    * When the command completes, check the [GCR](https://console.cloud.google.com/gcr/images/caendr/global/caendr-db-operations?authuser=1&project=caendr) and confirm your image with the proper version tag is appearing
+
+5. Deploy in Terraform shell:
+    * Open a terraform-shell
+    ```bash
+    make terraform-shell
+    ```
+    * Create a plan and apply
+    ```bash
+    terraform plan -out tf_plan && terraform apply tf_plan
+    ```
+
+Troubleshooting:
+* Even if ENV and GOOGLE_APPLICATION_CREDENTIALS are set correctly you will need to be [logged into gcloud and configure docker](#setting-the-environment-and-gcloud-login) to enable publishing containers to GCR since the service account does not have permissions to publish.
+
 ## Deployment of Individual Components
 -------------------------------------------------------------------
-Directions for deploying each module:
+Targeted deployment is under construction until isolated TF states can be establish for each module.
+
+<!-- Directions for deploying each module:
 * [Site](src/modules/api/pipeline-task/README.md)
 * [API Pipeline Tasks](src/modules/api/pipeline-task/README.md)
 * [Database Operations](src/modules/db_operations/README.md)
 * [Gene Browser Tracks](src/modules/gene_browser_tracks/README.md)
 * [Heritability](src/modules/heritability/README.md)
 * [Image Thumbnail Generator](src/modules/img_thumb_gen/README.md)
-* [Indel Primer](src/modules/indel_primer/README.md)
-
-Troubleshooting:
-* Even if ENV and GOOGLE_APPLICATION_CREDENTIALS are set correctly you will need to be [logged into gcloud and configure docker](#setting-the-environment-and-gcloud-login) to enable publishing containers to GCR since the service account does not have permissions to publish.
+* [Indel Primer](src/modules/indel_primer/README.md) -->
 
 ##  Website Requirements
 -------------------------------------------------------------------

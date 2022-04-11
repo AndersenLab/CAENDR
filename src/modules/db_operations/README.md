@@ -39,7 +39,11 @@ run.sh
 
 ## Deploying
 -------------------------------------------------------------------
-Pre-requisites: 
+Targeted deployment is under construction until isolated TF states can be establish for each module.
+
+See full app deployment docs in the [root project README.md](../../../README.md#deployment).
+
+<!-- Pre-requisites: 
 Ensure that you are logged in to the GCLOUD GCP project in the CLI, or using a devops service account.
 
 Open a terminal at the root of the project:
@@ -78,4 +82,4 @@ Open a terminal at the root of the project:
     * Create a plan targeting the module and apply the plan
     ```bash
     terraform plan -target module.db_operations -out tf_plan && terraform apply tf_plan
-    ```
+    ``` -->
