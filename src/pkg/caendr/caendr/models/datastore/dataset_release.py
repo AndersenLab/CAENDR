@@ -78,6 +78,7 @@ class DatasetRelease(Entity):
 def V2_Data_Map():
   return {
     'release_notes': '$ver/release_notes.md',
+    'summary': '$ver/summary.md',
     'methods': '$ver/methods.md',
     'alignment_report': '$ver/alignment_report.html',
     'gatk_report': '$ver/gatk_report.html',
@@ -111,6 +112,7 @@ def V2_Data_Map():
 
 def V1_Data_Map():
   return {
+    'summary': '$ver/summary.md',
     'methods': '$ver/methods.md',
     'haplotype_png_url': '$ver/haplotype/haplotype.png',
     'haplotype_thumb_png_url': '$ver/haplotype/haplotype.thumb.png',
