@@ -76,7 +76,7 @@ Open a terminal at the root of the project:
     export GOOGLE_APPLICATION_CREDENTIALS={PATH_TO_GCP_CREDENTIALS}
     ```
 2. Increment the versions for each module that is being updated as part of the deployment:
-    * Update the `version` property for the site in the `/env/{env}/global.env`
+    * Update the `version` property for the module in the `/env/{env}/global.env`
     * Update `version` in the file `src/modules/{module_name}/module.env`
 
 3. Move to each module folder and configure the modules for deployment:
@@ -105,6 +105,7 @@ Open a terminal at the root of the project:
 
 Troubleshooting:
 * Even if ENV and GOOGLE_APPLICATION_CREDENTIALS are set correctly you will need to be [logged into gcloud and configure docker](#setting-the-environment-and-gcloud-login) to enable publishing containers to GCR since the service account does not have permissions to publish.
+* Sometimes after deployment of the full application the ext_assets folder will not copy to the GCP static bucket, but terraform state will reflect the correct bucket resources. You'll notice the CeNDR logo and worms video will not show up on the home page. Simply redeploy the full application and the assets should be correctly copied to the GCP static bucket, fixing the issue.
 
 ## Deployment of Individual Components
 -------------------------------------------------------------------
