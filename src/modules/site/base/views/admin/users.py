@@ -30,26 +30,27 @@ def admin_users(id=None):
 @admin_users_bp.route('/<id>/edit/', methods=["GET", "POST"])
 @admin_required()
 def users_edit(id=None):
-  alt_parent_breadcrumb = {"title": "Admin/Users", "url": url_for('admin_users.admin_users')}
-  if id is None:
-    # todo: fix redirect
-    return render_template('500.html'), 500
-
   title = "Edit User"
   jwt_csrf_token = (get_jwt() or {}).get("csrf")
   form = AdminEditUserForm(request.form)
+  alt_parent_breadcrumb = {"title": "Admin/Users", "url": url_for('admin_users.admin_users')}
+
   user = User(id)
-
-  if request.method == 'GET':
-    form.roles.data = user.roles if hasattr(user, 'roles') else ['user']
-
-  if request.method == 'POST' and form.validate():
-    user.roles = request.form.getlist('roles')
-    user.save()
+  if not user._exists:
+    flash(f"Please select a valid user to edit", "error")
     return redirect(url_for('admin_users.admin_users'))
 
-  # todo: fix redirect here
-  return render_template('admin/user/edit.html', **locals())
+  if not (request.method == 'POST' and form.validate()):
+    form.roles.data = user.roles if hasattr(user, 'roles') else ['user']
+    return render_template('admin/user/edit.html', **locals())
+  
+  email = request.form.get('email')
+  full_name = request.form.get('full_name')
+  user.roles = request.form.getlist('roles')
+  user.set_properties(email=email, full_name=full_name)
+  user.save()
+  flash(f"Updated user: {id}", "success")
+  return redirect(url_for('admin_users.admin_users'))
 
 
 @admin_users_bp.route('/<id>/delete', methods=["GET"])
