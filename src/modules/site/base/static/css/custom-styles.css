@@ -716,32 +716,32 @@ header #latest-update-top div .read-more-btn:hover {
 }
 
 /* line 719, ../sass/custom-styles.scss */
-.strain-table {
+.strain-table, .etl-table {
   box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.1);
   margin-top: 30px;
   border-radius: 8px;
 }
 /* line 724, ../sass/custom-styles.scss */
-.strain-table thead {
+.strain-table thead, .etl-table thead {
   background: #401F68;
   color: #FFFFFF;
 }
 /* line 729, ../sass/custom-styles.scss */
-.strain-table thead tr th {
+.strain-table thead tr th, .etl-table thead tr th {
   padding: 12px 10px;
   font-weight: 500;
   font-size: 1.0em;
 }
 /* line 739, ../sass/custom-styles.scss */
-.strain-table tbody tr:nth-of-type(odd) {
+.strain-table tbody tr:nth-of-type(odd), .etl-table tbody tr:nth-of-type(odd) {
   background-color: unset;
 }
 /* line 743, ../sass/custom-styles.scss */
-.strain-table tbody tr:hover {
+.strain-table tbody tr:hover, .etl-table tbody tr:hover {
   background-color: rgba(0, 0, 0, 0.02);
 }
 /* line 747, ../sass/custom-styles.scss */
-.strain-table tbody tr td {
+.strain-table tbody tr td, .etl-table tbody tr td {
   padding: 10px;
 }
 /* line 752, ../sass/custom-styles.scss */
