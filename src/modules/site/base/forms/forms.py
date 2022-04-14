@@ -31,7 +31,7 @@ from wtforms.fields.html5 import EmailField
 from constants import PRICES, SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS, REPORT_TYPES
 
 from caendr.services.profile import get_profile_role_form_options
-from caendr.services.user import get_user_role_form_options
+from caendr.services.user import get_user_role_form_options, get_local_user_by_email
 from caendr.services.database_operation import get_db_op_form_options
 from caendr.services.indel_primer import get_indel_primer_chrom_choices, get_indel_primer_strain_choices
 from caendr.services.markdown import get_content_type_form_options
@@ -109,6 +109,11 @@ class UserRegisterForm(FlaskForm):
     user = User(field.data)
     if user._exists:
       raise ValidationError("Username already exists")
+
+  def validate_email(form, field):
+    existing_user = get_local_user_by_email(field.data)
+    if len(existing_user):
+      raise ValidationError("Email already exists")
 
 
 class UserUpdateForm(FlaskForm):
