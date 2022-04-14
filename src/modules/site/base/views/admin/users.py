@@ -1,8 +1,9 @@
+from logzero import logger
 from datetime import datetime, timezone
-from flask import request, render_template, Blueprint, redirect, url_for
+from flask import request, render_template, Blueprint, redirect, url_for, flash
 
 from base.forms import AdminEditUserForm
-from base.utils.auth import jwt_required, get_jwt, admin_required
+from base.utils.auth import get_jwt, admin_required, get_current_user
 
 from caendr.models.datastore import User
 from caendr.services.user import get_all_users, delete_user
@@ -54,8 +55,18 @@ def users_edit(id=None):
 @admin_users_bp.route('/<id>/delete', methods=["GET"])
 @admin_required()
 def users_delete(id=None):
-  if id is None:
-  # todo: fix redirect
-    return render_template('500.html'), 500
-  delete_user(id)
+  user = get_current_user()
+  
+  target_user = User(id)
+  if id == user.name or not target_user._exists:
+    flash(f"Please select a valid user to delete", "error")
+    return redirect(url_for('admin_users.admin_users'))
+  
+  try:
+    delete_user(id)
+    logger.info(f"Deleting user: {id}")
+    flash(f"Deleted user: {id}", "success")
+  except Exception as err:
+    logger.error(err)
+    flash(f"Unable to delete user at this time.", "error")
   return redirect(url_for('admin_users.admin_users'))
