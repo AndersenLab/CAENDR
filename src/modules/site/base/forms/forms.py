@@ -128,7 +128,13 @@ class AdminEditUserForm(FlaskForm):
   """ A form for one or more roles """
   _USER_ROLES = get_user_role_form_options()
 
-  roles = MultiCheckboxField('User Roles', choices=_USER_ROLES)
+  full_name = StringField('', [Required(), Length(min=5, max=50)])
+  email = EmailField('', [Required(), Email(), Length(min=6, max=50)])
+  roles = MultiCheckboxField('', choices=_USER_ROLES)
+
+  def validate_roles(form, field):
+    if not len(field.data):
+      raise ValidationError("User must have at least one role")
 
 class AdminEditProfileForm(FlaskForm):
   """ A form for updating individuals' public profile on the site """
