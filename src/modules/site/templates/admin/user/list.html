@@ -65,8 +65,25 @@ table.dataTable thead .sorting {
                 </a>
               </td>
               <td>
-                <a href="{{ url_for('admin_users.users_delete', id=user.name) }}"> 
+                <a
+                  id="toggle-delete-user-{{ loop.index }}"
+                  style="cursor: pointer;"
+                  onclick="toggleConfirmDelete(true, '{{loop.index}}')"> 
                   Delete
+                </a>
+                <a
+                  id="confirm-delete-user-{{ loop.index }}"
+                  style="display:none; cursor:pointer;"
+                  href="{{ url_for('admin_users.users_delete', id=user.name) }}"
+                >
+                  Confirm
+                </a>
+                <a
+                  id="cancel-delete-user-{{ loop.index }}"
+                  style="display:none; cursor:pointer;"
+                  onclick="toggleConfirmDelete(false, '{{loop.index}}')"
+                >
+                  Cancel
                 </a>
               </td>
             {% endif %}
@@ -85,7 +102,6 @@ table.dataTable thead .sorting {
 {% block script %}
 
 <script>
-
   $(document).ready(function(){
 
     const dTable = $('#h2-table').DataTable( {
@@ -114,8 +130,19 @@ table.dataTable thead .sorting {
     $('#page-length').change(function(){  
       dTable.page.len($(this).val()).draw();
     });
-
   });
+
+  function toggleConfirmDelete(show = false, idx) {
+      if (show) {
+        $(`#toggle-delete-user-${idx}`).hide();
+        $(`#confirm-delete-user-${idx}`).show();
+        $(`#cancel-delete-user-${idx}`).show();
+      } else {
+        $(`#toggle-delete-user-${idx}`).show();
+        $(`#confirm-delete-user-${idx}`).hide();
+        $(`#cancel-delete-user-${idx}`).hide();
+      }
+    }
 
 </script>
 
