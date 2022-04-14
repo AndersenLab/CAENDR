@@ -31,18 +31,20 @@ def user():
 def user_register():
   title = 'Register'
   form = UserRegisterForm(request.form)
-  if request.method == 'POST' and form.validate():
-    username = request.form.get('username')
-    password = request.form.get('password')
-    full_name = request.form.get('full_name')
-    email = request.form.get('email')
-    roles = ['user']
-    id = slugify(username)
-    user = User(id)
-    user.set_properties(username=username, password=password, salt=PASSWORD_PEPPER, full_name=full_name, email=email, roles=roles, last_login=datetime.now(timezone.utc), user_type='LOCAL')
-    user.save()
-    return assign_access_refresh_tokens(username, user.roles, url_for("user.user_profile"))
-  return render_template('user/register.html', **locals())
+  if not (request.method == 'POST' and form.validate()):
+    return render_template('user/register.html', **locals())
+   
+  username = request.form.get('username')
+  password = request.form.get('password')
+  full_name = request.form.get('full_name')
+  email = request.form.get('email')
+  roles = ['user']
+  id = slugify(username)
+  user = User(id)
+  user.set_properties(username=username, password=password, salt=PASSWORD_PEPPER, full_name=full_name, email=email, roles=roles, last_login=datetime.now(timezone.utc), user_type='LOCAL')
+  user.save()
+  return assign_access_refresh_tokens(username, user.roles, url_for("user.user_profile"))
+  
 
 
 @user_bp.route("/recover", methods=["GET", "POST"])
