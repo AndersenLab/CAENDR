@@ -1,12 +1,12 @@
 from logzero import logger
-from datetime import datetime, timezone
 from flask import request, render_template, Blueprint, redirect, url_for, flash
 
 from base.forms import AdminEditUserForm
-from base.utils.auth import get_jwt, admin_required, get_current_user
+from base.utils.auth import get_jwt, create_one_time_token, admin_required, get_current_user
 
 from caendr.models.datastore import User
 from caendr.services.user import get_all_users, delete_user
+from caendr.services.email import send_email, PASSWORD_RESET_EMAIL_TEMPLATE
 
 admin_users_bp = Blueprint('admin_users',
                             __name__,
@@ -51,6 +51,38 @@ def users_edit(id=None):
   user.save()
   flash(f"Updated user: {id}", "success")
   return redirect(url_for('admin_users.admin_users'))
+
+
+@admin_users_bp.route('/<id>/recover', methods=["GET"])
+@admin_required()
+def users_recover(id=None):
+  """ Send a password reset link to the chosen user """
+  title = "Edit User"
+  jwt_csrf_token = (get_jwt() or {}).get("csrf")
+  alt_parent_breadcrumb = {"title": "Admin/Users", "url": url_for('admin_users.admin_users')}
+
+  user = User(id)
+  if not (user._exists or user.user_type == 'LOCAL'): 
+    flash(f"Please select a valid LOCAL user to recover", "error")
+    return redirect(url_for('admin_users.users_edit', id=user.name))
+
+  email = user.email
+  token = create_one_time_token(id=user.name)
+  password_reset_magic_link = url_for('user.user_reset_password', token=token, _external=True)
+  try:
+    send_email({
+      "from": "no-reply@elegansvariation.org",
+      "to": [ email ],
+      "subject": "CeNDR Password Reset",
+      "text": PASSWORD_RESET_EMAIL_TEMPLATE.format(email=email, password_reset_magic_link=password_reset_magic_link)
+    })
+    logger.info(f"Sent password reset email: {email} to user: {user.name}, link: {password_reset_magic_link}")
+    flash(f"Sent password reset email to {user.full_name} ({user.name}) at {email}", "success")
+  except Exception as err:
+    logger.error(f"Failed to send email: {err}")
+    flash(f"Unable to reset credentials for {user.name} at this time. Please try again later.", "error")
+  
+  return redirect(url_for('admin_users.users_edit', id=user.name))
 
 
 @admin_users_bp.route('/<id>/delete', methods=["GET"])
