@@ -93,14 +93,9 @@ Open a terminal at the root of the project:
     ```
     * When the command completes, check the [GCR](https://console.cloud.google.com/gcr/images/caendr/global/caendr-db-operations?authuser=1&project=caendr) and confirm your image with the proper version tag is appearing
 
-5. Deploy in Terraform shell:
-    * Open a terraform-shell
+5. Deploy new app version:
     ```bash
-    make terraform-shell
-    ```
-    * Create a plan and apply
-    ```bash
-    terraform plan -out tf_plan && terraform apply tf_plan
+    make cloud-resource-deploy
     ```
 
 Troubleshooting:
