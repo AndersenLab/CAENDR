@@ -166,6 +166,7 @@ cloud-resource-deploy: cloud-resource-init
 	terraform plan -out tf_plan && \
 	$(MAKE) -C $(PROJECT_DIR) confirm --no-print-directory && \
 	terraform apply "tf_plan" 
+	@echo -e "$(COLOR_Y)GAE -- Login to GCP and delete all the older versions of GAE no longer in use!$(COLOR_N)\n"
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
 
