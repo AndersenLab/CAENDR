@@ -10,7 +10,8 @@ from caendr.utils.data import AltTemplate
 GCR_REPO_NAME = os.environ.get('GCR_REPO_NAME')
 
 VALID_REPOS = [
-  "caendr-db-operations"
+  "caendr-db-operations",
+  "caendr-gene-browser-tracks"
 ]
 
 def get_gcloud():
