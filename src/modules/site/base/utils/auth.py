@@ -31,9 +31,13 @@ PASSWORD_RESET_EXPIRATION_SECONDS = int(os.environ.get('MODULE_SITE_PASSWORD_RES
 
 
 def assign_access_refresh_tokens(id, roles, url, refresh=True):
+  if not url:
+    url = '/'
+
   resp = make_response(redirect(url, 302))
   access_token = create_access_token(identity=str(id), additional_claims={'roles': roles})
   set_access_cookies(resp, access_token)
+
   if refresh:
     refresh_token = create_refresh_token(identity=str(id))
     set_refresh_cookies(resp, refresh_token)
@@ -132,8 +136,9 @@ def user_lookup_callback(_jwt_header, jwt_data):
 
 @jwt.unauthorized_loader
 def unauthorized_callback(reason):
+  requested_route = request.path or None
   ''' Invalid auth header, redirect to login'''
-  return redirect(url_for('auth.choose_login')), 302
+  return redirect(url_for('auth.choose_login', next=requested_route)), 302
     
 
 @jwt.invalid_token_loader

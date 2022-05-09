@@ -48,11 +48,11 @@ def refresh():
 @auth_bp.route("/login/select", methods=['GET'])
 def choose_login(error=None):
   # Relax scope for Google
-  referrer = session.get("login_referrer") or "/"
+  referrer = session.get("login_referrer") or '/'
   if 'login' in referrer:
     session["login_referrer"] = '/'
   else:
-    session["login_referrer"] = request.referrer
+    session["login_referrer"] = request.args.get('next')
   os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = "true"
   VARS = {'page_title': 'Choose Login'}
   if error:
@@ -86,9 +86,7 @@ def basic_login():
 
 @auth_bp.route('/logout')
 def logout():
-  """
-      Logs the user out.
-  """
+  """ Logs the user out. """
   session.clear()
   resp = unset_jwt()
   flash("Successfully logged out", "success")
