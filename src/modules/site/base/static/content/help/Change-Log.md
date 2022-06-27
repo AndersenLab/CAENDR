@@ -4,7 +4,7 @@
 
 #### v1.5.2 (2020-09-07)
 
-* A divergent region summmary track has been added to the primer indel tool.
+* A divergent region summary track has been added to the primer indel tool.
 * Sweep haplotypes have been added to the latest release.
 
 #### v1.5.1 (2020-08-30)
