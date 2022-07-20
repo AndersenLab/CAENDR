@@ -179,3 +179,11 @@ Nemascan requires species data to be manually uploaded to cloud storage to make 
 -------------------------------------------------------------------
 Q: Why does it look like the `site` or `db_operations` are unable to connect to Cloud SQL (PostGres)?
 A: Check if the server exhausted the `max_connections` limit. Google Postgres has a hard limit on connections and there is a reserved number of connections for super-admin (backups, etc), that are not available for run-time apps/services/modules. Consider restarting (or stopping and starting) to close all the active connections. In GCP this can be viewed in the POSTGRES tab, select the "Active Connections" from the dropdown to view the stats.
+
+Q: I'm getting errors installing `numpy` on MacOS running on M1/M2 chip. 
+A: See below:
+
+```
+pip3 install cython
+pip3 install --no-binary :all: --no-use-pep517 numpy
+```
