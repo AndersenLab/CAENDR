@@ -187,3 +187,10 @@ A: See below:
 pip3 install cython
 pip3 install --no-binary :all: --no-use-pep517 numpy
 ```
+
+Q: Missing `pg_config` when running on MacOS?
+A: Install via homebrew:
+
+```
+brew install postgresql
+```
