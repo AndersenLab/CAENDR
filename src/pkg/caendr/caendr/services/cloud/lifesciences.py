@@ -104,6 +104,9 @@ def update_all_linked_status_records(kind, operation_name):
       status_record = IndelPrimer(entity.key.name)
     elif kind == NemascanMapping.kind:
       status_record = NemascanMapping(entity.key.name)
+    else:
+      logger.warn(f"Unrecognized kind: {kind}")
+      continue
       
     status_record.set_properties(status=status)
     status_record.save()
