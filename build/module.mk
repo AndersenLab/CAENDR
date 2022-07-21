@@ -99,7 +99,7 @@ container-build:
 	echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 	
 	@echo -e "\n$(COLOR_B)Building container image...$(COLOR_N)" && \
-	docker build $(MODULE_DIR) -t gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${MODULE_NAME}:${MODULE_VERSION} && \
+	docker buildx build --platform=linux/amd64 $(MODULE_DIR) -t gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${MODULE_NAME}:${MODULE_VERSION} && \
 	echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
 	@echo -e "\n$(COLOR_B)Removing local caendr package source copy$(COLOR_N)" && \
