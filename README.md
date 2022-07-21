@@ -187,3 +187,6 @@ A: See below:
 pip3 install cython
 pip3 install --no-binary :all: --no-use-pep517 numpy
 ```
+
+Q: Which version of terraform do I need to use? 
+A: Use terraform version 1.1.8. Optional: use `tfenv` to manage the terraform version
