@@ -1,4 +1,5 @@
 import os
+from caendr.models.datastore.heritability_report import HeritabilityReport
 
 from logzero import logger
 from googleapiclient import discovery
@@ -32,18 +33,19 @@ def start_pipeline(pipeline_request):
     logger.debug(f'Pipeline Response: {response}')
     return response
   except Exception as err:
+    logger.error(f"pipeline error: {err}")
     raise PipelineRunError(err)
 
 
 def create_pipeline_operation_record(task, response):
   if response is None:
     raise PipelineRunError()
-  
+
   name = response.get('name')
   metadata = response.get('metadata')
   if name is None or metadata is None:
     raise PipelineRunError('Pipeline start response missing expected properties')
-  
+
   id = name.rsplit('/', 1)[-1]
   data = {
     'id': id,
@@ -94,7 +96,7 @@ def update_all_linked_status_records(kind, operation_name):
       status = "ERROR"
   else:
     status = "RUNNING"
-  
+
   filters=[("operation_name", "=", operation_name)]
   ds_entities = query_ds_entities(kind, filters=filters, keys_only=True)
   for entity in ds_entities:
@@ -104,9 +106,11 @@ def update_all_linked_status_records(kind, operation_name):
       status_record = IndelPrimer(entity.key.name)
     elif kind == NemascanMapping.kind:
       status_record = NemascanMapping(entity.key.name)
+    elif kind == HeritabilityReport.kind:
+      status_record = HeritabilityReport(entity.key.name)
     else:
       logger.warn(f"Unrecognized kind: {kind}")
       continue
-      
+
     status_record.set_properties(status=status)
     status_record.save()
