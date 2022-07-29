@@ -137,7 +137,9 @@ def format_release(value):
 def get_status_css_class(value):
   mapping = {
     'COMPLETE': 'bg-success',
-    'ERROR': 'bg-danger'
+    'ERROR': 'bg-danger',
+    'SUBMITTED': 'bg-info',
+    'RUNNING': 'bg-primary'
   }
   return mapping.get(value, '')
 
