@@ -86,3 +86,64 @@ Open a terminal at the root of the project:
 ## Architecture Diagram
 -------------------------------------------------------------------
 ![Architecture Diagram](pipeline_task_execution.png)
+
+
+## Pipeline Sample Requests
+
+Route: /start/{task_route}
+Where `task_route` is one of the following values: 
+
+* `db-ops` - DatabaseOperationTask(payload)
+* `nscalc` - NemaScanTask(payload)
+* `ipcalc` - IndelPrimerTask(payload)
+* `h2calc` - HeritabilityTask(payload)
+* `gene-browser-tracks` - GeneBrowserTracks(payload)
+
+Method: POST
+
+*Payload Schema*
+```
+{
+    id: string,
+    kind: string,
+    container_name: string,
+    container_version: string,
+    container_repo: string,
+    username: string [optional],
+    email: string [optional],
+    data_hash: string [optional: IndelPrimerTask],
+    strain_1: string [optional: IndelPrimerTask],
+    strain_2: string [optional: IndelPrimerTask],
+    site: string [optional: IndelPrimerTask],
+    wormbase_version: string [optional: GeneBrowserTracksTask],
+    args: any [optional],
+}
+```
+
+Where:
+`id` is the value of the DataStore `key` entity. 
+`kind` is the datastore kind
+`username` is the CaeNDR username starting this task (useful for email notifications)
+`email` is the CaeNDR email of the user initiating the task (useful for email notifications)
+`container_name` is the name of the GCR container (within the project)
+`container_version` maps to container tags
+`container_repo` maps to the container registry. Most are `gcr` or `dockerhub`
+
+Note: `image_uri = f"{task.container_repo}/{task.container_name}:{task.container_version}"`
+
+*Payload Example*
+
+URI: /start/h2calc
+Method: POST
+Payload:
+```
+{
+    id: "123",
+    kind: "",
+    username: "erik",
+    email: "mockemail@mockcompany.com"
+    container_name: "",
+    container_version: "",
+    container_repo: "",
+}
+```

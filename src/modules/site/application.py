@@ -134,10 +134,18 @@ def comma(value):
 def format_release(value):
   return datetime.strptime(str(value), '%Y%m%d').strftime('%Y-%m-%d')
 
-def register_template_filters(app):
-  for t_filter in [comma, format_release]:
-    app.template_filter()(t_filter)
+def get_status_css_class(value):
+  mapping = {
+    'COMPLETE': 'bg-success',
+    'ERROR': 'bg-danger',
+    'SUBMITTED': 'bg-info',
+    'RUNNING': 'bg-primary'
+  }
+  return mapping.get(value, '')
 
+def register_template_filters(app):
+  for t_filter in [comma, format_release, get_status_css_class]:
+    app.template_filter()(t_filter)
 
 def register_extensions(app):
   markdown(app)

@@ -9,6 +9,9 @@ resource "google_cloud_run_service" "api_pipeline_task" {
   name     = var.module_api_pipeline_task_vars.container_name
   location = var.google_cloud_vars.region
 
+  autogenerate_revision_name = true
+
+
   template {
     spec {
       containers {

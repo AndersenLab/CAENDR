@@ -1,6 +1,8 @@
 import os
+import json
 import logging
 import tabix
+from logzero import logger
 
 from caendr.models.task import HeritabilityTask
 from caendr.models.datastore import HeritabilityReport
@@ -32,8 +34,19 @@ LOCAL_WORK_PATH = '/workdir'
 BOOT_DISK_SIZE_GB = 10
 ENABLE_STACKDRIVER_MONITORING = True
 
-COMMANDS = ['python', '/h2/main.py']
+# Override the entry point for the container based on the version. 
+# The container v0.3 is built from: https://github.com/AndersenLab/calc_heritability
+# The container v0.1a is built from: https://github.com/AndersenLab/CAENDR/tree/development/src/modules/heritability
+def _get_container_commands(version):
+  default_command = ['python', '/h2/main.py']
+  version_mapping = {
+    "v0.3": ["./heritability-nxf.sh"]
+  }
+  return version_mapping.get(version, default_command)
 
+      
+# COMMANDS = ['python', '/h2/main.py']
+# COMMANDS = ['/heritability/heritability-nxf.sh']
 
 def start_heritability_pipeline(task: HeritabilityTask):
   pipeline_req = _generate_heritability_pipeline_req(task)
@@ -44,11 +57,35 @@ def _generate_heritability_pipeline_req(task: HeritabilityTask):
   h = HeritabilityReport(task.id)
   
   image_uri = f"{task.container_repo}/{task.container_name}:{task.container_version}"
+  container_commands = _get_container_commands(task.container_version)
+  logger.debug(f"Using image: {image_uri} with commands: {container_commands}")
+
+  # prepare args
+  # VCF_VERSION = "20210121"
+  VCF_VERSION = "20220216"
+  GOOGLE_PROJECT = "caendr"
+  GOOGLE_ZONE = "us-central1-a"
+
+  # GOOGLE_SERVICE_ACCOUNT_EMAIL = "mti-caendr-service-account@mti-caendr.iam.gserviceaccount.com"
+  TRAIT_FILE="gs://elegansvariation.org/reports/heritability/kse_test_hert/ExampleTraitData.csv"
+  WORK_DIR = f"gs://caendr-nextflow-work-bucket/{h.data_hash}"
+  OUTPUT_DIR="gs://caendr-nextflow-work-bucket/reports/heritability/{h.data_hash}/results"
+
   
   container_name = f"heritability-{h.id}"
-  environment = {"DATA_HASH": h.data_hash, 
-                 "DATA_BUCKET": h.get_bucket_name(), 
-                 "DATA_BLOB_PATH": h.get_blob_path()}
+  environment = {
+    "GOOGLE_SERVICE_ACCOUNT_EMAIL": sa_email,
+    "GOOGLE_PROJECT": GOOGLE_PROJECT,
+    "GOOGLE_ZONE": GOOGLE_ZONE,
+    "VCF_VERSION": VCF_VERSION,
+    "TRAIT_FILE": TRAIT_FILE,
+    "WORK_DIR": WORK_DIR,
+    "OUTPUT_DIR": OUTPUT_DIR,
+    "DATA_HASH": h.data_hash, 
+    "DATA_BUCKET": h.get_bucket_name(), 
+    "DATA_BLOB_PATH": h.get_blob_path()}
+
+  logger.debug(f"Environment: { json.dumps(environment) }")
 
   service_account = ServiceAccount(email=sa_email, scopes=SCOPES)
   virtual_machine = VirtualMachine(machine_type=MACHINE_TYPE,
@@ -56,7 +93,7 @@ def _generate_heritability_pipeline_req(task: HeritabilityTask):
                                   boot_disk_size_gb=BOOT_DISK_SIZE_GB,
                                   boot_image=BOOT_IMAGE, enable_stackdriver_monitoring=ENABLE_STACKDRIVER_MONITORING, service_account=service_account)
   resources = Resources(virtual_machine=virtual_machine, zones=[ZONE])
-  action = Action(always_run=False, block_external_network=False, commands=COMMANDS, container_name=container_name, disable_image_prefetch=False,
+  action = Action(always_run=False, block_external_network=False, commands=container_commands, container_name=container_name, disable_image_prefetch=False,
                   disable_standard_error_capture=False, enable_fuse=False, environment=environment, ignore_exit_status=False, image_uri=image_uri, 
                   publish_exposed_ports=False, run_in_background=False, timeout=TIMEOUT)
   pipeline = Pipeline(actions=[action], resources=resources, timeout=TIMEOUT)
