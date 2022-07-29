@@ -49,13 +49,17 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
     wormbase_version = wormbase_version_override.upper()
   else:
     wormbase_version = dataset_release.wormbase_version    
+    # OVERRIDE wormbase_version  (default to 276 until 283 IGB data is available) 
+    wormbase_version = 'WS276'
 
-  # OVERRIDE wormbase_version  (default to 276 until 283 IGB data is available) 
-  wormbase_version = 'WS276'
   
+  # dataset_release_prefix = f'//storage.googleapis.com/elegansvariation.org/releases'
+  dataset_release_prefix = f'//storage.googleapis.com/caendr-site-public-bucket/dataset_release/c_elegans/{dataset_release.version}/strain/vcf'
+
   track_url_prefix = f'//storage.googleapis.com/elegansvariation.org/browser_tracks'
+  # track_url_prefix = f'//storage.googleapis.com/caendr-site-public-bucket/dataset_release/c_elegans/{dataset_release.version}/browser_tracks'
+
   bam_bai_url_prefix = f'//storage.googleapis.com/elegansvariation.org/bam'
-  dataset_release_prefix = f'//storage.googleapis.com/elegansvariation.org/releases'
   
   VARS = {'title': f"Genome Browser",
           'DATASET_RELEASE': int(dataset_release.version),
