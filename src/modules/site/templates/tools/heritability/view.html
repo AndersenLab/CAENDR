@@ -26,7 +26,7 @@
         }
 	</style>
 
-    {% if not result %}
+    {% if not (result or hr.status in ['ERROR','COMPLETE']) %}
         <meta http-equiv="refresh" content="10; url={{ request.path }}">
     {% endif %}
 
@@ -64,15 +64,13 @@
             <td>{{ hr.label}}</td>
           </tr>
           <tr>
-            <td class="key">Status</td>
-            <td>{{ hr.status}}</td>
-          </tr>
-
-          <tr>
             <td class="key">Updated</td>
             <td>{{ now }}</td>
           </tr>
-
+          <tr class="{{ hr.status | get_status_css_class }}">
+            <td class="key">Status</td>
+            <td>{{ hr.status}}</td>
+          </tr>
           {% if error %}
           <tr>
             <td class="key">Error</td>
@@ -80,12 +78,14 @@
           </tr>
           {% endif %}
 
+          {% if not hr.status in ['COMPLETE','ERROR'] %}
           <tr>
             <td></td>
             <td>
               <a href="javascript:window.location.reload(true)" class="btn btn-primary">refresh</a>
             </td>
           </tr>
+          {% endif %}
 
         </tbody>
       </table>
@@ -112,12 +112,14 @@
 <div class="row">
     <div class='col-md-2'></div>
     <div class='col-md-8'>
+      {% if not hr.status in ['COMPLETE','ERROR'] %}
         <p class='text-info text-center'>
             <strong>
                 The heritability calculation is currently being run. Please check back in a few minutes for results.
                 This page will reload automatically.
             </strong>
         </p>
+      {% endif %}
     </div> {# /col-md-8 #}
 </div>{# /row #}
 
