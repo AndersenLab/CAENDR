@@ -35,12 +35,12 @@ BOOT_DISK_SIZE_GB = 10
 ENABLE_STACKDRIVER_MONITORING = True
 
 # Override the entry point for the container based on the version. 
-# The container v0.3 is using this repo/Dockerfile: https://github.com/AndersenLab/calc_heritability
-# Version v0.1a is using this repo/Dockerfile: https://github.com/AndersenLab/CAENDR/tree/development/src/modules/heritability
+# The container v0.3 is built from: https://github.com/AndersenLab/calc_heritability
+# The container v0.1a is built from: https://github.com/AndersenLab/CAENDR/tree/development/src/modules/heritability
 def _get_container_commands(version):
   default_command = ['python', '/h2/main.py']
   version_mapping = {
-    "v0.3": ["heritability-nxf.sh"]
+    "v0.3": ["./heritability-nxf.sh"]
   }
   return version_mapping.get(version, default_command)
 
@@ -74,6 +74,7 @@ def _generate_heritability_pipeline_req(task: HeritabilityTask):
   
   container_name = f"heritability-{h.id}"
   environment = {
+    "GOOGLE_SERVICE_ACCOUNT_EMAIL": sa_email,
     "GOOGLE_PROJECT": GOOGLE_PROJECT,
     "GOOGLE_ZONE": GOOGLE_ZONE,
     "VCF_VERSION": VCF_VERSION,
