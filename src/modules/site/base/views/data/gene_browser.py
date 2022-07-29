@@ -49,7 +49,9 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
     wormbase_version = wormbase_version_override.upper()
   else:
     wormbase_version = dataset_release.wormbase_version    
-        
+
+  # OVERRIDE wormbase_version  (default to 276 until 283 IGB data is available) 
+  wormbase_version = 'WS276'
   
   track_url_prefix = f'//storage.googleapis.com/elegansvariation.org/browser_tracks'
   bam_bai_url_prefix = f'//storage.googleapis.com/elegansvariation.org/bam'
