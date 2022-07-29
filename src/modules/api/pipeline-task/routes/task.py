@@ -62,52 +62,51 @@ def start_task(task_route):
   #return jsonify({'operation': op.id}), 200
   return jsonify({}), 200
 
-
-def _get_task_class(queue_name):
+# Track the 'class' to create the task and the 'function' to initiate the pipeline
+def _get_task_metadata(queue_name):
   mapping = {
-    NEMASCAN_TASK_QUEUE_NAME: NemaScanTask,
-    INDEL_PRIMER_TASK_QUEUE_NAME: IndelPrimerTask,
-    HERITABILITY_TASK_QUEUE_NAME: HeritabilityTask,
-    MODULE_DB_OPERATIONS_TASK_QUEUE_NAME: DatabaseOperationTask,
-    MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME: GeneBrowserTracksTask
+    NEMASCAN_TASK_QUEUE_NAME: {
+      'class': NemaScanTask,
+      'start_pipeline': start_nemascan_pipeline,
+      'update_status': update_nemascan_mapping_status
+    },
+    INDEL_PRIMER_TASK_QUEUE_NAME: {
+      'class': IndelPrimerTask,
+      'start_pipeline': start_indel_primer_pipeline,
+      'update_status': update_indel_primer_status
+    },
+    HERITABILITY_TASK_QUEUE_NAME: {
+      'class': HeritabilityTask,
+      'start_pipeline':start_heritability_pipeline,
+      'update_status': update_heritability_report_status
+    },
+    MODULE_DB_OPERATIONS_TASK_QUEUE_NAME: {
+      'class': DatabaseOperationTask,
+      'start_pipeline': start_db_op_pipeline,
+      'update_status': update_db_op_status
+    },
+    MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME: {
+      'class': GeneBrowserTracksTask,
+      'start_pipeline': start_gene_browser_tracks_pipeline,
+      'update_status': update_gene_browser_track_status
+    }
   }
   return mapping.get(queue_name, None)
-
-def _create_task(task_route, payload):
-  TaskClass = _get_task_class(task_route)
-  if TaskClass is None:
-    raise APIBadRequestError("Invalid task route")
-  task = TaskClass(**payload)
-  return task
 
 def handle_task(payload, task_route):
   logger.info(f"Task: {task_route}")
 
-  task = _create_task(task_route, payload)
-  # response = start_nemascan_pipeline(task)
+  task_metadata = _get_task_metadata(task_route)
+  task_class, start_pipeline, update_status = task_metadata.values()
 
-  if task_route == NEMASCAN_TASK_QUEUE_NAME:
-    # task = NemaScanTask(**payload)
-    response = start_nemascan_pipeline(task)
-  elif task_route == INDEL_PRIMER_TASK_QUEUE_NAME:
-    # task = IndelPrimerTask(**payload)
-    response = start_indel_primer_pipeline(task)
-  elif task_route == HERITABILITY_TASK_QUEUE_NAME:
-    # task = HeritabilityTask(**payload)
-    response = start_heritability_pipeline(task)
-  elif task_route == MODULE_DB_OPERATIONS_TASK_QUEUE_NAME:
-    # task = DatabaseOperationTask(**payload)
-    response = start_db_op_pipeline(task)
-  elif task_route == MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME:
-    # task = GeneBrowserTracksTask(**payload)
-    response = start_gene_browser_tracks_pipeline(task)
-  else:
-    logger.warn(f"Unknown task route: {task_route}")
-    return
+  if task_class is None:
+      raise APIBadRequestError("Invalid task route")
+
+  task = task_class(**payload)
+  response = start_pipeline(task)
 
   persistent_logger = PersistentLogger(task_route)
 
-  logger.debug(task_route)
   status = 'RUNNING'
   operation_name = ''
   try:
@@ -118,18 +117,7 @@ def handle_task(payload, task_route):
     persistent_logger.log(e)
     status = 'ERROR'
 
-  if task.kind == NemascanMapping.kind:
-    update_nemascan_mapping_status(task.id, status=status, operation_name=operation_name)
-  elif task.kind == IndelPrimer.kind:
-    update_indel_primer_status(task.id, status=status, operation_name=operation_name)
-  elif task.kind == HeritabilityReport.kind:
-    update_heritability_report_status(task.id, status=status, operation_name=operation_name)
-  elif task.kind == DatabaseOperation.kind:
-    update_db_op_status(task.id, status=status, operation_name=operation_name)
-  elif task.kind == GeneBrowserTracks.kind:
-    update_gene_browser_track_status(task.id, status=status, operation_name=operation_name)
-  else:
-    logger.warn(f"Unknown task kind: {task.kind}")    
+  update_status(task.id, status=status, operation_name=operation_name)
 
 
 @task_handler_bp.route('/status', methods=['POST'])
