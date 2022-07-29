@@ -18,6 +18,10 @@ table.dataTable thead .sorting {
   background: url("//cdn.datatables.net/1.10.0/images/sort_both.png") no-repeat center left;
 }
 
+.data-status {
+  text-align: center;
+}
+
 </style>
 {% endblock %}
 
@@ -41,7 +45,7 @@ table.dataTable thead .sorting {
 
       <thead>
         <tr class="header">
-          <th class='data-label sorting'><strong> Label </strong></th>
+          <th width="35%" class='data-label sorting'><strong> Label </strong></th>
           <th class='data-trait sorting'><strong> Trait </strong></th>
           <th class='data-status sorting'><strong> Status </strong></th>
           <th class='data-date sorting'><strong> Date </strong></th>
@@ -52,18 +56,14 @@ table.dataTable thead .sorting {
         {% for item in items %}
           <tr>
             {% if item %}
-              <td class='data-label' data-item-id="{{item.id}}"> {{ item.label }} </td>
+              <td class='data-label' data-item-id="{{item.id}}">
+                <a href="{{ url_for('heritability.heritability_result', id=item.id) }}">
+                 {{ item.label }} 
+                </a>
+                </td>
               <td class='data-trait'> {{ item.trait }} </td>
-              <td class='data-status'>
-                {% if item.status == 'COMPLETE' %}
-                <a href="{{ url_for('heritability.heritability_result', id=item.id) }}">
+              <td class='data-status {{ item.status | get_status_css_class }}'>
                   {{ item.status }}
-                </a>
-                {% else %}
-                <a href="{{ url_for('heritability.heritability_result', id=item.id) }}">
-                  {{ item.status }}
-                </a>
-                {% endif %}
               </td>
             {% endif %}
             <td class='data-date' data-order="{{ item.created_on }}"> {{ item.created_on|date_format }} </td>

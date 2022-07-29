@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import json
 import datetime
+from caendr.models.datastore.pipeline_operation import PipelineOperation
 
 from flask import (flash,
                    request,
@@ -171,6 +172,11 @@ def heritability_result(id):
   format = '%I:%M %p %m/%d/%Y'
   now = datetime.now().strftime(format)
 
+  try:
+    operation_id = hr.operation_name.split('/').pop()
+    operation = PipelineOperation(operation_id)
+  except:
+    operation = None
 
   service_name = os.getenv('HERITABILITY_CONTAINER_NAME')
   persistent_logger = PersistentLogger(service_name)

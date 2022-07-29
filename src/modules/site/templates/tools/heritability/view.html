@@ -71,10 +71,10 @@
             <td class="key">Status</td>
             <td>{{ hr.status}}</td>
           </tr>
-          {% if error %}
+          {% if hr.status == 'ERROR' %}
           <tr>
             <td class="key">Error</td>
-            <td>{{ error }}</td>
+            <td>{{ operation.error }}</td>
           </tr>
           {% endif %}
 
@@ -104,7 +104,7 @@
 
 <!--
   Status: [{{ hr.status}}]
-  ERROR: [{{ error }}]
+  ERROR: [{{ operation.error if operation and operation.error }}]
 -->
 
 {% if data and not result %}
