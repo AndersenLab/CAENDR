@@ -67,10 +67,9 @@ def _generate_heritability_pipeline_req(task: HeritabilityTask):
   GOOGLE_ZONE = "us-central1-a"
 
   # GOOGLE_SERVICE_ACCOUNT_EMAIL = "mti-caendr-service-account@mti-caendr.iam.gserviceaccount.com"
-  TRAIT_FILE="gs://elegansvariation.org/reports/heritability/kse_test_hert/ExampleTraitData.csv"
+  TRAIT_FILE= f"gs://caendr-site-private-bucket/reports/heritability/{task.container_version}/{h.data_hash}/data.tsv"
   WORK_DIR = f"gs://caendr-nextflow-work-bucket/{h.data_hash}"
-  OUTPUT_DIR="gs://caendr-site-private-bucket/reports/heritability/{h.data_hash}"
-
+  OUTPUT_DIR= f"gs://caendr-site-private-bucket/reports/heritability/{task.container_version}/{h.data_hash}"
   
   container_name = f"heritability-{h.id}"
   environment = {
