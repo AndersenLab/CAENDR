@@ -64,8 +64,20 @@
             <td>{{ hr.label}}</td>
           </tr>
           <tr>
+            <td class="key">Report ID</td>
+            <td title="using short hash (similar to git's short hash)" data-id="hr.id">{{ hr.id | short_hash}}</td>
+          </tr>
+          <tr>
+            <td class="key">Data Hash</td>
+            <td title="using short hash (similar to git's short hash" data-data_hash="hr.data_hash">{{ hr.data_hash | short_hash }}</td>
+          </tr>
+          <tr>
             <td class="key">Updated</td>
             <td>{{ now }}</td>
+          </tr>
+          <tr>
+            <td class="key">Logs</td>
+            <td><a target="_blank" href='{{logs_url}}'>View Logs</a></td>
           </tr>
           <tr class="{{ hr.status | get_status_css_class }}">
             <td class="key">Status</td>

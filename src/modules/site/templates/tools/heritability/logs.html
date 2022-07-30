@@ -1,0 +1,42 @@
+{% extends "_layouts/default.html" %}
+
+{% block custom_head %}
+<style>
+  .log-data {
+    max-height: 50em;
+    overflow-y: scroll;
+    font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+    font-size: 0.8em;
+    margin: 15px !important;
+    word-break: break-all;
+  }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div id='logs'>
+  <h1>Logs</h1>
+  <br/>
+  <ul>
+
+    {% for log in logs %}
+    <li>
+      <a href="#stream-{{loop.index}}">{{ log['blob_name'] }} </a>
+    </li>
+    
+    {% endfor %}
+  </ul>
+
+  <hr/>
+
+  {% for log in logs %}
+  <section id="stream-{{loop.index}}" class="log-stream">
+    <p style='font-weight:bold'>{{ log['blob_name'] }} <a href='#logs'>(back to top)</a></p>
+    <pre class="log-data">{{ log['data'] }}</pre>
+  </section>
+  {% endfor %}
+  
+</div>
+{% endblock %}
