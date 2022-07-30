@@ -1,4 +1,5 @@
 import io
+import re
 import os
 import pandas as pd
 import json
@@ -125,6 +126,37 @@ def submit_h2():
                 'id': id})
 
 
+@heritability_bp.route("/heritability/h2/<id>/logs")
+@jwt_required()
+def view_logs(id):
+  hr = get_heritability_report(id)    
+  # get workflow bucket
+  from google.cloud import storage
+  storage_client = storage.Client()
+  bucket_name = os.getenv('MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME', None)
+  
+  if bucket_name is None:
+    return None
+  prefix = f"{hr.data_hash}"
+  # caendr-nextflow-work-bucket/938f561278fbdd4a546155f37cdaf47f/d4/ed062b62843eb156a22d303e0ce84b/google/logs
+
+  blobs = storage_client.list_blobs(bucket_name, prefix=prefix, delimiter=None)
+  filepaths = [ blob.name for blob in blobs ]
+  log_filepaths = [ filepath for filepath in filepaths if "google/logs/action" in filepath or ".command" in filepath ]
+  
+  logs = []
+  for log_filepath in log_filepaths:
+    data = get_blob(bucket_name, log_filepath).download_as_string().decode('utf-8').strip()
+    if data == "": 
+      continue
+    log = { 
+      'blob_name': log_filepath, 
+      'data': data
+    }
+    logs.append(log)
+
+  return render_template("tools/heritability/logs.html", **locals())
+
 # TODO: Move this into a separate service
 @heritability_bp.route("/heritability/h2/<id>")
 @jwt_required()
@@ -146,6 +178,9 @@ def heritability_result(id):
   data = get_blob(hr.get_bucket_name(), hr.get_data_blob_path())
   result = get_blob(hr.get_bucket_name(), hr.get_result_blob_path())
 
+  # get this dynamically from the bp
+  # logs_url = f"/heritability/h2/{hr.id}/logs"
+  logs_url = url_for('heritability.view_logs', id = hr.id)
 
   if data is None:
     return abort(404, description="Heritability report not found")
