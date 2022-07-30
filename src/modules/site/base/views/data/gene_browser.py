@@ -54,7 +54,7 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
 
   
   # dataset_release_prefix = f'//storage.googleapis.com/elegansvariation.org/releases'
-  dataset_release_prefix = f'//storage.googleapis.com/caendr-site-public-bucket/dataset_release/c_elegans/{dataset_release.version}/strain/vcf'
+  dataset_release_prefix = f"//storage.googleapis.com/caendr-site-public-bucket/dataset_release/c_elegans/{dataset_release.version}"
 
   track_url_prefix = f'//storage.googleapis.com/elegansvariation.org/browser_tracks'
   # track_url_prefix = f'//storage.googleapis.com/caendr-site-public-bucket/dataset_release/c_elegans/{dataset_release.version}/browser_tracks'
