@@ -1,6 +1,62 @@
 # CAENDR
 
-`CAENDR` is the code used to run the [_Caenorhabditis elegans_ Natural Diversity Resource](https://www.elegansvariation.org) website. Setup requires `make` which can be installed with:
+`CAENDR` is the code used to run the [_Caenorhabditis elegans_ Natural Diversity Resource](https://www.elegansvariation.org) website. 
+
+## GCP Credentials
+
+Ask in MS teams for the DevOps service-account json file. Create a local folder under your home directory named ~/.gcp and copy the service account json file to that folder.
+```
+$ mkdir ~/.gcp
+open -a Finder ~/.gcp 
+```
+The last line should open MacOS Finder on the `~/.gcp/` folder. Drop the `.json` service account file there. 
+
+## MacOS setup
+
+*Requirements*
+
+* Docker Mac (https://docs.docker.com/desktop/install/mac-install/) 
+* homebrew (install from https://brew.sh/)
+
+Steps:
+```
+brew update
+brew install python-devel
+brew install pyenv
+pyenv install 3.7.12
+pyenv global 3.7.12
+pip install virtualenv
+``` 
+
+Expected Outputs:
+```
+$ python -V
+Python 3.7.12
+```
+
+## Running local (work-in-progress)
+
+Open one terminal window and run:
+```
+export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
+export ENV=main
+cd src/modules/site
+make clean
+make configure
+make cloud-sql-proxy-start
+```
+
+Open a second terminal window:
+```
+export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
+export ENV=main
+cd src/modules/site
+make run
+```
+
+
+## Linux Setup
+Setup requires `make` which can be installed with:
 
 ```bash
 sudo apt-get update && sudo apt-get install build-essential
