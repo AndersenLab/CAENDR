@@ -65,8 +65,32 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
       {'id': 'divergent', 'name': 'Divergent'},
       {'id': 'release', 'name': 'Release Date'}
     ]
-    
-    
+
+
+  @staticmethod
+  def column_default_visibility(col):
+    """
+    Determine whether a column should be visible by default.
+
+    Takes column object with 'id' field.
+
+    Currently, this is based on a hard-coded list.  This can be changed to any desired filter.
+    """
+
+    default_list = [
+      "pos",
+      "consequence",
+      "amino_acid_change",
+      "strains",
+      "blosum",
+      "grantham",
+      "variant_impact",
+      "divergent"
+    ]
+
+    return col['id'] in default_list
+
+
   @classmethod
   def generate_interval_sql(cls, interval):
     interval = interval.replace(',','')

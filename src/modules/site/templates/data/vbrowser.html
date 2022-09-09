@@ -108,13 +108,13 @@ mark {
         <div class="form-group">
           <div class="select-checkbox">
             <div class="col-entry">
-              <input class="toggle-col-chk" type="checkbox" name="toggle_all_cols" id="toggle_all_cols" checked/> 
+              <input class="toggle-col-chk" type="checkbox" name="toggle_all_cols" id="toggle_all_cols"/>
               <strong><label id="toggle_all_cols_label" for="toggle_all_cols"> Select All </label> </strong>
             </div>
             <br>
           {% for col in columns %}
             <div class="col-entry">
-              <input class="toggle-col-chk" type="checkbox" name="toggle_{{ col['id'] }}" id="toggle_{{ col['id'] }}" data-column="{{ col['id'] }}" checked/> 
+              <input class="toggle-col-chk" type="checkbox" name="toggle_{{ col['id'] }}" id="toggle_{{ col['id'] }}" data-column="{{ col['id'] }}"/>
               <label for="toggle_{{ col['id'] }}"> {{ col['name'] }} </label>
             </div>
           {% endfor %}
@@ -163,14 +163,14 @@ mark {
 
           <div class="col-xs-6 form-group text-center">
             <div class="impact-entry select-checkbox">
-              <input class="toggle-impact-chk" type="checkbox" name="impact_high" id="impact_high" checked/> 
+              <input class="toggle-impact-chk" type="checkbox" name="impact_high" id="impact_high" checked/>
               <strong><label id="impact_high_label" for="impact_high"> High </label> </strong>
             </div>
           </div> {# /form group #}
 
           <div class="col-xs-6 form-group text-center">
             <div class="impact-entry select-checkbox">
-              <input class="toggle-impact-chk" type="checkbox" name="impact_low" id="impact_low" checked/> 
+              <input class="toggle-impact-chk" type="checkbox" name="impact_low" id="impact_low"/>
               <strong><label id="impact_low_label" for="impact_low"> Low </label> </strong>
             </div>
           </div> {# /form group #}
@@ -503,7 +503,8 @@ function init_data_table() {
     return { 
       "name": col.id, 
       "render": render,
-      "targets": idx
+      "targets": idx,
+      "visible": col['default_visibility'],
     } 
   });
 
@@ -528,12 +529,22 @@ function init_data_table() {
 }
 
 
+/* Set all column checkboxes to their default values */
+function select_default_columns() {
+  columnList.forEach((col, idx) => {
+    $( "#toggle_" + col.id ).attr("checked", col.default_visibility);
+  });
+}
+
+
 $(document).ready(function() {
 
   (function($) {
 
     init_selected_strain_set();
     init_data_table();
+
+    select_default_columns();
     
     const csrf_token = "{{ form.csrf_token._value() }}";
 
