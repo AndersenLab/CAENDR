@@ -79,8 +79,7 @@ Open a second terminal window:
 ```
 export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
 export ENV=main
-cd src/modules/site
-make run
+code .
 ```
 
 
