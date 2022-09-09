@@ -13,11 +13,7 @@
         <div class="panel panel-default">
             <div class="panel-heading">Release Summary</div>
             <div class="panel-body">
-                <ul>
-                    <li><strong>Strains:</strong> {{ release_summary.get('strain_count') }}</li>
-                <li><strong>WGS strains:</strong> {{ release_summary.get('strain_count_sequenced') }}</li>
-                <li><strong>Isotypes:</strong> {{ release_summary.get('isotype_count') }}</li>
-                <li><strong>Genome Version:</strong> {{ RELEASE.version }}
+                {{ render_ext_markdown(files.get('summary')) }}
             </div>
         </div>
 
@@ -37,9 +33,9 @@
         <h4>VCF</h4>
         <p>VCFs generated from the variant calling pipeline are provided below.</p>
         <ul>
-            <li><a href="{{ f.get('soft_filter_vcf_gz') }}">Soft-filter</a></strong> - Includes all variants and annotations. The QC status of variants is included.</li>
-            <li><a href="{{ f.get('hard_filter_vcf_gz') }}">Hard-filter</a></strong> - Variants and genotypes that fail QC are removed.</li>
-            <li><a href="{{ f.get('impute_vcf_gz') }}">Imputed</a> - An imputed dataset generated from the hard-filter VCF.</strong></li>
+            <li><a href="{{ files.get('soft_filter_vcf_gz') }}">Soft-filter</a></strong> - Includes all variants and annotations. The QC status of variants is included.</li>
+            <li><a href="{{ files.get('hard_filter_vcf_gz') }}">Hard-filter</a></strong> - Variants and genotypes that fail QC are removed.</li>
+            <li><a href="{{ files.get('impute_vcf_gz') }}">Imputed</a> - An imputed dataset generated from the hard-filter VCF.</strong></li>
         </ul>
 
         <div style="clear:both;"></div>
@@ -64,7 +60,7 @@
         <h4>Included Variants</h4>
         <p>Currently, we have performed variant calling across all wild isolates. We are working to add additional variant classes including insertion/deletion, structural, transposon, and additional variant classes.</p>
         <h4>Transposon Data</h4>
-        <p>We have recently performed an anaysis characterizing Transposon variation in <em>C. elegans</em>. The dataset will be further integrated with the site resources as time goes on. For now, the raw data are available below.</p>
+        <p>We have recently performed an analysis characterizing Transposon variation in <em>C. elegans</em>. The dataset will be further integrated with the site resources as time goes on. For now, the raw data are available below.</p>
         <a href="https://storage.googleapis.com/andersenlab.org/publications/2017Laricchia/tes_cender.bed" type="button" class="btn btn-default btn-block btn-success">Download Transposon Data</a>
     </div>
 </div>

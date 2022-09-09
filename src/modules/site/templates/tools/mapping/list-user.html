@@ -9,13 +9,13 @@
 <style>
 
 table.dataTable thead .sorting_asc {
-  background: url("http://cdn.datatables.net/1.10.0/images/sort_asc.png") no-repeat center left;
+  background: url("//cdn.datatables.net/1.10.0/images/sort_asc.png") no-repeat center left;
 }
 table.dataTable thead .sorting_desc {
-  background: url("http://cdn.datatables.net/1.10.0/images/sort_desc.png") no-repeat center left;
+  background: url("//cdn.datatables.net/1.10.0/images/sort_desc.png") no-repeat center left;
 }
 table.dataTable thead .sorting {
-  background: url("http://cdn.datatables.net/1.10.0/images/sort_both.png") no-repeat center left;
+  background: url("//cdn.datatables.net/1.10.0/images/sort_both.png") no-repeat center left;
 }
 
 </style>
@@ -27,7 +27,8 @@ table.dataTable thead .sorting {
 {{ 
   render_dataTable_top_menu(
     actions = [
-      {'label':'New Mapping', 'url':'mapping.mapping', 'classes':'btn nu-alt-btn', 'style':'float:right' }
+      {'label':'All Mappings', 'url':url_for('mapping.mapping_all_reports'), 'classes':'btn nu-alt-btn', 'style':'float:right;', 'icon': 'glyphicon glyphicon-list', 'admin_only': True },
+      {'label':'New Mapping', 'url':url_for('mapping.mapping'), 'classes':'btn nu-alt-btn', 'style':'float:right; margin-right: .5rem;', 'icon':'glyphicon glyphicon-plus' }
     ]
   ) 
 }}

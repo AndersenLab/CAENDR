@@ -9,13 +9,13 @@
 <style>
 
 table.dataTable thead .sorting_asc {
-  background: url("http://cdn.datatables.net/1.10.0/images/sort_asc.png") no-repeat center left;
+  background: url("//cdn.datatables.net/1.10.0/images/sort_asc.png") no-repeat center left;
 }
 table.dataTable thead .sorting_desc {
-  background: url("http://cdn.datatables.net/1.10.0/images/sort_desc.png") no-repeat center left;
+  background: url("//cdn.datatables.net/1.10.0/images/sort_desc.png") no-repeat center left;
 }
 table.dataTable thead .sorting {
-  background: url("http://cdn.datatables.net/1.10.0/images/sort_both.png") no-repeat center left;
+  background: url("//cdn.datatables.net/1.10.0/images/sort_both.png") no-repeat center left;
 }
 
 </style>
@@ -24,7 +24,14 @@ table.dataTable thead .sorting {
 {% block content %}
 
 {% from "_includes/macros.html" import render_dataTable_top_menu %}
-{{ render_dataTable_top_menu() }}
+{{ 
+  render_dataTable_top_menu(
+    actions = [
+      {'label':'My Results', 'url':url_for('indel_primer.indel_primer_user_results'), 'classes':'btn nu-alt-btn', 'style':'float:right;', 'icon': 'glyphicon glyphicon-list' },
+      {'label':'Find Indels', 'url':url_for('indel_primer.indel_primer'), 'classes':'btn nu-alt-btn', 'style':'float:right; margin-right: .5rem;', 'icon': 'glyphicon glyphicon-search' }
+    ]
+  ) 
+}}
 
 <div class="row">
   <div class="col-md-12">
@@ -37,6 +44,7 @@ table.dataTable thead .sorting {
           <th class='data-empty ordering'><strong> Empty </strong></th>
           <th class='data-status ordering'><strong> Status </strong></th>
           <th class='data-date ordering'><strong> Date </strong></th>
+          <th class='data-owner ordering'><strong> Owner </strong></th>
         </tr>
       </thead>
 
@@ -63,6 +71,7 @@ table.dataTable thead .sorting {
               </td>
             {% endif %}
             <td class="data-date" data-order="{{ item.created_on }}"> {{ item.created_on|date_format }} </td>
+            <td class="data-owner"> {{ item.username }} </td>
           </tr>
         {% endfor %}
       </tbody>
@@ -84,14 +93,18 @@ table.dataTable thead .sorting {
     dTable = $('#ip-table').DataTable( {
       paging: true,
       pageLength: 25,
+      autoWidth: true,
+      scrollX: true,
       aaSorting: [ [5,'desc'] ],
       aoColumns: [
-        {"width":"25%"},
-        {"width":"13%"},
-        {"width":"13%"},
-        {"width":"9%"},
-        {"width":"15%"},
-        {"width":"25%"}
+        {"width":"18%"},
+        {"width":"8%"},
+        {"width":"12%"},
+        {"width":"8%"},
+        {"width":"18%"},
+        {"width":"18%"},
+        {"width":"18%"}
+
       ],
       dom:"tipr"
     });

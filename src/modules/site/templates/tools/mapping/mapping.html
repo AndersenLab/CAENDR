@@ -53,17 +53,17 @@
       <div class="row">
 
         <div class="col-lg-3 col-lg-offset-2 text-center">
-          <span class="input-group-btn text-center">
-            <button type="submit" id="submit-btn" class="btn nu-alt-btn btn-block input-margin" style="width:100%"> Run NemaScan Mapping</button>
-          </span>
+          <button type="submit" id="submit-btn" class="btn nu-alt-btn btn-block input-margin" style="width:100%">
+            <span class="glyphicon glyphicon-play"></span>
+            Run NemaScan Mapping
+          </button>
         </div> {# /col #}
 
         <div class="col-lg-3 col-lg-offset-2 text-center">
-          <span class="text-center">
-            <p>
-              <a id="result-list" class="input-margin" style="width:100%" href="{{ url_for('mapping.mapping_report_list') }}"> View My Mapping Reports </a>
-            </p>
-          </span>
+          <a id="result-list" class="btn nu-alt-btn btn-block input-margin" style="width:100%" href="{{ url_for('mapping.mapping_user_reports') }}"> 
+            <span class="glyphicon glyphicon-list"></span>
+            View My Mapping Reports
+          </a>
         </div> 
             {# /col #}
 

@@ -65,8 +65,17 @@ COLUMNS = ["CHROM", "START", "STOP", "?", "TYPE", "STRAND", ""]
 def get_indel_primer(id):
   return IndelPrimer(id)
 
+
 def get_sv_strains():
   return SV_STRAINS
+
+
+def get_all_indel_primers():
+  logger.debug(f'Getting all indel primers...')
+  results = query_ds_entities(IndelPrimer.kind)
+  primers = [IndelPrimer(entity) for entity in results]
+  return sorted(primers, key=lambda x: x.created_on, reverse=True)
+
 
 def get_user_indel_primers(username):
   logger.debug(f'Getting all indel primers for user: username:{username}')
@@ -188,6 +197,7 @@ def create_new_indel_primer(username, site, strain_1, strain_2, size, data_hash)
 def _create_indel_primer_task(ip):
   return IndelPrimerTask(**{'id': ip.id,
                             'kind': IndelPrimer.kind,
+                            'username': ip.username,
                             'strain_1': ip.strain_1,
                             'strain_2': ip.strain_2,
                             'site': ip.site,

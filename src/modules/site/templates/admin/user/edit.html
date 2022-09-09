@@ -1,5 +1,22 @@
 {% extends "_layouts/default.html" %}
 
+{% block style %}
+<style>
+  .form-control {
+    border: unset;
+  }
+
+  .content ul li {
+    list-style: unset;
+    display: inline-block;
+  }
+
+  .send-password-reset {
+    cursor: pointer;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 {% from "_includes/macros.html" import render_field %}
 
@@ -8,36 +25,21 @@
   <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">
 
   <div class="row">
-    <div class="col-md-10">		
-    </div> <!-- /col-md-10 -->
-    <div class="col-md-2">
-      <button id='save-btn' value="save-btn" type='submit' class="btn btn-primary btn-block">
-        <span class="glyphicon glyphicon-save" aria-hidden="true"></span> 
-        Save
-      </button>
-    </div> <!-- /col-md-2 -->
-  </div> <!-- /row -->
-
-  <div class="row">
-    <div class='col-md-3'>
-    </div> <!-- /col-md-3 -->
-    <div class='col-md-6'>
-      {{ render_field(form.roles) }}
-    </div> <!-- /col-md-6 -->
-  </div> <!-- /row -->
-      
-  <br>
-
-  <div class="row">
-    <div class='col-md-3'>
-    </div> <!-- /col-md-3 -->
-    <div class='col-md-6'>
+    <div class='col-md-6 col-md-offset-3'>
       <table class='table table-striped table-condensed'>
         <tr><td>Username</td><td>{{ user.username }}</td></tr>
-        <tr><td>Full Name</td><td>{{ user.full_name }}</td></tr>
-        <tr><td>Email</td><td>{{ user.email }}</td></tr>
+        <tr><td>Full Name</td><td>{{ render_field(form.full_name) }}</td></tr>
+        <tr><td>Email</td><td>{{ render_field(form.email) }}</td></tr>
         <tr><td>Verified</td><td>{{ user.verified_email }}</td></tr>
-        <tr><td>Password</td><td>************</td></tr>
+        <tr><td>Password</td><td>
+          {% if user.user_type == "LOCAL" %} 
+            <a class="send-password-reset" onclick="window.location.href='{{ url_for( 'admin_users.users_recover', id=user.name ) }}';">Send Password Reset</a>
+          {% else %}
+            ************
+          {% endif %}
+        </td></tr>
+        <tr><td>User Roles</td><td>{{ render_field(form.roles) }}</td></tr>
+        <tr><td>User Type</td><td>{{ user.user_type }}</td></tr>
         <tr><td>Registered</td><td>{% if user.created_on %} {{ user.created_on|date_format }} {% endif %}</td></tr>
         <tr><td>Last Modified</td><td>{% if user.modified_on %} {{ user.modified_on|date_format }} {% endif %}</td></tr>
         <tr><td>Last Login</td><td>{% if user.last_login %} {{ user.last_login|date_format }} {% endif %}</td></tr>
@@ -45,7 +47,26 @@
     </div> <!-- /col-md-6 -->
   </div> <!-- /row -->
 
+  <div class="row">
+    <div class="col-md-4 col-md-offset-4">
+      <button id='save-btn' value="save-btn" type='submit' class="btn btn-primary btn-block">
+        <span class="glyphicon glyphicon-save" aria-hidden="true"></span> 
+        Save
+      </button>
+    </div> <!-- /col-md-2 -->
+  </div> <!-- /row -->
+
 </form>
+{% endblock %}
 
+{% block script %}
+<script>
+  $(document).ready(function () {
+    const full_name = '{{ user.full_name|safe }}';
+    const email = '{{ user.email|safe }}';
+    $('#full_name').val(full_name);
+    $('#email').val(email);
 
+  });
+</script>
 {% endblock %}

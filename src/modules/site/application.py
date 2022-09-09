@@ -134,10 +134,18 @@ def comma(value):
 def format_release(value):
   return datetime.strptime(str(value), '%Y%m%d').strftime('%Y-%m-%d')
 
-def register_template_filters(app):
-  for t_filter in [comma, format_release]:
-    app.template_filter()(t_filter)
+def get_status_css_class(value):
+  mapping = {
+    'COMPLETE': 'bg-success',
+    'ERROR': 'bg-danger',
+    'SUBMITTED': 'bg-info',
+    'RUNNING': 'bg-primary'
+  }
+  return mapping.get(value, '')
 
+def register_template_filters(app):
+  for t_filter in [comma, format_release, get_status_css_class]:
+    app.template_filter()(t_filter)
 
 def register_extensions(app):
   markdown(app)
@@ -212,6 +220,10 @@ MODULE_SITE_BUCKET_ASSETS_NAME = os.environ.get('MODULE_SITE_BUCKET_ASSETS_NAME'
 def ext_asset(path):
   return f"https://storage.googleapis.com/{MODULE_SITE_BUCKET_ASSETS_NAME}/{path}"
 
+ENV = os.environ.get("ENV")
+def get_env():
+  return ENV or None
+
 
 def configure_jinja(app):
   # Injects "contexts" into templates
@@ -225,6 +237,7 @@ def configure_jinja(app):
       int=int,
       len=len,
       ext_asset=ext_asset,
+      get_env=get_env,
       basename=os.path.basename,
       render_markdown=render_markdown,
       render_ext_markdown=render_ext_markdown

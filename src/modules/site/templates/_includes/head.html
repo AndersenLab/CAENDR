@@ -1,5 +1,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Sentry -->
+<script
+    src="https://browser.sentry-cdn.com/6.19.6/bundle.min.js"
+    integrity="sha384-XITe7oDiyULCpVPtGc52+ISVyD2MAEbbfpNsmYcfxClZXDw+IA906MSf6rhcdf3L"
+    crossorigin="anonymous"
+></script>
+<script>
+    const env = "{{ get_env() }}" || 'production';
+    Sentry.init({ dsn: "https://9e029077b849402db2b81d6593f40143@o353488.ingest.sentry.io/6324122", environment: env, tracesSampleRate: 1.0 });
+</script>
+
+<!-- Clarity -->
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "c6nb18g21d");
+</script>
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.7/d3.js" charset="utf-8"></script>
@@ -22,8 +43,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/brands.min.js" integrity="sha512-vefaKmSAX3XohXhN50vLfnK12TPIO+4uRpHjXVkX726CqbicEiAQGRzsMTE+EpLkBk4noUcUYu6AQ5af2vfRLA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <!-- DataTables -->
-<link rel="stylesheet" href="https:////cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" />
-<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="//cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" />
+<script src="//cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 
 {# Hands on Table #}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/handsontable/0.35.0/handsontable.full.min.js" integrity="sha256-3UlQas2vcjwJZ1Jp5kK+52IdkkolB/UxQxA+67bfaho=" crossorigin="anonymous"></script>

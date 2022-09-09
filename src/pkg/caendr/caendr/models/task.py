@@ -14,7 +14,6 @@ class Task(object):
     return {'id',
           'kind',
           'username',
-          'email',
           'container_name',
           'container_version',
           'container_repo'}
@@ -24,7 +23,6 @@ class Task(object):
     return {'id': self.id,
           'kind': self.kind,
           'username': self.username,
-          'email': self.email,
           'container_name': self.container_name,
           'container_version': self.container_version,
           'container_repo': self.container_repo}
@@ -94,6 +92,7 @@ class NemaScanTask(Task):
 class DatabaseOperationTask(Task):
   def get_payload(self):
     payload = super(DatabaseOperationTask, self).get_payload()
+    payload['email'] = self.email
     payload['db_operation'] = self.db_operation
     payload['args'] = self.args
     return payload
@@ -101,6 +100,7 @@ class DatabaseOperationTask(Task):
   @classmethod
   def get_props_set(cls):
     props = super(DatabaseOperationTask, cls).get_props_set()
+    props.add('email')
     props.add('db_operation')
     props.add('args')
     return props

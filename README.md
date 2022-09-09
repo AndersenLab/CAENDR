@@ -142,19 +142,56 @@ Then switch to a different terminal prompt and change to the module's src direct
 make run
 ```
 
+## Deployment
+-------------------------------------------------------------------
+Pre-requisites: 
+Ensure that you are logged in to the GCLOUD GCP project in the CLI, or using a devops service account.
+
+Open a terminal at the root of the project:
+1. Set ENV and GOOGLE_APPLICATION_CREDENTIALS environment variables:
+    ```bash
+    export ENV={ENV_TO_DEPLOY}
+    export GOOGLE_APPLICATION_CREDENTIALS={PATH_TO_GCP_CREDENTIALS}
+    ```
+2. Increment the versions for each module that is being updated as part of the deployment:
+    * Update the `version` property for the module in the `/env/{env}/global.env`
+    * Update `version` in the file `src/modules/{module_name}/module.env`
+
+3. Move to each module folder and configure the modules for deployment:
+    ```bash
+    cd src/modules/{module_name}
+    make configure
+    ```
+    * The module root folder should now contain a *.env* file
+    * The module root folder SHOULD NOT contain a *venv* folder
+
+4. Publish the module to GCR (src/modules/{module_name}):
+    ```bash
+    make publish
+    ```
+    * When the command completes, check the [GCR](https://console.cloud.google.com/gcr/images/caendr/global/caendr-db-operations?authuser=1&project=caendr) and confirm your image with the proper version tag is appearing
+
+5. Deploy new app version:
+    ```bash
+    make cloud-resource-deploy
+    ```
+
+Troubleshooting:
+* Even if ENV and GOOGLE_APPLICATION_CREDENTIALS are set correctly you will need to be [logged into gcloud and configure docker](#setting-the-environment-and-gcloud-login) to enable publishing containers to GCR since the service account does not have permissions to publish.
+* Sometimes after deployment of the full application the ext_assets folder will not copy to the GCP static bucket, but terraform state will reflect the correct bucket resources. You'll notice the CeNDR logo and worms video will not show up on the home page. Simply redeploy the full application and the assets should be correctly copied to the GCP static bucket, fixing the issue.
+
 ## Deployment of Individual Components
 -------------------------------------------------------------------
-Directions for deploying each module:
+Targeted deployment is under construction until isolated TF states can be establish for each module.
+
+<!-- Directions for deploying each module:
 * [Site](src/modules/api/pipeline-task/README.md)
 * [API Pipeline Tasks](src/modules/api/pipeline-task/README.md)
 * [Database Operations](src/modules/db_operations/README.md)
 * [Gene Browser Tracks](src/modules/gene_browser_tracks/README.md)
 * [Heritability](src/modules/heritability/README.md)
 * [Image Thumbnail Generator](src/modules/img_thumb_gen/README.md)
-* [Indel Primer](src/modules/indel_primer/README.md)
-
-Troubleshooting:
-* Even if ENV and GOOGLE_APPLICATION_CREDENTIALS are set correctly you will need to be [logged into gcloud and configure docker](#setting-the-environment-and-gcloud-login) to enable publishing containers to GCR since the service account does not have permissions to publish.
+* [Indel Primer](src/modules/indel_primer/README.md) -->
 
 ##  Website Requirements
 -------------------------------------------------------------------
@@ -179,11 +216,11 @@ Before these tools can be used for the first time, the available container versi
 These steps describe how to add data to the strain sheet, load it into the site database, then load the strain data, wormbase gene information, and strain variant annotation data into the site's SQL database:
 
 - `Admin -> Strain Sheet`: The google sheet linked here must be populated with the strain data that you want to load into the site's internal database.
-- `Admin -> Database Operations`: click 'New Operation' then 'Rebuild strain table from Google Sheet'. (No other fields are required)
-- `Admin -> Database Operations`: click 'New Operation' then 'Rebuild wormbase gene table from external sources' (Wormbase Version number required)
-- `Admin -> Database Operations`: click 'New Operation' then 'Rebuild Strain Annotated Variant table from .csv.gz file' (Strain Variant Annotation Version number required). This operation expects the .csv.gz source file to already exist in the Cloud Bucket location described below.
+- `Admin -> ETL Operations`: click 'New Operation' then 'Rebuild strain table from Google Sheet'. (No other fields are required)
+- `Admin -> ETL Operations`: click 'New Operation' then 'Rebuild wormbase gene table from external sources' (Wormbase Version number required)
+- `Admin -> ETL Operations`: click 'New Operation' then 'Rebuild Strain Annotated Variant table from .csv.gz file' (Strain Variant Annotation Version number required). This operation expects the .csv.gz source file to already exist in the Cloud Bucket location described below.
 
-## ##Strain Variant Annotation
+## Strain Variant Annotation
 -------------------------------------------------------------------
 The strain variant annotation data csv should be versioned with the date of the release having the format YYYYMMDD, compressed with gzip, and uploaded to:
 
@@ -220,3 +257,22 @@ Nemascan requires species data to be manually uploaded to cloud storage to make 
 -------------------------------------------------------------------
 Q: Why does it look like the `site` or `db_operations` are unable to connect to Cloud SQL (PostGres)?
 A: Check if the server exhausted the `max_connections` limit. Google Postgres has a hard limit on connections and there is a reserved number of connections for super-admin (backups, etc), that are not available for run-time apps/services/modules. Consider restarting (or stopping and starting) to close all the active connections. In GCP this can be viewed in the POSTGRES tab, select the "Active Connections" from the dropdown to view the stats.
+
+Q: I'm getting errors installing `numpy` on MacOS running on M1/M2 chip. 
+A: See below:
+
+```
+pip3 install cython
+pip3 install --no-binary :all: --no-use-pep517 numpy
+```
+
+Q: Which version of terraform do I need to use? 
+A: Use terraform version 1.1.8. Optional: use `tfenv` to manage the terraform version
+
+Q: Missing `pg_config` when running on MacOS?
+A: Install via homebrew:
+
+```
+brew install postgresql
+```
+

@@ -24,7 +24,14 @@ def get_heritability_report(id):
   return HeritabilityReport(id)
 
 
-def get_user_heritability_reports(username):
+def get_all_heritability_results():
+  logger.debug(f'Getting all heritability reports...')
+  results = query_ds_entities(HeritabilityReport.kind)
+  primers = [HeritabilityReport(entity) for entity in results]
+  return sorted(primers, key=lambda x: x.created_on, reverse=True)
+
+
+def get_user_heritability_results(username):
   logger.debug(f'Getting all heritability reports for user: username:{username}')
   filters = [('username', '=', username)]
   results = query_ds_entities(HeritabilityReport.kind, filters=filters)
@@ -37,7 +44,7 @@ def create_new_heritability_report(id, username, label, data_hash, trait, data_t
   
   # Load container version info 
   c = get_current_container_version(HERITABILITY_CONTAINER_NAME)
-  logger.debug(c)
+  logger.debug(f"Creating heritability calculation with {c.repo}/{c.name}:{c.container_tag}")
   
   # TODO: assign properties from cached result if it exists
   props = {'id': id,
@@ -96,6 +103,7 @@ def create_new_heritability_report(id, username, label, data_hash, trait, data_t
 def _create_heritability_task(h):
   return HeritabilityTask(**{'id': h.id,
                             'kind': HeritabilityReport.kind,
+                            'username': h.username,
                             'data_hash': h.data_hash,
                             'container_name': h.container_name,
                             'container_version': h.container_version,

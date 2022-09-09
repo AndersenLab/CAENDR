@@ -46,6 +46,14 @@ def get_mapping(id):
       m.save()
   return m
 
+def get_all_mappings():
+  logger.debug(f'Getting all mappings...')
+  results = query_ds_entities(NemascanMapping.kind)
+  mappings = [NemascanMapping(entity) for entity in results]
+  mappings = sorted(mappings, key=lambda x: x.created_on, reverse=True)
+  return mappings
+
+
 def get_user_mappings(username):
   logger.debug(f'Getting all mappings for user: username:{username}')
   filters = [('username', '=', username)]

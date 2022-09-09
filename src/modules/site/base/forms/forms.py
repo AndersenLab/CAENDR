@@ -31,7 +31,7 @@ from wtforms.fields.html5 import EmailField
 from constants import PRICES, SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS, REPORT_TYPES
 
 from caendr.services.profile import get_profile_role_form_options
-from caendr.services.user import get_user_role_form_options
+from caendr.services.user import get_user_role_form_options, get_local_user_by_email
 from caendr.services.database_operation import get_db_op_form_options
 from caendr.services.indel_primer import get_indel_primer_chrom_choices, get_indel_primer_strain_choices
 from caendr.services.markdown import get_content_type_form_options
@@ -110,6 +110,11 @@ class UserRegisterForm(FlaskForm):
     if user._exists:
       raise ValidationError("Username already exists")
 
+  def validate_email(form, field):
+    existing_user = get_local_user_by_email(field.data)
+    if len(existing_user):
+      raise ValidationError("Email already exists")
+
 
 class UserUpdateForm(FlaskForm):
   """ Modifies an existing users profile """
@@ -123,7 +128,13 @@ class AdminEditUserForm(FlaskForm):
   """ A form for one or more roles """
   _USER_ROLES = get_user_role_form_options()
 
-  roles = MultiCheckboxField('User Roles', choices=_USER_ROLES)
+  full_name = StringField('', [Required(), Length(min=5, max=50)])
+  email = EmailField('', [Required(), Email(), Length(min=6, max=50)])
+  roles = MultiCheckboxField('', choices=_USER_ROLES)
+
+  def validate_roles(form, field):
+    if not len(field.data):
+      raise ValidationError("User must have at least one role")
 
 class AdminEditProfileForm(FlaskForm):
   """ A form for updating individuals' public profile on the site """
