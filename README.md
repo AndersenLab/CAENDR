@@ -23,10 +23,10 @@ Steps:
 brew update
 brew install python-devel
 brew install pyenv
+```
 
 Edit your `~/.bash_profile` and add this to the bottom of the file. If the file doens't exist, create a new one. 
 ```
-# pyenv
 export PATH=$HOME/.pyenv/bin:$PATH
 eval "$(pyenv init --path)"
 eval "$(pyenv init -)"
