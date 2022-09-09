@@ -67,6 +67,18 @@ cd src/modules/site
 make clean
 make configure
 make cloud-sql-proxy-start
+
+# once you are done working on the PR, then stop the 
+make cloud-sql-proxy-stop
+# if this does not stop the container, do this: 
+docker ps
+(base) rbv218@imac:site{docs/developer-getting-started} $ docker ps
+CONTAINER ID   IMAGE                                            COMMAND                  CREATED          STATUS          PORTS                    NAMES
+75ef941c1e64   gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine   "/cloud_sql_proxy -i…"   29 minutes ago   Up 29 minutes   0.0.0.0:5432->5432/tcp   caendr-cloud-sql-proxy-1
+
+then stop the container manually with:
+$ docker kill 75ef941c1e64
+ 
 ```
 
 Expected result:
