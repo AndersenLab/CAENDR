@@ -26,7 +26,13 @@ brew install pyenv
 ```
 
 Edit your `~/.bash_profile` and add this to the bottom of the file. If the file doens't exist, create a new one. 
+
 ```
+# if using bash, do 
+nano ~/.bash_profile
+# if using zsh then 
+nano ~/.zprofile
+
 export PATH=$HOME/.pyenv/bin:$PATH
 eval "$(pyenv init --path)"
 eval "$(pyenv init -)"
