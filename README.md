@@ -23,6 +23,21 @@ Steps:
 brew update
 brew install python-devel
 brew install pyenv
+
+Edit your `~/.bash_profile` and add this to the bottom of the file. If the file doens't exist, create a new one. 
+```
+# pyenv
+export PATH=$HOME/.pyenv/bin:$PATH
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"
+```
+
+# pyenv
+export PATH=$HOME/.pyenv/bin:$PATH
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"
+
+
 pyenv install 3.7.12
 pyenv global 3.7.12
 pip install virtualenv
