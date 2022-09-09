@@ -41,13 +41,6 @@ eval "$(pyenv init -)"
 source ~/.bash_profile
 # if using zsh then 
 source ~/.zprofile
-```
-
-# pyenv
-export PATH=$HOME/.pyenv/bin:$PATH
-eval "$(pyenv init --path)"
-eval "$(pyenv init -)"
-
 
 pyenv install 3.7.12
 pyenv global 3.7.12
@@ -55,7 +48,6 @@ pip install virtualenv
 ``` 
 
 Expected Outputs:
-
 ```
 $ python -V
 Python 3.7.12
