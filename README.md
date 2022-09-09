@@ -36,6 +36,11 @@ nano ~/.zprofile
 export PATH=$HOME/.pyenv/bin:$PATH
 eval "$(pyenv init --path)"
 eval "$(pyenv init -)"
+
+# if using bash, do 
+source ~/.bash_profile
+# if using zsh then 
+source ~/.zprofile
 ```
 
 # pyenv
