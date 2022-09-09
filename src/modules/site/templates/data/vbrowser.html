@@ -122,6 +122,10 @@ mark {
         </div>
       </form>
     </div> {# /col-list #}
+
+    <button class="btn nu-alt-btn btn-block" id="reset-cols-btn" onClick="select_default_columns()">
+      Reset Default Columns
+    </button>
   </div> {# /col-md-2 #}
 
   {# strain select list block #}
@@ -529,11 +533,22 @@ function init_data_table() {
 }
 
 
-/* Set all column checkboxes to their default values */
+/* Set all columns to their default visibility values */
 function select_default_columns() {
+
+  /* Set checkboxes */
   columnList.forEach((col, idx) => {
-    $( "#toggle_" + col.id ).attr("checked", col.default_visibility);
+    $( "#toggle_" + col.id ).prop("checked", col.default_visibility);
   });
+
+  /* Set table columns */
+  for (let i = 0; i < columnList.length; i++) {
+    const column = dTable.column(i);
+    column.visible(columnList[i].default_visibility);
+  }
+
+  /* Redraw the table */
+  dTable.columns.adjust().draw();
 }
 
 
