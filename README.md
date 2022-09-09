@@ -55,6 +55,7 @@ pip install virtualenv
 ``` 
 
 Expected Outputs:
+
 ```
 $ python -V
 Python 3.7.12
