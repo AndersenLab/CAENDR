@@ -15,6 +15,7 @@ The last line should open MacOS Finder on the `~/.gcp/` folder. Drop the `.json`
 
 *Requirements*
 
+* VS Code
 * Docker Mac (https://docs.docker.com/desktop/install/mac-install/) 
 * homebrew (install from https://brew.sh/)
 
