@@ -80,8 +80,11 @@ Open a second terminal window:
 ```
 export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
 export ENV=main
-cd caendr # cd into the root of the project (not from sites)
-code .
+cd src/modules/sites
+make configure
+make dot-env
+make venv
+code ../../..
 ```
 
 
