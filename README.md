@@ -51,6 +51,9 @@ Expected Outputs:
 ```
 $ python -V
 Python 3.7.12
+
+$ virtualenv --version
+virtualenv 20.13.0 from /Users/rbv218/.pyenv/versions/3.7.12/lib/python3.7/site-packages/virtualenv/__init__.py
 ```
 
 ## Running local (work-in-progress)
