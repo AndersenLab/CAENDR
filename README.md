@@ -15,6 +15,7 @@ The last line should open MacOS Finder on the `~/.gcp/` folder. Drop the `.json`
 
 *Requirements*
 
+* VS Code
 * Docker Mac (https://docs.docker.com/desktop/install/mac-install/) 
 * homebrew (install from https://brew.sh/)
 
@@ -66,14 +67,36 @@ cd src/modules/site
 make clean
 make configure
 make cloud-sql-proxy-start
+
+# once you are done working on the PR, then stop the 
+make cloud-sql-proxy-stop
+# if this does not stop the container, do this: 
+docker ps
+(base) rbv218@imac:site{docs/developer-getting-started} $ docker ps
+CONTAINER ID   IMAGE                                            COMMAND                  CREATED          STATUS          PORTS                    NAMES
+75ef941c1e64   gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine   "/cloud_sql_proxy -i…"   29 minutes ago   Up 29 minutes   0.0.0.0:5432->5432/tcp   caendr-cloud-sql-proxy-1
+
+then stop the container manually with:
+$ docker kill 75ef941c1e64
+ 
+```
+
+Expected result:
+```
+$ docker ps
+CONTAINER ID   IMAGE                                            COMMAND                  CREATED         STATUS         PORTS                    NAMES
+75ef941c1e64   gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine   "/cloud_sql_proxy -i…"   3 minutes ago   Up 3 minutes   0.0.0.0:5432->5432/tcp   caendr-cloud-sql-proxy-1
 ```
 
 Open a second terminal window:
 ```
 export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
 export ENV=main
-cd src/modules/site
-make run
+cd src/modules/sites
+make configure
+make dot-env
+make venv
+code ../../..
 ```
 
 
