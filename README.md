@@ -1,6 +1,107 @@
 # CAENDR
 
-`CAENDR` is the code used to run the [_Caenorhabditis elegans_ Natural Diversity Resource](https://www.elegansvariation.org) website. Setup requires `make` which can be installed with:
+`CAENDR` is the code used to run the [_Caenorhabditis elegans_ Natural Diversity Resource](https://www.elegansvariation.org) website. 
+
+## GCP Credentials
+
+Ask in MS teams for the DevOps service-account json file. Create a local folder under your home directory named ~/.gcp and copy the service account json file to that folder.
+```
+$ mkdir ~/.gcp
+open -a Finder ~/.gcp 
+```
+The last line should open MacOS Finder on the `~/.gcp/` folder. Drop the `.json` service account file there. 
+
+## MacOS setup
+
+*Requirements*
+
+* VS Code
+* Docker Mac (https://docs.docker.com/desktop/install/mac-install/) 
+* homebrew (install from https://brew.sh/)
+
+Steps:
+```
+brew update
+brew install python-devel
+brew install pyenv
+```
+
+Edit your `~/.bash_profile` and add this to the bottom of the file. If the file doens't exist, create a new one. 
+
+```
+# if using bash, do 
+nano ~/.bash_profile
+# if using zsh then 
+nano ~/.zprofile
+
+export PATH=$HOME/.pyenv/bin:$PATH
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"
+
+# if using bash, do 
+source ~/.bash_profile
+# if using zsh then 
+source ~/.zprofile
+
+pyenv install 3.7.12
+pyenv global 3.7.12
+pip install virtualenv
+``` 
+
+Expected Outputs:
+```
+$ python -V
+Python 3.7.12
+
+$ virtualenv --version
+virtualenv 20.13.0 from /Users/rbv218/.pyenv/versions/3.7.12/lib/python3.7/site-packages/virtualenv/__init__.py
+```
+
+## Running local (work-in-progress)
+
+Open one terminal window and run:
+```
+export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
+export ENV=main
+cd src/modules/site
+make clean
+make configure
+make cloud-sql-proxy-start
+
+# once you are done working on the PR, then stop the 
+make cloud-sql-proxy-stop
+# if this does not stop the container, do this: 
+docker ps
+(base) rbv218@imac:site{docs/developer-getting-started} $ docker ps
+CONTAINER ID   IMAGE                                            COMMAND                  CREATED          STATUS          PORTS                    NAMES
+75ef941c1e64   gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine   "/cloud_sql_proxy -i…"   29 minutes ago   Up 29 minutes   0.0.0.0:5432->5432/tcp   caendr-cloud-sql-proxy-1
+
+then stop the container manually with:
+$ docker kill 75ef941c1e64
+ 
+```
+
+Expected result:
+```
+$ docker ps
+CONTAINER ID   IMAGE                                            COMMAND                  CREATED         STATUS         PORTS                    NAMES
+75ef941c1e64   gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine   "/cloud_sql_proxy -i…"   3 minutes ago   Up 3 minutes   0.0.0.0:5432->5432/tcp   caendr-cloud-sql-proxy-1
+```
+
+Open a second terminal window:
+```
+export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
+export ENV=main
+cd src/modules/sites
+make configure
+make dot-env
+make venv
+code ../../..
+```
+
+
+## Linux Setup
+Setup requires `make` which can be installed with:
 
 ```bash
 sudo apt-get update && sudo apt-get install build-essential
