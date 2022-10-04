@@ -62,7 +62,7 @@ Reset Password
 
 A password reset was requested for your account ({email}). If you did not authorize this, you may ignore this email.
 
-To continue with your password reset, click the link below and follow the prompts. This link will expire in 15 minutes and can only be used one time.
+To continue with your password reset, click the link below and follow the prompts. This link will expire in 24 hours and can only be used one time.
 
 {password_reset_magic_link}
 """
