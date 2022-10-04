@@ -26,18 +26,36 @@ variant_browser_bp = Blueprint('variant_browser',
 @variant_browser_bp.route('/vbrowser')
 @cache.memoize(60*60)
 def vbrowser():
-  title = 'Variant Annotation'
-  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.landing')}
-  form = VBrowserForm()
-  strain_listing = get_distinct_isotypes()
+
+  # Load columns from StrainAnnotatedVariant class
   columns = StrainAnnotatedVariant.get_column_details()
-  fluid_container = True
+
+  # Set function to decide which columns should be visible by default
+  # Currently uses default values in class definition, but a different filter could be used if desired
+  col_visibility_func = StrainAnnotatedVariant.column_default_visibility
+
+  # Set whether columns should be visible by default as an object attribute
+  for col in columns:
+    col['default_visibility'] = col_visibility_func(col)
+
+  # Create an options object to pass to vbrowser
+  vbrowser_options = {
+    "title": 'Variant Annotation',
+    "alt_parent_breadcrumb": {
+      "title": "Data",
+      "url": url_for('data.landing')
+    },
+    "form": VBrowserForm(),
+    "strain_listing": get_distinct_isotypes(),
+    "columns": columns,
+    "fluid_container": True,
+  }
 
   if request.args.get('download_err'):
     flash('CSV Download Failed.', 'error')
     return redirect(request.path)
 
-  return render_template('data/vbrowser.html', **locals())
+  return render_template('data/vbrowser.html', **vbrowser_options)
 
 
 @variant_browser_bp.route('/vbrowser/query/interval', methods=['POST'])

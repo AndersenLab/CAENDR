@@ -34,6 +34,19 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
 
   __tablename__ = 'strain_annotated_variants'
   __gene_summary__ = db.relationship("WormbaseGeneSummary", backref='strain_annotated_variants', lazy='joined')
+
+
+  # List of columns to be checked by default
+  _column_default_list = [
+    "pos",
+    "consequence",
+    "amino_acid_change",
+    "strains",
+    "blosum",
+    "grantham",
+    "variant_impact",
+    "divergent"
+  ]
   
   
   def __repr__(self):
@@ -65,8 +78,21 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
       {'id': 'divergent', 'name': 'Divergent'},
       {'id': 'release', 'name': 'Release Date'}
     ]
-    
-    
+
+
+  @staticmethod
+  def column_default_visibility(col):
+    """
+    Determine whether a column should be visible by default.
+
+    Takes column object with 'id' field.
+
+    Currently, this is based on a hard-coded list.  This can be changed to any desired filter.
+    """
+
+    return col['id'] in StrainAnnotatedVariant._column_default_list
+
+
   @classmethod
   def generate_interval_sql(cls, interval):
     interval = interval.replace(',','')
@@ -115,3 +141,10 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
     except ValueError:
       result = {}
     return result
+
+
+
+_full_column_list = list(map( lambda x: x['id'], StrainAnnotatedVariant.get_column_details() ))
+
+for col_id in StrainAnnotatedVariant._column_default_list:
+  assert col_id in _full_column_list, f'Could not set column ID "{col_id}" to checked by default - ID was not found. Is this a typo?'
