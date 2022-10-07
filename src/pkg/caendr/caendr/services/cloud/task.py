@@ -1,5 +1,6 @@
 import os
 import json
+import datetime
 
 from logzero import logger
 from flask import request
@@ -46,7 +47,7 @@ def add_task(queue, url, payload, delay_seconds=None, task_name=None):
 
   try:
     response = taskClient.create_task(request={"parent": parent, "task": task})
-    logger.debug("Created task {}".format(response.name))
+    logger.debug(f"Created task {response.name}")
   except Exception as e:
     logger.error(f"Failed to create task {e}")
     eType = str(type(e).__name__)

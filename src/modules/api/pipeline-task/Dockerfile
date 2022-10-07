@@ -9,13 +9,17 @@ RUN apt-get update && \
     apt-get upgrade -y --no-install-recommends && \
     apt-get install -y --no-install-recommends \
       build-essential \
+      libbz2-dev \
+      libssl-dev \
+      liblzma-dev \
+      libz-dev \
       python3-dev \
       python3 \
       python3-venv \
       python3-virtualenv \
       tabix \
-      virtualenv \
-      libz-dev && \
+      libcurl4-openssl-dev \
+      virtualenv && \
     apt-get autoremove && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*

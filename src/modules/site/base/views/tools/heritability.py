@@ -1,6 +1,9 @@
 import io
+import os
 import pandas as pd
 import json
+import datetime
+from caendr.models.datastore.pipeline_operation import PipelineOperation
 
 from flask import (flash,
                    request,
@@ -16,10 +19,12 @@ from datetime import datetime
 from base.forms import HeritabilityForm
 from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user
 
+from caendr.models.error import CachedDataError, DuplicateDataError
 from caendr.api.strain import get_strains
 from caendr.services.heritability_report import get_all_heritability_results, get_user_heritability_results, create_new_heritability_report, get_heritability_report
 from caendr.utils.data import unique_id, convert_data_table_to_tsv, get_object_hash
 from caendr.services.cloud.storage import get_blob, generate_blob_url
+from caendr.services.persistent_logger import PersistentLogger
 
 # ================== #
 #   heritability     #
@@ -56,7 +61,7 @@ def heritability_create():
   hide_form = False
   id = unique_id()
   return render_template('tools/heritability/submit.html', **locals())
-  
+
 
 @heritability_bp.route("/heritability/all-results")
 @admin_required()
@@ -89,9 +94,9 @@ def submit_h2():
   data = json.loads(request.values['table_data'])
   data = [x for x in data[1:] if x[0] is not None]
   trait = data[0][2]
-  
+
   data_tsv = convert_data_table_to_tsv(data, columns)
-  
+
   # Generate an ID for the data based on its hash
   data_hash = get_object_hash(data, length=32)
   logger.debug(data_hash)
@@ -99,22 +104,26 @@ def submit_h2():
 
   try:
     h = create_new_heritability_report(id, user.name, label, data_hash, trait, data_tsv)
-  except Exception as ex:
-    if str(type(ex).__name__) == 'DuplicateDataError':
-      flash('It looks like you submitted that data already - redirecting to your list of Heritability Reports', 'danger')
+  except DuplicateDataError:
+      flash('Oops! It looks like you submitted that data already - redirecting to your list of Heritability Reports', 'danger')
       return jsonify({'duplicate': True,
               'data_hash': data_hash,
               'id': id})
-    if str(type(ex).__name__) == 'CachedDataError':
-      flash('It looks like that data has already been submitted - redirecting to the saved results', 'danger')
-    return jsonify({'cached': True,
+  except CachedDataError:
+      flash('Oops! It looks like that data has already been submitted - redirecting to the saved results', 'danger')
+      return jsonify({'cached': True,
                   'data_hash': data_hash,
                   'id': id})
-    
+  except Exception as ex:
+      flash("Oops! There was a problem submitting your request: {ex}", 'danger')
+      return jsonify({'duplicate': True,
+              'data_hash': data_hash,
+              'id': id})
+
   return jsonify({'started': True,
                 'data_hash': data_hash,
                 'id': id})
-  
+
 
 # TODO: Move this into a separate service
 @heritability_bp.route("/heritability/h2/<id>")
@@ -137,9 +146,10 @@ def heritability_result(id):
   data = get_blob(hr.get_bucket_name(), hr.get_data_blob_path())
   result = get_blob(hr.get_bucket_name(), hr.get_result_blob_path())
 
+
   if data is None:
     return abort(404, description="Heritability report not found")
-  
+
   data = data.download_as_string().decode('utf-8')
   data = pd.read_csv(io.StringIO(data), sep="\t")
   data['AssayNumber'] = data['AssayNumber'].astype(str)
@@ -148,7 +158,7 @@ def heritability_result(id):
   trait = data[0]['TraitName']
   # Get trait and set title
   subtitle = trait
-  
+
   if result:
     hr.status = 'COMPLETE'
     hr.save()
@@ -156,8 +166,21 @@ def heritability_result(id):
     result = pd.read_csv(io.StringIO(result), sep="\t")
     result = result.to_dict('records')[0]
 
-    fnam=datetime.today().strftime('%Y%m%d.')+trait
+    fname =  datetime.today().strftime('%Y%m%d.')+trait
     ready = True
+
+  format = '%I:%M %p %m/%d/%Y'
+  now = datetime.now().strftime(format)
+
+  try:
+    operation_id = hr.operation_name.split('/').pop()
+    operation = PipelineOperation(operation_id)
+  except:
+    operation = None
+
+  service_name = os.getenv('HERITABILITY_CONTAINER_NAME')
+  persistent_logger = PersistentLogger(service_name)
+  error = persistent_logger.get(id)
 
   return render_template("tools/heritability/view.html", **locals())
 

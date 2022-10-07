@@ -44,7 +44,7 @@ def create_new_heritability_report(id, username, label, data_hash, trait, data_t
   
   # Load container version info 
   c = get_current_container_version(HERITABILITY_CONTAINER_NAME)
-  logger.debug(c)
+  logger.debug(f"Creating heritability calculation with {c.repo}/{c.name}:{c.container_tag}")
   
   # TODO: assign properties from cached result if it exists
   props = {'id': id,
