@@ -143,8 +143,12 @@ def get_status_css_class(value):
   }
   return mapping.get(value, '')
 
+# similar to the git short hash
+def short_hash(hash):
+  return hash[0:8]
+
 def register_template_filters(app):
-  for t_filter in [comma, format_release, get_status_css_class]:
+  for t_filter in [comma, format_release, get_status_css_class, short_hash]:
     app.template_filter()(t_filter)
 
 def register_extensions(app):
