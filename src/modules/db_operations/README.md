@@ -43,6 +43,36 @@ Targeted deployment is under construction until isolated TF states can be establ
 
 See full app deployment docs in the [root project README.md](../../../README.md#deployment).
 
+
+___
+
+## Troubleshooting ETL operations
+
+To troubleshoot the ETL operations, instead of running the operations against the production postgres, we can run against a local SQLITE database that runs in memory. The main reason to do this is speed. Please note that the sqlite memory is only available while the python is running. Consider changing the SQLITE to a local file if temporary persistence of the Sqlite data is needed. 
+
+Activate Step-by-Step of the ETL operations: 
+
+In the terminal, run:
+```
+export ENV=main
+export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/YOUR_FILE_HERE
+
+cd src/modules/db_operations
+make clean-venv
+make venv
+code ../../..
+```
+
+In VSCode:
+
+* Check that the Debug Launch for DROP_AND_POPULATE_ALL_TABLES is using the SQLITE in memory instead of the production Postgres.
+* Add a breakpoint to the file: `src/modules/db_operations/main.py` in the line after the `dev run():` )
+* Use the debugger to launch "Run DROP_AND_POPULATE_ALL_TABLES"
+
+Step-through the db_operations code and use the interactive debugger to check values, load data from SQlite memory using the ORM via classes, etc. 
+
+
+
 <!-- Pre-requisites: 
 Ensure that you are logged in to the GCLOUD GCP project in the CLI, or using a devops service account.
 
