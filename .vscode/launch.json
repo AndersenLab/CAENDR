@@ -159,11 +159,7 @@
             "envFile": "${workspaceFolder}/src/modules/db_operations/.env",
             "env": {
                 "DATABASE_OPERATION": "DROP_AND_POPULATE_ALL_TABLES",
-<<<<<<< HEAD
-                "EMAIL": "user@example.com",
-=======
                 "EMAIL": "no-reply@example.com",
->>>>>>> e67f2d74d4a2cbc1ad7e79c6a35d82c4ce781c84
                 "USE_MEMOIZATION": "1",
                 "WORMBASE_VERSION": "WS283",
                 "STRAIN_VARIANT_ANNOTATION_VERSION": "20220216",
@@ -188,11 +184,7 @@
             "envFile": "${workspaceFolder}/src/modules/db_operations/.env",
             "env": {
                 "DATABASE_OPERATION": "DROP_AND_POPULATE_ALL_TABLES",
-<<<<<<< HEAD
-                "EMAIL": "user@example.com",
-=======
                 "EMAIL": "no-reply@example.com",
->>>>>>> e67f2d74d4a2cbc1ad7e79c6a35d82c4ce781c84
                 "USE_MEMOIZATION": "1",
                 "USE_MOCK_DATA": "1",
                 "WORMBASE_VERSION": "WS283",
@@ -217,11 +209,7 @@
             "envFile": "${workspaceFolder}/src/modules/db_operations/.env",
             "env": {
                 "DATABASE_OPERATION": "TEST_ECHO",
-<<<<<<< HEAD
-                "EMAIL": "user@example.com",
-=======
                 "EMAIL": "no-reply@example.com",
->>>>>>> e67f2d74d4a2cbc1ad7e79c6a35d82c4ce781c84
                 // "USE_MEMOIZATION": "1",
                 "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "localhost",
                 // "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "memory",
