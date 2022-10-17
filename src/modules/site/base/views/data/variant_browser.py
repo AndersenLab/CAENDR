@@ -15,6 +15,7 @@ from base.forms import VBrowserForm
 
 from caendr.api.isotype import get_isotypes, get_distinct_isotypes
 from caendr.models.sql import StrainAnnotatedVariant
+from caendr.services.dataset_release import get_latest_dataset_release_version
 from caendr.services.strain_annotated_variants import verify_interval_query, verify_position_query
 
 
@@ -49,6 +50,7 @@ def vbrowser():
     "strain_listing": get_distinct_isotypes(),
     "columns": columns,
     "fluid_container": True,
+    "current_version": get_latest_dataset_release_version().version,
   }
 
   if request.args.get('download_err'):

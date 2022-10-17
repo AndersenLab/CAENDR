@@ -56,7 +56,7 @@
                 </strong>
             </div>
             <ul class="list-group">
-            <li class="list-group-item" style="padding:0px;">
+            <li class="list-group-item-img" style="padding:0px;">
             {% if isotype_ref_strain.latitude %}
               <div id="map" style="height: 200px; width:100%">
                 <script>
@@ -190,7 +190,7 @@ if (document.getElementById('map')) {
             const innerHTML = `
                 <div>
                     <ul style="list-style-type:none; padding-left:0px">
-                        ${d.isotype ? '<li><b><a href="../strains/isotype/' + d.isotype + '">Isotype: ' + d.isotype + '</a></b></li>': ''}
+                        ${d.isotype ? '<li><b><a href="../' + d.isotype + '">Isotype: ' + d.isotype + '</a></b></li>': ''}
                         ${d.strain ? '<li><b>Strain: ' + d.strain + '</b></li>': ''}
                         ${d.isolation ? '<li>Isolation: ' + d.isolation + '</li>': ''}
                         ${d.elevation ? '<li>Elevation: ' + d.elevation + '</li>': ''}
