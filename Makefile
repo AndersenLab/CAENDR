@@ -152,12 +152,17 @@ cloud-resource-plan: cloud-resource-init
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 	@echo -e "\n\nRun this command to apply the terraform plan: $(COLOR_G)'make cloud-resource-deploy ENV=$(ENV)'$(COLOR_N)\n" 
 
+.PHONY: docker-daemon
+docker-daemon:
+	@echo "Checking if Docker Daemon is running..."
+	@docker info > /dev/null
+	@echo "OK"
 
 #~
 cloud-resource-deploy: #~
 #~ Executes the generated terraform plan for deploying infrastructure described 
 #~ in ./env/[environment]/terraform including any service-specific terraform modules that are required
-cloud-resource-deploy: cloud-resource-init
+cloud-resource-deploy: cloud-resource-init docker-daemon
 	@echo -e "\n$(COLOR_B)Deploying the Terraform cloud resource plan...$(COLOR_N)" && \
 	$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && \
 	cd $(TF_PATH) && \
