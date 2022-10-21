@@ -236,8 +236,9 @@ let typingTimer;                //timer identifier
 let dTable = null;
 const selected_strains = new Set();
 
-let impactHigh = true;
-let impactLow = true; 
+// Initialize impact variables to match their checkboxes
+let impactHigh = $("#impact_high").prop('checked');
+let impactLow  = $("#impact_low").prop('checked');
 
 let toggle_strain_lock = false;
 
@@ -474,6 +475,7 @@ function populateDataTable() {
     const row_data = columnList.map(col => processCol(result_data[col['id']][variant], col['id']))
     $('#variant-table').dataTable().fnAddData(row_data);
   }
+  filter_rows_by_impact();
   filter_rows_by_strains();
   dTable.columns.adjust().draw();
 }
