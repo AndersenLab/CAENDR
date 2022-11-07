@@ -165,12 +165,16 @@ def heritability_result(id):
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   user = get_current_user()
   hr = get_heritability_report(id)
-  ready = False
-  data_url = generate_blob_url(hr.get_bucket_name(), hr.get_data_blob_path())
 
-  if (not hr._exists) or (hr.username != user.name):
+  if not hr._exists:
     flash('You do not have access to that report', 'danger')
     abort(401)
+  if not (hr.username == user.name or 'admin' in user.roles):
+    flash('You do not have access to that report', 'danger')
+    abort(401)
+
+  ready = False
+  data_url = generate_blob_url(hr.get_bucket_name(), hr.get_data_blob_path())
 
   data_hash = hr.data_hash
   data_blob = hr.get_data_blob_path()
