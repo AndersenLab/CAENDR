@@ -34,11 +34,11 @@ def reroute_software():
 @cache.memoize(60*60)
 def news_item(filename=""):
   ''' News '''
-  files = get_dir_list_sorted("static/content/news/")
+  files = get_dir_list_sorted("base/static/content/news/")
   if not filename:
     filename = files[0].strip(".md")
   title = filename[11:].strip(".md").replace("-", " ")
-  return render_template('news_item.html', **locals())
+  return render_template('news/news_item.html', **locals())
 
 
 @primary_bp.route("/help")
