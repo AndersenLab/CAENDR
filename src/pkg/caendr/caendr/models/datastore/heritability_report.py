@@ -7,7 +7,7 @@ from caendr.models.datastore import Entity
 MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
 H2_REPORT_PATH_PREFIX = 'reports'
 H2_INPUT_FILE = 'data.tsv'
-H2_RESULT_FILE = 'result.tsv'
+H2_RESULT_FILE = 'heritability_result.tsv'
 
 class HeritabilityReport(Entity):
   kind = 'heritability_report'
