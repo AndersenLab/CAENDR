@@ -56,13 +56,9 @@ table.dataTable thead .sorting {
               <td class='data-label'> {{ item.label }} </td>
               <td class='data-trait'> {{ item.trait }} </td>
               <td class='data-status'>
-                {% if item.status == 'COMPLETE' %}
                 <a href="{{ url_for('heritability.heritability_result', id=item.id) }}">
                   {{ item.status }}
                 </a>
-                {% else %}
-                  {{ item.status }}
-                {% endif %}
               </td>
             {% endif %}
             <td class='data-date' data-order="{{ item.created_on }}"> {{ item.created_on|date_format }} </td>

@@ -65,11 +65,13 @@
           </tr>
           <tr>
             <td class="key">Report ID</td>
-            <td title="using short hash (similar to git's short hash)" data-id="hr.id">{{ hr.id | short_hash}}</td>
+            <!-- <td title="using short hash (similar to git's short hash)" data-id="hr.id">{{ hr.id | short_hash}}</td> -->
+            <td>{{ hr.id }}</td>
           </tr>
           <tr>
-            <td class="key">Data Hash</td>
-            <td title="using short hash (similar to git's short hash" data-data_hash="hr.data_hash">{{ hr.data_hash | short_hash }}</td>
+            <td class="key">Data Hash<br/>(GCP Bucket)</td>
+            <!-- <td title="using short hash (similar to git's short hash" data-data_hash="hr.data_hash">{{ hr.data_hash | short_hash }}</td> -->
+            <td>{{ hr.data_hash }} </td>
           </tr>
           <tr>
             <td class="key">Updated</td>
