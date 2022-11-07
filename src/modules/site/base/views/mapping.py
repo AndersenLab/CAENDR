@@ -43,8 +43,7 @@ def submit_mapping_request():
   props = {'label': label, 
           'username': user.name,
           'email': user.email,
-          'file': request.files['file'],
-          'status': ''}
+          'file': request.files['file']}          
   try:
     logger.warn("Check Duplicates is DISABLED !!!")
     m = create_new_mapping(**props, check_duplicates=True)

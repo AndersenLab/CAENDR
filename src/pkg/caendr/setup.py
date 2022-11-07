@@ -9,6 +9,7 @@ setup(
     'cyvcf2==0.30.14',
     'Flask_SQLAlchemy==2.5.1',
     'Flask==1.1.2',
+    'protobuf==3.20.*',
     'google-api-python-client',
     'google-cloud-datastore',
     'google_cloud_logging',
