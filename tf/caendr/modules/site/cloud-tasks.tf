@@ -3,7 +3,7 @@ resource "google_cloud_tasks_queue" "heritability" {
   location = "us-central1"
 
   rate_limits {
-    max_concurrent_dispatches = 1
+    max_concurrent_dispatches = 5
     max_dispatches_per_second = 1
   }
 
