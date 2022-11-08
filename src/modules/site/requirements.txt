@@ -18,6 +18,7 @@ google-api-core
 google_api_python_client>=1.10.0
 google-auth-httplib2>=0.0.4
 google-cloud
+google-cloud-compute
 google-cloud-tasks
 google-cloud-secret-manager
 google-cloud-storage
