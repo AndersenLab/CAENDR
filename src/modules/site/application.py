@@ -262,7 +262,7 @@ def configure_jinja(app):
     if fmt:
       return aware_date.strftime(fmt)
     else:
-      return aware_date.strftime('%Y-%m-%d %H:%M:%S %z')
+      return aware_date.strftime('%Y-%m-%d %I:%M %p %z')
     
   @app.template_filter('species_italic')
   def _jinja2_filter_species_italic(text):

@@ -60,7 +60,12 @@ def create_new_heritability_report(id, username, label, data_hash, trait, data_t
   h2_new = HeritabilityReport(id)
   
   # check for heritability report with matching data hash and container version
-  reports = query_ds_entities(HeritabilityReport.kind, filters=[('data_hash', '=', data_hash)])
+  # and status as completed
+  filters = [
+    ('data_hash', '=', data_hash),
+    ('status', '=', 'COMPLETE' )
+  ]
+  reports = query_ds_entities(HeritabilityReport.kind, filters=filters)
   for h in reports:
     h = HeritabilityReport(h)
     if h.container_version == c.container_tag:
