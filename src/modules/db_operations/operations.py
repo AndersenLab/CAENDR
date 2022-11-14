@@ -5,10 +5,8 @@ from logzero import logger
 from caendr.models.error import EnvVarError
 from caendr.models.sql import WormbaseGene, WormbaseGeneSummary, Strain, Homolog, StrainAnnotatedVariant
 from caendr.services.sql.db import (drop_tables,
-                                    download_all_external_dbs,
-                                    download_external_db,
                                     backup_external_db,
-                                    fetch_internal_db)
+                                    DatasetManager)
 from caendr.services.sql.etl import (load_strains, 
                                       load_genes_summary, 
                                       load_genes, 
@@ -58,16 +56,20 @@ def drop_and_populate_strains(app, db):
   drop_tables(app, db, tables=[Strain.__table__])
   load_strains(db)
 
+
 def drop_and_populate_wormbase_genes(app, db, wb_ver: str):
   logger.info(f"Running Drop and Populate wormbase genes with version: {wb_ver}")
-  gene_gff_fname = download_external_db('GENE_GFF_URL', wb_ver=wb_ver)
-  gene_gtf_fname = download_external_db('GENE_GTF_URL', wb_ver=wb_ver)
-  gene_ids_fname = download_external_db('GENE_IDS_URL', wb_ver=wb_ver)
-  homologene_fname = download_external_db('HOMOLOGENE_URL')
-  ortholog_fname = download_external_db('ORTHOLOG_URL')
-  
+
+  file_manager = DatasetManager(wb_ver=wb_ver)
+  gene_gff_fname   = file_manager.fetch_external_db('GENE_GFF_URL', 'c_elegans')
+  gene_gtf_fname   = file_manager.fetch_external_db('GENE_GTF_URL', 'c_elegans')
+  gene_ids_fname   = file_manager.fetch_external_db('GENE_IDS_URL', 'c_elegans')
+  homologene_fname = file_manager.fetch_external_db('HOMOLOGENE_URL')
+  ortholog_fname   = file_manager.fetch_external_db('ORTHOLOG_URL', 'c_elegans')
+
   drop_tables(app, db, tables=[Homolog.__table__, WormbaseGene.__table__])
   drop_tables(app, db, tables=[WormbaseGeneSummary.__table__])
+
   load_genes_summary(db, gene_gff_fname)
   load_genes(db, gene_gtf_fname, gene_ids_fname)
   load_homologs(db, homologene_fname)
@@ -75,7 +77,8 @@ def drop_and_populate_wormbase_genes(app, db, wb_ver: str):
 
 
 def drop_and_populate_strain_annotated_variants(app, db, sva_ver: str):
-  sva_fname = fetch_internal_db('SVA_CSVGZ_URL', sva_ver=sva_ver)
+  file_manager = DatasetManager(sva_ver=sva_ver)
+  sva_fname = file_manager.fetch_internal_db('SVA_CSVGZ_URL')
   db.session.commit()
   logger.info(f"Dropping table...")
   drop_tables(app, db, tables=[StrainAnnotatedVariant.__table__])
@@ -85,16 +88,15 @@ def drop_and_populate_strain_annotated_variants(app, db, sva_ver: str):
 
 def drop_and_populate_all_tables(app, db, wb_ver: str, sva_ver: str):
   logger.info(f'Dropping and populating all tables - WORMBASE_VERSION: {wb_ver} STRAIN_VARIANT_ANNOTATION_VERSION: {sva_ver}')
+
   logger.info("[1/8] Downloading databases...eta ~0:15")
-  filenames = download_all_external_dbs(wb_ver)
-  gene_gff_fname = filenames['specific']['c_elegans']['GENE_GFF_URL']
-  gene_gtf_fname = filenames['specific']['c_elegans']['GENE_GTF_URL']
-  gene_ids_fname = filenames['specific']['c_elegans']['GENE_IDS_URL']
-  homologene_fname = filenames['generic']['HOMOLOGENE_URL']
-  ortholog_fname = filenames['specific']['c_elegans']['ORTHOLOG_URL']
-  
-  filenames['SVA_CSVGZ_URL'] = fetch_internal_db('SVA_CSVGZ_URL', sva_ver)
-  sva_fname = filenames['SVA_CSVGZ_URL']
+  file_manager = DatasetManager(wb_ver=wb_ver, sva_ver=sva_ver)
+  gene_gff_fname   = file_manager.fetch_external_db('GENE_GFF_URL', 'c_elegans')
+  gene_gtf_fname   = file_manager.fetch_external_db('GENE_GTF_URL', 'c_elegans')
+  gene_ids_fname   = file_manager.fetch_external_db('GENE_IDS_URL', 'c_elegans')
+  homologene_fname = file_manager.fetch_external_db('HOMOLOGENE_URL')
+  ortholog_fname   = file_manager.fetch_external_db('ORTHOLOG_URL', 'c_elegans')
+  sva_fname        = file_manager.fetch_internal_db('SVA_CSVGZ_URL')
 
   logger.info("[2/8] Dropping tables...eta ~0:01")
   drop_tables(app, db)

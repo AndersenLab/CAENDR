@@ -57,113 +57,195 @@ species_list = {
   },
 }
 
-@cache.memoize()
-def download_all_external_dbs(wb_ver: str):
-  '''
-    download_all_external_dbs [Downloads all external DB files to save them locally]
-      Args:
-        wb_ver (str, optional): [description]. Defaults to None.
-      Returns:
-        dict(str): [A dictionary of all downloaded filenames]
-  '''  
+class DatasetManager:
+
+  def __init__(self,
+    wb_ver: str = None,
+    sva_ver: str = None,
+    local_download_path: str = local_download_path,
+    species_list = species_list,
+    reload_files: bool = False,
+  ):
+
+    self.set_wb_ver(wb_ver)
+    self.set_sva_ver(sva_ver)
+
+    self.local_download_path = local_download_path
+    self.species_list = species_list
+
+    # Locate directory
+    if reload_files:
+      self.reset_directory()
+    self.ensure_directory_exists()
+
+
   # TODO: confirm correct format for wormbase_version
-  if not wb_ver:
-    logger.warning("E_NOT_SET: 'wb_ver'")    
-    raise BadRequestError()
+  def set_wb_ver(self, wb_ver: str):
+    self.wb_ver = wb_ver
   
+  def set_sva_ver(self, sva_ver: str):
+    self.sva_ver = sva_ver
+
+
+  ## Directory ##
+
+  def ensure_directory_exists(self):
+    '''
+    Ensures the local download directory exists and has the desired subfolders.
+    '''
+    # Create a folder at the desired path if one does not yet exist
+    if not os.path.exists(self.local_download_path):
+      os.mkdir(self.local_download_path)
+
+    # Make sure a subfolder exists for each species in the list
+    for species_name in self.species_list.keys():
+      species_path = f'{self.local_download_path}/{species_name}'
+      if not os.path.exists(species_path):
+        os.mkdir(species_path)
+
+
   # Create a local directory to store the downloads
-  logger.info('Creating empty directory to store downloaded files')
-  if os.path.exists(local_download_path):
-    shutil.rmtree(local_download_path)
-  os.mkdir(local_download_path)
-  
-  logger.info('Downloading All External DBs...')
-  downloaded_files = {
-    'specific': {},
-    'generic':  {},
-  }
-
-  # Download all files that depend on species
-  for species_name, species_info in species_list.items():
-    downloaded_files['specific'][species_name] = {}
-    for url_template_name in external_db_url_templates['specific'].keys():
-      downloaded_files['specific'][species_name][url_template_name] = download_external_db(
-        url_template_name,
-        wb_ver=wb_ver,
-        species_name=species_name,
-        project_number=species_info['project_number']
-      )
-
-  # Download all files that don't depend on species
-  for key, val in external_db_url_templates['generic'].items():
-    downloaded_files['generic'][key] = download_external_db(key, wb_ver)
-
-  logger.info('Done Downloading External Data.')
-  return downloaded_files
-  
-@cache.memoize()
-def download_external_db(db_url_name: str, wb_ver: str='', species_name: str='c_elegans', project_number: str='PRJNA13758'):
-  '''
-    download_external_db [Downloads an external database file and stores it locally]
-      Args:
-        db_url_name (str): [Name used as the key for the Dict of URLs].
-        wb_ver (str, optional): [Version of Wormbase Data to use (ie: WS276)].
-      Raises:
-        BadRequestError: [Arguments missing or malformed]
-      Returns:
-        str: [The downloaded file's local filename]
-  '''  
-  # TODO: confirm correct format for wormbase_version
-  if not db_url_name:
-    raise BadRequestError()
-
-  # Modify the URL template with correct wormbase version and download it
-  # TODO: make template args optional
-  if not os.path.exists(local_download_path):
-    os.mkdir(local_download_path)
-
-  # Make sure a folder for the current species exists in the download path, if one is provided
-  if species_name is not '' and not os.path.exists(f'{local_download_path}/{species_name}'):
-    os.mkdir(f'{local_download_path}/{species_name}')
-
-  if (db_url_name in external_db_url_templates['generic']):
-    url_template = external_db_url_templates['generic'][db_url_name]
-    url_path = ''
-  else:
-    url_template = external_db_url_templates['specific'][db_url_name]
-    url_path = species_name + '/'
-
-  t = Template(url_template)
-  url = t.substitute({
-    'WB':      wb_ver,
-    'SPECIES': species_name,
-    'PRJ':     project_number,
-  })
-  logger.info(f'Downloading External DB [{db_url_name}]:\n\t{url}')
-  fname = download_file(url, f'{local_download_path}/{url_path}{db_url_name}')
-  logger.info(f'Download Complete [{db_url_name}]:\n\t{fname} - {url}')
-  return fname
+  def reset_directory(self):
+    logger.info('Creating empty directory to store downloaded files')
+    if os.path.exists(self.local_download_path):
+      shutil.rmtree(self.local_download_path)
 
 
-def fetch_internal_db(db_url_name: str, sva_ver: str=''):
-  # TODO: confirm correct format for wormbase_version
-  if not db_url_name:
-    raise BadRequestError()
+  ## URLs and Filenames ##
 
-  # Modify the URL template with correct wormbase version and download it
-  # TODO: make template args optional
-  if not os.path.exists(local_download_path):
-    os.mkdir(local_download_path)
+  def url_template_type(self, db_url_name: str):
+      if db_url_name in external_db_url_templates['generic']:
+        return 'generic'
+      elif db_url_name in external_db_url_templates['specific']:
+        return 'specific'
+      else:
+        logger.warning(f'Unrecognized URL template name "{db_url_name}".')
+        raise BadRequestError()
 
-  t = Template(internal_db_blob_templates[db_url_name])
-  blob_name = t.substitute({'SVA': sva_ver})
-  url = f'gs://{MODULE_DB_OPERATIONS_BUCKET_NAME}/{blob_name}'
-  logger.info(f'Downloading Internal DB [{db_url_name}]:\n\t{url}')
-  fname = blob_name.rsplit('/', 1)[-1]
-  download_blob_to_file(MODULE_DB_OPERATIONS_BUCKET_NAME, blob_name, fname)
-  
-  logger.info(f'Download Complete [{db_url_name}]:\n\t{fname} - {url}')
-  return fname
+
+  def get_url_template(self, db_url_name: str):
+    return external_db_url_templates[self.url_template_type(db_url_name)][db_url_name]
+
+
+  def get_url(self, db_url_name: str, species_name: str = None):
+
+    # Make sure wormbase version is set
+    if not self.wb_ver:
+      logger.warning("E_NOT_SET: 'wb_ver'")
+      raise BadRequestError()
+
+    # Make sure a species name was provided if the URL requires one
+    if (self.url_template_type(db_url_name) == 'specific') and species_name is None:
+      logger.warning(f'URL template "{db_url_name}" requires a species, but none was provided.')
+      raise BadRequestError()
+
+    # Make sure the species name is valid
+    if species_name is not None and species_name not in self.species_list.keys():
+      logger.warning(f'Cannot construct URL for unknown species "{species_name}".')
+      raise BadRequestError()
+
+    # Get the desired template an fill in species information, if applicable
+    t = Template(self.get_url_template(db_url_name))
+    if species_name is not None:
+      return t.substitute({
+        'WB':      self.wb_ver,
+        'SPECIES': species_name,
+        'PRJ':     self.species_list[species_name]['project_number'],
+      })
+    else:
+      return t.substitute({
+        'WB':      self.wb_ver,
+      })
+
+
+  def get_filename(self, db_url_name: str, species_name: str = ''):
+    if (self.url_template_type(db_url_name) == 'generic'):
+      url_path = ''
+    else:
+      url_path = species_name + '/'
+    return f'{self.local_download_path}/{url_path}{db_url_name}'
+
+
+  ## Download external databases ##
+
+  def prefetch_all_external_dbs(self):
+    '''
+      download_all_external_dbs [Downloads all external DB files to save them locally]
+        Args:
+          wb_ver (str, optional): [description]. Defaults to None.
+        Returns:
+          dict(str): [A dictionary of all downloaded filenames]
+    '''
+    logger.info('Downloading All External DBs...')
+
+    # Make sure wormbase version is set
+    if not self.wb_ver:
+      logger.warning("E_NOT_SET: 'wb_ver'")
+      raise BadRequestError()
+
+    # Download all files that depend on species
+    for species_name in species_list.keys():
+      for url_template_name in external_db_url_templates['specific'].keys():
+        self.fetch_external_db(url_template_name, species_name)
+
+    # Download all files that don't depend on species
+    for url_template_name in external_db_url_templates['generic'].keys():
+      self.fetch_external_db(url_template_name)
+
+    logger.info('Done Downloading All External Data.')
+
+
+  def fetch_external_db(self, db_url_name: str, species_name: str = None, force: bool = False):
+    '''
+      fetch_external_db [Downloads an external database file and stores it locally]
+        Args:
+          db_url_name (str): [Name used as the key for the Dict of URLs].
+          wb_ver (str, optional): [Version of Wormbase Data to use (ie: WS276)].
+        Raises:
+          BadRequestError: [Arguments missing or malformed]
+        Returns:
+          str: [The downloaded file's local filename]
+    '''
+    # TODO: confirm correct format for wormbase_version
+    if not db_url_name:
+      raise BadRequestError()
+
+    # Construct the URL and filename
+    url      = self.get_url(db_url_name, species_name)
+    filename = self.get_filename(db_url_name, species_name)
+
+    # Check if file already downloaded, if applicable
+    if not force and os.path.exists(filename):
+      species_name_string = f', {species_name}' if species_name is not None else ''
+      logger.info(f'External DB already exists [{db_url_name}{species_name_string}]:\n\t{url}')
+      fname = filename
+
+    # Download the external file
+    else:
+      logger.info(f'Downloading External DB [{db_url_name}]:\n\t{url}')
+      fname = download_file(url, filename)
+      logger.info(f'Download Complete [{db_url_name}]:\n\t{fname} - {url}')
+
+    # Return the resulting filename
+    return fname
+
+
+  def fetch_internal_db(self, db_url_name: str):
+    if not self.sva_ver:
+      logger.warning("E_NOT_SET: 'sva_ver'")
+      raise BadRequestError()
+    if not db_url_name:
+      raise BadRequestError()
+
+    t = Template(internal_db_blob_templates[db_url_name])
+    blob_name = t.substitute({'SVA': self.sva_ver})
+    url = f'gs://{MODULE_DB_OPERATIONS_BUCKET_NAME}/{blob_name}'
+    logger.info(f'Downloading Internal DB [{db_url_name}]:\n\t{url}')
+    fname = blob_name.rsplit('/', 1)[-1]
+    download_blob_to_file(MODULE_DB_OPERATIONS_BUCKET_NAME, blob_name, fname)
+
+    logger.info(f'Download Complete [{db_url_name}]:\n\t{fname} - {url}')
+    return fname
 
 
 
