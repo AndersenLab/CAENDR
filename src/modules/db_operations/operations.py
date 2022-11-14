@@ -87,11 +87,11 @@ def drop_and_populate_all_tables(app, db, wb_ver: str, sva_ver: str):
   logger.info(f'Dropping and populating all tables - WORMBASE_VERSION: {wb_ver} STRAIN_VARIANT_ANNOTATION_VERSION: {sva_ver}')
   logger.info("[1/8] Downloading databases...eta ~0:15")
   filenames = download_all_external_dbs(wb_ver)
-  gene_gff_fname = filenames['GENE_GFF_URL']
-  gene_gtf_fname = filenames['GENE_GTF_URL']
-  gene_ids_fname = filenames['GENE_IDS_URL']
-  homologene_fname = filenames['HOMOLOGENE_URL']
-  ortholog_fname = filenames['ORTHOLOG_URL']
+  gene_gff_fname = filenames['specific']['c_elegans']['GENE_GFF_URL']
+  gene_gtf_fname = filenames['specific']['c_elegans']['GENE_GTF_URL']
+  gene_ids_fname = filenames['specific']['c_elegans']['GENE_IDS_URL']
+  homologene_fname = filenames['generic']['HOMOLOGENE_URL']
+  ortholog_fname = filenames['specific']['c_elegans']['ORTHOLOG_URL']
   
   filenames['SVA_CSVGZ_URL'] = fetch_internal_db('SVA_CSVGZ_URL', sva_ver)
   sva_fname = filenames['SVA_CSVGZ_URL']

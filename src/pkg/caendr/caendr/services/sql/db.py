@@ -28,16 +28,33 @@ SVA_CSVGZ_URL_TEMPLATE = f'{STRAIN_VARIANT_ANNOTATION_PATH}/WI.strain-annotation
 
 
 external_db_url_templates = {
-  'GENE_GTF_URL': remove_env_escape_chars(os.environ.get('GENE_GTF_URL')),
-  'GENE_GFF_URL': remove_env_escape_chars(os.environ.get('GENE_GFF_URL')),
-  'GENE_IDS_URL': remove_env_escape_chars(os.environ.get('GENE_IDS_URL')),
-  'ORTHOLOG_URL': remove_env_escape_chars(os.environ.get('ORTHOLOG_URL')),
-  'HOMOLOGENE_URL': remove_env_escape_chars(os.environ.get('HOMOLOGENE_URL')),
-  'TAXON_ID_URL': remove_env_escape_chars(os.environ.get('TAXON_ID_URL'))
+
+  # URLs that depend on the species
+  'specific': {
+    'GENE_GTF_URL': remove_env_escape_chars(os.environ.get('GENE_GTF_URL')),
+    'GENE_GFF_URL': remove_env_escape_chars(os.environ.get('GENE_GFF_URL')),
+    'GENE_IDS_URL': remove_env_escape_chars(os.environ.get('GENE_IDS_URL')),
+    'ORTHOLOG_URL': remove_env_escape_chars(os.environ.get('ORTHOLOG_URL')),
+  },
+
+  # URLs that don't depend on the species
+  'generic': {
+    'HOMOLOGENE_URL': remove_env_escape_chars(os.environ.get('HOMOLOGENE_URL')),
+    'TAXON_ID_URL':   remove_env_escape_chars(os.environ.get('TAXON_ID_URL'))
+  },
 }
 
 internal_db_blob_templates = {
   'SVA_CSVGZ_URL': SVA_CSVGZ_URL_TEMPLATE
+}
+
+# List of species, with associated project number(s) and wormbase version
+# TODO: This information should probably be read from somewhere else
+species_list = {
+  'c_elegans': {
+    'project_number':   'PRJNA13758',
+    'wormbase_version': os.environ.get('WORMBASE_VERSION'),
+  },
 }
 
 @cache.memoize()
@@ -61,14 +78,31 @@ def download_all_external_dbs(wb_ver: str):
   os.mkdir(local_download_path)
   
   logger.info('Downloading All External DBs...')
-  downloaded_files = {}
-  for key, val in external_db_url_templates.items():
-    downloaded_files[key] = download_external_db(key, wb_ver)
+  downloaded_files = {
+    'specific': {},
+    'generic':  {},
+  }
+
+  # Download all files that depend on species
+  for species_name, species_info in species_list.items():
+    downloaded_files['specific'][species_name] = {}
+    for url_template_name in external_db_url_templates['specific'].keys():
+      downloaded_files['specific'][species_name][url_template_name] = download_external_db(
+        url_template_name,
+        wb_ver=wb_ver,
+        species_name=species_name,
+        project_number=species_info['project_number']
+      )
+
+  # Download all files that don't depend on species
+  for key, val in external_db_url_templates['generic'].items():
+    downloaded_files['generic'][key] = download_external_db(key, wb_ver)
+
   logger.info('Done Downloading External Data.')
   return downloaded_files
   
 @cache.memoize()
-def download_external_db(db_url_name: str, wb_ver: str=''):
+def download_external_db(db_url_name: str, wb_ver: str='', species_name: str='c_elegans', project_number: str='PRJNA13758'):
   '''
     download_external_db [Downloads an external database file and stores it locally]
       Args:
@@ -88,10 +122,25 @@ def download_external_db(db_url_name: str, wb_ver: str=''):
   if not os.path.exists(local_download_path):
     os.mkdir(local_download_path)
 
-  t = Template(external_db_url_templates[db_url_name])
-  url = t.substitute({'WB': wb_ver})
+  # Make sure a folder for the current species exists in the download path, if one is provided
+  if species_name is not '' and not os.path.exists(f'{local_download_path}/{species_name}'):
+    os.mkdir(f'{local_download_path}/{species_name}')
+
+  if (db_url_name in external_db_url_templates['generic']):
+    url_template = external_db_url_templates['generic'][db_url_name]
+    url_path = ''
+  else:
+    url_template = external_db_url_templates['specific'][db_url_name]
+    url_path = species_name + '/'
+
+  t = Template(url_template)
+  url = t.substitute({
+    'WB':      wb_ver,
+    'SPECIES': species_name,
+    'PRJ':     project_number,
+  })
   logger.info(f'Downloading External DB [{db_url_name}]:\n\t{url}')
-  fname = download_file(url, f'{local_download_path}/{db_url_name}')
+  fname = download_file(url, f'{local_download_path}/{url_path}{db_url_name}')
   logger.info(f'Download Complete [{db_url_name}]:\n\t{fname} - {url}')
   return fname
 
