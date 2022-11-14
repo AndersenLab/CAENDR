@@ -66,6 +66,14 @@ class DatasetManager:
     species_list = species_list,
     reload_files: bool = False,
   ):
+    '''
+      Args:
+        wb_ver (str, optional): [Version of Wormbase Data to use (ie: WS276). Optional for initialization, but required for some operations.]
+        sva_ver (str, optional): [Strain Variant Annotation version to use. Optional for initialization, but required for some operations.]
+        local_download_path (str, optional): [Local directory path to store downloaded files. Defaults to '.download'.]
+        species_list (dict(str), optional): [Dictionary mapping species IDs to species-specific values. Default provided.]
+        reload_files (bool, optional): [Whether to clear the current contents of the download directory and re-download all files. Defaults to False.]
+    '''
 
     self.set_wb_ver(wb_ver)
     self.set_sva_ver(sva_ver)
@@ -91,7 +99,7 @@ class DatasetManager:
 
   def ensure_directory_exists(self):
     '''
-    Ensures the local download directory exists and has the desired subfolders.
+      Ensures the local download directory exists and has the correct subfolders.
     '''
     # Create a folder at the desired path if one does not yet exist
     if not os.path.exists(self.local_download_path):
@@ -106,6 +114,9 @@ class DatasetManager:
 
   # Create a local directory to store the downloads
   def reset_directory(self):
+    '''
+      Deletes the local download directory and all its contents.
+    '''
     logger.info('Creating empty directory to store downloaded files')
     if os.path.exists(self.local_download_path):
       shutil.rmtree(self.local_download_path)
@@ -114,21 +125,46 @@ class DatasetManager:
   ## URLs and Filenames ##
 
   def url_template_type(self, db_url_name: str):
-      if db_url_name in external_db_url_templates['generic']:
-        return 'generic'
-      elif db_url_name in external_db_url_templates['specific']:
-        return 'specific'
-      else:
-        logger.warning(f'Unrecognized URL template name "{db_url_name}".')
-        raise BadRequestError()
+    '''
+      Determines whether a URL is 'generic' (same for all species) or 'specific' (different for different species).
+        Args:
+          db_url_name (str): [Name of the URL template to check.]
+        Raises:
+          BadRequestError: [Provided URL name is not recognized.]
+        Returns:
+          str: ['generic' or 'specific']
+    '''
+    if db_url_name in external_db_url_templates['generic']:
+      return 'generic'
+    elif db_url_name in external_db_url_templates['specific']:
+      return 'specific'
+    else:
+      logger.warning(f'Unrecognized URL template name "{db_url_name}".')
+      raise BadRequestError()
 
 
   def get_url_template(self, db_url_name: str):
+    '''
+      Gets the URL template associated with a given template name.
+        Args:
+          db_url_name (str): [The name of the template to retrieve.]
+        Returns:
+          str: [The URL template associated with the given name.]
+    '''
     return external_db_url_templates[self.url_template_type(db_url_name)][db_url_name]
 
 
   def get_url(self, db_url_name: str, species_name: str = None):
-
+    '''
+      Fills in the specified URL template with version & species information.  Some templates do not require a species.
+        Args:
+          db_url_name (str): [The name of the template to retrieve.]
+          species_name (str, optional): [The species to fill in the template with. Defaults to None. Optional, but must be provided for certain templates.]
+        Raises:
+          BadRequestError: [Class-level WormBase version not set; URL template requires species, but none provided; Unknown species name.]
+        Returns:
+          str: [The desired URL filled in with information for the given species.]
+    '''
     # Make sure wormbase version is set
     if not self.wb_ver:
       logger.warning("E_NOT_SET: 'wb_ver'")
@@ -159,6 +195,14 @@ class DatasetManager:
 
 
   def get_filename(self, db_url_name: str, species_name: str = ''):
+    '''
+      Gets the local filename for a URL template and species.  Does NOT guarantee that this file exists.
+        Args:
+          db_url_name (str): [The name of the template to retrieve.]
+          species_name (str, optional): [The species to fill in the template with. Defaults to None. Optional, but must be provided for certain templates.]
+        Returns:
+          str: [The location in the local downloads folder where the downloaded file belongs.]
+    '''
     if (self.url_template_type(db_url_name) == 'generic'):
       url_path = ''
     else:
@@ -170,11 +214,7 @@ class DatasetManager:
 
   def prefetch_all_external_dbs(self):
     '''
-      download_all_external_dbs [Downloads all external DB files to save them locally]
-        Args:
-          wb_ver (str, optional): [description]. Defaults to None.
-        Returns:
-          dict(str): [A dictionary of all downloaded filenames]
+      Downloads all external DB files and saves them locally.
     '''
     logger.info('Downloading All External DBs...')
 
@@ -197,14 +237,15 @@ class DatasetManager:
 
   def fetch_external_db(self, db_url_name: str, species_name: str = None, force: bool = False):
     '''
-      fetch_external_db [Downloads an external database file and stores it locally]
+      fetch_external_db [Downloads an external database file and stores it locally.]
         Args:
-          db_url_name (str): [Name used as the key for the Dict of URLs].
-          wb_ver (str, optional): [Version of Wormbase Data to use (ie: WS276)].
+          db_url_name (str): [Name used as the key for the Dict of URLs.]
+          species_name (str, optional): [Name of species to retrieve DB file for. Defaults to None. Optional, but must be provided for certain URLs.]
+          force (bool, optional): [Whether to re-download the file, even if a local copy already exists. Defaults to False.]
         Raises:
           BadRequestError: [Arguments missing or malformed]
         Returns:
-          str: [The downloaded file's local filename]
+          str: [The downloaded file's local filename.]
     '''
     # TODO: confirm correct format for wormbase_version
     if not db_url_name:
