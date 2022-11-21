@@ -235,13 +235,13 @@ class DatasetManager:
     logger.info('Done Downloading All External Data.')
 
 
-  def fetch_external_db(self, db_url_name: str, species_name: str = None, force: bool = False):
+  def fetch_external_db(self, db_url_name: str, species_name: str = None, use_cache: bool = True):
     '''
       fetch_external_db [Downloads an external database file and stores it locally.]
         Args:
           db_url_name (str): [Name used as the key for the Dict of URLs.]
           species_name (str, optional): [Name of species to retrieve DB file for. Defaults to None. Optional, but must be provided for certain URLs.]
-          force (bool, optional): [Whether to re-download the file, even if a local copy already exists. Defaults to False.]
+          use_cache (bool, optional): [Whether to use a local copy if it exists (True), or force a re-download of the file (False). Defaults to True.]
         Raises:
           BadRequestError: [Arguments missing or malformed]
         Returns:
@@ -256,7 +256,7 @@ class DatasetManager:
     filename = self.get_filename(db_url_name, species_name)
 
     # Check if file already downloaded, if applicable
-    if not force and os.path.exists(filename):
+    if use_cache and os.path.exists(filename):
       species_name_string = f', {species_name}' if species_name is not None else ''
       logger.info(f'External DB already exists [{db_url_name}{species_name_string}]:\n\t{url}')
       fname = filename
