@@ -55,8 +55,8 @@ def submit_mapping_request():
     if str(type(ex).__name__) == 'CachedDataError':
       flash('It looks like that data has already been submitted - redirecting to the saved results', 'danger')
       return redirect(url_for('mapping.mapping_report', id=ex.description))
-    logger.error(ex)
-    flash(f"Unable to submit your request: {ex}", 'danger')
+    logger.error(ex.description)
+    flash(f"Unable to submit your request: \"{ex.description}\"", 'danger')
     return redirect(url_for('mapping.mapping'))
 
 @mapping_bp.route('/mapping/reports/all', methods=['GET', 'POST'])
