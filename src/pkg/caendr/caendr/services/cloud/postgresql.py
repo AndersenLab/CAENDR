@@ -46,10 +46,22 @@ def get_db_conn_uri():
     if connection_type == "memory":
         return "sqlite://"
     if connection_type == "file":
-        import tempfile
-        filepath = tempfile.TemporaryFile()
-        logger.info(f"SQLITE3 sqlite:///{filepath}")
-        return f"sqlite:///{filepath}"
+        target_file = os.getenv('MODULE_DB_OPERATIONS_CONNECTION_FILE')
+
+        # If filename is provided, use it as the database
+        if (target_file != None):
+            logger.info(f"SQLITE3 sqlite:///{target_file}")
+            return f"sqlite:///{target_file}"
+
+        # Otherwise, create a new temp file
+        else:
+            import tempfile
+            filepath = tempfile.TemporaryFile()
+            # file = tempfile.NamedTemporaryFile(delete=False)
+            # filepath = file.name
+            # file.close()
+            logger.info(f"SQLITE3 sqlite:///{filepath.name}")
+            return f"sqlite:///{filepath.name}"
     return alt_db_conn_uri
 
 

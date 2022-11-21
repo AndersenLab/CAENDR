@@ -13,7 +13,7 @@ from caendr.services.sql.db import external_db_url_templates
 C_ELEGANS_PREFIX = 'CELE_'
 C_ELEGANS_HOMOLOG_ID = 6239
 
-TAXON_ID_URL = external_db_url_templates['TAXON_ID_URL']
+TAXON_ID_URL = external_db_url_templates['generic']['TAXON_ID_URL']
 
 def load_homologs(db, homologene_fname: str):
   logger.info('Loading homologenes from NIH homologene.data file')
