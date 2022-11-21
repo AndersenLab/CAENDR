@@ -60,12 +60,12 @@ def drop_and_populate_strains(app, db):
 def drop_and_populate_wormbase_genes(app, db, wb_ver: str):
   logger.info(f"Running Drop and Populate wormbase genes with version: {wb_ver}")
 
-  file_manager = DatasetManager(wb_ver=wb_ver)
-  gene_gff_fname   = file_manager.fetch_external_db('GENE_GFF_URL', 'c_elegans')
-  gene_gtf_fname   = file_manager.fetch_external_db('GENE_GTF_URL', 'c_elegans')
-  gene_ids_fname   = file_manager.fetch_external_db('GENE_IDS_URL', 'c_elegans')
-  homologene_fname = file_manager.fetch_external_db('HOMOLOGENE_URL')
-  ortholog_fname   = file_manager.fetch_external_db('ORTHOLOG_URL', 'c_elegans')
+  dataset_manager = DatasetManager(wb_ver=wb_ver)
+  gene_gff_fname   = dataset_manager.fetch_external_db('GENE_GFF_URL', 'c_elegans')
+  gene_gtf_fname   = dataset_manager.fetch_external_db('GENE_GTF_URL', 'c_elegans')
+  gene_ids_fname   = dataset_manager.fetch_external_db('GENE_IDS_URL', 'c_elegans')
+  homologene_fname = dataset_manager.fetch_external_db('HOMOLOGENE_URL')
+  ortholog_fname   = dataset_manager.fetch_external_db('ORTHOLOG_URL', 'c_elegans')
 
   drop_tables(app, db, tables=[Homolog.__table__, WormbaseGene.__table__])
   drop_tables(app, db, tables=[WormbaseGeneSummary.__table__])
@@ -77,8 +77,8 @@ def drop_and_populate_wormbase_genes(app, db, wb_ver: str):
 
 
 def drop_and_populate_strain_annotated_variants(app, db, sva_ver: str):
-  file_manager = DatasetManager(sva_ver=sva_ver)
-  sva_fname = file_manager.fetch_internal_db('SVA_CSVGZ_URL')
+  dataset_manager = DatasetManager(sva_ver=sva_ver)
+  sva_fname = dataset_manager.fetch_internal_db('SVA_CSVGZ_URL')
   db.session.commit()
   logger.info(f"Dropping table...")
   drop_tables(app, db, tables=[StrainAnnotatedVariant.__table__])
@@ -90,13 +90,13 @@ def drop_and_populate_all_tables(app, db, wb_ver: str, sva_ver: str):
   logger.info(f'Dropping and populating all tables - WORMBASE_VERSION: {wb_ver} STRAIN_VARIANT_ANNOTATION_VERSION: {sva_ver}')
 
   logger.info("[1/8] Downloading databases...eta ~0:15")
-  file_manager = DatasetManager(wb_ver=wb_ver, sva_ver=sva_ver)
-  gene_gff_fname   = file_manager.fetch_external_db('GENE_GFF_URL', 'c_elegans')
-  gene_gtf_fname   = file_manager.fetch_external_db('GENE_GTF_URL', 'c_elegans')
-  gene_ids_fname   = file_manager.fetch_external_db('GENE_IDS_URL', 'c_elegans')
-  homologene_fname = file_manager.fetch_external_db('HOMOLOGENE_URL')
-  ortholog_fname   = file_manager.fetch_external_db('ORTHOLOG_URL', 'c_elegans')
-  sva_fname        = file_manager.fetch_internal_db('SVA_CSVGZ_URL')
+  dataset_manager = DatasetManager(wb_ver=wb_ver, sva_ver=sva_ver)
+  gene_gff_fname   = dataset_manager.fetch_external_db('GENE_GFF_URL', 'c_elegans')
+  gene_gtf_fname   = dataset_manager.fetch_external_db('GENE_GTF_URL', 'c_elegans')
+  gene_ids_fname   = dataset_manager.fetch_external_db('GENE_IDS_URL', 'c_elegans')
+  homologene_fname = dataset_manager.fetch_external_db('HOMOLOGENE_URL')
+  ortholog_fname   = dataset_manager.fetch_external_db('ORTHOLOG_URL', 'c_elegans')
+  sva_fname        = dataset_manager.fetch_internal_db('SVA_CSVGZ_URL')
 
   logger.info("[2/8] Dropping tables...eta ~0:01")
   drop_tables(app, db)
