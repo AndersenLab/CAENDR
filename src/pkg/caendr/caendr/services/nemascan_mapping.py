@@ -172,10 +172,10 @@ def validate_data_format(id, local_path):
     csv_headings = next(csv_reader)
 
   # Check first line for column headers (strain, {TRAIT})
-  if csv_headings[0] != 'strain' or len(csv_headings) != 2 or len(csv_headings[1]) == 0:
+  if csv_headings[0].lower() != 'strain' or len(csv_headings) != 2 or len(csv_headings[1]) == 0:
     raise DataFormatError()
   
-  trait = csv_headings[1]
+  trait = csv_headings[1].lower()
   data_hash = get_file_hash(local_path, length=32)
   return trait, data_hash
 
