@@ -10,9 +10,9 @@ from sqlalchemy.sql.expression import null
 from caendr.models.sql import StrainAnnotatedVariant
 
 
-def load_strain_annotated_variants(db, sva_fname: str):
+def load_strain_annotated_variants(self, db):
   logger.info('Loading strain variant annotated csv')
-  sva_data = fetch_strain_variant_annotation_data(sva_fname)
+  sva_data = fetch_strain_variant_annotation_data(self.dataset_manager.fetch_sva_db())
   logger.info('Inserting strain annotated variant data into database')
   db.session.bulk_insert_mappings(StrainAnnotatedVariant, sva_data)
   db.session.commit()

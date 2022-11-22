@@ -15,9 +15,9 @@ C_ELEGANS_HOMOLOG_ID = 6239
 
 TAXON_ID_URL = external_db_url_templates['generic']['TAXON_ID_URL']
 
-def load_homologs(db, homologene_fname: str):
+def load_homologs(self, db):
   logger.info('Loading homologenes from NIH homologene.data file')
-  homologene = fetch_homologene(homologene_fname)
+  homologene = fetch_homologene(self.dataset_manager.fetch_homologene_db())
   db.session.bulk_insert_mappings(Homolog, homologene)
   db.session.commit()
   logger.info(f'Inserted {Homolog.query.count()} Homologs')
