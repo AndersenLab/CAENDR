@@ -212,7 +212,7 @@ class DatasetManager:
 
   ## Download external databases ##
 
-  def prefetch_all_external_dbs(self):
+  def prefetch_all_external_dbs(self, use_cache: bool = True):
     '''
       Downloads all external DB files and saves them locally.
     '''
@@ -226,11 +226,11 @@ class DatasetManager:
     # Download all files that depend on species
     for species_name in species_list.keys():
       for url_template_name in external_db_url_templates['specific'].keys():
-        self.fetch_external_db(url_template_name, species_name)
+        self.fetch_external_db(url_template_name, species_name, use_cache=use_cache)
 
     # Download all files that don't depend on species
     for url_template_name in external_db_url_templates['generic'].keys():
-      self.fetch_external_db(url_template_name)
+      self.fetch_external_db(url_template_name, use_cache=use_cache)
 
     logger.info('Done Downloading All External Data.')
 
@@ -287,6 +287,76 @@ class DatasetManager:
 
     logger.info(f'Download Complete [{db_url_name}]:\n\t{fname} - {url}')
     return fname
+
+
+  ## Fetch specific URLs ##
+
+  def fetch_gene_gtf_db(self, species, use_cache: bool = True):
+    '''
+      Fetches WormBase gene .gtf.gz file.
+        Args:
+          species (str): [Name of species to retrieve DB file for.]
+          use_cache (bool, optional): [Whether to use a local copy if it exists (True), or force a re-download of the file (False). Defaults to True.]
+        Returns:
+          gene_gtf_fname (str): [path of downloaded wormbase gene gtf.gz file]
+    '''
+    return self.fetch_external_db('GENE_GTF_URL', species, use_cache=use_cache)
+
+  def fetch_gene_gff_db(self, species, use_cache: bool = True):
+    '''
+      Fetches WormBase gene .gff file.
+        Args:
+          species (str): [Name of species to retrieve DB file for.]
+          use_cache (bool, optional): [Whether to use a local copy if it exists (True), or force a re-download of the file (False). Defaults to True.]
+        Returns:
+          gene_gff_fname (str): [Path of downloaded wormbase gene gff file.]
+    '''
+    return self.fetch_external_db('GENE_GFF_URL', species, use_cache=use_cache)
+
+  def fetch_gene_ids_db(self, species, use_cache: bool = True):
+    '''
+      Fetches WormBase gene IDs file.
+        Args:
+          species (str): [Name of species to retrieve DB file for.]
+          use_cache (bool, optional): [Whether to use a local copy if it exists (True), or force a re-download of the file (False). Defaults to True.]
+        Returns:
+          gene_ids_fname (str): [path of downloaded wormbase gene IDs file]
+    '''
+    return self.fetch_external_db('GENE_IDS_URL', species, use_cache=use_cache)
+
+  def fetch_ortholog_db(self, species, use_cache: bool = True):
+    '''
+      Fetches WormBase orthologs file.
+        Args:
+          species (str): [Name of species to retrieve DB file for.]
+          use_cache (bool, optional): [Whether to use a local copy if it exists (True), or force a re-download of the file (False). Defaults to True.]
+        Returns:
+          ortholog_fname (str): [path of downloaded wormbase homologs file]
+    '''
+    return self.fetch_external_db('ORTHOLOG_URL', species, use_cache=use_cache)
+
+  def fetch_homologene_db(self, use_cache: bool = True):
+    '''
+      Fetches homologene file.
+        Args:
+          use_cache (bool, optional): [Whether to use a local copy if it exists (True), or force a re-download of the file (False). Defaults to True.]
+        Returns:
+          homologene_fname (str): [path of downloaded homologene file]
+    '''
+    return self.fetch_external_db('HOMOLOGENE_URL', use_cache=use_cache)
+
+  def fetch_taxon_id_db(self, use_cache: bool = True):
+    '''
+      Fetches taxon IDs file.
+        Args:
+          use_cache (bool, optional): [Whether to use a local copy if it exists (True), or force a re-download of the file (False). Defaults to True.]
+        Returns:
+          taxon_id_fname (str): [path of downloaded taxon IDs file]
+    '''
+    return self.fetch_external_db('TAXON_ID_URL', use_cache=use_cache)
+
+  def fetch_sva_db(self, use_cache: bool = True):
+    return self.fetch_internal_db('SVA_CSVGZ_URL', use_cache=use_cache)
 
 
 
