@@ -271,6 +271,14 @@ class DatasetManager:
     return fname
 
 
+  def prefetch_all_internal_dbs(self, use_cache: bool = True):
+    '''
+      Downloads all internal DB files and saves them locally.
+    '''
+    logger.info('Downloading All Internal DBs...')
+    self.fetch_sva_db()
+
+
   def fetch_internal_db(self, db_url_name: str):
     if not self.sva_ver:
       logger.warning("E_NOT_SET: 'sva_ver'")
