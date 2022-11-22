@@ -1,6 +1,6 @@
 from .strains import load_strains
 
-from caendr.services.sql.db import DatasetManager
+from caendr.services.sql.dataset import DatasetManager
 
 class ETLManager:
 

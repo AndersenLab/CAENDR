@@ -7,7 +7,6 @@ from gtfparse import read_gtf_as_dataframe
 from logzero import logger
 
 from caendr.models.sql import WormbaseGeneSummary, WormbaseGene, Homolog
-from caendr.services.sql.db import DatasetManager
 from caendr.utils.bio import arm_or_center
 from caendr.utils.constants import CHROM_NUMERIC
 
