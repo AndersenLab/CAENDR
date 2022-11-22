@@ -19,10 +19,10 @@ def execute_operation(app, db, DB_OP):
     if not WORMBASE_VERSION or not STRAIN_VARIANT_ANNOTATION_VERSION:
       raise EnvVarError()
     drop_and_populate_all_tables(app, db, WORMBASE_VERSION, STRAIN_VARIANT_ANNOTATION_VERSION)
-    
+
   elif DB_OP == 'DROP_AND_POPULATE_STRAINS':
     drop_and_populate_strains(app, db)
-    
+
   elif DB_OP == 'DROP_AND_POPULATE_WORMBASE_GENES':
     if not WORMBASE_VERSION:
       raise EnvVarError()
@@ -32,7 +32,7 @@ def execute_operation(app, db, DB_OP):
     if not STRAIN_VARIANT_ANNOTATION_VERSION:
       raise EnvVarError()
     drop_and_populate_strain_annotated_variants(app, db, STRAIN_VARIANT_ANNOTATION_VERSION)
-  
+
   elif DB_OP == 'TEST_ECHO':
     result, message = health_database_status()
     if not result:
@@ -51,7 +51,7 @@ def drop_and_populate_strains(app, db):
 
 
 def drop_and_populate_wormbase_genes(app, db, wb_ver: str):
-  logger.info(f"Running Drop and Populate wormbase genes with version: {wb_ver}")
+  logger.info(f"Dropping and populating wormbase genes - WORMBASE_VERSION: {wb_ver}")
 
   # Initialize ETL Manager
   etl_manager = ETLManager(wb_ver=wb_ver)
@@ -68,6 +68,7 @@ def drop_and_populate_wormbase_genes(app, db, wb_ver: str):
 
 
 def drop_and_populate_strain_annotated_variants(app, db, sva_ver: str):
+  logger.info(f'Dropping and populating strain annotated variants - STRAIN_VARIANT_ANNOTATION_VERSION: {sva_ver}')
 
   # Initialize ETL Manager
   etl_manager = ETLManager(sva_ver=sva_ver)
