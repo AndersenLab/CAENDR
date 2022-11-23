@@ -121,10 +121,10 @@ def fetch_homologene_db(self, use_cache: bool = True):
 
 def fetch_taxon_id_db(self, use_cache: bool = True):
     '''
-      Fetches taxon IDs file.
+      Fetches taxonomic IDs file.
         Args:
           use_cache (bool, optional): [Whether to use a local copy if it exists (True), or force a re-download of the file (False). Defaults to True.]
         Returns:
-          taxon_id_fname (str): [path of downloaded taxon IDs file]
+          taxon_id_fname (str): [path of downloaded taxonomic IDs file]
     '''
     return self.fetch_external_db('TAXON_ID_URL', use_cache=use_cache)

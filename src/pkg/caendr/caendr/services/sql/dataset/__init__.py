@@ -5,7 +5,7 @@ from logzero import logger
 
 from caendr.models.error import BadRequestError
 
-# Import the TAXON_ID_URL to expose it to external modules
+# Import the taxonomic ID URL to expose it to external modules
 from .env import DEFAULT_LOCAL_DOWNLOAD_PATH, TAXON_ID_URL
 
 

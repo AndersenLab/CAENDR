@@ -25,9 +25,9 @@ def load_homologs(self, db):
 
 def fetch_taxon_ids():
   """
-      Downloads mapping of taxon-ids to species names.
+      Downloads mapping of taxonomic IDs to species names.
   """
-  # TODO: combine fetching taxon ids with the rest of the external DBs
+  # TODO: combine fetching taxonomic ids with the rest of the external DBs
   taxon_file = NamedTemporaryFile(suffix='tar')
   out, err = urlretrieve(TAXON_ID_URL, taxon_file.name)
   tar = tarfile.open(out)

@@ -35,5 +35,5 @@ internal_db_blob_templates = {
 
 DEFAULT_LOCAL_DOWNLOAD_PATH = '.download'
 
-# Expose the Taxon ID URL for external use (in the ETL module)
+# Expose the taxonomic ID URL for external use (in the ETL module)
 TAXON_ID_URL = external_db_url_templates['generic']['TAXON_ID_URL']
