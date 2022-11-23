@@ -1,0 +1,12 @@
+{
+    "c_elegans": {
+        "project_number":   "PRJNA13758",
+        "wormbase_version": "WS283",
+        "sva_version":      "20220216"
+    },
+    "c_briggsae": {
+        "project_number":   "PRJNA10731",
+        "wormbase_version": "WS285",
+        "sva_version":      "XXXXXXXX"
+    }
+}

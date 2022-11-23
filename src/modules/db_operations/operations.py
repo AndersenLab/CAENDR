@@ -15,22 +15,20 @@ def execute_operation(app, db, DB_OP):
   # Get the path to the JSON file containing the list of species and their attributes
   SPECIES_LIST_FILE = os.environ['SPECIES_LIST_FILE']
   logger.info(f'Executing {DB_OP} -- SPECIES_LIST_FILE: "{SPECIES_LIST_FILE}"')
-  if not SPECIES_LIST_FILE:
-      raise EnvVarError()
-
-  # Parse species list
-  species_list = Species.parse_json_file(SPECIES_LIST_FILE)
 
   if DB_OP == 'DROP_AND_POPULATE_ALL_TABLES':
+    species_list = parse_species_list(SPECIES_LIST_FILE)
     drop_and_populate_all_tables(app, db, species_list)
 
   elif DB_OP == 'DROP_AND_POPULATE_STRAINS':
     drop_and_populate_strains(app, db)
 
   elif DB_OP == 'DROP_AND_POPULATE_WORMBASE_GENES':
+    species_list = parse_species_list(SPECIES_LIST_FILE)
     drop_and_populate_wormbase_genes(app, db, species_list)
 
   elif DB_OP == 'DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS':
+    species_list = parse_species_list(SPECIES_LIST_FILE)
     drop_and_populate_strain_annotated_variants(app, db, species_list)
 
   elif DB_OP == 'TEST_ECHO':
@@ -42,7 +40,14 @@ def execute_operation(app, db, DB_OP):
     os.environ["USE_MOCK_DATA"] = "1"
     os.environ["MODULE_DB_OPERATIONS_CONNECTION_TYPE"] = "memory"
     logger.info("Using MOCK DATA")
+    species_list = parse_species_list(SPECIES_LIST_FILE)
     drop_and_populate_all_tables(app, db, species_list)
+
+
+def parse_species_list(species_list_file):
+  if not species_list_file:
+    raise EnvVarError()
+  return Species.parse_json_file(species_list_file)
 
 
 def drop_and_populate_strains(app, db):
