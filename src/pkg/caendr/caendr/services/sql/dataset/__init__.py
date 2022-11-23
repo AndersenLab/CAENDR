@@ -83,7 +83,7 @@ class DatasetManager:
             raise BadRequestError()
         return self._sva_ver
 
-    @wb_ver.setter
+    @sva_ver.setter
     def sva_ver(self, new_sva_ver: str):
         # TODO: validate
         self._sva_ver = new_sva_ver
