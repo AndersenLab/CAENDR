@@ -1,9 +1,10 @@
 import os
+import re
 import shutil
 
 from logzero import logger
 
-from caendr.models.error import BadRequestError
+from caendr.models.error import BadRequestError, InternalError
 
 # Import the taxonomic ID URL to expose it to external modules
 from .env import DEFAULT_LOCAL_DOWNLOAD_PATH, TAXON_ID_URL
@@ -69,8 +70,15 @@ class DatasetManager:
 
     @wb_ver.setter
     def wb_ver(self, new_wb_ver: str):
-        # TODO: validate
-        # wb_regex = r'^WS[0-9]*$'      # Match the expected format: 'WS276'
+
+        # Validate desired new value mtches expected format 'WS###', e.g. 'WS276'
+        # TODO: Confirm this is the correct format
+        # TODO: What about WormBase ParaSite?
+        if not re.match(r'^WS[0-9]+$', new_wb_ver):
+            logger.warning(f'Invalid WormBase Version String: "{new_wb_ver}"')
+            raise InternalError()
+
+        # If valid, set the new value
         self._wb_ver = new_wb_ver
 
 
@@ -85,7 +93,7 @@ class DatasetManager:
 
     @sva_ver.setter
     def sva_ver(self, new_sva_ver: str):
-        # TODO: validate
+        # TODO: validate -- looks like this should be the 8 digit date string
         self._sva_ver = new_sva_ver
 
 
