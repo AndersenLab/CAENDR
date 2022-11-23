@@ -4,7 +4,7 @@ from logzero import logger
 from caendr.models.error import BadRequestError
 from caendr.services.cloud.storage import download_blob_to_file
 
-from .env import MODULE_DB_OPERATIONS_BUCKET_NAME, internal_db_blob_templates
+from ._env import MODULE_DB_OPERATIONS_BUCKET_NAME, internal_db_blob_templates
 
 
 ## General fetch functions ##

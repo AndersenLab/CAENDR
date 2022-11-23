@@ -5,7 +5,7 @@ from logzero import logger
 
 from caendr.models.error import BadRequestError
 
-from .env import external_db_url_templates
+from ._env import external_db_url_templates
 
 
 def url_template_type(db_url_name: str):

@@ -7,7 +7,7 @@ from logzero import logger
 from caendr.models.error import BadRequestError, InternalError
 
 # Import the taxonomic ID URL to expose it to external modules
-from .env import DEFAULT_LOCAL_DOWNLOAD_PATH, TAXON_ID_URL
+from ._env import DEFAULT_LOCAL_DOWNLOAD_PATH, TAXON_ID_URL
 
 
 
@@ -39,12 +39,12 @@ class DatasetManager:
 
     @property
     def specific_template_names(self):
-        from .env import external_db_url_templates
+        from ._env import external_db_url_templates
         return external_db_url_templates['specific'].keys()
 
     @property
     def generic_template_names(self):
-        from .env import external_db_url_templates
+        from ._env import external_db_url_templates
         return external_db_url_templates['generic'].keys()
 
 
@@ -90,9 +90,9 @@ class DatasetManager:
 
     ## Import functions from this module as class methods ##
 
-    from .url_templates import get_url, get_filename
+    from ._url_templates import get_url, get_filename
 
-    from .db_external import (
+    from ._db_external import (
         prefetch_all_external_dbs,
         fetch_external_db,
         fetch_gene_gff_db,
@@ -103,7 +103,7 @@ class DatasetManager:
         fetch_taxon_id_db,
     )
 
-    from .db_internal import (
+    from ._db_internal import (
         prefetch_all_internal_dbs,
         fetch_internal_db,
         fetch_sva_db,
