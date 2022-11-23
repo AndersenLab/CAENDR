@@ -62,15 +62,14 @@ def get_url(self, db_url_name: str, species_name: str = None):
     # Get the desired template an fill in species information, if applicable
     t = Template(get_url_template(db_url_name))
     if species_name is not None:
+      species = self.get_species(species_name)
       return t.substitute({
-        'WB':      self.wb_ver,
         'SPECIES': species_name,
-        'PRJ':     self.species_list[species_name]['project_number'],
+        'PRJ':     species.proj_num,
+        'WB':      species.wb_ver,
       })
     else:
-      return t.substitute({
-        'WB':      self.wb_ver,
-      })
+      return t.template
 
 
 def get_filename(self, db_url_name: str, species_name: str = ''):

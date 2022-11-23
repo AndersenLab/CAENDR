@@ -14,10 +14,11 @@ def prefetch_all_internal_dbs(self, use_cache: bool = True):
       Downloads all internal DB files and saves them locally.
     '''
     logger.info('Downloading All Internal DBs...')
-    self.fetch_sva_db()
+    self.fetch_sva_db('c_elegans',  use_cache=use_cache)
+    # self.fetch_sva_db('c_briggsae', use_cache=use_cache)
 
 
-def fetch_internal_db(self, db_url_name: str, use_cache: bool = True):
+def fetch_internal_db(self, db_url_name: str, species_name: str, use_cache: bool = True):
 
     # Ensure a URL template was passed
     # TODO: If we look this up like we do for the external template names, this check won't be necessary
@@ -26,7 +27,10 @@ def fetch_internal_db(self, db_url_name: str, use_cache: bool = True):
 
     # Construct blob name
     t = Template(internal_db_blob_templates[db_url_name])
-    blob_name = t.substitute({'SVA': self.sva_ver})
+    species = self.get_species(species_name)
+    blob_name = t.substitute({
+        'SVA': species.sva_ver
+    })
 
     # Construct URL
     url = f'gs://{MODULE_DB_OPERATIONS_BUCKET_NAME}/{blob_name}'
@@ -42,5 +46,5 @@ def fetch_internal_db(self, db_url_name: str, use_cache: bool = True):
 
 ## Specific fetch functions ##
 
-def fetch_sva_db(self, use_cache: bool = True):
-    return self.fetch_internal_db('SVA_CSVGZ_URL', use_cache=use_cache)
+def fetch_sva_db(self, species_name: str, use_cache: bool = True):
+    return self.fetch_internal_db('SVA_CSVGZ_URL', species_name, use_cache=use_cache)

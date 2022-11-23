@@ -6,32 +6,32 @@ from caendr.models.error import EnvVarError
 from caendr.models.sql import WormbaseGene, WormbaseGeneSummary, Strain, Homolog, StrainAnnotatedVariant
 from caendr.services.sql.db import drop_tables, backup_external_db
 from caendr.services.sql.etl import ETLManager, load_strains
+from caendr.services.sql.species import Species
 
 
 
 def execute_operation(app, db, DB_OP):
-  WORMBASE_VERSION = os.environ.get('WORMBASE_VERSION')
-  STRAIN_VARIANT_ANNOTATION_VERSION = os.environ.get('STRAIN_VARIANT_ANNOTATION_VERSION')
   
-  logger.info(f'Executing {DB_OP}: WORMBASE_VERSION:{WORMBASE_VERSION} STRAIN_VARIANT_ANNOTATION_VERSION:{STRAIN_VARIANT_ANNOTATION_VERSION}')
+  # Get the path to the JSON file containing the list of species and their attributes
+  SPECIES_LIST_FILE = os.environ['SPECIES_LIST_FILE']
+  logger.info(f'Executing {DB_OP} -- SPECIES_LIST_FILE: "{SPECIES_LIST_FILE}"')
+  if not SPECIES_LIST_FILE:
+      raise EnvVarError()
+
+  # Parse species list
+  species_list = Species.parse_json_file(SPECIES_LIST_FILE)
 
   if DB_OP == 'DROP_AND_POPULATE_ALL_TABLES':
-    if not WORMBASE_VERSION or not STRAIN_VARIANT_ANNOTATION_VERSION:
-      raise EnvVarError()
-    drop_and_populate_all_tables(app, db, WORMBASE_VERSION, STRAIN_VARIANT_ANNOTATION_VERSION)
+    drop_and_populate_all_tables(app, db, species_list)
 
   elif DB_OP == 'DROP_AND_POPULATE_STRAINS':
     drop_and_populate_strains(app, db)
 
   elif DB_OP == 'DROP_AND_POPULATE_WORMBASE_GENES':
-    if not WORMBASE_VERSION:
-      raise EnvVarError()
-    drop_and_populate_wormbase_genes(app, db, WORMBASE_VERSION)
+    drop_and_populate_wormbase_genes(app, db, species_list)
 
   elif DB_OP == 'DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS':
-    if not STRAIN_VARIANT_ANNOTATION_VERSION:
-      raise EnvVarError()
-    drop_and_populate_strain_annotated_variants(app, db, STRAIN_VARIANT_ANNOTATION_VERSION)
+    drop_and_populate_strain_annotated_variants(app, db, species_list)
 
   elif DB_OP == 'TEST_ECHO':
     result, message = health_database_status()
@@ -42,7 +42,7 @@ def execute_operation(app, db, DB_OP):
     os.environ["USE_MOCK_DATA"] = "1"
     os.environ["MODULE_DB_OPERATIONS_CONNECTION_TYPE"] = "memory"
     logger.info("Using MOCK DATA")
-    drop_and_populate_all_tables(app, db, WORMBASE_VERSION, STRAIN_VARIANT_ANNOTATION_VERSION)
+    drop_and_populate_all_tables(app, db, species_list)
 
 
 def drop_and_populate_strains(app, db):
@@ -50,28 +50,36 @@ def drop_and_populate_strains(app, db):
   load_strains(db)
 
 
-def drop_and_populate_wormbase_genes(app, db, wb_ver: str):
-  logger.info(f"Dropping and populating wormbase genes - WORMBASE_VERSION: {wb_ver}")
+def drop_and_populate_wormbase_genes(app, db, species_list):
+
+  # Print operation & species info
+  spec_strings = [ f'{key} (wb_ver = {val.wb_ver})' for key, val in species_list.items() ]
+  logger.info(f'Dropping and populating wormbase genes. Species list: [ {", ".join(spec_strings)} ]')
 
   # Initialize ETL Manager
-  etl_manager = ETLManager(wb_ver=wb_ver)
+  etl_manager = ETLManager(species_list)
 
   # Drop relevant tables
+  logger.info(f"Dropping tables...")
   drop_tables(app, db, tables=[Homolog.__table__, WormbaseGene.__table__])
   drop_tables(app, db, tables=[WormbaseGeneSummary.__table__])
 
   # Fetch and load data using ETL Manager
+  logger.ingo("Loading wormbase genes...")
   etl_manager.load_genes_summary(db)
   etl_manager.load_genes(db)
   etl_manager.load_homologs(db)
   etl_manager.load_orthologs(db)
 
 
-def drop_and_populate_strain_annotated_variants(app, db, sva_ver: str):
-  logger.info(f'Dropping and populating strain annotated variants - STRAIN_VARIANT_ANNOTATION_VERSION: {sva_ver}')
+def drop_and_populate_strain_annotated_variants(app, db, species_list):
+
+  # Print operation & species info
+  spec_strings = [ f'{key} (sva_ver = {val.sva_ver})' for key, val in species_list.items() ]
+  logger.info(f'Dropping and populating strain annotated variants. Species list: [ {", ".join(spec_strings)} ]')
 
   # Initialize ETL Manager
-  etl_manager = ETLManager(sva_ver=sva_ver)
+  etl_manager = ETLManager(species_list)
 
   # Drop relevant table
   logger.info(f"Dropping table...")
@@ -83,11 +91,14 @@ def drop_and_populate_strain_annotated_variants(app, db, sva_ver: str):
   etl_manager.load_strain_annotated_variants(db)
 
 
-def drop_and_populate_all_tables(app, db, wb_ver: str, sva_ver: str):
-  logger.info(f'Dropping and populating all tables - WORMBASE_VERSION: {wb_ver} STRAIN_VARIANT_ANNOTATION_VERSION: {sva_ver}')
+def drop_and_populate_all_tables(app, db, species_list):
+
+  # Print operation & species info
+  spec_strings = [ f'{key} (wb_ver = {val.wb_ver}, sva_ver = {val.sva_ver})' for key, val in species_list.items() ]
+  logger.info(f'Dropping and populating all tables. Species list: [ {", ".join(spec_strings)} ]')
 
   logger.info("[1/8] Downloading databases...eta ~0:15")
-  etl_manager = ETLManager(wb_ver=wb_ver, sva_ver=sva_ver)
+  etl_manager = ETLManager(species_list)
 
   logger.info("[2/8] Dropping tables...eta ~0:01")
   drop_tables(app, db)

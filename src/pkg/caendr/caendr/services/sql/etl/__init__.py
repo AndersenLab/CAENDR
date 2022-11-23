@@ -2,10 +2,12 @@ from .strains import load_strains
 
 from caendr.services.sql.dataset import DatasetManager
 
+
+
 class ETLManager:
 
-    def __init__(self, wb_ver: str = None, sva_ver: str = None):
-        self.dataset_manager = DatasetManager(wb_ver=wb_ver, sva_ver=sva_ver)
+    def __init__(self, species_list, reload_files: bool = False,):
+        self.dataset_manager = DatasetManager(species_list=species_list, reload_files=reload_files)
 
     def prefetch_all_dbs(self, use_cache: bool = True):
         self.dataset_manager.prefetch_all_external_dbs(use_cache=use_cache)
