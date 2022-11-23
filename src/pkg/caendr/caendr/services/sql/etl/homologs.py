@@ -11,13 +11,10 @@ from caendr.models.sql import Homolog, WormbaseGeneSummary
 from caendr.services.sql.dataset import TAXON_ID_URL
 
 
-C_ELEGANS_PREFIX = 'CELE_'
-C_ELEGANS_HOMOLOG_ID = 6239
-
 
 def load_homologs(self, db):
   logger.info('Loading homologenes from NIH homologene.data file')
-  homologene = fetch_homologene(self.dataset_manager.fetch_homologene_db())
+  homologene = fetch_homologene(self.dataset_manager.fetch_homologene_db(), self.get_species('c_elegans'))
   db.session.bulk_insert_mappings(Homolog, homologene)
   db.session.commit()
   logger.info(f'Inserted {Homolog.query.count()} Homologs')
@@ -39,7 +36,7 @@ def fetch_taxon_ids():
   return taxon_ids
 
 
-def fetch_homologene(homologene_fname: str):
+def fetch_homologene(homologene_fname: str, species):
   """
     Download the homologene database and load
 
@@ -67,11 +64,11 @@ def fetch_homologene(homologene_fname: str):
   taxon_ids = fetch_taxon_ids()
 
   # First, fetch records with a homolog ID that possesses a C. elegans gene.
-  elegans_set = dict([[int(x[0]), x[3]] for x in response_csv if x[1] == str(C_ELEGANS_HOMOLOG_ID)])
+  elegans_set = dict([[int(x[0]), x[3]] for x in response_csv if x[1] == str(species.homolog_id)])
 
   # Remove CELE_ prefix from some gene names
   for k, v in elegans_set.items():
-    elegans_set[k] = v.replace(C_ELEGANS_PREFIX, '')
+    elegans_set[k] = v.replace(species.homolog_prefix, '')
 
   idx = 0
   count = 0
@@ -82,7 +79,7 @@ def fetch_homologene(homologene_fname: str):
       return    
     tax_id = int(line[1])
     homolog_id = int(line[0])
-    if homolog_id in elegans_set.keys() and tax_id != int(C_ELEGANS_HOMOLOG_ID):
+    if homolog_id in elegans_set.keys() and tax_id != int(species.homolog_id):
       # Try to resolve the wormbase WB ID if possible.
       gene_name = elegans_set[homolog_id]
       gene_id = WormbaseGeneSummary.resolve_gene_id(gene_name)

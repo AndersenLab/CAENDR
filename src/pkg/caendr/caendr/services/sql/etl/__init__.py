@@ -14,6 +14,16 @@ class ETLManager:
         self.dataset_manager.prefetch_all_internal_dbs(use_cache=use_cache)
 
 
+    ## Species ##
+
+    @property
+    def species_list(self):
+        return self.dataset_manager.species_list
+
+    def get_species(self, species_name: str):
+        return self.dataset_manager.get_species(species_name)
+
+
     ## Import functions from this module as class methods ##
 
     from .wormbase import load_genes_summary, load_genes, load_orthologs

@@ -8,7 +8,7 @@ from caendr.models.error import BadRequestError, InternalError
 
 
 class Species:
-    def __init__(self, name, proj_num, wb_ver, sva_ver):
+    def __init__(self, name, proj_num, wb_ver, sva_ver, homolog_prefix='', homolog_id=None):
         '''
           Args:
             name (str): [Name of the species. Standard format is initial of genus, underscore, species name, e.g. 'c_elegans' for Caenorhabditis elegans.]
@@ -21,6 +21,10 @@ class Species:
         self.wb_ver   = wb_ver
         self.sva_ver  = sva_ver
 
+        # Set params for homologs
+        self.homolog_prefix = homolog_prefix
+        self.homolog_id     = homolog_id
+
 
     @classmethod
     def from_json(cls, key, value):
@@ -28,7 +32,9 @@ class Species:
             key,
             value['project_number'],
             value['wormbase_version'],
-            value['sva_version']
+            value['sva_version'],
+            homolog_prefix = value.get('homolog_prefix', ''),
+            homolog_id     = value.get('homolog_id', None)
         )
 
 

@@ -2,7 +2,9 @@
     "c_elegans": {
         "project_number":   "PRJNA13758",
         "wormbase_version": "WS283",
-        "sva_version":      "20220216"
+        "sva_version":      "20220216",
+        "homolog_prefix":   "CELE_",
+        "homolog_id":       6239
     },
     "c_briggsae": {
         "project_number":   "PRJNA10731",
