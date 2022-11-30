@@ -153,32 +153,49 @@ def fetch_gene_gff_summary(gff_fname: str):
 def fetch_orthologs(orthologs_fname: str):
   """
       LOADS (part of) homologs
-      Fetches orthologs from wormbase; Stored in the homolog table.
+      Fetches orthologs from WormBase, to be stored in the homolog table.
   """
   csv_out = list(csv.reader(open(orthologs_fname, 'r'), delimiter='\t'))
 
-  idx = 0
+  # Initialize var to track matching ortholog genes
   count = 0
-  for line in csv_out:
-    idx += 1
+
+  # Loop through each line in the file
+  # TODO: idx is the number of lines processed, which is not the same as the number of records (as claimed in logger statement).
+  #       This likely doesn't matter, since it's not used in any actual data, but it's still technically not correct.
+  for idx, line in enumerate(csv_out):
     size_of_line = len(line)
+
+    # Skip lines that don't specify an ortholog
     if size_of_line < 2:
       continue
+
+    # Update to next gene
     elif size_of_line == 2:
       wb_id, locus_name = line
+
+    # Parse ortholog
     else:
       ref = WormbaseGeneSummary.query.filter(WormbaseGeneSummary.gene_id == wb_id).first()
+
+      # If testing, finish early
       if os.getenv("USE_MOCK_DATA") and idx > 10:
-        logger.warn("USE_MOCK_DATA Early Return!!!")    
-        return    
+        logger.warn("USE_MOCK_DATA Early Return!!!")
+        return
+
+      # Progress update
       if idx % 10000 == 0:
         logger.info(f'Processed {idx} records yielding {count} inserts')
+
+      # If gene matches, add it to the list
       if ref:
         count += 1
-        yield {'gene_id': wb_id,
-                'gene_name': locus_name,
-                'homolog_species': line[0],
-                'homolog_taxon_id': None,
-                'homolog_gene': line[2],
-                'homolog_source': line[3],
-                'is_ortholog': line[0] == 'Caenorhabditis elegans'}
+        yield {
+          'gene_id': wb_id,
+          'gene_name': locus_name,
+          'homolog_species': line[0],
+          'homolog_taxon_id': None,
+          'homolog_gene': line[2],
+          'homolog_source': line[3],
+          'is_ortholog': line[0] == 'Caenorhabditis elegans',
+        }
