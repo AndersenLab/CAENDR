@@ -20,7 +20,7 @@ def load_genes_summary(self, db):
         db (SQLAlchemy): [sqlalchemy db instance to insert into]
   '''  
   logger.info('Loading gene summary table')
-  gene_summary = fetch_gene_gff_summary(self.dataset_manager.fetch_gene_gff_db('c_elegans'))
+  gene_summary = fetch_gene_gff_summary(self.dataset_manager.fetch_gene_gff_db('c_elegans'), self.get_species('c_elegans'))
   db.session.bulk_insert_mappings(WormbaseGeneSummary, gene_summary)
   db.session.commit()
   logger.info(f"Inserted {WormbaseGeneSummary.query.count()} Wormbase Gene Summaries")
@@ -44,7 +44,7 @@ def load_genes(self, db):
   logger.info('Done extracting gene_gtf file')
 
   logger.info('Loading gene table')
-  genes = fetch_gene_gtf(gene_gtf_fname, gene_ids_fname)
+  genes = fetch_gene_gtf(gene_gtf_fname, gene_ids_fname, self.get_species('c_elegans'))
   db.session.bulk_insert_mappings(WormbaseGene, genes)
   db.session.commit()
   logger.info(f"Inserted {WormbaseGene.query.count()} Wormbase Genes")
@@ -59,7 +59,7 @@ def load_genes(self, db):
 def load_orthologs(self, db):
   logger.info('Loading orthologs from WormBase')
   initial_count = Homolog.query.count()
-  orthologs = fetch_orthologs(self.dataset_manager.fetch_ortholog_db('c_elegans'))
+  orthologs = fetch_orthologs(self.dataset_manager.fetch_ortholog_db('c_elegans'), self.get_species('c_elegans'))
   db.session.bulk_insert_mappings(Homolog, orthologs)
   db.session.commit()
   total_records = Homolog.query.count() - initial_count
@@ -76,7 +76,7 @@ def get_gene_ids(gene_ids_fname: str):
   return dict(results)
 
 
-def fetch_gene_gtf(gtf_fname: str, gene_ids_fname: str):
+def fetch_gene_gtf(gtf_fname: str, gene_ids_fname: str, species):
   """
       LOADS wormbase_gene
       This function fetches and parses the canonical geneset GTF
@@ -104,6 +104,9 @@ def fetch_gene_gtf(gtf_fname: str, gene_ids_fname: str):
   # Compute whether gene is on arm or center
   gene_gtf['arm_or_center'] = gene_gtf.apply(lambda row: arm_or_center(row['chrom'], row['pos']), axis=1)
 
+  # Add column for species name
+  gene_gtf['species_name'] = species.name
+
   # Loop through and yield all records
   for idx, row in enumerate(gene_gtf.to_dict('records')):
 
@@ -120,14 +123,14 @@ def fetch_gene_gtf(gtf_fname: str, gene_ids_fname: str):
     yield row
 
 
-def fetch_gene_gff_summary(gff_fname: str):
+def fetch_gene_gff_summary(gff_fname: str, species):
   """
       LOADS wormbase_gene_summary
       This function fetches data for wormbase_gene_summary;
       It's a condensed version of the wormbase_gene_table
       constructed for convenience.
   """
-  WB_GENE_FIELDSET = ['ID', 'biotype', 'sequence_name', 'chrom', 'start', 'end', 'locus']
+  WB_GENE_FIELDSET = ['ID', 'biotype', 'sequence_name', 'chrom', 'start', 'end', 'locus', 'species_name']
 
   with gzip.open(gff_fname) as f:
 
@@ -162,6 +165,9 @@ def fetch_gene_gff_summary(gff_fname: str):
                         [line[0], line[3], line[4]]))
         gene = {k.lower(): v for k, v in gene.items() if k in WB_GENE_FIELDSET}
 
+        # Tag gene with species name
+        gene['species_name'] = species.name
+
         # Change add chrom_num
         gene['chrom_num'] = CHROM_NUMERIC[gene['chrom']]
         gene['start'] = int(gene['start'])
@@ -183,7 +189,7 @@ def fetch_gene_gff_summary(gff_fname: str):
           yield gene
 
 
-def fetch_orthologs(orthologs_fname: str):
+def fetch_orthologs(orthologs_fname: str, species):
   """
       LOADS (part of) homologs
       Fetches orthologs from WormBase, to be stored in the homolog table.
@@ -224,11 +230,12 @@ def fetch_orthologs(orthologs_fname: str):
       if ref:
         count += 1
         yield {
-          'gene_id': wb_id,
-          'gene_name': locus_name,
-          'homolog_species': line[0],
+          'gene_id':          wb_id,
+          'gene_name':        locus_name,
+          'homolog_species':  line[0],
           'homolog_taxon_id': None,
-          'homolog_gene': line[2],
-          'homolog_source': line[3],
-          'is_ortholog': line[0] == 'Caenorhabditis elegans',
+          'homolog_gene':     line[2],
+          'homolog_source':   line[3],
+          'is_ortholog':      line[0] == species.scientific_name,
+          'species_name':     species.name,
         }
