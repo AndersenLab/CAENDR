@@ -70,7 +70,7 @@ def drop_and_populate_wormbase_genes(app, db, species_list):
   drop_tables(app, db, tables=[WormbaseGeneSummary.__table__])
 
   # Fetch and load data using ETL Manager
-  logger.ingo("Loading wormbase genes...")
+  logger.info("Loading wormbase genes...")
   etl_manager.load_genes_summary(db)
   etl_manager.load_genes(db)
   etl_manager.load_homologs(db)
