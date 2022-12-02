@@ -85,24 +85,38 @@ def fetch_gene_gtf(gtf_fname: str, gene_ids_fname: str):
   gene_gtf = read_gtf_as_dataframe(gtf_fname)
   gene_ids = get_gene_ids(gene_ids_fname)
 
-  # Add locus column
   # Rename seqname to chrom
   gene_gtf = gene_gtf.rename({'seqname': 'chrom'}, axis='columns')
+
+  # Add locus column
   gene_gtf = gene_gtf.assign(locus=[gene_ids.get(x) for x in gene_gtf.gene_id])
+
+  # Convert chromosomes from roman numerals to integers
   gene_gtf = gene_gtf.assign(chrom_num=[CHROM_NUMERIC[x] for x in gene_gtf.chrom])
+
+  # Compute gene position and add as column
   gene_gtf = gene_gtf.assign(pos=(((gene_gtf.end - gene_gtf.start)/2) + gene_gtf.start).map(int))
+
+  # Convert empty markers to None
   gene_gtf.frame = gene_gtf.frame.apply(lambda x: x if x != "." else None)
   gene_gtf.exon_number = gene_gtf.exon_number.apply(lambda x: x if x != "" else None)
+
+  # Compute whether gene is on arm or center
   gene_gtf['arm_or_center'] = gene_gtf.apply(lambda row: arm_or_center(row['chrom'], row['pos']), axis=1)
-  
-  idx = 0
-  for row in gene_gtf.to_dict('records'):
-    idx += 1
+
+  # Loop through and yield all records
+  for idx, row in enumerate(gene_gtf.to_dict('records')):
+
+    # If testing, finish early
     if os.getenv('USE_MOCK_DATA') and idx > 10:
-      logger.warn("USE_MOCK_DATA Early Return!!!")    
-      return    
+      logger.warn("USE_MOCK_DATA Early Return!!!")
+      return
+
+    # Progress update
     if idx % 10000 == 0:
       logger.info(f"Processed {idx} lines")
+
+    # Yield the row
     yield row
 
 
