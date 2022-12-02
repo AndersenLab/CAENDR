@@ -116,19 +116,33 @@ def fetch_gene_gff_summary(gff_fname: str):
   WB_GENE_FIELDSET = ['ID', 'biotype', 'sequence_name', 'chrom', 'start', 'end', 'locus']
 
   with gzip.open(gff_fname) as f:
-    idx = 0
+
+    # Initialize counter for matching genes
     gene_count = 0
-    for line in f:
-      idx += 1
+
+    # Loop through each line in the file (indexed)
+    for idx, line in enumerate(f):
+
+      # If testing, finish early
       if os.getenv("USE_MOCK_DATA") and idx > 100:
         logger.warn("USE_MOCK_DATA Early Exit!!!")    
-        return    
+        return
+
+      # Skip comments and pragmas (lines starting with '#' and '##' respectively)
       if line.decode('utf-8').startswith("#"):
         continue
+
+      # Convert the line from a tab-separated string into a list
       line = line.decode('utf-8').strip().split("\t")
+
+      # Progress update
       if idx % 1000000 == 0:
         logger.debug(f"Processed {idx} lines;{gene_count} genes; {line[0]}:{line[4]}")
+
+      # Only parse if line represents a gene from Wormbase
       if 'WormBase' in line[1] and 'gene' in line[2]:
+
+        # Convert fields column into dict object & include chromosome information
         gene = dict([x.split("=") for x in line[8].split(";")])
         gene.update(zip(["chrom", "start", "end"],
                         [line[0], line[3], line[4]]))
@@ -138,15 +152,20 @@ def fetch_gene_gff_summary(gff_fname: str):
         gene['chrom_num'] = CHROM_NUMERIC[gene['chrom']]
         gene['start'] = int(gene['start'])
         gene['end'] = int(gene['end'])
+
         # Annotate gene with arm/center
         gene_pos = int(((gene['end'] - gene['start'])/2) + gene['start'])
         gene['arm_or_center'] = arm_or_center(gene['chrom'], gene_pos)
+
+        # If gene has an ID, split the ID into two fields and yield the gene
         if 'id' in gene.keys():
           gene_count += 1
-          gene_id_type, gene_id = gene['id'].split(":")
-          gene['gene_id_type'], gene['gene_id'] = gene['id'].split(":")
 
+          # Split 'id' into 'gene_id_type' and 'gene_id'
+          gene['gene_id_type'], gene['gene_id'] = gene['id'].split(":")
           del gene['id']
+
+          # Yield the gene
           yield gene
 
 
