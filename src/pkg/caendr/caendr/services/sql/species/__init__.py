@@ -8,41 +8,41 @@ from caendr.models.error import BadRequestError, InternalError
 
 
 class Species:
-    def __init__(self, name, proj_num, wb_ver, sva_ver, homolog_prefix='', homolog_id=None):
+    def __init__(self, name, **params):
         '''
           Args:
             name (str): [Name of the species. Standard format is initial of genus, underscore, species name, e.g. 'c_elegans' for Caenorhabditis elegans.]
-            proj_num (str): [WormBase project number to use (e.g. 'PRJNA13758').]
-            wb_ver (str): [Version of WormBase data to use (e.g. 'WS276').]
-            sva_ver (str): [Strain Variant Annotation version to use.]
+
+          Keyword Args:
+            project_number (str): [WormBase project number to use (e.g. 'PRJNA13758').]
+            wormbase_version (str): [Version of WormBase data to use (e.g. 'WS276').]
+            sva_version (str): [Strain Variant Annotation version to use.]
+            scientific_name (str): [Scientific name of the species.]
+            homolog_prefix (str): [Species-specific prefix for some genes. Will be removed from gene names.]
+            homolog_id (int): [.]
         '''
-        self.name     = name
-        self.proj_num = proj_num
-        self.wb_ver   = wb_ver
-        self.sva_ver  = sva_ver
+        self.name = name
+
+        # Set scientific name
+        self.scientific_name = params["scientific_name"]
+
+        # Set versioning information
+        self.proj_num = params["project_number"]
+        self.wb_ver   = params["wormbase_version"]
+        self.sva_ver  = params["sva_version"]
 
         # Set params for homologs
-        self.homolog_prefix = homolog_prefix
-        self.homolog_id     = homolog_id
+        self.homolog_prefix = params.get('homolog_prefix', '')
+        self.homolog_id     = params.get('homolog_id',     None)
 
 
-    @classmethod
-    def from_json(cls, key, value):
-        return Species(
-            key,
-            value['project_number'],
-            value['wormbase_version'],
-            value['sva_version'],
-            homolog_prefix = value.get('homolog_prefix', ''),
-            homolog_id     = value.get('homolog_id', None)
-        )
 
 
     @classmethod
     def parse_json_file(cls, filename):
         with open(filename) as f:
             species_list = {
-                key: Species.from_json(key, val) for key, val in json.load(f).items()
+                name: Species(name, **params) for name, params in json.load(f).items()
             }
         return species_list
 
