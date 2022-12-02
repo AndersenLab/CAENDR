@@ -220,7 +220,7 @@ def fetch_orthologs(orthologs_fname: str):
       if idx % 10000 == 0:
         logger.info(f'Processed {idx} records yielding {count} inserts')
 
-      # If gene matches, add it to the list
+      # If gene matches, add it to the dataset
       if ref:
         count += 1
         yield {
