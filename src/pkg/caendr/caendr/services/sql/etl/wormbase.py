@@ -20,9 +20,15 @@ def load_genes_summary(self, db):
         db (SQLAlchemy): [sqlalchemy db instance to insert into]
   '''  
   logger.info('Loading gene summary table')
-  gene_summary = fetch_gene_gff_summary(self.dataset_manager.fetch_gene_gff_db('c_elegans'), self.get_species('c_elegans'))
-  db.session.bulk_insert_mappings(WormbaseGeneSummary, gene_summary)
-  db.session.commit()
+
+  # Loop through the name & Species object for each species, loading & saving table data
+  for name, species in self.species_list.items():
+    logger.info(f'Loading {name} genes')
+    gene_summary = fetch_gene_gff_summary(self.dataset_manager.fetch_gene_gff_db(name), species)
+    db.session.bulk_insert_mappings(WormbaseGeneSummary, gene_summary)
+    db.session.commit()
+
+  # Print a summary of the new table
   logger.info(f"Inserted {WormbaseGeneSummary.query.count()} Wormbase Gene Summaries")
 
 
@@ -31,24 +37,32 @@ def load_genes(self, db):
     load_genes [extracts gene information from wormbase db files and loads it into the caendr db]
       Args:
         db (SQLAlchemy): [sqlalchemy db instance]
-  '''  
-  logger.info('Extracting gene_gtf file')
-
-  gene_gtf_fname    = 'gene.gtf'
-  gene_gtf_gz_fname = self.dataset_manager.fetch_gene_gtf_db('c_elegans')
-  gene_ids_fname    = self.dataset_manager.fetch_gene_ids_db('c_elegans')
-
-  with gzip.open(gene_gtf_gz_fname, 'rb') as f_in:
-    with open(gene_gtf_fname, 'wb') as f_out:
-      shutil.copyfileobj(f_in, f_out)
-  logger.info('Done extracting gene_gtf file')
-
+  '''
   logger.info('Loading gene table')
-  genes = fetch_gene_gtf(gene_gtf_fname, gene_ids_fname, self.get_species('c_elegans'))
-  db.session.bulk_insert_mappings(WormbaseGene, genes)
-  db.session.commit()
-  logger.info(f"Inserted {WormbaseGene.query.count()} Wormbase Genes")
 
+  # Loop through the name & Species object for each species
+  for name, species in self.species_list.items():
+
+    # Generate filenames
+    gene_gtf_fname    = f'gene_{name}.gtf'
+    gene_gtf_gz_fname = self.dataset_manager.fetch_gene_gtf_db(name)
+    gene_ids_fname    = self.dataset_manager.fetch_gene_ids_db(name)
+
+    # Unzip the GTF .gz file into a new file named gene_{name}.gtf
+    logger.info(f'Extracting gene_gtf file for {name}')
+    with gzip.open(gene_gtf_gz_fname, 'rb') as f_in:
+      with open(gene_gtf_fname, 'wb') as f_out:
+        shutil.copyfileobj(f_in, f_out)
+    logger.info('Done extracting gene_gtf file')
+
+    # Load gene table data
+    logger.info('Loading gene table')
+    genes = fetch_gene_gtf(gene_gtf_fname, gene_ids_fname, species)
+    db.session.bulk_insert_mappings(WormbaseGene, genes)
+    db.session.commit()
+
+  # Print a summary of the new table
+  logger.info(f"Inserted {WormbaseGene.query.count()} Wormbase Genes")
   results = db.session.query(WormbaseGene.feature, db.func.count(WormbaseGene.feature)) \
                             .group_by(WormbaseGene.feature) \
                             .all()
@@ -75,6 +89,9 @@ def get_gene_ids(gene_ids_fname: str):
   results = [x.split(",")[1:3] for x in gzip.open(gene_ids_fname, 'r').read().decode('utf-8').splitlines()]
   return dict(results)
 
+
+
+## File Parsing Generator Functions ##
 
 def fetch_gene_gtf(gtf_fname: str, gene_ids_fname: str, species):
   """
