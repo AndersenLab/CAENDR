@@ -86,9 +86,8 @@ class Species:
     @wb_ver.setter
     def wb_ver(self, new_wb_ver: str):
 
-        # Validate desired new value mtches expected format 'WS###', e.g. 'WS276'
-        # TODO: Confirm this is the correct format
-        # TODO: What about WormBase ParaSite?
+        # Validate desired new value matches expected format 'WS###', e.g. 'WS276'
+        # TODO: Handle WormBase ParaSite
         if not re.match(r'^WS[0-9]+$', new_wb_ver):
             logger.warning(f'Invalid WormBase Version String: "{new_wb_ver}"')
             raise InternalError()
