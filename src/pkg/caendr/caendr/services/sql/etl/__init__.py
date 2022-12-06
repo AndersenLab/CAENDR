@@ -24,6 +24,16 @@ class ETLManager:
         return self.dataset_manager.get_species(species_name)
 
 
+    ## Download Path ##
+
+    @property
+    def local_download_path(self):
+        return self.dataset_manager.local_download_path
+
+    def get_download_path(self, species_name):
+        return f"{self.local_download_path}/{species_name}"
+
+
     ## Import functions from this module as class methods ##
 
     from .wormbase import load_genes_summary, load_genes, load_orthologs

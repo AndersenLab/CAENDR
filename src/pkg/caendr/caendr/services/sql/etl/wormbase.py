@@ -44,11 +44,11 @@ def load_genes(self, db):
   for name, species in self.species_list.items():
 
     # Generate filenames
-    gene_gtf_fname    = f'gene_{name}.gtf'
+    gene_gtf_fname    = f'{self.get_download_path(name)}/gene.gtf'
     gene_gtf_gz_fname = self.dataset_manager.fetch_gene_gtf_db(name)
     gene_ids_fname    = self.dataset_manager.fetch_gene_ids_db(name)
 
-    # Unzip the GTF .gz file into a new file named gene_{name}.gtf
+    # Unzip the GTF .gz file into a new file named gene.gtf
     logger.info(f'Extracting gene_gtf file for {name}')
     with gzip.open(gene_gtf_gz_fname, 'rb') as f_in:
       with open(gene_gtf_fname, 'wb') as f_out:
