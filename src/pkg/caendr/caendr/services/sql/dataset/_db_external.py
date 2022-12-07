@@ -126,19 +126,23 @@ def fetch_ortholog_db(self, species, **kwargs):
     return self.fetch_external_db('ORTHOLOG_URL', species, **kwargs)
 
 
-def fetch_homologene_db(self, **kwargs):
+def fetch_homologene_db(self, species = None, **kwargs):
     '''
       Fetches homologene file. Accepts all keyword args of fetch_external_db, except species_name.
         Returns:
           homologene_fname (str): [path of downloaded homologene file]
     '''
+    if species is not None:
+      logger.warn(f'Homologene does not take a species; discarding argument "{species}".')
     return self.fetch_external_db('HOMOLOGENE_URL', None, **kwargs)
 
 
-def fetch_taxon_id_db(self, **kwargs):
+def fetch_taxon_id_db(self, species = None, **kwargs):
     '''
       Fetches taxonomic IDs file. Accepts all keyword args of fetch_external_db, except species_name.
         Returns:
           taxon_id_fname (str): [path of downloaded taxonomic IDs file]
     '''
+    if species is not None:
+      logger.warn(f'Homologene does not take a species; discarding argument "{species}".')
     return self.fetch_external_db('TAXON_ID_URL', None, **kwargs)
