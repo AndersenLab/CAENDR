@@ -125,6 +125,7 @@ class DatasetManager:
         get_blob,
         get_filename,
         get_download_path,
+        get_file_suffix,
     )
 
     from ._db_external import (

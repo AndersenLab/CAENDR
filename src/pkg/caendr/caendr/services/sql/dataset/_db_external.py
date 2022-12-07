@@ -65,7 +65,7 @@ def fetch_external_db(self, db_url_name: str, species_name: str = None, use_cach
 
         # Append the '.gz' suffix if the file is a GZ zipped file
         if is_zipped:
-          filename = f'{filename}.gz'
+          filename += '.gz'
 
         # Download the file
         fname = download_file(url, filename)
@@ -74,6 +74,7 @@ def fetch_external_db(self, db_url_name: str, species_name: str = None, use_cach
     # Unzip the file, if applicable
     if is_zipped and unzip:
         self.unzip_gz(fname, keep_zipped_file=False)
+        fname = fname[:-3]
 
     # Return the resulting filename
     return fname

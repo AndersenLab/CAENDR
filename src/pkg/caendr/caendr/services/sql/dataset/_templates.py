@@ -118,6 +118,27 @@ def get_download_path(self, species_name: str = ''):
     return f'{self.local_download_path}/{species_name}'
 
 
+def get_file_suffix(self, db_url_name: str):
+
+  # Get the URL template
+  url = get_url_template(db_url_name)
+
+  # Determine whether the URL is zipped
+  is_zipped = url[-3:] == '.gz'
+
+  # If URL is zipped, suffix is everything after the second-to-last period
+  if is_zipped:
+    suffix = url[ url[:-3].rfind('.') + 1 :]
+
+  # Otherwise, suffix is everything after the final period
+  else:
+    suffix = url[ url.rfind('.') + 1 :]
+
+  # Split the suffix into an array
+  # First element will be the 'true' suffix, and if the file is zipped, second will be '.gz'
+  return suffix.split('.')
+
+
 def get_filename(self, db_url_name: str, species_name: str = ''):
     '''
       Gets the local filename for a URL template and species.  Does NOT guarantee that this file exists.
@@ -134,5 +155,8 @@ def get_filename(self, db_url_name: str, species_name: str = ''):
     else:
       download_path = self.get_download_path(species_name)
 
+    # Compute file suffix, ignoring '.gz' if zipped
+    suffix = self.get_file_suffix(db_url_name)[0]
+
     # Use URL name as filename in computed download path
-    return f'{download_path}/{db_url_name}'
+    return f'{download_path}/{db_url_name}.{suffix}'
