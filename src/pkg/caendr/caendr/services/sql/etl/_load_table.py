@@ -2,9 +2,9 @@ from logzero import logger
 
 from caendr.models.sql import WormbaseGeneSummary, WormbaseGene, Homolog, StrainAnnotatedVariant
 
-from .wormbase import fetch_gene_gtf, fetch_gene_gff_summary, fetch_orthologs
-from .homologs import fetch_homologene
-from .strain_annotated_variants import fetch_strain_variant_annotation_data
+from .wormbase import parse_gene_gtf, parse_gene_gff_summary, parse_orthologs
+from .homologs import parse_homologene
+from .strain_annotated_variants import parse_strain_variant_annotation_data
 
 
 # https://github.com/phil-bergmann/2016_DLRW_brain/blob/3f69c945a40925101c58a3d77c5621286ad8d787/brain/data.py
@@ -46,7 +46,7 @@ def load_genes_summary(self, db):
     self.load_table(
         db,
         table       = WormbaseGeneSummary,
-        generator   = fetch_gene_gff_summary,
+        generator   = parse_gene_gff_summary,
         fetch_funcs = [ self.dataset_manager.fetch_gene_gff_db ]
     )
 
@@ -61,7 +61,7 @@ def load_genes(self, db):
     self.load_table(
         db,
         table       = WormbaseGene,
-        generator   = fetch_gene_gtf,
+        generator   = parse_gene_gtf,
         fetch_funcs = [ self.dataset_manager.fetch_gene_gtf_db, self.dataset_manager.fetch_gene_ids_db ]
     )
     # Print a summary of the new table
@@ -82,7 +82,7 @@ def load_orthologs(self, db):
     self.load_table(
         db,
         table       = Homolog,
-        generator   = fetch_orthologs,
+        generator   = parse_orthologs,
         fetch_funcs = [ self.dataset_manager.fetch_ortholog_db ]
     )
 
@@ -92,7 +92,7 @@ def load_homologs(self, db):
     self.load_table(
         db,
         table       = Homolog,
-        generator   = fetch_homologene,
+        generator   = parse_homologene,
         fetch_funcs = [ self.dataset_manager.fetch_homologene_db ]
     )
 
@@ -102,6 +102,6 @@ def load_strain_annotated_variants(self, db):
     self.load_table(
         db,
         table       = StrainAnnotatedVariant,
-        generator   = fetch_strain_variant_annotation_data,
+        generator   = parse_strain_variant_annotation_data,
         fetch_funcs = [ self.dataset_manager.fetch_sva_db ]
     )

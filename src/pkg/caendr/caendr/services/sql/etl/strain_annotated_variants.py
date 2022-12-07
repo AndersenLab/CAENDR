@@ -7,7 +7,7 @@ from sqlalchemy.sql.expression import null
 
 
 
-def fetch_strain_variant_annotation_data(species, sva_fname: str):
+def parse_strain_variant_annotation_data(species, sva_fname: str):
   """
       Load strain variant annotation table data:
 

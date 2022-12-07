@@ -24,7 +24,7 @@ def get_gene_ids(gene_ids_fname: str):
 
 ## File Parsing Generator Functions ##
 
-def fetch_gene_gtf(species, gtf_fname: str, gene_ids_fname: str):
+def parse_gene_gtf(species, gtf_fname: str, gene_ids_fname: str):
   """
       LOADS wormbase_gene
       This function fetches and parses the canonical geneset GTF
@@ -71,7 +71,7 @@ def fetch_gene_gtf(species, gtf_fname: str, gene_ids_fname: str):
     yield row
 
 
-def fetch_gene_gff_summary(species, gff_fname: str):
+def parse_gene_gff_summary(species, gff_fname: str):
   """
       LOADS wormbase_gene_summary
       This function fetches data for wormbase_gene_summary;
@@ -137,7 +137,7 @@ def fetch_gene_gff_summary(species, gff_fname: str):
           yield gene
 
 
-def fetch_orthologs(species, orthologs_fname: str):
+def parse_orthologs(species, orthologs_fname: str):
   """
       LOADS (part of) homologs
       Fetches orthologs from WormBase, to be stored in the homolog table.

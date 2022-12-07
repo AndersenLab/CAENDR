@@ -28,7 +28,7 @@ def fetch_taxon_ids():
   return taxon_ids
 
 
-def fetch_homologene(species, homologene_fname: str):
+def parse_homologene(species, homologene_fname: str):
   """
     Download the homologene database and load
 
