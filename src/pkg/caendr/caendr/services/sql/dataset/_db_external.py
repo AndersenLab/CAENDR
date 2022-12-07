@@ -8,10 +8,8 @@ from ._db import fetch_db
 
 def fetch_external_db(self, *args, **kwargs):
     '''
-      fetch_external_db [
-        Downloads an external (WormBase, etc.) database file and stores it locally.
-        Takes the same positional and keyword arguments as fetch_db, except for db_type.
-      ]
+      Downloads an external (WormBase, etc.) database file and stores it locally.
+      Takes the same positional and keyword arguments as fetch_db, except for db_type.
         Returns:
           str: [The downloaded file's local filename.]
     '''
