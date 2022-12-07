@@ -33,6 +33,12 @@ class ETLManager:
     def get_download_path(self, species_name):
         return f"{self.local_download_path}/{species_name}"
 
+    def unzip_gz(self, *args):
+        '''
+            Directly calls the unzip_gz method this object's DatasetManager for the given arguments.
+        '''
+        return self.dataset_manager.unzip_gz(*args)
+
 
     ## Import functions from this module as class methods ##
 

@@ -43,16 +43,13 @@ def load_genes(self, db):
   # Loop through the name & Species object for each species
   for name, species in self.species_list.items():
 
-    # Generate filenames
-    gene_gtf_fname    = f'{self.get_download_path(name)}/gene.gtf'
+    # Fetch relevant dataset(s)
     gene_gtf_gz_fname = self.dataset_manager.fetch_gene_gtf_db(name)
     gene_ids_fname    = self.dataset_manager.fetch_gene_ids_db(name)
 
-    # Unzip the GTF .gz file into a new file named gene.gtf
+    # Unzip the GTF .gz file
     logger.info(f'Extracting gene_gtf file for {name}')
-    with gzip.open(gene_gtf_gz_fname, 'rb') as f_in:
-      with open(gene_gtf_fname, 'wb') as f_out:
-        shutil.copyfileobj(f_in, f_out)
+    gene_gtf_fname = self.unzip_gz(gene_gtf_gz_fname)
     logger.info('Done extracting gene_gtf file')
 
     # Load gene table data

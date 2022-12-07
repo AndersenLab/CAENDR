@@ -1,8 +1,6 @@
 import os
 import csv
 import re
-import gzip
-import shutil
 
 from logzero import logger
 from sqlalchemy.sql.expression import null
@@ -13,15 +11,12 @@ from caendr.models.sql import StrainAnnotatedVariant
 def load_strain_annotated_variants(self, db):
   logger.info('Loading strain variant annotated csv')
 
-  # Generate filenames
-  sva_fname    = f'{self.get_download_path("c_elegans")}/sva.csv'
+  # Fetch relevant dataset(s)
   sva_gz_fname = self.dataset_manager.fetch_sva_db('c_elegans')
 
-  # Unzip the CSV .gz file into a new file named sva.csv
+  # Unzip the CSV .gz file
   logger.info('Extracting strain variant annotation .csv.gz file')
-  with gzip.open(sva_gz_fname, 'rb') as f_in:
-    with open(sva_fname, 'wb') as f_out:
-      shutil.copyfileobj(f_in, f_out)
+  sva_fname = self.unzip_gz(sva_gz_fname)
   logger.info('Done extracting strain variant annotation file')
 
   # Load table data
