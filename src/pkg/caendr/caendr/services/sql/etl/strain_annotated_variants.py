@@ -12,14 +12,27 @@ from caendr.models.sql import StrainAnnotatedVariant
 
 def load_strain_annotated_variants(self, db):
   logger.info('Loading strain variant annotated csv')
-  sva_data = fetch_strain_variant_annotation_data(self.dataset_manager.fetch_sva_db('c_elegans'))
+
+  # Generate filenames
+  sva_fname    = f'{self.get_download_path("c_elegans")}/sva.csv'
+  sva_gz_fname = self.dataset_manager.fetch_sva_db('c_elegans')
+
+  # Unzip the CSV .gz file into a new file named sva.csv
+  logger.info('Extracting strain variant annotation .csv.gz file')
+  with gzip.open(sva_gz_fname, 'rb') as f_in:
+    with open(sva_fname, 'wb') as f_out:
+      shutil.copyfileobj(f_in, f_out)
+  logger.info('Done extracting strain variant annotation file')
+
+  # Load table data
+  sva_data = fetch_strain_variant_annotation_data(sva_fname)
   logger.info('Inserting strain annotated variant data into database')
   db.session.bulk_insert_mappings(StrainAnnotatedVariant, sva_data)
   db.session.commit()
   logger.info(f'Inserted {StrainAnnotatedVariant.query.count()} Strain Annotated Variants')
 
 
-def fetch_strain_variant_annotation_data(sva_gz_fname: str):
+def fetch_strain_variant_annotation_data(sva_fname: str):
   """
       Load strain variant annotation table data:
 
@@ -28,13 +41,8 @@ def fetch_strain_variant_annotation_data(sva_gz_fname: str):
       Percent_Protein,GENE,VARIANT_IMPACT,SNPEFF_IMPACT,DIVERGENT,RELEASE
 
   """
-  logger.info('Extracting strain variant annotation .csv.gz file')
-  sva_fname = 'sva.csv'
-  with gzip.open(sva_gz_fname, 'rb') as f_in:
-    with open(sva_fname, 'wb') as f_out:
-      shutil.copyfileobj(f_in, f_out)
-  
   logger.info('Parsing extracted strain variant annotation .csv file')
+
   with open(sva_fname) as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
 
