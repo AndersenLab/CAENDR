@@ -8,6 +8,12 @@ from caendr.utils.file import download_file
 
 from ._env import MODULE_DB_OPERATIONS_BUCKET_NAME
 
+'''
+    Functions in this file are internal, and are not imported into the DatasetManager class namespace.
+    These are meant to be used as helper functions in the externally-facing methods in
+    _db_external.py and _db_internal.py
+'''
+
 
 
 ## Local vars that differ based on internal/external fetch ##
@@ -61,36 +67,8 @@ def get_fetch_params_external(manager, db_url_name: str, species_name: str):
 
 ## Fetch DBs ##
 
-def fetch_external_db(self, *args, **kwargs):
-    '''
-      fetch_external_db [
-        Downloads an external (WormBase, etc.) database file and stores it locally.
-        Takes the same positional and keyword arguments as fetch_db, except for db_type.
-      ]  
-        Returns:
-          str: [The downloaded file's local filename.]
-    '''
-    return self.fetch_db('external', *args, **kwargs)
-
-
-def fetch_internal_db(self, *args, **kwargs):
-    '''
-      fetch_internal_db [
-        Downloads an internal (GCP) database file and stores it locally.
-        Takes the same positional and keyword arguments as fetch_db, except for db_type.
-      ]  
-        Returns:
-          str: [The downloaded file's local filename.]
-    '''
-
-    # Unzip downloaded files, unless caller explicitly asks not to
-    kwargs['unzip'] = kwargs.get('unzip', True)
-
-    return self.fetch_db('internal', *args, **kwargs)
-
-
 def fetch_db(
-        self,
+        manager,
         db_type: str,
         db_url_name: str,
         species_name: str = None,
@@ -118,9 +96,9 @@ def fetch_db(
 
     # Set local variables based on whether the db is external or internal
     if db_type == 'external':
-        url, filename, dl_func = get_fetch_params_external(self, db_url_name, species_name)
+        url, filename, dl_func = get_fetch_params_external(manager, db_url_name, species_name)
     elif db_type == 'internal':
-        url, filename, dl_func = get_fetch_params_internal(self, db_url_name, species_name)
+        url, filename, dl_func = get_fetch_params_internal(manager, db_url_name, species_name)
     else:
         logger.warn(f'Unrecognized DB type "{db_type}"')
         raise InternalError()
@@ -155,7 +133,7 @@ def fetch_db(
 
     # Unzip the downloaded file, if applicable
     if is_zipped and unzip:
-        self.unzip_gz(filename, keep_zipped_file=False)
+        manager.unzip_gz(filename, keep_zipped_file=False)
         filename = filename[:-3]
 
     # Return the resulting filename

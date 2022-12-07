@@ -1,13 +1,26 @@
-from string import Template
 from logzero import logger
 
-from caendr.models.error import BadRequestError
-from caendr.services.cloud.storage import download_blob_to_file
+from ._db import fetch_db
 
-from ._env import MODULE_DB_OPERATIONS_BUCKET_NAME
 
 
 ## General fetch functions ##
+
+def fetch_internal_db(self, *args, **kwargs):
+    '''
+      fetch_internal_db [
+        Downloads an internal (GCP) database file and stores it locally.
+        Takes the same positional and keyword arguments as fetch_db, except for db_type.
+      ]
+        Returns:
+          str: [The downloaded file's local filename.]
+    '''
+
+    # Unzip downloaded files, unless caller explicitly asks not to
+    kwargs['unzip'] = kwargs.get('unzip', True)
+
+    return fetch_db(self, 'internal', *args, **kwargs)
+
 
 def prefetch_all_internal_dbs(self, **kwargs):
     '''

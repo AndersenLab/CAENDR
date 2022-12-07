@@ -1,9 +1,21 @@
-import os
-
 from logzero import logger
 
-from caendr.models.error import BadRequestError
-from caendr.utils.file import download_file
+from ._db import fetch_db
+
+
+
+## General fetch functions ##
+
+def fetch_external_db(self, *args, **kwargs):
+    '''
+      fetch_external_db [
+        Downloads an external (WormBase, etc.) database file and stores it locally.
+        Takes the same positional and keyword arguments as fetch_db, except for db_type.
+      ]
+        Returns:
+          str: [The downloaded file's local filename.]
+    '''
+    return fetch_db(self, 'external', *args, **kwargs)
 
 
 def prefetch_all_external_dbs(self, **kwargs):
@@ -26,7 +38,7 @@ def prefetch_all_external_dbs(self, **kwargs):
 
 
 
-## Fetch specific URLs ##
+## Specific fetch functions ##
 
 def fetch_gene_gtf_db(self, species, **kwargs):
     '''
