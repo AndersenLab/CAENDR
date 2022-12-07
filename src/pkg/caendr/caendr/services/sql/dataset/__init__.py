@@ -128,9 +128,14 @@ class DatasetManager:
         get_file_suffix,
     )
 
+    from ._db import (
+        fetch_db,
+        fetch_external_db,
+        fetch_internal_db,
+    )
+
     from ._db_external import (
         prefetch_all_external_dbs,
-        fetch_external_db,
         fetch_gene_gff_db,
         fetch_gene_gtf_db,
         fetch_gene_ids_db,
@@ -141,6 +146,5 @@ class DatasetManager:
 
     from ._db_internal import (
         prefetch_all_internal_dbs,
-        fetch_internal_db,
         fetch_sva_db,
     )
