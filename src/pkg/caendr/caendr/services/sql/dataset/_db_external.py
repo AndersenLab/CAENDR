@@ -47,11 +47,17 @@ def fetch_external_db(self, db_url_name: str, species_name: str = None, use_cach
     # Determine whether the URL is zipped
     is_zipped = url[-3:] == '.gz'
 
-    # Check if file already downloaded, if applicable
-    if use_cache and (os.path.exists(filename) or os.path.exists(filename + '.gz')):
+    # Check if file already downloaded and unzipped
+    if use_cache and os.path.exists(filename):
         species_name_string = f', {species_name}' if species_name is not None else ''
         logger.info(f'External DB already exists [{db_url_name}{species_name_string}]:\n\t{url}')
         fname = filename
+
+    # Check if file already downloaded and zipped
+    elif use_cache and os.path.exists(filename + '.gz'):
+        species_name_string = f', {species_name}' if species_name is not None else ''
+        logger.info(f'External DB already exists [{db_url_name}.gz{species_name_string}]:\n\t{url}')
+        fname = filename + '.gz'
 
     # Download the external file
     else:

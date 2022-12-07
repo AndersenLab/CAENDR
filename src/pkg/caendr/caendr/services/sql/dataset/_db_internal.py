@@ -35,6 +35,7 @@ def fetch_internal_db(self, db_url_name: str, species_name: str, use_cache: bool
     # Unzip the downloaded file, if applicable
     if fname[-3:] == '.gz' and unzip:
         self.unzip_gz(fname, keep_zipped_file=False)
+        fname = fname[:-3]
 
     return fname
 
