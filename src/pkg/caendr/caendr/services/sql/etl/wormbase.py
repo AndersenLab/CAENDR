@@ -1,80 +1,14 @@
 import csv
 import gzip
-import shutil
 import os
 
 from gtfparse import read_gtf_as_dataframe
 from logzero import logger
 
-from caendr.models.sql import WormbaseGeneSummary, WormbaseGene, Homolog
+from caendr.models.sql import WormbaseGeneSummary
 from caendr.utils.bio import arm_or_center
 from caendr.utils.constants import CHROM_NUMERIC
 
-
-# https://github.com/phil-bergmann/2016_DLRW_brain/blob/3f69c945a40925101c58a3d77c5621286ad8d787/brain/data.py
-
-def load_genes_summary(self, db):
-  '''
-    load_genes_summary [extracts gene summary from wormbase db file and loads it into the caendr db]
-      Args:
-        db (SQLAlchemy): [sqlalchemy db instance to insert into]
-  '''  
-  logger.info('Loading gene summary table')
-
-  # Loop through the name & Species object for each species, loading & saving table data
-  for name, species in self.species_list.items():
-    logger.info(f'Loading {name} genes')
-
-    # Fetch relevant dataset(s)
-    gene_gff_fname = self.dataset_manager.fetch_gene_gff_db(name) + '.gz'
-
-    # Load gene summary table data
-    gene_summary = fetch_gene_gff_summary(gene_gff_fname, species)
-    db.session.bulk_insert_mappings(WormbaseGeneSummary, gene_summary)
-    db.session.commit()
-
-  # Print a summary of the new table
-  logger.info(f"Inserted {WormbaseGeneSummary.query.count()} Wormbase Gene Summaries")
-
-
-def load_genes(self, db):
-  '''
-    load_genes [extracts gene information from wormbase db files and loads it into the caendr db]
-      Args:
-        db (SQLAlchemy): [sqlalchemy db instance]
-  '''
-  logger.info('Loading gene table')
-
-  # Loop through the name & Species object for each species
-  for name, species in self.species_list.items():
-
-    # Fetch relevant dataset(s)
-    gene_gtf_fname = self.dataset_manager.fetch_gene_gtf_db(name) + '.gz'
-    gene_ids_fname = self.dataset_manager.fetch_gene_ids_db(name) + '.gz'
-
-    # Load gene table data
-    logger.info('Loading gene table')
-    genes = fetch_gene_gtf(gene_gtf_fname, gene_ids_fname, species)
-    db.session.bulk_insert_mappings(WormbaseGene, genes)
-    db.session.commit()
-
-  # Print a summary of the new table
-  logger.info(f"Inserted {WormbaseGene.query.count()} Wormbase Genes")
-  results = db.session.query(WormbaseGene.feature, db.func.count(WormbaseGene.feature)) \
-                            .group_by(WormbaseGene.feature) \
-                            .all()
-  result_summary = '\n'.join([f"{k}: {v}" for k, v in results])
-  logger.info(f'Gene Summary: {result_summary}')
-
-
-def load_orthologs(self, db):
-  logger.info('Loading orthologs from WormBase')
-  initial_count = Homolog.query.count()
-  orthologs = fetch_orthologs(self.dataset_manager.fetch_ortholog_db('c_elegans'), self.get_species('c_elegans'))
-  db.session.bulk_insert_mappings(Homolog, orthologs)
-  db.session.commit()
-  total_records = Homolog.query.count() - initial_count
-  logger.info(f'Inserted {total_records} Orthologs')
 
 
 def get_gene_ids(gene_ids_fname: str):
@@ -90,7 +24,7 @@ def get_gene_ids(gene_ids_fname: str):
 
 ## File Parsing Generator Functions ##
 
-def fetch_gene_gtf(gtf_fname: str, gene_ids_fname: str, species):
+def fetch_gene_gtf(species, gtf_fname: str, gene_ids_fname: str):
   """
       LOADS wormbase_gene
       This function fetches and parses the canonical geneset GTF
@@ -137,7 +71,7 @@ def fetch_gene_gtf(gtf_fname: str, gene_ids_fname: str, species):
     yield row
 
 
-def fetch_gene_gff_summary(gff_fname: str, species):
+def fetch_gene_gff_summary(species, gff_fname: str):
   """
       LOADS wormbase_gene_summary
       This function fetches data for wormbase_gene_summary;
@@ -203,7 +137,7 @@ def fetch_gene_gff_summary(gff_fname: str, species):
           yield gene
 
 
-def fetch_orthologs(orthologs_fname: str, species):
+def fetch_orthologs(species, orthologs_fname: str):
   """
       LOADS (part of) homologs
       Fetches orthologs from WormBase, to be stored in the homolog table.

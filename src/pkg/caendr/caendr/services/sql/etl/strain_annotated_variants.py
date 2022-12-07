@@ -5,24 +5,9 @@ import re
 from logzero import logger
 from sqlalchemy.sql.expression import null
 
-from caendr.models.sql import StrainAnnotatedVariant
 
 
-def load_strain_annotated_variants(self, db):
-  logger.info('Loading strain variant annotated csv')
-
-  # Fetch relevant dataset(s)
-  sva_fname = self.dataset_manager.fetch_sva_db('c_elegans')
-
-  # Load table data
-  sva_data = fetch_strain_variant_annotation_data(sva_fname)
-  logger.info('Inserting strain annotated variant data into database')
-  db.session.bulk_insert_mappings(StrainAnnotatedVariant, sva_data)
-  db.session.commit()
-  logger.info(f'Inserted {StrainAnnotatedVariant.query.count()} Strain Annotated Variants')
-
-
-def fetch_strain_variant_annotation_data(sva_fname: str):
+def fetch_strain_variant_annotation_data(species, sva_fname: str):
   """
       Load strain variant annotation table data:
 
@@ -90,7 +75,7 @@ def fetch_strain_variant_annotation_data(sva_fname: str):
           'divergent': True if row[18] == 'D' else False,
           'release': row[19] if row[19] else None
         }
-        
+
         yield data
 
   print(f'Processed {line_count} lines.')

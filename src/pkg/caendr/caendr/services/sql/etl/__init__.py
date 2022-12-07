@@ -42,6 +42,11 @@ class ETLManager:
 
     ## Import functions from this module as class methods ##
 
-    from .wormbase import load_genes_summary, load_genes, load_orthologs
-    from .homologs import load_homologs
-    from .strain_annotated_variants import load_strain_annotated_variants
+    from ._load_table import (
+        load_table,
+        load_genes_summary,
+        load_genes,
+        load_orthologs,
+        load_homologs,
+        load_strain_annotated_variants,
+    )

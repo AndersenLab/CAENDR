@@ -7,17 +7,9 @@ from logzero import logger
 from urllib.request import urlretrieve
 from tempfile import NamedTemporaryFile
 
-from caendr.models.sql import Homolog, WormbaseGeneSummary
+from caendr.models.sql import WormbaseGeneSummary
 from caendr.services.sql.dataset import TAXON_ID_URL
 
-
-
-def load_homologs(self, db):
-  logger.info('Loading homologenes from NIH homologene.data file')
-  homologene = fetch_homologene(self.dataset_manager.fetch_homologene_db(), self.get_species('c_elegans'))
-  db.session.bulk_insert_mappings(Homolog, homologene)
-  db.session.commit()
-  logger.info(f'Inserted {Homolog.query.count()} Homologs')
 
 
 def fetch_taxon_ids():
@@ -36,7 +28,7 @@ def fetch_taxon_ids():
   return taxon_ids
 
 
-def fetch_homologene(homologene_fname: str, species):
+def fetch_homologene(species, homologene_fname: str):
   """
     Download the homologene database and load
 
