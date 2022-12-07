@@ -5,8 +5,11 @@ from logzero import logger
 
 from caendr.models.error import BadRequestError
 
-from ._env import external_db_url_templates
+from ._env import external_db_url_templates, internal_db_blob_templates
 
+
+
+## URLs ##
 
 def url_template_type(db_url_name: str):
     '''
@@ -72,6 +75,49 @@ def get_url(self, db_url_name: str, species_name: str = None):
       return t.template
 
 
+
+## GS Blobs ##
+
+def get_blob_template(db_url_name: str):
+    '''
+      Gets the blob template associated with a given template name.
+        Args:
+          db_url_name (str): [The name of the template to retrieve.]
+        Returns:
+          str: [The GS blob template associated with the given name.]
+    '''
+    blob_template = internal_db_blob_templates.get(db_url_name)
+    if blob_template is None:
+        logger.warning(f'Unrecognized blob template name "{db_url_name}".')
+        raise BadRequestError()
+    else:
+        return Template(blob_template)
+
+
+def get_blob(self, db_url_name: str, species_name: str):
+
+    # Get the species object
+    species = self.get_species(species_name)
+
+    # Get the blob template
+    t = get_blob_template(db_url_name)
+
+    # Substitute in relevant species values
+    return t.substitute({
+        'SVA': species.sva_ver
+    })
+
+
+
+## Filenames ##
+
+def get_download_path(self, species_name: str = ''):
+  if species_name == '':
+    return self.local_download_path
+  else:
+    return f'{self.local_download_path}/{species_name}'
+
+
 def get_filename(self, db_url_name: str, species_name: str = ''):
     '''
       Gets the local filename for a URL template and species.  Does NOT guarantee that this file exists.
@@ -81,8 +127,12 @@ def get_filename(self, db_url_name: str, species_name: str = ''):
         Returns:
           str: [The location in the local downloads folder where the downloaded file belongs.]
     '''
+
+    # Get the path to the correct (sub)directory
     if (url_template_type(db_url_name) == 'generic'):
-      url_path = ''
+      download_path = self.get_download_path()
     else:
-      url_path = species_name + '/'
-    return f'{self.local_download_path}/{url_path}{db_url_name}'
+      download_path = self.get_download_path(species_name)
+
+    # Use URL name as filename in computed download path
+    return f'{download_path}/{db_url_name}'

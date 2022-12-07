@@ -90,7 +90,12 @@ class DatasetManager:
 
     ## Import functions from this module as class methods ##
 
-    from ._url_templates import get_url, get_filename
+    from ._url_templates import (
+        get_url,
+        get_blob,
+        get_filename,
+        get_download_path,
+    )
 
     from ._db_external import (
         prefetch_all_external_dbs,
