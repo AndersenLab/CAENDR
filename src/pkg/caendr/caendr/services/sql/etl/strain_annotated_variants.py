@@ -12,12 +12,7 @@ def load_strain_annotated_variants(self, db):
   logger.info('Loading strain variant annotated csv')
 
   # Fetch relevant dataset(s)
-  sva_gz_fname = self.dataset_manager.fetch_sva_db('c_elegans')
-
-  # Unzip the CSV .gz file
-  logger.info('Extracting strain variant annotation .csv.gz file')
-  sva_fname = self.unzip_gz(sva_gz_fname)
-  logger.info('Done extracting strain variant annotation file')
+  sva_fname = self.dataset_manager.fetch_sva_db('c_elegans')
 
   # Load table data
   sva_data = fetch_strain_variant_annotation_data(sva_fname)

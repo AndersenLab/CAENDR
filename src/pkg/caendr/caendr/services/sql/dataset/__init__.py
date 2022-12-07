@@ -89,11 +89,12 @@ class DatasetManager:
             shutil.rmtree(self.local_download_path)
 
 
-    def unzip_gz(self, gz_fname):
+    def unzip_gz(self, gz_fname: str, keep_zipped_file: bool = False):
         '''
           Unzips a GZ file for a given species.
             Args:
               gz_fname (str): [Name of the file to unzip.]
+              keep_zipped_file (bool, optional): [Whether to keep the original .gz file after it has been unzipped (True) or remove it (False). Optional, defaults to False.]
             Returns:
               [Name of the unzipped file.]
         '''
@@ -109,7 +110,9 @@ class DatasetManager:
             with open(fname, 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
 
-        # TODO: Optionally delete the zipped file
+        # Optionally delete the zipped file
+        if not keep_zipped_file:
+            os.remove(gz_fname)
 
         # Return the name of the new unzipped file
         return fname

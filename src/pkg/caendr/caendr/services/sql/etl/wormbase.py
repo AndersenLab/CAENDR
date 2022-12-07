@@ -24,7 +24,12 @@ def load_genes_summary(self, db):
   # Loop through the name & Species object for each species, loading & saving table data
   for name, species in self.species_list.items():
     logger.info(f'Loading {name} genes')
-    gene_summary = fetch_gene_gff_summary(self.dataset_manager.fetch_gene_gff_db(name), species)
+
+    # Fetch relevant dataset(s)
+    gene_gff_fname = self.dataset_manager.fetch_gene_gff_db(name) + '.gz'
+
+    # Load gene summary table data
+    gene_summary = fetch_gene_gff_summary(gene_gff_fname, species)
     db.session.bulk_insert_mappings(WormbaseGeneSummary, gene_summary)
     db.session.commit()
 
@@ -44,13 +49,8 @@ def load_genes(self, db):
   for name, species in self.species_list.items():
 
     # Fetch relevant dataset(s)
-    gene_gtf_gz_fname = self.dataset_manager.fetch_gene_gtf_db(name)
-    gene_ids_fname    = self.dataset_manager.fetch_gene_ids_db(name)
-
-    # Unzip the GTF .gz file
-    logger.info(f'Extracting gene_gtf file for {name}')
-    gene_gtf_fname = self.unzip_gz(gene_gtf_gz_fname)
-    logger.info('Done extracting gene_gtf file')
+    gene_gtf_fname = self.dataset_manager.fetch_gene_gtf_db(name) + '.gz'
+    gene_ids_fname = self.dataset_manager.fetch_gene_ids_db(name) + '.gz'
 
     # Load gene table data
     logger.info('Loading gene table')
@@ -65,8 +65,8 @@ def load_genes(self, db):
                             .all()
   result_summary = '\n'.join([f"{k}: {v}" for k, v in results])
   logger.info(f'Gene Summary: {result_summary}')
-  
-  
+
+
 def load_orthologs(self, db):
   logger.info('Loading orthologs from WormBase')
   initial_count = Homolog.query.count()
