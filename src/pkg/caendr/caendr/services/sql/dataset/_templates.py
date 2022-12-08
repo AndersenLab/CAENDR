@@ -104,7 +104,8 @@ def get_blob(self, db_url_name: str, species_name: str):
 
     # Substitute in relevant species values
     return t.substitute({
-        'SVA': species.sva_ver
+        'SPECIES': species_name,
+        'SVA':     species.sva_ver,
     })
 
 
