@@ -42,4 +42,4 @@ def fetch_sva_db(self, species: str, **kwargs):
         Returns:
           sva_fname (str): [path of downloaded strain variant annotations file]
     '''
-    return self.fetch_internal_db('SVA_CSVGZ_URL', species, **kwargs)
+    return self.fetch_internal_db('SVA_CSVGZ', species, **kwargs)

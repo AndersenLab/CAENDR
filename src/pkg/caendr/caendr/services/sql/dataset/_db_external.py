@@ -46,7 +46,7 @@ def fetch_gene_gtf_db(self, species, **kwargs):
         Returns:
           gene_gtf_fname (str): [path of downloaded wormbase gene gtf.gz file]
     '''
-    return self.fetch_external_db('GENE_GTF_URL', species, **kwargs)
+    return self.fetch_external_db('GENE_GTF', species, **kwargs)
 
 
 def fetch_gene_gff_db(self, species, **kwargs):
@@ -57,7 +57,7 @@ def fetch_gene_gff_db(self, species, **kwargs):
         Returns:
           gene_gff_fname (str): [Path of downloaded wormbase gene gff file.]
     '''
-    return self.fetch_external_db('GENE_GFF_URL', species, **kwargs)
+    return self.fetch_external_db('GENE_GFF', species, **kwargs)
 
 
 def fetch_gene_ids_db(self, species, **kwargs):
@@ -68,7 +68,7 @@ def fetch_gene_ids_db(self, species, **kwargs):
         Returns:
           gene_ids_fname (str): [path of downloaded wormbase gene IDs file]
     '''
-    return self.fetch_external_db('GENE_IDS_URL', species, **kwargs)
+    return self.fetch_external_db('GENE_IDS', species, **kwargs)
 
 
 def fetch_ortholog_db(self, species, **kwargs):
@@ -79,7 +79,7 @@ def fetch_ortholog_db(self, species, **kwargs):
         Returns:
           ortholog_fname (str): [path of downloaded wormbase homologs file]
     '''
-    return self.fetch_external_db('ORTHOLOG_URL', species, **kwargs)
+    return self.fetch_external_db('ORTHOLOG', species, **kwargs)
 
 
 def fetch_homologene_db(self, species = None, **kwargs):
@@ -90,7 +90,7 @@ def fetch_homologene_db(self, species = None, **kwargs):
     '''
     if species is not None:
       logger.warn(f'Homologene does not take a species; discarding argument "{species}".')
-    return self.fetch_external_db('HOMOLOGENE_URL', None, **kwargs)
+    return self.fetch_external_db('HOMOLOGENE', None, **kwargs)
 
 
 def fetch_taxon_id_db(self, species = None, **kwargs):
@@ -101,4 +101,4 @@ def fetch_taxon_id_db(self, species = None, **kwargs):
     '''
     if species is not None:
       logger.warn(f'Homologene does not take a species; discarding argument "{species}".')
-    return self.fetch_external_db('TAXON_ID_URL', None, **kwargs)
+    return self.fetch_external_db('TAXON_ID', None, **kwargs)
