@@ -14,6 +14,24 @@ from .strain_annotated_variants import parse_strain_variant_annotation_data
 ## Generic Table ##
 
 def load_table(self, db, table, generator, fetch_funcs):
+    '''
+      Generalized function to extract information from one or more downloaded files and load them into
+      the CaeNDR database.  Specifically, calls 'fetch_funcs' to generate a list of local filenames,
+      passes these to 'generator', and inserts the generated results into 'table'.
+
+      Usually should not be called directly; see other 'load_' functions in this module.
+
+      Args:
+        db (SQLAlchemy): [SQLAlchemy db instance to insert into.]
+        table (PostGres table): [PostGres table to insert data into.]
+        generator (function): [
+            A function that takes a species object and a list of local filenames, and generates
+            rows of data based on the file(s).
+        ]
+        fetch_funcs (list): [
+            A list of functions that each take a species name and return the name of a local file.
+        ]
+    '''
 
     # Initialize a count for the number of entries added
     initial_count = table.query.count()
@@ -38,10 +56,11 @@ def load_table(self, db, table, generator, fetch_funcs):
 
 def load_genes_summary(self, db):
     '''
-    load_genes_summary [extracts gene summary from wormbase db file and loads it into the caendr db]
+      Extracts gene summary from WormBase GFF file and loads it into the CaeNDR database.
+
       Args:
-        db (SQLAlchemy): [sqlalchemy db instance to insert into]
-  '''
+        db (SQLAlchemy): [SQLAlchemy db instance to insert into.]
+    '''
     logger.info('Loading WormBase Gene Summary table')
     self.load_table(
         db,
@@ -53,9 +72,10 @@ def load_genes_summary(self, db):
 
 def load_genes(self, db):
     '''
-      load_genes [extracts gene information from wormbase db files and loads it into the caendr db]
-        Args:
-          db (SQLAlchemy): [sqlalchemy db instance]
+      Extracts gene information from WormBase GTF and gene ID files, and loads it into the CaeNDR database.
+
+      Args:
+        db (SQLAlchemy): [SQLAlchemy db instance to insert into.]
     '''
     logger.info('Loading WormBase Gene table')
     self.load_table(
@@ -74,9 +94,10 @@ def load_genes(self, db):
 
 def load_orthologs(self, db):
     '''
-      load_orthologs []
-        Args:
-          db (SQLAlchemy): [sqlalchemy db instance]
+      Extracts ortholog information from WormBase ortholog file and loads it into the CaeNDR database.
+
+      Args:
+        db (SQLAlchemy): [SQLAlchemy db instance to insert into.]
     '''
     logger.info('Loading orthologs from WormBase')
     self.load_table(
@@ -88,6 +109,12 @@ def load_orthologs(self, db):
 
 
 def load_homologs(self, db):
+    '''
+      Extracts homolog information from NIH file and loads it into the CaeNDR database.
+
+      Args:
+        db (SQLAlchemy): [SQLAlchemy db instance to insert into.]
+    '''
     logger.info('Loading homologenes from NIH homologene.data file')
     self.load_table(
         db,
@@ -98,6 +125,12 @@ def load_homologs(self, db):
 
 
 def load_strain_annotated_variants(self, db):
+    '''
+      Extracts strain variant annotation information from GCP file and loads it into the CaeNDR database.
+
+      Args:
+        db (SQLAlchemy): [SQLAlchemy db instance to insert into.]
+    '''
     logger.info('Loading strain variant annotated csv')
     self.load_table(
         db,
