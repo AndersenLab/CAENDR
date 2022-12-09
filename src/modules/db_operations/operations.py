@@ -3,10 +3,10 @@ from caendr.services.cloud.postgresql import health_database_status
 from logzero import logger
 
 from caendr.models.error import EnvVarError
+from caendr.models.species import Species
 from caendr.models.sql import WormbaseGene, WormbaseGeneSummary, Strain, Homolog, StrainAnnotatedVariant
 from caendr.services.sql.db import drop_tables, backup_external_db
 from caendr.services.sql.etl import ETLManager, load_strains
-from caendr.services.sql.species import Species
 
 
 
