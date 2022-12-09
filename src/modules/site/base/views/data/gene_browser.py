@@ -15,6 +15,9 @@ gene_browser_bp = Blueprint('gene_browser',
                         template_folder='templates')
 
 
+
+# TODO: Move validators and get_dataset to new module / service
+
 def is_valid_release_version(value = None):
   if value is None:
     return False
@@ -52,7 +55,7 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
     # OVERRIDE wormbase_version  (default to 276 until 283 IGB data is available) 
     wormbase_version = 'WS276'
 
-  
+
   # dataset_release_prefix = f'//storage.googleapis.com/elegansvariation.org/releases'
   dataset_release_prefix = f"//storage.googleapis.com/caendr-site-public-bucket/dataset_release/c_elegans"
 
@@ -60,20 +63,31 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
   # track_url_prefix = f'//storage.googleapis.com/caendr-site-public-bucket/dataset_release/c_elegans/{dataset_release.version}/browser_tracks'
 
   bam_bai_url_prefix = f'//storage.googleapis.com/elegansvariation.org/bam'
-  
-  VARS = {'title': f"Genome Browser",
-          'DATASET_RELEASE': int(dataset_release.version),
-          'strain_listing': get_isotypes(),
-          'region': region,
-          'query': query,
-          'alt_parent_breadcrumb': {
-            "title": "Data", 
-            "url": url_for('data.landing')
-          },
-          'wormbase_version': wormbase_version,
-          'release_version': int(dataset_release.version),
-          'track_url_prefix': track_url_prefix,
-          'bam_bai_url_prefix': bam_bai_url_prefix,
-          'dataset_release_prefix': dataset_release_prefix,
-          'fluid_container': True}
+
+  VARS = {
+    # Page info
+    'title': f"Genome Browser",
+    'alt_parent_breadcrumb': {
+      "title": "Data",
+      "url": url_for('data.landing')
+    },
+
+    # Data
+    'strain_listing': get_isotypes(),
+    'region': region,
+    'query': query,
+
+    # Versions
+    'DATASET_RELEASE': int(dataset_release.version),
+    'release_version': int(dataset_release.version),
+    'wormbase_version': wormbase_version,
+
+    # Data locations
+    'track_url_prefix':       track_url_prefix,
+    'bam_bai_url_prefix':     bam_bai_url_prefix,
+    'dataset_release_prefix': dataset_release_prefix,
+
+    # Misc
+    'fluid_container': True
+  }
   return render_template('data/gbrowser.html', **VARS)
