@@ -1,4 +1,10 @@
+import json
+import os
 import re
+
+from pathlib import Path
+from string import Template
+
 from caendr.models.datastore.dataset_release import DatasetRelease
 from flask import (render_template,
                     Blueprint, 
@@ -14,6 +20,13 @@ gene_browser_bp = Blueprint('gene_browser',
                         __name__,
                         template_folder='templates')
 
+
+# Get path to current file
+path = Path(os.path.dirname(__file__))
+
+# Load the JSON file with the browser tracks
+with open(f"{str(path.parents[5])}/data/browser_tracks.json") as f:
+  TRACKS = json.load(f)
 
 
 # TODO: Move validators and get_dataset to new module / service
@@ -38,6 +51,25 @@ def get_dataset_release_or_latest(release_version = None):
   return get_latest_dataset_release_version()
 
 
+def replace_tokens(s, species='$SPECIES', prj='$PRJ', wb='$WB', sva='$SVA', release='$RELEASE', strain='$STRAIN'):
+  return Template(s).substitute({
+    'SPECIES': species,
+    'RELEASE': release,
+    'WB':      wb,
+    'SVA':     sva,
+    'PRJ':     prj,
+    'STRAIN':  strain,
+  })
+
+def replace_tokens_recursive(obj, **kwargs):
+  if isinstance(obj, str):
+    return replace_tokens(obj, **kwargs)
+  elif isinstance(obj, dict):
+    return { key: replace_tokens_recursive(val, **kwargs) for key, val in obj.items() }
+  else:
+    return obj
+
+
 @gene_browser_bp.route('/gbrowser')
 @gene_browser_bp.route('/gbrowser/')
 @gene_browser_bp.route('/gbrowser/<release_version>')
@@ -55,14 +87,20 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
     # OVERRIDE wormbase_version  (default to 276 until 283 IGB data is available) 
     wormbase_version = 'WS276'
 
+  # dataset_release_prefix = '//storage.googleapis.com/elegansvariation.org/releases'
+  # track_url_prefix       = '//storage.googleapis.com/elegansvariation.org/browser_tracks'
+  # bam_bai_url_prefix     = '//storage.googleapis.com/elegansvariation.org/bam'
 
-  # dataset_release_prefix = f'//storage.googleapis.com/elegansvariation.org/releases'
-  dataset_release_prefix = f"//storage.googleapis.com/caendr-site-public-bucket/dataset_release/c_elegans"
 
-  track_url_prefix = f'//storage.googleapis.com/elegansvariation.org/browser_tracks'
-  # track_url_prefix = f'//storage.googleapis.com/caendr-site-public-bucket/dataset_release/c_elegans/{dataset_release.version}/browser_tracks'
+  # Initialize trackset with non-templated tracks
+  trackset = { key: val for key, val in TRACKS['tracks'].items() }
 
-  bam_bai_url_prefix = f'//storage.googleapis.com/elegansvariation.org/bam'
+  # Generate tracks for each strain by filling out templates
+  for strain in get_isotypes():
+    for template_name, template in TRACKS['templates'].items():
+      trackset[ replace_tokens(template_name, strain=strain.strain) ] = \
+        replace_tokens_recursive(template, strain=strain.strain)
+
 
   VARS = {
     # Page info
@@ -77,15 +115,21 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
     'region': region,
     'query': query,
 
+    # Tracks
+    'trackset':     trackset,
+    'trackset_str': json.dumps(trackset),
+    'track_names':  list(TRACKS['tracks'].keys()),
+
     # Versions
     'DATASET_RELEASE': int(dataset_release.version),
     'release_version': int(dataset_release.version),
     'wormbase_version': wormbase_version,
 
     # Data locations
-    'track_url_prefix':       track_url_prefix,
-    'bam_bai_url_prefix':     bam_bai_url_prefix,
-    'dataset_release_prefix': dataset_release_prefix,
+    'site_prefix':            TRACKS['paths']['site_prefix'],
+    'dataset_release_prefix': TRACKS['paths']['dataset_release_prefix'],
+    'bam_bai_url_prefix':     TRACKS['paths']['bam_bai_url_prefix'],
+    'fasta_filename':         TRACKS['paths']['fasta_filename'],
 
     # Misc
     'fluid_container': True
