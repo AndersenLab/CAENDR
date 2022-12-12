@@ -8,7 +8,7 @@
         "homolog_id":       6239
     },
     "c_briggsae": {
-        "scientific_name":  "",
+        "scientific_name":  "Caenorhabditis briggsae",
         "project_number":   "PRJNA10731",
         "wormbase_version": "WS285",
         "sva_version":      "XXXXXXXX",
