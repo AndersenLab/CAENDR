@@ -5,7 +5,9 @@ import re
 from pathlib import Path
 from string import Template
 
+from caendr.models.error import EnvVarError
 from caendr.models.datastore.dataset_release import DatasetRelease
+from caendr.models.species import Species
 from flask import (render_template,
                     Blueprint, 
                     request,
@@ -25,8 +27,17 @@ gene_browser_bp = Blueprint('gene_browser',
 path = Path(os.path.dirname(__file__))
 
 # Load the JSON file with the browser tracks
+# with open(f"{str(path.parents[5])}/{os.environ['MODULE_GENE_BROWSER_TRACKS_JSON_PATH']}") as f:
 with open(f"{str(path.parents[5])}/data/browser_tracks.json") as f:
   TRACKS = json.load(f)
+
+
+# Load species list
+SPECIES_LIST_FILE = os.environ['SPECIES_LIST_FILE']
+if not SPECIES_LIST_FILE:
+    raise EnvVarError()
+SPECIES_LIST = Species.parse_json_file(SPECIES_LIST_FILE)
+
 
 
 # TODO: Move validators and get_dataset to new module / service
@@ -114,6 +125,7 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
     'strain_listing': get_isotypes(),
     'region': region,
     'query': query,
+    'species': SPECIES_LIST,
 
     # Tracks
     'trackset':     trackset,

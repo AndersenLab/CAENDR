@@ -38,6 +38,7 @@
                 "CAENDR_USE_SSL": "1",
                 "SENTRY_URL": "",
                 "SITE_BASE_URL": "https://localhost:8080",
+                "SPECIES_LIST_FILE": "${workspaceFolder}/data/species_list.json",
             },
             "args": [
                 "run",
