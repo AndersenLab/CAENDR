@@ -95,7 +95,7 @@ th {
 
       <!-- Species dropdown -->
       <h5>Species</h5>
-      <select name="species" id="species-selector" onchange="change_species()">
+      <select name="species" id="species-selector" onchange="update_species()">
         {% for s in species_list %}
           <option value="{{s}}">{{species_list[s]["scientific_name"]}}</option>
         {% endfor %}
@@ -214,24 +214,20 @@ th {
 
 <script type="text/javascript">
 
-var tracks = [];
+
+/* Variables */
 
 
-// Get the list of tracks
+// Typing
+var typingTimer;                //timer identifier
+var doneTypingInterval = 1000;  //time in ms (5 seconds)
+
+// Tracks
+var tracks   = [];
 var trackset = {};
-function reload_trackset() {
-  fetch( "{{ url_for('gene_browser.get_tracks') }}" )
-    .then((response) => {
-      return response.text();
-    })
-    .then((text) => {
-      trackset = JSON.parse(text);
-      // console.log('trackset: ', trackset);
-    });
-}
-reload_trackset();
 
-
+// Current active species
+var species = null;
 
 // Parse the list of species into a JS object
 // Only grabs the required fields
@@ -246,68 +242,27 @@ var species_list = {}
   };
 {% endfor %}
 
-// Set up species variable & set to match species selector
-var species = null;
-function change_species() {
-  species_id = document.getElementById('species-selector').value;
-  species    = species_list[species_id];
-
-  document.getElementById('wormbase_version').innerHTML = species['wormbase_version'];
-  document.getElementById('release_version').innerHTML  = species['latest_release'];
-}
-change_species();
 
 
+/* Initialization */
 
 
-// TODO: Move off of client side?
-function replace_tokens(filename) {
-  filename = filename.replaceAll('$WB',      species['wormbase_version']);
-  filename = filename.replaceAll('$RELEASE', species['latest_release']);
-  filename = filename.replaceAll('$SPECIES', species['name'].substring(2));
-  filename = filename.replaceAll('$PRJ',     species['project_number']);
-  return filename;
-}
+// Load species & trackset from template/API
+reload_trackset();
+update_species();
 
-// TODO: Move off of client side?
-function get_track(track_name) {
-  var track  = trackset[track_name];
-  var params = track.params;
-
-  // Get the path to the file in GCP
-  var path = track['is_bam'] ? "{{ bam_bai_path }}" : "{{ release_path }}"
-
-  // Create the full URL and replace all tokens
-  params.url = replace_tokens(`{{ site_prefix }}/${ path }/${ track.filename }`);
-
-  // Create indexURL field by appending file extension to filename, if applicable
-  if (track['index_suffix']) {
-    params.indexURL = params.url + track['index_suffix']
-  }
-
-  return params;
-}
-
-function reload_tracks() {
-  $('.track-select').each(function(i, obj) {
-    const track_name = $(this).attr("value");
-    if ($(this).prop("checked") == true){
-      if (!tracks.includes(track_name)) {
-        tracks.push(track_name);
-        igv.getBrowser().loadTrack(get_track(track_name));
-      }
-    } else {
-      igv.getBrowser().removeTrackByName(track_name);
-      i = tracks.indexOf(track_name);
-      while(i != -1) {
-        tracks.splice(i, 1);
-        i = tracks.indexOf(track_name);
-      }
-    }
-  });
-}
-
+// Load data
 $(document).ready(function () {
+
+  // Initial load
+  setTimeout(reload_tracks, 500);
+});
+
+
+// Set up gene browser tool & callbacks
+$(document).ready(function () {
+
+  // Location for browser
   var div = $("#browser")[0];
 
   // Set initial config options for browser
@@ -339,74 +294,11 @@ $(document).ready(function () {
   });
 
 
-  function process_gene_search() {
-    $("#loading-search-table").fadeOut();
-    var gene = $('#gene-search').val();
-    if (gene.length == 0) {
-      $("#g-search-table").fadeOut();
-    } else {
-      $("#orthologs").html("");
-      $.ajax({
-          url:         "{{ url_for('api_gene.api_search_combined', query='') }}" + gene,
-          method:      "GET",
-          contentType: "application/xml",
-      }).done(function(msg) {
-          row = Array();
-          $.each(msg, function(i, row) {
-              if ("chrom" in row) {
-                  link = row["chrom"] + ":" + row["start"] + "-" + row["end"];
-              } else {
-                  link = row["locus"];
-              }
-              gene_name = `<a onclick="set_position('${link}')" link='${link}' class='ortholink'>${row["locus"]}</a>`;
-              result = [
-                  gene_name,
-                  row['homolog_gene']    || row["gene_symbol"],
-                  row["homolog_species"] || "<em>C. elegans</em>",
-                  row["homolog_source"]  || "Wormbase",
-              ];
-              result = "<tr><td>" + result.join("</td><td>") + "</td></tr>";
-              position = row["chrom"] + ":" + row["start"];
-              $("#orthologs").append(result);
-          });
-          $("#g-search-table").fadeIn();
-      });
-    }
-  }
-
   // Make links work!
   $(".container-fluid").on("click", ".ortholink", function() {
     igv.getBrowser().search($(this).attr("link"))
   });
 
-
-  function gt_label(gt) {
-    // Generates a genotype label
-    r = ""
-    classes = [];
-    classes.push(`gt-${gt["GT"]}`);
-    FT = gt["FT"].split(";").join(" ");
-    classes.push(FT);
-    tt = "";
-    if (gt['FT'] != ['PASS']) {
-      tt = ` data-placement='bottom' title='${FT}' `;
-    }
-    r += `<div class='label ttop ${classes.join(" ")}' ${tt} >`;
-    r += gt["SAMPLE"] + " : " + gt["TGT"];
-    r += "</div>";
-    return r
-  }
-
-  function draw_gt_set(genotype_set, genotype_val) {
-    return genotype_set.filter(function(gt) { return gt['GT'] == genotype_val })
-                       .map( gt_label )
-                       .join(" ");
-    // return genotype_set.filter( gt => gt['GT'] == genotype_val ).map( gt_label ).join(" ");
-  }
-
-
-  var typingTimer;                //timer identifier
-  var doneTypingInterval = 1000;  //time in ms (5 seconds)
 
   // Ortholog search
   $("#gene-search").on("input", function(e) {
@@ -416,41 +308,168 @@ $(document).ready(function () {
   })
 
 
-  // Initial load
-  setTimeout(reload_tracks, 500);
+  (function($) {
+      var patterns = [];
+      $('#filter').keyup(function() {
+          $('.searchable tr').hide();
+          $(this).val().split(',').forEach(function(r) {
+              var rex = new RegExp(r, "i");
+              $('.searchable tr').filter(function() {
+                  return rex.test($(this).text());
+              }).show();
+          })
+      })
+  }(jQuery));
+
+
+  $('#filter').keydown(function(event) {
+      if (event.keyCode == 13) {
+          event.preventDefault();
+          return false;
+      }
+  });
 
 });
 
-set_position = function(coord) {
+
+
+/* Update functions */
+
+
+// Get the list of tracks
+function reload_trackset() {
+  fetch( "{{ url_for('gene_browser.get_tracks') }}" )
+    .then( (response) => { return response.text();      } )
+    .then( (text)     => { trackset = JSON.parse(text); } );
+}
+
+function reload_tracks() {
+  $('.track-select').each(function(i, obj) {
+    const track_name = $(this).attr("value");
+    if ($(this).prop("checked") == true){
+      if (!tracks.includes(track_name)) {
+        tracks.push(track_name);
+        igv.getBrowser().loadTrack(get_track(track_name));
+      }
+    } else {
+      igv.getBrowser().removeTrackByName(track_name);
+      i = tracks.indexOf(track_name);
+      while(i != -1) {
+        tracks.splice(i, 1);
+        i = tracks.indexOf(track_name);
+      }
+    }
+  });
+}
+
+// Set up species variable & set to match species selector
+function update_species() {
+  species_id = document.getElementById('species-selector').value;
+  species    = species_list[species_id];
+
+  document.getElementById('wormbase_version').innerHTML = species['wormbase_version'];
+  document.getElementById('release_version').innerHTML  = species['latest_release'];
+}
+
+
+
+/* Searching */
+
+
+function process_gene_search() {
+  $("#loading-search-table").fadeOut();
+  var gene = $('#gene-search').val();
+  if (gene.length == 0) {
+    $("#g-search-table").fadeOut();
+  } else {
+    $("#orthologs").html("");
+    $.ajax({
+        url:         "{{ url_for('api_gene.api_search_combined', query='') }}" + gene,
+        method:      "GET",
+        contentType: "application/xml",
+    }).done(function(msg) {
+        row = Array();
+        $.each(msg, function(i, row) {
+            if ("chrom" in row) {
+                link = row["chrom"] + ":" + row["start"] + "-" + row["end"];
+            } else {
+                link = row["locus"];
+            }
+            gene_name = `<a onclick="set_position('${link}')" link='${link}' class='ortholink'>${row["locus"]}</a>`;
+            result = [
+                gene_name,
+                row['homolog_gene']    || row["gene_symbol"],
+                row["homolog_species"] || "<em>C. elegans</em>",
+                row["homolog_source"]  || "Wormbase",
+            ];
+            result = "<tr><td>" + result.join("</td><td>") + "</td></tr>";
+            position = row["chrom"] + ":" + row["start"];
+            $("#orthologs").append(result);
+        });
+        $("#g-search-table").fadeIn();
+    });
+  }
+}
+
+function set_position(coord) {
   // Sets browser position based on input
   igv.getBrowser().search(coord);
 }
 
-$(document).ready(function() {
-
-    (function($) {
-        var patterns = [];
-        $('#filter').keyup(function() {
-            $('.searchable tr').hide();
-            $(this).val().split(',').forEach(function(r) {
-                var rex = new RegExp(r, "i");
-                $('.searchable tr').filter(function() {
-                    return rex.test($(this).text());
-                }).show();
-            })
-        })
-
-    }(jQuery));
 
 
-    $('#filter').keydown(function(event) {
-        if (event.keyCode == 13) {
-            event.preventDefault();
-            return false;
-        }
-    });
+// TODO: Move off of client side?
+function replace_tokens(filename) {
+  filename = filename.replaceAll('$WB',      species['wormbase_version']);
+  filename = filename.replaceAll('$RELEASE', species['latest_release']);
+  filename = filename.replaceAll('$SPECIES', species['name'].substring(2));
+  filename = filename.replaceAll('$PRJ',     species['project_number']);
+  return filename;
+}
 
-});
+// TODO: Move off of client side?
+function get_track(track_name) {
+  var track  = trackset[track_name];
+  var params = track.params;
+
+  // Get the path to the file in GCP
+  var path = track['is_bam'] ? "{{ bam_bai_path }}" : "{{ release_path }}"
+
+  // Create the full URL and replace all tokens
+  params.url = replace_tokens(`{{ site_prefix }}/${ path }/${ track.filename }`);
+
+  // Create indexURL field by appending file extension to filename, if applicable
+  if (track['index_suffix']) {
+    params.indexURL = params.url + track['index_suffix']
+  }
+
+  return params;
+}
+
+
+
+function gt_label(gt) {
+  // Generates a genotype label
+  r = ""
+  classes = [];
+  classes.push(`gt-${gt["GT"]}`);
+  FT = gt["FT"].split(";").join(" ");
+  classes.push(FT);
+  tt = "";
+  if (gt['FT'] != ['PASS']) {
+    tt = ` data-placement='bottom' title='${FT}' `;
+  }
+  r += `<div class='label ttop ${classes.join(" ")}' ${tt} >`;
+  r += gt["SAMPLE"] + " : " + gt["TGT"];
+  r += "</div>";
+  return r
+}
+
+function draw_gt_set(genotype_set, genotype_val) {
+  return genotype_set.filter(function(gt) { return gt['GT'] == genotype_val })
+                      .map( gt_label )
+                      .join(" ");
+}
 
 </script>
 
