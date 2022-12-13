@@ -30,6 +30,7 @@ class Species:
         self.proj_num = params["project_number"]
         self.wb_ver   = params["wormbase_version"]
         self.sva_ver  = params["sva_version"]
+        self.latest   = params["latest_release"]
 
         # Set params for homologs
         self.homolog_prefix = params.get('homolog_prefix', '')
@@ -45,6 +46,17 @@ class Species:
                 name: Species(name, **params) for name, params in json.load(f).items()
             }
         return species_list
+
+
+    def __iter__(self):
+        yield from {
+            'name':             self.name,
+            'scientific_name':  self.scientific_name,
+            'project_number':   self.proj_num,
+            'wormbase_version': self.wb_ver,
+            'sva_version':      self.sva_ver,
+            'latest_release':   self.latest,
+        }.items()
 
 
     ## Property: name (Species Name) ##
