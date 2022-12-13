@@ -103,13 +103,13 @@ th {
 
       <!-- Trackset check boxes -->
       <h5>Tracks</h5>
-      {% for track_name in track_names %}
+      {% for name, track in default_tracks.items() %}
         <div class="checkbox">
           <label>
-            <input type="checkbox" checked class="track-select normal-track" value="{{ track_name }}" />
-            {{ track_name }}
-            {% if 'source' in trackset[track_name] %}
-              <br />(<a href="{{ trackset[track_name].source.url }}" target='_blank'>{{ trackset[track_name].source.title }}</a>)
+            <input type="checkbox" checked class="track-select normal-track" value="{{ name }}" />
+            {{ name }}
+            {% if 'source' in track %}
+              <br />(<a href="{{ track.source.url }}" target='_blank'>{{ track.source.title }}</a>)
             {% endif %}
           </label>
         </div>
@@ -216,9 +216,21 @@ th {
 
 var tracks = [];
 
-// TODO: This solution doesn't seem very safe...
-//       If get_track moves off of the client side, this becomes unnecessary (I think)
-var trackset = {{trackset_str | safe}};
+
+// Get the list of tracks
+var trackset = {};
+function reload_trackset() {
+  fetch( "{{ url_for('gene_browser.get_tracks') }}" )
+    .then((response) => {
+      return response.text();
+    })
+    .then((text) => {
+      trackset = JSON.parse(text);
+      // console.log('trackset: ', trackset);
+    });
+}
+reload_trackset();
+
 
 
 // Parse the list of species into a JS object

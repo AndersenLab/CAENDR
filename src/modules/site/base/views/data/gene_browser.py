@@ -9,7 +9,8 @@ from caendr.models.error import EnvVarError
 from caendr.models.datastore.dataset_release import DatasetRelease
 from caendr.models.species import Species
 from flask import (render_template,
-                    Blueprint, 
+                    Blueprint,
+                    jsonify,
                     request,
                     url_for)
 from extensions import cache
@@ -81,6 +82,28 @@ def replace_tokens_recursive(obj, **kwargs):
     return obj
 
 
+
+@gene_browser_bp.route('/gbrowser/tracks', methods=['GET'])
+def get_tracks():
+  '''
+  Get the list of browser tracks.
+  '''
+
+  # Initialize trackset with non-templated tracks
+  trackset = { key: val for key, val in TRACKS['tracks'].items() }
+
+  # Generate tracks for each strain by filling out templates
+  trackset.update({
+    replace_tokens(template_name, strain=strain.strain): replace_tokens_recursive(template, strain=strain.strain)
+      for template_name, template in TRACKS['templates'].items()
+      for strain in get_isotypes()
+  })
+
+  # Send back in JSON format
+  return jsonify(trackset)
+
+
+
 @gene_browser_bp.route('/gbrowser')
 @gene_browser_bp.route('/gbrowser/')
 @gene_browser_bp.route('/gbrowser/<release_version>')
@@ -102,17 +125,6 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
   # track_url_prefix       = '//storage.googleapis.com/elegansvariation.org/browser_tracks'
   # bam_bai_url_prefix     = '//storage.googleapis.com/elegansvariation.org/bam'
 
-
-  # Initialize trackset with non-templated tracks
-  trackset = { key: val for key, val in TRACKS['tracks'].items() }
-
-  # Generate tracks for each strain by filling out templates
-  for strain in get_isotypes():
-    for template_name, template in TRACKS['templates'].items():
-      trackset[ replace_tokens(template_name, strain=strain.strain) ] = \
-        replace_tokens_recursive(template, strain=strain.strain)
-
-
   VARS = {
     # Page info
     'title': f"Genome Browser",
@@ -123,14 +135,12 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
 
     # Data
     'strain_listing': get_isotypes(),
-    'region': region,
-    'query': query,
-    'species_list': SPECIES_LIST,
+    'region':         region,
+    'query':          query,
+    'species_list':   SPECIES_LIST,
 
     # Tracks
-    'trackset':     trackset,
-    'trackset_str': json.dumps(trackset),
-    'track_names':  list(TRACKS['tracks'].keys()),
+    'default_tracks': TRACKS['tracks'],
 
     # Data locations
     'site_prefix':    TRACKS['paths']['site_prefix'],
