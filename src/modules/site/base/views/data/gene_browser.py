@@ -133,10 +133,10 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
     'track_names':  list(TRACKS['tracks'].keys()),
 
     # Data locations
-    'site_prefix':            TRACKS['paths']['site_prefix'],
-    'dataset_release_prefix': TRACKS['paths']['dataset_release_prefix'],
-    'bam_bai_url_prefix':     TRACKS['paths']['bam_bai_url_prefix'],
-    'fasta_filename':         TRACKS['paths']['fasta_filename'],
+    'site_prefix':    TRACKS['paths']['site_prefix'],
+    'release_path':   TRACKS['paths']['release_path'],
+    'bam_bai_path':   TRACKS['paths']['bam_bai_path'],
+    'fasta_filename': TRACKS['paths']['fasta_filename'],
 
     # Misc
     'fluid_container': True

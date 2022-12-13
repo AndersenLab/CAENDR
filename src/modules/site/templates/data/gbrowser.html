@@ -263,10 +263,10 @@ function get_track(track_name) {
   var params = track.params;
 
   // Get the path to the file in GCP
-  var path = track['is_bam'] ? "{{bam_bai_url_prefix}}" : "{{dataset_release_prefix}}"
+  var path = track['is_bam'] ? "{{ bam_bai_path }}" : "{{ release_path }}"
 
   // Create the full URL and replace all tokens
-  params.url = replace_tokens(`{{site_prefix}}/${path}/${track.filename}`);
+  params.url = replace_tokens(`{{ site_prefix }}/${ path }/${ track.filename }`);
 
   // Create indexURL field by appending file extension to filename, if applicable
   if (track['index_suffix']) {
@@ -307,7 +307,7 @@ $(document).ready(function () {
         showKaryo: false,
         reference: {
           id: "WS276", // TODO: used to be {wormbase_version}, but there's no longer a single value for this
-          fastaURL: replace_tokens("{{ site_prefix }}/{{ dataset_release_prefix }}/{{ fasta_filename }}"),
+          fastaURL: replace_tokens("{{ site_prefix }}/{{ release_path }}/{{ fasta_filename }}"),
         },
         locus: "{{ region }}",
         tracks: [],
