@@ -230,15 +230,12 @@ var trackset = {};
 var species = null;
 
 // Parse the list of species into a JS object
-// Only grabs the required fields
 var species_list = {}
-{% for key, val in species_list.items() %}
-  {# species_list['{{key}}'] = JSON.parse('{{ json.dumps(dict(val)) }}'); #}
-  species_list['{{key}}'] = {
-    'name':             '{{ key }}',
-    'project_number':   '{{ dict(val)["project_number"] }}',
-    'latest_release':   '{{ dict(val)["latest_release"] }}',
-    'wormbase_version': '{{ dict(val)["wormbase_version"] }}',
+{% for name, species in species_list.items() %}
+  species_list['{{ name }}'] = {
+    {% for key, val in dict(species).items() %}
+      '{{ key }}': '{{ val }}',
+    {% endfor %}
   };
 {% endfor %}
 
