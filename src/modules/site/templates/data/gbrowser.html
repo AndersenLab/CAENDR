@@ -95,9 +95,9 @@ th {
 
       <!-- Species dropdown -->
       <h5>Species</h5>
-      <select name="species" id="species">
-        {% for s in species %}
-          <option value="{{s}}">{{species[s]["scientific_name"]}}</option>
+      <select name="species" id="species-selector" onchange="change_species()">
+        {% for s in species_list %}
+          <option value="{{s}}">{{species_list[s]["scientific_name"]}}</option>
         {% endfor %}
       </select>
 
@@ -200,7 +200,9 @@ th {
 
   <div class="row igv-browser-row">
     <div class="col-lg-12 col-md-12">
-      <h3 class="center">IGC (Data Release: {{ release_version }} | Wormbase Version: {{wormbase_version}})</h3>
+      <h3 class="center">
+        IGC (Data Release: <span id="release_version"></span> | Wormbase Version: <span id="wormbase_version"></span>)
+      </h3>
       <div id="browser"></div>
     </div>
   </div>
@@ -219,12 +221,39 @@ var tracks = [];
 var trackset = {{trackset_str | safe}};
 
 
+// Parse the list of species into a JS object
+// Only grabs the required fields
+var species_list = {}
+{% for key, val in species_list.items() %}
+  {# species_list['{{key}}'] = JSON.parse('{{ json.dumps(dict(val)) }}'); #}
+  species_list['{{key}}'] = {
+    'name':             '{{ key }}',
+    'project_number':   '{{ dict(val)["project_number"] }}',
+    'latest_release':   '{{ dict(val)["latest_release"] }}',
+    'wormbase_version': '{{ dict(val)["wormbase_version"] }}',
+  };
+{% endfor %}
+
+// Set up species variable & set to match species selector
+var species = null;
+function change_species() {
+  species_id = document.getElementById('species-selector').value;
+  species    = species_list[species_id];
+
+  document.getElementById('wormbase_version').innerHTML = species['wormbase_version'];
+  document.getElementById('release_version').innerHTML  = species['latest_release'];
+}
+change_species();
+
+
+
+
 // TODO: Move off of client side?
 function replace_tokens(filename) {
-  filename = filename.replaceAll('$WB', 'WS283');
-  filename = filename.replaceAll('$RELEASE', '{{release_version}}');
-  filename = filename.replaceAll('$SPECIES', 'elegans')
-  filename = filename.replaceAll('$PRJ', 'PRJNA13758')
+  filename = filename.replaceAll('$WB',      species['wormbase_version']);
+  filename = filename.replaceAll('$RELEASE', species['latest_release']);
+  filename = filename.replaceAll('$SPECIES', species['name'].substring(2));
+  filename = filename.replaceAll('$PRJ',     species['project_number']);
   return filename;
 }
 
@@ -262,7 +291,7 @@ function reload_tracks() {
         tracks.splice(i, 1);
         i = tracks.indexOf(track_name);
       }
-    }                          
+    }
   });
 }
 
@@ -277,7 +306,7 @@ $(document).ready(function () {
         showNavigation: true,
         showKaryo: false,
         reference: {
-          id: "{{ wormbase_version }}",
+          id: "WS276", // TODO: used to be {wormbase_version}, but there's no longer a single value for this
           fastaURL: replace_tokens("{{ site_prefix }}/{{ dataset_release_prefix }}/{{ fasta_filename }}"),
         },
         locus: "{{ region }}",

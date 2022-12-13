@@ -125,17 +125,12 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
     'strain_listing': get_isotypes(),
     'region': region,
     'query': query,
-    'species': SPECIES_LIST,
+    'species_list': SPECIES_LIST,
 
     # Tracks
     'trackset':     trackset,
     'trackset_str': json.dumps(trackset),
     'track_names':  list(TRACKS['tracks'].keys()),
-
-    # Versions
-    'DATASET_RELEASE': int(dataset_release.version),
-    'release_version': int(dataset_release.version),
-    'wormbase_version': wormbase_version,
 
     # Data locations
     'site_prefix':            TRACKS['paths']['site_prefix'],

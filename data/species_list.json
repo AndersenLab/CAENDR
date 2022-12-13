@@ -6,6 +6,7 @@
         "sva_version":      "20220216",
         "homolog_prefix":   "CELE_",
         "homolog_id":       6239
+        "latest_release":   "20220216"
     },
     "c_briggsae": {
         "scientific_name":  "Caenorhabditis briggsae",
@@ -14,5 +15,6 @@
         "sva_version":      "XXXXXXXX",
         "homolog_prefix":   "",
         "homolog_id":       0
+        "latest_release":   "20210803"
     }
 }
