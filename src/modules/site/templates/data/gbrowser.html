@@ -106,7 +106,7 @@ th {
       {% for name, track in default_tracks.items() %}
         <div class="checkbox">
           <label>
-            <input type="checkbox" checked class="track-select normal-track" value="{{ name }}" />
+            <input id="{{ name }}_checkbox" type="checkbox" class="track-select normal-track" value="{{ name }}" />
             {{ name }}
             {% if 'source' in track %}
               <br />(<a href="{{ track.source.url }}" target='_blank'>{{ track.source.title }}</a>)
@@ -253,7 +253,14 @@ $(document).ready(function () {
   // Load species from dropdown default value
   update_species();
 
-  // Load tracks from API, then update the browser to match the defaults
+  // Set default checked tracks
+  {% for name, track in default_tracks.items() %}
+    {% if track.checked %}
+      document.getElementById("{{name}}_checkbox").checked = true;
+    {% endif %}
+  {% endfor %}
+
+  // Load tracks from API, then populate the browser with the default tracks
   update_trackset().then( update_tracks );
 });
 
