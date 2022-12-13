@@ -247,15 +247,14 @@ var species_list = {}
 /* Initialization */
 
 
-// Load species & trackset from template/API
-update_trackset();
-update_species();
-
 // Load data
 $(document).ready(function () {
 
-  // Initial load
-  setTimeout(update_tracks, 500);
+  // Load species from dropdown default value
+  update_species();
+
+  // Load tracks from API, then update the browser to match the defaults
+  update_trackset().then( update_tracks );
 });
 
 
@@ -338,7 +337,7 @@ $(document).ready(function () {
 
 // Get the list of tracks
 function update_trackset() {
-  fetch( "{{ url_for('gene_browser.get_tracks') }}" )
+  return fetch( "{{ url_for('gene_browser.get_tracks') }}" )
     .then( (response) => { return response.text();      } )
     .then( (text)     => { trackset = JSON.parse(text); } );
 }
