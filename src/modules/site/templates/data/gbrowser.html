@@ -308,39 +308,38 @@ function reload_tracks() {
 }
 
 $(document).ready(function () {
-  var div = $("#browser")[0], 
-      options = {
-        search: {
-          url: "{{ url_for('api_gene.api_search_combined', query='') }}$FEATURE$",
-          coords: 1,
-          resultsField: 'result'
-        },
-        showNavigation: true,
-        showKaryo: false,
-        reference: {
-          id: "WS276", // TODO: used to be {wormbase_version}, but there's no longer a single value for this
-          fastaURL: replace_tokens("{{ site_prefix }}/{{ release_path }}/{{ fasta_filename }}"),
-        },
-        locus: "{{ region }}",
-        tracks: [],
-      };
-      var browser = igv.createBrowser(div, options)
-                      .then(function(browser) {
-                        /*
-                          Bind browser events
-                        */
-                        browser.on('trackdragend', function(reference_frame, label) {
-                        });
+  var div = $("#browser")[0];
 
-                        // Detect track changes
-                        $(".track-select").on("change", function() {
-                          reload_tracks();
-                        });
+  // Set initial config options for browser
+  var options = {
+    search: {
+      url: "{{ url_for('api_gene.api_search_combined', query='') }}$FEATURE$",
+      coords: 1,
+      resultsField: 'result'
+    },
+    showNavigation: true,
+    showKaryo: false,
+    reference: {
+      id: "WS276", // TODO: used to be {wormbase_version}, but there's no longer a single value for this
+      fastaURL: replace_tokens("{{ site_prefix }}/{{ release_path }}/{{ fasta_filename }}"),
+    },
+    locus: "{{ region }}",
+    tracks: [],
+  };
 
-                      });
+  // Create browser
+  var browser = igv.createBrowser(div, options).then(function(browser) {
+
+    /* Bind browser events */
+    browser.on('trackdragend', function(reference_frame, label) {});
+
+    // Detect track changes
+    $(".track-select").on( "change", reload_tracks );
+
+  });
 
 
-function process_gene_search() {
+  function process_gene_search() {
     $("#loading-search-table").fadeOut();
     var gene = $('#gene-search').val();
     if (gene.length == 0) {
@@ -348,74 +347,77 @@ function process_gene_search() {
     } else {
       $("#orthologs").html("");
       $.ajax({
-           url: "{{ url_for('api_gene.api_search_combined', query='') }}" + gene,
-           method: "GET",
-           contentType: 'application/xml',
-           }).done(function(msg) {
-            row = Array();
-            $.each(msg, function(i,row) {
-                if ("chrom" in row) {
-                   link = row["chrom"] + ":" + row["start"] + "-" + row["end"];
-                } else {
-                    link = row["locus"];
-                }
-                gene_name = `<a onclick="set_position('${link}')" link='${link}' class='ortholink'>${row["locus"]}</a>`;
-                homolog_species = row["homolog_species"] || "<em>C. elegans</em>";
-                homolog_source = row["homolog_source"] || "Wormbase";
-                result = [gene_name, row['homolog_gene'] || row["gene_symbol"], homolog_species, row["homolog_source"] || "Wormbase"]  ;
-                result = "<tr><td>" + result.join("</td><td>") + "</td></tr>";
-                position = row["chrom"] + ":" + row["start"];
+          url:         "{{ url_for('api_gene.api_search_combined', query='') }}" + gene,
+          method:      "GET",
+          contentType: "application/xml",
+      }).done(function(msg) {
+          row = Array();
+          $.each(msg, function(i, row) {
+              if ("chrom" in row) {
+                  link = row["chrom"] + ":" + row["start"] + "-" + row["end"];
+              } else {
+                  link = row["locus"];
+              }
+              gene_name = `<a onclick="set_position('${link}')" link='${link}' class='ortholink'>${row["locus"]}</a>`;
+              result = [
+                  gene_name,
+                  row['homolog_gene']    || row["gene_symbol"],
+                  row["homolog_species"] || "<em>C. elegans</em>",
+                  row["homolog_source"]  || "Wormbase",
+              ];
+              result = "<tr><td>" + result.join("</td><td>") + "</td></tr>";
+              position = row["chrom"] + ":" + row["start"];
               $("#orthologs").append(result);
-            });
-            $("#g-search-table").fadeIn();
-            });
+          });
+          $("#g-search-table").fadeIn();
+      });
     }
-}
-
-// Make links work!
-$(".container-fluid").on("click", ".ortholink", function() {
-  igv.getBrowser().search($(this).attr("link"))
-});
-
-
-function gt_label(gt) {
-  // Generates a genotype label
-  r = ""
-  classes = [];
-  classes.push(`gt-${gt["GT"]}`);
-  FT = gt["FT"].split(";").join(" ");
-  classes.push(FT);
-  tt = "";
-  if (gt['FT'] != ['PASS']) {
-      tt = ` data-placement='bottom' title='${FT}' `;
   }
-  r += `<div class='label ttop ${classes.join(" ")}' ${tt} >`;
-  r += gt["SAMPLE"] + " : " + gt["TGT"];
-  r += "</div>";
-  return r
-}
 
-function draw_gt_set(genotype_set, genotype_val) {
+  // Make links work!
+  $(".container-fluid").on("click", ".ortholink", function() {
+    igv.getBrowser().search($(this).attr("link"))
+  });
+
+
+  function gt_label(gt) {
+    // Generates a genotype label
+    r = ""
+    classes = [];
+    classes.push(`gt-${gt["GT"]}`);
+    FT = gt["FT"].split(";").join(" ");
+    classes.push(FT);
+    tt = "";
+    if (gt['FT'] != ['PASS']) {
+      tt = ` data-placement='bottom' title='${FT}' `;
+    }
+    r += `<div class='label ttop ${classes.join(" ")}' ${tt} >`;
+    r += gt["SAMPLE"] + " : " + gt["TGT"];
+    r += "</div>";
+    return r
+  }
+
+  function draw_gt_set(genotype_set, genotype_val) {
     return genotype_set.filter(function(gt) { return gt['GT'] == genotype_val })
                        .map( gt_label )
                        .join(" ");
-
-}
-
-
-var typingTimer;                //timer identifier
-var doneTypingInterval = 1000;  //time in ms (5 seconds)
-
-// Ortholog search
-$("#gene-search").on("input", function(e) {
-  $("#loading-search-table").fadeIn();
-  clearTimeout(typingTimer);
-  typingTimer = setTimeout(process_gene_search, doneTypingInterval);
-})
+    // return genotype_set.filter( gt => gt['GT'] == genotype_val ).map( gt_label ).join(" ");
+  }
 
 
-// Initial load
-setTimeout(reload_tracks, 500);
+  var typingTimer;                //timer identifier
+  var doneTypingInterval = 1000;  //time in ms (5 seconds)
+
+  // Ortholog search
+  $("#gene-search").on("input", function(e) {
+    $("#loading-search-table").fadeIn();
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(process_gene_search, doneTypingInterval);
+  })
+
+
+  // Initial load
+  setTimeout(reload_tracks, 500);
 
 });
 
