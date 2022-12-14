@@ -200,7 +200,15 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
     'bam_bai_path':   TRACKS['paths']['bam_bai_path'],
     'fasta_filename': TRACKS['paths']['fasta_filename'],
 
+    # String replacement tokens
+    # Maps token to the field in Species object it should be replaced with
+    'tokens': {
+      '$WB':      'wormbase_version',
+      '$RELEASE': 'latest_release',
+      '$PRJ':     'project_number',
+    },
+
     # Misc
-    'fluid_container': True
+    'fluid_container': True,
   }
   return render_template('data/gbrowser.html', **VARS)

@@ -462,12 +462,13 @@ function set_position(coord) {
 
 
 
-// TODO: Move off of client side?
+// Replace string tokens with species values
+// TODO: Uses of species name ID in filenames not yet standardized, so we drop the 'c_' prefix for now
 function replace_tokens(filename) {
-  filename = filename.replaceAll('$WB',      species['wormbase_version']);
-  filename = filename.replaceAll('$RELEASE', species['latest_release']);
   filename = filename.replaceAll('$SPECIES', species['name'].substring(2));
-  filename = filename.replaceAll('$PRJ',     species['project_number']);
+  {% for token, field in tokens.items() %}
+  filename = filename.replaceAll('{{ token }}', species['{{ field }}']);
+  {% endfor %}
   return filename;
 }
 
@@ -475,9 +476,13 @@ function replace_tokens(filename) {
 function get_track(track_name) {
 
   // Retrieve or generate the track
+  // If track is in default set, use it
   if (track_name in trackset) {
     var track = trackset[track_name];
-  } else {
+  }
+
+  // If not, generate the track from a template
+  else {
     if (track_name.endsWith('bam')) {
       var track = fill_track_template('bam', track_name.substring(0, track_name.length - 4));
     } else {
