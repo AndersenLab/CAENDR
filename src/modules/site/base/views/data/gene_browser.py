@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 from string import Template
 
-from caendr.models.error import EnvVarError
+from caendr.models.error import EnvVarError, InternalError
 from caendr.models.datastore.dataset_release import DatasetRelease
 from caendr.models.species import Species
 from flask import (render_template,
@@ -104,6 +104,43 @@ def get_tracks():
 
 
 
+@gene_browser_bp.route('/gbrowser/strains/<species>', methods=['GET'])
+def get_strains(species=None):
+  '''
+  Get the list of strains for the given species.
+  '''
+
+  if species == 'c_elegans':
+    result = [
+      {
+        'strain':  strain.strain,
+        'isotype': strain.isotype,
+      }
+      for strain in get_isotypes()
+    ]
+  elif species == 'c_briggsae':
+    result = [
+      {
+        'strain':  "BRC20069",
+        'isotype': "BRC20069",
+      },
+      {
+        'strain':  "BRC20075",
+        'isotype': "BRC20075",
+      },
+      {
+        'strain':  "BRC20102",
+        'isotype': "BRC20102",
+      },
+    ]
+  else:
+    raise InternalError()
+
+  # Send back in JSON format
+  return jsonify(result)
+
+
+
 @gene_browser_bp.route('/gbrowser')
 @gene_browser_bp.route('/gbrowser/')
 @gene_browser_bp.route('/gbrowser/<release_version>')
@@ -134,7 +171,6 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
     },
 
     # Data
-    'strain_listing': get_isotypes(),
     'region':         region,
     'query':          query,
     'species_list':   SPECIES_LIST,

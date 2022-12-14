@@ -144,38 +144,19 @@ th {
     </div> {# /col-lg-4 #}
 
 
-
-
+    {# Right column -- Strain table #}
     <div class="col-lg-4 col-md-4 col-sm-12 ">
 
       <h5>Isotype (reference strain) <a href="{{ url_for('primary.help_item', filename = 'Genome-Browser') }}#ind-strains"><span class="glyphicon glyphicon-question-sign"></span></a></h5>
 
+      {# Strain table search bar #}
       <form class="form-inline pull-xs-right">
         <input class="form-control" id="filter" type="text" style="width:100%;  margin-bottom: 5px;" placeholder="e.g. JU360" autocomplete="off">
       </form>
 
+      {# Strain table -- filled in by update_strains() #}
       <table id='browser_strain_list' class="table table-striped table-hover table-condensed">
-
-        <tbody class="searchable">
-        {% for strain in strain_listing %}
-          <tr>
-            <td>
-              {{ strain.isotype }} ({{ strain.strain }})
-            </td>
-            <td>
-                <label>
-                <input type="checkbox" class="track-select isotype-item sample-track" value="{{ strain.strain }}" />
-                VCF</label>
-            </td>
-            <td>
-                <label>
-                <input type="checkbox" class="track-select sample-track-alignment" value="{{ strain.strain }}_bam" />
-                BAM</label>
-            </td>
-          </tr>
-        {% endfor %}
-        </tbody>
-
+        <tbody id="browser_strain_list_body" class="searchable"></tbody>
       </table>
     </div> {# /col-lg-4 #}
 </div>
@@ -240,6 +221,9 @@ var species_list = {}
 {% endfor %}
 
 
+var strain_list = [];
+
+
 
 /* Initialization */
 
@@ -258,7 +242,11 @@ $(document).ready(function () {
   {% endfor %}
 
   // Load tracks from API, then populate the browser with the default tracks
-  update_trackset().then( update_tracks );
+  fetch_trackset( update = true );
+
+  // Load strains for current species from API, then populate table with results
+  fetch_strains( update = true );
+
 });
 
 
@@ -336,15 +324,27 @@ $(document).ready(function () {
 
 
 
-/* Update functions */
+/* Fetch functions */
 
 
 // Get the list of tracks
-function update_trackset() {
-  return fetch( "{{ url_for('gene_browser.get_tracks') }}" )
+function fetch_trackset( update = false ) {
+  fetch( "{{ url_for('gene_browser.get_tracks') }}" )
     .then( (response) => { return response.text();      } )
-    .then( (text)     => { trackset = JSON.parse(text); } );
+    .then( (text)     => { trackset = JSON.parse(text); } )
+    .then( ()         => { if (update) update_tracks(); } );
 }
+
+function fetch_strains( update = false ) {
+  fetch( "{{ url_for('gene_browser.get_strains', species='') }}" + species.name )
+    .then( (response) => { return response.text();         } )
+    .then( (text)     => { strain_list = JSON.parse(text); } )
+    .then( ()         => { if (update) update_strains();   } );
+}
+
+
+
+/* Update functions */
 
 function update_tracks() {
   $('.track-select').each(function(i, obj) {
@@ -365,6 +365,35 @@ function update_tracks() {
   });
 }
 
+function update_strains() {
+
+  // Clear the current contents of the table
+  $("#browser_strain_list_body").html("");
+
+  // Map each strain to a table row
+  result = strain_list.map((strain) => `
+    <tr>
+      <td>
+        ${ strain.isotype } ${ (strain.isotype != strain.strain) ? "(" + strain.strain + ")" : "" }
+      </td>
+      <td><label>
+          <input type="checkbox" class="track-select isotype-item sample-track" value="${ strain.strain }" />
+          VCF
+      </label></td>
+      <td><label>
+          <input type="checkbox" class="track-select sample-track-alignment" value="${ strain.strain }_bam" />
+          BAM
+      </label></td>
+    </tr>
+  `);
+
+  // Combine the table rows into one string and insert into the table body
+  $("#browser_strain_list_body").html(result.join(''));
+
+  // Detect track changes
+  $(".track-select").on( "change", update_tracks );
+}
+
 // Set up species variable & set to match species selector
 function update_species() {
   species_id = document.getElementById('species-selector').value;
@@ -372,6 +401,8 @@ function update_species() {
 
   document.getElementById('wormbase_version').innerHTML = species['wormbase_version'];
   document.getElementById('release_version').innerHTML  = species['latest_release'];
+
+  fetch_strains( update = true );
 }
 
 
