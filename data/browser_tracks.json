@@ -61,7 +61,7 @@
         }
     },
     "templates": {
-        "$STRAIN": {
+        "vcf": {
             "filename":             "strain/vcf/$STRAIN.$RELEASE.vcf.gz",
             "index_suffix":         ".tbi",
             "checked":              false,
@@ -76,7 +76,7 @@
                 "searchable":       false
             }
         },
-        "${STRAIN}_bam": {
+        "bam": {
             "filename":             "c_$SPECIES/$STRAIN.bam",
             "is_bam":               true,
             "index_suffix":         ".bai",

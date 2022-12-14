@@ -88,19 +88,35 @@ def get_tracks():
   '''
   Get the list of browser tracks.
   '''
+  return jsonify(TRACKS['tracks'])
 
-  # Initialize trackset with non-templated tracks
-  trackset = { key: val for key, val in TRACKS['tracks'].items() }
 
-  # Generate tracks for each strain by filling out templates
-  trackset.update({
-    replace_tokens(template_name, strain=strain.strain): replace_tokens_recursive(template, strain=strain.strain)
-      for template_name, template in TRACKS['templates'].items()
-      for strain in get_isotypes()
+@gene_browser_bp.route('/gbrowser/templates', methods=['GET'])
+def get_track_templates():
+  '''
+  Get the list of browser track templates for strains.
+  Returns templates as JSON strings, so every instantiation of the template is a new copy.
+  '''
+  return jsonify({
+    key: json.dumps(template)
+      for key, template in TRACKS['templates'].items()
   })
 
-  # Send back in JSON format
-  return jsonify(trackset)
+
+@gene_browser_bp.route('/gbrowser/templates/<template>',          methods=['GET'])
+@gene_browser_bp.route('/gbrowser/templates/<template>/<strain>', methods=['GET'])
+def get_track_template(template = '', strain = None):
+  '''
+  Get a specific browser track template, potentially filled in with a given strain.
+  '''
+
+  # If no specific strain requested, send back the template as-is
+  if strain is None:
+    return jsonify(TRACKS['templates'][template])
+
+  # Otherwise, replace the strain name in the template before returning
+  else:
+    return jsonify(replace_tokens_recursive(TRACKS['templates'][template], strain=strain))
 
 
 

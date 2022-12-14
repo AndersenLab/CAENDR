@@ -223,6 +223,8 @@ var species_list = {}
 
 var strain_list = [];
 
+var templates = {};
+
 
 
 /* Initialization */
@@ -246,6 +248,8 @@ $(document).ready(function () {
 
   // Load strains for current species from API, then populate table with results
   fetch_strains( update = true );
+
+  fetch_templates();
 
 });
 
@@ -333,6 +337,12 @@ function fetch_trackset( update = false ) {
     .then( (response) => { return response.text();      } )
     .then( (text)     => { trackset = JSON.parse(text); } )
     .then( ()         => { if (update) update_tracks(); } );
+}
+
+function fetch_templates() {
+  fetch( "{{ url_for('gene_browser.get_track_templates') }}" )
+    .then( (response) => { return response.text();       } )
+    .then( (text)     => { templates = JSON.parse(text); } );
 }
 
 function fetch_strains( update = false ) {
@@ -463,7 +473,19 @@ function replace_tokens(filename) {
 
 // TODO: Move off of client side?
 function get_track(track_name) {
-  var track  = trackset[track_name];
+
+  // Retrieve or generate the track
+  if (track_name in trackset) {
+    var track = trackset[track_name];
+  } else {
+    if (track_name.endsWith('bam')) {
+      var track = fill_track_template('bam', track_name.substring(0, track_name.length - 4));
+    } else {
+      var track = fill_track_template('vcf', track_name);
+    }
+  }
+
+  // Get track params
   var params = track.params;
 
   // Get the path to the file in GCP
@@ -478,6 +500,26 @@ function get_track(track_name) {
   }
 
   return params;
+}
+
+
+
+function fill_track_template(template_name, strain_name) {
+  var template = JSON.parse( templates[template_name] );
+
+  // Fill in strain name in filename
+  template['filename'] = template['filename'].replaceAll("${STRAIN}", strain_name);
+  template['filename'] = template['filename'].replaceAll("$STRAIN",   strain_name);
+
+  // Fill in strain name in params
+  for (var key in template['params']) {
+    if (typeof template['params'][key] == "string") {
+      template['params'][key] = template['params'][key].replaceAll("${STRAIN}", strain_name);
+      template['params'][key] = template['params'][key].replaceAll("$STRAIN",   strain_name);
+    }
+  }
+
+  return template;
 }
 
 
