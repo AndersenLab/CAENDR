@@ -58,6 +58,22 @@
                 "displayMode":      "EXPANDED",
                 "visibilityWindow": 20000000
             }
+        },
+        "Transposons": {
+            "filename":             "???.bed.gz",
+            "checked":              false,
+            "hidden":               true,
+            "source": {
+                "title":            "Laricchia et al. 2017",
+                "url":              "https://andersenlab.org/publications/2017Laricchia.pdf"
+            },
+            "params": {
+                "name":             "Transposons",
+                "order":            6,
+                "displayMode":      "EXPANDED",
+                "color":            "#34CB80",
+                "visibilityWindow": 20000000
+            }
         }
     },
     "templates": {

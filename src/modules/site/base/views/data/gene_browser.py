@@ -32,6 +32,13 @@ path = Path(os.path.dirname(__file__))
 with open(f"{str(path.parents[5])}/data/browser_tracks.json") as f:
   TRACKS = json.load(f)
 
+# Filter out any hidden tracks
+TRACKS['tracks'] = {
+  key: val
+    for key, val in TRACKS['tracks'].items()
+    if not val.get('hidden', False)
+}
+
 
 # Load species list
 SPECIES_LIST_FILE = os.environ['SPECIES_LIST_FILE']
