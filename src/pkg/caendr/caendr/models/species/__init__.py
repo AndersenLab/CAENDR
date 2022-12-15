@@ -52,6 +52,7 @@ class Species:
         yield from {
             'name':             self.name,
             'scientific_name':  self.scientific_name,
+            'short_name':       self.short_name,
             'project_number':   self.proj_num,
             'wormbase_version': self.wb_ver,
             'sva_version':      self.sva_ver,
@@ -68,6 +69,12 @@ class Species:
     @name.setter
     def name(self, new_name: str):
         self._name = new_name
+
+
+    @property
+    def short_name(self):
+        genus, species = self.scientific_name.split()
+        return f"{genus[0]}. {species}"
 
 
     ## Property: proj_num (Project Number) ##

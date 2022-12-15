@@ -97,7 +97,7 @@ th {
       <h5>Species</h5>
       <select name="species" id="species-selector" onchange="update_species()">
         {% for s in species_list %}
-          <option value="{{s}}">{{species_list[s]["scientific_name"]}}</option>
+          <option value="{{s}}">{{species_list[s]["short_name"]}}</option>
         {% endfor %}
       </select>
 
@@ -443,7 +443,7 @@ function process_gene_search() {
             result = [
                 gene_name,
                 row['homolog_gene']    || row["gene_symbol"],
-                row["homolog_species"] || "<em>C. elegans</em>",
+                row["homolog_species"] || `<em>${ species_list[ row["species_name"] ]["short_name"] }</em>`,
                 row["homolog_source"]  || "Wormbase",
             ];
             result = "<tr><td>" + result.join("</td><td>") + "</td></tr>";
