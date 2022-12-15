@@ -169,11 +169,14 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
   dataset_release = get_dataset_release_or_latest(release_version)
 
   # Allow WB version to be overridden w URL variable
-  wormbase_version_override = WormbaseVersion( request.args.get('wormbase_version', None) )
+  wormbase_version_override_str = request.args.get('wormbase_version', None)
+  if WormbaseVersion.validate(wormbase_version_override_str):
+    wormbase_version = WormbaseVersion(wormbase_version_override_str)
 
   # Default to version 276
-  # wormbase_version = wormbase_version_override or dataset_release.wormbase_version
-  wormbase_version = wormbase_version_override or WormbaseVersion('WS276')
+  else:
+    # wormbase_version = wormbase_version_override or dataset_release.wormbase_version
+    wormbase_version = WormbaseVersion('WS276')
 
   # dataset_release_prefix = '//storage.googleapis.com/elegansvariation.org/releases'
   # track_url_prefix       = '//storage.googleapis.com/elegansvariation.org/browser_tracks'
