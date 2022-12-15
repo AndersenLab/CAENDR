@@ -11,6 +11,8 @@ from flask import Response, Blueprint, render_template, request, url_for, jsonif
 from base.utils.auth import jwt_required, admin_required, get_current_user
 from base.forms import PairwiseIndelForm
 
+from caendr.models.datastore.gene_browser_tracks import TRACKS, TRACK_PATHS, TRACK_TEMPLATES
+from caendr.models.species import SPECIES_LIST
 from caendr.services.dataset_release import get_browser_tracks_path
 from caendr.utils.constants import CHROM_NUMERIC
 from caendr.utils.data import get_object_hash
@@ -29,18 +31,41 @@ from caendr.utils.constants import CHROM_NUMERIC
 @indel_primer_bp.route('/pairwise_indel_finder', methods=['GET'])
 @jwt_required()
 def indel_primer():
-  form = PairwiseIndelForm(request.form)
-  title = "Pairwise Indel Finder"
-  strains = get_sv_strains()
-  chroms = CHROM_NUMERIC.keys()
-  fluid_container = True
-  alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
-  
-  # TODO: REPLACE THESE STATIC VALUES
-  divergent_track_summary_url = "//storage.googleapis.com/elegansvariation.org/browser_tracks/lee2020.divergent_regions_all.bed.gz"
-  fasta_url = "//storage.googleapis.com/elegansvariation.org/browser_tracks/c_elegans.PRJNA13758.WS276.genomic.fa"
-  
-  return render_template('tools/indel_primer/submit.html', **locals())
+
+  # Construct path to track folder
+  track_path = f'{ TRACK_PATHS["site_prefix"] }/{ TRACK_PATHS["release_path"] }'
+
+  # Construct variables and render template
+  return render_template('tools/indel_primer/submit.html', **{
+
+    # Page info
+    "title": "Pairwise Indel Finder",
+    "form":  PairwiseIndelForm(request.form),
+    "alt_parent_breadcrumb": {
+      "title": "Tools",
+      "url":   url_for('tools.tools')
+    },
+
+    # Data
+    "strains":      get_sv_strains(),
+    "chroms":       CHROM_NUMERIC.keys(),
+    "species_list": SPECIES_LIST,
+
+    # Data locations
+    "divergent_track_summary_url": f'{track_path}/{ TRACKS["Divergent Regions Summary"]["filename"] }',
+    "fasta_url":                   f'{track_path}/{ TRACK_PATHS["fasta_filename"]                   }',
+
+    # String replacement tokens
+    # Maps token to the field in Species object it should be replaced with
+    'tokens': {
+      '$WB':      'wormbase_version',
+      '$RELEASE': 'latest_release',
+      '$PRJ':     'project_number',
+    },
+
+    # Misc
+    "fluid_container": True,
+  })
 
 
 

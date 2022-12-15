@@ -7,8 +7,9 @@ from string import Template
 
 from caendr.models.error import EnvVarError, InternalError
 from caendr.models.datastore.dataset_release import DatasetRelease
+from caendr.models.datastore.gene_browser_tracks import TRACKS, TRACK_PATHS, TRACK_TEMPLATES
 from caendr.models.datastore.wormbase import WormbaseVersion
-from caendr.models.species import Species
+from caendr.models.species import SPECIES_LIST
 from flask import (render_template,
                     Blueprint,
                     jsonify,
@@ -23,29 +24,6 @@ from caendr.services.dataset_release import get_dataset_release, get_latest_data
 gene_browser_bp = Blueprint('gene_browser',
                         __name__,
                         template_folder='templates')
-
-
-# Get path to current file
-path = Path(os.path.dirname(__file__))
-
-# Load the JSON file with the browser tracks
-# with open(f"{str(path.parents[5])}/{os.environ['MODULE_GENE_BROWSER_TRACKS_JSON_PATH']}") as f:
-with open(f"{str(path.parents[5])}/data/browser_tracks.json") as f:
-  TRACKS = json.load(f)
-
-# Filter out any hidden tracks
-TRACKS['tracks'] = {
-  key: val
-    for key, val in TRACKS['tracks'].items()
-    if not val.get('hidden', False)
-}
-
-
-# Load species list
-SPECIES_LIST_FILE = os.environ['SPECIES_LIST_FILE']
-if not SPECIES_LIST_FILE:
-    raise EnvVarError()
-SPECIES_LIST = Species.parse_json_file(SPECIES_LIST_FILE)
 
 
 
@@ -90,7 +68,7 @@ def get_tracks():
   '''
   Get the list of browser tracks.
   '''
-  return jsonify(TRACKS['tracks'])
+  return jsonify(TRACKS)
 
 
 @gene_browser_bp.route('/gbrowser/templates', methods=['GET'])
@@ -101,7 +79,7 @@ def get_track_templates():
   '''
   return jsonify({
     key: json.dumps(template)
-      for key, template in TRACKS['templates'].items()
+      for key, template in TRACK_TEMPLATES.items()
   })
 
 
@@ -114,11 +92,11 @@ def get_track_template(template = '', strain = None):
 
   # If no specific strain requested, send back the template as-is
   if strain is None:
-    return jsonify(TRACKS['templates'][template])
+    return jsonify(TRACK_TEMPLATES[template])
 
   # Otherwise, replace the strain name in the template before returning
   else:
-    return jsonify(replace_tokens_recursive(TRACKS['templates'][template], strain=strain))
+    return jsonify(replace_tokens_recursive(TRACK_TEMPLATES[template], strain=strain))
 
 
 
@@ -196,13 +174,13 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
     'species_list':   SPECIES_LIST,
 
     # Tracks
-    'default_tracks': TRACKS['tracks'],
+    'default_tracks': TRACKS,
 
     # Data locations
-    'site_prefix':    TRACKS['paths']['site_prefix'],
-    'release_path':   TRACKS['paths']['release_path'],
-    'bam_bai_path':   TRACKS['paths']['bam_bai_path'],
-    'fasta_filename': TRACKS['paths']['fasta_filename'],
+    'site_prefix':    TRACK_PATHS['site_prefix'],
+    'release_path':   TRACK_PATHS['release_path'],
+    'bam_bai_path':   TRACK_PATHS['bam_bai_path'],
+    'fasta_filename': TRACK_PATHS['fasta_filename'],
 
     # String replacement tokens
     # Maps token to the field in Species object it should be replaced with

@@ -1,10 +1,10 @@
 import json
-import re
+import os
 
 from logzero import logger
 
 from caendr.models.datastore import WormbaseVersion, WormbaseProjectNumber
-from caendr.models.error import BadRequestError, InternalError
+from caendr.models.error import BadRequestError, EnvVarError
 
 
 
@@ -140,3 +140,11 @@ class Species:
     def sva_ver(self, new_sva_ver: str):
         # TODO: validate -- looks like this should be the 8 digit date string
         self._sva_ver = new_sva_ver
+
+
+
+# Load species list
+SPECIES_LIST_FILE = os.environ['SPECIES_LIST_FILE']
+if not SPECIES_LIST_FILE:
+    raise EnvVarError()
+SPECIES_LIST = Species.parse_json_file(SPECIES_LIST_FILE)

@@ -82,25 +82,30 @@
 {% endblock %}
 
 {% block script %}
+{% from "_includes/macros.html" import unpack_species_list %}
 
 <script>
+
+/* Species List */
+const species_list = {{ unpack_species_list(species_list) }};
 
 /*
 	IGV Browser
 */
-var browserDiv = $("#browser"),
-                options = {
-                    showNavigation: true,
-                    showKaryo: false,
-                    reference: {
-                      id: "WS276",
-                      fastaURL: "{{ fasta_url }}",
-                    },
-                };
+var browserDiv = $("#browser");
+var options = {
+    showNavigation: true,
+    showKaryo: false,
+    reference: {
+      id: "WS276",
+      fastaURL: replace_tokens("{{ fasta_url }}"),
+    },
+};
 
+// TODO: Pull from JSON
 var divergent_track_summary = {
                     name: "Divergent Regions",
-                    url: "{{ divergent_track_summary_url }}",
+                    url: replace_tokens("{{ divergent_track_summary_url }}"),
                     order: 6,
                     height: 40,
                     displayMode: "EXPANDED",
@@ -292,6 +297,18 @@ $(document).ready(function(){
     submitForm()
 
 });
+
+
+// Replace string tokens with species values
+// TODO: Uses of species name ID in filenames not yet standardized, so we drop the 'c_' prefix for now
+function replace_tokens(filename) {
+  filename = filename.replaceAll('$SPECIES', species_list['c_elegans']['name'].substring(2));
+  {% for token, field in tokens.items() %}
+  filename = filename.replaceAll('{{ token }}', species_list['c_elegans']['{{ field }}']);
+  {% endfor %}
+  return filename;
+}
+
 </script>
 
 {% endblock %}
