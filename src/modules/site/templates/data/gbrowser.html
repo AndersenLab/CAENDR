@@ -225,6 +225,9 @@ var strain_list = [];
 
 var templates = {};
 
+// Location for browser
+const browser_div = $("#browser")[0];
+
 
 
 /* Initialization */
@@ -236,34 +239,10 @@ $(document).ready(function () {
   // Load species from dropdown default value
   update_species();
 
-  // Set default checked tracks
-  {% for name, track in default_tracks.items() %}
-    {% if track.checked %}
-      document.getElementById("{{name}}_checkbox").checked = true;
-    {% endif %}
-  {% endfor %}
-
-  // Load tracks from API, then populate the browser with the default tracks
-  fetch_trackset( update = true );
-
-  // Load strains for current species from API, then populate table with results
-  fetch_strains( update = true );
-
-  fetch_templates();
-
-});
-
-
-// Set up gene browser tool & callbacks
-$(document).ready(function () {
-
-  // Location for browser
-  var div = $("#browser")[0];
-
   // Set initial config options for browser
-  var options = {
+  const options = {
     search: {
-      url: "{{ url_for('api_gene.api_search_combined', query='') }}$FEATURE$",
+      url: "{{ url_for('api_gene.api_search_combined', species='', query='') }}$FEATURE$",
       coords: 1,
       resultsField: 'result'
     },
@@ -278,7 +257,7 @@ $(document).ready(function () {
   };
 
   // Create browser
-  var browser = igv.createBrowser(div, options).then(function(browser) {
+  var browser = igv.createBrowser(browser_div, options).then(function(browser) {
 
     /* Bind browser events */
     browser.on('trackdragend', function(reference_frame, label) {});
@@ -288,12 +267,10 @@ $(document).ready(function () {
 
   });
 
-
   // Make links work!
   $(".container-fluid").on("click", ".ortholink", function() {
     igv.getBrowser().search($(this).attr("link"))
   });
-
 
   // Ortholog search
   $("#gene-search").on("input", function(e) {
@@ -302,7 +279,29 @@ $(document).ready(function () {
     typingTimer = setTimeout(process_gene_search, doneTypingInterval);
   })
 
+  // Set default checked tracks
+  {% for name, track in default_tracks.items() %}
+    {% if track.checked %}
+      document.getElementById("{{name}}_checkbox").checked = true;
+    {% endif %}
+  {% endfor %}
 
+  // Load tracks from API, then populate the browser with the default tracks
+  fetch_trackset( update = true );
+
+  // Load strains for current species from API, then populate table with results
+  fetch_strains( update = true );
+
+  // Load browser track templates
+  fetch_templates();
+
+});
+
+
+// Set up isotype search table
+$(document).ready(function () {
+
+  // Isotype search
   (function($) {
       var patterns = [];
       $('#filter').keyup(function() {
@@ -316,7 +315,7 @@ $(document).ready(function () {
       })
   }(jQuery));
 
-
+  // Isotype search -- prevent enter key from reloading page
   $('#filter').keydown(function(event) {
       if (event.keyCode == 13) {
           event.preventDefault();
