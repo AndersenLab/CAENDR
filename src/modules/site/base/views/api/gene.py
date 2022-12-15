@@ -16,7 +16,8 @@ api_gene_bp = Blueprint('api_gene',
 def api_search_homologs(query=""):
   query = request.args.get('query') or query
   query = str(query).lower()
-  return search_homologs(query)
+  species = request.args.get('species') or None
+  return search_homologs(query, species=species)
 
 
 @api_gene_bp.route('/search/gene/<string:query>')
@@ -25,7 +26,8 @@ def api_search_homologs(query=""):
 def api_search_genes(query=""):
   query = request.args.get('query') or query
   query = str(query).lower()
-  return search_genes(query)
+  species = request.args.get('species') or None
+  return search_genes(query, species=species)
 
 
 @api_gene_bp.route('/search/<string:query>')
@@ -34,7 +36,8 @@ def api_search_genes(query=""):
 def api_search_combined(query=""):
   query = request.args.get('query') or query
   query = str(query).lower()
-  return (search_genes(query) + search_homologs(query))[0:10]
+  species = request.args.get('species') or None
+  return (search_genes(query, species=species) + search_homologs(query, species=species))[0:10]
 
 
 @api_gene_bp.route('/search/interval/<string:gene>') # Seach for IGV Browser

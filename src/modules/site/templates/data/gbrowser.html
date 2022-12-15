@@ -428,7 +428,7 @@ function process_gene_search() {
   } else {
     $("#orthologs").html("");
     $.ajax({
-        url:         "{{ url_for('api_gene.api_search_combined', query='') }}" + gene,
+        url:         "{{ url_for('api_gene.api_search_combined', query='') }}" + gene + '?species=' + species.name,
         method:      "GET",
         contentType: "application/xml",
     }).done(function(msg) {
