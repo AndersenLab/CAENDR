@@ -7,6 +7,7 @@ from string import Template
 
 from caendr.models.error import EnvVarError, InternalError
 from caendr.models.datastore.dataset_release import DatasetRelease
+from caendr.models.datastore.wormbase import WormbaseVersion
 from caendr.models.species import Species
 from flask import (render_template,
                     Blueprint,
@@ -54,12 +55,6 @@ def is_valid_release_version(value = None):
   if value is None:
     return False
   return value.isdigit()
-
-def is_valid_wormbase_version(value = None):
-  if value is None:
-    return False
-  regex = r"^ws[0-9]+$"
-  return re.match(regex, value, flags=re.IGNORECASE) is not None
 
 def get_dataset_release_or_latest(release_version = None):
   if release_version is None or not is_valid_release_version(release_version):
@@ -173,13 +168,12 @@ def get_strains(species=None):
 def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
   dataset_release = get_dataset_release_or_latest(release_version)
 
-  wormbase_version_override = request.args.get('wormbase_version', None)
-  if (wormbase_version_override is not None) and is_valid_wormbase_version(wormbase_version_override):
-    wormbase_version = wormbase_version_override.upper()
-  else:
-    wormbase_version = dataset_release.wormbase_version    
-    # OVERRIDE wormbase_version  (default to 276 until 283 IGB data is available) 
-    wormbase_version = 'WS276'
+  # Allow WB version to be overridden w URL variable
+  wormbase_version_override = WormbaseVersion( request.args.get('wormbase_version', None) )
+
+  # Default to version 276
+  # wormbase_version = wormbase_version_override or dataset_release.wormbase_version
+  wormbase_version = wormbase_version_override or WormbaseVersion('WS276')
 
   # dataset_release_prefix = '//storage.googleapis.com/elegansvariation.org/releases'
   # track_url_prefix       = '//storage.googleapis.com/elegansvariation.org/browser_tracks'

@@ -3,6 +3,7 @@ import re
 
 from logzero import logger
 
+from caendr.models.datastore import WormbaseVersion, WormbaseProjectNumber
 from caendr.models.error import BadRequestError, InternalError
 
 
@@ -38,6 +39,7 @@ class Species:
 
 
 
+    ## JSON ##
 
     @classmethod
     def parse_json_file(cls, filename):
@@ -60,6 +62,7 @@ class Species:
         }.items()
 
 
+
     ## Property: name (Species Name) ##
 
     @property
@@ -77,16 +80,28 @@ class Species:
         return f"{genus[0]}. {species}"
 
 
+
     ## Property: proj_num (Project Number) ##
 
     @property
     def proj_num(self):
+
+        # Throw an error if trying to get the value before it's been set
+        if self._proj_num is None:
+            logger.warning(f"E_NOT_SET: 'proj_num' (WormBase project number) for species {self.name}")
+            raise BadRequestError()
+
+        # Otherwise, return the value
         return self._proj_num
 
     @proj_num.setter
     def proj_num(self, new_proj_num):
-        # TODO: Validate?
-        self._proj_num = new_proj_num
+        if new_proj_num is None:
+            logger.warning(f"Removing WormBase project number for species {self.name}")
+            self._proj_num = None
+        else:
+            self._proj_num = WormbaseProjectNumber(new_proj_num)
+
 
 
     ## Property: wb_ver (WormBase Version) ##
@@ -95,7 +110,7 @@ class Species:
     def wb_ver(self):
 
         # Throw an error if trying to get the version before it's been set
-        if not self._wb_ver:
+        if self._wb_ver is None:
             logger.warning(f"E_NOT_SET: 'wb_ver' (WormBase version) for species {self.name}")
             raise BadRequestError()
 
@@ -104,15 +119,12 @@ class Species:
 
     @wb_ver.setter
     def wb_ver(self, new_wb_ver: str):
+        if new_wb_ver is None:
+            logger.warning(f"Removing WormBase version for species {self.name}")
+            self._wb_ver = None
+        else:
+            self._wb_ver = WormbaseVersion(new_wb_ver)
 
-        # Validate desired new value matches expected format 'WS###', e.g. 'WS276'
-        # TODO: Handle WormBase ParaSite
-        if not re.match(r'^WS[0-9]+$', new_wb_ver):
-            logger.warning(f'Invalid WormBase Version String: "{new_wb_ver}"')
-            raise InternalError()
-
-        # If valid, set the new value
-        self._wb_ver = new_wb_ver
 
 
     ## Property: sva_ver (Strain Variant Annotation Version) ##
