@@ -109,7 +109,7 @@ th {
             <input id="{{ name }}_checkbox" type="checkbox" class="track-select normal-track" value="{{ name }}" />
             {{ name }}
             {% if 'source' in track %}
-              <br />(<a href="{{ track.source.url }}" target='_blank'>{{ track.source.title }}</a>)
+              <br />(<a class="track-source-link" href="{{ track.source.url }}" target='_blank'>{{ track.source.title }}</a>)
             {% endif %}
           </label>
         </div>
@@ -285,6 +285,11 @@ $(document).ready(function () {
       document.getElementById("{{name}}_checkbox").checked = true;
     {% endif %}
   {% endfor %}
+
+  // Italicize 'et al.' in track sources
+  $('.track-source-link').each((i, obj) => {
+    obj.innerHTML = obj.innerHTML.replaceAll('et al.', '<em>et al.</em>');
+  });
 
   // Load tracks from API, then populate the browser with the default tracks
   fetch_trackset( update = true );
