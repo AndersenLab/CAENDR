@@ -46,7 +46,5 @@ class ETLManager:
         load_table,
         load_genes_summary,
         load_genes,
-        load_orthologs,
-        load_homologs,
         load_strain_annotated_variants,
     )

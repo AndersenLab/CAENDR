@@ -92,36 +92,36 @@ def load_genes(self, db):
     logger.info(f'Gene Summary: {result_summary}')
 
 
-def load_orthologs(self, db):
-    '''
-      Extracts ortholog information from WormBase ortholog file and loads it into the CaeNDR database.
+# def load_orthologs(self, db):
+#     '''
+#       Extracts ortholog information from WormBase ortholog file and loads it into the CaeNDR database.
 
-      Args:
-        db (SQLAlchemy): [SQLAlchemy db instance to insert into.]
-    '''
-    logger.info('Loading orthologs from WormBase')
-    self.load_table(
-        db,
-        table       = Homolog,
-        generator   = parse_orthologs,
-        fetch_funcs = [ self.dataset_manager.fetch_ortholog_db ]
-    )
+#       Args:
+#         db (SQLAlchemy): [SQLAlchemy db instance to insert into.]
+#     '''
+#     logger.info('Loading orthologs from WormBase')
+#     self.load_table(
+#         db,
+#         table       = Homolog,
+#         generator   = parse_orthologs,
+#         fetch_funcs = [ self.dataset_manager.fetch_ortholog_db ]
+#     )
 
 
-def load_homologs(self, db):
-    '''
-      Extracts homolog information from NIH file and loads it into the CaeNDR database.
+# def load_homologs(self, db):
+#     '''
+#       Extracts homolog information from NIH file and loads it into the CaeNDR database.
 
-      Args:
-        db (SQLAlchemy): [SQLAlchemy db instance to insert into.]
-    '''
-    logger.info('Loading homologenes from NIH homologene.data file')
-    self.load_table(
-        db,
-        table       = Homolog,
-        generator   = parse_homologene,
-        fetch_funcs = [ self.dataset_manager.fetch_homologene_db ]
-    )
+#       Args:
+#         db (SQLAlchemy): [SQLAlchemy db instance to insert into.]
+#     '''
+#     logger.info('Loading homologenes from NIH homologene.data file')
+#     self.load_table(
+#         db,
+#         table       = Homolog,
+#         generator   = parse_homologene,
+#         fetch_funcs = [ self.dataset_manager.fetch_homologene_db ]
+#     )
 
 
 def load_strain_annotated_variants(self, db):

@@ -134,9 +134,6 @@ class DatasetManager:
         fetch_gene_gff_db,
         fetch_gene_gtf_db,
         fetch_gene_ids_db,
-        fetch_homologene_db,
-        fetch_ortholog_db,
-        fetch_taxon_id_db,
     )
 
     from ._db_internal import (

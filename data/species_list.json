@@ -5,8 +5,6 @@
         "gene_prefix":      "",
         "wb_ver":           "WS283",
         "sva_ver":          "20220216",
-        "homolog_prefix":   "CELE_",
-        "homolog_id":       6239,
         "latest_release":   "20220216",
         "browser_tracks": [
             "Genes",
@@ -21,8 +19,6 @@
         "gene_prefix":      "Cbr-",
         "wb_ver":           "WS285",
         "sva_ver":          "XXXXXXXX",
-        "homolog_prefix":   "",
-        "homolog_id":       0,
         "latest_release":   "20210803",
         "browser_tracks": [
             "Genes",

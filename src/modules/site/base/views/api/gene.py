@@ -10,14 +10,14 @@ api_gene_bp = Blueprint('api_gene',
                         __name__)
 
 
-@api_gene_bp.route('/search/homologene/<string:query>')
-@cache.memoize(60*60)
-@jsonify_request
-def api_search_homologs(query=""):
-  query = request.args.get('query') or query
-  query = str(query).lower()
-  species = request.args.get('species') or None
-  return search_homologs(query, species=species)
+# @api_gene_bp.route('/search/homologene/<string:query>')
+# @cache.memoize(60*60)
+# @jsonify_request
+# def api_search_homologs(query=""):
+#   query = request.args.get('query') or query
+#   query = str(query).lower()
+#   species = request.args.get('species') or None
+#   return search_homologs(query, species=species)
 
 
 @api_gene_bp.route('/search/gene/<string:query>')
@@ -30,14 +30,14 @@ def api_search_genes(query=""):
   return search_genes(query, species=species)
 
 
-@api_gene_bp.route('/search/<string:query>')
-@cache.memoize(60*60)
-@jsonify_request
-def api_search_combined(query=""):
-  query = request.args.get('query') or query
-  query = str(query).lower()
-  species = request.args.get('species') or None
-  return (search_genes(query, species=species) + search_homologs(query, species=species))[0:10]
+# @api_gene_bp.route('/search/<string:query>')
+# @cache.memoize(60*60)
+# @jsonify_request
+# def api_search_combined(query=""):
+#   query = request.args.get('query') or query
+#   query = str(query).lower()
+#   species = request.args.get('species') or None
+#   return (search_genes(query, species=species) + search_homologs(query, species=species))[0:10]
 
 
 @api_gene_bp.route('/search/interval/<string:gene>') # Seach for IGV Browser

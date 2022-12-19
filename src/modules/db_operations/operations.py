@@ -4,7 +4,7 @@ from logzero import logger
 
 from caendr.models.error import EnvVarError
 from caendr.models.species import Species
-from caendr.models.sql import WormbaseGene, WormbaseGeneSummary, Strain, Homolog, StrainAnnotatedVariant
+from caendr.models.sql import WormbaseGene, WormbaseGeneSummary, Strain, StrainAnnotatedVariant
 from caendr.services.sql.db import drop_tables, backup_external_db
 from caendr.services.sql.etl import ETLManager, load_strains
 
@@ -66,15 +66,18 @@ def drop_and_populate_wormbase_genes(app, db, species_list):
 
   # Drop relevant tables
   logger.info(f"Dropping tables...")
-  drop_tables(app, db, tables=[Homolog.__table__, WormbaseGene.__table__])
-  drop_tables(app, db, tables=[WormbaseGeneSummary.__table__])
+  drop_tables(app, db, tables=[
+    WormbaseGeneSummary.__table__,
+    WormbaseGene.__table__,
+    # Homolog.__table__,
+  ])
 
   # Fetch and load data using ETL Manager
   logger.info("Loading wormbase genes...")
   etl_manager.load_genes_summary(db)
   etl_manager.load_genes(db)
-  etl_manager.load_homologs(db)
-  etl_manager.load_orthologs(db)
+  # etl_manager.load_homologs(db)
+  # etl_manager.load_orthologs(db)
 
 
 def drop_and_populate_strain_annotated_variants(app, db, species_list):
@@ -102,27 +105,27 @@ def drop_and_populate_all_tables(app, db, species_list):
   spec_strings = [ f'{key} (wb_ver = {val.wb_ver}, sva_ver = {val.sva_ver})' for key, val in species_list.items() ]
   logger.info(f'Dropping and populating all tables. Species list: [ {", ".join(spec_strings)} ]')
 
-  logger.info("[1/8] Downloading databases...eta ~0:15")
+  logger.info("[1/6] Downloading databases...eta ~0:15")
   etl_manager = ETLManager(species_list)
 
-  logger.info("[2/8] Dropping tables...eta ~0:01")
+  logger.info("[2/6] Dropping tables...eta ~0:01")
   drop_tables(app, db)
 
-  logger.info("[3/8] Load Strains...eta ~0:24")
+  logger.info("[3/6] Load Strains...eta ~0:24")
   load_strains(db)
 
-  logger.info("[4/8] Load genes summary...eta ~3:15")
+  logger.info("[4/6] Load genes summary...eta ~3:15")
   etl_manager.load_genes_summary(db)
 
-  logger.info("[5/8] Load genes...eta ~12:37")
+  logger.info("[5/6] Load genes...eta ~12:37")
   etl_manager.load_genes(db)
 
-  logger.info("[6/8] Load Homologs...eta ~3:10")
-  etl_manager.load_homologs(db)
+  # logger.info("[6/8] Load Homologs...eta ~3:10")
+  # etl_manager.load_homologs(db)
 
-  logger.info("[7/8] Load Horthologs...eta ~17:13")
-  etl_manager.load_orthologs(db)
+  # logger.info("[7/8] Load Horthologs...eta ~17:13")
+  # etl_manager.load_orthologs(db)
 
-  logger.info("[8/8] Load Strains Annotated Variants...eta ~26:47")
+  logger.info("[6/6] Load Strains Annotated Variants...eta ~26:47")
   etl_manager.load_strain_annotated_variants(db)
   

@@ -134,8 +134,6 @@ th {
           <tr>
             <th>Gene</th>
             <th>Symbol/ID</th>
-            <th>Species</th>
-            <th>Source</th>
           </tr>
         </thead>
         <tbody id="orthologs"></tbody>
@@ -238,7 +236,7 @@ $(document).ready(function () {
   // Set initial config options for browser
   const options = {
     search: {
-      url: "{{ url_for('api_gene.api_search_combined', species='', query='') }}$FEATURE$",
+      url: "{{ url_for('api_gene.api_search_genes', species='', query='') }}$FEATURE$",
       coords: 1,
       resultsField: 'result'
     },
@@ -436,7 +434,7 @@ function process_gene_search() {
   } else {
     $("#orthologs").html("");
     $.ajax({
-        url:         "{{ url_for('api_gene.api_search_combined', query='') }}" + gene + '?species=' + species.name,
+        url:         "{{ url_for('api_gene.api_search_genes', query='') }}" + gene + '?species=' + species.name,
         method:      "GET",
         contentType: "application/xml",
     }).done(function(msg) {
@@ -450,9 +448,7 @@ function process_gene_search() {
             gene_name = `<a onclick="set_position('${link}')" link='${link}' class='ortholink'>${row["locus"]}</a>`;
             result = [
                 gene_name,
-                row['homolog_gene']    || row["gene_symbol"],
-                row["homolog_species"] || `<em>${ species_list[ row["species_name"] ]["short_name"] }</em>`,
-                row["homolog_source"]  || "Wormbase",
+                row["gene_symbol"],
             ];
             result = "<tr><td>" + result.join("</td><td>") + "</td></tr>";
             position = row["chrom"] + ":" + row["start"];

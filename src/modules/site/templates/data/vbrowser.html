@@ -303,7 +303,7 @@ function process_gene_search() {
   } else {
     $("#orthologs").html("");
     $.ajax({
-         url: "{{ url_for('api_gene.api_search_combined', query='') }}" + gene,
+         url: "{{ url_for('api_gene.api_search_genes', query='') }}" + gene,
          method: "GET",
          contentType: 'application/xml',
          }).done(function(results) {
@@ -311,7 +311,11 @@ function process_gene_search() {
           genes.forEach(gene => {
             const position = gene["chrom"] + ":" + gene["start"] + "-" + gene["end"];
             const link = `<a onclick="set_position('${position}')" link='${position}' class='ortholink'>${gene['gene_id']}</a>`;
-            const result = [gene['homolog_gene'] || gene["gene_symbol"], gene['sequence_name'], link]
+            const result = [
+              gene['gene_symbol'],
+              gene['sequence_name'],
+              link,
+            ]
             const table_data = "<tr><td>" + result.join("</td><td>").slice(0,-4) + "</tr>";
             $("#orthologs").append(table_data);
           });
