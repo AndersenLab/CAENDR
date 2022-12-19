@@ -6,16 +6,19 @@ from caendr.services.cloud.sheets import get_google_sheet
 from caendr.services.cloud.secret import get_secret
 from caendr.models.sql import Strain
 
-ANDERSEN_LAB_STRAIN_SHEET = get_secret('ANDERSEN_LAB_STRAIN_SHEET')
+ANDERSEN_LAB_STRAIN_SHEET = [
+  get_secret('ANDERSEN_LAB_STRAIN_SHEET'),
+]
 
 elevation_cache = {}
 NULL_VALS = ["None", "", "NA", None]
 
 def load_strains(db): 
   logger.info('Loading strains...')
-  andersen_strains = fetch_andersen_strains()
-  db.session.bulk_insert_mappings(Strain, andersen_strains)
-  db.session.commit()
+  for sheet_id in ANDERSEN_LAB_STRAIN_SHEET:
+    andersen_strains = fetch_andersen_strains(sheet_id)
+    db.session.bulk_insert_mappings(Strain, andersen_strains)
+    db.session.commit()
   logger.info(f"Inserted {Strain.query.count()} strains")
   
 
@@ -30,7 +33,7 @@ def fetch_elevation(lat, lon):
   return elevation
 
 
-def fetch_andersen_strains():
+def fetch_andersen_strains(sheet_id: str):
   """
     Fetches latest strains from
     google sheet database.
@@ -40,10 +43,14 @@ def fetch_andersen_strains():
     - Strain sets are concatenated with ','
     - Fetches elevation for each strain
   """
-  WI = get_google_sheet(ANDERSEN_LAB_STRAIN_SHEET)
+
+  # Get records from Google sheet
+  WI = get_google_sheet(sheet_id)
   strain_records = WI.get_all_records()
+
   # Only take records with a release reported
   strain_records = list(filter(lambda x: x.get('release') not in NULL_VALS, strain_records))
+
   results = []
   for n, record in enumerate(strain_records):
     record = {k.lower(): v for k, v in record.items()}
@@ -87,5 +94,7 @@ def fetch_andersen_strains():
       record['previous_names'] = str(record['previous_names']).replace(", ", ",").strip()
     results.append(record)
 
+    # Convert species scientific name to species ID string
+    record['species_name'] = f"c_{record['species'].split(' ')[1]}"
 
   return results

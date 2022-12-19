@@ -108,31 +108,18 @@ def get_species_tracks(species=None):
   These together determine what tracks can be generated for the species.
   '''
 
-  if species == 'c_elegans':
-    strain_list = [
-      {
-        'strain':  strain.strain,
-        'isotype': strain.isotype,
-      }
-      for strain in get_isotypes()
-    ]
-  elif species == 'c_briggsae':
-    strain_list = [
-      {
-        'strain':  "BRC20069",
-        'isotype': "BRC20069",
-      },
-      {
-        'strain':  "BRC20075",
-        'isotype': "BRC20075",
-      },
-      {
-        'strain':  "BRC20102",
-        'isotype': "BRC20102",
-      },
-    ]
-  else:
+  # Confirm that species string is valid
+  if (species not in SPECIES_LIST):
     raise InternalError()
+
+  # Get strain and isotype for all strains of given species
+  strain_list = [
+    {
+      'strain':  strain.strain,
+      'isotype': strain.isotype,
+    }
+    for strain in get_isotypes( species=species )
+  ]
 
   # Send back in JSON format
   return jsonify({
