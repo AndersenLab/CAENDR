@@ -68,7 +68,7 @@ def get_url(self, db_url_name: str, species_name: str = None):
       species = self.get_species(species_name)
       return t.substitute({
         'SPECIES': species_name,
-        'PRJ':     species.proj_num,
+        'PRJ':     species.project_num,
         'WB':      species.wb_ver,
       })
     else:

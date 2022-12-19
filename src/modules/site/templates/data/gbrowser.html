@@ -405,7 +405,7 @@ function update_species() {
   species_id = document.getElementById('species-selector').value;
   species    = species_list[species_id];
 
-  document.getElementById('wormbase_version').innerHTML = species['wormbase_version'];
+  document.getElementById('wormbase_version').innerHTML = species['wb_ver'];
   document.getElementById('release_version').innerHTML  = species['latest_release'];
 
   fetch_strains( update = true );

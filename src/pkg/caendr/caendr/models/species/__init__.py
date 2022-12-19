@@ -9,33 +9,54 @@ from caendr.models.error import BadRequestError, EnvVarError
 
 
 class Species:
+
+
+    ## Parameters & Initialization ##
+
+    @classmethod
+    def parameters(cls):
+        '''
+        Parameters that should be provided by keyword when constructing a Species object.
+        '''
+        return {
+            'scientific_name',     # Scientific name of the species (e.g. 'Caenorhabditis elegans')
+            'project_num',         # WormBase project number associated with species release (e.g. 'PRJNA13758')
+            'wb_ver',              # WormBase version associated with species release (e.g. 'WS276)
+            'sva_ver',             # CaeNDR release to use for Strain Variant Annotation
+            'latest_release',      # Most recent CaeNDR release that supports the species
+            'gene_prefix',         # Species-specific prefix for genes. Will be removed from gene names whenever found.
+        }
+
+    @classmethod
+    def properties(cls):
+        '''
+        All properties of a Species object.  Superset of `Species.parameters()`.
+        '''
+        return {
+            'name',                # Name used to uniquely identify the species
+            'short_name',          # Abridged version of scientific name
+            *Species.parameters(), # Load the rest of the parameters
+        }
+
     def __init__(self, name, **params):
         '''
+        For keyword args, see list of parameters in `Species.parameters()`.
+
           Args:
             name (str): [Name of the species. Standard format is initial of genus, underscore, species name, e.g. 'c_elegans' for Caenorhabditis elegans.]
-
-          Keyword Args:
-            project_number (str): [WormBase project number to use (e.g. 'PRJNA13758').]
-            wormbase_version (str): [Version of WormBase data to use (e.g. 'WS276').]
-            sva_version (str): [Strain Variant Annotation version to use.]
-            scientific_name (str): [Scientific name of the species.]
-            homolog_prefix (str): [Species-specific prefix for some genes. Will be removed from gene names.]
-            homolog_id (int): [.]
         '''
+
+        # Set the species unique name ID
         self.name = name
 
-        # Set scientific name
-        self.scientific_name = params["scientific_name"]
+        # Load parameters from parameter list
+        for param in Species.parameters():
+            setattr(self, param, params.get(param))
 
-        # Set versioning information
-        self.proj_num = params["project_number"]
-        self.wb_ver   = params["wormbase_version"]
-        self.sva_ver  = params["sva_version"]
-        self.latest   = params["latest_release"]
-
-        # Set params for homologs
-        self.homolog_prefix = params.get('homolog_prefix', '')
-        self.homolog_id     = params.get('homolog_id',     None)
+        # Flag any keyword params that aren't in the parameter list, since they will be ignored
+        for param in params:
+            if param not in Species.parameters():
+                logger.warn(f'Unrecognized parameter "{param}" passed to Species constructor. Ignoring value...')
 
 
 
@@ -43,6 +64,12 @@ class Species:
 
     @classmethod
     def parse_json_file(cls, filename):
+        '''
+        Read a JSON file, interpreting each top-level element as a new Species object.
+
+          Returns:
+            species_list (dict(str, Species)): [A dict mapping species name (ID) to Species objects.]
+        '''
         with open(filename) as f:
             species_list = {
                 name: Species(name, **params) for name, params in json.load(f).items()
@@ -51,28 +78,11 @@ class Species:
 
 
     def __iter__(self):
-        yield from {
-            'name':             self.name,
-            'scientific_name':  self.scientific_name,
-            'short_name':       self.short_name,
-            'project_number':   self.proj_num,
-            'wormbase_version': self.wb_ver,
-            'sva_version':      self.sva_ver,
-            'latest_release':   self.latest,
-        }.items()
+        yield from { key: getattr(self, key) for key in Species.properties() }.items()
 
 
 
-    ## Property: name (Species Name) ##
-
-    @property
-    def name(self):
-        return self._name
-
-    @name.setter
-    def name(self, new_name: str):
-        self._name = new_name
-
+    ## Property: short_name (Short version of scientific name) ##
 
     @property
     def short_name(self):
@@ -81,26 +91,26 @@ class Species:
 
 
 
-    ## Property: proj_num (Project Number) ##
+    ## Property: project_num (WormBase Project Number) ##
 
     @property
-    def proj_num(self):
+    def project_num(self):
 
         # Throw an error if trying to get the value before it's been set
-        if self._proj_num is None:
-            logger.warning(f"E_NOT_SET: 'proj_num' (WormBase project number) for species {self.name}")
+        if self._project_num is None:
+            logger.warning(f"E_NOT_SET: 'project_num' (WormBase project number) for species {self.name}")
             raise BadRequestError()
 
         # Otherwise, return the value
-        return self._proj_num
+        return self._project_num
 
-    @proj_num.setter
-    def proj_num(self, new_proj_num):
-        if new_proj_num is None:
+    @project_num.setter
+    def project_num(self, new_project_num):
+        if new_project_num is None:
             logger.warning(f"Removing WormBase project number for species {self.name}")
-            self._proj_num = None
+            self._project_num = None
         else:
-            self._proj_num = WormbaseProjectNumber(new_proj_num)
+            self._project_num = WormbaseProjectNumber(new_project_num)
 
 
 
@@ -127,7 +137,7 @@ class Species:
 
 
 
-    ## Property: sva_ver (Strain Variant Annotation Version) ##
+    ## Property: sva_ver (CaeNDR Strain Variant Annotation Version) ##
 
     @property
     def sva_ver(self):

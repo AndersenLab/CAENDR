@@ -185,9 +185,9 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
     # String replacement tokens
     # Maps token to the field in Species object it should be replaced with
     'tokens': {
-      '$WB':      'wormbase_version',
+      '$WB':      'wb_ver',
       '$RELEASE': 'latest_release',
-      '$PRJ':     'project_number',
+      '$PRJ':     'project_num',
     },
 
     # Misc
