@@ -25,6 +25,7 @@ class Species:
             'sva_ver',             # CaeNDR release to use for Strain Variant Annotation
             'latest_release',      # Most recent CaeNDR release that supports the species
             'gene_prefix',         # Species-specific prefix for genes. Will be removed from gene names whenever found.
+            'browser_tracks',      # List of browser tracks species supports, by name
         }
 
     @classmethod

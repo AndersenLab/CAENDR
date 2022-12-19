@@ -7,7 +7,13 @@
         "sva_ver":          "20220216",
         "homolog_prefix":   "CELE_",
         "homolog_id":       6239,
-        "latest_release":   "20220216"
+        "latest_release":   "20220216",
+        "browser_tracks": [
+            "Genes",
+            "Transcripts",
+            "Divergent Regions Summary",
+            "Divergent Regions"
+        ]
     },
     "c_briggsae": {
         "scientific_name":  "Caenorhabditis briggsae",
@@ -17,6 +23,10 @@
         "sva_ver":          "XXXXXXXX",
         "homolog_prefix":   "",
         "homolog_id":       0,
-        "latest_release":   "20210803"
+        "latest_release":   "20210803",
+        "browser_tracks": [
+            "Genes",
+            "Transcripts"
+        ]
     }
 }

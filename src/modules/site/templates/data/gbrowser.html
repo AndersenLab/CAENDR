@@ -104,7 +104,7 @@ th {
       <!-- Trackset check boxes -->
       <h5>Tracks</h5>
       {% for name, track in default_tracks.items() %}
-        <div class="checkbox">
+        <div id="{{ name }}_checkbox_container" class="checkbox default-track-container">
           <label>
             <input id="{{ name }}_checkbox" type="checkbox" class="track-select normal-track" value="{{ name }}" />
             {{ name }}
@@ -211,10 +211,14 @@ var trackset = {};
 // Current active species
 var species = null;
 
-const species_list = {{ unpack_species_list(species_list) }};
+// Set of all species
+const species_list = {{ unpack_species_list(species_list, species_fields) }};
 
-var strain_list = [];
+// Species specific default tracks & strain-specific tracks
+var species_tracks = [];
+var strain_list    = [];
 
+// Strain track templates
 var templates = {};
 
 // Location for browser
@@ -287,7 +291,7 @@ $(document).ready(function () {
   fetch_trackset( update = true );
 
   // Load strains for current species from API, then populate table with results
-  fetch_strains( update = true );
+  fetch_species_tracks( update = true );
 
   // Load browser track templates
   fetch_templates();
@@ -341,11 +345,11 @@ function fetch_templates() {
     .then( (text)     => { templates = JSON.parse(text); } );
 }
 
-function fetch_strains( update = false ) {
-  fetch( "{{ url_for('gene_browser.get_strains', species='') }}" + species.name )
-    .then( (response) => { return response.text();         } )
-    .then( (text)     => { strain_list = JSON.parse(text); } )
-    .then( ()         => { if (update) update_strains();   } );
+function fetch_species_tracks( update = false ) {
+  fetch( "{{ url_for('gene_browser.get_species_tracks', species='') }}" + species.name )
+    .then( (response) => { return response.text();                               } )
+    .then( (text)     => { ({ species_tracks, strain_list } = JSON.parse(text)); } )
+    .then( ()         => { if (update) update_strains();                         } );
 }
 
 
@@ -398,6 +402,13 @@ function update_strains() {
 
   // Detect track changes
   $(".track-select").on( "change", update_tracks );
+
+  // Show/hide tracks to match species list
+  const suffix = "-checkbox-container";
+  $(".default-track-container").each((i, obj) => {
+    const name = obj.id.substring( 0, obj.id.length - suffix.length );
+    obj.style.display = species_tracks.includes(name) ? 'block' : 'none';
+  });
 }
 
 // Set up species variable & set to match species selector
@@ -408,7 +419,7 @@ function update_species() {
   document.getElementById('wormbase_version').innerHTML = species['wb_ver'];
   document.getElementById('release_version').innerHTML  = species['latest_release'];
 
-  fetch_strains( update = true );
+  fetch_species_tracks( update = true );
 }
 
 

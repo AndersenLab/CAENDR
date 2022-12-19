@@ -100,14 +100,16 @@ def get_track_template(template = '', strain = None):
 
 
 
-@gene_browser_bp.route('/gbrowser/strains/<species>', methods=['GET'])
-def get_strains(species=None):
+@gene_browser_bp.route('/gbrowser/tracks/<species>', methods=['GET'])
+def get_species_tracks(species=None):
   '''
-  Get the list of strains for the given species.
+  Get the list of default tracks and the list of strains for the given species.
+
+  These together determine what tracks can be generated for the species.
   '''
 
   if species == 'c_elegans':
-    result = [
+    strain_list = [
       {
         'strain':  strain.strain,
         'isotype': strain.isotype,
@@ -115,7 +117,7 @@ def get_strains(species=None):
       for strain in get_isotypes()
     ]
   elif species == 'c_briggsae':
-    result = [
+    strain_list = [
       {
         'strain':  "BRC20069",
         'isotype': "BRC20069",
@@ -133,7 +135,10 @@ def get_strains(species=None):
     raise InternalError()
 
   # Send back in JSON format
-  return jsonify(result)
+  return jsonify({
+    'strain_list':    strain_list,
+    'species_tracks': SPECIES_LIST[species].browser_tracks,
+  })
 
 
 
@@ -189,6 +194,12 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
       '$RELEASE': 'latest_release',
       '$PRJ':     'project_num',
     },
+
+    # List of Species class fields to expose to the template
+    # Optional - exposes all attributes if not provided
+    'species_fields': [
+      'name', 'short_name', 'project_num', 'wb_ver', 'latest_release',
+    ],
 
     # Misc
     'fluid_container': True,
