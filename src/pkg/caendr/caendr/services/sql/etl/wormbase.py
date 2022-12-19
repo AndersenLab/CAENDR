@@ -11,14 +11,32 @@ from caendr.utils.constants import CHROM_NUMERIC
 
 
 
-def get_gene_ids(gene_ids_fname: str):
+## Helper Functions ##
+
+def remove_prefix(val: str, prefix: str):
+  '''
+      Remove a prefix from a string, if it exists.
+  '''
+  if val and val.startswith(prefix):
+    return val[ len(prefix): ]
+  else:
+    return val
+
+
+def get_gene_ids(species, gene_ids_fname: str):
   """
       Retrieve mapping between wormbase IDs (WB000...) to locus names.
       Uses the latest IDs by default.
       Gene locus names (e.g. pot-2)
+
+      Removes gene prefix from locus names whenever it appears, e.g. 'Cbr-' for C. briggsae.
   """
-  results = [x.split(",")[1:3] for x in gzip.open(gene_ids_fname, 'r').read().decode('utf-8').splitlines()]
-  return dict(results)
+
+  # Read in file, and extract the WormBase ID and locus name from each line
+  results = [ x.split(",")[1:3] for x in gzip.open(gene_ids_fname, 'r').read().decode('utf-8').splitlines() ]
+
+  # Convert to a dictionary, removing species-specific gene prefix from each value as we do
+  return { x[0]: remove_prefix(x[1], species.gene_prefix) for x in results }
 
 
 
@@ -31,7 +49,7 @@ def parse_gene_gtf(species, gtf_fname: str, gene_ids_fname: str):
       and yields a dictionary for each row.
   """
   gene_gtf = read_gtf_as_dataframe(gtf_fname)
-  gene_ids = get_gene_ids(gene_ids_fname)
+  gene_ids = get_gene_ids(species, gene_ids_fname)
 
   # Rename seqname to chrom
   gene_gtf = gene_gtf.rename({'seqname': 'chrom'}, axis='columns')
@@ -124,6 +142,9 @@ def parse_gene_gff_summary(species, gff_fname: str):
         # Annotate gene with arm/center
         gene_pos = int(((gene['end'] - gene['start'])/2) + gene['start'])
         gene['arm_or_center'] = arm_or_center(gene['chrom'], gene_pos)
+
+        # Remove species-specific gene prefix, if locus exists and begins with the prefix
+        gene['locus'] = remove_prefix(gene.get('locus'), species.gene_prefix)
 
         # If gene has an ID, split the ID into two fields and yield the gene
         if 'id' in gene.keys():
