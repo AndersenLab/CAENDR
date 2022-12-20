@@ -235,6 +235,9 @@ mark {
 {% block script %}
 <script>
 
+
+/* Variables */
+
 const doneTypingInterval = 1000;  //time in ms (5 seconds)
 const col_max_len = 20;
 const strains_per_row = 10;
@@ -253,6 +256,13 @@ let toggle_strain_lock = false;
 let result_data = {};
 let cachedTargets = {};
 
+const columnList = JSON.parse('{{ columns | tojson }}');
+
+const strainListing = JSON.parse('{{ strain_listing | tojson }}');
+
+
+
+/* CSV Download */
 
 async function downloadCSV(json_data) {
   const csrfToken = "{{ form.csrf_token._value() }}";
@@ -289,11 +299,9 @@ function onDownload() {
   downloadCSV(jsonData);
 }
 
-const strainListing = JSON.parse('{{ strain_listing | tojson }}');
 
-function init_selected_strain_set() {
-  strainListing.forEach(strain => selected_strains.add(strain));
-}
+
+/* Gene Search */
 
 function process_gene_search() {
   $("#loading-search-table").fadeOut();
@@ -329,18 +337,15 @@ function set_position(pos) {
   $('#search-interval-btn').click();
 }
 
-function chunk_substr(data, size) {
-  if (typeof data === 'string' && data.length > col_max_len) {
-    let numChunks = Math.ceil(data.length / size)
-    let chunks = new Array(numChunks)
-    for (let i = 0, o = 0; i < numChunks; ++i, o += size) {
-      chunks[i] = data.substr(o, size)
-    }
-    return chunks.join('<br/>')
-  } else {
-    return data;
-  }
+function toggleDisableForm(disabled = false) {
+  // false = form enabled, true = form disabled
+  $("#search-interval-btn").attr("disabled", disabled);
+  $('#interval').attr("disabled", disabled);
 }
+
+
+
+/* Table Visibility */
 
 function hideTable() {
   $("#result-table").fadeOut();
@@ -352,11 +357,9 @@ function showTable() {
   $("#result-table").fadeIn();
 }
 
-function toggleDisableForm(disabled = false) {
-  // false = form enabled, true = form disabled
-  $("#search-interval-btn").attr("disabled", disabled);
-  $('#interval').attr("disabled", disabled);
-}
+
+
+/* Table Filtering */
 
 function filter_rows_by_strains() {
 
@@ -391,11 +394,23 @@ function filter_rows_by_impact() {
     $('#variant-table').dataTable().fnFilter(r, 'variant_impact:name', true, false);
 }
 
-function highlight_selected_strains() {
-  $("mark").removeClass('hl-mark');
-  selected_strains.forEach(strain => {
-    $(`.mark_${strain}`).addClass('hl-mark');
-  });
+
+
+
+/* Result Table -- General Columns */
+
+
+function chunk_substr(data, size) {
+  if (typeof data === 'string' && data.length > col_max_len) {
+    let numChunks = Math.ceil(data.length / size)
+    let chunks = new Array(numChunks)
+    for (let i = 0, o = 0; i < numChunks; ++i, o += size) {
+      chunks[i] = data.substr(o, size)
+    }
+    return chunks.join('<br/>')
+  } else {
+    return data;
+  }
 }
 
 function processCol(col, id) {
@@ -404,6 +419,37 @@ function processCol(col, id) {
   }
   return chunk_substr(col, col_max_len)
 }
+
+
+
+/* Result Table -- Strains Column */
+
+function highlight_selected_strains() {
+  $("mark").removeClass('hl-mark');
+  selected_strains.forEach(strain => {
+    $(`.mark_${strain}`).addClass('hl-mark');
+  });
+}
+
+function renderStrainsCol(data, type, row) {
+  // let result = '<mark></mark>';
+  let strains = data.split(',');
+
+  // Map each strain to a mark tag
+  let result = strains.map( (strain) => `<mark class="mark_${strain}">${strain}</mark>` )
+
+  // Add a line break after every strains_per_row elements
+  for (let i = strains_per_row; i < result.length; i += strains_per_row) {
+    result[i] = "<br/>" + result[i];
+  }
+
+  // Concatenate result together with commas and return
+  return result.join(', ');
+}
+
+
+
+/* Result Table -- Target Consequence Column */
 
 function renderTargetConsequenceCol(data, type, row) {
   if (data) {
@@ -479,7 +525,9 @@ function expandTargetConsequence(el, pos) {
   }
 }
 
-const columnList = JSON.parse('{{ columns | tojson }}');
+
+
+/* Table Data */
 
 function populateDataTable() {
   // clear the table before populating it with more data
@@ -499,20 +547,13 @@ function populateDataTable() {
 }
 
 
-function renderStrainsCol(data, type, row) {
-  // let result = '<mark></mark>';
-  let strains = data.split(',');
 
-  // Map each strain to a mark tag
-  let result = strains.map( (strain) => `<mark class="mark_${strain}">${strain}</mark>` )
 
-  // Add a line break after every strains_per_row elements
-  for (let i = strains_per_row; i < result.length; i += strains_per_row) {
-    result[i] = "<br/>" + result[i];
-  }
+/* Initialization - Helper functions */
 
-  // Concatenate result together with commas and return
-  return result.join(', ');
+
+function init_selected_strain_set() {
+  strainListing.forEach(strain => selected_strains.add(strain));
 }
 
 
@@ -574,6 +615,9 @@ function select_default_columns() {
   dTable.columns.adjust().draw();
 }
 
+
+
+/* Initialization - Set up event handlers */
 
 $(document).ready(function() {
 
