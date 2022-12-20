@@ -34,29 +34,19 @@ MAX_SV_SIZE = 500
 # Initial load of strain list from sv_data
 # This is run when the server is started.
 # NOTE: Tabix cannot make requests over https!
-SV_BED_URL = f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/tools/pairwise_indel_primer/sv.20200815.bed.gz"
-SV_VCF_URL = f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/tools/pairwise_indel_primer/sv.20200815.vcf.gz"
+SV_BED_URL = f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/tools/pairwise_indel_primer/caendr.pif.bed.gz"
+SV_VCF_URL = f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/tools/pairwise_indel_primer/caendr.pif.vcf.gz"
 
 SV_STRAINS = VCF(SV_VCF_URL).samples
-SV_COLUMNS = ["CHROM",
-              "START",
-              "END",
-              "SUPPORT",
-              "SVTYPE",
-              "STRAND",
-              "SV_TYPE_CALLER",
-              "SV_POS_CALLER",
-              "STRAIN",
-              "CALLER",
-              "GT",
-              "SNPEFF_TYPE",
-              "SNPEFF_PRED",
-              "SNPEFF_EFF",
-              "SVTYPE_CLEAN",
-              "TRANSCRIPT",
-              "SIZE",
-              "HIGH_EFF",
-              "WBGeneID"]
+SV_COLUMNS = [
+    "CHROM",
+    "START",
+    "END",
+    "SVTYPE",
+    "STRAIN",
+    "GT",
+    "SIZE",
+]
 
 STRAIN_CHOICES = [(x, x) for x in SV_STRAINS]
 CHROMOSOME_CHOICES = [(x, x) for x in CHROM_NUMERIC.keys()]
