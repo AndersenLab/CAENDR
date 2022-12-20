@@ -293,8 +293,14 @@ function update_species() {
   $("#loading-search-table").fadeIn();
   process_gene_search();
 
+  // Clear the interval search on switching species, to help avoid confusion
+  clear_interval_search();
+
   // Update the strain list table
   update_strains();
+
+  // Clear any previous species data from the data table
+  clearDataTable();
 }
 
 
@@ -402,6 +408,10 @@ function process_gene_search() {
 function set_position(pos) {
   $('#interval').val(pos);
   $('#search-interval-btn').click();
+}
+
+function clear_interval_search() {
+  $('#interval').val(null);
 }
 
 function toggleDisableForm(disabled = false) {
@@ -614,6 +624,13 @@ function populateDataTable() {
   filter_rows_by_impact();
   filter_rows_by_strains();
   dTable.columns.adjust().draw();
+}
+
+function clearDataTable() {
+  if (dTable !== null) {
+    dTable.clear();
+    dTable.columns.adjust().draw();
+  }
 }
 
 
