@@ -46,6 +46,15 @@ mark {
         <div class="row">
       <div class="col-lg-4 col-lg-offset-0 col-md-10 col-md-offset-1 col-sm-8 col-sm-offset-2 col-xs-12 text-center">
 
+        <h3><label for="gene-search"> Species </label></h3>
+        <select name="species" id="species-selector" onchange="update_species()">
+          {% for s in species_list %}
+            <option value="{{s}}">{{species_list[s]["short_name"]}}</option>
+          {% endfor %}
+        </select>
+
+        <br /><br />
+
         <h3><label for="gene-search"> Gene </label></h3>
         <form id='form-submit-gene' method='post'>
           <div class="form-group">
@@ -233,6 +242,7 @@ mark {
 {% endblock %}
 
 {% block script %}
+{% from "_includes/macros.html" import unpack_species_list %}
 <script>
 
 
@@ -256,9 +266,29 @@ let toggle_strain_lock = false;
 let result_data = {};
 let cachedTargets = {};
 
+// Species dictionary & selected species
+const species_list = {{ unpack_species_list(species_list, species_fields) }};
+var species = null
+
 const columnList = JSON.parse('{{ columns | tojson }}');
 
 const strainListing = JSON.parse('{{ strain_listing | tojson }}');
+
+
+
+/* Track Species */
+
+// Track changes to selected species
+function update_species() {
+
+  // Get species from selector
+  species_id = document.getElementById('species-selector').value;
+  species    = species_list[species_id];
+
+  // Reprocess gene search with the new species
+  $("#loading-search-table").fadeIn();
+  process_gene_search();
+}
 
 
 
@@ -311,7 +341,7 @@ function process_gene_search() {
   } else {
     $("#orthologs").html("");
     $.ajax({
-         url: "{{ url_for('api_gene.api_search_genes', query='') }}" + gene,
+         url: "{{ url_for('api_gene.api_search_genes', query='') }}" + gene + '?species=' + species.name,
          method: "GET",
          contentType: 'application/xml',
          }).done(function(results) {
@@ -620,6 +650,9 @@ function select_default_columns() {
 /* Initialization - Set up event handlers */
 
 $(document).ready(function() {
+
+  // Get the default species from the selector
+  update_species();
 
   (function($) {
 

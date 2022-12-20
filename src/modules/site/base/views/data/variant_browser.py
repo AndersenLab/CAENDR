@@ -14,6 +14,7 @@ from extensions import cache
 from base.forms import VBrowserForm
 
 from caendr.api.isotype import get_isotypes, get_distinct_isotypes
+from caendr.models.species import SPECIES_LIST
 from caendr.models.sql import StrainAnnotatedVariant
 from caendr.services.dataset_release import get_latest_dataset_release_version
 from caendr.services.strain_annotated_variants import verify_interval_query, verify_position_query
@@ -41,16 +42,29 @@ def vbrowser():
 
   # Create an options object to pass to vbrowser
   vbrowser_options = {
+
+    # Page info
     "title": 'Variant Annotation',
     "alt_parent_breadcrumb": {
       "title": "Data",
       "url": url_for('data.landing')
     },
     "form": VBrowserForm(),
+
+    # Data
     "strain_listing": get_distinct_isotypes(),
     "columns": columns,
-    "fluid_container": True,
     "current_version": get_latest_dataset_release_version().version,
+    "species_list": SPECIES_LIST,
+
+    # List of Species class fields to expose to the template
+    # Optional - exposes all attributes if not provided
+    'species_fields': [
+      'name', 'short_name', 'project_num', 'wb_ver', 'latest_release',
+    ],
+
+    # Misc
+    "fluid_container": True,
   }
 
   if request.args.get('download_err'):
