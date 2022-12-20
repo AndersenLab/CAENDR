@@ -40,11 +40,22 @@ def get_isotypes(known_origin=False, list_only=False, unique=False, species=None
   return result
 
 
-def get_distinct_isotypes():
+def get_distinct_isotypes(species=None):
   """
       Returns a list of unique values in the isotype column of the Strains table
+
+      Args:
+        species: Optionally limit to one species. Default None.
   """
-  result = Strain.query.with_entities(Strain.isotype).filter(Strain.isotype != None).distinct().all()
-  result = [x.isotype for x in result]
+
+  # Perform the query for distinct isotypes
+  result = Strain.query.with_entities(Strain.isotype).filter(Strain.isotype != None).distinct()
+
+  # Optionally limit to given species
+  if species is not None:
+    result = result.filter( Strain.species_name == species )
+
+  # Map to list and return
+  result = [ x.isotype for x in result.all() ]
   return result
 

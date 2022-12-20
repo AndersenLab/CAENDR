@@ -40,6 +40,9 @@ def vbrowser():
   for col in columns:
     col['default_visibility'] = col_visibility_func(col)
 
+  # Organize distinct isotypes by species
+  strain_listing = { name: sorted( get_distinct_isotypes(species=name) ) for name in SPECIES_LIST }
+
   # Create an options object to pass to vbrowser
   vbrowser_options = {
 
@@ -52,7 +55,7 @@ def vbrowser():
     "form": VBrowserForm(),
 
     # Data
-    "strain_listing": get_distinct_isotypes(),
+    "strain_listing": strain_listing,
     "columns": columns,
     "current_version": get_latest_dataset_release_version().version,
     "species_list": SPECIES_LIST,

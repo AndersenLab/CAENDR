@@ -157,16 +157,20 @@ mark {
           <div class="form-group">
             <div class="select-checkbox">
               <div class="strain-entry select-searchable">
-                <input class="toggle-strain-chk" type="checkbox" name="toggle_all_strains" id="toggle_all_strains" checked/> 
+                <input class="toggle-strain-chk" type="checkbox" name="toggle_all_strains" id="toggle_all_strains" checked/>
                 <strong><label id="toggle_all_strains_label" for="toggle_all_strains"> Select All </label></strong>
               </div>
               <br>
-            {% for strain in strain_listing %}
-              <div class="strain-entry select-searchable">
-                <input class="toggle-strain-chk" type="checkbox" data-column="{{strain}}" id="toggle_{{strain}}" checked/> 
-                <label for="toggle_{{strain}}"> {{ strain }} </label>
+              {% for species in species_list %}
+              <div id="strain-entry-container-{{species}}" class="strain-entry-container">
+                {% for strain in strain_listing[species] %}
+                <div class="strain-entry select-searchable">
+                  <input class="toggle-strain-chk toggle-strain-chk-{{species}}" type="checkbox" data-column="{{strain}}" id="toggle_{{strain}}" checked/>
+                  <label for="toggle_{{strain}}"> {{ strain }} </label>
+                </div>
+                {% endfor %}
               </div>
-            {% endfor %}
+              {% endfor %}
             </div>
           </div>
         </form>
@@ -276,7 +280,7 @@ const strainListing = JSON.parse('{{ strain_listing | tojson }}');
 
 
 
-/* Track Species */
+/* Species */
 
 // Track changes to selected species
 function update_species() {
@@ -288,6 +292,39 @@ function update_species() {
   // Reprocess gene search with the new species
   $("#loading-search-table").fadeIn();
   process_gene_search();
+
+  // Update the strain list table
+  update_strains();
+}
+
+
+
+/* Strains */
+
+function update_strains() {
+
+  // Show only strains matching current species
+  $('.strain-entry-container').hide();
+  $(`#strain-entry-container-${species_id}`).show();
+
+  // Update selected strains set to match current species
+  update_selected_strains();
+}
+
+
+function update_selected_strains() {
+
+  // Clear selected strains
+  selected_strains.clear();
+
+  // Loop through each strain checkbox associated with the current species
+  $(`.toggle-strain-chk-${species.name}`).each((i, obj) => {
+
+    // If box is checked, add to strain set
+    if (obj.checked) {
+      selected_strains.add(obj.dataset.column);
+    }
+  });
 }
 
 
@@ -582,11 +619,6 @@ function populateDataTable() {
 /* Initialization - Helper functions */
 
 
-function init_selected_strain_set() {
-  strainListing.forEach(strain => selected_strains.add(strain));
-}
-
-
 function init_data_table() {
   const colDefs = columnList.map((col, idx) => {
     let render = null;
@@ -656,7 +688,6 @@ $(document).ready(function() {
 
   (function($) {
 
-    init_selected_strain_set();
     init_data_table();
 
     select_default_columns();
@@ -700,14 +731,12 @@ $(document).ready(function() {
       toggle_strain_lock = true;
       const state = $(this).prop('checked');
 
-      $(".toggle-strain-chk").each(function(i, e) {
+      // Apply new selection to all strains for current species
+      $(`.toggle-strain-chk-${species.name}`).each(function(i, e) {
         e.checked = state;
       });
-      if (state) {
-        init_selected_strain_set();
-      } else {
-        selected_strains.clear();
-      }
+      update_selected_strains();
+
       setTimeout(filter_rows_by_strains, 50); /* allow checkbox to be clicked before processing */
       setTimeout(function() { 
         toggle_strain_lock = false;
