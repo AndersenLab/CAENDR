@@ -430,8 +430,11 @@ function showTable() {
 
 function filter_rows_by_strains() {
 
-  // Join all selected strains with RegEx 'or' operator, defaulting to empty expression to prevent matching everything
-  var r = [...selected_strains].join('|') || '^$';
+  // Construct a RegEx string to search for strain names:
+  //   - Add the word boundary token '\b' to the end of each strain name
+  //   - Concatenate all names with 'or' operator, and default to empty
+  //   - Default to empty expression to prevent matching everything if no strains selected
+  var r = [ ...selected_strains ].map((s) => `${s}\\b`).join('|') || '^$';
 
   // Hide the table while filtering
   hideTable();
