@@ -55,12 +55,18 @@ def indel_primer():
     "divergent_track_summary_url": f'{track_path}/{ TRACKS["Divergent Regions Summary"]["filename"] }',
     "fasta_url":                   f'{track_path}/{ TRACK_PATHS["fasta_filename"]                   }',
 
+    # List of Species class fields to expose to the template
+    # Optional - exposes all attributes if not provided
+    'species_fields': [
+      'name', 'short_name', 'project_num', 'wb_ver', 'latest_release',
+    ],
+
     # String replacement tokens
     # Maps token to the field in Species object it should be replaced with
     'tokens': {
-      '$WB':      'wormbase_version',
+      '$WB':      'wb_ver',
       '$RELEASE': 'latest_release',
-      '$PRJ':     'project_number',
+      '$PRJ':     'project_num',
     },
 
     # Misc
