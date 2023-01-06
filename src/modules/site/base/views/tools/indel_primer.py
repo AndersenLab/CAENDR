@@ -8,7 +8,7 @@ import io
 from logzero import logger
 from flask import Response, Blueprint, render_template, request, url_for, jsonify, redirect, flash, abort
 
-from base.utils.auth import jwt_required, admin_required, get_current_user
+from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
 from base.forms import PairwiseIndelForm
 
 from caendr.models.datastore.gene_browser_tracks import TRACKS, TRACK_PATHS, TRACK_TEMPLATES
@@ -115,21 +115,34 @@ def pairwise_indel_finder_query():
 @indel_primer_bp.route('/pairwise_indel_finder/submit', methods=["POST"])
 @jwt_required()
 def submit_indel_primer():
-  user = get_current_user()
-  data = request.get_json()
-  data_hash = get_object_hash(data, length=32)
-  
-  props = {'site': data['site'],
-            'strain_1': data['strain_1'],
-            'strain_2': data['strain_2'],
-            'size': data['size'],
-            'data_hash': data_hash,
-            'username': user.name}
 
-  p = create_new_indel_primer(**props)
-  return jsonify({'started': True,
-                  'data_hash': data_hash,
-                  'id': p.id })
+  # Get current user
+  user = get_current_user()
+
+  # Get info about data
+  data      = request.get_json()
+  data_hash = get_object_hash(data, length=32)
+
+  # If user is admin, allow them to bypass cache with URL variable
+  no_cache = bool(user_is_admin() and request.args.get("nocache", False))
+
+  # Create new Indel Primer
+  p = create_new_indel_primer(**{
+    'site':      data['site'],
+    'strain_1':  data['strain_1'],
+    'strain_2':  data['strain_2'],
+    'size':      data['size'],
+    'data_hash': data_hash,
+    'username':  user.name,
+    'no_cache':  no_cache,
+  })
+
+  # Notify user that task has been started
+  return jsonify({
+    'started':   True,
+    'data_hash': data_hash,
+    'id':        p.id,
+  })
 
 
 # TODO: Move internals of this to a service function

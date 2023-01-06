@@ -88,6 +88,11 @@ def user_has_role(role):
   except Exception as e:
     return False
 
+
+def user_is_admin():
+  return user_has_role('admin')
+
+
 def admin_required():
   def wrapper(fn):
     @wraps(fn)
@@ -100,6 +105,7 @@ def admin_required():
         return abort(401)
     return decorator
   return wrapper
+
 
 def magic_link_required():
   def wrapper(fn):
