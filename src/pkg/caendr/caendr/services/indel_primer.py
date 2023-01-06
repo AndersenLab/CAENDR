@@ -127,60 +127,78 @@ def query_indels_and_mark_overlaps(strain_1, strain_2, chromosome, start, stop):
   return []
 
 
-def create_new_indel_primer(username, site, strain_1, strain_2, size, data_hash):
-  logger.debug(f'Creating new Indel Primer: username:{username} site:{site} strain_1:{strain_1} strain_2:{strain_2} size:{size} data_hash:{data_hash}')
+def create_new_indel_primer(username, site, strain_1, strain_2, size, data_hash, no_cache=False):
+  logger.debug(f'''Creating new Indel Primer:
+    username:  "{username}"
+    site:      {site}
+    strain_1:  {strain_1}
+    strain_2:  {strain_2}
+    size:      {size}
+    data_hash: {data_hash}
+    cache:     {not no_cache}''')
+
+  # Check for existing indel primer matching data_hash & user
+  if not no_cache:
+    ips = query_ds_entities(IndelPrimer.kind, filters=[('data_hash', '=', data_hash)])
+    if ips and ips[0]:
+      ip = IndelPrimer(ips[0])
+      if ip.username == username:
+        return ip
+
+  # Compute unique ID for new Indel Primer entity
   id = unique_id()
   
   # Load container version info 
   c = get_current_container_version(INDEL_PRIMER_CONTAINER_NAME)
-  
-  status = 'SUBMITTED'
-  props = {'id': id,
-          'username': username,
-          'site': site,
-          'strain_1': strain_1,
-          'strain_2': strain_2,
-          'size': size,
-          'data_hash': data_hash,
-          'container_repo': c.repo,
-          'container_name': c.container_name,
-          'container_version': c.container_tag,
-          'status': status}
-    
-  # Check for existing indel primer matching data_hash
-  ips = query_ds_entities(IndelPrimer.kind, filters=[('data_hash', '=', data_hash)])
-  if ips and ips[0]:
-    ip = IndelPrimer(ips[0])
-    if ip.username == username:
-      return ip
 
+  # Create Indel Primer entity & upload to GCP
   ip = IndelPrimer(id)
-  ip.set_properties(**props)
+  ip.set_properties(**{
+    'id': id,
+    'username': username,
+    'site': site,
+    'strain_1': strain_1,
+    'strain_2': strain_2,
+    'size': size,
+    'data_hash': data_hash,
+    'container_repo': c.repo,
+    'container_name': c.container_name,
+    'container_version': c.container_tag,
+    'status': 'SUBMITTED'
+  })
   ip.save()
 
-  data = {'site': site,
-          'strain_1': strain_1,
-          'strain_2': strain_2,
-          'size': size}
-  
   # Check if there is already a result
-  if check_blob_exists(ip.get_bucket_name(), ip.get_result_blob_path()):
-    ip.status = 'COMPLETE'
-    ip.save()
-    return ip
-  
+  if not no_cache:
+    if check_blob_exists(ip.get_bucket_name(), ip.get_result_blob_path()):
+      ip.status = 'COMPLETE'
+      ip.save()
+      return ip
+
+  # Collect data about this run
+  data = {
+    'site': site,
+    'strain_1': strain_1,
+    'strain_2': strain_2,
+    'size': size
+  }
+
   # Upload data.tsv to google storage
   bucket = ip.get_bucket_name()
   blob = ip.get_data_blob_path()
   upload_blob_from_string(bucket, json.dumps(data), blob)
-  
+
   # Schedule mapping in task queue
   task = _create_indel_primer_task(ip)
   payload = task.get_payload()
   task = add_task(INDEL_PRIMER_TASK_QUEUE_NAME, f'{API_PIPELINE_TASK_URL}/task/start/{INDEL_PRIMER_TASK_QUEUE_NAME}', payload)
+
+  # If task couldn't be created, set Indel Primer status to ERROR
   if not task:
     ip.status = 'ERROR'
     ip.save()
+
+  # Return resulting Indel Primer object
   return ip
 
 
