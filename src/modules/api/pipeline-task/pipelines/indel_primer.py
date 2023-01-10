@@ -46,11 +46,15 @@ def _generate_indel_primer_pipeline_req(task: IndelPrimerTask):
   image_uri = f"{task.container_repo}/{task.container_name}:{task.container_version}"
   
   container_name = f"indel-primer-{ip.id}"
-  environment = {"INDEL_STRAIN_1": ip.strain_1, 
-                 "INDEL_STRAIN_2": ip.strain_2, 
-                 "INDEL_SITE": ip.site,
-                 "RESULT_BUCKET": ip.get_bucket_name(),
-                 "RESULT_BLOB": ip.get_result_blob_path()}
+  environment = {
+    "INDEL_STRAIN_1":               ip.strain_1,
+    "INDEL_STRAIN_2":               ip.strain_2,
+    "INDEL_SITE":                   ip.site,
+    "RESULT_BUCKET":                ip.get_bucket_name(),
+    "RESULT_BLOB":                  ip.get_result_blob_path(),
+    "INDEL_PRIMER_SV_BED_FILENAME": ip.sv_bed_filename,
+    "INDEL_PRIMER_SV_VCF_FILENAME": ip.sv_vcf_filename,
+  }
 
   service_account = ServiceAccount(email=sa_email, scopes=SCOPES)
   virtual_machine = VirtualMachine(machine_type=MACHINE_TYPE,
