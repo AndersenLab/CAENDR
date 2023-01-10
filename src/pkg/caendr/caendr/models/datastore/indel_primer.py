@@ -51,6 +51,8 @@ class IndelPrimer(Entity):
             'container_version',
             'container_repo',
             'operation_name',
+            'sv_bed_filename',
+            'sv_vcf_filename',
             'status'}
     
   def __repr__(self):

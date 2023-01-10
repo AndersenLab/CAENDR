@@ -119,6 +119,8 @@ class IndelPrimerTask(Task):
     payload['strain_1'] = self.strain_1
     payload['strain_2'] = self.strain_2
     payload['site'] = self.site
+    payload['sv_bed_filename'] = self.sv_bed_filename
+    payload['sv_vcf_filename'] = self.sv_vcf_filename
     return payload
   
   @classmethod
@@ -128,6 +130,8 @@ class IndelPrimerTask(Task):
     props.add('strain_1')
     props.add('strain_2')
     props.add('site')
+    props.add('sv_bed_filename')
+    props.add('sv_vcf_filename')
     return props
 
   def __repr__(self):

@@ -5,6 +5,7 @@ import json
 from cyvcf2 import VCF
 from logzero import logger
 
+from caendr.models.error import EnvVarError
 from caendr.models.datastore import IndelPrimer
 from caendr.models.task import IndelPrimerTask
 
@@ -17,10 +18,23 @@ from caendr.services.tool_versions import get_current_container_version
 from caendr.utils.constants import CHROM_NUMERIC
 from caendr.utils.data import unique_id
 
-MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
-INDEL_PRIMER_CONTAINER_NAME = os.environ.get('INDEL_PRIMER_CONTAINER_NAME')
-INDEL_PRIMER_TASK_QUEUE_NAME = os.environ.get('INDEL_PRIMER_TASK_QUEUE_NAME')
+MODULE_SITE_BUCKET_PRIVATE_NAME   = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
+INDEL_PRIMER_CONTAINER_NAME       = os.environ.get('INDEL_PRIMER_CONTAINER_NAME')
+INDEL_PRIMER_TASK_QUEUE_NAME      = os.environ.get('INDEL_PRIMER_TASK_QUEUE_NAME')
 MODULE_API_PIPELINE_TASK_URL_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_URL_NAME')
+
+
+SV_BED_FILENAME = os.environ.get('INDEL_PRIMER_SV_BED_FILENAME')
+SV_VCF_FILENAME = os.environ.get('INDEL_PRIMER_SV_VCF_FILENAME')
+
+if not SV_BED_FILENAME:
+  logger.debug("No value provided for INDEL_PRIMER_SV_BED_FILENAME")
+  raise EnvVarError()
+
+if not SV_VCF_FILENAME:
+  logger.debug("No value provided for INDEL_PRIMER_SV_VCF_FILENAME")
+  raise EnvVarError()
+
 
 API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 
@@ -34,8 +48,8 @@ MAX_SV_SIZE = 500
 # Initial load of strain list from sv_data
 # This is run when the server is started.
 # NOTE: Tabix cannot make requests over https!
-SV_BED_URL = f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/tools/pairwise_indel_primer/caendr.pif.bed.gz"
-SV_VCF_URL = f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/tools/pairwise_indel_primer/caendr.pif.vcf.gz"
+SV_BED_URL = f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/tools/pairwise_indel_primer/{SV_BED_FILENAME}"
+SV_VCF_URL = f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/tools/pairwise_indel_primer/{SV_VCF_FILENAME}"
 
 SV_STRAINS = VCF(SV_VCF_URL).samples
 SV_COLUMNS = [
@@ -154,17 +168,19 @@ def create_new_indel_primer(username, site, strain_1, strain_2, size, data_hash,
   # Create Indel Primer entity & upload to GCP
   ip = IndelPrimer(id)
   ip.set_properties(**{
-    'id': id,
-    'username': username,
-    'site': site,
-    'strain_1': strain_1,
-    'strain_2': strain_2,
-    'size': size,
-    'data_hash': data_hash,
-    'container_repo': c.repo,
-    'container_name': c.container_name,
+    'id':                id,
+    'username':          username,
+    'site':              site,
+    'strain_1':          strain_1,
+    'strain_2':          strain_2,
+    'size':              size,
+    'data_hash':         data_hash,
+    'container_repo':    c.repo,
+    'container_name':    c.container_name,
     'container_version': c.container_tag,
-    'status': 'SUBMITTED'
+    'sv_bed_filename':   SV_BED_FILENAME,
+    'sv_vcf_filename':   SV_VCF_FILENAME,
+    'status':            'SUBMITTED',
   })
   ip.save()
 
@@ -203,16 +219,23 @@ def create_new_indel_primer(username, site, strain_1, strain_2, size, data_hash,
 
 
 def _create_indel_primer_task(ip):
-  return IndelPrimerTask(**{'id': ip.id,
-                            'kind': IndelPrimer.kind,
-                            'username': ip.username,
-                            'strain_1': ip.strain_1,
-                            'strain_2': ip.strain_2,
-                            'site': ip.site,
-                            'data_hash': ip.data_hash,
-                            'container_name': ip.container_name,
-                            'container_version': ip.container_version,
-                            'container_repo': ip.container_repo})
+  """
+    Convert an Indel Primer object to an Indel Primer task.
+  """
+  return IndelPrimerTask(**{
+    'id':                ip.id,
+    'kind':              IndelPrimer.kind,
+    'username':          ip.username,
+    'site':              ip.site,
+    'strain_1':          ip.strain_1,
+    'strain_2':          ip.strain_2,
+    'data_hash':         ip.data_hash,
+    'container_repo':    ip.container_repo,
+    'container_name':    ip.container_name,
+    'container_version': ip.container_version,
+    'sv_bed_filename':   ip.sv_bed_filename,
+    'sv_vcf_filename':   ip.sv_vcf_filename,
+  })
 
 
 def update_indel_primer_status(id: str, status: str=None, operation_name: str=None):
