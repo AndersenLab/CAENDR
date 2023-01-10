@@ -18,6 +18,7 @@ from extensions import cache
 
 from caendr.api.strain import get_strains, query_strains, get_strain_sets, get_strain_img_url
 from caendr.models.sql import Strain
+from caendr.services.cloud.storage import get_blob
 from caendr.utils.json import dump_json
 
 
@@ -159,7 +160,17 @@ def strains_submission_page():
 @strains_bp.route("/protocols")
 @cache.memoize(60*60)
 def protocols():
-    title = "Protocols"
-    protocols = yaml.safe_load(
-        open("base/static/yaml/protocols.yaml", 'r'))
-    return render_template('strain/protocols.html', **locals())
+
+    # Get location of YAML file in GCP
+    MODULE_SITE_BUCKET_ASSETS_NAME = os.environ.get('MODULE_SITE_BUCKET_ASSETS_NAME')
+
+    # Download the YAML file as a string
+    blob = get_blob(MODULE_SITE_BUCKET_ASSETS_NAME, 'protocols/protocols.yaml')
+    content = blob.download_as_text()
+
+    # Initialize params and render HTML page
+    params = {
+      'title': "Protocols",
+      'protocols': yaml.safe_load(content),
+    }
+    return render_template('strain/protocols.html', **params)
