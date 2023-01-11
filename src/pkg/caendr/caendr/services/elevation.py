@@ -2,7 +2,7 @@ import requests
 
 from string import Template
 from caendr.services.cloud.secret import get_secret
-from logzero import logger
+from caendr.services.logger import logger
 from diskcache import Cache
 
 cache = Cache("cachedir")

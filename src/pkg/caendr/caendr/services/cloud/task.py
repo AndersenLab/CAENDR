@@ -2,7 +2,7 @@ import os
 import json
 import datetime
 
-from logzero import logger
+from caendr.services.logger import logger
 from flask import request
 from google.cloud import tasks_v2
 from google.protobuf import timestamp_pb2

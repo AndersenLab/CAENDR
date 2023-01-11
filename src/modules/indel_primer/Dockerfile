@@ -34,5 +34,5 @@ RUN vk genome wormbase --ref=WS276
 COPY . ./
 
 # Install requirements and CAENDR package
+RUN python -m pip install --no-cache-dir -r requirements.txt
 RUN python -m pip install --no-cache-dir -e ./caendr
-

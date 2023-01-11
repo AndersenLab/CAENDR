@@ -3,7 +3,7 @@ import json
 import requests
 
 from datetime import datetime
-from logzero import logger
+from caendr.services.logger import logger
 from flask import Flask, render_template
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.middleware.proxy_fix import ProxyFix

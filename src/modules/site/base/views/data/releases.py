@@ -10,7 +10,7 @@ from flask import (request,
                     send_file,
                     url_for,
                     abort)
-from logzero import logger
+from caendr.services.logger import logger
 
 from config import config
 from extensions import cache

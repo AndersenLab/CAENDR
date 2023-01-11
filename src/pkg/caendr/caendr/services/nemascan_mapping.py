@@ -1,7 +1,7 @@
 import os
 import csv
 
-from logzero import logger
+from caendr.services.logger import logger
 
 from caendr.models.task import NemaScanTask
 from caendr.models.datastore import NemascanMapping

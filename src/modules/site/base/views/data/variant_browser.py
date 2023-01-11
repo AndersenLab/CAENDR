@@ -1,5 +1,5 @@
 import json
-from logzero import logger
+from caendr.services.logger import logger
 import pandas as pd
 
 from flask import (render_template,

@@ -1,4 +1,4 @@
-from logzero import logger
+from caendr.services.logger import logger
 from flask import Blueprint, jsonify
 from caendr.models.error import (APIError, 
                                  APIBadRequestError, 

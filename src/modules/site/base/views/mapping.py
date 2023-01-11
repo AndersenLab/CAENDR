@@ -1,4 +1,4 @@
-from logzero import logger
+from caendr.services.logger import logger
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 import bleach
 from flask import jsonify

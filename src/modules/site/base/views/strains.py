@@ -1,7 +1,7 @@
 import os
 import yaml
 
-from logzero import logger
+from caendr.services.logger import logger
 from flask import (render_template,
                    request,
                    url_for,

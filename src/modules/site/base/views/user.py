@@ -1,4 +1,4 @@
-from logzero import logger
+from caendr.services.logger import logger
 from flask import request, render_template, Blueprint, redirect, url_for, flash
 from slugify import slugify
 from datetime import datetime, timezone

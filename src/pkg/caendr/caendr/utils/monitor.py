@@ -1,7 +1,7 @@
 # sentry
 import os
 import sentry_sdk
-from logzero import logger
+from caendr.services.logger import logger
 
 # Sentry has a single project for CAENDR. 
 # Each component@env is a represented in Sentry as a unique environment
