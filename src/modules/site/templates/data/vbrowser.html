@@ -47,7 +47,7 @@ mark {
       <div class="col-lg-4 col-lg-offset-0 col-md-10 col-md-offset-1 col-sm-8 col-sm-offset-2 col-xs-12 text-center">
 
         <h3><label for="gene-search"> Species </label></h3>
-        <select name="species" id="species-selector" onchange="update_species()">
+        <select name="species" id="species-selector" class="form-control" onchange="update_species()">
           {% for s in species_list %}
             <option value="{{s}}">{{species_list[s]["short_name"]}}</option>
           {% endfor %}
