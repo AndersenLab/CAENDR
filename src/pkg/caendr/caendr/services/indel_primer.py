@@ -111,17 +111,17 @@ def fetch_ip_result(ip: IndelPrimer):
 
 def query_indels_and_mark_overlaps(strain_1, strain_2, chromosome, start, stop):
   results = []
-  strain_cmp = [strain_1,
-                strain_2]
+  strain_cmp = [ strain_1, strain_2 ]
+
   tb = tabix.open(SV_BED_URL)
   query = tb.query(chromosome, start, stop)
-  results = []
+
   for row in query:
     row = dict(zip(SV_COLUMNS, row))
     row["START"] = int(row["START"])
-    row["END"] = int(row["END"])
-    if row["STRAIN"] in strain_cmp and \
-      MIN_SV_SIZE <= int(row["SIZE"]) <= MAX_SV_SIZE:
+    row["END"]   = int(row["END"])
+
+    if row["STRAIN"] in strain_cmp and ( MIN_SV_SIZE <= int(row["SIZE"]) <= MAX_SV_SIZE ):
       row["site"] = f"{row['CHROM']}:{row['START']}-{row['END']} ({row['SVTYPE']})"
       results.append(row)
   
