@@ -150,7 +150,9 @@ def pairwise_indel_query_results(id, filename = None):
 
     if result:
         result = result.download_as_string().decode('utf-8')
-        result = pd.read_csv(io.StringIO(result), sep="\t")
+
+        if len(result) > 0:
+          result = pd.read_csv(io.StringIO(result), sep="\t")
 
         # Check for no results
         empty = True if len(result) == 0 else False
