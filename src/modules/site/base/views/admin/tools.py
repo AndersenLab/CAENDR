@@ -34,6 +34,8 @@ def edit_tool(id):
   
   tool = get_container(id)
   versions = get_available_version_tags(tool)
+  versions.append(tool.container_tag)
+  versions = [*set(versions)]
   versions.reverse()
 
   form = AdminEditToolContainerVersion(version=get_version(tool))

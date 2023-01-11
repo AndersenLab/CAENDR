@@ -12,6 +12,9 @@ GCR_REPO_NAME = os.environ.get('GCR_REPO_NAME')
 VALID_REPOS = [
   "caendr-db-operations",
   "caendr-gene-browser-tracks"
+  "indel-primer",
+  "heritability",
+  "nemascan-nxf"
 ]
 
 def get_gcloud():
