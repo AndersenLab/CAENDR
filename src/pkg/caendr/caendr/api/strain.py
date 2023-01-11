@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 
-from logzero import logger
+from caendr.services.logger import logger
 from sqlalchemy import or_
 from flask import request
 from datetime import timedelta

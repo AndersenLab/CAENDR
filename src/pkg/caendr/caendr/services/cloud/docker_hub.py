@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from logzero import logger
+from caendr.services.logger import logger
 
 from caendr.utils.data import AltTemplate
 

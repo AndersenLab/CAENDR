@@ -1,5 +1,5 @@
 import json
-from logzero import logger
+from caendr.services.logger import logger
 from caendr.utils.json import dump_json
 
 from google.cloud import datastore

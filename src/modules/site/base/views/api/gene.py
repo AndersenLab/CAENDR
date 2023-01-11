@@ -1,5 +1,5 @@
 from flask import request, Blueprint
-from logzero import logger
+from caendr.services.logger import logger
 from extensions import cache
 
 from caendr.api.gene import search_genes, search_homologs, get_gene

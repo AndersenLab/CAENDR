@@ -3,7 +3,7 @@ import subprocess
 import json
 from shutil import which
 
-from logzero import logger
+from caendr.services.logger import logger
 
 from caendr.utils.data import AltTemplate
 

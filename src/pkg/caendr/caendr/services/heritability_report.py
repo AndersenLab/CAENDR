@@ -1,6 +1,6 @@
 import os
 
-from logzero import logger
+from caendr.services.logger import logger
 
 from caendr.services.cloud.datastore import query_ds_entities
 from caendr.services.cloud.storage import upload_blob_from_string, generate_blob_url, check_blob_exists

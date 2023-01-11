@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, url_for, request, redirect
-from logzero import logger
+from caendr.services.logger import logger
 
 from base.utils.auth import admin_required, get_jwt
 from base.forms import AdminEditToolContainerVersion

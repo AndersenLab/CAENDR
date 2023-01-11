@@ -1,6 +1,6 @@
 from slugify import slugify
 from wtforms.validators import ValidationError
-from logzero import logger
+from caendr.services.logger import logger
 from gcloud.exceptions import BadRequest
 
 from caendr.services.cloud.datastore import get_ds_entity

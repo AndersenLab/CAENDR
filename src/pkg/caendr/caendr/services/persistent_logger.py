@@ -1,4 +1,4 @@
-from logzero import logger
+from caendr.services.logger import logger
 from google.cloud import storage
 import os
 from caendr.models.datastore.entity import Entity

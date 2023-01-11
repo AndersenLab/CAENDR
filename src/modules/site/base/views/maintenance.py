@@ -1,6 +1,6 @@
 from threading import Thread
 from flask import jsonify, Blueprint, request, flash, abort, render_template
-from logzero import logger
+from caendr.services.logger import logger
 
 from caendr.services.cloud.cron import verify_cron_req_origin
 from caendr.api.strain import generate_bam_bai_download_script, get_joined_strain_list

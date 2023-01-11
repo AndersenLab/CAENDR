@@ -1,5 +1,5 @@
 import os
-from logzero import logger
+from caendr.services.logger import logger
 
 from caendr.services.cloud.docker_hub import get_container_versions
 from caendr.services.cloud import gcr_container_registry

@@ -1,5 +1,5 @@
 import os
-from logzero import logger
+from caendr.services.logger import logger
 from sqlalchemy import func 
 
 from caendr.models.datastore import DatabaseOperation

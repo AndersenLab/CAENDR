@@ -1,7 +1,7 @@
 import json
 import pandas as pd
 import numpy as np
-from logzero import logger
+from caendr.services.logger import logger
 
 
 from flask_wtf import FlaskForm, RecaptchaField, Form

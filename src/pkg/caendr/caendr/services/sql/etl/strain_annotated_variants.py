@@ -4,7 +4,7 @@ import re
 import gzip
 import shutil
 
-from logzero import logger
+from caendr.services.logger import logger
 from sqlalchemy.sql.expression import null
 
 from caendr.models.sql import StrainAnnotatedVariant

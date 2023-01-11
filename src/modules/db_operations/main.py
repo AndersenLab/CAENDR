@@ -3,9 +3,9 @@ from re import T
 import traceback
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask
-from logzero import logger
+from caendr.services.logger import logger
 from dotenv import load_dotenv
-from logzero import logger
+from caendr.services.logger import logger
 import time
 import json
 from caendr.services.email import send_email

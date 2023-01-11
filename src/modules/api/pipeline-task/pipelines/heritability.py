@@ -2,7 +2,7 @@ import os
 import json
 import logging
 import tabix
-from logzero import logger
+from caendr.services.logger import logger
 
 from caendr.models.task import HeritabilityTask
 from caendr.models.datastore import HeritabilityReport
