@@ -136,7 +136,7 @@ def pairwise_indel_query_results(id, filename = None):
 
     if data is None:
         return abort(404, description="Indel primer report not found")
-      
+
     data = json.loads(data.download_as_string().decode('utf-8'))
     logger.debug(data)
     # Get trait and set title
@@ -150,15 +150,19 @@ def pairwise_indel_query_results(id, filename = None):
 
     if result:
         result = result.download_as_string().decode('utf-8')
-        result = pd.read_csv(io.StringIO(result), sep="\t")
 
         # Check for no results
-        empty = True if len(result) == 0 else False
+        empty = len(result) == 0
         ready = True
         ip.status = 'COMPLETE'
         ip.empty = empty
         ip.save()
+
         if empty is False:
+
+            # Separate results by tabs
+            result = pd.read_csv(io.StringIO(result), sep="\t")
+
             # left primer
             result['left_primer_start'] = result.amplicon_region.apply(lambda x: x.split(":")[1].split("-")[0]).astype(int)
             result['left_primer_stop'] = result.apply(lambda x: len(x['primer_left']) + x['left_primer_start'], axis=1)
