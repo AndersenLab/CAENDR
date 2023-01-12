@@ -151,19 +151,19 @@ def create_new_indel_primer(username, site, strain_1, strain_2, size, data_hash,
     data_hash: {data_hash}
     cache:     {not no_cache}''')
 
+  # Load container version info
+  c = get_current_container_version(INDEL_PRIMER_CONTAINER_NAME)
+
   # Check for existing indel primer matching data_hash & user
   if not no_cache:
     ips = query_ds_entities(IndelPrimer.kind, filters=[('data_hash', '=', data_hash)])
     if ips and ips[0]:
       ip = IndelPrimer(ips[0])
-      if ip.username == username:
+      if ip.username == username and ip.container_equals(c):
         return ip
 
   # Compute unique ID for new Indel Primer entity
   id = unique_id()
-  
-  # Load container version info 
-  c = get_current_container_version(INDEL_PRIMER_CONTAINER_NAME)
 
   # Create Indel Primer entity & upload to GCP
   ip = IndelPrimer(id)

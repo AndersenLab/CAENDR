@@ -27,4 +27,23 @@ class Container(Entity):
       return f"<{self.kind}:{self.id}>"
     else:
       return f"<{self.kind}:no-id>"
-    
+
+
+  def __getitem__(self, prop):
+    '''
+      Make properties listed in props_set accessible with bracket notation.
+      Properties that are not set will return as None.
+
+      Raises:
+        KeyError: prop not found in props_set
+    '''
+    if prop in Container.get_props_set():
+      return self.__dict__.get(prop)
+    raise KeyError()
+
+
+  def full_string(self):
+    s = f"{self['repo']}/{self['container_name']}"
+    if self['container_tag']:
+      s += ':' + self['container_tag']
+    return s
