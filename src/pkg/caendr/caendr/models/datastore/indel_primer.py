@@ -29,6 +29,8 @@ class IndelPrimer(Entity):
     'container_version':  'container_tag',
   }
 
+  __container = Container()
+
   
   def __init__(self, *args, **kwargs):
     super(IndelPrimer, self).__init__(*args, **kwargs)
@@ -36,11 +38,22 @@ class IndelPrimer(Entity):
     self.set_properties(**kwargs)
 
 
+  def __iter__(self):
+    '''
+      Convert entity to an iterable.  Yields all fields from superclass(es), then fields specific to self.
+    '''
+    yield from super(IndelPrimer, self).__iter__()
+    yield from (
+      ( k , self[k] ) for k in self.__container_prop_map if self[k] is not None
+    )
+
+
   def set_properties(self, **kwargs):
 
-    # Set normal props directly
-    props = self.get_props_set()
-    self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
+    # Set non-container props through super method
+    super(IndelPrimer, self).set_properties(**{
+      k: v for k, v in kwargs.items() if k not in self.__container_prop_map
+    })
 
     # Pass container props to Container
     self._set_container_props_from(kwargs)
@@ -53,9 +66,6 @@ class IndelPrimer(Entity):
       Initialize this Indel Primer result's source Container object.
       Accepts *args and **kwargs from __init__.
     '''
-
-    # Initialize Container object
-    self.__container = Container()
 
     # Copying an existing Entity object
     if len(args) > 0 and type(args[0]) == datastore.entity.Entity:
@@ -169,6 +179,8 @@ class IndelPrimer(Entity):
   @classmethod
   def get_props_set(cls):
     return {
+      *super(IndelPrimer, cls).get_props_set(),
+
       # Submission
       'id',
       'data_hash',
@@ -206,12 +218,12 @@ class IndelPrimer(Entity):
         KeyError: prop not found in props_set
     '''
 
-    # Lookup prop in dictionary
-    if prop in IndelPrimer.get_props_set():
-      return self.__dict__.get(prop)
+    # Forward container props to Container object
+    if prop in self.__container_prop_map:
+      return self.__container[ self.__container_prop_map[ prop ] ]
 
-    # If prop not in list, raise an error
-    raise KeyError()
+    # Handle non-container props with default lookup method
+    return super(IndelPrimer, self).__getitem__(prop)
 
 
 
