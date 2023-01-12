@@ -68,6 +68,13 @@ class Entity(object):
     self.set_properties(**obj)
 
 
+  def __repr__(self):
+    return f"<{self.kind}:{getattr(self, 'name', 'no-name')}>"
+
+
+
+  ## Saving to Datastore ##
+
   def save(self):
     '''
       Append metadata to the Entity and save it to the datastore.
@@ -123,9 +130,3 @@ class Entity(object):
     props = self.get_props_set()
     self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
 
-
-  def __repr__(self):
-    if hasattr(self, 'name'):
-      return f"<{self.kind}:{self.name}>"
-    else:
-      return f"<{self.kind}:no-name>"

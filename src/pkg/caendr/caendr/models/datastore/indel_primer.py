@@ -19,6 +19,9 @@ class IndelPrimer(JobEntity):
   __result_file = INDEL_RESULT_FILE
 
 
+  def __repr__(self):
+    return f"<{self.kind}:{getattr(self, 'id', 'no-id')}>"
+
 
   ## Bucket ##
 
@@ -34,7 +37,6 @@ class IndelPrimer(JobEntity):
   
   def get_result_blob_path(self):
     return f'{self.get_blob_path()}/{self.__result_file}'
-
 
 
   ## All Properties ##
@@ -63,11 +65,3 @@ class IndelPrimer(JobEntity):
       'sv_bed_filename',
       'sv_vcf_filename',
     }
-
-
-  def __repr__(self):
-    # if hasattr(self, 'id'):
-    #   return f"<{self.kind}:{self.id}>"
-    # else:
-    #   return f"<{self.kind}:no-id>"
-    return f"<{self.kind}:{getattr(self, 'id', 'no-id')}>"
