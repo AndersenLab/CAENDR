@@ -169,18 +169,18 @@ def create_new_indel_primer(username, site, strain_1, strain_2, size, data_hash,
   ip = IndelPrimer(id)
   ip.set_properties(**{
     'id':                id,
+    'data_hash':         data_hash,
     'username':          username,
+    'status':            'SUBMITTED',
     'site':              site,
     'strain_1':          strain_1,
     'strain_2':          strain_2,
     'size':              size,
-    'data_hash':         data_hash,
     'container_repo':    c.repo,
     'container_name':    c.container_name,
     'container_version': c.container_tag,
     'sv_bed_filename':   SV_BED_FILENAME,
     'sv_vcf_filename':   SV_VCF_FILENAME,
-    'status':            'SUBMITTED',
   })
   ip.save()
 
@@ -225,11 +225,11 @@ def _create_indel_primer_task(ip):
   return IndelPrimerTask(**{
     'id':                ip.id,
     'kind':              IndelPrimer.kind,
+    'data_hash':         ip.data_hash,
     'username':          ip.username,
     'site':              ip.site,
     'strain_1':          ip.strain_1,
     'strain_2':          ip.strain_2,
-    'data_hash':         ip.data_hash,
     'container_repo':    ip.container_repo,
     'container_name':    ip.container_name,
     'container_version': ip.container_version,

@@ -169,20 +169,29 @@ class IndelPrimer(Entity):
   @classmethod
   def get_props_set(cls):
     return {
+      # Submission
       'id',
-      'site', 
-      'strain_1',
-      'strain_2',
       'data_hash',
       'username',
+      'operation_name',
+
+      # Status
+      'status',
       'no_result',
+
+      # Query
+      'site',
+      'strain_1',
+      'strain_2',
+
+      # Container
       'container_repo',
       'container_name',
       'container_version',
-      'operation_name',
+
+      # Files
       'sv_bed_filename',
       'sv_vcf_filename',
-      'status',
     }
 
 
