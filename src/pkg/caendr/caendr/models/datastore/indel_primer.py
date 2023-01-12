@@ -19,13 +19,6 @@ class IndelPrimer(JobEntity):
   __result_file = INDEL_RESULT_FILE
 
 
-  ## Initialization ##
-  
-  def __init__(self, *args, **kwargs):
-    super(IndelPrimer, self).__init__(*args, **kwargs)
-    self.set_properties(**kwargs)
-
-
 
   ## Bucket ##
 

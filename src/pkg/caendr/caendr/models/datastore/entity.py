@@ -9,7 +9,10 @@ class Entity(object):
   """  Base model for datastore entity """
   kind = "Entity"
 
-  def __init__(self, name_or_obj=None):
+
+  ## Initialization ##
+
+  def __init__(self, name_or_obj = None, **kwargs):
     """
       Args:
         name_or_obj - A name for a new datastore item or an existing one to retrieve from the datastore               
@@ -17,27 +20,58 @@ class Entity(object):
     self.exclude_from_indexes = None
     self._exists = False
 
+    # If a datastore entity was passed, copy its fields
     if type(name_or_obj) == datastore.entity.Entity:
-      # Parse JSON fields when instantiating without loading from gcloud.
-      result_out = {}
-      for k, v in name_or_obj.items():
-        if isinstance(v, str) and v.startswith("JSON:"):
-          result_out[k] = json.loads(v[5:])
-        elif v:
-          result_out[k] = v
-      self.__dict__.update(result_out)
-      self.kind = name_or_obj.key.kind
-      self.name = name_or_obj.key.name
+      self._init_from_entity(name_or_obj)
+
+    # If a name was passed, check if the name already exists in the datastore
     elif name_or_obj:
       self.name = name_or_obj
       item = get_ds_entity(self.kind, name_or_obj)
       if item:
-        self._exists = True
-        self.__dict__.update(item)
+        self._init_from_datastore(item)
+
+    # Catch any remaining keyword arguments and use them to initialize the object
+    self.set_properties(**kwargs)
+
+
+  def _init_from_entity(self, obj):
+    '''
+      Copy constructor helper function.
+
+      Initialize by copying a datastore entity that already exists locally.
+      Can be overwritten by subclasses if special functionality is needed.
+    '''
+
+    # Set kind and name from object
+    self.kind = obj.key.kind
+    self.name = obj.key.name
+
+    # Parse JSON fields when instantiating without loading from gcloud.
+    result_out = {}
+    for k, v in obj.items():
+      if isinstance(v, str) and v.startswith("JSON:"):
+        result_out[k] = json.loads(v[5:])
+      elif v:
+        result_out[k] = v
+
+    # Update properties
+    self.set_properties(**result_out)
+
+
+  def _init_from_datastore(self, obj):
+    '''
+      Initialize by copying fields from an object downloaded from the datastore.
+      Can be overwritten by subclasses if special functionality is needed.
+    '''
+    self._exists = True
+    self.set_properties(**obj)
 
 
   def save(self):
-    ''' Append metadata to the Entity and save it to the datastore'''
+    '''
+      Append metadata to the Entity and save it to the datastore.
+    '''
     now = datetime.now(timezone.utc)
     meta_props = {}
 
@@ -54,10 +88,8 @@ class Entity(object):
     save_ds_entity(self.kind, self.name, **props)
 
 
-  def set_properties(self, **kwargs):
-    props = self.get_props_set()
-    self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
 
+  ## Properties List ##
 
   @classmethod
   def get_props_set(cls):
@@ -82,6 +114,14 @@ class Entity(object):
     if prop in self.__class__.get_props_set():
       return self.__dict__.get(prop)
     raise KeyError()
+
+
+
+  ## Set Properties ##
+
+  def set_properties(self, **kwargs):
+    props = self.get_props_set()
+    self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
 
 
   def __repr__(self):

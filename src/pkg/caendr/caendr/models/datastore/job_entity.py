@@ -1,10 +1,7 @@
 import os
 from logzero import logger
 
-from google.cloud import datastore
-
 from caendr.models.datastore import Container, Entity
-from caendr.services.cloud.datastore import get_ds_entity
 
 
 
@@ -36,25 +33,6 @@ class JobEntity(Entity):
 
     # Initialize from superclass
     super(JobEntity, self).__init__(*args, **kwargs)
-
-    self._init_container(*args, **kwargs)
-    self.set_properties(**kwargs)
-
-
-  def _init_container(self, *args, **kwargs):
-    '''
-      Initialize this JobEntity's source Container object.
-      Accepts *args and **kwargs from __init__.
-    '''
-
-    # Copying an existing Entity object
-    if len(args) > 0 and type(args[0]) == datastore.entity.Entity:
-      self._set_container_props_from(args[0])
-
-    # Downloading an existing Entity from datastore
-    elif self._exists:
-      item = get_ds_entity(self.kind, args[0])
-      self._set_container_props_from(item)
 
 
 
@@ -104,7 +82,9 @@ class JobEntity(Entity):
 
   def set_properties(self, **kwargs):
     '''
-      Pass Container properties to Container object.
+      Set object properties, passing Container properties to Container object.
+
+      Container properties in the source must be named by the *keys* in JobEntity.__container_prop_map.
     '''
 
     # Set non-container props through super method
@@ -113,20 +93,10 @@ class JobEntity(Entity):
     })
 
     # Pass container props to Container
-    self._set_container_props_from(kwargs)
-
-
-  def _set_container_props_from(self, src):
-    '''
-      Set the Container object's properties from a source object.
-
-      Properties must be accessible in the source via __getitem__ (i.e. bracket notation).
-      Properties in the source must be named by the *keys* in IndelPrimer.__container_prop_map.
-    '''
     self.__container.set_properties(**{
-      container_field_name: src[indel_field_name]
+      container_field_name: kwargs[indel_field_name]
         for indel_field_name, container_field_name in self.__container_prop_map.items()
-        if indel_field_name in src
+        if indel_field_name in kwargs
     })
 
 
@@ -150,7 +120,7 @@ class JobEntity(Entity):
       Check whether this object was generated in a given Container.
 
       TODO: Should this be equivalent to two Containers being equal (__eq__)?
-            Currently ignores container registry, since existing Indel Primer
+            Currently ignores container registry, since existing JobEntity
             results don't store that field.
     '''
     # Check whether repo + name + tag is the same for both Containers
@@ -160,7 +130,7 @@ class JobEntity(Entity):
 
   ## Container properties ##
 
-  # Make these explicitly properties of Indel Primer object so that getting/setting
+  # Make these explicitly properties of JobEntity object so that getting/setting
   # redirects to Container object -- single source of truth
 
   @property

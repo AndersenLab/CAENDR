@@ -166,8 +166,7 @@ def create_new_indel_primer(username, site, strain_1, strain_2, size, data_hash,
   id = unique_id()
 
   # Create Indel Primer entity & upload to GCP
-  ip = IndelPrimer(id)
-  ip.set_properties(**{
+  ip = IndelPrimer(id, **{
     'id':                id,
     'data_hash':         data_hash,
     'username':          username,
