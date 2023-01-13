@@ -1,180 +1,124 @@
 from logzero import logger
 
+
+
 class Task(object):
-  
+  name = 'task'
+
   def __init__(self, *args, **kwargs):
+
+    # Set properties from keyword arguments
     self.set_properties(**kwargs)
-    
+
   def set_properties(self, **kwargs):
     props = self.get_props_set()
     self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
-  
+
   @classmethod
   def get_props_set(cls):
-    return {'id',
-          'kind',
-          'username',
-          'container_name',
-          'container_version',
-          'container_repo'}
-    
-  # TODO: simplify this with __dict__ or something
+    return {
+      'id',
+      'kind',
+      'username',
+      'container_name',
+      'container_version',
+      'container_repo',
+    }
+
   def get_payload(self):
-    return {'id': self.id,
-          'kind': self.kind,
-          'username': self.username,
-          'container_name': self.container_name,
-          'container_version': self.container_version,
-          'container_repo': self.container_repo}
-  
+    return { k: self.__getattribute__(k) for k in self.get_props_set() }
+
   def __repr__(self):
-    if hasattr(self, 'id'):
-      return f"<task:{self.id}>"
-    else:
-      return f"<task:no-id>"
+    return f"<{self.name}:{getattr(self, 'id', 'no-id')}>"
+
+
 
 class EchoTask(Task):
-  def get_payload(self):
-    payload = super(EchoTask, self).get_payload()
-    payload['data_hash'] = self.data_hash
-    return payload
-  
+  name = 'echo_task'
+
   @classmethod
   def get_props_set(cls):
-    props = super(EchoTask, cls).get_props_set()
-    props.add('data_hash')
-    return props
+    return {
+      *super(EchoTask, cls).get_props_set(),
+      'data_hash',
+    }
 
-  def __repr__(self):
-    if hasattr(self, 'id'):
-      return f"<echo_task:{self.id}>"
-    else:
-      return f"<echo_task:no-id>"
+
 
 class MockDataTask(Task):
-  def get_payload(self):
-    payload = super(MockDataTask, self).get_payload()
-    payload['data_hash'] = self.data_hash
-    return payload
-  
+  name = 'mock_data_task'
+
   @classmethod
   def get_props_set(cls):
-    props = super(MockDataTask, cls).get_props_set()
-    props.add('data_hash')
-    return props
+    return {
+      *super(MockDataTask, cls).get_props_set(),
+      'data_hash',
+    }
 
-  def __repr__(self):
-    if hasattr(self, 'id'):
-      return f"<mock_data_task:{self.id}>"
-    else:
-      return f"<mock_data_task:no-id>"
+
 
 class NemaScanTask(Task):
-  def get_payload(self):
-    payload = super(NemaScanTask, self).get_payload()
-    payload['data_hash'] = self.data_hash
-    return payload
-  
+  name = 'nemascan_task'
+
   @classmethod
   def get_props_set(cls):
-    props = super(NemaScanTask, cls).get_props_set()
-    props.add('data_hash')
-    return props
+    return {
+      *super(NemaScanTask, cls).get_props_set(),
+      'data_hash',
+      'species',
+    }
 
-  def __repr__(self):
-    if hasattr(self, 'id'):
-      return f"<nemascan_task:{self.id}>"
-    else:
-      return f"<nemascan_task:no-id>"
-    
-    
-    
+
+
 class DatabaseOperationTask(Task):
-  def get_payload(self):
-    payload = super(DatabaseOperationTask, self).get_payload()
-    payload['email'] = self.email
-    payload['db_operation'] = self.db_operation
-    payload['args'] = self.args
-    return payload
-  
+  name = 'db_op_task'
+
   @classmethod
   def get_props_set(cls):
-    props = super(DatabaseOperationTask, cls).get_props_set()
-    props.add('email')
-    props.add('db_operation')
-    props.add('args')
-    return props
+    return {
+      *super(DatabaseOperationTask, cls).get_props_set(),
+      'email',
+      'db_operation',
+      'args',
+    }
 
-  def __repr__(self):
-    if hasattr(self, 'id'):
-      return f"<db_op_task:{self.id}>"
-    else:
-      return f"<db_op_task:no-id>"
-    
-    
+
+
 class IndelPrimerTask(Task):
-  def get_payload(self):
-    payload = super(IndelPrimerTask, self).get_payload()
-    payload['data_hash'] = self.data_hash
-    payload['site'] = self.site
-    payload['strain_1'] = self.strain_1
-    payload['strain_2'] = self.strain_2
-    payload['sv_bed_filename'] = self.sv_bed_filename
-    payload['sv_vcf_filename'] = self.sv_vcf_filename
-    return payload
-  
+  name  = 'indel_primer_task'
+
   @classmethod
   def get_props_set(cls):
-    props = super(IndelPrimerTask, cls).get_props_set()
-    props.add('data_hash')
-    props.add('site')
-    props.add('strain_1')
-    props.add('strain_2')
-    props.add('sv_bed_filename')
-    props.add('sv_vcf_filename')
-    return props
+    return {
+      *super(IndelPrimerTask, cls).get_props_set(),
+      'data_hash',
+      'site',
+      'strain_1',
+      'strain_2',
+      'sv_bed_filename',
+      'sv_vcf_filename',
+    }
 
-  def __repr__(self):
-    if hasattr(self, 'id'):
-      return f"<indel_primer_task:{self.id}>"
-    else:
-      return f"<indel_primer_task:no-id>"
-    
-    
+
+
 class HeritabilityTask(Task):
-  def get_payload(self):
-    payload = super(HeritabilityTask, self).get_payload()
-    payload['data_hash'] = self.data_hash
-    return payload
+  name = 'heritability_task'
   
   @classmethod
   def get_props_set(cls):
-    props = super(HeritabilityTask, cls).get_props_set()
-    props.add('data_hash')
-    return props
+    return {
+      *super(HeritabilityTask, cls).get_props_set(),
+      'data_hash',
+    }
 
-  def __repr__(self):
-    if hasattr(self, 'id'):
-      return f"<heritability_task:{self.id}>"
-    else:
-      return f"<heritability_task:no-id>"
-    
-    
+
+
 class GeneBrowserTracksTask(Task):
-  def get_payload(self):
-    payload = super(GeneBrowserTracksTask, self).get_payload()
-    payload['wormbase_version'] = self.wormbase_version
-    return payload
-  
+  name = 'gene_browser_tracks_task'
+
   @classmethod
   def get_props_set(cls):
-    props = super(GeneBrowserTracksTask, cls).get_props_set()
-    props.add('wormbase_version')
-    return props
-
-  def __repr__(self):
-    if hasattr(self, 'id'):
-      return f"<gene_browser_tracks_task:{self.id}>"
-    else:
-      return f"<gene_browser_tracks_task:no-id>"
-    
+    return {
+      *super(GeneBrowserTracksTask, cls).get_props_set(),
+      'wormbase_version',
+    }
