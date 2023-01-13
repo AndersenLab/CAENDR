@@ -52,9 +52,8 @@ class IndelPrimer(JobEntity):
       'username',
       'operation_name',
 
-      # Status
-      'status',
-      'no_result',
+      # # Status
+      # 'no_result',
 
       # Query
       'site',

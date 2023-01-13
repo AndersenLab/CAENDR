@@ -46,10 +46,16 @@ class JobEntity(Entity):
   @classmethod
   def get_props_set(cls):
     return {
+      # Entity fields
       *super(JobEntity, cls).get_props_set(),
+
+      # Container fields
       'container_repo',
       'container_name',
       'container_version',
+
+      # Other fields
+      'status',
     }
 
 
