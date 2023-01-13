@@ -5,8 +5,22 @@ from google.cloud import datastore
 
 from caendr.services.cloud.datastore import get_ds_entity, save_ds_entity
 
+
+
 class Entity(object):
-  """  Base model for datastore entity """
+  """
+    Base model for datastore entity.
+
+    Functions like a dictionary with a restricted set of possible keys, defined in get_props_set().
+    Fields are get/setable with bracket notation, and return as None if not set.
+
+    Supports iteration (and therefore dictionary conversion) -- will only expose prop fields,
+    not internal attributes like `kind`.  In other words, all fields in the dict output will be
+    saved to the datastore.  This is important for subclassing.
+  """
+
+  # Default kind for the entity
+  # This should be overwritten by subclasses
   kind = "Entity"
 
 
@@ -87,9 +101,8 @@ class Entity(object):
       meta_props['created_on'] = now
     meta_props.update({'modified_on': now})
 
-    # Get list of props by converting to dict and excluding certain class vars
-    props = { k: v for k, v in dict(self).items() if k not in ['kind', 'name'] }
-    props.update(meta_props)
+    # Combine props dict with meta properties defined above
+    props = { **dict(self), **meta_props }
 
     # Save the entity in datastore
     save_ds_entity(self.kind, self.name, **props)
@@ -106,8 +119,19 @@ class Entity(object):
   def __iter__(self):
     '''
       Iterate through all props in the entity.
+
+      Returns all attributes saved in this object's __dict__ field, with keys
+      present in the props set.
+
+      Does not return attributes such as `kind` or `name`, as these are not
+      meant to be stored directly as fields in the datastore.
+
+      If subclasses add entity fields that are not stored in __dict__, they
+      should override this function to include those fields in the resulting
+      generator.
     '''
-    return ( (k, v) for k, v in self.__dict__.items() if not k.startswith("_") )
+    props = self.get_props_set()
+    return ( (k, v) for k, v in self.__dict__.items() if k in props )
 
 
   def __getitem__(self, prop):
@@ -126,7 +150,23 @@ class Entity(object):
 
   ## Set Properties ##
 
+
+  def __setitem__(self, prop, val):
+    '''
+      Make properties listed in props_set set-able with bracket notation.
+
+      Raises:
+        KeyError: prop not found in props_set
+    '''
+    if prop in self.__class__.get_props_set():
+      return self.__dict__.__setitem__(prop, val)
+    raise KeyError()
+
+
   def set_properties(self, **kwargs):
+    '''
+      Set multiple properties using keyword arguments.
+    '''
     props = self.get_props_set()
     self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
 

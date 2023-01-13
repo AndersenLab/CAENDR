@@ -1,11 +1,17 @@
-import os
-from logzero import logger
-
 from caendr.models.datastore import Container, Entity
 
 
 
 class JobEntity(Entity):
+  '''
+    Subclass of Entity for pipeline jobs.
+
+    Manages a private Container Entity instance to track container fields.
+
+    Should never be instantiated directly -- in fact, this is prevented in this class's __new__ function.
+    Instead, specific job types should be subclasses of this class.
+  '''
+
 
   # Map from JobEntity container fields -> Container fields
   # Props listed here will be converted to JobEntity object properties,
@@ -13,7 +19,6 @@ class JobEntity(Entity):
   __container_prop_map = {
     'container_repo':     'repo',
     'container_name':     'container_name',
-    # 'container_registry': 'container_registry',
     'container_version':  'container_tag',
   }
 
@@ -50,7 +55,10 @@ class JobEntity(Entity):
 
   def __iter__(self):
     '''
-      Convert entity to an iterable.  Yields all fields from superclass(es), then fields specific to self.
+      Convert entity to an iterable.
+
+      Container fields are not stored in this object's __dict__, so they must be
+      accessed separately.
     '''
     yield from super(JobEntity, self).__iter__()
     yield from (
@@ -71,7 +79,7 @@ class JobEntity(Entity):
 
     # Forward container props to Container object
     if prop in self.__container_prop_map:
-      return self.__container[ self.__container_prop_map[ prop ] ]
+      return self.__container.__getitem__( self.__container_prop_map[ prop ] )
 
     # Handle non-container props with default lookup method
     return super(JobEntity, self).__getitem__(prop)
@@ -79,6 +87,23 @@ class JobEntity(Entity):
 
 
   ## Set Properties ##
+
+
+  def __setitem__(self, prop, val):
+    '''
+      Make properties listed in props_set set-able with bracket notation.
+
+      Raises:
+        KeyError: prop not found in props_set
+    '''
+
+    # Forward container props to Container object
+    if prop in self.__container_prop_map:
+      return self.__container.__setitem__( self.__container_prop_map[ prop ], val )
+
+    # Handle non-container props with default lookup method
+    return super(JobEntity, self).__setitem__( prop, val )
+
 
   def set_properties(self, **kwargs):
     '''
@@ -94,9 +119,9 @@ class JobEntity(Entity):
 
     # Pass container props to Container
     self.__container.set_properties(**{
-      container_field_name: kwargs[indel_field_name]
-        for indel_field_name, container_field_name in self.__container_prop_map.items()
-        if indel_field_name in kwargs
+      container_field_name: kwargs[job_field_name]
+        for job_field_name, container_field_name in self.__container_prop_map.items()
+        if job_field_name in kwargs
     })
 
 
