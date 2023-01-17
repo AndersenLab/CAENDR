@@ -7,6 +7,28 @@ from caendr.services.cloud.datastore import get_ds_entity, save_ds_entity
 
 
 
+def _datetime_sort_key(datetime_or_none, set_none_max = False):
+  '''
+    Helper function for sorting Entities by a datetime field, allowing None entries.
+    None entries are mapped to the minimum possible datetime value unless set_none_max
+    is True, in which case they are mapped to the maximum possible datetime value.
+
+    Best used as key in sorted().
+
+    Args:
+      datetime_or_none (datetime, None): A datetime object or None.
+      set_none_max (bool): Whether to map None to datetime.min or datetime.max.
+
+    Returns:
+      (datetime): The key to use in sorting.
+  '''
+  if datetime_or_none is None:
+    return datetime.max if set_none_max else datetime.min
+  else:
+    return datetime_or_none.replace(tzinfo = None)
+
+
+
 class Entity(object):
   """
     Base model for datastore entity.
@@ -213,4 +235,16 @@ class Entity(object):
   @property
   def modified_on(self):
     return self.__dict__.get('modified_on')
+
+
+
+  ## Sort Methods ##
+
+  @classmethod
+  def sort_by_created_date(cls, arr, reverse = False, set_none_max = False):
+    return sorted( arr, key = lambda e: _datetime_sort_key(e.created_on, set_none_max=set_none_max), reverse=reverse )
+
+  @classmethod
+  def sort_by_modified_date(cls, arr, reverse = False, set_none_max = False):
+    return sorted( arr, key = lambda e: _datetime_sort_key(e.modified_on, set_none_max=set_none_max), reverse=reverse )
 

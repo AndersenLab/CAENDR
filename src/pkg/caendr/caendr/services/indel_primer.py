@@ -78,7 +78,7 @@ def get_all_indel_primers():
   logger.debug(f'Getting all indel primers...')
   results = query_ds_entities(IndelPrimer.kind)
   primers = [IndelPrimer(entity) for entity in results]
-  return sorted(primers, key=lambda x: x.created_on, reverse=True)
+  return IndelPrimer.sort_by_created_date(primers, reverse=True)
 
 
 def get_user_indel_primers(username):
@@ -86,7 +86,7 @@ def get_user_indel_primers(username):
   filters = [('username', '=', username)]
   results = query_ds_entities(IndelPrimer.kind, filters=filters)
   primers = [IndelPrimer(e) for e in results]
-  return sorted(primers, key=lambda x: x.created_on, reverse=True)
+  return IndelPrimer.sort_by_created_date(primers, reverse=True)
 
 
 def get_indel_primer_chrom_choices(): 
