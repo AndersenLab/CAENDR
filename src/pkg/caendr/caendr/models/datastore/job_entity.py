@@ -55,6 +55,7 @@ class JobEntity(Entity):
       'container_version',
 
       # Other fields
+      'operation_name',
       'status',
     }
 

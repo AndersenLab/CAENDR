@@ -50,7 +50,6 @@ class IndelPrimer(JobEntity):
       'id',
       'data_hash',
       'username',
-      'operation_name',
 
       # # Status
       # 'no_result',
