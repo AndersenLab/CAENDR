@@ -189,7 +189,7 @@ class Entity(object):
     '''
     if prop in self.__class__.get_props_set():
       return self.__dict__.get(prop)
-    raise KeyError()
+    raise KeyError(f'Could not get property "{prop}": not defined in property set.')
 
 
 
@@ -204,7 +204,7 @@ class Entity(object):
     '''
     if prop in self.__class__.get_props_set():
       return self.__dict__.__setitem__(prop, val)
-    raise KeyError()
+    raise KeyError(f'Could not set property "{prop}": not defined in property set.')
 
 
   def set_properties(self, **kwargs):
