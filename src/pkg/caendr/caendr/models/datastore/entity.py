@@ -71,6 +71,7 @@ class Entity(object):
 
     # Update properties
     self.set_properties(**result_out)
+    self.set_properties_meta(**result_out)
 
 
   def _init_from_datastore(self, obj):
@@ -80,6 +81,7 @@ class Entity(object):
     '''
     self._exists = True
     self.set_properties(**obj)
+    self.set_properties_meta(**obj)
 
 
   def __repr__(self):
@@ -113,8 +115,29 @@ class Entity(object):
 
   @classmethod
   def get_props_set(cls):
+    '''
+      Define the set of possible keys for an entity.
+
+      This set should be extended in subclasses.
+    '''
     return {}
 
+  @classmethod
+  def get_props_set_meta(cls):
+    '''
+      Define the set of metadata properties for an entity.
+
+      These are set automatically when saving/retrieving an Entity,
+      and should not be set directly.
+    '''
+    return {
+      'created_on',
+      'modified_on',
+    }
+
+
+
+  ## Get Properties ##
 
   def __iter__(self):
     '''
@@ -150,7 +173,6 @@ class Entity(object):
 
   ## Set Properties ##
 
-
   def __setitem__(self, prop, val):
     '''
       Make properties listed in props_set set-able with bracket notation.
@@ -169,4 +191,26 @@ class Entity(object):
     '''
     props = self.get_props_set()
     self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
+
+
+
+  # Meta Properties ##
+
+  def set_properties_meta(self, **kwargs):
+    '''
+      Copy the metadata properties from keyword args.
+      See props listed in get_props_set_meta().
+    '''
+    props = self.get_props_set_meta()
+    self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
+
+
+  @property
+  def created_on(self):
+    return self.__dict__.get('created_on')
+
+
+  @property
+  def modified_on(self):
+    return self.__dict__.get('modified_on')
 
