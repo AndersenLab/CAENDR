@@ -8,34 +8,91 @@ from caendr.utils.data import get_password_hash
 
 class User(Entity):
   kind = 'user'
+
+
+  ## Initialization ##
   
   def __init__(self, *args, **kwargs):
+
+    # Initialize roles to an empty list
+    # Prevents site from failing if not defined in initialization
+    self.roles = []
+
+    # Pass args to super
     super(User, self).__init__(*args, **kwargs)
-    self.set_properties(**kwargs)
+
+
+  @classmethod
+  def from_email(self, email):
+    '''
+      Get a user by email.
+
+      TODO: Should this return as a User object?
+    '''
+    filters = [ ('email', '=', email) ]
+    results = query_ds_entities(self.kind, filters=filters)
+    if len(results):
+      return results[0]
+    return None
+
+
+
+  ## Properties List ##
+
+  @classmethod
+  def get_props_set(cls):
+    return {
+      *super(User, cls).get_props_set(),
+      'username',
+      'full_name',
+      'password',
+      'email',
+      'roles',
+      'last_login',
+      'user_type',
+    }
+
+
+
+  ## Set Properties ##
+
+  def __setitem__(self, prop, val):
+
+    # Require password and salt to be set together
+    # TODO: Technically, we could save both (e.g. as 'raw_password' and 'salt') and make password a property
+    #       computed on the fly.  Would this be safe?
+    if prop == 'password' or prop == 'salt':
+      raise KeyError(f'Cannot set property {prop} alone; use User.set_password(password, salt) instead.')
+
+    # Set email using special method
+    # TODO: Is this necessary?
+    elif prop == 'email':
+      self.set_email(val)
+
+    # Handle other props with default method
+    else:
+      return super(User, self).__setitem__( prop, val )
+
 
 
   def set_properties(self, **kwargs):
-    ''' Sets allowed properties for the User instance '''
-    if 'username' in kwargs:
-      self.username = kwargs.get('username')
-    if 'full_name' in kwargs:
-      self.full_name = kwargs.get('full_name')
+
+    # Set non-container props through super method
+    super(User, self).set_properties(**{
+      k: v for k, v in kwargs.items() if k not in ['password', 'salt', 'email']
+    })
+
+    # Set password and salt together
     if 'password' and 'salt' in kwargs:
       self.set_password(kwargs.get('password'), kwargs.get('salt'))
+
+    # Set email using special method
     if 'email' in kwargs:
       self.set_email(kwargs.get('email'))
-    if 'roles' in kwargs:
-      self.roles = kwargs.get('roles')
-    if 'last_login' in kwargs:
-      self.last_login = kwargs.get('last_login')
-    if 'user_type' in kwargs:
-      self.user_type = kwargs.get('user_type')
 
 
-  def save(self, *args, **kwargs):
-    ''' Saves the User entity to the datastore'''
-    super(User, self).save(*args, **kwargs)
 
+  ## Other ##
 
   def reports(self):
     ''' Gets a sorted list of the User's reports '''
@@ -64,11 +121,3 @@ class User(Entity):
   def check_password(self, password, salt):
     ''' Checks the User's password using the saved salted and hashed password'''
     return safe_str_cmp(self.password, get_password_hash(password + salt))
-
-  @classmethod
-  def from_email(self, email):
-    filters = [ ('email', '=', email) ]    
-    results = query_ds_entities(self.kind, filters=filters)
-    if len(results):
-      return results[0]    
-    return None
