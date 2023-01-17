@@ -29,6 +29,7 @@ DB_OPS = {
 }
 
 
+# TODO: Should this return DatabaseOperation entity objects?
 def get_all_db_ops(keys_only=False, order=None, placeholder=True):
   logger.debug(f'get_all_db_ops(keys_only={keys_only}, order={order})')
   ds_entities = query_ds_entities(DatabaseOperation.kind, keys_only=keys_only, order=order)
@@ -89,28 +90,31 @@ def get_etl_op(op_id, keys_only=False, order=None, placeholder=True):
   op = get_ds_entity(DatabaseOperation.kind, op_id)
   logger.debug(op)
   return op
-      
+
 def get_db_op_form_options(): 
   return [(key, val) for key, val in DB_OPS.items()]
-  
-  
+
+
 def create_new_db_op(op, username, email, args=None, note=None):
   logger.debug(f'Creating new Database Operation: op:{op}, username:{username}, email:{email}, args:{args}, note:{note}')
-  
+
+  # Compute unique ID for new Database Operation entity
   id = unique_id()
-  props = {'id': id,
-          'note': note, 
-          'args': args,
-          'db_operation': op,
-          'username': username,
-          'email': email,
-          'container_repo': GCR_REPO_NAME,
-          'container_name': MODULE_DB_OPERATIONS_CONTAINER_NAME,
-          'container_version': MODULE_DB_OPERATIONS_CONTAINER_VERSION}
-  db_op = DatabaseOperation(id)
-  db_op.set_properties(**props)
+
+  # Create Gene Browser Tracks entity & upload to datastore
+  db_op = DatabaseOperation(id, **{
+    'id':                id,
+    'username':          username,
+    'email':             email,
+    'note':              note,
+    'db_operation':      op,
+    'args':              args,
+    'container_repo':    GCR_REPO_NAME,
+    'container_name':    MODULE_DB_OPERATIONS_CONTAINER_NAME,
+    'container_version': MODULE_DB_OPERATIONS_CONTAINER_VERSION,
+  })
   db_op.save()
-  
+
   # Schedule mapping in task queue
   task = _create_db_op_task(db_op)
   payload = task.get_payload()

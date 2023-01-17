@@ -4,7 +4,6 @@ from logzero import logger
 from caendr.models.datastore import GeneBrowserTracks
 from caendr.models.task import GeneBrowserTracksTask
 from caendr.services.tool_versions import GCR_REPO_NAME
-from caendr.services.cloud.datastore import query_ds_entities
 from caendr.services.cloud.task import add_task
 from caendr.services.cloud.secret import get_secret
 from caendr.utils.data import unique_id
@@ -19,29 +18,30 @@ MODULE_API_PIPELINE_TASK_URL_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_URL
 API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 
 
+
 def get_all_gene_browser_tracks(keys_only=False, order=None, placeholder=True):
   logger.debug(f'get_all_gene_browser_tracks(keys_only={keys_only}, order={order})')
-  ds_entities = query_ds_entities(GeneBrowserTracks.kind, keys_only=keys_only, order=order)
-  logger.debug(ds_entities)
-  return [GeneBrowserTracks(e.key.name) for e in ds_entities]
+  return GeneBrowserTracks.query_ds(keys_only=keys_only, order=order)
 
-  
-  
+
 def create_new_gene_browser_track(wormbase_version, username, note=None):
   logger.debug(f'Creating new Gene Browser Tracks: wormbase_version:{wormbase_version}, username:{username}, note:{note}')
-  
+
+  # Compute unique ID for new Gene Browser Tracks entity
   id = unique_id()
-  props = {'id': id,
-          'note': note, 
-          'wormbase_version': wormbase_version,
-          'username': username,
-          'container_repo': GCR_REPO_NAME,
-          'container_name': MODULE_GENE_BROWSER_TRACKS_CONTAINER_NAME,
-          'container_version': MODULE_GENE_BROWSER_TRACKS_CONTAINER_VERSION}
-  t = GeneBrowserTracks(id)
-  t.set_properties(**props)
+
+  # Create Gene Browser Tracks entity & upload to datastore
+  t = GeneBrowserTracks(id, **{
+    'id':                id,
+    'note':              note,
+    'wormbase_version':  wormbase_version,
+    'username':          username,
+    'container_repo':    GCR_REPO_NAME,
+    'container_name':    MODULE_GENE_BROWSER_TRACKS_CONTAINER_NAME,
+    'container_version': MODULE_GENE_BROWSER_TRACKS_CONTAINER_VERSION,
+  })
   t.save()
-  
+
   # Schedule mapping in task queue
   task = _create_gene_browser_track_task(t)
   payload = task.get_payload()
