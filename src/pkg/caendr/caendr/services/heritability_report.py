@@ -88,7 +88,7 @@ def create_new_heritability_report(id, username, label, data_hash, trait, data_t
   upload_blob_from_string(bucket, data_tsv, blob)
 
   # Schedule mapping in task queue
-  task = _create_heritability_task(h2_new)
+  task   = HeritabilityTask(h2_new)
   result = task.submit()
 
   # Update entity status to reflect whether task was submitted successfully
@@ -97,16 +97,6 @@ def create_new_heritability_report(id, username, label, data_hash, trait, data_t
 
   # Return resulting Heritability Report entity
   return h2_new
-  
-  
-def _create_heritability_task(h):
-  return HeritabilityTask(**{'id': h.id,
-                            'kind': HeritabilityReport.kind,
-                            'username': h.username,
-                            'data_hash': h.data_hash,
-                            'container_name': h.container_name,
-                            'container_version': h.container_version,
-                            'container_repo': h.container_repo})
 
 
 

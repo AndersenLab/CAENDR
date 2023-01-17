@@ -36,7 +36,7 @@ def create_new_gene_browser_track(wormbase_version, username, note=None):
   t.save()
 
   # Schedule mapping in task queue
-  task = _create_gene_browser_track_task(t)
+  task   = GeneBrowserTracksTask(t)
   result = task.submit()
 
   # Update entity status to reflect whether task was submitted successfully
@@ -45,17 +45,7 @@ def create_new_gene_browser_track(wormbase_version, username, note=None):
 
   # Return resulting Gene Browser Tracks entity
   return t
-  
-  
-def _create_gene_browser_track_task(t):
-  return GeneBrowserTracksTask(**{'id': t.id,
-                                  'kind': GeneBrowserTracks.kind,
-                                  'wormbase_version': t.wormbase_version,
-                                  'container_name': t.container_name,
-                                  'container_version': t.container_version,
-                                  'container_repo': t.container_repo})
-  
-  
+
 
 def update_gene_browser_track_status(id: str, status: str=None, operation_name: str=None):
   logger.debug(f'update_gene_browser_track_status: id:{id} status:{status} operation_name:{operation_name}')

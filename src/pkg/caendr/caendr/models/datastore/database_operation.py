@@ -31,5 +31,14 @@ class DatabaseOperation(JobEntity):
       'logs',
     }
 
+  def __getitem__(self, prop):
+
+    # Prop 'logs' should default to empty string if not set
+    if prop == 'logs':
+      return self.__dict__.get(prop, '')
+
+    # Use default for other props
+    return super().__getitem__(prop)
+
   def __repr__(self):
     return f"<{self.kind}:{getattr(self, 'id', 'no-id')}>"

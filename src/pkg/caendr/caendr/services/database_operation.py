@@ -113,7 +113,7 @@ def create_new_db_op(op, username, email, args=None, note=None):
   db_op.save()
 
   # Schedule mapping in task queue
-  task = _create_db_op_task(db_op)
+  task   = DatabaseOperationTask(db_op)
   result = task.submit()
 
   # Update entity status to reflect whether task was submitted successfully
@@ -122,21 +122,8 @@ def create_new_db_op(op, username, email, args=None, note=None):
 
   # Return resulting Database Operation entity
   return db_op
-  
-  
-def _create_db_op_task(db_op):
-  return DatabaseOperationTask(**{'id': db_op.id,
-                                  'kind': DatabaseOperation.kind,
-                                  'db_operation': db_op.db_operation,
-                                  'args': db_op.args,
-                                  'username': db_op.username, 
-                                  'email': db_op.email,
-                                  'logs': '',
-                                  'container_name': db_op.container_name,
-                                  'container_version': db_op.container_version,
-                                  'container_repo': db_op.container_repo})
-  
-  
+
+
 
 def update_db_op_status(id: str, status: str=None, operation_name: str=None):
   logger.debug(f'update_db_op_status: id:{id} status:{status} operation_name:{operation_name}')

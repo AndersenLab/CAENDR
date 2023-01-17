@@ -2,6 +2,8 @@ import os
 
 from logzero import logger
 
+from caendr.models.datastore import Entity
+
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.task   import add_task
 
@@ -18,7 +20,16 @@ class Task(object):
 
   ## Initialization ##
 
-  def __init__(self, *args, **kwargs):
+  def __init__(self, source_obj: Entity = None, **kwargs):
+    '''
+      Args:
+        source_obj (Entity, optional): An Entity to initialize from.
+    '''
+
+    # Initialize props from source Entity, if one is provided
+    if source_obj is not None:
+      self.kind = source_obj.__class__.kind
+      self.set_properties( **dict(source_obj) )
 
     # Set properties from keyword arguments
     self.set_properties(**kwargs)

@@ -117,7 +117,7 @@ def create_new_mapping(username, email, label, file, status = 'SUBMITTED', check
   os.remove(local_path)
   
   # Schedule mapping in task queue
-  task = create_nemascan_mapping_task(m_new)
+  task   = NemaScanTask(m_new)
   result = task.submit()
 
   # Update entity status to reflect whether task was submitted successfully
@@ -126,17 +126,6 @@ def create_new_mapping(username, email, label, file, status = 'SUBMITTED', check
 
   # Return resulting Nemascan Mapping entity
   return m_new
-  
-  
-def create_nemascan_mapping_task(m):
-  return NemaScanTask(**{'id': m.id,
-                          'kind': NemascanMapping.kind,
-                          'data_hash': m.data_hash,
-                          'username': m.username, 
-                          'email': m.email,
-                          'container_name': m.container_name,
-                          'container_version': m.container_version,
-                          'container_repo': m.container_repo})
 
 
 

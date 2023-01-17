@@ -196,7 +196,7 @@ def create_new_indel_primer(username, site, strain_1, strain_2, size, data_hash,
   upload_blob_from_string(bucket, json.dumps(data), blob)
 
   # Schedule mapping in task queue
-  task = _create_indel_primer_task(ip)
+  task   = IndelPrimerTask(ip)
   result = task.submit()
 
   # Update entity status to reflect whether task was submitted successfully
@@ -206,25 +206,6 @@ def create_new_indel_primer(username, site, strain_1, strain_2, size, data_hash,
   # Return resulting Indel Primer entity
   return ip
 
-
-def _create_indel_primer_task(ip):
-  """
-    Convert an Indel Primer object to an Indel Primer task.
-  """
-  return IndelPrimerTask(**{
-    'id':                ip.id,
-    'kind':              IndelPrimer.kind,
-    'data_hash':         ip.data_hash,
-    'username':          ip.username,
-    'site':              ip.site,
-    'strain_1':          ip.strain_1,
-    'strain_2':          ip.strain_2,
-    'container_repo':    ip.container_repo,
-    'container_name':    ip.container_name,
-    'container_version': ip.container_version,
-    'sv_bed_filename':   ip.sv_bed_filename,
-    'sv_vcf_filename':   ip.sv_vcf_filename,
-  })
 
 
 def update_indel_primer_status(id: str, status: str=None, operation_name: str=None):
