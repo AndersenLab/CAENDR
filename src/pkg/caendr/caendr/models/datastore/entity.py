@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 
 from google.cloud import datastore
 
-from caendr.services.cloud.datastore import get_ds_entity, save_ds_entity
+from caendr.services.cloud.datastore import get_ds_entity, save_ds_entity, query_ds_entities
 
 
 
@@ -263,4 +263,19 @@ class Entity(object):
   @classmethod
   def sort_by_modified_date(cls, arr, reverse = False, set_none_max = False):
     return sorted( arr, key = lambda e: _datetime_sort_key(e.modified_on, set_none_max=set_none_max), reverse=reverse )
+
+
+
+  ## Querying ##
+
+  @classmethod
+  def query_ds(cls, *args, **kwargs):
+    '''
+      Query all datastore entities with this class's kind, and return as objects
+      of this Entity subclass type.
+
+      Should be called from subclasses, e.g. 'IndelPrimer.query_all( ... )'
+      instead of 'Entity.query_all( ... )'.
+    '''
+    return [ cls(e) for e in query_ds_entities(cls.kind, *args, **kwargs) ]
 

@@ -10,7 +10,6 @@ from caendr.models.datastore import IndelPrimer
 from caendr.models.task import IndelPrimerTask
 
 from caendr.services.cloud.secret import get_secret
-from caendr.services.cloud.datastore import query_ds_entities
 from caendr.services.cloud.task import add_task
 from caendr.services.cloud.storage import upload_blob_from_string, get_blob, check_blob_exists
 from caendr.services.tool_versions import get_current_container_version
@@ -76,16 +75,14 @@ def get_sv_strains():
 
 def get_all_indel_primers():
   logger.debug(f'Getting all indel primers...')
-  results = query_ds_entities(IndelPrimer.kind)
-  primers = [IndelPrimer(entity) for entity in results]
+  primers = IndelPrimer.query_ds()
   return IndelPrimer.sort_by_created_date(primers, reverse=True)
 
 
 def get_user_indel_primers(username):
   logger.debug(f'Getting all indel primers for user: username:{username}')
   filters = [('username', '=', username)]
-  results = query_ds_entities(IndelPrimer.kind, filters=filters)
-  primers = [IndelPrimer(e) for e in results]
+  primers = IndelPrimer.query_ds(filters=filters)
   return IndelPrimer.sort_by_created_date(primers, reverse=True)
 
 
@@ -156,11 +153,10 @@ def create_new_indel_primer(username, site, strain_1, strain_2, size, data_hash,
 
   # Check for existing indel primer matching data_hash & user
   if not no_cache:
-    ips = query_ds_entities(IndelPrimer.kind, filters=[('data_hash', '=', data_hash)])
-    if ips and ips[0]:
-      ip = IndelPrimer(ips[0])
-      if ip.username == username and ip.container_equals(c):
-        return ip
+    ips = IndelPrimer.query_ds(filters=[('data_hash', '=', data_hash)])
+    if ips[0]:
+      if ips[0].username == username and ips[0].container_equals(c):
+        return ips[0]
 
   # Compute unique ID for new Indel Primer entity
   id = unique_id()
