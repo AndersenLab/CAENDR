@@ -79,16 +79,12 @@ class User(Entity):
 
     # Set non-container props through super method
     super(User, self).set_properties(**{
-      k: v for k, v in kwargs.items() if k not in ['password', 'salt', 'email']
+      k: v for k, v in kwargs.items() if k not in ['password', 'salt']
     })
 
     # Set password and salt together
     if 'password' and 'salt' in kwargs:
       self.set_password(kwargs.get('password'), kwargs.get('salt'))
-
-    # Set email using special method
-    if 'email' in kwargs:
-      self.set_email(kwargs.get('email'))
 
 
 

@@ -39,6 +39,16 @@ class Entity(object):
     Supports iteration (and therefore dictionary conversion) -- will only expose prop fields,
     not internal attributes like `kind`.  In other words, all fields in the dict output will be
     saved to the datastore.  This is important for subclassing.
+
+    Subclasses should override:
+      - get_props_set() to add props to the class
+      - kind to specify a unique kind of entity
+
+    Generally, they may also want to override:
+      - __set_item__() if properties must be parsed and/or stored specially (e.g. not in __dict__)
+      - __get_item__() if properties must be retrieved in some unique way (e.g. not from __dict__)
+      - _init_from_entity(), _init_from_datastore(), and/or save() if the class must interact with
+          the datastore in some unique way
   """
 
   # Default kind for the entity
@@ -161,24 +171,6 @@ class Entity(object):
 
   ## Get Properties ##
 
-  def __iter__(self):
-    '''
-      Iterate through all props in the entity.
-
-      Returns all attributes saved in this object's __dict__ field, with keys
-      present in the props set.
-
-      Does not return attributes such as `kind` or `name`, as these are not
-      meant to be stored directly as fields in the datastore.
-
-      If subclasses add entity fields that are not stored in __dict__, they
-      should override this function to include those fields in the resulting
-      generator.
-    '''
-    props = self.get_props_set()
-    return ( (k, v) for k, v in self.__dict__.items() if k in props )
-
-
   def __getitem__(self, prop):
     '''
       Make properties listed in props_set accessible with bracket notation.
@@ -190,6 +182,24 @@ class Entity(object):
     if prop in self.__class__.get_props_set():
       return self.__dict__.get(prop)
     raise KeyError(f'Could not get property "{prop}": not defined in property set.')
+
+
+  def __iter__(self):
+    '''
+      Iterate through all props in the entity.
+
+      Returns all attributes saved in this object's __dict__ field, with keys
+      present in the props set.
+
+      Does not return attributes such as `kind` or `name`, as these are not
+      meant to be stored directly as fields in the datastore.
+
+      Uses __getitem__ to retrieve props. Subclasses should only override this
+      function if they add props which cannot be retrieved normally through
+      __getitem__.
+    '''
+    props = self.get_props_set()
+    return ( (k, self[k]) for k in props if self[k] is not None )
 
 
 
@@ -210,9 +220,15 @@ class Entity(object):
   def set_properties(self, **kwargs):
     '''
       Set multiple properties using keyword arguments.
+
+      Uses __setitem__ to set props. Subclasses should only override this
+      function if they add props which cannot be set normally through
+      __setitem__.
     '''
     props = self.get_props_set()
-    self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
+    for k, v in kwargs.items():
+      if k in props:
+        self[k] = v
 
 
 

@@ -59,76 +59,30 @@ class JobEntity(Entity):
     }
 
 
-  def __iter__(self):
-    '''
-      Convert entity to an iterable.
 
-      Container fields are not stored in this object's __dict__, so they must be
-      accessed separately.
-    '''
-    yield from super(JobEntity, self).__iter__()
-    yield from (
-      ( k , self[k] ) for k in self.__container_prop_map if self[k] is not None
-    )
-
+  ## Get Properties ##
 
   def __getitem__(self, prop):
-    '''
-      Make properties listed in props_set accessible with bracket notation.
-      Properties that are not set will return as None.
-
-      Container properties are taken from Container object.
-
-      Raises:
-        KeyError: prop not found in props_set
-    '''
 
     # Forward container props to Container object
     if prop in self.__container_prop_map:
       return self.__container.__getitem__( self.__container_prop_map[ prop ] )
 
-    # Handle non-container props with default lookup method
+    # Handle non-container props with default __getitem__ method
     return super(JobEntity, self).__getitem__(prop)
 
 
 
   ## Set Properties ##
 
-
   def __setitem__(self, prop, val):
-    '''
-      Make properties listed in props_set set-able with bracket notation.
-
-      Raises:
-        KeyError: prop not found in props_set
-    '''
 
     # Forward container props to Container object
     if prop in self.__container_prop_map:
       return self.__container.__setitem__( self.__container_prop_map[ prop ], val )
 
-    # Handle non-container props with default lookup method
+    # Handle non-container props with default __setitem__ method
     return super(JobEntity, self).__setitem__( prop, val )
-
-
-  def set_properties(self, **kwargs):
-    '''
-      Set object properties, passing Container properties to Container object.
-
-      Container properties in the source must be named by the *keys* in JobEntity.__container_prop_map.
-    '''
-
-    # Set non-container props through super method
-    super(JobEntity, self).set_properties(**{
-      k: v for k, v in kwargs.items() if k not in self.__container_prop_map
-    })
-
-    # Pass container props to Container
-    self.__container.set_properties(**{
-      container_field_name: kwargs[job_field_name]
-        for job_field_name, container_field_name in self.__container_prop_map.items()
-        if job_field_name in kwargs
-    })
 
 
 
