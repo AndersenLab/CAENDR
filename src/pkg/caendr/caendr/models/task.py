@@ -1,21 +1,50 @@
+import os
+
 from logzero import logger
+
+from caendr.services.cloud.secret import get_secret
+from caendr.services.cloud.task   import add_task
+
+
+MODULE_API_PIPELINE_TASK_URL_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_URL_NAME')
+API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 
 
 
 class Task(object):
-  name = 'task'
+  name  = 'task'
+  queue = None
+
+
+  ## Initialization ##
 
   def __init__(self, *args, **kwargs):
 
     # Set properties from keyword arguments
     self.set_properties(**kwargs)
 
+
   def set_properties(self, **kwargs):
+    '''
+      Set multiple properties using keyword arguments.
+      Only properties specified in get_props_set() will be accepted.
+    '''
     props = self.get_props_set()
     self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
 
+
+  def __repr__(self):
+    return f"<{self.name}:{getattr(self, 'id', 'no-id')}>"
+
+
+  ## Property List ##
+
   @classmethod
   def get_props_set(cls):
+    '''
+      Define the set of properties for a task.
+      This set should be extended in subclasses.
+    '''
     return {
       'id',
       'kind',
@@ -25,11 +54,35 @@ class Task(object):
       'container_repo',
     }
 
-  def get_payload(self):
-    return { k: self.__getattribute__(k) for k in self.get_props_set() }
 
-  def __repr__(self):
-    return f"<{self.name}:{getattr(self, 'id', 'no-id')}>"
+  def __iter__(self):
+    '''
+      Iterate through all props in the task.
+
+      Returns all attributes saved in this object's __dict__ field, with keys
+      present in the props set.
+
+      Allows conversion to dictionary via dict().
+    '''
+    return ( ( k, self.__getattribute__(k) ) for k in self.get_props_set() )
+
+
+  ## Task Submission ##
+
+  @property
+  def queue_url(self):
+    '''
+      URL of the queue that handles tasks of this type.
+    '''
+    return f'{API_PIPELINE_TASK_URL}/task/start/{self.queue}'
+
+
+  def submit(self):
+    '''
+      Submit this task to the appropriate queue.
+      Uses dictionary of fields -> values as payload.
+    '''
+    return add_task( self.queue, self.queue_url, dict(self) )
 
 
 
@@ -58,7 +111,8 @@ class MockDataTask(Task):
 
 
 class NemaScanTask(Task):
-  name = 'nemascan_task'
+  name  = 'nemascan_task'
+  queue = os.environ.get('NEMASCAN_TASK_QUEUE_NAME')
 
   @classmethod
   def get_props_set(cls):
@@ -71,7 +125,8 @@ class NemaScanTask(Task):
 
 
 class DatabaseOperationTask(Task):
-  name = 'db_op_task'
+  name  = 'db_op_task'
+  queue = os.environ.get('MODULE_DB_OPERATIONS_TASK_QUEUE_NAME')
 
   @classmethod
   def get_props_set(cls):
@@ -86,6 +141,7 @@ class DatabaseOperationTask(Task):
 
 class IndelPrimerTask(Task):
   name  = 'indel_primer_task'
+  queue = os.environ.get('INDEL_PRIMER_TASK_QUEUE_NAME')
 
   @classmethod
   def get_props_set(cls):
@@ -102,8 +158,9 @@ class IndelPrimerTask(Task):
 
 
 class HeritabilityTask(Task):
-  name = 'heritability_task'
-  
+  name  = 'heritability_task'
+  queue = os.environ.get('HERITABILITY_TASK_QUEUE_NAME')
+
   @classmethod
   def get_props_set(cls):
     return {
@@ -114,7 +171,8 @@ class HeritabilityTask(Task):
 
 
 class GeneBrowserTracksTask(Task):
-  name = 'gene_browser_tracks_task'
+  name  = 'gene_browser_tracks_task'
+  queue = os.environ.get('MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME')
 
   @classmethod
   def get_props_set(cls):

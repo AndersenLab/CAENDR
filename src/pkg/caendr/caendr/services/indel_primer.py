@@ -9,19 +9,16 @@ from caendr.models.error import EnvVarError
 from caendr.models.datastore import IndelPrimer
 from caendr.models.task import IndelPrimerTask
 
-from caendr.services.cloud.secret import get_secret
-from caendr.services.cloud.task import add_task
 from caendr.services.cloud.storage import upload_blob_from_string, get_blob, check_blob_exists
 from caendr.services.tool_versions import get_current_container_version
 
 from caendr.utils.constants import CHROM_NUMERIC
 from caendr.utils.data import unique_id
 
+
+
 MODULE_SITE_BUCKET_PRIVATE_NAME   = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
 INDEL_PRIMER_CONTAINER_NAME       = os.environ.get('INDEL_PRIMER_CONTAINER_NAME')
-INDEL_PRIMER_TASK_QUEUE_NAME      = os.environ.get('INDEL_PRIMER_TASK_QUEUE_NAME')
-MODULE_API_PIPELINE_TASK_URL_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_URL_NAME')
-
 
 SV_BED_FILENAME = os.environ.get('INDEL_PRIMER_SV_BED_FILENAME')
 SV_VCF_FILENAME = os.environ.get('INDEL_PRIMER_SV_VCF_FILENAME')
@@ -35,7 +32,6 @@ if not SV_VCF_FILENAME:
   raise EnvVarError()
 
 
-API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 
 # =========================== #
 #    pairwise_indel_finder    #
@@ -201,15 +197,13 @@ def create_new_indel_primer(username, site, strain_1, strain_2, size, data_hash,
 
   # Schedule mapping in task queue
   task = _create_indel_primer_task(ip)
-  payload = task.get_payload()
-  task = add_task(INDEL_PRIMER_TASK_QUEUE_NAME, f'{API_PIPELINE_TASK_URL}/task/start/{INDEL_PRIMER_TASK_QUEUE_NAME}', payload)
+  result = task.submit()
 
-  # If task couldn't be created, set Indel Primer status to ERROR
-  if not task:
-    ip.status = 'ERROR'
-    ip.save()
+  # Update entity status to reflect whether task was submitted successfully
+  ip.status = 'SUBMITTED' if result else 'ERROR'
+  ip.save()
 
-  # Return resulting Indel Primer object
+  # Return resulting Indel Primer entity
   return ip
 
 

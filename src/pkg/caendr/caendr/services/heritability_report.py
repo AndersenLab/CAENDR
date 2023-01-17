@@ -2,22 +2,16 @@ import os
 
 from logzero import logger
 
-from caendr.services.cloud.datastore import query_ds_entities
 from caendr.services.cloud.storage import upload_blob_from_string, generate_blob_url, check_blob_exists
 from caendr.models.task import HeritabilityTask
 from caendr.models.error import CachedDataError, DuplicateDataError
 from caendr.models.datastore import HeritabilityReport
 from caendr.utils.data import unique_id
-from caendr.services.cloud.task import add_task
-from caendr.services.cloud.secret import get_secret
 from caendr.services.tool_versions import get_current_container_version
 
 
 HERITABILITY_CONTAINER_NAME = os.environ.get('HERITABILITY_CONTAINER_NAME')
-HERITABILITY_TASK_QUEUE_NAME = os.environ.get('HERITABILITY_TASK_QUEUE_NAME')
-MODULE_API_PIPELINE_TASK_URL_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_URL_NAME')
 
-API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 
 
 def get_heritability_report(id):
@@ -73,7 +67,7 @@ def create_new_heritability_report(id, username, label, data_hash, trait, data_t
         raise DuplicateDataError('You have already submitted this heritability data')
       else:
         logger.debug('Heritability Report with identical Data Hash exists. Returning cached report.')
-        h2_new.set_properties( status = h.status )
+        h2_new.status = h.status
         h2_new.save()
         e = CachedDataError()
         e.description = id
@@ -95,11 +89,13 @@ def create_new_heritability_report(id, username, label, data_hash, trait, data_t
 
   # Schedule mapping in task queue
   task = _create_heritability_task(h2_new)
-  payload = task.get_payload()
-  task = add_task(HERITABILITY_TASK_QUEUE_NAME, f'{API_PIPELINE_TASK_URL}/task/start/{HERITABILITY_TASK_QUEUE_NAME}', payload)
-  if not task:
-    h2_new.status = 'ERROR'
-    h2_new.save()
+  result = task.submit()
+
+  # Update entity status to reflect whether task was submitted successfully
+  h2_new.status = 'SUBMITTED' if result else 'ERROR'
+  h2_new.save()
+
+  # Return resulting Heritability Report entity
   return h2_new
   
   

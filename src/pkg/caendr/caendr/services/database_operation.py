@@ -7,17 +7,14 @@ from caendr.models.task import DatabaseOperationTask
 from caendr.models.sql import Homolog, StrainAnnotatedVariant, Strain, WormbaseGene, WormbaseGeneSummary
 from caendr.services.tool_versions import GCR_REPO_NAME
 from caendr.services.cloud.datastore import get_ds_entity, query_ds_entities
-from caendr.services.cloud.task import add_task
-from caendr.services.cloud.secret import get_secret
 from caendr.utils.data import unique_id
+
 
 
 MODULE_DB_OPERATIONS_CONTAINER_NAME = os.environ.get('MODULE_DB_OPERATIONS_CONTAINER_NAME')
 MODULE_DB_OPERATIONS_CONTAINER_VERSION = os.environ.get('MODULE_DB_OPERATIONS_CONTAINER_VERSION')
-MODULE_DB_OPERATIONS_TASK_QUEUE_NAME = os.environ.get('MODULE_DB_OPERATIONS_TASK_QUEUE_NAME')
-MODULE_API_PIPELINE_TASK_URL_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_URL_NAME')
 
-API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
+
 
 DB_OPS = {
   'DROP_AND_POPULATE_STRAINS': 'Rebuild strain table from google sheet',
@@ -101,7 +98,7 @@ def create_new_db_op(op, username, email, args=None, note=None):
   # Compute unique ID for new Database Operation entity
   id = unique_id()
 
-  # Create Gene Browser Tracks entity & upload to datastore
+  # Create Database Operation entity & upload to datastore
   db_op = DatabaseOperation(id, **{
     'id':                id,
     'username':          username,
@@ -117,15 +114,13 @@ def create_new_db_op(op, username, email, args=None, note=None):
 
   # Schedule mapping in task queue
   task = _create_db_op_task(db_op)
-  payload = task.get_payload()
-  task = add_task(MODULE_DB_OPERATIONS_TASK_QUEUE_NAME, F'{API_PIPELINE_TASK_URL}/task/start/{MODULE_DB_OPERATIONS_TASK_QUEUE_NAME}', payload)
-  db_op = DatabaseOperation(id)
-  if task:
-    db_op.set_properties(status='SUBMITTED')
-  else:
-    db_op.set_properties(status='ERROR')
+  result = task.submit()
+
+  # Update entity status to reflect whether task was submitted successfully
+  db_op.status = 'SUBMITTED' if result else 'ERROR'
   db_op.save()
 
+  # Return resulting Database Operation entity
   return db_op
   
   

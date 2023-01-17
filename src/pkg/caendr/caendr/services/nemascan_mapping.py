@@ -8,17 +8,11 @@ from caendr.models.datastore import NemascanMapping
 from caendr.utils.data import unique_id
 from caendr.models.error import DataFormatError, DuplicateDataError, CachedDataError
 from caendr.services.cloud.storage import check_blob_exists, upload_blob_from_file, get_blob_list
-from caendr.services.cloud.datastore import query_ds_entities
-from caendr.services.cloud.task import add_task
-from caendr.services.cloud.secret import get_secret
 from caendr.services.tool_versions import get_current_container_version
 from caendr.utils.file import get_file_hash
 
 NEMASCAN_NXF_CONTAINER_NAME = os.environ.get('NEMASCAN_NXF_CONTAINER_NAME')
-NEMASCAN_TASK_QUEUE_NAME = os.environ.get('NEMASCAN_TASK_QUEUE_NAME')
-MODULE_API_PIPELINE_TASK_URL_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_URL_NAME')
 
-API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 
 
 uploads_dir = os.path.join('./', 'uploads')
@@ -124,11 +118,13 @@ def create_new_mapping(username, email, label, file, status = 'SUBMITTED', check
   
   # Schedule mapping in task queue
   task = create_nemascan_mapping_task(m_new)
-  payload = task.get_payload()
-  task = add_task(NEMASCAN_TASK_QUEUE_NAME, f'{API_PIPELINE_TASK_URL}/task/start/{NEMASCAN_TASK_QUEUE_NAME}', payload)
-  if not task:
-    m_new.status = 'ERROR'
-    m_new.save()
+  result = task.submit()
+
+  # Update entity status to reflect whether task was submitted successfully
+  m_new.status = 'SUBMITTED' if result else 'ERROR'
+  m_new.save()
+
+  # Return resulting Nemascan Mapping entity
   return m_new
   
   

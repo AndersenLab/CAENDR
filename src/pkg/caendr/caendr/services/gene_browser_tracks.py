@@ -4,18 +4,11 @@ from logzero import logger
 from caendr.models.datastore import GeneBrowserTracks
 from caendr.models.task import GeneBrowserTracksTask
 from caendr.services.tool_versions import GCR_REPO_NAME
-from caendr.services.cloud.task import add_task
-from caendr.services.cloud.secret import get_secret
 from caendr.utils.data import unique_id
 
 
 MODULE_GENE_BROWSER_TRACKS_CONTAINER_NAME = os.environ.get('MODULE_GENE_BROWSER_TRACKS_CONTAINER_NAME')
 MODULE_GENE_BROWSER_TRACKS_CONTAINER_VERSION = os.environ.get('MODULE_GENE_BROWSER_TRACKS_CONTAINER_VERSION')
-MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME = os.environ.get('MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME')
-
-MODULE_API_PIPELINE_TASK_URL_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_URL_NAME')
-
-API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 
 
 
@@ -44,14 +37,13 @@ def create_new_gene_browser_track(wormbase_version, username, note=None):
 
   # Schedule mapping in task queue
   task = _create_gene_browser_track_task(t)
-  payload = task.get_payload()
-  task = add_task(MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME, F'{API_PIPELINE_TASK_URL}/task/start/{MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME}', payload)
-  t = GeneBrowserTracks(id)
-  if task:
-    t.set_properties(status='SUBMITTED')
-  else:
-    t.set_properties(status='ERROR')
+  result = task.submit()
+
+  # Update entity status to reflect whether task was submitted successfully
+  t.status = 'SUBMITTED' if result else 'ERROR'
   t.save()
+
+  # Return resulting Gene Browser Tracks entity
   return t
   
   
