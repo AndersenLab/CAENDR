@@ -2,7 +2,7 @@ import os
 
 from logzero import logger
 
-from caendr.models.datastore import Entity
+from caendr.models.datastore import Entity, DatabaseOperation, GeneBrowserTracks, HeritabilityReport, IndelPrimer, NemascanMapping
 
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.task   import add_task
@@ -13,9 +13,22 @@ API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 
 
 
+## Task Superclass Definition ##
+
+
 class Task(object):
-  name  = 'task'
+
+  # A human readable name for this Task type
+  # Should be overwritten in subclasses
+  name = 'task'
+
+  # The name of the queue that handles Tasks of this type
+  # Should be overwritten in subclasses
   queue = None
+
+  # The kind of Entity associated with this Task type
+  # Should be overwritten in subclasses
+  kind = None
 
 
   ## Initialization ##
@@ -28,7 +41,18 @@ class Task(object):
 
     # Initialize props from source Entity, if one is provided
     if source_obj is not None:
-      self.kind = source_obj.__class__.kind
+
+      # If subclass does not specify a kind, it cannot be initialized from an Entity
+      if self.kind is None:
+        raise ValueError(f'Cannot initialize Task of type "{self.name}" from Entity.')
+
+      # Check that kind of subclass matches kind of Entity to init from
+      if self.kind != source_obj.__class__.kind:
+        raise ValueError(
+          f'Cannot initialize Task of type "{self.name}" from Entity of kind "{source_obj.__class__.kind}" (expected "{self.kind}").'
+        )
+
+      # If all checks passed, copy the properties of the source Entity
       self.set_properties( **dict(source_obj) )
 
     # Set properties from keyword arguments
@@ -97,6 +121,9 @@ class Task(object):
 
 
 
+## Test Tasks ##
+
+
 class EchoTask(Task):
   name = 'echo_task'
 
@@ -106,7 +133,6 @@ class EchoTask(Task):
       *super(EchoTask, cls).get_props_set(),
       'data_hash',
     }
-
 
 
 class MockDataTask(Task):
@@ -121,9 +147,13 @@ class MockDataTask(Task):
 
 
 
+## Job Tasks ##
+
+
 class DatabaseOperationTask(Task):
   name  = 'db_op_task'
   queue = os.environ.get('MODULE_DB_OPERATIONS_TASK_QUEUE_NAME')
+  kind  = DatabaseOperation.kind
 
   @classmethod
   def get_props_set(cls):
@@ -135,10 +165,10 @@ class DatabaseOperationTask(Task):
     }
 
 
-
 class GeneBrowserTracksTask(Task):
   name  = 'gene_browser_tracks_task'
   queue = os.environ.get('MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME')
+  kind  = GeneBrowserTracks.kind
 
   @classmethod
   def get_props_set(cls):
@@ -148,10 +178,10 @@ class GeneBrowserTracksTask(Task):
     }
 
 
-
 class HeritabilityTask(Task):
   name  = 'heritability_task'
   queue = os.environ.get('HERITABILITY_TASK_QUEUE_NAME')
+  kind  = HeritabilityReport.kind
 
   @classmethod
   def get_props_set(cls):
@@ -161,10 +191,10 @@ class HeritabilityTask(Task):
     }
 
 
-
 class IndelPrimerTask(Task):
   name  = 'indel_primer_task'
   queue = os.environ.get('INDEL_PRIMER_TASK_QUEUE_NAME')
+  kind  = IndelPrimer.kind
 
   @classmethod
   def get_props_set(cls):
@@ -179,10 +209,10 @@ class IndelPrimerTask(Task):
     }
 
 
-
 class NemaScanTask(Task):
   name  = 'nemascan_task'
   queue = os.environ.get('NEMASCAN_TASK_QUEUE_NAME')
+  kind  = NemascanMapping.kind
 
   @classmethod
   def get_props_set(cls):
