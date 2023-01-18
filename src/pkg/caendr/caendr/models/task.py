@@ -117,6 +117,9 @@ class Task(object):
       Submit this task to the appropriate queue.
       Uses dictionary of fields -> values as payload.
     '''
+    if self.queue is None:
+      raise ValueError(f'Target queue is undefined for task of type "{self.name}".')
+
     return add_task( self.queue, self.queue_url, dict(self) )
 
 
