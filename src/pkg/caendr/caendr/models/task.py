@@ -161,7 +161,7 @@ class DatabaseOperationTask(Task):
   @classmethod
   def get_props_set(cls):
     return {
-      *super(DatabaseOperationTask, cls).get_props_set(),
+      *super().get_props_set(),
       'email',
       'db_operation',
       'args',
@@ -176,7 +176,7 @@ class GeneBrowserTracksTask(Task):
   @classmethod
   def get_props_set(cls):
     return {
-      *super(GeneBrowserTracksTask, cls).get_props_set(),
+      *super().get_props_set(),
       'wormbase_version',
     }
 
@@ -189,7 +189,7 @@ class HeritabilityTask(Task):
   @classmethod
   def get_props_set(cls):
     return {
-      *super(HeritabilityTask, cls).get_props_set(),
+      *super().get_props_set(),
       'data_hash',
     }
 
@@ -202,7 +202,7 @@ class IndelPrimerTask(Task):
   @classmethod
   def get_props_set(cls):
     return {
-      *super(IndelPrimerTask, cls).get_props_set(),
+      *super().get_props_set(),
       'data_hash',
       'site',
       'strain_1',
@@ -220,7 +220,7 @@ class NemaScanTask(Task):
   @classmethod
   def get_props_set(cls):
     return {
-      *super(NemaScanTask, cls).get_props_set(),
+      *super().get_props_set(),
       'data_hash',
       'species',
     }
