@@ -121,20 +121,6 @@ class MockDataTask(Task):
 
 
 
-class NemaScanTask(Task):
-  name  = 'nemascan_task'
-  queue = os.environ.get('NEMASCAN_TASK_QUEUE_NAME')
-
-  @classmethod
-  def get_props_set(cls):
-    return {
-      *super(NemaScanTask, cls).get_props_set(),
-      'data_hash',
-      'species',
-    }
-
-
-
 class DatabaseOperationTask(Task):
   name  = 'db_op_task'
   queue = os.environ.get('MODULE_DB_OPERATIONS_TASK_QUEUE_NAME')
@@ -146,6 +132,32 @@ class DatabaseOperationTask(Task):
       'email',
       'db_operation',
       'args',
+    }
+
+
+
+class GeneBrowserTracksTask(Task):
+  name  = 'gene_browser_tracks_task'
+  queue = os.environ.get('MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME')
+
+  @classmethod
+  def get_props_set(cls):
+    return {
+      *super(GeneBrowserTracksTask, cls).get_props_set(),
+      'wormbase_version',
+    }
+
+
+
+class HeritabilityTask(Task):
+  name  = 'heritability_task'
+  queue = os.environ.get('HERITABILITY_TASK_QUEUE_NAME')
+
+  @classmethod
+  def get_props_set(cls):
+    return {
+      *super(HeritabilityTask, cls).get_props_set(),
+      'data_hash',
     }
 
 
@@ -168,26 +180,14 @@ class IndelPrimerTask(Task):
 
 
 
-class HeritabilityTask(Task):
-  name  = 'heritability_task'
-  queue = os.environ.get('HERITABILITY_TASK_QUEUE_NAME')
+class NemaScanTask(Task):
+  name  = 'nemascan_task'
+  queue = os.environ.get('NEMASCAN_TASK_QUEUE_NAME')
 
   @classmethod
   def get_props_set(cls):
     return {
-      *super(HeritabilityTask, cls).get_props_set(),
+      *super(NemaScanTask, cls).get_props_set(),
       'data_hash',
-    }
-
-
-
-class GeneBrowserTracksTask(Task):
-  name  = 'gene_browser_tracks_task'
-  queue = os.environ.get('MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME')
-
-  @classmethod
-  def get_props_set(cls):
-    return {
-      *super(GeneBrowserTracksTask, cls).get_props_set(),
-      'wormbase_version',
+      'species',
     }
