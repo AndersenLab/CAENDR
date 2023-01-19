@@ -12,6 +12,9 @@ MODULE_GENE_BROWSER_TRACKS_CONTAINER_VERSION = os.environ.get('MODULE_GENE_BROWS
 
 
 
+# TODO: Does keys_only make sense as a parameter? Seems like it was originally used to limit the ds query
+#       to keys, which would then be mapped to DatasetRelease objects, but since Entity.query_ds handles
+#       that mapping, passing keys_only in creates DatasetRelease objects missing almost all of their fields.
 def get_all_gene_browser_tracks(keys_only=False, order=None, placeholder=True):
   logger.debug(f'get_all_gene_browser_tracks(keys_only={keys_only}, order={order})')
   return GeneBrowserTracks.query_ds(keys_only=keys_only, order=order)

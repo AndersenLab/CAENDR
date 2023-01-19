@@ -18,9 +18,8 @@ def get_profile_role_form_options():
   return [(key, val) for key, val in PROFILE_ROLES.items()]
   
 
-def get_all_profiles(keys_only=False):
-  ds_entities = query_ds_entities(Profile.kind, keys_only=keys_only)
-  return [Profile(e.key.name) for e in ds_entities]
+def get_all_profiles():
+  return Profile.query_ds()
 
 
 def get_profile(id: str):

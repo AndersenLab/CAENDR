@@ -23,6 +23,9 @@ def get_browser_tracks_path(release_version=None):
   return f'{release_path}/browser_tracks'
 
 
+# TODO: Does keys_only make sense as a parameter? Seems like it was originally used to limit the ds query
+#       to keys, which would then be mapped to DatasetRelease objects, but since Entity.query_ds handles
+#       that mapping, passing keys_only in creates DatasetRelease objects missing almost all of their fields.
 def get_all_dataset_releases(keys_only=False, order=None, placeholder=True):
   ''' Returns a list of all Dataset Release entities in datastore as DatasetRelease objects '''
   logger.debug(f'get_all_dataset_releases(keys_only={keys_only}, order={order})')
@@ -34,7 +37,7 @@ def get_all_dataset_releases(keys_only=False, order=None, placeholder=True):
   # If none were found and a placeholder was provided, return the placeholder
   if len(list(releases)) == 0 and placeholder:
     return [ _get_placeholder_dataset_release() ]
-  
+
   # Otherwise, return the retrieved releases
   return releases
 
@@ -53,7 +56,7 @@ def get_dataset_release(version: str):
 
 
 def get_latest_dataset_release_version():
-  releases = get_all_dataset_releases(order='-version', keys_only=True)
+  releases = get_all_dataset_releases(order='-version')
   if len(releases) > 0:
     latest_release = releases[0]
     return latest_release
