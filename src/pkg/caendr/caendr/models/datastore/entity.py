@@ -180,8 +180,9 @@ class Entity(object):
         KeyError: prop not found in props_set
     '''
     if prop in self.__class__.get_props_set():
-      return self.__dict__.get(prop)
-    raise KeyError(f'Could not get property "{prop}": not defined in property set.')
+      return getattr(self, prop, None)
+    else:
+      raise KeyError(f'Could not get property "{prop}": not defined in property set.')
 
 
   def __iter__(self):
@@ -213,8 +214,9 @@ class Entity(object):
         KeyError: prop not found in props_set
     '''
     if prop in self.__class__.get_props_set():
-      return self.__dict__.__setitem__(prop, val)
-    raise KeyError(f'Could not set property "{prop}": not defined in property set.')
+      setattr(self, prop, val)
+    else:
+      raise KeyError(f'Could not set property "{prop}": not defined in property set.')
 
 
   def set_properties(self, **kwargs):

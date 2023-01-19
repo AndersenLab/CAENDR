@@ -61,32 +61,6 @@ class JobEntity(Entity):
 
 
 
-  ## Get Properties ##
-
-  def __getitem__(self, prop):
-
-    # Forward container props to Container object
-    if prop in self.__container_prop_map:
-      return self.__container.__getitem__( self.__container_prop_map[ prop ] )
-
-    # Handle non-container props with default __getitem__ method
-    return super(JobEntity, self).__getitem__(prop)
-
-
-
-  ## Set Properties ##
-
-  def __setitem__(self, prop, val):
-
-    # Forward container props to Container object
-    if prop in self.__container_prop_map:
-      return self.__container.__setitem__( self.__container_prop_map[ prop ], val )
-
-    # Handle non-container props with default __setitem__ method
-    return super(JobEntity, self).__setitem__( prop, val )
-
-
-
   ## Container object ##
 
   def get_container(self) -> Container:
