@@ -26,20 +26,22 @@ def get_browser_tracks_path(release_version=None):
 def get_all_dataset_releases(keys_only=False, order=None, placeholder=True):
   ''' Returns a list of all Dataset Release entities in datastore as DatasetRelease objects '''
   logger.debug(f'get_all_dataset_releases(keys_only={keys_only}, order={order})')
-  ds_entities = query_ds_entities(DatasetRelease.kind, keys_only=keys_only, order=order)
-  if len(list(ds_entities)) == 0:
-    if placeholder:
-      return [_get_placeholder_dataset_release()]
+
+  # Query the db for all dataset releases
+  releases = DatasetRelease.query_ds(keys_only=keys_only, order=order)
+  logger.debug(releases)
+
+  # If none were found and a placeholder was provided, return the placeholder
+  if len(list(releases)) == 0 and placeholder:
+    return [ _get_placeholder_dataset_release() ]
   
-  logger.debug(ds_entities)
-  return [DatasetRelease(e.key.name) for e in ds_entities]
+  # Otherwise, return the retrieved releases
+  return releases
 
 
 def _get_placeholder_dataset_release():
   ''' Returns an empty release as a placeholder to use when none exist '''
-  release = DatasetRelease()
-  release.set_properties(version='None', report_type='V0', disabled=True, hidden=False)
-  return release
+  return DatasetRelease(version='None', report_type='V0', disabled=True, hidden=False)
 
 
 def get_dataset_release(version: str):
@@ -64,13 +66,13 @@ def create_new_dataset_release(version: str, wormbase_version: str, report_type:
   if ds_entity:
     raise BadRequestError(f'Dataset release: version:{version} already exists!')
   
-  release = DatasetRelease(version)
-  PROPS = {'version': version, 
-          'wormbase_version': wormbase_version,
-          'report_type': report_type,
-          'disabled': disabled,
-          'hidden': hidden}
-  release.set_properties(**PROPS)
+  release = DatasetRelease(version, **{
+    'version':          version,
+    'wormbase_version': wormbase_version,
+    'report_type':      report_type,
+    'disabled':         disabled,
+    'hidden':           hidden,
+  })
   release.save()
   return release
 

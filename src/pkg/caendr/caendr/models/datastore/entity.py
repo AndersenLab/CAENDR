@@ -98,7 +98,7 @@ class Entity(object):
     for k, v in obj.items():
       if isinstance(v, str) and v.startswith("JSON:"):
         result_out[k] = json.loads(v[5:])
-      elif v:
+      elif v is not None:
         result_out[k] = v
 
     # Update properties
