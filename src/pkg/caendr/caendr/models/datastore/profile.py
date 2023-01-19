@@ -1,6 +1,7 @@
 import os
 
 from caendr.models.datastore import Entity
+from caendr.services.cloud.storage import generate_blob_url
 
 MODULE_SITE_BUCKET_PUBLIC_NAME = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME')
 PROFILE_PHOTO_PATH_PREFIX = 'profile/photos'
@@ -49,3 +50,15 @@ class Profile(Entity):
   def prof_roles(self, val):
     # Save prop in object's local dictionary
     self.__dict__['prof_roles'] = val
+
+
+
+  @property
+  def img_url(self):
+    '''
+      URL for profile image. Constructed from blob path, if one is provided.
+    '''
+    if self.img_blob_path:
+      return generate_blob_url(Profile.get_bucket_name(), self.img_blob_path)
+
+    return None
