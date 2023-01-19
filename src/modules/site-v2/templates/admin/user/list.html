@@ -1,0 +1,144 @@
+{% extends "_layouts/default.html" %}
+
+{% block custom_head %}
+    <link rel="stylesheet" href="//cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css" />
+    <script type="text/javascript" src="//cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+{% endblock %}
+
+{% block style %}
+<style>
+
+table.dataTable thead .sorting_asc {
+  background: url("//cdn.datatables.net/1.10.0/images/sort_asc.png") no-repeat center left;
+}
+table.dataTable thead .sorting_desc {
+  background: url("//cdn.datatables.net/1.10.0/images/sort_desc.png") no-repeat center left;
+}
+table.dataTable thead .sorting {
+  background: url("//cdn.datatables.net/1.10.0/images/sort_both.png") no-repeat center left;
+}
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% from "_includes/macros.html" import render_dataTable_top_menu %}
+{{ render_dataTable_top_menu() }}
+
+<div class="row">
+
+  <div class="col-md-12">
+
+    <table id='h2-table' class='table table-hover table-striped table-compact strain-table' style="width: 100%;">
+
+      <thead>
+        <tr class="header">
+          <th class='col-md-1'><strong> Username </strong></th>
+          <th class='col-md-2'><strong> Full Name </strong></th>
+          <th class='col-md-2'><strong> Email </strong></th>
+          <th class='col-md-1'><strong> Roles </strong></th>
+          <th class='col-md-1'><strong> Created On </strong></th>
+          <th class='col-md-1'><strong> Last Login </strong></th>
+          <th class='col-md-1'><strong> Edit </strong></th>
+          <th class='col-md-1'><strong> Delete </strong></th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for user in users%}
+          <tr>
+            {% if user %}
+              <td> {{ user.username }} </td>
+              <td> {{ user.full_name }} </td>
+              <td> {{ user.email }} </td>
+              <td>
+                {% for role in user.roles %}
+                <h5><span class="label btn-nu">{{ role }}</span></h5>
+                {% endfor %}
+              </td>
+              <td> {% if user.created_on %} {{ user.created_on|date_format }} {% endif %} </td>
+              <td> {% if user.last_login %} {{ user.last_login|date_format }} {% endif %} </td>
+              <td>
+              <a href="{{ url_for('admin_users.users_edit', id=user.name) }}"> 
+                  Edit
+                </a>
+              </td>
+              <td>
+                <a
+                  id="toggle-delete-user-{{ loop.index }}"
+                  style="cursor: pointer;"
+                  onclick="toggleConfirmDelete(true, '{{loop.index}}')"> 
+                  Delete
+                </a>
+                <a
+                  id="confirm-delete-user-{{ loop.index }}"
+                  style="display:none; cursor:pointer;"
+                  href="{{ url_for('admin_users.users_delete', id=user.name) }}"
+                >
+                  Confirm
+                </a>
+                <a
+                  id="cancel-delete-user-{{ loop.index }}"
+                  style="display:none; cursor:pointer;"
+                  onclick="toggleConfirmDelete(false, '{{loop.index}}')"
+                >
+                  Cancel
+                </a>
+              </td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </tbody>
+
+    </table>
+
+  </div> {# /col #}
+</div> {# /row #}
+{% endblock %}
+
+{% block script %}
+<script>
+  $(document).ready(function(){
+    const dTable = $('#h2-table').DataTable( {
+      paging: true,
+      pageLength: 25,
+      autoWidth: true,
+      scrollX: true,
+      aaSorting: [ [2,'asc'] ],
+      aoColumns: [
+        {"width": "14%"},
+        {"width": "14%"},
+        {"width": "14%"},
+        {"width": "10%"},
+        {"width": "14%"},
+        {"width": "14%"},
+        {"width": "10%"},
+        {"width": "10%"}
+      ],
+      dom:"tipr"
+    });
+
+    $('#filter').keyup(function(){  
+      dTable.search($(this).val()).draw();
+    });
+
+    $('#page-length').change(function(){  
+      dTable.page.len($(this).val()).draw();
+    });
+  });
+
+  function toggleConfirmDelete(show = false, idx) {
+      if (show) {
+        $(`#toggle-delete-user-${idx}`).hide();
+        $(`#confirm-delete-user-${idx}`).show();
+        $(`#cancel-delete-user-${idx}`).show();
+      } else {
+        $(`#toggle-delete-user-${idx}`).show();
+        $(`#confirm-delete-user-${idx}`).hide();
+        $(`#cancel-delete-user-${idx}`).hide();
+      }
+    }
+
+</script>
+{% endblock %}

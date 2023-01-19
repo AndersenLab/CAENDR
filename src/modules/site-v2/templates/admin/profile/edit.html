@@ -1,0 +1,73 @@
+{% extends "_layouts/default.html" %}
+
+{% block content %}
+{% from "_includes/macros.html" import render_field %}
+  <form id='form-submit' method="POST" onsubmit="disableButton()" class="form" enctype="multipart/form-data" action="{{ kind }}">
+
+      
+  <div class="row">
+    <div class='col-md-3'></div> <!-- /col-md-3 -->
+    <div class='col-md-6'>
+      {{ form.csrf_token }}
+      <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">
+      {{ render_field(form.first_name) }}
+      {{ render_field(form.last_name) }}
+      {{ render_field(form.email) }}
+      {{ render_field(form.title) }}
+      {{ render_field(form.org) }}
+      {{ render_field(form.website) }}
+    </div> <!-- /col-md-6 -->
+  </div> <!-- /row -->
+
+  <div class="row">
+    <div class='col-md-3'>
+    </div> <!-- /col-md-3 -->
+    <div class='col-md-6'>
+      <label for="file">Profile Photo</label>
+      <input id="file" name="file" type="file" accept="image/*" class="form-control input-margin form-input"/>
+    </div> <!-- /col-md-6 -->
+  </div> <!-- /row -->
+
+
+  <div class="row">
+    <div class='col-md-3'>
+    </div> <!-- /col-md-3 -->
+    <div class='col-md-6'>
+      <p>
+      {{ render_field(form.prof_roles, class="input-group") }}
+    </div> <!-- /col-md-6 -->
+  </div> <!-- /row -->
+
+
+    <div class="row">
+    <div class="col-md-5"></div> <!-- /col-md-5 -->
+    <div class="col-md-2">
+      <button id='save-btn' value="save-btn" type='submit' class="btn btn-primary btn-block">
+        <span class="glyphicon glyphicon-save" aria-hidden="true"></span> 
+        Save
+      </button>
+    </div> <!-- /col-md-2 -->
+  </div> <!-- /row -->
+      
+      
+
+</form>
+
+
+{% endblock %}
+
+
+{% block script %}
+
+<script>
+
+function disableButton() {
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.innerText = 'Loading...'
+}
+
+</script>
+
+{% endblock %}
+

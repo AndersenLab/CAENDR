@@ -1,0 +1,38 @@
+{% extends "_layouts/default.html" %}
+
+{% block style %}
+
+{% endblock %}
+
+{% block content %}
+<div class="row row-margin">
+  
+  <div class="text-center col-lg-4 col-lg-offset-1 col-md-6 col-sm-6 col-xs-12">
+    <a href="{{ url_for('indel_primer.indel_primer') }}" style="text-decoration: none;">
+      <div class="menu-card">
+        <img class="card-img-top" src="{{ ext_asset('img/icons/pairwise_indel_finder.png') }}" alt="Pairwise Indel Finder">
+        <div class="card-body">
+          <h4 class="card-title">Pairwise Indel Finder</h4>
+          <p class="card-text text-center">Compare any two wild C. elegans strains for insertion-deletion (indel) variants that can be genotyped using PCR</p>
+        </div>
+      </div> {# /card #}
+    </a>
+  </div> {#/col #}
+  
+  
+  <div class="text-center col-lg-4 col-lg-offset-2 col-md-6 col-sm-6 col-xs-12">
+    <a href="{{ url_for('heritability.heritability') }}" style="text-decoration: none;">
+      <div class="menu-card">
+        <img class="card-img-top" src="{{ ext_asset('img/icons/heritability_calculator.png') }}" alt="Heritability Calculator">
+        <div class="card-body">
+          <h4 class="card-title">Heritability Calculator</h4>
+          <p class="card-text text-center">Calculate the broad-sense heritability for your trait of interest using a set of C. elegans wild isolates</p>
+        </div>
+      </div> {# /card #}
+    </a>
+  </div> {#/col #}
+
+</div> {# /row #}
+
+{% endblock %}
+
