@@ -222,6 +222,10 @@ var templates = {};
 // Location for browser
 const browser_div = $("#browser")[0];
 
+const default_checked_tracks = [
+  {% for name, track in default_tracks.items() %} {% if track.checked %} "{{ name }}", {% endif %} {% endfor %}
+];
+
 
 
 /* Initialization */
@@ -230,66 +234,13 @@ const browser_div = $("#browser")[0];
 // Load data
 $(document).ready(function () {
 
-  // Load species from dropdown default value
+  // Update species to match value in dropdown, and load all associated data
   update_species();
-
-  // Set initial config options for browser
-  const options = {
-    search: {
-      url: "{{ url_for('api_gene.api_search_genes', species='', query='') }}$FEATURE$",
-      coords: 1,
-      resultsField: 'result'
-    },
-    showNavigation: true,
-    showKaryo: false,
-    reference: {
-      id: "WS276", // TODO: used to be {wormbase_version}, but there's no longer a single value for this
-      fastaURL: replace_tokens("{{ site_prefix }}/{{ release_path }}/{{ fasta_filename }}"),
-    },
-    locus: "{{ region }}",
-    tracks: [],
-  };
-
-  // Create browser
-  var browser = igv.createBrowser(browser_div, options).then(function(browser) {
-
-    /* Bind browser events */
-    browser.on('trackdragend', function(reference_frame, label) {});
-
-    // Detect track changes
-    $(".track-select").on( "change", update_tracks );
-
-  });
-
-  // Make links work!
-  $(".container-fluid").on("click", ".ortholink", function() {
-    igv.getBrowser().search($(this).attr("link"))
-  });
-
-  // Ortholog search
-  $("#gene-search").on("input", function(e) {
-    $("#loading-search-table").fadeIn();
-    clearTimeout(typingTimer);
-    typingTimer = setTimeout(process_gene_search, doneTypingInterval);
-  })
-
-  // Set default checked tracks
-  {% for name, track in default_tracks.items() %}
-    {% if track.checked %}
-      document.getElementById("{{name}}_checkbox").checked = true;
-    {% endif %}
-  {% endfor %}
 
   // Italicize 'et al.' in track sources
   $('.track-source-link').each((i, obj) => {
     obj.innerHTML = obj.innerHTML.replaceAll('et al.', '<em>et al.</em>');
   });
-
-  // Load tracks from API, then populate the browser with the default tracks
-  fetch_trackset( update = true );
-
-  // Load strains for current species from API, then populate table with results
-  fetch_species_tracks( update = true );
 
   // Load browser track templates
   fetch_templates();
@@ -322,6 +273,13 @@ $(document).ready(function () {
       }
   });
 
+  // Ortholog search
+  $("#gene-search").on("input", function(e) {
+    $("#loading-search-table").fadeIn();
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(process_gene_search, doneTypingInterval);
+  })
+
 });
 
 
@@ -330,11 +288,10 @@ $(document).ready(function () {
 
 
 // Get the list of tracks
-function fetch_trackset( update = false ) {
-  fetch( "{{ url_for('gene_browser.get_tracks') }}" )
-    .then( (response) => { return response.text();      } )
-    .then( (text)     => { trackset = JSON.parse(text); } )
-    .then( ()         => { if (update) update_tracks(); } );
+function fetch_trackset() {
+  return fetch( "{{ url_for('gene_browser.get_tracks') }}" )
+    .then( (response) => { return response.text();  } )
+    .then( (text)     => { return JSON.parse(text); } );
 }
 
 function fetch_templates() {
@@ -343,35 +300,137 @@ function fetch_templates() {
     .then( (text)     => { templates = JSON.parse(text); } );
 }
 
-function fetch_species_tracks( update = false ) {
-  fetch( "{{ url_for('gene_browser.get_species_tracks', species='') }}" + species.name )
-    .then( (response) => { return response.text();                               } )
-    .then( (text)     => { ({ species_tracks, strain_list } = JSON.parse(text)); } )
-    .then( ()         => { if (update) update_strains();                         } );
+function fetch_species_tracks() {
+  return fetch( "{{ url_for('gene_browser.get_species_tracks', species='') }}" + species.name )
+    .then( (response) => { return response.text();  } )
+    .then( (text)     => { return JSON.parse(text); } );
 }
 
 
 
-/* Update functions */
+/* Browser */
 
+function create_or_update_browser(callback) {
+
+  // If browser exists, swap out species params (name and FASTA file)
+  if (igv.getBrowser()) {
+    return igv.getBrowser().loadGenome({
+      "id":       species['name'],
+      "name":     species['short_name'],
+      "fastaURL": replace_tokens("{{ site_prefix }}/{{ release_path }}/{{ fasta_filename }}"),
+    });
+  }
+
+  // If not, create a new browser
+  else {
+
+    // Set initial config options for browser
+    const options = {
+      search: {
+        url: "{{ url_for('api_gene.api_search_genes', species='', query='') }}$FEATURE$",
+        coords: 1,
+        resultsField: 'result'
+      },
+      showNavigation: true,
+      showKaryo: false,
+      reference: {
+        id:       species['name'],
+        name:     species['short_name'],
+        fastaURL: replace_tokens("{{ site_prefix }}/{{ release_path }}/{{ fasta_filename }}"),
+      },
+      locus: "{{ region }}",
+      tracks: [],
+    };
+
+    // Create browser, make it responsive, and return it in a Promise
+    return igv.createBrowser(browser_div, options).then(function(browser) {
+
+      // Bind browser events
+      browser.on('trackdragend', function(reference_frame, label) {});
+
+      // Detect track changes
+      $(".track-select").on( "change", update_tracks );
+
+      // Make links work!
+      $(".container-fluid").on("click", ".ortholink", function() {
+        browser.search($(this).attr("link"))
+      });
+
+      // Return browser from Promise
+      return browser;
+    });
+  }
+}
+
+
+
+/* Browser Tracks */
+
+
+// Add a single track to the browser by name
+function add_track(track_name) {
+  if (!tracks.includes(track_name)) {
+    tracks.push(track_name);
+    return igv.getBrowser().loadTrack(get_track(track_name));
+  }
+}
+
+// Remove a single track from the browser
+function remove_track(track_name) {
+  i = tracks.indexOf(track_name);
+  while (i != -1) {
+    tracks.splice(i, 1);
+    i = tracks.indexOf(track_name);
+  }
+  return igv.getBrowser().removeTrackByName(track_name);
+}
+
+// Update tracks in the browser to match the checkboxes
 function update_tracks() {
   $('.track-select').each(function(i, obj) {
     const track_name = $(this).attr("value");
-    if ($(this).prop("checked") == true){
-      if (!tracks.includes(track_name)) {
-        tracks.push(track_name);
-        igv.getBrowser().loadTrack(get_track(track_name));
-      }
+    if ($(this).prop("checked") == true) {
+      add_track(track_name)
     } else {
-      igv.getBrowser().removeTrackByName(track_name);
-      i = tracks.indexOf(track_name);
-      while(i != -1) {
-        tracks.splice(i, 1);
-        i = tracks.indexOf(track_name);
-      }
+      remove_track(track_name)
     }
   });
 }
+
+// Remove all tracks from the browser
+function clear_tracks() {
+  $('.track-select').each(function(i, obj) {
+    const track_name = $(this).attr("value");
+    remove_track(track_name)
+  });
+  tracks = [];
+}
+
+
+
+/* Track Checkboxes */
+
+// Update the browser track checkboxes to match a given array of track names
+function set_track_checkboxes(arr) {
+  $('.track-select').each(function(i, obj) {
+    const track_name = $(this).attr("value");
+    obj.checked = arr.includes(track_name);
+  });
+}
+
+// Reset the track checkboxes to the default values
+function reset_track_checkboxes() {
+  return set_track_checkboxes(default_checked_tracks);
+}
+
+// Uncheck all track checkboxes
+function clear_track_checkboxes() {
+  return set_track_checkboxes([]);
+}
+
+
+
+/* Changing Species */
 
 function update_strains() {
 
@@ -417,8 +476,26 @@ function update_species() {
   document.getElementById('wormbase_version').innerHTML = species['wb_ver'];
   document.getElementById('release_version').innerHTML  = species['latest_release'];
 
-  fetch_species_tracks( update = true );
-  clear_tracks();
+  // Reset the checkboxes to the default
+  reset_track_checkboxes();
+
+  return create_or_update_browser().then((browser) => {
+
+    // Clear any existing tracks from the browser, once we know it exists
+    clear_tracks();
+
+    // Update the supported browser tracks & strains for the current species
+    fetch_species_tracks().then((data) => {
+      ({ species_tracks, strain_list } = data);
+      update_strains();
+    })
+
+    // Update the set of supported tracks, now that the browser exists
+    fetch_trackset().then((new_trackset) => {
+      trackset = new_trackset;
+      update_tracks();
+    });
+  });
 }
 
 
@@ -462,21 +539,6 @@ function process_gene_search() {
 function set_position(coord) {
   // Sets browser position based on input
   igv.getBrowser().search(coord);
-}
-
-
-function clear_tracks() {
-
-  // If browser not initialized yet, skip
-  if ( !igv.getBrowser() ) return;
-
-  // Uncheck all boxes
-  $('.track-select').each(function(i, obj) {
-    obj.checked = false;
-  });
-
-  // Update tracks to match unchecked boxes (i.e. remove all)
-  update_tracks();
 }
 
 
