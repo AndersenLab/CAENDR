@@ -95,7 +95,7 @@ th {
 
       <!-- Species dropdown -->
       <h5>Species</h5>
-      <select name="species" id="species-selector" onchange="update_species()">
+      <select name="species" id="species-selector" class="form-control" onchange="update_species()">
         {% for s in species_list %}
           <option value="{{s}}">{{species_list[s]["short_name"]}}</option>
         {% endfor %}
