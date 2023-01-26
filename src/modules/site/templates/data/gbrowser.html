@@ -436,22 +436,22 @@ function clear_track_checkboxes() {
 
 /* Changing Species */
 
+// Show only strains matching current species
 function update_strains() {
-
-  // Show only strains matching current species
   $('.strain-entry-container').hide();
   $(`.strain-entry-container-${species_id}`).show();
 }
 
 
+// Show/hide tracks to match list of tracks supported by current species
 function update_visible_track_checkboxes() {
-  // Show/hide tracks to match species list
   const suffix = "-checkbox-container";
   $(".default-track-container").each((i, obj) => {
     const name = obj.id.substring( 0, obj.id.length - suffix.length );
     obj.style.display = species_supported_tracks[species_id].includes(name) ? 'block' : 'none';
   });
 }
+
 
 // Set up species variable & set to match species selector
 function update_species() {
