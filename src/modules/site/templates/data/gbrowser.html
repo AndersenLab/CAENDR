@@ -594,27 +594,26 @@ function fill_track_template(template_name, strain_name) {
 
 
 
+// Generates a genotype label
 function gt_label(gt) {
-  // Generates a genotype label
-  r = ""
-  classes = [];
+
+  // Get class list
+  classes = gt["FT"].split(";");
   classes.push(`gt-${gt["GT"]}`);
-  FT = gt["FT"].split(";").join(" ");
-  classes.push(FT);
-  tt = "";
-  if (gt['FT'] != ['PASS']) {
-    tt = ` data-placement='bottom' title='${FT}' `;
-  }
-  r += `<div class='label ttop ${classes.join(" ")}' ${tt} >`;
-  r += gt["SAMPLE"] + " : " + gt["TGT"];
-  r += "</div>";
-  return r
+
+  // Optional extra parameters
+  tt = (gt['FT'] != ['PASS']) ? ` data-placement='bottom' title='${FT}' ` : "";
+
+  // Create & return div string
+  return `
+    <div class='label ttop ${classes.join(" ")}' ${tt}>
+      ${gt["SAMPLE"]} : ${gt["TGT"]}
+    </div>
+  `;
 }
 
 function draw_gt_set(genotype_set, genotype_val) {
-  return genotype_set.filter(function(gt) { return gt['GT'] == genotype_val })
-                      .map( gt_label )
-                      .join(" ");
+  return genotype_set.filter( gt => gt['GT'] == genotype_val ).map( gt_label ).join(" ");
 }
 
 </script>
