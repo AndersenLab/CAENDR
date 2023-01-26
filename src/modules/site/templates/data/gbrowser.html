@@ -252,27 +252,23 @@ const default_checked_tracks = [
 /* Initialization */
 
 
-// Load data
 $(document).ready(function () {
 
-  // Update species to match value in dropdown, and load all associated data
-  update_species();
+  // Fetch the browser track objects
+  fetch_trackset().then((data) => {
+    trackset  = data.default;
+    templates = data.templates;
+
+    // Once we know the trackset exists, update the species & browser
+    update_species();
+  })
 
   // Italicize 'et al.' in track sources
   $('.track-source-link').each((i, obj) => {
     obj.innerHTML = obj.innerHTML.replaceAll('et al.', '<em>et al.</em>');
   });
 
-  // Load browser track templates
-  fetch_templates();
-
-});
-
-
-// Set up isotype search table
-$(document).ready(function () {
-
-  // Isotype search
+  // Isotype search -- make table responsive
   (function($) {
       var patterns = [];
       $('#filter').keyup(function() {
@@ -304,21 +300,14 @@ $(document).ready(function () {
 });
 
 
-
-/* Fetch functions */
-
-
 // Get the list of tracks
+// Retrieves an object with two fields:
+//   - 'default':   the list of tracks that are not specific to any one strain
+//   - 'templates': the list of track templates to be filled out with strain data
 function fetch_trackset() {
   return fetch( "{{ url_for('gene_browser.get_tracks') }}" )
     .then( (response) => { return response.text();  } )
     .then( (text)     => { return JSON.parse(text); } );
-}
-
-function fetch_templates() {
-  fetch( "{{ url_for('gene_browser.get_track_templates') }}" )
-    .then( (response) => { return response.text();       } )
-    .then( (text)     => { templates = JSON.parse(text); } );
 }
 
 
@@ -479,16 +468,17 @@ function update_species() {
   reset_track_checkboxes();
   update_visible_track_checkboxes();
 
+  // Ensure the browser exists and is displaying the correct species,
+  // then sort out the tracks in it
   return create_or_update_browser().then((browser) => {
 
     // Clear any existing tracks from the browser, once we know it exists
+    // This is important for default tracks, which are different for different species
+    // but have the same track_name.
     clear_tracks();
 
-    // Update the set of supported tracks, now that the browser exists
-    fetch_trackset().then((new_trackset) => {
-      trackset = new_trackset;
-      update_tracks();
-    });
+    // Update the tracks in the browser
+    update_tracks();
   });
 }
 

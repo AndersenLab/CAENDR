@@ -67,20 +67,21 @@ def replace_tokens_recursive(obj, **kwargs):
 def get_tracks():
   '''
   Get the list of browser tracks.
-  '''
-  return jsonify(TRACKS)
 
+  Returns two fields:
+    - 'default':   The list of tracks that are not specific to any one strain
+    - 'templates': The list of track templates to be filled out with strain data
 
-@gene_browser_bp.route('/gbrowser/templates', methods=['GET'])
-def get_track_templates():
-  '''
-  Get the list of browser track templates for strains.
-  Returns templates as JSON strings, so every instantiation of the template is a new copy.
+  Templates are returned as JSON strings, so every instantiation of the template is a new copy.
   '''
   return jsonify({
-    key: json.dumps(template)
-      for key, template in TRACK_TEMPLATES.items()
+    'default':   TRACKS,
+    'templates': {
+      key: json.dumps(template)
+        for key, template in TRACK_TEMPLATES.items()
+    },
   })
+
 
 
 @gene_browser_bp.route('/gbrowser/templates/<template>',          methods=['GET'])
