@@ -100,35 +100,6 @@ def get_track_template(template = '', strain = None):
 
 
 
-@gene_browser_bp.route('/gbrowser/tracks/<species>', methods=['GET'])
-def get_species_tracks(species=None):
-  '''
-  Get the list of default tracks and the list of strains for the given species.
-
-  These together determine what tracks can be generated for the species.
-  '''
-
-  # Confirm that species string is valid
-  if (species not in SPECIES_LIST):
-    raise InternalError()
-
-  # Get strain and isotype for all strains of given species
-  strain_list = [
-    {
-      'strain':  strain.strain,
-      'isotype': strain.isotype,
-    }
-    for strain in get_isotypes( species=species )
-  ]
-
-  # Send back in JSON format
-  return jsonify({
-    'strain_list':    strain_list,
-    'species_tracks': SPECIES_LIST[species].browser_tracks,
-  })
-
-
-
 @gene_browser_bp.route('/gbrowser')
 @gene_browser_bp.route('/gbrowser/')
 @gene_browser_bp.route('/gbrowser/<release_version>')
@@ -152,7 +123,23 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
   # track_url_prefix       = '//storage.googleapis.com/elegansvariation.org/browser_tracks'
   # bam_bai_url_prefix     = '//storage.googleapis.com/elegansvariation.org/bam'
 
-  VARS = {
+
+  # Get strain and isotype for all strains of each species
+  # Produces a dictionary from species ID to list of strains
+  strain_listing = {
+    species: [
+      {
+        'strain':  strain.strain,
+        'isotype': strain.isotype,
+      }
+      for strain in get_isotypes( species=species )
+    ]
+    for species in SPECIES_LIST
+  }
+
+  # Render the page
+  return render_template('data/gbrowser.html', **{
+
     # Page info
     'title': f"Genome Browser",
     'alt_parent_breadcrumb': {
@@ -163,6 +150,7 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
     # Data
     'region':         region,
     'query':          query,
+    'strain_listing': strain_listing,
     'species_list':   SPECIES_LIST,
 
     # Tracks
@@ -190,5 +178,4 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
 
     # Misc
     'fluid_container': True,
-  }
-  return render_template('data/gbrowser.html', **VARS)
+  })

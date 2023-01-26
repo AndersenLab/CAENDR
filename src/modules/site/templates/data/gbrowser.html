@@ -152,9 +152,25 @@ th {
         <input class="form-control" id="filter" type="text" style="width:100%;  margin-bottom: 5px;" placeholder="e.g. JU360" autocomplete="off">
       </form>
 
-      {# Strain table -- filled in by update_strains() #}
+      {# Strain table #}
       <table id='browser_strain_list' class="table table-striped table-hover table-condensed">
-        <tbody id="browser_strain_list_body" class="searchable"></tbody>
+        <tbody id="browser_strain_list_body" class="searchable">
+
+        {% for species in species_list %}
+          {% for strain in strain_listing[species] %}
+            <tr class="strain-entry-container strain-entry-container-{{species}}">
+              <td> {{ strain.isotype }} {{ ("(" + strain.strain + ")") if (strain.isotype != strain.strain) else "" }} </td>
+              <td><label>
+                  <input type="checkbox" class="track-select isotype-item sample-track" value="{{ strain.strain }}" /> VCF
+              </label></td>
+              <td><label>
+                  <input type="checkbox" class="track-select sample-track-alignment" value="{{ strain.strain }}_bam" /> BAM
+              </label></td>
+            </tr>
+          {% endfor %}
+        {% endfor %}
+
+        </tbody>
       </table>
     </div> {# /col-lg-4 #}
 </div>
@@ -214,7 +230,12 @@ const species_list = {{ unpack_species_list(species_list, species_fields) }};
 
 // Species specific default tracks & strain-specific tracks
 var species_tracks = [];
-var strain_list    = [];
+
+const species_supported_tracks = {
+  {% for species_name, species in species_list.items() %}
+    "{{species_name}}": [{% for track in species.browser_tracks %} "{{ track }}", {% endfor %}],
+  {% endfor %}
+};
 
 // Strain track templates
 var templates = {};
@@ -298,12 +319,6 @@ function fetch_templates() {
   fetch( "{{ url_for('gene_browser.get_track_templates') }}" )
     .then( (response) => { return response.text();       } )
     .then( (text)     => { templates = JSON.parse(text); } );
-}
-
-function fetch_species_tracks() {
-  return fetch( "{{ url_for('gene_browser.get_species_tracks', species='') }}" + species.name )
-    .then( (response) => { return response.text();  } )
-    .then( (text)     => { return JSON.parse(text); } );
 }
 
 
@@ -434,37 +449,18 @@ function clear_track_checkboxes() {
 
 function update_strains() {
 
-  // Clear the current contents of the table
-  $("#browser_strain_list_body").html("");
+  // Show only strains matching current species
+  $('.strain-entry-container').hide();
+  $(`.strain-entry-container-${species_id}`).show();
+}
 
-  // Map each strain to a table row
-  result = strain_list.map((strain) => `
-    <tr>
-      <td>
-        ${ strain.isotype } ${ (strain.isotype != strain.strain) ? "(" + strain.strain + ")" : "" }
-      </td>
-      <td><label>
-          <input type="checkbox" class="track-select isotype-item sample-track" value="${ strain.strain }" />
-          VCF
-      </label></td>
-      <td><label>
-          <input type="checkbox" class="track-select sample-track-alignment" value="${ strain.strain }_bam" />
-          BAM
-      </label></td>
-    </tr>
-  `);
 
-  // Combine the table rows into one string and insert into the table body
-  $("#browser_strain_list_body").html(result.join(''));
-
-  // Detect track changes
-  $(".track-select").on( "change", update_tracks );
-
+function update_visible_track_checkboxes() {
   // Show/hide tracks to match species list
   const suffix = "-checkbox-container";
   $(".default-track-container").each((i, obj) => {
     const name = obj.id.substring( 0, obj.id.length - suffix.length );
-    obj.style.display = species_tracks.includes(name) ? 'block' : 'none';
+    obj.style.display = species_supported_tracks[species_id].includes(name) ? 'block' : 'none';
   });
 }
 
@@ -476,19 +472,17 @@ function update_species() {
   document.getElementById('wormbase_version').innerHTML = species['wb_ver'];
   document.getElementById('release_version').innerHTML  = species['latest_release'];
 
-  // Reset the checkboxes to the default
+  // Update list of strains to match current species
+  update_strains();
+
+  // Reset the checkboxes to the default for the new species
   reset_track_checkboxes();
+  update_visible_track_checkboxes();
 
   return create_or_update_browser().then((browser) => {
 
     // Clear any existing tracks from the browser, once we know it exists
     clear_tracks();
-
-    // Update the supported browser tracks & strains for the current species
-    fetch_species_tracks().then((data) => {
-      ({ species_tracks, strain_list } = data);
-      update_strains();
-    })
 
     // Update the set of supported tracks, now that the browser exists
     fetch_trackset().then((new_trackset) => {
