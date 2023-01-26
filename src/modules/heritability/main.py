@@ -2,7 +2,7 @@ import os
 import sys
 
 from subprocess import Popen, PIPE, STDOUT
-from logzero import logger
+from caendr.services.logger import logger
 from dotenv import load_dotenv
 
 from caendr.utils import monitor

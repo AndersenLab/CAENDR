@@ -1,5 +1,5 @@
 from flask import jsonify
-from logzero import logger
+from caendr.services.logger import logger
 class APIError(Exception):
   """ General API Error exception handler base class """
   def default_handler(self):

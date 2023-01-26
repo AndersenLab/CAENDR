@@ -4,7 +4,7 @@ import urllib.request as request
 import shutil
 
 from contextlib import closing
-from logzero import logger
+from caendr.services.logger import logger
 
 
 def get_dir_list_sorted(path):

@@ -3,7 +3,7 @@ import subprocess
 import json
 from shutil import which
 
-from logzero import logger
+from caendr.services.logger import logger
 
 from caendr.utils.data import AltTemplate
 
@@ -12,6 +12,9 @@ GCR_REPO_NAME = os.environ.get('GCR_REPO_NAME')
 VALID_REPOS = [
   "caendr-db-operations",
   "caendr-gene-browser-tracks"
+  "indel-primer",
+  "heritability",
+  "nemascan-nxf"
 ]
 
 def get_gcloud():

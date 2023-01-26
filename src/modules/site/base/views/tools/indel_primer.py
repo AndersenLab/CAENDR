@@ -5,7 +5,7 @@ import numpy as np
 
 import io
 
-from logzero import logger
+from caendr.services.logger import logger
 from flask import Response, Blueprint, render_template, request, url_for, jsonify, redirect, flash, abort
 
 from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
@@ -180,6 +180,9 @@ def pairwise_indel_query_results(id, filename = None):
 
         # Download results file as string
         result = result.download_as_string().decode('utf-8')
+
+        if len(result) > 0:
+          result = pd.read_csv(io.StringIO(result), sep="\t")
 
         # Check for empty results file
         if len(result) == 0:

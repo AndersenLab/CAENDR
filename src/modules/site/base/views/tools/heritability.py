@@ -14,7 +14,7 @@ from flask import (flash,
                    render_template,
                    Blueprint,
                    abort)
-from logzero import logger
+from caendr.services.logger import logger
 from datetime import datetime
 
 from base.forms import HeritabilityForm

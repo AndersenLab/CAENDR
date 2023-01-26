@@ -3,7 +3,7 @@ import os
 import json
 
 from cyvcf2 import VCF
-from logzero import logger
+from caendr.services.logger import logger
 
 from caendr.models.error import EnvVarError
 from caendr.models.datastore import IndelPrimer
@@ -146,6 +146,9 @@ def create_new_indel_primer(username, site, strain_1, strain_2, size, data_hash,
 
   # Load container version info
   c = get_current_container_version(INDEL_PRIMER_CONTAINER_NAME)
+  if c is None:
+    logger.error(f"Unable to find the container for [{INDEL_PRIMER_CONTAINER_NAME}]")
+    return
 
   # Check for existing indel primer matching data_hash & user
   if not no_cache:

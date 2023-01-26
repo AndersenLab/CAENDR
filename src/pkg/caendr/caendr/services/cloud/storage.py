@@ -7,7 +7,7 @@ import datetime
 from google.oauth2 import service_account
 from google.resumable_media.requests import ResumableUpload
 from google.cloud import storage
-from logzero import logger
+from caendr.services.logger import logger
 
 from caendr.models.error import CloudStorageUploadError, NotFoundError
 from caendr.services.cloud.secret import get_secret

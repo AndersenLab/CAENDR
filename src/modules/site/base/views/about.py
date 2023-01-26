@@ -8,7 +8,7 @@ import requests
 
 from flask import Blueprint, render_template, url_for, request, redirect
 from datetime import datetime, timezone
-from logzero import logger
+from caendr.services.logger import logger
 
 # TODO: fix summaries
 # from base.utils.query import get_mappings_summary, get_weekly_visits, get_unique_users

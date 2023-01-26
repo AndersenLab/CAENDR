@@ -1,4 +1,4 @@
-from logzero import logger
+from caendr.services.logger import logger
 import os
 
 from flask import Blueprint, jsonify, request
