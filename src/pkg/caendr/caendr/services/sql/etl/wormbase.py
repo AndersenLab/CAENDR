@@ -3,7 +3,7 @@ import gzip
 import os
 
 from gtfparse import read_gtf_as_dataframe
-from logzero import logger
+from caendr.services.logger import logger
 
 from caendr.models.sql import WormbaseGeneSummary
 from caendr.utils.bio import arm_or_center

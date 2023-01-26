@@ -1,24 +1,20 @@
 import os
 import csv
 
-from logzero import logger
+from caendr.services.logger import logger
 
 from caendr.models.task import NemaScanTask
 from caendr.models.datastore import NemascanMapping
 from caendr.utils.data import unique_id
 from caendr.models.error import DataFormatError, DuplicateDataError, CachedDataError
 from caendr.services.cloud.storage import check_blob_exists, upload_blob_from_file, get_blob_list
-from caendr.services.cloud.datastore import query_ds_entities
-from caendr.services.cloud.task import add_task
-from caendr.services.cloud.secret import get_secret
 from caendr.services.tool_versions import get_current_container_version
 from caendr.utils.file import get_file_hash
 
-NEMASCAN_NXF_CONTAINER_NAME = os.environ.get('NEMASCAN_NXF_CONTAINER_NAME')
-NEMASCAN_TASK_QUEUE_NAME = os.environ.get('NEMASCAN_TASK_QUEUE_NAME')
-MODULE_API_PIPELINE_TASK_URL_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_URL_NAME')
+from caendr.models.datastore import Container
 
-API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
+NEMASCAN_NXF_CONTAINER_NAME = os.environ.get('NEMASCAN_NXF_CONTAINER_NAME')
+
 
 
 uploads_dir = os.path.join('./', 'uploads')
@@ -46,21 +42,18 @@ def get_mapping(id):
       m.save()
   return m
 
+
 def get_all_mappings():
   logger.debug(f'Getting all mappings...')
-  results = query_ds_entities(NemascanMapping.kind)
-  mappings = [NemascanMapping(entity) for entity in results]
-  mappings = sorted(mappings, key=lambda x: x.created_on, reverse=True)
-  return mappings
+  mappings = NemascanMapping.query_ds()
+  return NemascanMapping.sort_by_created_date(mappings, reverse=True)
 
 
 def get_user_mappings(username):
   logger.debug(f'Getting all mappings for user: username:{username}')
   filters = [('username', '=', username)]
-  results = query_ds_entities(NemascanMapping.kind, filters=filters)
-  mappings = [NemascanMapping(e) for e in results]
-  mappings = sorted(mappings, key=lambda x: x.created_on, reverse=True)
-  return mappings
+  mappings = NemascanMapping.query_ds(filters=filters)
+  return NemascanMapping.sort_by_created_date(mappings, reverse=True)
   
   
 def create_new_mapping(username, email, label, file, status = 'SUBMITTED', check_duplicates=True):
@@ -79,16 +72,18 @@ def create_new_mapping(username, email, label, file, status = 'SUBMITTED', check
   
   # TODO: assign properties from cached mapping if it exists   if is_mapping_cached(data_hash):
 
-  props = {'id': id,
-          'username': username,
-          'email': email,
-          'label': label,
-          'trait': trait,
-          'data_hash': data_hash,
-          'container_repo': c.repo,
-          'container_name': c.container_name,
-          'container_version': c.container_tag,
-          'status': status }
+  props = {
+    'id': id,
+    'username': username,
+    'email': email,
+    'label': label,
+    'trait': trait,
+    'data_hash': data_hash,
+    'container_repo': c.repo,
+    'container_name': c.container_name,
+    'container_version': c.container_tag,
+    'status': status
+  }
   
   
   m_new = NemascanMapping(id)
@@ -96,9 +91,8 @@ def create_new_mapping(username, email, label, file, status = 'SUBMITTED', check
   if check_duplicates:
     logger.warn(f"Skipping Nemascan duplicate check")    
     # check for mappings with matching data hash and container version
-    mappings = query_ds_entities(NemascanMapping.kind, filters=[('data_hash', '=', data_hash)])
+    mappings = NemascanMapping.query_ds(filters=[('data_hash', '=', data_hash)])
     for m in mappings:
-      m = NemascanMapping(m)
       if m.container_version == c.container_tag:
         if m.username == username:
           logger.debug('User resubmitted identical nemascan mapping data')
@@ -125,24 +119,15 @@ def create_new_mapping(username, email, label, file, status = 'SUBMITTED', check
   os.remove(local_path)
   
   # Schedule mapping in task queue
-  task = create_nemascan_mapping_task(m_new)
-  payload = task.get_payload()
-  task = add_task(NEMASCAN_TASK_QUEUE_NAME, f'{API_PIPELINE_TASK_URL}/task/start/{NEMASCAN_TASK_QUEUE_NAME}', payload)
-  if not task:
-    m_new.status = 'ERROR'
-    m_new.save()
+  task   = NemaScanTask(m_new)
+  result = task.submit()
+
+  # Update entity status to reflect whether task was submitted successfully
+  m_new.status = 'SUBMITTED' if result else 'ERROR'
+  m_new.save()
+
+  # Return resulting Nemascan Mapping entity
   return m_new
-  
-  
-def create_nemascan_mapping_task(m):
-  return NemaScanTask(**{'id': m.id,
-                          'kind': NemascanMapping.kind,
-                          'data_hash': m.data_hash,
-                          'username': m.username, 
-                          'email': m.email,
-                          'container_name': m.container_name,
-                          'container_version': m.container_version,
-                          'container_repo': m.container_repo})
 
 
 
@@ -160,9 +145,9 @@ def update_nemascan_mapping_status(id: str, status: str=None, operation_name: st
 
   m.save()
   return m
-  
 
-  
+
+
 def validate_data_format(id, local_path):
   logger.debug(f'Validating Nemascan Mapping data format: id:{id}')
 

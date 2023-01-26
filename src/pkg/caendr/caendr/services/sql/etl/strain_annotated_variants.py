@@ -2,7 +2,7 @@ import os
 import csv
 import re
 
-from logzero import logger
+from caendr.services.logger import logger
 from sqlalchemy.sql.expression import null
 
 

@@ -2,7 +2,7 @@ import json
 import os
 from attr import has
 from caendr.services.cloud.postgresql import health_database_status
-from logzero import logger
+from caendr.services.logger import logger
 from flask import Blueprint, render_template, url_for, request, redirect
 
 from base.utils.auth import admin_required, get_jwt, get_jwt_identity, get_current_user

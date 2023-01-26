@@ -5,7 +5,7 @@ import string
 import pandas as pd
 
 from collections import Counter
-from logzero import logger
+from caendr.services.logger import logger
 
 
 class AltTemplate(string.Template):

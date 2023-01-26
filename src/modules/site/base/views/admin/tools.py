@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, url_for, request, redirect
-from logzero import logger
+from caendr.services.logger import logger
 
 from base.utils.auth import admin_required, get_jwt
 from base.forms import AdminEditToolContainerVersion
@@ -34,6 +34,8 @@ def edit_tool(id):
   
   tool = get_container(id)
   versions = get_available_version_tags(tool)
+  versions.append(tool.container_tag)
+  versions = [*set(versions)]
   versions.reverse()
 
   form = AdminEditToolContainerVersion(version=get_version(tool))

@@ -3,7 +3,7 @@ import os
 import psycopg2
 import pg8000
 
-from logzero import logger
+from caendr.services.logger import logger
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine

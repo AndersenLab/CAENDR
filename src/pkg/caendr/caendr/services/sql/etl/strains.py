@@ -1,5 +1,5 @@
 from dateutil import parser
-from logzero import logger
+from caendr.services.logger import logger
 
 from caendr.services.elevation import get_elevation
 from caendr.services.cloud.sheets import get_google_sheet

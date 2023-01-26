@@ -8,7 +8,7 @@ import datetime
 from io import StringIO
 from oauth2client.service_account import ServiceAccountCredentials
 from base64 import b64decode
-from logzero import logger
+from caendr.services.logger import logger
 
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.service_account import get_service_account_credentials

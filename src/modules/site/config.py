@@ -2,7 +2,7 @@
 import os
 from re import U
 from dotenv import dotenv_values
-from logzero import logger
+from caendr.services.logger import logger
 
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.postgresql import get_db_conn_uri, get_db_timeout, health_database_status

@@ -1,5 +1,6 @@
 import os
-from logzero import logger
+from caendr.services.logger import logger
+import urllib.parse
 
 from caendr.services.cloud.docker_hub import get_container_versions
 from caendr.services.cloud import gcr_container_registry
@@ -21,10 +22,15 @@ GOOGLE_CLOUD_PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID')
 GCR_REPO_NAME = f'gcr.io/{GOOGLE_CLOUD_PROJECT_ID}'
 
 def get_available_version_tags(container):
+  versions = []
   if hasattr(container, 'container_registry') and container.container_registry == 'gcr':
-    return get_available_version_tags_gcr(container)
-  
-  return get_available_version_tags_dockerhub(container)
+    versions = get_available_version_tags_gcr(container)
+  elif hasattr(container, 'container_registry') and container.container_registry == 'dockerhub':
+    versions = get_available_version_tags_dockerhub(container)
+  else:
+    logger.error("Unknown 'container_registry' value")
+
+  return versions
 
 
 def get_available_version_tags_gcr(container):
@@ -34,13 +40,9 @@ def get_available_version_tags_gcr(container):
 
 
 def get_available_version_tags_dockerhub(container):
-  container_name = container.name    
-  v = get_container_versions(f'{DOCKER_HUB_REPO_NAME}/{container_name}')
-  try:
-    v.remove('latest')
-  except ValueError:
-    pass
-  return v
+  versions = get_container_versions(f'{container.repo}/{container.container_name}')
+  versions = [ version['name'] for version in versions ]
+  return versions
 
 
 def get_container(id: str):

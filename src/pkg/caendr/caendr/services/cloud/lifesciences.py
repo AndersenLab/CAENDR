@@ -1,7 +1,7 @@
 import os
 from caendr.models.datastore.heritability_report import HeritabilityReport
 
-from logzero import logger
+from caendr.services.logger import logger
 from googleapiclient import discovery
 from oauth2client.client import GoogleCredentials
 

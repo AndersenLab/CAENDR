@@ -1,7 +1,8 @@
 from flask import request, Blueprint
 from caendr.models.sql import Homolog, WormbaseGeneSummary
+
 from sqlalchemy import and_, or_, func
-from logzero import logger
+from caendr.services.logger import logger
 
 
 def get_gene(query: str):

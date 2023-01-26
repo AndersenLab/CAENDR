@@ -2,7 +2,7 @@ import os
 import markdown
 import requests
 
-from logzero import logger
+from caendr.services.logger import logger
 from flask import Markup, render_template_string
 
 

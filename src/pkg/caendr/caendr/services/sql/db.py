@@ -2,10 +2,10 @@ import os
 import datetime
 import shutil
 
-from logzero import logger
+from caendr.services.logger import logger
 
 from string import Template
-from logzero import logger
+from caendr.services.logger import logger
 from diskcache import Cache
 
 from caendr.models.error import BadRequestError

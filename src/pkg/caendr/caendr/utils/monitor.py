@@ -2,7 +2,7 @@
 import os
 import sys
 import sentry_sdk
-from logzero import logger
+from caendr.services.logger import logger
 
 def running_local():
     return sys.platform == 'darwin'

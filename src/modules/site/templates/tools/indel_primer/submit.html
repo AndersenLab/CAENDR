@@ -260,13 +260,17 @@ $(document).ready(function(){
               console.log("Submitted")
               $(this).text("Submitted")
 
+              // Get strain values and sort - consistent ordering of strains for hashing
+              var strains = [$("#strain_1").val(), $("#strain_2").val()].sort()
+
               var data = {
                 site: $(this).attr("site"),
-                strain_1: $("#strain_1").val(),
-                strain_2: $("#strain_2").val(),
+                strain_1: strains[0],
+                strain_2: strains[1],
                 size: $(this).attr("size"),
                 svtype: $(this).attr("svtype")
               }
+
               $.ajax({
                 type: "POST",
                 url: "{{ url_for('indel_primer.submit_indel_primer') }}",

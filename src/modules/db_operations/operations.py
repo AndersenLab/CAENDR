@@ -1,6 +1,6 @@
 import os
 from caendr.services.cloud.postgresql import health_database_status
-from logzero import logger
+from caendr.services.logger import logger
 
 from caendr.models.error import EnvVarError
 from caendr.models.species import Species

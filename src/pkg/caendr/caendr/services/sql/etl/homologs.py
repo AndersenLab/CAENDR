@@ -3,7 +3,7 @@ import tarfile
 import csv
 import os
 
-from logzero import logger
+from caendr.services.logger import logger
 from urllib.request import urlretrieve
 from tempfile import NamedTemporaryFile
 
