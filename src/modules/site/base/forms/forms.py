@@ -36,6 +36,7 @@ from caendr.services.database_operation import get_db_op_form_options
 from caendr.services.indel_primer import get_indel_primer_chrom_choices, get_indel_primer_strain_choices
 from caendr.services.markdown import get_content_type_form_options
 from caendr.models.datastore import User
+from caendr.models.species import SPECIES_LIST
 from caendr.api.strain import query_strains
 from base.forms.validators import (validate_duplicate_strain, 
                                    validate_duplicate_isotype, 
@@ -195,7 +196,9 @@ class FlexIntegerField(IntegerField):
 class PairwiseIndelForm(Form):
   STRAIN_CHOICES = get_indel_primer_strain_choices()
   CHROMOSOME_CHOICES = get_indel_primer_chrom_choices()
+  SPECIES_CHOICES = [(name, value.short_name) for name, value in SPECIES_LIST.items()]
   
+  species = SelectField('Species', choices=SPECIES_CHOICES, default="c_elegans", validators=[Required()])
   strain_1 = SelectField('Strain 1', choices=STRAIN_CHOICES, default="N2", validators=[Required(), validate_uniq_strains])
   strain_2 = SelectField('Strain 2', choices=STRAIN_CHOICES, default="CB4856", validators=[Required()])
   chromosome = SelectField('Chromosome', choices=CHROMOSOME_CHOICES, default="V", validators=[Required()])

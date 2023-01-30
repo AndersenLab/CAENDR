@@ -45,6 +45,7 @@
 	<div class='row row-margin'>
 		<form id='form-submit' method="POST">
 			{{ form.csrf_token }}
+			<div class='col-lg-2 col-md-2 col-sm-4 col-xs-6'>{{ render_field(form.species) }}</div>
 			<div class='col-lg-2 col-md-2 col-sm-4 col-xs-6'>{{ render_field(form.strain_1) }}</div>
 			<div class='col-lg-2 col-md-2 col-sm-4 col-xs-6'>{{ render_field(form.strain_2) }}</div>
 			<div class='col-lg-2 col-md-2 col-sm-4 col-xs-6'>{{ render_field(form.chromosome) }}</div>
@@ -104,11 +105,18 @@ var options = {
 
 var divergent_track_summary = {};
 
-var browser
 var results
 var query_running = false
 var loaded = false
 var table
+var species;
+
+const COLORS = {
+  INS: 'blue',
+  DEL: 'red'
+}
+
+var divergent_track_name;
 
 
 
@@ -121,52 +129,189 @@ function fetch_trackset() {
 
 $(document).ready(function(){
 
-	let COLORS = {
-		INS: 'blue',
-		DEL: 'red'
-	}
-
   var form = document.getElementById('form-submit');
+
+  species = $("#species").val();
 
   form.addEventListener('change', function() {
     if (loaded) {
-      set_position();
+      set_position( igv.getBrowser() );
     }
   });
 
-  generate_data_table = function() {
-    table = $("#results").DataTable({
-      data: results,
-      paging:   false,
-      ordering: true,
-      searching: false,
-      order: [[1, "asc"]],
-      columnDefs: [
-        { targets: [0], orderData: [1,2] }
-      ],
-      columns: [
-        { data: "site", title: "Site" },
-        { data: "START", title: "Start", visible: false },
-        { data: "END", title: "End", visible: false },
-        { data: "STRAIN", title: "Strain" },
-        { data: "generate_primers", renderer: "html" }
-      ]
+	reset_query = function() {
+		query_running = false
+	}
+
+	submitForm = function() {
+		if (query_running == false) {
+			query_running = true
+			$("form").submit()
+		}
+		setTimeout(reset_query, 200)
+	}
+
+  $('form').submit(function (e) {
+		e.preventDefault();
+		$.ajax({
+        type: "POST",
+				url:  "{{ url_for('indel_primer.pairwise_indel_finder_query') }}",
+				data: $('form').serialize(),
+				success: function(data) {
+          results = data["results"]
+
+          // Add the 'generate primers' HTML value to each result
+          _.each(results, function(x) {
+            x['generate_primers'] = `<div site="${x['CHROM']}:${x["START"]}-${x['END']}" svtype="${x['SVTYPE']}" size="${x["END"]-x["START"]}" class='btn-link generate-primers'>Generate Primers</div>`
+          })
+
+					// Handle errors
+					$(".form-error").remove();
+					if (Object.keys(data).indexOf("errors") > -1) {
+						for(error in data["errors"]) {
+							$("[for='" + error + "']").parent().append(`<div class='form-error'>${data["errors"][error]}</div>`)
+						}
+					}
+
+          // If no errors, update the page based on the retrieved results
+          else {
+            process_indel_finder_query_results(results);
+					}
+
+          query_running = false;
+				}
+      });    
+	});
+
+	$.ajaxSetup({
+		beforeSend: function(xhr, settings) {
+			if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+				xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
+			}
+		}
+	});
+
+  submitForm()
+});
+
+
+function process_indel_finder_query_results(results) {
+
+  // Handle data table
+  create_or_update_data_table(results);
+
+  // Handle genome browser
+  create_or_get_browser().then(({ browser, created }) => {
+
+    // Update the reference species, if applicable
+    new_species = $("#species").val();
+    if (created || species != new_species) {
+      species = new_species;
+      update_browser_species(browser, species).then(() => {
+
+        // Strain tracks must be (re)set AFTER reference species genome is changed
+        update_browser_tracks(browser, results);
+      });
+    }
+
+    // Update browser tracks
+    else {
+      update_browser_tracks(browser, results);
+    }
+  });
+}
+
+
+
+/* Genome Browser Create & Update */
+
+
+function create_or_get_browser() {
+
+  // If browser not yet initialized, create it
+  if (!igv.getBrowser()) {
+    return igv.createBrowser(browserDiv, options).then(function(browser) {
+
+      // Set the browser's position
+      set_position(browser);
+      browser.on('locuschange', function(reference_frame, label) {
+        $("#chromosome").val(reference_frame["chr"]);
+        $("#start").val(reference_frame["start"]);
+        $("#stop").val(reference_frame["end"]);
+        setTimeout(submitForm, 500);
+      });
+      loaded = true;
+
+      // Return the browser object to make it accessible from further .then calls
+      return { browser, created: true };
     });
   }
 
-  load_tracks = function() {
-    // Load tracks
+  // If browser exists, return it in a Promise
+  else {
+    return new Promise((resolve, reject) => {
+      resolve({
+        browser: igv.getBrowser(),
+        created: false,
+      });
+    });
+  }
+}
+
+
+function update_browser_species(browser, new_species) {
+
+  // Load the new species genome
+  return browser.loadGenome({
+    "id":       new_species,
+    "name":     new_species,
+    "fastaURL": replace_tokens("{{ fasta_url }}"),
+  }).then(() => {
+
+    // (Re)set the browser position, since it's removed when reference genome changes
+    set_position(browser);
+
+    // Load the divergent regions track
+    fetch_trackset().then((divergent_track_summary) => {
+      divergent_track_name = divergent_track_summary.name;
+
+      // Update divergent track summary
+      divergent_track_summary.url    = replace_tokens(divergent_track_summary.url);
+      divergent_track_summary.height = 40;
+      divergent_track_summary.color  = "#CB3466";
+      browser.loadTrack(divergent_track_summary);
+    })
+  })
+}
+
+
+// Load the individual strain tracks
+function update_browser_tracks(browser, results) {
+
+  // Clear existing strain tracks
+  browser.findTracks().forEach(track => {
+    if (!["", divergent_track_name].includes(track.name)) {
+      browser.removeTrackByName(track.name);
+    }
+  })
+
+  // Load new tracks
+  load_tracks(browser, results);
+}
+
+
+function load_tracks(browser, results) {
     rowset = {}
     rowset[$("#strain_1").val()] = []
     rowset[$("#strain_2").val()] = []
     tracks = []
 
     // Restructure results by strain
-    for(idx in results) {
+    for (idx in results) {
       row = results[idx]
       rowset[row["STRAIN"]].push(row)
     }
-    for(strain in rowset) {
+    for (strain in rowset) {
       track = rowset[strain]
       items = _.map(track, function(row) {
         result = {
@@ -183,139 +328,112 @@ $(document).ready(function(){
         type: "annotation",
         features: items,
       }
-      browser.loadTrack(igvTrack)
+      igv.getBrowser().loadTrack(igvTrack);
     }
   }
 
-	set_position = function() {
-		// Sets browser position based on input
-    const MAX_DIFF = 1000000
-		browser = igv.getBrowser()
-		let chromosome = $("#chromosome").val().trim()
-		let start = parseInt($("#start").val().trim().replace(/,/g, ''), 10)
-		let end = parseInt($("#stop").val().trim().replace(/,/g, ''), 10)
-    let diff = end - start
-		if (diff > MAX_DIFF || diff <= 0) {
-			end = +start + MAX_DIFF
-		}
-		browser.search(`${chromosome}:${start}-${end}`)
-	}
 
-	reset_query = function() {
-		query_running = false
-	}
 
-	submitForm = function() {
-		if (query_running == false) {
-			query_running = true
-			$("form").submit()
-		}
-		setTimeout(reset_query, 200)
-	}
+/* Data Table Create & Update */
 
-  $('form').submit(function (e) {
-		e.preventDefault();
-		var url = "{{ url_for('indel_primer.pairwise_indel_finder_query') }}"
-		$.ajax({type: "POST",
-				url: url,
-				data: $('form').serialize(),
-				success: function(data) {
-          results = data["results"]
-          _.each(results, function(x) { x['generate_primers'] = `<div site="${x['CHROM']}:${x["START"]}-${x['END']}" svtype="${x['SVTYPE']}" size="${x["END"]-x["START"]}" class='btn-link generate-primers'>Generate Primers</div>` })
 
-					// Handle errors
-					$(".form-error").remove();
-					if (Object.keys(data).indexOf("errors") > -1) {
-						for(error in data["errors"]) {
-							$("[for='" + error + "']").parent().append(`<div class='form-error'>${data["errors"][error]}</div>`)
-						}
-					} else {
-						if (loaded == false) {
-							// Create genome browser
-              browser = igv.createBrowser(browserDiv, options).then(function(browser) {
-                set_position();
-                browser.on('locuschange', function(reference_frame, label) {
-                  $("#chromosome").val(reference_frame["chr"]);
-                  $("#start").val(reference_frame["start"]);
-                  $("#stop").val(reference_frame["end"]);
-                  setTimeout(submitForm, 500)
-                });
-                generate_data_table();
-                load_tracks(browser, results);
-                fetch_trackset().then((divergent_track_summary) => {
-                  divergent_track_summary.url    = replace_tokens(divergent_track_summary.url);
-                  divergent_track_summary.height = 40,
-                  divergent_track_summary.color  = "#CB3466",
-                  browser.loadTrack(divergent_track_summary);
-                })
-                loaded = true;
-              });
-						} else {
-							table.clear()
-							table.rows.add(results);
-							table.draw();
-              load_tracks();
-              // Remove strain tracks
-              var remove_tracks = _.filter(_.map(browser.findTracks(), x => x.name), y => ["", "Divergent Regions"].includes(y) == false)
-							_.each(remove_tracks, x => browser.removeTrackByName(x))
-						}
+function create_or_update_data_table(results) {
 
-            // Activate primer generation links
-            $(".generate-primers").on("click", function(e) {
-              console.log("Submitted")
-              $(this).text("Submitted")
+  if (!table) {
+    table = $("#results").DataTable({
+      data:      results,
+      paging:    false,
+      ordering:  true,
+      searching: false,
+      order:     [[1, "asc"]],
+      columnDefs: [
+        { targets: [0], orderData: [1,2] },
+      ],
+      columns: [
+        { data: "site",   title: "Site"                  },
+        { data: "START",  title: "Start", visible: false },
+        { data: "END",    title: "End",   visible: false },
+        { data: "STRAIN", title: "Strain"                },
+        { data: "generate_primers", renderer: "html"     },
+      ],
+    });
+  }
+  else {
+    table.clear()
+    table.rows.add(results);
+    table.draw();
+  }
 
-              // Get strain values and sort - consistent ordering of strains for hashing
-              var strains = [$("#strain_1").val(), $("#strain_2").val()].sort()
+  // Activate primer generation links
+  $(".generate-primers").on("click", generate_primers);
+}
 
-              var data = {
-                site: $(this).attr("site"),
-                strain_1: strains[0],
-                strain_2: strains[1],
-                size: $(this).attr("size"),
-                svtype: $(this).attr("svtype")
-              }
 
-              $.ajax({
-                type: "POST",
-                url: "{{ url_for('indel_primer.submit_indel_primer') }}",
-                data: JSON.stringify(data),
-                contentType: "application/json; charset=utf-8",
-                dataType: 'json',
-                success:function(result){
-                    window.open(`indel_primer/result/${result.id}`, "_blank")
-                }
-              })
-            });
+function generate_primers(e) {
+  console.log("Submitted")
+  $(this).text("Submitted")
 
-					}
-          query_running = false;
+  // Get strain values and sort - consistent ordering of strains for hashing
+  var strains = [$("#strain_1").val(), $("#strain_2").val()].sort()
 
-				}
-      });    
-	});
+  var data = {
+    site: $(this).attr("site"),
+    strain_1: strains[0],
+    strain_2: strains[1],
+    size: $(this).attr("size"),
+    svtype: $(this).attr("svtype")
+  }
 
-	$.ajaxSetup({
-		beforeSend: function(xhr, settings) {
-			if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
-				xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
-			}
-		}
-	});
-   
-    submitForm()
+  $.ajax({
+    type: "POST",
+    url: "{{ url_for('indel_primer.submit_indel_primer') }}",
+    data: JSON.stringify(data),
+    contentType: "application/json; charset=utf-8",
+    dataType: 'json',
+    success: function(result) {
+        window.open(`indel_primer/result/${result.id}`, "_blank")
+    }
+  })
+}
 
-});
+
+/* Helper Functions */
+
+
+// Set browser position based on input
+function set_position(browser) {
+  const MAX_DIFF = 1000000;
+
+  // Extract query information from form
+  let chromosome = $("#chromosome").val().trim();
+  let start = parseInt($("#start").val().trim().replace(/,/g, ''), 10);
+  let end   = parseInt($("#stop").val().trim().replace(/,/g, ''), 10);
+
+  // Check start and end relative to one another, defaulting to maximum diff if invalid
+  let diff = end - start
+  if (diff > MAX_DIFF || diff <= 0) {
+    end = +start + MAX_DIFF;
+  }
+
+  // Update the browser to the desired search window
+  browser.search(`${chromosome}:${start}-${end}`);
+}
 
 
 // Replace string tokens with species values
 // TODO: Uses of species name ID in filenames not yet standardized, so we drop the 'c_' prefix for now
 function replace_tokens(filename) {
-  filename = filename.replaceAll('$SPECIES',   species_list['c_elegans']['name'].substring(2));
-  filename = filename.replaceAll('${SPECIES}', species_list['c_elegans']['name'].substring(2));
+
+  // TODO: resolve call order (?) so this default value is unnecessary
+  if (!species) {
+    species = 'c_elegans'
+  }
+
+  filename = filename.replaceAll('$SPECIES',   species_list[species]['name'].substring(2));
+  filename = filename.replaceAll('${SPECIES}', species_list[species]['name'].substring(2));
   {% for token, field in tokens.items() %}
-  filename = filename.replaceAll('${{ token }}',             species_list['c_elegans']['{{ field }}']);
-  filename = filename.replaceAll('${' + '{{ token }}' + '}', species_list['c_elegans']['{{ field }}']);
+  filename = filename.replaceAll('${{ token }}',             species_list[species]['{{ field }}']);
+  filename = filename.replaceAll('${' + '{{ token }}' + '}', species_list[species]['{{ field }}']);
   {% endfor %}
   return filename;
 }
