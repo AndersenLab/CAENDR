@@ -103,12 +103,12 @@ th {
 
       <!-- Trackset check boxes -->
       <h5>Tracks</h5>
-      {% for name, track in default_tracks.items() %}
-        <div id="{{ name }}_checkbox_container" class="checkbox default-track-container">
+      {% for track in default_tracks %}
+        <div id="{{ track.name }}_checkbox_container" class="checkbox default-track-container">
           <label>
-            <input id="{{ name }}_checkbox" type="checkbox" class="track-select normal-track" value="{{ name }}" />
-            {{ name }}
-            {% if 'source' in track %}
+            <input id="{{ track.name }}_checkbox" type="checkbox" class="track-select normal-track" value="{{ track.name }}" />
+            {{ track.name }}
+            {% if track['source'] %}
               <br />(<a class="track-source-link" href="{{ track.source.url }}" target='_blank'>{{ track.source.title }}</a>)
             {% endif %}
           </label>
@@ -244,7 +244,7 @@ var templates = {};
 const browser_div = $("#browser")[0];
 
 const default_checked_tracks = [
-  {% for name, track in default_tracks.items() %} {% if track.checked %} "{{ name }}", {% endif %} {% endfor %}
+  {% for track in default_tracks %} {% if track.checked %} "{{ track.name }}", {% endif %} {% endfor %}
 ];
 
 
@@ -321,7 +321,7 @@ function create_or_update_browser(callback) {
     return igv.getBrowser().loadGenome({
       "id":       species['name'],
       "name":     species['short_name'],
-      "fastaURL": replace_tokens("{{ site_prefix }}/{{ release_path }}/{{ fasta_filename }}"),
+      "fastaURL": replace_tokens("{{ fasta_filename }}"),
     });
   }
 
@@ -340,7 +340,7 @@ function create_or_update_browser(callback) {
       reference: {
         id:       species['name'],
         name:     species['short_name'],
-        fastaURL: replace_tokens("{{ site_prefix }}/{{ release_path }}/{{ fasta_filename }}"),
+        fastaURL: replace_tokens("{{ fasta_filename }}"),
       },
       locus: "{{ region }}",
       tracks: [],
@@ -530,9 +530,9 @@ function set_position(coord) {
 // Replace string tokens with species values
 // TODO: Uses of species name ID in filenames not yet standardized, so we drop the 'c_' prefix for now
 function replace_tokens(filename) {
-  filename = filename.replaceAll('$SPECIES', species['name'].substring(2));
+  filename = filename.replaceAll('${SPECIES}', species['name'].substring(2));
   {% for token, field in tokens.items() %}
-  filename = filename.replaceAll('{{ token }}', species['{{ field }}']);
+  filename = filename.replaceAll('${' + '{{ token }}' + '}', species['{{ field }}']);
   {% endfor %}
   return filename;
 }
@@ -558,15 +558,12 @@ function get_track(track_name) {
   // Get track params
   var params = track.params;
 
-  // Get the path to the file in GCP
-  var path = track['is_bam'] ? "{{ bam_bai_path }}" : "{{ release_path }}"
-
   // Create the full URL and replace all tokens
-  params.url = replace_tokens(`{{ site_prefix }}/${ path }/${ track.filename }`);
+  params.url = replace_tokens( params.url );
 
-  // Create indexURL field by appending file extension to filename, if applicable
-  if (track['index_suffix']) {
-    params.indexURL = params.url + track['index_suffix']
+  // If an index URL is defined, replace all tokens
+  if (params.indexURL) {
+    params.indexURL = replace_tokens( params.indexURL );
   }
 
   return params;
@@ -577,15 +574,17 @@ function get_track(track_name) {
 function fill_track_template(template_name, strain_name) {
   var template = JSON.parse( templates[template_name] );
 
-  // Fill in strain name in filename
-  template['filename'] = template['filename'].replaceAll("${STRAIN}", strain_name);
-  template['filename'] = template['filename'].replaceAll("$STRAIN",   strain_name);
+  // Fill in strain names in top level string fields
+  for (var key in template) {
+    if (typeof template[key] == "string") {
+      template[key] = template[key].replaceAll("${STRAIN}", strain_name);
+    }
+  }
 
   // Fill in strain name in params
   for (var key in template['params']) {
     if (typeof template['params'][key] == "string") {
       template['params'][key] = template['params'][key].replaceAll("${STRAIN}", strain_name);
-      template['params'][key] = template['params'][key].replaceAll("$STRAIN",   strain_name);
     }
   }
 

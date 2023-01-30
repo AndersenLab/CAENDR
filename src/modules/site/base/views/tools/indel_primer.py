@@ -11,7 +11,7 @@ from flask import Response, Blueprint, render_template, request, url_for, jsonif
 from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
 from base.forms import PairwiseIndelForm
 
-from caendr.models.datastore.gene_browser_tracks import TRACKS, TRACK_PATHS, TRACK_TEMPLATES
+from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefault
 from caendr.models.species import SPECIES_LIST
 from caendr.services.dataset_release import get_browser_tracks_path
 from caendr.utils.constants import CHROM_NUMERIC
@@ -28,12 +28,25 @@ indel_primer_bp = Blueprint('indel_primer',
 
 from caendr.utils.constants import CHROM_NUMERIC
 
+
+
+@indel_primer_bp.route('/pairwise_indel_finder/tracks', methods=['GET'])
+@jwt_required()
+def indel_primer_get_tracks():
+
+  # Get the Divergent Regions browser track
+  divergent_track = BrowserTrackDefault.query_ds(filters=[('name', '=', 'Divergent Regions')])[0]
+
+  return jsonify({
+    **divergent_track['params'],
+    'url': divergent_track.get_url_template(),
+  })
+
+
+
 @indel_primer_bp.route('/pairwise_indel_finder', methods=['GET'])
 @jwt_required()
 def indel_primer():
-
-  # Construct path to track folder
-  track_path = f'{ TRACK_PATHS["site_prefix"] }/{ TRACK_PATHS["release_path"] }'
 
   # Construct variables and render template
   return render_template('tools/indel_primer/submit.html', **{
@@ -52,8 +65,7 @@ def indel_primer():
     "species_list": SPECIES_LIST,
 
     # Data locations
-    "divergent_track_summary_url": f'{track_path}/{ TRACKS["Divergent Regions Summary"]["filename"] }',
-    "fasta_url":                   f'{track_path}/{ TRACK_PATHS["fasta_filename"]                   }',
+    "fasta_url": BrowserTrack.get_fasta_path_full(),
 
     # List of Species class fields to expose to the template
     # Optional - exposes all attributes if not provided
@@ -64,9 +76,9 @@ def indel_primer():
     # String replacement tokens
     # Maps token to the field in Species object it should be replaced with
     'tokens': {
-      '$WB':      'wb_ver',
-      '$RELEASE': 'latest_release',
-      '$PRJ':     'project_num',
+      'WB':      'wb_ver',
+      'RELEASE': 'latest_release',
+      'PRJ':     'project_num',
     },
 
     # Misc

@@ -94,12 +94,7 @@ class Entity(object):
     self.name = obj.key.name
 
     # Parse JSON fields when instantiating without loading from gcloud.
-    result_out = {}
-    for k, v in obj.items():
-      if isinstance(v, str) and v.startswith("JSON:"):
-        result_out[k] = json.loads(v[5:])
-      elif v is not None:
-        result_out[k] = v
+    result_out = Entity._parse_entity_to_dict(obj)
 
     # Update properties
     self.set_properties(**result_out)
@@ -114,6 +109,17 @@ class Entity(object):
     self._exists = True
     self.set_properties(**obj)
     self.set_properties_meta(**obj)
+
+
+  @classmethod
+  def _parse_entity_to_dict(cls, obj):
+    '''
+      Parse JSON fields in an object.  Reads strings beginning with "JSON:" as JSON objects.
+    '''
+    return {
+      k: json.loads(v[5:]) if isinstance(v, str) and v.startswith("JSON:") else v
+        for k, v in obj.items()
+    }
 
 
   def __repr__(self):
@@ -214,7 +220,10 @@ class Entity(object):
         KeyError: prop not found in props_set
     '''
     if prop in self.__class__.get_props_set():
-      setattr(self, prop, val)
+      if type(val) == datastore.entity.Entity:
+        setattr(self, prop, Entity._parse_entity_to_dict(val))
+      else:
+        setattr(self, prop, val)
     else:
       raise KeyError(f'Could not set property "{prop}": not defined in property set.')
 

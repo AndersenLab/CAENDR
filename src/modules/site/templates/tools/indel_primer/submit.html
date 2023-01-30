@@ -102,16 +102,7 @@ var options = {
     },
 };
 
-// TODO: Pull from JSON
-var divergent_track_summary = {
-                    name: "Divergent Regions",
-                    url: replace_tokens("{{ divergent_track_summary_url }}"),
-                    order: 6,
-                    height: 40,
-                    displayMode: "EXPANDED",
-                    color: "#CB3466",
-                    visibilityWindow: 20000000
-                  }
+var divergent_track_summary = {};
 
 var browser
 var results
@@ -119,8 +110,17 @@ var query_running = false
 var loaded = false
 var table
 
+
+
+function fetch_trackset() {
+  return fetch( "{{ url_for('indel_primer.indel_primer_get_tracks') }}" )
+    .then( (response) => { return response.text();  } )
+    .then( (text)     => { return JSON.parse(text); } );
+}
+
+
 $(document).ready(function(){
-	
+
 	let COLORS = {
 		INS: 'blue',
 		DEL: 'red'
@@ -233,7 +233,6 @@ $(document).ready(function(){
 						if (loaded == false) {
 							// Create genome browser
               browser = igv.createBrowser(browserDiv, options).then(function(browser) {
-                browser.loadTrack(divergent_track_summary);
                 set_position();
                 browser.on('locuschange', function(reference_frame, label) {
                   $("#chromosome").val(reference_frame["chr"]);
@@ -243,6 +242,12 @@ $(document).ready(function(){
                 });
                 generate_data_table();
                 load_tracks(browser, results);
+                fetch_trackset().then((divergent_track_summary) => {
+                  divergent_track_summary.url    = replace_tokens(divergent_track_summary.url);
+                  divergent_track_summary.height = 40,
+                  divergent_track_summary.color  = "#CB3466",
+                  browser.loadTrack(divergent_track_summary);
+                })
                 loaded = true;
               });
 						} else {
@@ -306,9 +311,11 @@ $(document).ready(function(){
 // Replace string tokens with species values
 // TODO: Uses of species name ID in filenames not yet standardized, so we drop the 'c_' prefix for now
 function replace_tokens(filename) {
-  filename = filename.replaceAll('$SPECIES', species_list['c_elegans']['name'].substring(2));
+  filename = filename.replaceAll('$SPECIES',   species_list['c_elegans']['name'].substring(2));
+  filename = filename.replaceAll('${SPECIES}', species_list['c_elegans']['name'].substring(2));
   {% for token, field in tokens.items() %}
-  filename = filename.replaceAll('{{ token }}', species_list['c_elegans']['{{ field }}']);
+  filename = filename.replaceAll('${{ token }}',             species_list['c_elegans']['{{ field }}']);
+  filename = filename.replaceAll('${' + '{{ token }}' + '}', species_list['c_elegans']['{{ field }}']);
   {% endfor %}
   return filename;
 }

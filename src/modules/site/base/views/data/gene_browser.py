@@ -1,13 +1,11 @@
 import json
-import os
 import re
 
-from pathlib import Path
 from string import Template
 
 from caendr.models.error import EnvVarError, InternalError
+from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefault, BrowserTrackTemplate
 from caendr.models.datastore.dataset_release import DatasetRelease
-from caendr.models.datastore.gene_browser_tracks import TRACKS, TRACK_PATHS, TRACK_TEMPLATES
 from caendr.models.datastore.wormbase import WormbaseVersion
 from caendr.models.species import SPECIES_LIST
 from flask import (render_template,
@@ -75,29 +73,15 @@ def get_tracks():
   Templates are returned as JSON strings, so every instantiation of the template is a new copy.
   '''
   return jsonify({
-    'default':   TRACKS,
+    'default': {
+      track['name']: dict(track)
+        for track in BrowserTrackDefault.query_ds_visible()
+    },
     'templates': {
-      key: json.dumps(template)
-        for key, template in TRACK_TEMPLATES.items()
+      track['template_name']: json.dumps( dict(track) )
+        for track in BrowserTrackTemplate.query_ds_visible()
     },
   })
-
-
-
-@gene_browser_bp.route('/gbrowser/templates/<template>',          methods=['GET'])
-@gene_browser_bp.route('/gbrowser/templates/<template>/<strain>', methods=['GET'])
-def get_track_template(template = '', strain = None):
-  '''
-  Get a specific browser track template, potentially filled in with a given strain.
-  '''
-
-  # If no specific strain requested, send back the template as-is
-  if strain is None:
-    return jsonify(TRACK_TEMPLATES[template])
-
-  # Otherwise, replace the strain name in the template before returning
-  else:
-    return jsonify(replace_tokens_recursive(TRACK_TEMPLATES[template], strain=strain))
 
 
 
@@ -155,20 +139,17 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
     'species_list':   SPECIES_LIST,
 
     # Tracks
-    'default_tracks': TRACKS,
+    'default_tracks': sorted(BrowserTrackDefault.query_ds_visible(), key = lambda x: x['order'] ),
 
     # Data locations
-    'site_prefix':    TRACK_PATHS['site_prefix'],
-    'release_path':   TRACK_PATHS['release_path'],
-    'bam_bai_path':   TRACK_PATHS['bam_bai_path'],
-    'fasta_filename': TRACK_PATHS['fasta_filename'],
+    'fasta_filename': BrowserTrack.get_fasta_path_full(),
 
     # String replacement tokens
     # Maps token to the field in Species object it should be replaced with
     'tokens': {
-      '$WB':      'wb_ver',
-      '$RELEASE': 'latest_release',
-      '$PRJ':     'project_num',
+      'WB':      'wb_ver',
+      'RELEASE': 'latest_release',
+      'PRJ':     'project_num',
     },
 
     # List of Species class fields to expose to the template
