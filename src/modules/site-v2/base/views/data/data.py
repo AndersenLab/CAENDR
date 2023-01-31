@@ -23,6 +23,17 @@ def data():
 
 
 #
+# Download Data
+#
+@data_bp.route('/download')
+@cache.memoize(60*60)
+def download():
+  title = 'Download Data'
+  disable_parent_breadcrumb = True
+  return render_template('data/download.html', **locals())
+
+
+#
 # Protocols
 #
 @data_bp.route("/protocols")
