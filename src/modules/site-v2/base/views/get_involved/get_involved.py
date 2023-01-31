@@ -52,7 +52,7 @@ def donate():
       "is_donation": True,
       "date": datetime.now(timezone.utc)
     }
-    order_obj['items'] = u"{}:{}".format("CeNDR strain and data support", form.data.get('total'))
+    order_obj['items'] = u"{}:{}".format("CaeNDR strain and data support", form.data.get('total'))
     order_obj.update(form.data)
     order_obj['invoice_hash'] = get_object_hash(order_obj, length=8)
     order_obj['url'] = url_for('order.order_confirmation', invoice_hash=order_obj['invoice_hash'], _external=True)
@@ -60,7 +60,7 @@ def donate():
       "from": "no-reply@elegansvariation.org",
       "to": [order_obj["email"]],
       "cc": config.get("CC_EMAILS"),
-      "subject": f"CeNDR Dontaion #{order_obj['invoice_hash']}",
+      "subject": f"CaeNDR Donation #{order_obj['invoice_hash']}",
       "text": DONATION_SUBMISSION_EMAIL_TEMPLATE.format(order_confirmation_link=order_obj.get('url'), donation_amount=order_obj.get('total'))
     })
     add_to_order_ws(order_obj)
