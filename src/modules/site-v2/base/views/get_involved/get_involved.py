@@ -33,7 +33,7 @@ def citizen_scientists():
   return render_template('get_involved/citizen-scientists.html', **locals())
 
 
-@get_involved_bp.route('/donate/', methods=['GET', 'POST'])
+@get_involved_bp.route('/donate', methods=['GET', 'POST'])
 @jwt_required(optional=True)
 def donate():
   ''' Process donation form page '''

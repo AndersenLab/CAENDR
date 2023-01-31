@@ -36,7 +36,7 @@ def about():
   return render_template('about/about.html', **locals())
 
 
-@about_bp.route('/getting_started/')
+@about_bp.route('/getting_started')
 @cache.memoize(60*60)
 def getting_started():
   ''' Getting Started - provides information on how to get started with CeNDR '''
@@ -47,7 +47,7 @@ def getting_started():
   return render_template('about/getting_started.html', **locals())
 
 
-@about_bp.route('/people/')
+@about_bp.route('/people')
 @cache.memoize(60*60)
 def people():
   '''
@@ -72,7 +72,7 @@ def people():
   return render_template('about/people.html', **locals())
 
 
-@about_bp.route('/funding/')
+@about_bp.route('/funding')
 @cache.memoize(60*60)
 def funding():
   title = "Funding"
