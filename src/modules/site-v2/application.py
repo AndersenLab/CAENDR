@@ -37,6 +37,9 @@ from base.views.tools import genetic_mapping_bp
 from base.views.tools import pairwise_indel_finder_bp
 from base.views.tools import heritability_calculator_bp
 
+# Get Involved
+from base.views.get_involved import get_involved_bp
+
 # API
 from base.views.api import api_gene_bp
 
@@ -171,6 +174,7 @@ def register_blueprints(app):
   app.register_blueprint(about_bp, url_prefix='/about')
   app.register_blueprint(strains_bp, url_prefix='/strains')
   app.register_blueprint(order_bp, url_prefix='/order')
+  app.register_blueprint(get_involved_bp, url_prefix='/get-involved')
 
   # Data
   app.register_blueprint(data_bp, url_prefix='/data')

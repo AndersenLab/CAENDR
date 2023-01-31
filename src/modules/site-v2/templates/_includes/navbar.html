@@ -73,17 +73,17 @@
           <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> About Us <span class="caret"></span></a>
             <ul class="dropdown-menu">
-              <li><a href="{{ url_for('about.about') }}"> About CeNDR </a></li>
+              <li><a href="{{ url_for('about.about')      }}"> About CeNDR </a></li>
 
               <!-- <li><a href="{{ url_for('about.staff') }}"> Staff </a></li> -->
               <!-- <li><a href="{{ url_for('about.committee') }}"> Scientific Advisory Committee </a></li> -->
               <!-- <li><a href="{{ url_for('about.collaborators') }}"> Collaborators </a></li> -->
               <li><a> People </a></li>
 
-              <li><a href="{{ url_for('about.publications') }}"> Cited By </a></li>
-              <li><a href="{{ url_for('about.funding') }}"> Funding </a></li>
+              <li><a href="{{ url_for('about.cited_by')   }}"> Cited By </a></li>
+              <li><a href="{{ url_for('about.funding')    }}"> Funding </a></li>
               <li><a href="{{ url_for('about.statistics') }}"> Statistics </a></li>
-              <li><a href="{{ url_for('primary.contact') }}"> Contact Us </a></li>
+              <li><a href="{{ url_for('about.contact_us') }}"> Contact Us </a></li>
             </ul>
           </li>
 
@@ -91,15 +91,11 @@
           <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Get Involved <span class="caret"></span></a>
             <ul class="dropdown-menu">
-              <li><a> Citizen Scientists </a></li>
-              <li><a href="{{ url_for('about.donate') }}"> Donate </a></li>
+              <li><a href="{{ url_for('get_involved.citizen_scientists') }}"> Citizen Scientists </a></li>
+              <li><a href="{{ url_for('get_involved.donate')             }}"> Donate </a></li>
             </ul>
           </li>
 
-
-          <!-- <li class="nav-item">
-            <a href="{{ url_for('primary.outreach') }}" class="nav-link" role="button" aria-haspopup="true" aria-expanded="false"> Outreach </a>
-          </li> -->
 
           <li class="nav-item">
             <a href="{{ url_for('primary.help_item') }}" class="nav-link" role="button" aria-haspopup="true" aria-expanded="false"> FAQs </a>
