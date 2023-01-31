@@ -19,7 +19,6 @@ from base.utils.markdown import render_markdown, render_ext_markdown
 #  Routing  #
 # --------- #
 from base.views import primary_bp
-from base.views import about_bp
 from base.views import strains_bp
 from base.views import user_bp
 from base.views import order_bp
@@ -37,7 +36,8 @@ from base.views.tools import genetic_mapping_bp
 from base.views.tools import pairwise_indel_finder_bp
 from base.views.tools import heritability_calculator_bp
 
-# Get Involved
+# About & Get Involved
+from base.views.about        import about_bp
 from base.views.get_involved import get_involved_bp
 
 # API
