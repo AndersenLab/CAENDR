@@ -34,7 +34,7 @@ def genetic_mapping():
 
 @genetic_mapping_bp.route('/genetic-mapping/upload', methods = ['POST'])
 @jwt_required()
-def submit_mapping_request():
+def submit():
   form = FileUploadForm(request.form)
   user = get_current_user()
   if not form.validate_on_submit():
@@ -49,21 +49,21 @@ def submit_mapping_request():
   try:
     logger.warn("Check Duplicates is DISABLED !!!")
     m = create_new_mapping(**props, check_duplicates=True)
-    return redirect(url_for('genetic_mapping.mapping_report', id=m.id))
+    return redirect(url_for('genetic_mapping.report', id=m.id))
   except Exception as ex:
     if str(type(ex).__name__) == 'DuplicateDataError':
       flash('It looks like you submitted that data already - redirecting to your list of Mapping Reports', 'danger')
-      return redirect(url_for('genetic_mapping.mapping_user_reports'))
+      return redirect(url_for('genetic_mapping.user_reports'))
     if str(type(ex).__name__) == 'CachedDataError':
       flash('It looks like that data has already been submitted - redirecting to the saved results', 'danger')
-      return redirect(url_for('genetic_mapping.mapping_report', id=ex.description))
+      return redirect(url_for('genetic_mapping.report', id=ex.description))
     logger.error(ex.description)
     flash(f"Unable to submit your request: \"{ex.description}\"", 'danger')
     return redirect(url_for('genetic_mapping.mapping'))
 
 @genetic_mapping_bp.route('/genetic-mapping/reports/all', methods=['GET', 'POST'])
 @admin_required()
-def mapping_all_reports():
+def all_reports():
   title = 'All Genetic Mappings'
   subtitle = 'Report List'
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
@@ -74,7 +74,7 @@ def mapping_all_reports():
 
 @genetic_mapping_bp.route('/genetic-mapping/reports', methods=['GET', 'POST'])
 @jwt_required()
-def mapping_user_reports():
+def user_reports():
   title = 'My Genetic Mappings'
   subtitle = 'Report List'
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
@@ -85,7 +85,7 @@ def mapping_user_reports():
 
 @genetic_mapping_bp.route('/genetic-mapping/report/<id>', methods=['GET'])
 @jwt_required()
-def mapping_report(id):
+def report(id):
   title = 'Genetic Mapping Report'
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   user = get_current_user()
@@ -99,13 +99,13 @@ def mapping_report(id):
   else:
     report_url = None
 
-  report_status_url = url_for("genetic_mapping.mapping_report_status", id=id)
+  report_status_url = url_for("genetic_mapping.report_status", id=id)
 
   return render_template('tools/genetic_mapping/report.html', **locals())
 
 @genetic_mapping_bp.route('/genetic-mapping/report/<id>/fullscreen', methods=['GET'])
 @jwt_required()
-def mapping_report_fullscreen(id):
+def report_fullscreen(id):
   title = 'Genetic Mapping Report'
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   user = get_current_user()
@@ -124,7 +124,7 @@ def mapping_report_fullscreen(id):
 
 @genetic_mapping_bp.route('/genetic-mapping/report/<id>/status', methods=['GET'])
 @jwt_required()
-def mapping_report_status(id):
+def report_status(id):
   mapping = get_mapping(id)
   data_url = generate_blob_url(mapping.get_bucket_name(), mapping.get_data_blob_path())
   if hasattr(mapping, 'mapping_report_url'):
@@ -141,7 +141,7 @@ def mapping_report_status(id):
 
 @genetic_mapping_bp.route('/genetic-mapping/report/<id>/results/', methods=['GET'])
 @jwt_required()
-def mapping_results(id):
+def results(id):
   title = 'Genetic Mapping Result Files'
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   user = get_current_user()

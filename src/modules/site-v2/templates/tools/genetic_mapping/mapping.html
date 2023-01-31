@@ -29,7 +29,7 @@
 
 
 {# Data upload form #}
-  <form id="form-submit" action="{{ url_for('genetic_mapping.submit_mapping_request') }}" method="post" onsubmit="disableButton()" class="form form-inline" enctype="multipart/form-data">
+  <form id="form-submit" action="{{ url_for('genetic_mapping.submit') }}" method="post" onsubmit="disableButton()" class="form form-inline" enctype="multipart/form-data">
     <div class="form-group" style="width:100%">
 
       <div class="row">
@@ -60,7 +60,7 @@
         </div> {# /col #}
 
         <div class="col-lg-3 col-lg-offset-2 text-center">
-          <a id="result-list" class="btn nu-alt-btn btn-block input-margin" style="width:100%" href="{{ url_for('genetic_mapping.mapping_user_reports') }}"> 
+          <a id="result-list" class="btn nu-alt-btn btn-block input-margin" style="width:100%" href="{{ url_for('genetic_mapping.user_reports') }}">
             <span class="glyphicon glyphicon-list"></span>
             View My Mapping Reports
           </a>
