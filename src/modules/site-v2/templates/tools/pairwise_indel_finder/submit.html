@@ -34,7 +34,7 @@
 		
   <div class='row row-margin'>
     <div class='col-md-4 col-md-offset-4 my-results-btn'>
-      <a role="button" class="btn nu-alt-btn btn-block" href='{{ url_for("pairwise_indel_finder.indel_primer_user_results") }}' >
+      <a role="button" class="btn nu-alt-btn btn-block" href='{{ url_for("pairwise_indel_finder.user_results") }}' >
         <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
         My Indel Primer Results
       </a>
@@ -210,7 +210,7 @@ $(document).ready(function(){
 
   $('form').submit(function (e) {
 		e.preventDefault();
-		var url = "{{ url_for('pairwise_indel_finder.pairwise_indel_finder_query') }}"
+		var url = "{{ url_for('pairwise_indel_finder.query') }}"
 		$.ajax({type: "POST",
 				url: url,
 				data: $('form').serialize(),
@@ -264,7 +264,7 @@ $(document).ready(function(){
               }
               $.ajax({
                 type: "POST",
-                url: "{{ url_for('pairwise_indel_finder.submit_indel_primer') }}",
+                url: "{{ url_for('pairwise_indel_finder.submit') }}",
                 data: JSON.stringify(data),
                 contentType: "application/json; charset=utf-8",
                 dataType: 'json',

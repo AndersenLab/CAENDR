@@ -46,7 +46,7 @@ def pairwise_indel_finder():
 
 @pairwise_indel_finder_bp.route("/pairwise-indel-finder/all-results")
 @admin_required()
-def indel_primer_all_results():
+def all_results():
   title = "All Indel Primer Results"
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   user = get_current_user()
@@ -56,7 +56,7 @@ def indel_primer_all_results():
 
 @pairwise_indel_finder_bp.route("/pairwise-indel-finder/my-results")
 @jwt_required()
-def indel_primer_user_results():
+def user_results():
   title = "My Indel Primer Results"
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   user = get_current_user()
@@ -65,9 +65,9 @@ def indel_primer_user_results():
 
 
 
-@pairwise_indel_finder_bp.route("/pairwise-indel-finder/query_indels", methods=["POST"])
+@pairwise_indel_finder_bp.route("/pairwise-indel-finder/query-indels", methods=["POST"])
 @jwt_required()
-def pairwise_indel_finder_query():
+def query():
   form = PairwiseIndelForm()
   if form.validate_on_submit():
     strain_1 = form.data['strain_1']
@@ -83,7 +83,7 @@ def pairwise_indel_finder_query():
 
 @pairwise_indel_finder_bp.route('/pairwise-indel-finder/submit', methods=["POST"])
 @jwt_required()
-def submit_indel_primer():
+def submit():
 
   # Get current user
   user = get_current_user()
@@ -118,7 +118,7 @@ def submit_indel_primer():
 @pairwise_indel_finder_bp.route("/pairwise-indel-finder/result/<id>")
 @pairwise_indel_finder_bp.route("/pairwise-indel-finder/result/<id>/tsv/<filename>")
 @jwt_required()
-def pairwise_indel_query_results(id, filename = None):
+def query_results(id, filename = None):
     alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
     user = get_current_user()
     ip = get_indel_primer(id)
