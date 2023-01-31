@@ -47,42 +47,29 @@ def getting_started():
   return render_template('about/getting_started.html', **locals())
 
 
-@about_bp.route('/committee/')
+@about_bp.route('/people/')
 @cache.memoize(60*60)
-def committee():
-  ''' Scientific Panel Page'''
-  title = "Scientific Advisory Committee"
+def people():
+  '''
+    People
+  '''
+  title = "People"
   disable_parent_breadcrumb = True
-  profiles = get_committee_profiles()
-  return render_template('about/committee.html', **locals())
 
+  profiles = {
+    'committee':     get_committee_profiles(),
+    'collaborators': get_collaborator_profiles(),
+    'staff':         get_staff_profiles(),
+  }
 
-@about_bp.route('/collaborators/')
-@cache.memoize(60*60)
-def collaborators():
-  ''' Other Project Collaborators Page '''
-  title = "Collaborators"
-  disable_parent_breadcrumb = True
-  profiles = get_collaborator_profiles()
-  return render_template('about/collaborators.html', **locals())
-
-
-@about_bp.route('/staff/')
-@cache.memoize(60*60)
-def staff():
-  ''' Staff Page '''
-  title = "Staff"
-  disable_parent_breadcrumb = True
-  profiles = get_staff_profiles()
-  # Move director to top of list
-  index = 0
-  for i, item in enumerate(profiles):
+  # Move director to top of staff list
+  for i, item in enumerate(profiles['staff']):
     if hasattr(item, 'title') and item.title.lower() == 'director':
-      p = profiles.pop(i)
-      profiles.insert(0, p)
+      p = profiles['staff'].pop(i)
+      profiles['staff'].insert(0, p)
       break
 
-  return render_template('about/staff.html', **locals())
+  return render_template('about/people.html', **locals())
 
 
 @about_bp.route('/funding/')
