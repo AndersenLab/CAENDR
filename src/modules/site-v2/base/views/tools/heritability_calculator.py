@@ -49,7 +49,7 @@ def heritability_calculator():
 
 @heritability_calculator_bp.route('/heritability-calculator/create', methods=["GET"])
 @jwt_required()
-def heritability_create():
+def create():
   """ This endpoint is used to create a heritability job. """
   title = "Heritability Calculator"
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
@@ -67,7 +67,7 @@ def heritability_create():
 
 @heritability_calculator_bp.route("/heritability-calculator/all-results")
 @admin_required()
-def heritability_all_results():
+def all_results():
   title = "All Heritability Results"
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   user = get_current_user()
@@ -77,7 +77,7 @@ def heritability_all_results():
 
 @heritability_calculator_bp.route("/heritability-calculator/my-results")
 @jwt_required()
-def heritability_user_results():
+def user_results():
   title = "My Heritability Results"
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   user = get_current_user()

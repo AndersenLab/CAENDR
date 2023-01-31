@@ -27,8 +27,8 @@ table.dataTable thead .sorting {
 {{ 
   render_dataTable_top_menu(
     actions = [
-      {'label':'My Results', 'url':url_for('heritability_calculator.heritability_user_results'), 'classes':'btn nu-alt-btn', 'style':'float:right;', 'icon': 'glyphicon glyphicon-list' },
-      {'label':'New Calculation', 'url':url_for('heritability_calculator.heritability_create'), 'classes':'btn nu-alt-btn', 'style':'float:right; margin-right: .5rem;', 'icon': 'glyphicon glyphicon-plus' }
+      {'label':'My Results', 'url':url_for('heritability_calculator.user_results'), 'classes':'btn nu-alt-btn', 'style':'float:right;', 'icon': 'glyphicon glyphicon-list' },
+      {'label':'New Calculation', 'url':url_for('heritability_calculator.create'), 'classes':'btn nu-alt-btn', 'style':'float:right; margin-right: .5rem;', 'icon': 'glyphicon glyphicon-plus' }
     ]
   ) 
 }}

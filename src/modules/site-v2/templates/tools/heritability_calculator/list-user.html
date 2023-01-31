@@ -31,8 +31,8 @@ table.dataTable thead .sorting {
 {{
   render_dataTable_top_menu(
     actions = [
-      {'label':'All Results', 'url':url_for('heritability_calculator.heritability_all_results'), 'classes':'btn nu-alt-btn', 'style':'float:right;', 'icon': 'glyphicon glyphicon-list', 'admin_only': True },
-      {'label':'New Calculation', 'url':url_for('heritability_calculator.heritability_create'), 'classes':'btn nu-alt-btn', 'style':'float:right; margin-right: .5rem;', 'icon': 'glyphicon glyphicon-plus' }
+      {'label':'All Results', 'url':url_for('heritability_calculator.all_results'), 'classes':'btn nu-alt-btn', 'style':'float:right;', 'icon': 'glyphicon glyphicon-list', 'admin_only': True },
+      {'label':'New Calculation', 'url':url_for('heritability_calculator.create'), 'classes':'btn nu-alt-btn', 'style':'float:right; margin-right: .5rem;', 'icon': 'glyphicon glyphicon-plus' }
     ]
   )
 }}
