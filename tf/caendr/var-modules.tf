@@ -19,7 +19,8 @@ locals {
     "bucket_public_name" = var.MODULE_SITE_BUCKET_PUBLIC_NAME,
     "bucket_private_name" = var.MODULE_SITE_BUCKET_PRIVATE_NAME,
     "nemascan_task_queue_name" = var.NEMASCAN_TASK_QUEUE_NAME,
-    "indel_primer_task_queue_name" = var.INDEL_PRIMER_TASK_QUEUE_NAME
+    "indel_primer_task_queue_name" = var.INDEL_PRIMER_TASK_QUEUE_NAME,
+    "heritability_task_queue_name" = var.HERITABILITY_TASK_QUEUE_NAME,
     "api_pipeline_task_url_name" = var.MODULE_API_PIPELINE_TASK_URL_NAME
   })
 

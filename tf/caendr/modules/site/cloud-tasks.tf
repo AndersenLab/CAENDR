@@ -1,5 +1,5 @@
 resource "google_cloud_tasks_queue" "heritability" {
-  name = "h2calc"
+  name = var.module_site_vars.heritability_task_queue_name
   location = "us-central1"
 
   rate_limits {
