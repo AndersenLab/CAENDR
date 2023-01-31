@@ -154,4 +154,4 @@ def cited_by():
 @cache.memoize(60*60)
 def contact_us():
   title = "Contact Us"
-  return render_template('primary/contact.html', **locals())
+  return render_template('about/contact-us.html', **locals())
