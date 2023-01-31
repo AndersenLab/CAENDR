@@ -27,8 +27,8 @@ table.dataTable thead .sorting {
 {{ 
   render_dataTable_top_menu(
     actions = [
-      {'label':'My Results', 'url':url_for('indel_primer.indel_primer_user_results'), 'classes':'btn nu-alt-btn', 'style':'float:right;', 'icon': 'glyphicon glyphicon-list' },
-      {'label':'Find Indels', 'url':url_for('indel_primer.indel_primer'), 'classes':'btn nu-alt-btn', 'style':'float:right; margin-right: .5rem;', 'icon': 'glyphicon glyphicon-search' }
+      {'label':'All Results', 'url':url_for('pairwise_indel_finder.indel_primer_all_results'), 'classes':'btn nu-alt-btn', 'style':'float:right;', 'icon': 'glyphicon glyphicon-list', 'admin_only': True },
+      {'label':'Find Indels', 'url':url_for('pairwise_indel_finder.pairwise_indel_finder'), 'classes':'btn nu-alt-btn', 'style':'float:right; margin-right: .5rem;', 'icon': 'glyphicon glyphicon-search' }
     ]
   ) 
 }}
@@ -44,7 +44,6 @@ table.dataTable thead .sorting {
           <th class='data-empty ordering'><strong> Empty </strong></th>
           <th class='data-status ordering'><strong> Status </strong></th>
           <th class='data-date ordering'><strong> Date </strong></th>
-          <th class='data-owner ordering'><strong> Owner </strong></th>
         </tr>
       </thead>
 
@@ -62,7 +61,7 @@ table.dataTable thead .sorting {
             {% endif %}
               <td class="data-status">
                 {% if item.status == 'COMPLETE' %}
-                <a href="{{ url_for('indel_primer.pairwise_indel_query_results', id=item.id) }}">
+                <a href="{{ url_for('pairwise_indel_finder.pairwise_indel_query_results', id=item.id) }}">
                   {{ item.status }}
                 </a>
                 {% else %}
@@ -71,7 +70,6 @@ table.dataTable thead .sorting {
               </td>
             {% endif %}
             <td class="data-date" data-order="{{ item.created_on }}"> {{ item.created_on|date_format }} </td>
-            <td class="data-owner"> {{ item.username }} </td>
           </tr>
         {% endfor %}
       </tbody>
@@ -97,14 +95,12 @@ table.dataTable thead .sorting {
       scrollX: true,
       aaSorting: [ [5,'desc'] ],
       aoColumns: [
-        {"width":"18%"},
-        {"width":"8%"},
-        {"width":"12%"},
-        {"width":"8%"},
-        {"width":"18%"},
-        {"width":"18%"},
-        {"width":"18%"}
-
+        {"width":"22%"},
+        {"width":"10%"},
+        {"width":"14%"},
+        {"width":"10%"},
+        {"width":"22%"},
+        {"width":"22%"}
       ],
       dom:"tipr"
     });

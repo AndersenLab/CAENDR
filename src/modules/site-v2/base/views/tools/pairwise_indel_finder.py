@@ -20,15 +20,15 @@ from caendr.services.indel_primer import get_sv_strains, query_indels_and_mark_o
 
 
 # Tools blueprint
-indel_primer_bp = Blueprint('indel_primer',
-                            __name__,
-                            template_folder='tools')
+pairwise_indel_finder_bp = Blueprint(
+  'pairwise_indel_finder', __name__, template_folder='tools'
+)
 
 from caendr.utils.constants import CHROM_NUMERIC
 
-@indel_primer_bp.route('/pairwise_indel_finder', methods=['GET'])
+@pairwise_indel_finder_bp.route('/pairwise-indel-finder', methods=['GET'])
 @jwt_required()
-def indel_primer():
+def pairwise_indel_finder():
   form = PairwiseIndelForm(request.form)
   title = "Pairwise Indel Finder"
   strains = get_sv_strains()
@@ -40,32 +40,32 @@ def indel_primer():
   divergent_track_summary_url = "//storage.googleapis.com/elegansvariation.org/browser_tracks/lee2020.divergent_regions_all.bed.gz"
   fasta_url = "//storage.googleapis.com/elegansvariation.org/browser_tracks/c_elegans.PRJNA13758.WS276.genomic.fa"
   
-  return render_template('tools/indel_primer/submit.html', **locals())
+  return render_template('tools/pairwise_indel_finder/submit.html', **locals())
 
 
 
-@indel_primer_bp.route("/pairwise_indel_finder/all-results")
+@pairwise_indel_finder_bp.route("/pairwise-indel-finder/all-results")
 @admin_required()
 def indel_primer_all_results():
   title = "All Indel Primer Results"
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   user = get_current_user()
   items = get_all_indel_primers()
-  return render_template('tools/indel_primer/list-all.html', **locals())
+  return render_template('tools/pairwise_indel_finder/list-all.html', **locals())
 
 
-@indel_primer_bp.route("/pairwise_indel_finder/my-results")
+@pairwise_indel_finder_bp.route("/pairwise-indel-finder/my-results")
 @jwt_required()
 def indel_primer_user_results():
   title = "My Indel Primer Results"
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   user = get_current_user()
   items = get_user_indel_primers(user.name)
-  return render_template('tools/indel_primer/list-user.html', **locals())
+  return render_template('tools/pairwise_indel_finder/list-user.html', **locals())
 
 
 
-@indel_primer_bp.route("/pairwise_indel_finder/query_indels", methods=["POST"])
+@pairwise_indel_finder_bp.route("/pairwise-indel-finder/query_indels", methods=["POST"])
 @jwt_required()
 def pairwise_indel_finder_query():
   form = PairwiseIndelForm()
@@ -81,7 +81,7 @@ def pairwise_indel_finder_query():
 
 
 
-@indel_primer_bp.route('/pairwise_indel_finder/submit', methods=["POST"])
+@pairwise_indel_finder_bp.route('/pairwise-indel-finder/submit', methods=["POST"])
 @jwt_required()
 def submit_indel_primer():
 
@@ -115,8 +115,8 @@ def submit_indel_primer():
 
 
 # TODO: Move internals of this to a service function
-@indel_primer_bp.route("/indel_primer/result/<id>")
-@indel_primer_bp.route("/indel_primer/result/<id>/tsv/<filename>")
+@pairwise_indel_finder_bp.route("/pairwise-indel-finder/result/<id>")
+@pairwise_indel_finder_bp.route("/pairwise-indel-finder/result/<id>/tsv/<filename>")
 @jwt_required()
 def pairwise_indel_query_results(id, filename = None):
     alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
@@ -220,6 +220,6 @@ def pairwise_indel_query_results(id, filename = None):
         # Return TSV of results
         return Response(format_table.to_csv(sep="\t"), mimetype="text/tab-separated-values")
 
-    return render_template("tools/indel_primer/view.html", **locals())
+    return render_template("tools/pairwise_indel_finder/view.html", **locals())
 
 
