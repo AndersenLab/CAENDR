@@ -34,6 +34,7 @@ variable "MODULE_SITE_BUCKET_PUBLIC_NAME" { type = string }
 variable "MODULE_SITE_BUCKET_PRIVATE_NAME" { type = string }
 variable "NEMASCAN_TASK_QUEUE_NAME" { type = string }
 variable "INDEL_PRIMER_TASK_QUEUE_NAME" { type = string }
+variable "HERITABILITY_TASK_QUEUE_NAME" { type = string } 
 variable "MODULE_API_PIPELINE_TASK_URL_NAME" { type = string }
 
 
