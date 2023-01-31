@@ -41,6 +41,12 @@
     </div> {# /col #}
   </div> {# /row #}
 
+  {% if session["is_admin"] %}
+    <label>
+      <input id="no_cache_checkbox" type="checkbox" class="track-select normal-track" value="no_cache" />
+      Ignore cache?
+    </label>
+  {% endif %}
 
 	<div class='row row-margin'>
 		<form id='form-submit' method="POST">
@@ -417,7 +423,12 @@ function generate_primers(e) {
 
   $.ajax({
     type: "POST",
-    url: "{{ url_for('indel_primer.submit_indel_primer') }}",
+    url:
+      {% if session["is_admin"] %}
+        "{{ url_for('indel_primer.submit_indel_primer') }}" + ($('#no_cache_checkbox').prop('checked') ? "?nocache=1" : ""),
+      {% else %}
+        "{{ url_for('indel_primer.submit_indel_primer') }}",
+      {% endif %}
     data: JSON.stringify(data),
     contentType: "application/json; charset=utf-8",
     dataType: 'json',
