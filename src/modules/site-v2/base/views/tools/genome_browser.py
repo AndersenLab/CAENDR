@@ -67,8 +67,8 @@ def genome_browser(release_version=None, region="III:11746923-11750250", query=N
           'region': region,
           'query': query,
           'alt_parent_breadcrumb': {
-            "title": "Data", 
-            "url": url_for('data.landing')
+            "title": "Tools",
+            "url": url_for('tools.tools')
           },
           'wormbase_version': wormbase_version,
           'release_version': int(dataset_release.version),

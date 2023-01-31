@@ -43,8 +43,8 @@ def variant_annotation():
   vbrowser_options = {
     "title": 'Variant Annotation',
     "alt_parent_breadcrumb": {
-      "title": "Data",
-      "url": url_for('data.landing')
+      "title": "Tools",
+      "url": url_for('tools.tools')
     },
     "form": VBrowserForm(),
     "strain_listing": get_distinct_isotypes(),
