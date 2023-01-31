@@ -44,5 +44,5 @@ def download_bam_bai_file(strain_name='', ext=''):
     msg = 'error fetching download link'
     signed_download_url = ''
   
-  return render_template('data/download.html', **locals())
+  return render_template('data/download-redirect.html', **locals())
 
