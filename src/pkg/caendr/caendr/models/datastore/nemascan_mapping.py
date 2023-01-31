@@ -54,6 +54,7 @@ class NemascanMapping(JobEntity):
       'email',
 
       # Query
+      'species',
       'label',
       'trait',
       'report_path',

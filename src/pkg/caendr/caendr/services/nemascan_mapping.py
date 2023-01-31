@@ -56,8 +56,12 @@ def get_user_mappings(username):
   return NemascanMapping.sort_by_created_date(mappings, reverse=True)
   
   
-def create_new_mapping(username, email, label, file, status = 'SUBMITTED', check_duplicates=True):
-  logger.debug(f'Creating new Nemascan Mapping: username:{username} label:{label} file:{file}')
+def create_new_mapping(username, email, label, file, species, status = 'SUBMITTED', check_duplicates=True):
+  logger.debug(f'''Creating new Nemascan Mapping:
+    username: "{username}"
+    label:    "{label}"
+    file:     {file}
+    species:  {species}''')
   id = unique_id()
 
   # Save uploaded file to server temporarily
@@ -78,6 +82,7 @@ def create_new_mapping(username, email, label, file, status = 'SUBMITTED', check
     'email': email,
     'label': label,
     'trait': trait,
+    'species': species,
     'data_hash': data_hash,
     'container_repo': c.repo,
     'container_name': c.container_name,
