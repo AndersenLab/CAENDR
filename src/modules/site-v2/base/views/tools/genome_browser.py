@@ -10,9 +10,9 @@ from caendr.api.isotype import get_isotypes
 from caendr.services.dataset_release import get_dataset_release, get_latest_dataset_release_version
 
 
-gene_browser_bp = Blueprint('gene_browser',
-                        __name__,
-                        template_folder='templates')
+genome_browser_bp = Blueprint(
+  'genome_browser', __name__, template_folder='templates'
+)
 
 
 def is_valid_release_version(value = None):
@@ -35,13 +35,13 @@ def get_dataset_release_or_latest(release_version = None):
   return get_latest_dataset_release_version()
 
 
-@gene_browser_bp.route('/gbrowser')
-@gene_browser_bp.route('/gbrowser/')
-@gene_browser_bp.route('/gbrowser/<release_version>')
-@gene_browser_bp.route('/gbrowser/<release_version>/<region>')
-@gene_browser_bp.route('/gbrowser/<release_version>/<region>/<query>')
+@genome_browser_bp.route('/genome-browser')
+@genome_browser_bp.route('/genome-browser/')
+@genome_browser_bp.route('/genome-browser/<release_version>')
+@genome_browser_bp.route('/genome-browser/<release_version>/<region>')
+@genome_browser_bp.route('/genome-browser/<release_version>/<region>/<query>')
 @cache.memoize(60*60)
-def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
+def genome_browser(release_version=None, region="III:11746923-11750250", query=None):
   dataset_release = get_dataset_release_or_latest(release_version)
 
   wormbase_version_override = request.args.get('wormbase_version', None)
@@ -76,4 +76,4 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
           'bam_bai_url_prefix': bam_bai_url_prefix,
           'dataset_release_prefix': dataset_release_prefix,
           'fluid_container': True}
-  return render_template('data/gbrowser.html', **VARS)
+  return render_template('tools/genome_browser/gbrowser.html', **VARS)

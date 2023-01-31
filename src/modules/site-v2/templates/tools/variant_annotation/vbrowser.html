@@ -256,7 +256,7 @@ let cachedTargets = {};
 
 async function downloadCSV(json_data) {
   const csrfToken = "{{ form.csrf_token._value() }}";
-  const url = "{{ url_for('variant_browser.vbrowser_download_csv') }}"
+  const url = "{{ url_for('variant_annotation.vbrowser_download_csv') }}"
   const res = await fetch(url, {
     method: "POST",
     credentials: "include",
@@ -279,7 +279,7 @@ async function downloadCSV(json_data) {
   } else {
     const err = await res.json()
     console.error(err.message)
-    window.location.href = "{{ url_for('variant_browser.vbrowser', download_err=True ) }}"
+    window.location.href = "{{ url_for('variant_annotation.variant_annotation', download_err=True ) }}"
   }
 
 }
@@ -439,7 +439,7 @@ function fetchTargetConsequence(el, q) {
       type: "POST",
       contentType: 'application/json',
       dataType: 'json',
-      url: "{{ url_for('variant_browser.vbrowser_query_position') }}",
+      url: "{{ url_for('variant_annotation.vbrowser_query_position') }}",
       data: JSON.stringify({query: q}),
       success:function(result) {
         cachedTargets[q] = result;
@@ -681,7 +681,7 @@ $(document).ready(function() {
 				type: "POST",
         contentType: 'application/json',
         dataType: 'json',
-				url: "{{ url_for('variant_browser.vbrowser_query_interval') }}",
+				url: "{{ url_for('variant_annotation.vbrowser_query_interval') }}",
 				data: JSON.stringify(data),
 				success:function(result) {
           const has_results = !!Object.keys(result).length;

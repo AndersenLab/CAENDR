@@ -28,12 +28,12 @@ from base.views import mapping_bp
 # Data
 from base.views.data import data_bp
 from base.views.data import releases_bp
-from base.views.data import gene_browser_bp
-from base.views.data import variant_browser_bp
 from base.views.data import data_downloads_bp
 
 # Tool
 from base.views.tools import tools_bp
+from base.views.tools import genome_browser_bp
+from base.views.tools import variant_annotation_bp
 from base.views.tools import indel_primer_bp
 from base.views.tools import heritability_bp
 
@@ -176,8 +176,6 @@ def register_blueprints(app):
   app.register_blueprint(data_bp, url_prefix='/data')
   app.register_blueprint(releases_bp, url_prefix='/data')
   app.register_blueprint(data_downloads_bp, url_prefix='/data')
-  app.register_blueprint(gene_browser_bp, url_prefix='/data')
-  app.register_blueprint(variant_browser_bp, url_prefix='/data')
   
   # User
   app.register_blueprint(user_bp, url_prefix='/user')
@@ -208,8 +206,10 @@ def register_blueprints(app):
   # Tools
   app.register_blueprint(mapping_bp, url_prefix='')
   app.register_blueprint(tools_bp, url_prefix='/tools')
-  app.register_blueprint(indel_primer_bp, url_prefix='/tools')
-  app.register_blueprint(heritability_bp, url_prefix='/tools')
+  app.register_blueprint(genome_browser_bp,     url_prefix='/tools')
+  app.register_blueprint(variant_annotation_bp, url_prefix='/tools')
+  app.register_blueprint(indel_primer_bp,       url_prefix='/tools')
+  app.register_blueprint(heritability_bp,       url_prefix='/tools')
 
   '''
   app.register_blueprint(gene_bp, url_prefix='/gene')
