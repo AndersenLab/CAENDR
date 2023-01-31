@@ -120,6 +120,9 @@
             <ul class="dropdown-menu">
               <li><a href="{{ url_for('user.user_account') }}" class='nav-link' role='button'> My Account </a></li>
               <li><a href="{{ url_for('user.user_results') }}" class='nav-link' role='button'> My Results </a></li>
+              {% if session["is_admin"] %}
+              <li><a href="{{ url_for('admin.admin') }}" class='nav-link' role='button'> Admin </a></li>
+              {% endif %}
               <li><a href="{{ url_for('auth.logout') }}" class='nav-link' role='button'> Logout </a></li>
             </ul>
           </li>
