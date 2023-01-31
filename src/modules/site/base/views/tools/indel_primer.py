@@ -46,7 +46,7 @@ def indel_primer_get_tracks():
 @jwt_required()
 def indel_primer_get_strains():
   return jsonify({
-    'c_elegans': get_sv_strains()
+    species: get_sv_strains( species ) for species in ['c_elegans']
   })
 
 
@@ -67,13 +67,13 @@ def indel_primer():
     },
 
     # Data
-    "strains":      get_sv_strains(),
     "chroms":       CHROM_NUMERIC.keys(),
     "species_list": SPECIES_LIST,
 
     # Data locations
     "fasta_url": BrowserTrack.get_fasta_path_full(),
 
+    # Default strains for form dropdowns
     "default_strains": PairwiseIndelForm.default_strain_choices(),
 
     # List of Species class fields to expose to the template
@@ -141,6 +141,7 @@ def pairwise_indel_finder_query():
   if form.validate_on_submit():
 
     # Extract fields
+    species  = form.data['species']
     strain_1 = form.data['strain_1']
     strain_2 = form.data['strain_2']
     chrom    = form.data['chromosome']
@@ -148,7 +149,7 @@ def pairwise_indel_finder_query():
     stop     = form.data['stop']
 
     # Run query and return results
-    results = query_indels_and_mark_overlaps(strain_1, strain_2, chrom, start, stop)
+    results = query_indels_and_mark_overlaps(species, strain_1, strain_2, chrom, start, stop)
     return jsonify({ 'results': results })
 
   # If form not valid, return errors
@@ -172,6 +173,7 @@ def submit_indel_primer():
 
   # Create new Indel Primer
   p = create_new_indel_primer(**{
+    'species':   data['species'],
     'site':      data['site'],
     'strain_1':  data['strain_1'],
     'strain_2':  data['strain_2'],

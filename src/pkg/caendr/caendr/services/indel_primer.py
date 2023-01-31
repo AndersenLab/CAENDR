@@ -2,6 +2,8 @@ import tabix
 import os
 import json
 
+from string import Template
+
 from cyvcf2 import VCF
 from caendr.services.logger import logger
 
@@ -20,16 +22,14 @@ from caendr.utils.data import unique_id
 MODULE_SITE_BUCKET_PRIVATE_NAME   = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
 INDEL_PRIMER_CONTAINER_NAME       = os.environ.get('INDEL_PRIMER_CONTAINER_NAME')
 
-SV_BED_FILENAME = os.environ.get('INDEL_PRIMER_SV_BED_FILENAME')
-SV_VCF_FILENAME = os.environ.get('INDEL_PRIMER_SV_VCF_FILENAME')
+# INDEL_PRIMER_FILENAME = os.environ.get('INDEL_PRIMER_FILENAME')
+INDEL_PRIMER_FILENAME = '${RELEASE}_${SPECIES}_pif'
 
-if not SV_BED_FILENAME:
-  logger.debug("No value provided for INDEL_PRIMER_SV_BED_FILENAME")
+if not INDEL_PRIMER_FILENAME:
+  logger.debug("No value provided for INDEL_PRIMER_FILENAME")
   raise EnvVarError()
 
-if not SV_VCF_FILENAME:
-  logger.debug("No value provided for INDEL_PRIMER_SV_VCF_FILENAME")
-  raise EnvVarError()
+INDEL_PRIMER_FILENAME = Template(INDEL_PRIMER_FILENAME)
 
 
 
@@ -40,13 +40,6 @@ if not SV_VCF_FILENAME:
 MIN_SV_SIZE = 50
 MAX_SV_SIZE = 500
 
-# Initial load of strain list from sv_data
-# This is run when the server is started.
-# NOTE: Tabix cannot make requests over https!
-SV_BED_URL = f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/tools/pairwise_indel_primer/{SV_BED_FILENAME}"
-SV_VCF_URL = f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/tools/pairwise_indel_primer/{SV_VCF_FILENAME}"
-
-SV_STRAINS = VCF(SV_VCF_URL).samples
 SV_COLUMNS = [
     "CHROM",
     "START",
@@ -57,16 +50,11 @@ SV_COLUMNS = [
     "SIZE",
 ]
 
-STRAIN_CHOICES = [(x, x) for x in SV_STRAINS]
 CHROMOSOME_CHOICES = [(x, x) for x in CHROM_NUMERIC.keys()]
 COLUMNS = ["CHROM", "START", "STOP", "?", "TYPE", "STRAND", ""]
 
 def get_indel_primer(id):
   return IndelPrimer(id)
-
-
-def get_sv_strains():
-  return SV_STRAINS
 
 
 def get_all_indel_primers():
@@ -82,12 +70,32 @@ def get_user_indel_primers(username):
   return IndelPrimer.sort_by_created_date(primers, reverse=True)
 
 
+
+def get_bed_filename(species, release = '20220216'):
+  return INDEL_PRIMER_FILENAME.substitute({ 'SPECIES': species, 'RELEASE': release })
+
+def get_bed_url(species, release = '20220216'):
+  filename = get_bed_filename(species, release)
+  return f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/tools/pairwise_indel_primer/{filename}.bed.gz"
+
+def get_vcf_filename(species, release = '20220216'):
+  return INDEL_PRIMER_FILENAME.substitute({ 'SPECIES': species, 'RELEASE': release })
+
+def get_vcf_url(species, release = '20220216'):
+  filename = get_vcf_filename(species, release)
+  return f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/tools/pairwise_indel_primer/{filename}.vcf.gz"
+
+
+def get_sv_strains(species, release = '20220216'):
+  return VCF( get_vcf_url( species, release ) ).samples
+
+
 def get_indel_primer_chrom_choices(): 
   return CHROMOSOME_CHOICES
   
   
-def get_indel_primer_strain_choices():
-  return STRAIN_CHOICES
+def get_indel_primer_strain_choices(species, release = '20220216'):
+  return [ (x, x) for x in get_sv_strains(species, release) ]
 
 
 def overlaps(s1, e1, s2, e2):
@@ -102,11 +110,11 @@ def fetch_ip_result(ip: IndelPrimer):
   return get_blob(ip.get_bucket_name(), ip.get_result_blob_path())
 
 
-def query_indels_and_mark_overlaps(strain_1, strain_2, chromosome, start, stop):
+def query_indels_and_mark_overlaps(species, strain_1, strain_2, chromosome, start, stop):
   results = []
   strain_cmp = [ strain_1, strain_2 ]
 
-  tb = tabix.open(SV_BED_URL)
+  tb = tabix.open( get_bed_url(species) )
   query = tb.query(chromosome, start, stop)
 
   for row in query:
@@ -134,9 +142,10 @@ def query_indels_and_mark_overlaps(strain_1, strain_2, chromosome, start, stop):
   return []
 
 
-def create_new_indel_primer(username, site, strain_1, strain_2, size, data_hash, no_cache=False):
+def create_new_indel_primer(username, species, site, strain_1, strain_2, size, data_hash, no_cache=False):
   logger.debug(f'''Creating new Indel Primer:
     username:  "{username}"
+    species:   {species}
     site:      {site}
     strain_1:  {strain_1}
     strain_2:  {strain_2}
@@ -160,6 +169,9 @@ def create_new_indel_primer(username, site, strain_1, strain_2, size, data_hash,
   # Compute unique ID for new Indel Primer entity
   id = unique_id()
 
+  # TODO: Pull this value from somewhere
+  release = '20220216'
+
   # Create Indel Primer entity & upload to GCP
   ip = IndelPrimer(id, **{
     'id':                id,
@@ -173,8 +185,8 @@ def create_new_indel_primer(username, site, strain_1, strain_2, size, data_hash,
     'container_repo':    c.repo,
     'container_name':    c.container_name,
     'container_version': c.container_tag,
-    'sv_bed_filename':   SV_BED_FILENAME,
-    'sv_vcf_filename':   SV_VCF_FILENAME,
+    'sv_bed_filename':   get_bed_filename(species, release),
+    'sv_vcf_filename':   get_vcf_filename(species, release),
   })
   ip.save()
 
