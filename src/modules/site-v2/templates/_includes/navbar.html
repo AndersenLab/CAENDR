@@ -35,40 +35,13 @@
 
         <ul class="nav navbar-nav navbar-left">
 
-          <li class="dropdown">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> About <span class="caret"></span></a>
-            <ul class="dropdown-menu">
-              <li><a href="{{ url_for('about.about') }}"> About CeNDR </a></li>
-              <li><a href="{{ url_for('about.statistics') }}"> Statistics </a></li>
-              <li><a href="{{ url_for('about.staff') }}"> Staff </a></li>
-              <li><a href="{{ url_for('about.committee') }}"> Scientific Advisory Committee </a></li>
-              <li><a href="{{ url_for('about.collaborators') }}"> Collaborators </a></li>
-              <li><a href="{{ url_for('about.donate') }}"> Donate </a></li>
-              <li><a href="{{ url_for('about.funding') }}"> Funding </a></li>
-              <li><a href="{{ url_for('about.publications') }}"> Publications </a></li>
-            </ul>
-          </li>
 
-          
-          <li class="dropdown">
-            <a href="#" role="button" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> Strains <span class="caret"></span></a>
-            <ul class="dropdown-menu">
-              <li><a href="{{ url_for('strains.strains_catalog')}}"> Strain Catalog </a></li>
-              <li><a href="{{ url_for('strains.strains_list')}}"> Isotype List </a></li>
-              <li><a href="{{ url_for('strains.strains_map')}}"> Strain Map </a></li>
-              <li><a href="{{ url_for('strains.strains_issues')}}"> Strain Issues </a></li>
-              <li><a href="{{ url_for('strains.protocols') }}"> Protocols </a></li>
-              <li><a href="{{ url_for('strains.strains_submission_page') }}"> Submit Strains </a></li>
-              <li><a href="{{ url_for('strains.external_links')}}"> External Links </a></li>
-            </ul>
-          </li>
-
-
-          <li class="dropdown">
-            <a href="#" role="button" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> Data <span class="caret"></span></a>
-            <ul class="dropdown-menu">
-              <li><a href="{{ url_for('data_releases.data_releases') }}"> Genomic Data </a></li>
-            </ul>
+          <!-- <li><a href="{{ url_for('strains.strains_list')}}"> Isotype List </a></li> -->
+          <!-- <li><a href="{{ url_for('strains.strains_map')}}"> Strain Map </a></li> -->
+          <!-- <li><a href="{{ url_for('strains.strains_issues')}}"> Strain Issues </a></li> -->
+          <!-- <li><a href="{{ url_for('strains.external_links')}}"> External Links </a></li> -->
+          <li class="nav-item">
+            <a href="{{ url_for('strains.strains_catalog') }}" class="nav-link" role="button" aria-haspopup="true" aria-expanded="false"> Request Strains </a>
           </li>
 
 
@@ -83,16 +56,53 @@
             </ul>
           </li>
 
-          <li class="nav-item">
+
+          <li class="dropdown">
+            <a href="#" role="button" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> Data <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+
+              <!-- <li><a href="{{ url_for('data_releases.data_releases') }}"> Genomic Data </a></li> -->
+              <li><a> Download Data </a></li>
+
+              <li><a href="{{ url_for('strains.protocols') }}"> Protocols </a></li>
+              <li><a href="{{ url_for('strains.strains_submission_page') }}"> Submit A Strain </a></li>
+            </ul>
+          </li>
+
+
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> About Us <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="{{ url_for('about.about') }}"> About CeNDR </a></li>
+
+              <!-- <li><a href="{{ url_for('about.staff') }}"> Staff </a></li> -->
+              <!-- <li><a href="{{ url_for('about.committee') }}"> Scientific Advisory Committee </a></li> -->
+              <!-- <li><a href="{{ url_for('about.collaborators') }}"> Collaborators </a></li> -->
+              <li><a> People </a></li>
+
+              <li><a href="{{ url_for('about.publications') }}"> Cited By </a></li>
+              <li><a href="{{ url_for('about.funding') }}"> Funding </a></li>
+              <li><a href="{{ url_for('about.statistics') }}"> Statistics </a></li>
+              <li><a href="{{ url_for('primary.contact') }}"> Contact Us </a></li>
+            </ul>
+          </li>
+
+
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Get Involved <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a> Citizen Scientists </a></li>
+              <li><a href="{{ url_for('about.donate') }}"> Donate </a></li>
+            </ul>
+          </li>
+
+
+          <!-- <li class="nav-item">
             <a href="{{ url_for('primary.outreach') }}" class="nav-link" role="button" aria-haspopup="true" aria-expanded="false"> Outreach </a>
-          </li>
+          </li> -->
 
           <li class="nav-item">
-            <a href="{{ url_for('primary.help_item') }}" class="nav-link" role="button" aria-haspopup="true" aria-expanded="false"> Help </a>
-          </li>
-
-          <li class="nav-item">
-            <a href="{{ url_for('primary.contact') }}" class="nav-link" role="button" aria-haspopup="true" aria-expanded="false"> Contact Us </a>
+            <a href="{{ url_for('primary.help_item') }}" class="nav-link" role="button" aria-haspopup="true" aria-expanded="false"> FAQs </a>
           </li>
 
 
