@@ -42,6 +42,13 @@ def indel_primer_get_tracks():
     'url': divergent_track.get_url_template(),
   })
 
+@indel_primer_bp.route('/pairwise_indel_finder/strains', methods=['GET'])
+@jwt_required()
+def indel_primer_get_strains():
+  return jsonify({
+    'c_elegans': get_sv_strains()
+  })
+
 
 
 @indel_primer_bp.route('/pairwise_indel_finder', methods=['GET'])
@@ -66,6 +73,8 @@ def indel_primer():
 
     # Data locations
     "fasta_url": BrowserTrack.get_fasta_path_full(),
+
+    "default_strains": PairwiseIndelForm.default_strain_choices(),
 
     # List of Species class fields to expose to the template
     # Optional - exposes all attributes if not provided

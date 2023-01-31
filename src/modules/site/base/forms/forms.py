@@ -193,17 +193,25 @@ class FlexIntegerField(IntegerField):
     return super(FlexIntegerField, self).process_formdata(val)
 
 
+class StrainSelectField(SelectField):
+  def pre_validate(self, form):
+    pass
+
+
 class PairwiseIndelForm(Form):
-  STRAIN_CHOICES = get_indel_primer_strain_choices()
   CHROMOSOME_CHOICES = get_indel_primer_chrom_choices()
   SPECIES_CHOICES = [(name, value.short_name) for name, value in SPECIES_LIST.items()]
   
   species = SelectField('Species', choices=SPECIES_CHOICES, default="c_elegans", validators=[Required()])
-  strain_1 = SelectField('Strain 1', choices=STRAIN_CHOICES, default="N2", validators=[Required(), validate_uniq_strains])
-  strain_2 = SelectField('Strain 2', choices=STRAIN_CHOICES, default="CB4856", validators=[Required()])
+  strain_1 = StrainSelectField('Strain 1', choices=[], default="N2",     validators=[Required(), validate_uniq_strains])
+  strain_2 = StrainSelectField('Strain 2', choices=[], default="CB4856", validators=[Required()])
   chromosome = SelectField('Chromosome', choices=CHROMOSOME_CHOICES, default="V", validators=[Required()])
   start = FlexIntegerField('Start', default="6,271,913", validators=[Required(), validate_start_lt_stop])
   stop = FlexIntegerField('Stop', default="6,272,025", validators=[Required()])
+
+  @classmethod
+  def default_strain_choices(cls):
+    return ("N2", "CB4856")
 
   
 class OrderForm(Form):

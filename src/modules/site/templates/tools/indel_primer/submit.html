@@ -89,6 +89,7 @@
 
 /* Species List */
 const species_list = {{ unpack_species_list(species_list, species_fields) }};
+var strains;
 
 /*
 	IGV Browser
@@ -122,6 +123,12 @@ var divergent_track_name;
 
 function fetch_trackset() {
   return fetch( "{{ url_for('indel_primer.indel_primer_get_tracks') }}" )
+    .then( (response) => { return response.text();  } )
+    .then( (text)     => { return JSON.parse(text); } );
+}
+
+function fetch_strains() {
+  return fetch( "{{ url_for('indel_primer.indel_primer_get_strains') }}" )
     .then( (response) => { return response.text();  } )
     .then( (text)     => { return JSON.parse(text); } );
 }
@@ -191,7 +198,10 @@ $(document).ready(function(){
 		}
 	});
 
-  submitForm()
+  fetch_strains().then((data) => {
+    strains = data;
+    submitForm();
+  });
 });
 
 
@@ -207,7 +217,13 @@ function process_indel_finder_query_results(results) {
     new_species = $("#species").val();
     if (created || species != new_species) {
       species = new_species;
-      update_browser_species(browser, species).then(() => {
+
+      Promise.all([
+        update_browser_species(browser, species),
+        update_strain_dropdown("#strain_1", "{{ default_strains[0] }}"),
+        update_strain_dropdown("#strain_2", "{{ default_strains[1] }}"),
+      ])
+      .then(() => {
 
         // Strain tracks must be (re)set AFTER reference species genome is changed
         update_browser_tracks(browser, results);
@@ -221,6 +237,21 @@ function process_indel_finder_query_results(results) {
   });
 }
 
+
+function update_strain_dropdown(id, initial_value = null) {
+  $(id).empty();
+  if (strains[species]) {
+    strains[species].forEach((val) => {
+      $(id).append( $("<option />").val(val).text(val) );
+    });
+    if (initial_value) {
+      $(id).val(initial_value);
+    }
+  }
+  else {
+    console.warn(`Couldn't find strains for species ${species}`);
+  }
+}
 
 
 /* Genome Browser Create & Update */
