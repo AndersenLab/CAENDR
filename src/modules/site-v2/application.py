@@ -35,7 +35,7 @@ from base.views.tools import tools_bp
 from base.views.tools import genome_browser_bp
 from base.views.tools import variant_annotation_bp
 from base.views.tools import indel_primer_bp
-from base.views.tools import heritability_bp
+from base.views.tools import heritability_calculator_bp
 
 # API
 from base.views.api import api_gene_bp
@@ -206,10 +206,10 @@ def register_blueprints(app):
   # Tools
   app.register_blueprint(mapping_bp, url_prefix='')
   app.register_blueprint(tools_bp, url_prefix='/tools')
-  app.register_blueprint(genome_browser_bp,     url_prefix='/tools')
-  app.register_blueprint(variant_annotation_bp, url_prefix='/tools')
-  app.register_blueprint(indel_primer_bp,       url_prefix='/tools')
-  app.register_blueprint(heritability_bp,       url_prefix='/tools')
+  app.register_blueprint(genome_browser_bp,          url_prefix='/tools')
+  app.register_blueprint(variant_annotation_bp,      url_prefix='/tools')
+  app.register_blueprint(indel_primer_bp,            url_prefix='/tools')
+  app.register_blueprint(heritability_calculator_bp, url_prefix='/tools')
 
   '''
   app.register_blueprint(gene_bp, url_prefix='/gene')

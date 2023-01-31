@@ -43,13 +43,13 @@
 
 <div class="row">
   <div class="col-md-3 col-md-offset-3 col-sm-5 col-sm-offset-1 col-xs-8 col-xs-offset-2 row-margin-bottom btn-mid-row">
-    <a id='create' value="create" type='submit' href="{{ url_for('heritability.heritability_create') }}" class="btn nu-alt-btn btn-block">
+    <a id='create' value="create" type='submit' href="{{ url_for('heritability_calculator.heritability_create') }}" class="btn nu-alt-btn btn-block">
       <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> 
       New Calculation
     </a>
   </div> {# /col-md-3 #}
   <div class="col-md-3 col-sm-5 col-sm-offset-0 col-xs-8 col-xs-offset-2 row-margin-bottom btn-mid-row">
-    <a id='create' value="create" type='submit' href="{{ url_for('heritability.heritability_user_results') }}" class="btn nu-alt-btn btn-block">
+    <a id='create' value="create" type='submit' href="{{ url_for('heritability_calculator.heritability_user_results') }}" class="btn nu-alt-btn btn-block">
       <span class="glyphicon glyphicon-list" aria-hidden="true"></span> 
       My Heritability Results
     </a>
@@ -339,15 +339,15 @@ $("#hcalc").on("click", function(e) {
         processData: false,
         contentType: false,
         dataType: 'json',
-        url: "{{ url_for('heritability.submit_h2') }}",
+        url: "{{ url_for('heritability_calculator.submit_h2') }}",
         data: data,
         success:function(result) {
           console.log(result)
           if(result.duplicate) {
-            window.location = "{{ url_for('heritability.heritability_user_results') }}";
+            window.location = "{{ url_for('heritability_calculator.heritability_user_results') }}";
             return;
           } else {
-            url = "{{ url_for('heritability.heritability_result', id='') }}" + result.id;
+            url = "{{ url_for('heritability_calculator.heritability_result', id='') }}" + result.id;
             console.log(url);
             window.location = url;
             return;
