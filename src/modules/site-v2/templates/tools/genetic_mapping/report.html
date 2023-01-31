@@ -14,7 +14,7 @@
       </a>
     </div>
     <div class='col-lg-2 col-md-4 col-sm-4 btn-mid-row'>
-      <a class="btn btn-block btn-nu " href="{{ url_for('mapping.mapping_results', id=id) }}" role="button">
+      <a class="btn btn-block btn-nu " href="{{ url_for('genetic_mapping.mapping_results', id=id) }}" role="button">
         <span class="glyphicon glyphicon-download" aria-hidden="true"></span> 
         View Result Files
       </a>
@@ -33,7 +33,7 @@
    
     <div class='col-lg-2 col-md-4 col-sm-4 btn-mid-row'>
       {% if report_url %}
-        <a target='_blank' class="btn btn-block btn-nu" href="{{ url_for('mapping.mapping_report_fullscreen', id=id) }}" role="button">
+        <a target='_blank' class="btn btn-block btn-nu" href="{{ url_for('genetic_mapping.mapping_report_fullscreen', id=id) }}" role="button">
       {% else %}
         <a class="btn btn-block btn-nu" href="" role="button" disabled>
       {% endif %}
@@ -53,7 +53,7 @@
 
         {% if report_url %}
 
-        <iframe defer loading="lazy" src="{{ url_for('mapping.mapping_report_fullscreen', id=id) }}" frameborder=0 style="width:100%; height: 800px"></iframe>
+        <iframe defer loading="lazy" src="{{ url_for('genetic_mapping.mapping_report_fullscreen', id=id) }}" frameborder=0 style="width:100%; height: 800px"></iframe>
 
         {% else %}
         <div class="spinner">

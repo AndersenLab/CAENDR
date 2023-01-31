@@ -23,7 +23,6 @@ from base.views import about_bp
 from base.views import strains_bp
 from base.views import user_bp
 from base.views import order_bp
-from base.views import mapping_bp
 
 # Data
 from base.views.data import data_bp
@@ -34,6 +33,7 @@ from base.views.data import data_downloads_bp
 from base.views.tools import tools_bp
 from base.views.tools import genome_browser_bp
 from base.views.tools import variant_annotation_bp
+from base.views.tools import genetic_mapping_bp
 from base.views.tools import pairwise_indel_finder_bp
 from base.views.tools import heritability_calculator_bp
 
@@ -204,10 +204,10 @@ def register_blueprints(app):
   app.register_blueprint(google_bp, url_prefix='/login')
   
   # Tools
-  app.register_blueprint(mapping_bp, url_prefix='')
   app.register_blueprint(tools_bp, url_prefix='/tools')
   app.register_blueprint(genome_browser_bp,          url_prefix='/tools')
   app.register_blueprint(variant_annotation_bp,      url_prefix='/tools')
+  app.register_blueprint(genetic_mapping_bp,         url_prefix='/tools')
   app.register_blueprint(pairwise_indel_finder_bp,   url_prefix='/tools')
   app.register_blueprint(heritability_calculator_bp, url_prefix='/tools')
 

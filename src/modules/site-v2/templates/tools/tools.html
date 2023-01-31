@@ -34,6 +34,19 @@
 
 
   <div class="text-center col-lg-4 col-md-6 col-sm-6">
+    <a href="{{ url_for('genetic_mapping.genetic_mapping') }}" style="text-decoration: none;">
+      <div class="menu-card">
+        <img class="card-img-top" src="static/img/pin.png" alt="Genetic Mapping">
+        <div class="card-body">
+          <h4 class="card-title">Genetic Mapping</h4>
+          <p class="card-text text-center">Facilitation of genetic mappings to empower researchers in quantitative genetics</p>
+        </div>
+      </div> {# /card #}
+    </a>
+  </div> {#/col #}
+
+
+  <div class="text-center col-lg-4 col-md-6 col-sm-6">
     <a href="{{ url_for('pairwise_indel_finder.pairwise_indel_finder') }}" style="text-decoration: none;">
       <div class="menu-card">
         <img class="card-img-top" src="{{ ext_asset('img/icons/pairwise_indel_finder.png') }}" alt="Pairwise Indel Finder">
