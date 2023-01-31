@@ -182,6 +182,8 @@ def create_new_indel_primer(username, species, site, strain_1, strain_2, size, d
     'strain_1':          strain_1,
     'strain_2':          strain_2,
     'size':              size,
+    'species':           species,
+    'release':           release,
     'container_repo':    c.repo,
     'container_name':    c.container_name,
     'container_version': c.container_tag,

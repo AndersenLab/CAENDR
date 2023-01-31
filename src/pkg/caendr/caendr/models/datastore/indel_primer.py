@@ -59,7 +59,9 @@ class IndelPrimer(JobEntity):
       'strain_1',
       'strain_2',
 
-      # Files
+      # Versioning
       'sv_bed_filename',
       'sv_vcf_filename',
+      'species',
+      'release'
     }

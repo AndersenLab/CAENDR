@@ -209,6 +209,8 @@ class IndelPrimerTask(Task):
       'strain_2',
       'sv_bed_filename',
       'sv_vcf_filename',
+      'species',
+      'release',
     }
 
 
