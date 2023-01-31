@@ -118,7 +118,8 @@
           <li class="dropdown">
             <a href="#" role="button" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> Account <span class="caret"></span></a>
             <ul class="dropdown-menu">
-              <li><a href="{{ url_for('user.user_profile') }}" class='nav-link' role='button'> My Profile </a></li>
+              <li><a href="{{ url_for('user.user_account') }}" class='nav-link' role='button'> My Account </a></li>
+              <li><a href="{{ url_for('user.user_results') }}" class='nav-link' role='button'> My Results </a></li>
               <li><a href="{{ url_for('auth.logout') }}" class='nav-link' role='button'> Logout </a></li>
             </ul>
           </li>
