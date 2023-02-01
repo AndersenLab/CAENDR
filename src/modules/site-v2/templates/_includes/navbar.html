@@ -1,107 +1,119 @@
 <header>
-<!-- Global Navbar -->
-<nav class="navbar navbar-expand-lg fw-bold mt-3">
-  <div class="container-fluid">
+  <!-- Global Navbar -->
+  <nav class="navbar navbar-expand-lg fw-bold mt-3">
+    <div class="container-fluid">
       <div class="col-3 col-md-1 navbar-brand ms-5">
-          <a href="/"><img src="/static/img/caeNDRLogo.png" class="img-fluid"></a>
+        <a href="/"><img src="/static/img/caeNDRLogo.png" class="img-fluid"></a>
       </div>
-      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
+        data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+        aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
-          <div class="navbar-nav">
-              <a class="nav-link mx-5" href="{{ url_for('strains.strains_catalog') }}">Request Strains</a>
-              <div class="nav-item dropdown mx-5">
-                  <a class="nav-link dropdown-toggle" href="#" id="toolsDropdown" role="button"
-                      data-bs-toggle="dropdown" aria-expanded="false">
-                      Tools
-                  </a>
-                  <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
-                    <li><a class="dropdown-item" href="{{ url_for('genome_browser.genome_browser')                   }}"> Genome Browser
-                      </a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('variant_annotation.variant_annotation')           }}"> Variant
-                        Annotation </a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('genetic_mapping.genetic_mapping')                 }}"> Genetic Mapping
-                      </a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('pairwise_indel_finder.pairwise_indel_finder')     }}"> Pairwise Indel
-                        Finder</a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('heritability_calculator.heritability_calculator') }}"> Heritability
-                        Calculator </a></li>
-                  </ul>
-              </div>
-              <div class="nav-item dropdown mx-5">
-                  <a class="nav-link dropdown-toggle" href="#" id="dataDropdown" role="button"
-                      data-bs-toggle="dropdown" aria-expanded="false">
-                      Data
-                  </a>
-                  <ul class="dropdown-menu" aria-labelledby="dataDropdown">
-                      <li><a class="dropdown-item" href="{{ url_for('data.download')      }}"> Download Data </a></li>
-                      <li><a class="dropdown-item" href="{{ url_for('data.protocols')     }}"> Protocols </a></li>
-                      <li><a class="dropdown-item" href="{{ url_for('data.submit_strain') }}"> Submit A Strain </a></li>
-                  </ul>
-              </div>
-              <div class="nav-item dropdown mx-5">
-                  <a class="nav-link dropdown-toggle" href="#" id="aboutDropdown" role="button"
-                      data-bs-toggle="dropdown" aria-expanded="false">
-                      About Us
-                  </a>
-                  <ul class="dropdown-menu" aria-labelledby="aboutDropdown">
-                      <li><a class="dropdown-item" href="{{ url_for('about.about')      }}"> About CeNDR </a></li>
-                      <li><a class="dropdown-item" href="{{ url_for('about.people')     }}"> People </a></li>
-                      <li><a class="dropdown-item" href="{{ url_for('about.cited_by')   }}"> Cited By </a></li>
-                      <li><a class="dropdown-item" href="{{ url_for('about.funding')    }}"> Funding </a></li>
-                      <li><a class="dropdown-item" href="{{ url_for('about.statistics') }}"> Statistics </a></li>
-                      <li><a class="dropdown-item" href="{{ url_for('about.contact_us') }}"> Contact Us </a></li>
-                  </ul>
-              </div>
-              <div class="nav-item dropdown mx-5">
-                  <a class="nav-link dropdown-toggle" href="#" id="getInvolvedDropdown" role="button"
-                      data-bs-toggle="dropdown" aria-expanded="false">
-                      Get Involved
-                  </a>
-                  <ul class="dropdown-menu" aria-labelledby="getInvolvedDropdown">
-                    <li><a class="dropdown-item" href="{{ url_for('get_involved.donate')             }}"> Donate </a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('get_involved.citizen_scientists') }}"> Citizen Scientists </a></li>
-                  </ul>
-              </div>
-              <a class="nav-link mx-5 mb-3" href="{{ url_for('primary.help_item') }}">FAQs</a>
-              <!-- User Menu -->
-              <div class="nav-item dropdown mx-5">
-                  <a class="dropdown-toggle rounded-circle userMenu" data-bs-toggle="dropdown" id="userMenuDropDown"
-                      data-bs-auto-close="false" aria-expanded="false" aria-label="User Menu"><i class="bi bi-person-fill lh-1"
-                          aria-hidden="true"></i></a>
-                  <div class="dropdown-menu p-3" aria-labelledby="userMenuDropDown">
-                      {% if session["is_logged_in"] %}
-                      <div class="vstack gap-3 px-1 py-2">
-                          <a href="{{ url_for('user.user_account') }}"><i class="bi bi-person-fill userMenuIcon" aria-hidden="true"></i>My Account</a>
-                          <a href="{{ url_for('user.user_results') }}"><i class="bi bi-journal userMenuIcon" aria-hidden="true"></i>My Results</a>
-                          <a href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right userMenuIcon" aria-hidden="true"></i> Sign Out</a>
-                            {% if session["is_admin"] %}
-                            <hr class="dropdown-divider">
-                            <a href="{{ url_for('admin.admin') }}"><i class="bi bi-gear-fill userMenuIcon" aria-hidden="true"></i>Admin</a>
-                            {% endif %}
-                            {% else %}
-                            <div class="d-grid mb-3">
-                              <a class="btn btn-secondary text-light" href="{{ url_for('auth.choose_login') }}">Login</a>
-                          </div>
-                          <p class="text-center"><a href="#">Sign Up</a></p>
-                          {% endif %}
-                      </div>
-                  </div>
-              </div>
-              <!-- /User Menu -->
+        <div class="navbar-nav">
+          <a class="nav-link mx-5" href="{{ url_for('strains.strains_catalog') }}">Request Strains</a>
+          <div class="nav-item dropdown mx-5">
+            <a class="nav-link dropdown-toggle" href="#" id="toolsDropdown" role="button" data-bs-toggle="dropdown"
+              aria-expanded="false">
+              Tools
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
+              <li><a class="dropdown-item" href="{{ url_for('genome_browser.genome_browser')                   }}">
+                  Genome Browser
+                </a></li>
+              <li><a class="dropdown-item" href="{{ url_for('variant_annotation.variant_annotation')           }}">
+                  Variant
+                  Annotation </a></li>
+              <li><a class="dropdown-item" href="{{ url_for('genetic_mapping.genetic_mapping')                 }}">
+                  Genetic Mapping
+                </a></li>
+              <li><a class="dropdown-item" href="{{ url_for('pairwise_indel_finder.pairwise_indel_finder')     }}">
+                  Pairwise Indel
+                  Finder</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('heritability_calculator.heritability_calculator') }}">
+                  Heritability
+                  Calculator </a></li>
+            </ul>
           </div>
+          <div class="nav-item dropdown mx-5">
+            <a class="nav-link dropdown-toggle" href="#" id="dataDropdown" role="button" data-bs-toggle="dropdown"
+              aria-expanded="false">
+              Data
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="dataDropdown">
+              <li><a class="dropdown-item" href="{{ url_for('data.download')      }}"> Download Data </a></li>
+              <li><a class="dropdown-item" href="{{ url_for('data.protocols')     }}"> Protocols </a></li>
+              <li><a class="dropdown-item" href="{{ url_for('data.submit_strain') }}"> Submit A Strain </a></li>
+            </ul>
+          </div>
+          <div class="nav-item dropdown mx-5">
+            <a class="nav-link dropdown-toggle" href="#" id="aboutDropdown" role="button" data-bs-toggle="dropdown"
+              aria-expanded="false">
+              About Us
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="aboutDropdown">
+              <li><a class="dropdown-item" href="{{ url_for('about.about')      }}"> About CeNDR </a></li>
+              <li><a class="dropdown-item" href="{{ url_for('about.people')     }}"> People </a></li>
+              <li><a class="dropdown-item" href="{{ url_for('about.cited_by')   }}"> Cited By </a></li>
+              <li><a class="dropdown-item" href="{{ url_for('about.funding')    }}"> Funding </a></li>
+              <li><a class="dropdown-item" href="{{ url_for('about.statistics') }}"> Statistics </a></li>
+              <li><a class="dropdown-item" href="{{ url_for('about.contact_us') }}"> Contact Us </a></li>
+            </ul>
+          </div>
+          <div class="nav-item dropdown mx-5">
+            <a class="nav-link dropdown-toggle" href="#" id="getInvolvedDropdown" role="button"
+              data-bs-toggle="dropdown" aria-expanded="false">
+              Get Involved
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="getInvolvedDropdown">
+              <li><a class="dropdown-item" href="{{ url_for('get_involved.donate')             }}"> Donate </a></li>
+              <li><a class="dropdown-item" href="{{ url_for('get_involved.citizen_scientists') }}"> Citizen Scientists
+                </a></li>
+            </ul>
+          </div>
+          <a class="nav-link mx-5 mb-3" href="{{ url_for('primary.help_item') }}">FAQs</a>
+          <!-- User Menu -->
+          <div class="nav-item dropdown mx-5">
+            <a class="dropdown-toggle rounded-circle userMenu" data-bs-toggle="dropdown" id="userMenuDropDown"
+              data-bs-auto-close="false" aria-expanded="false" aria-label="User Menu"><i class="bi bi-person-fill lh-1"
+                aria-hidden="true"></i></a>
+            <div class="dropdown-menu p-3" aria-labelledby="userMenuDropDown">
+              {% if session["is_logged_in"] %}
+              <div class="vstack gap-3 px-1 py-2">
+                <a href="{{ url_for('user.user_account') }}"><i class="bi bi-person-fill userMenuIcon"
+                    aria-hidden="true"></i>My Account</a>
+                <a href="{{ url_for('user.user_results') }}"><i class="bi bi-journal userMenuIcon"
+                    aria-hidden="true"></i>My Results</a>
+                <a href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right userMenuIcon"
+                    aria-hidden="true"></i> Sign Out</a>
+                {% if session["is_admin"] %}
+                <hr class="dropdown-divider">
+                <a href="{{ url_for('admin.admin') }}"><i class="bi bi-gear-fill userMenuIcon"
+                    aria-hidden="true"></i>Admin</a>
+                {% endif %}
+                {% else %}
+                <div class="d-grid mb-3">
+                  <a class="btn btn-secondary text-light" href="{{ url_for('auth.choose_login') }}">Login</a>
+                </div>
+                <p class="text-center"><a href="#">Sign Up</a></p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <!-- /User Menu -->
+        </div>
       </div>
-</nav>
-<!-- /Navbar -->
+  </nav>
+  <!-- /Navbar -->
 
   <div id="snackbar">
     <div id="messages">
-    {% for category, msg in get_flashed_messages(with_categories=true) %}
+      {% for category, msg in get_flashed_messages(with_categories=true) %}
       <div class="flash-{{ category }} alert alert-dismissable alert-{{ category }} flash-banner">
         <p class="snackbar-msg-txt snackbar-msg-txt-{{ category }}">{{ msg }}</p>
       </div>
-    {% endfor %}
+      {% endfor %}
     </div>
   </div>
 
