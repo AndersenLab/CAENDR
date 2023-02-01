@@ -17,7 +17,7 @@
         {% block script %}{% endblock %}
         <div id="alert"></div>
     </main>
-    {% if config.DEBUG %} <div title='turn off DEBUG mode to hide these messages' class='debug-message'>{{ session }}
+    {% if config.DEBUG %} <div title='turn off DEBUG mode to hide these messages' class='visually-hidden'>{{ session }}
     </div>{% endif %}
     {% include "_includes/footer.html" %}
 </body>
