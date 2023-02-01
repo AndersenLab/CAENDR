@@ -1,141 +1,55 @@
-<footer class='hidden-print nu-footer'>
-<div class="container-fluid">
-    <div class="row">
-      <div class="col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4 col-sm-5 col-sm-offset-3">
-        <div class="panel panel-default">
-          <div class="panel-body text-center">
-            <small>{{ version }} &nbsp;&nbsp; <a href="https://github.com/AndersenLab/CAENDR/issues">Issue Tracker</a></small>
+    <!-- Footer -->
+    <footer>
+      <div class="container-fluid mt-5 p-5">
+          <div class="row pt-5">
+              <div class="col-12 col-md-6 col-lg-4 col-xl-3 text-center mx-auto mb-5">
+                  <a href="/"><img src="/static/img/caeNDRLogo.png" class="img-fluid footerImage"></a>
+              </div>
+              <div class="col-12 col-xl-9">
+                  <div class="row">
+              <div class="col-8 col-sm-3 col-lg-3 mx-auto mb-5">
+                  <nav class="nav flex-column">
+                      <h3 class="h5 text-dark">Tools</h3>
+                      <li><a class="nav-link ps-0"  href="{{ url_for('genome_browser.genome_browser')                   }}"> Genome Browser
+                      </a></li>
+                    <li><a class="nav-link ps-0" href="{{ url_for('variant_annotation.variant_annotation')           }}"> Variant
+                        Annotation </a></li>
+                    <li><a class="nav-link ps-0" href="{{ url_for('genetic_mapping.genetic_mapping')                 }}"> Genetic Mapping
+                      </a></li>
+                    <li><a class="nav-link ps-0" href="{{ url_for('pairwise_indel_finder.pairwise_indel_finder')     }}"> Pairwise Indel
+                        Finder</a></li>
+                    <li><a class="nav-link ps-0" href="{{ url_for('heritability_calculator.heritability_calculator') }}"> Heritability
+                        Calculator </a></li>
+                    </nav>
+              </div>
+              <div class="col-8 col-sm-3 col-lg-3 mx-auto mb-5">
+                  <nav class="nav flex-column">
+                      <h3 class="h5 text-dark">Data</h3>
+                      <li><a class="nav-link ps-0" href="{{ url_for('data.download')      }}"> Download Data </a></li>
+                      <li><a class="nav-link ps-0" href="{{ url_for('data.protocols')     }}"> Protocols </a></li>
+                      <li><a class="nav-link ps-0" href="{{ url_for('data.submit_strain') }}"> Submit A Strain </a></li>
+                    </nav>
+              </div>
+              <div class="col-8 col-sm-3 col-lg-3 mx-auto mb-5">
+                  <nav class="nav flex-column">
+                      <h3 class="h5 text-dark">About Us</h3>
+                      <li><a class="nav-link ps-0" href="{{ url_for('about.about')      }}"> About CeNDR </a></li>
+                      <li><a class="nav-link ps-0" href="{{ url_for('about.people')     }}"> People </a></li>
+                      <li><a class="nav-link ps-0" href="{{ url_for('about.contact_us') }}"> Contact Us </a></li>
+                    </nav>
+              </div>
+              <div class="col-8 col-sm-6 col-lg-3 mx-auto mb-5">
+                  <nav class="nav flex-column">
+                      <h3 class="h5 text-dark"><i class="bi bi-chat-left-quote-fill text-secondary me-1" aria-hidden="true"></i>Cite CaeNDR</h3>
+                      <p>Cook DE, Zdraljevic S, Roberts JP, Andersen EC
+                              <br>(2016 Oct 3) <em>Nucleic Acids Research</em>
+                              <br>[ <a href="http://nar.oxfordjournals.org/content/early/2016/10/03/nar.gkw893.full" target="_blank">Article on Nucleic Acids Research</a> | <a href="https://dx.doi.org/10.1093/nar/gkw893" target="_blank">DOI</a> | <a href="https://www.ncbi.nlm.nih.gov/pubmed/27701074" target="_blank">Pubmed</a> ]
+                      </p>
+                    </nav>
+              </div>
           </div>
-        </div>
+              </div>
+          </div>
       </div>
-    </div>
-
-    <!-- <div class="row">
-
-      <div class="col-sm-12">
-        <div class="text-center">
-          <a href="https://www.northwestern.edu/"><img src="{{ ext_asset('img/logos/NU.jpg') }}" /></a> 
-        </div>
-        <br />
-        <br />
-      </div>
-      
-    </div> -->
-
-  
-</div> {# /container-fluid #}
-</footer>
-
-<footer>
-<div class="container-fluid nu-footer">
-    <div class="row nopadding">
-
-      <div class="col-lg-2 col-md-3 col-xs-6 col-lg-offset-2 nu-footer-col text-center">
-          <ul>
-            <a href=""><img alt="Northwestern University logo" src="/static/img/northwestern-university.svg"></a>
-            <li>© 2020 Northwestern University</li>
-            <li><a href="https://www.northwestern.edu/accessibility/">Accessibility</a></li>
-            <li><a href="https://www.northwestern.edu/emergency/index.html">Campus Emergency Information</a></li>
-            <li><a href="https://www.northwestern.edu/hr/careers/">Careers</a></li>
-            <li><a href="https://www.northwestern.edu/contact.html">Contact Northwestern University</a></li>
-            <li><a href="https://www.northwestern.edu/disclaimer.html">Disclaimer</a></li>
-            <li><a href="https://www.northwestern.edu/privacy/index.html">Privacy Statement</a></li>
-            <li><a href="http://policies.northwestern.edu/">University Policies</a></li>
-          </ul>
-      </div> {# / col-md-2 #}
-
-
-      <div class="col-lg-2 col-md-3 col-xs-6 nu-footer-col nu-footer-col-2">
-        <ul>
-          <span class="glyphicon glyphicon-map-marker nu-footer-icon"></span>
-          <li></li>
-          <li>633 Clark Street</li>
-          <li>Evanston, IL 60208</li>
-          <span class="glyphicon glyphicon-phone nu-footer-icon"></span>
-          <li></li>
-          <li><strong>Evanston</strong></li>
-          <li>(847) 491-3741</li>
-          <li></li>
-          <li><strong>Chicago</strong></li>
-          <li>(312) 503-8649</li>
-        </ul>
-      </div> {# / col-md-2 #}
-
-
-      <div class="col-lg-2 col-md-3 col-xs-6 nu-footer-col nu-footer-col-3 text-center">
-        <div class="nu-footer-col-3-title">Social Media</div>
-        <table>
-          <tbody>
-            <tr>
-              <td class="text-center"><a href="https://www.facebook.com/NorthwesternU"><span class="fab fa-facebook-square fa-3x" title="Facebook"></span></a></td>
-              <td class="text-center"><a href="https://www.twitter.com/northwesternu"><span class="fab fa-twitter-square fa-3x" title="Twitter"></span></a></td>
-              <td class="text-center"><a href="https://instagram.com/northwesternu"><span class="fab fa-instagram-square fa-3x" title="Instagram"></span></a></td>
-            </tr>
-            <tr>
-              <td class="text-center"><a href="https://www.youtube.com/user/NorthwesternU"><span class="fab fa-youtube-square fa-3x" title="YouTube"></span></a></td>
-              <td class="text-center"><a href="https://www.futurity.org/university/northwestern-university/"><div style="height:4.0em;"><img src="/static/img/futurity.svg" alt="Futurity" /></div></a></td>
-              <td class="text-center"><a href="https://news.northwestern.edu/feeds/allStories"><span class="fas fa-rss-square fa-3x" title="RSS feed"></span></a></td>
-            </tr>
-          </tbody>
-        </table>
-
-      </div> {# / col-md-2 #}
-
-      <div class="col-lg-2 col-md-3 col-xs-6 nu-footer-col text-center">
-        <ul>
-          <li><a href="https://www.northwestern.edu/norris/services/bookstore/">Bookstore</a></li>
-          <li><a href="https://offices.northwestern.edu/">Directory</a></li>
-          <li><a href="https://www.library.northwestern.edu/">Library</a></li>
-          <li><a href="https://maps.northwestern.edu/">Maps</a></li>
-          <li><a href="https://news.northwestern.edu/for-journalists/staff-page">Media Relations</a></li>
-          <li><a href="https://www.northwestern.edu/transportation-parking/">Parking</a></li>
-          <li><a href="https://www.northwestern.edu/transportation-parking/shuttles/routes/">Shuttles</a></li>
-          <li><a href="https://www.northwestern.edu/provost/initiatives/teaching-and-learning/online-and-blended-learning/student-complaint-procedure.html">Student Complaint Procedure</a></li>
-        </ul>
-      </div>
-
-      <!-- <footer class="hidden-print">
-      <div class="row">
-        <div class="col-lg-2 col-lg-offset-5">
-            <div class="panel panel-default">
-                <div class="panel-body text-center">
-                    <small>
-                        1.7.0g &nbsp;&nbsp;
-                        <a href="https://github.com/AndersenLab/CeNDR/issues">Issue Tracker</a>
-                    </small>
-                </div>
-            </div>
-        </div>
-    </div>{# /row #}
-  </footer> -->
-
-
-    </div> {# /row #}
-
-  </div> {# /container-fluid #}
   </footer>
-
-
-<!--Closes Container -->
-
-<!-- Custom Bootstrap -->
-<script src="/static/js/bootstrap.js"></script>
-
-<!-- Google Analytics -->
-<script>
-(function(i, s, o, g, r, a, m) {
-    i['GoogleAnalyticsObject'] = r;
-    i[r] = i[r] || function() {
-        (i[r].q = i[r].q || []).push(arguments)
-    }, i[r].l = 1 * new Date();
-    a = s.createElement(o),
-        m = s.getElementsByTagName(o)[0];
-    a.async = 1;
-    a.src = g;
-    m.parentNode.insertBefore(a, m)
-})(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
-
-ga('create', 'UA-24677584-4', 'auto', 
-    { user: "{{ user['name'] if user else None }}"});
-ga('send', 'pageview');
-</script>
+      <!-- /Container /Footer -->
