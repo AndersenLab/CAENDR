@@ -35,7 +35,7 @@
             <option value="3">C. Tropicalis</option>
           </select>
         </div>
-        <!-- Text input with searchable table -->
+        <!-- Gene search -->
         <div class="mb-4">
           <label for="gene-search" class="form-label">Gene Search:</label>
           <div class="dropdown">
@@ -62,9 +62,9 @@
             </div>
           </div>
         </div>
-        <!-- /Text input with searchable table -->
+        <!-- /Gene Search -->
         <div class="mb-4">
-          <!-- Text input with searchable table - checkboxes -->
+          <!-- Isotypes -->
           <label for="filter" class="form-label">Isotype (Reference Strain):</label>
           <div class="dropdown">
             <input type="text" class="form-control dropdown-toggle" id="filter" placeholder="For example, JU360"
@@ -96,17 +96,16 @@
               </table>
             </div>
           </div>
-          <!-- /Text input with searchable table - checkboxes -->
+          <!-- /Isotypes -->
         </div>
         <div class="mb-4">
-          <label for="exampleMultiSelect" class="form-label">Tracks:</label>
+          <label for="track-options" class="form-label">Tracks:</label>
           <!-- Info Modal -->
           <!-- Button trigger modal -->
           <button type="button" class="btn btn-secondary rounded-circle infoButton" data-bs-toggle="modal"
             data-bs-target="#infoModal" aria-label="More information">
             <i class="bi bi-info lh-1" aria-hidden="true"></i>
           </button>
-
           <!-- Modal -->
           <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
@@ -122,32 +121,36 @@
             </div>
           </div>
           <!-- /Info Modal -->
-          <div class="p-3 mb-4 rounded-2 overflow-auto" style="height:15vh; background-color: #fff;">
-            {% for i in ["Genes", "Transcripts"] %}
-            <div class="checkbox">
-              <label><input type="checkbox" checked class="track-select normal-track" value="{{ i }}" />{{ i }}</label>
-            </div>
-            {% endfor %}
-            {% for i in ["phyloP", "phastCons", "Dust", "Repeat Masker", "Divergent Regions Summary" ] %}
-            <div class="checkbox">
-              <label><input type="checkbox" class="track-select normal-track" value="{{ i }}" />{{ i }}</label>
-            </div>
-            {% endfor %}
-            <div class="checkbox">
-              <label><input type="checkbox" class="track-select normal-track" value="Divergent Regions" />Divergent
-                Regions
-                Strain<br /> (<a href="https://andersenlab.org/publications/2021LeeNatureEE.pdf" target='_blank'>Lee
-                  <em>et
-                    al.</em>
-                  2020)</a></label>
-            </div>
-            <div class="checkbox">
-              <label><input type="checkbox" class="track-select normal-track" value="Transposons" />Transposons (<a
-                  href="https://andersenlab.org/publications/2017Laricchia.pdf" target='_blank'>Laricchia <em>et
-                    al.</em>
-                  2017)</a></label>
-            </div>
+          <!-- Tracks -->
+          <div class="p-3 mb-4 rounded-2 overflow-auto gbrowserTracks">
+            <form id="track-options">
+              {% for i in ["Genes", "Transcripts"] %}
+              <div class="checkbox">
+                <label><input type="checkbox" checked class="track-select normal-track" value="{{ i }}" /> {{ i }}</label>
+              </div>
+              {% endfor %}
+              {% for i in ["phyloP", "phastCons", "Dust", "Repeat Masker", "Divergent Regions Summary" ] %}
+              <div class="checkbox">
+                <label><input type="checkbox" class="track-select normal-track" value="{{ i }}" /> {{ i }}</label>
+              </div>
+              {% endfor %}
+              <div class="checkbox">
+                <label><input type="checkbox" class="track-select normal-track" value="Divergent Regions" /> Divergent
+                  Regions
+                  Strain<br /> (<a href="https://andersenlab.org/publications/2021LeeNatureEE.pdf" target='_blank'>Lee
+                    <em>et
+                      al.</em>
+                    2020)</a></label>
+              </div>
+              <div class="checkbox">
+                <label><input type="checkbox" class="track-select normal-track" value="Transposons" /> Transposons (<a
+                    href="https://andersenlab.org/publications/2017Laricchia.pdf" target='_blank'>Laricchia <em>et
+                      al.</em>
+                    2017)</a></label>
+              </div>
+            </form>
           </div>
+          <!-- /Tracks -->
         </div>
         <small>
           <p>IGC (Data Release: {{ release_version }} | Wormbase Version: {{wormbase_version}})</p>
@@ -160,7 +163,6 @@
   <div class="d-flex flex-wrap flex-column col-md-12 col-xl-8">
       <!-- Options Toolbar -->
       <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar">
-      <div class="ps-3 pt-0"><a href="#"><i class="bi bi-file-earmark-arrow-down-fill" aria-hidden="true"></i> Download My Results</a></div>
       <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i> Fullscreen</a></div>
       </div>
       <!-- /Options Toolbar -->
