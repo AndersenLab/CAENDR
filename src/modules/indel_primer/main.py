@@ -38,15 +38,35 @@ SV_VCF_FILENAME = os.environ.get('INDEL_PRIMER_SV_VCF_FILENAME')
 WORMBASE_VERSION  = os.environ.get('WORMBASE_VERSION')
 
 # Name for local cache directory (to download files from GCP)
-INDEL_CACHE_DIR = os.environ.get('INDEL_CACHE_DIR')
+INDEL_CACHE_DIR = os.environ.get('INDEL_CACHE_DIR', '.download')
 
+
+# Define list of environment variables required for Indel Primer to run properly
+required_env_vars = {
+  'INDEL_TOOL_PATH',
+  'INDEL_CACHE_DIR',
+  'INDEL_SITE',
+  'INDEL_STRAIN_1',
+  'INDEL_STRAIN_2',
+  'SPECIES',
+  'RELEASE',
+  'RESULT_BUCKET',
+  'RESULT_BLOB',
+  'WORMBASE_VERSION',
+}
+
+# Save current list of vars
+# Have to do this manually because vars() is overwritten in smaller scopes, e.g. list comprehensions
+VARS = vars()
+
+# Ensure all required env vars exist
+for var_name in required_env_vars:
+  if VARS.get(var_name) is None:
+    raise EnvVarError(var_name)
 
 # Log all env vars
-logger.info(f'Indel Primer: INDEL_SITE:{INDEL_SITE} INDEL_STRAIN_1:{INDEL_STRAIN_1} INDEL_STRAIN_2:{INDEL_STRAIN_2} WORMBASE_VERSION:{WORMBASE_VERSION} RESULT_BUCKET:{RESULT_BUCKET} RESULT_BLOB:{RESULT_BLOB} SV_BED_FILENAME:{SV_BED_FILENAME} SV_VCF_FILENAME:{SV_VCF_FILENAME}')
-
-# Ensure all env vars exist
-if not INDEL_SITE or not INDEL_STRAIN_1 or not INDEL_STRAIN_2 or not RESULT_BLOB or not RESULT_BUCKET or not WORMBASE_VERSION or not SV_BED_FILENAME or not SV_VCF_FILENAME or not INDEL_TOOL_PATH or not INDEL_CACHE_DIR:
-  raise EnvVarError()
+vars_strings = [ f'{x}="{VARS.get(x)}"' for x in required_env_vars ]
+logger.info( f'Indel Primer: { " ".join(vars_strings) }' )
 
 
 
