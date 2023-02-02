@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 from caendr.utils import monitor
 from caendr.models.error import EnvVarError
+from caendr.models.datastore import IndelPrimer
 from caendr.services.cloud.storage import download_blob_to_file, upload_blob_from_file
 
 
@@ -25,14 +26,12 @@ INDEL_TOOL_PATH                 = os.environ.get('INDEL_TOOL_PATH')
 INDEL_SITE     = os.environ.get('INDEL_SITE')
 INDEL_STRAIN_1 = os.environ.get('INDEL_STRAIN_1')
 INDEL_STRAIN_2 = os.environ.get('INDEL_STRAIN_2')
+SPECIES        = os.environ.get('SPECIES')
+RELEASE        = os.environ.get('RELEASE')
 
 # Result file location
 RESULT_BUCKET = os.environ.get('RESULT_BUCKET')
 RESULT_BLOB   = os.environ.get('RESULT_BLOB')
-
-# Names of source files
-SV_BED_FILENAME = os.environ.get('INDEL_PRIMER_SV_BED_FILENAME')
-SV_VCF_FILENAME = os.environ.get('INDEL_PRIMER_SV_VCF_FILENAME')
 
 # WormBase Version
 WORMBASE_VERSION  = os.environ.get('WORMBASE_VERSION')
@@ -71,7 +70,8 @@ logger.info( f'Indel Primer: { " ".join(vars_strings) }' )
 
 
 # Generate local name for VCF file
-target_vcf_file_name = f'{INDEL_CACHE_DIR}/{SV_VCF_FILENAME}'
+source_vcf_file_name = f'{ INDEL_TOOL_PATH }/{ IndelPrimer.get_source_filename(SPECIES, RELEASE) }.vcf.gz'
+target_vcf_file_name = f'{ INDEL_CACHE_DIR }/{ IndelPrimer.get_source_filename(SPECIES, RELEASE) }.vcf.gz'
 
 # Create a folder at the desired path if one does not yet exist
 if not os.path.exists(INDEL_CACHE_DIR):
@@ -80,7 +80,7 @@ if not os.path.exists(INDEL_CACHE_DIR):
 # Download VCF file
 # Index too?
 if not os.path.exists(target_vcf_file_name):
-  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, f'{INDEL_TOOL_PATH}/{SV_VCF_FILENAME}', target_vcf_file_name)
+  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, source_vcf_file_name, target_vcf_file_name)
 
 
 # Prepare command for VCF-kit Indel Primer tool

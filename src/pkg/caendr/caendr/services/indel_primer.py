@@ -2,12 +2,9 @@ import tabix
 import os
 import json
 
-from string import Template
-
 from cyvcf2 import VCF
 from caendr.services.logger import logger
 
-from caendr.models.error import EnvVarError
 from caendr.models.datastore import IndelPrimer
 from caendr.models.task import IndelPrimerTask
 
@@ -21,15 +18,7 @@ from caendr.utils.data import unique_id
 
 MODULE_SITE_BUCKET_PRIVATE_NAME   = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
 INDEL_PRIMER_CONTAINER_NAME       = os.environ.get('INDEL_PRIMER_CONTAINER_NAME')
-
-# INDEL_PRIMER_FILENAME = os.environ.get('INDEL_PRIMER_FILENAME')
-INDEL_PRIMER_FILENAME = '${RELEASE}_${SPECIES}_pif'
-
-if not INDEL_PRIMER_FILENAME:
-  logger.debug("No value provided for INDEL_PRIMER_FILENAME")
-  raise EnvVarError()
-
-INDEL_PRIMER_FILENAME = Template(INDEL_PRIMER_FILENAME)
+INDEL_PRIMER_TOOL_PATH            = os.environ.get('INDEL_PRIMER_TOOL_PATH')
 
 
 
@@ -70,20 +59,13 @@ def get_user_indel_primers(username):
   return IndelPrimer.sort_by_created_date(primers, reverse=True)
 
 
-
-def get_bed_filename(species, release = '20220216'):
-  return INDEL_PRIMER_FILENAME.substitute({ 'SPECIES': species, 'RELEASE': release })
-
 def get_bed_url(species, release = '20220216'):
-  filename = get_bed_filename(species, release)
-  return f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/tools/pairwise_indel_primer/{filename}.bed.gz"
-
-def get_vcf_filename(species, release = '20220216'):
-  return INDEL_PRIMER_FILENAME.substitute({ 'SPECIES': species, 'RELEASE': release })
+  filename = IndelPrimer.get_source_filename(species, release)
+  return f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/{INDEL_PRIMER_TOOL_PATH}/{filename}.bed.gz"
 
 def get_vcf_url(species, release = '20220216'):
-  filename = get_vcf_filename(species, release)
-  return f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/tools/pairwise_indel_primer/{filename}.vcf.gz"
+  filename = IndelPrimer.get_source_filename(species, release)
+  return f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/{INDEL_PRIMER_TOOL_PATH}/{filename}.vcf.gz"
 
 
 def get_sv_strains(species, release = '20220216'):
@@ -162,7 +144,7 @@ def create_new_indel_primer(username, species, site, strain_1, strain_2, size, d
   # Check for existing indel primer matching data_hash & user
   if not no_cache:
     ips = IndelPrimer.query_ds(filters=[('data_hash', '=', data_hash)])
-    if ips[0]:
+    if len(ips):
       if ips[0].username == username and ips[0].container_equals(c):
         return ips[0]
 
@@ -187,8 +169,8 @@ def create_new_indel_primer(username, species, site, strain_1, strain_2, size, d
     'container_repo':    c.repo,
     'container_name':    c.container_name,
     'container_version': c.container_tag,
-    'sv_bed_filename':   get_bed_filename(species, release),
-    'sv_vcf_filename':   get_vcf_filename(species, release),
+    'sv_bed_filename':   IndelPrimer.get_source_filename(species, release) + '.bed.gz',
+    'sv_vcf_filename':   IndelPrimer.get_source_filename(species, release) + '.vcf.gz',
   })
   ip.save()
 
@@ -201,10 +183,12 @@ def create_new_indel_primer(username, species, site, strain_1, strain_2, size, d
 
   # Collect data about this run
   data = {
-    'site': site,
+    'site':     site,
     'strain_1': strain_1,
     'strain_2': strain_2,
-    'size': size
+    'size':     size,
+    'species':  species,
+    'release':  release,
   }
 
   # Upload data.tsv to google storage
