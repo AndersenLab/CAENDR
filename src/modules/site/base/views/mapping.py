@@ -9,6 +9,7 @@ from base.forms import FileUploadForm
 
 from caendr.services.nemascan_mapping import create_new_mapping, get_mapping, get_all_mappings, get_user_mappings
 from caendr.services.cloud.storage import get_blob, generate_blob_url, get_blob_list
+from caendr.models.species import SPECIES_LIST
 
 
 mapping_bp = Blueprint('mapping',
@@ -21,13 +22,25 @@ def mapping():
   """
       This is the mapping submission page.
   """
-  title = 'Perform Mapping'
-  jwt_csrf_token = (get_jwt() or {}).get("csrf")
-  form = FileUploadForm()
-  # TODO: change
-  nemascan_container_url = 'https://github.com/AndersenLab/dockerfile/tree/nemarun/nemarun'
-  nemascan_github_url = 'https://github.com/AndersenLab/NemaScan'
-  return render_template('tools/mapping/mapping.html', **locals())
+  return render_template('tools/mapping/mapping.html', **{
+
+    # Page info
+    'title': 'Perform Mapping',
+
+    # Form info
+    'jwt_csrf_token': (get_jwt() or {}).get("csrf"),
+    'form': FileUploadForm(),
+
+    # TODO: change
+    'nemascan_container_url': 'https://github.com/AndersenLab/dockerfile/tree/nemarun/nemarun',
+    'nemascan_github_url':    'https://github.com/AndersenLab/NemaScan',
+
+    # Species list
+    'species_list': SPECIES_LIST,
+    'species_fields': [
+      'name', 'short_name', 'project_num', 'wb_ver', 'latest_release',
+    ],
+  })
 
 
 @mapping_bp.route('/mapping/upload', methods = ['POST'])
@@ -35,19 +48,28 @@ def mapping():
 def submit_mapping_request():
   form = FileUploadForm(request.form)
   user = get_current_user()
+
+  # Validate form
   if not form.validate_on_submit():
     flash("You must include a description of your data and a TSV file to upload", "error")
     return redirect(url_for('mapping.mapping'))
-  
-  label = bleach.clean(request.form.get('label'))
-  props = {'label': label, 
-          'username': user.name,
-          'email': user.email,
-          'file': request.files['file']}          
+
+  # Read fields from form
+  label   = bleach.clean(request.form.get('label'))
+  species = bleach.clean(request.form.get('species'))
+  props = {
+    'username': user.name,
+    'email':    user.email,
+    'label':    label,
+    'file':     request.files['file'],
+    'species':  species,
+  }
+
   try:
     logger.warn("Check Duplicates is DISABLED !!!")
     m = create_new_mapping(**props, check_duplicates=True)
     return redirect(url_for('mapping.mapping_report', id=m.id))
+
   except Exception as ex:
     if str(type(ex).__name__) == 'DuplicateDataError':
       flash('It looks like you submitted that data already - redirecting to your list of Mapping Reports', 'danger')
@@ -58,6 +80,7 @@ def submit_mapping_request():
     logger.error(ex.description)
     flash(f"Unable to submit your request: \"{ex.description}\"", 'danger')
     return redirect(url_for('mapping.mapping'))
+
 
 @mapping_bp.route('/mapping/reports/all', methods=['GET', 'POST'])
 @admin_required()

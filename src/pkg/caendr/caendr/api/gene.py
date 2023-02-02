@@ -1,6 +1,7 @@
 from flask import request, Blueprint
 from caendr.models.sql import Homolog, WormbaseGeneSummary
-from sqlalchemy import or_, func
+
+from sqlalchemy import and_, or_, func
 from caendr.services.logger import logger
 
 
@@ -30,34 +31,46 @@ def get_gene(query: str):
   return result
 
 
-def search_genes(query: str):
+def search_genes(query: str, species: str = None):
   """Query gene
 
   Query genes in the wormbase summary gene table.
 
   Args:
       query (str): Query string
+      species (str, optional): Limit query to one species. If not provided, will query all species.
 
   Returns:
       results (list): List of dictionaries with gene results.
   """
-  results = WormbaseGeneSummary.query.filter(or_(func.lower(WormbaseGeneSummary.locus).startswith(query),
-                                                  func.lower(WormbaseGeneSummary.sequence_name).startswith(query),
-                                                  func.lower(WormbaseGeneSummary.gene_id).startswith(query))) \
-                                            .limit(10) \
-                                            .all()
 
+  # Initialize search to match gene info with query
+  search = or_(
+    func.lower(WormbaseGeneSummary.locus).startswith(query),
+    func.lower(WormbaseGeneSummary.sequence_name).startswith(query),
+    func.lower(WormbaseGeneSummary.gene_id).startswith(query)
+  )
+
+  # If provided, add requirement that species matches
+  if species is not None:
+    search = and_( search, func.lower(WormbaseGeneSummary.species_name) == species )
+
+  # Perform the query
+  results = WormbaseGeneSummary.query.filter(search).limit(10).all()
+
+  # Map to JSON and return
   results = [x.to_json() for x in results]
   return results
 
 
-def search_homologs(query: str):
+def search_homologs(query: str, species: str = None):
   """Query homolog
 
   Query the homologs database and return C. elegans homologs.
 
   Args:
       query (str): Query string
+      species (str, optional): Limit query to one species. If not provided, will query all species.
 
   Returns:
       results (list): List of dictionaries describing the homolog.
@@ -65,9 +78,18 @@ def search_homologs(query: str):
   """
   query = request.args.get('query') or query
   query = query.lower()
-  results = Homolog.query.filter((func.lower(Homolog.homolog_gene)).startswith(query)) \
-                            .limit(10) \
-                            .all()
+
+  # Initialize search to match gene info with query
+  search = (func.lower(Homolog.homolog_gene)).startswith(query)
+
+  # If provided, add requirement that species matches
+  if species is not None:
+    search = and_( search, func.lower(Homolog.species_name) == species )
+
+  # Perform the query
+  results = Homolog.query.filter(search).limit(10).all()
+
+  # Map to JSON and return
   results = [x.unnest().to_json() for x in results]
   return results
 

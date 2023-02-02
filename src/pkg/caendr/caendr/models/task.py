@@ -1,180 +1,228 @@
+import os
+
 from caendr.services.logger import logger
 
+from caendr.models.datastore import Entity, DatabaseOperation, GeneBrowserTracks, HeritabilityReport, IndelPrimer, NemascanMapping
+
+from caendr.services.cloud.secret import get_secret
+from caendr.services.cloud.task   import add_task
+
+
+MODULE_API_PIPELINE_TASK_URL_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_URL_NAME')
+API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
+
+
+
+## Task Superclass Definition ##
+
+
 class Task(object):
-  
-  def __init__(self, *args, **kwargs):
+
+  # A human readable name for this Task type
+  # Should be overwritten in subclasses
+  name = 'task'
+
+  # The name of the queue that handles Tasks of this type
+  # Should be overwritten in subclasses
+  queue = None
+
+  # The kind of Entity associated with this Task type
+  # Should be overwritten in subclasses
+  kind = None
+
+
+  ## Initialization ##
+
+  def __init__(self, source_obj: Entity = None, **kwargs):
+    '''
+      Args:
+        source_obj (Entity, optional): An Entity to initialize from.
+    '''
+
+    # Initialize props from source Entity, if one is provided
+    if source_obj is not None:
+
+      # If subclass does not specify a kind, it cannot be initialized from an Entity
+      if self.kind is None:
+        raise ValueError(f'Cannot initialize Task of type "{self.name}" from Entity.')
+
+      # Check that kind of subclass matches kind of Entity to init from
+      if self.kind != source_obj.__class__.kind:
+        raise ValueError(
+          f'Cannot initialize Task of type "{self.name}" from Entity of kind "{source_obj.__class__.kind}" (expected "{self.kind}").'
+        )
+
+      # If all checks passed, copy the properties of the source Entity
+      self.set_properties( **dict(source_obj) )
+
+    # Set properties from keyword arguments
     self.set_properties(**kwargs)
-    
+
+
   def set_properties(self, **kwargs):
+    '''
+      Set multiple properties using keyword arguments.
+      Only properties specified in get_props_set() will be accepted.
+    '''
     props = self.get_props_set()
     self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
-  
+
+
+  def __repr__(self):
+    return f"<{self.name}:{getattr(self, 'id', 'no-id')}>"
+
+
+  ## Property List ##
+
   @classmethod
   def get_props_set(cls):
-    return {'id',
-          'kind',
-          'username',
-          'container_name',
-          'container_version',
-          'container_repo'}
-    
-  # TODO: simplify this with __dict__ or something
-  def get_payload(self):
-    return {'id': self.id,
-          'kind': self.kind,
-          'username': self.username,
-          'container_name': self.container_name,
-          'container_version': self.container_version,
-          'container_repo': self.container_repo}
-  
-  def __repr__(self):
-    if hasattr(self, 'id'):
-      return f"<task:{self.id}>"
-    else:
-      return f"<task:no-id>"
+    '''
+      Define the set of properties for a task.
+      This set should be extended in subclasses.
+    '''
+    return {
+      'id',
+      'kind',
+      'username',
+      'container_name',
+      'container_version',
+      'container_repo',
+    }
+
+
+  def __iter__(self):
+    '''
+      Iterate through all props in the task.
+
+      Returns all attributes saved in this object's __dict__ field, with keys
+      present in the props set.
+
+      Allows conversion to dictionary via dict().
+    '''
+    return ( ( k, self.__getattribute__(k) ) for k in self.get_props_set() )
+
+
+  ## Task Submission ##
+
+  @property
+  def queue_url(self):
+    '''
+      URL of the queue that handles tasks of this type.
+    '''
+    return f'{API_PIPELINE_TASK_URL}/task/start/{self.queue}'
+
+
+  def submit(self):
+    '''
+      Submit this task to the appropriate queue.
+      Uses dictionary of fields -> values as payload.
+    '''
+    if self.queue is None:
+      raise ValueError(f'Target queue is undefined for task of type "{self.name}".')
+
+    return add_task( self.queue, self.queue_url, dict(self) )
+
+
+
+## Test Tasks ##
+
 
 class EchoTask(Task):
-  def get_payload(self):
-    payload = super(EchoTask, self).get_payload()
-    payload['data_hash'] = self.data_hash
-    return payload
-  
+  name = 'echo_task'
+
   @classmethod
   def get_props_set(cls):
-    props = super(EchoTask, cls).get_props_set()
-    props.add('data_hash')
-    return props
+    return {
+      *super(EchoTask, cls).get_props_set(),
+      'data_hash',
+    }
 
-  def __repr__(self):
-    if hasattr(self, 'id'):
-      return f"<echo_task:{self.id}>"
-    else:
-      return f"<echo_task:no-id>"
 
 class MockDataTask(Task):
-  def get_payload(self):
-    payload = super(MockDataTask, self).get_payload()
-    payload['data_hash'] = self.data_hash
-    return payload
-  
+  name = 'mock_data_task'
+
   @classmethod
   def get_props_set(cls):
-    props = super(MockDataTask, cls).get_props_set()
-    props.add('data_hash')
-    return props
+    return {
+      *super(MockDataTask, cls).get_props_set(),
+      'data_hash',
+    }
 
-  def __repr__(self):
-    if hasattr(self, 'id'):
-      return f"<mock_data_task:{self.id}>"
-    else:
-      return f"<mock_data_task:no-id>"
+
+
+## Job Tasks ##
+
+
+class DatabaseOperationTask(Task):
+  name  = 'db_op_task'
+  queue = os.environ.get('MODULE_DB_OPERATIONS_TASK_QUEUE_NAME')
+  kind  = DatabaseOperation.kind
+
+  @classmethod
+  def get_props_set(cls):
+    return {
+      *super().get_props_set(),
+      'email',
+      'db_operation',
+      'args',
+    }
+
+
+class GeneBrowserTracksTask(Task):
+  name  = 'gene_browser_tracks_task'
+  queue = os.environ.get('MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME')
+  kind  = GeneBrowserTracks.kind
+
+  @classmethod
+  def get_props_set(cls):
+    return {
+      *super().get_props_set(),
+      'wormbase_version',
+    }
+
+
+class HeritabilityTask(Task):
+  name  = 'heritability_task'
+  queue = os.environ.get('HERITABILITY_TASK_QUEUE_NAME')
+  kind  = HeritabilityReport.kind
+
+  @classmethod
+  def get_props_set(cls):
+    return {
+      *super().get_props_set(),
+      'data_hash',
+    }
+
+
+class IndelPrimerTask(Task):
+  name  = 'indel_primer_task'
+  queue = os.environ.get('INDEL_PRIMER_TASK_QUEUE_NAME')
+  kind  = IndelPrimer.kind
+
+  @classmethod
+  def get_props_set(cls):
+    return {
+      *super().get_props_set(),
+      'data_hash',
+      'site',
+      'strain_1',
+      'strain_2',
+      'sv_bed_filename',
+      'sv_vcf_filename',
+      'species',
+      'release',
+    }
+
 
 class NemaScanTask(Task):
-  def get_payload(self):
-    payload = super(NemaScanTask, self).get_payload()
-    payload['data_hash'] = self.data_hash
-    return payload
-  
+  name  = 'nemascan_task'
+  queue = os.environ.get('NEMASCAN_TASK_QUEUE_NAME')
+  kind  = NemascanMapping.kind
+
   @classmethod
   def get_props_set(cls):
-    props = super(NemaScanTask, cls).get_props_set()
-    props.add('data_hash')
-    return props
-
-  def __repr__(self):
-    if hasattr(self, 'id'):
-      return f"<nemascan_task:{self.id}>"
-    else:
-      return f"<nemascan_task:no-id>"
-    
-    
-    
-class DatabaseOperationTask(Task):
-  def get_payload(self):
-    payload = super(DatabaseOperationTask, self).get_payload()
-    payload['email'] = self.email
-    payload['db_operation'] = self.db_operation
-    payload['args'] = self.args
-    return payload
-  
-  @classmethod
-  def get_props_set(cls):
-    props = super(DatabaseOperationTask, cls).get_props_set()
-    props.add('email')
-    props.add('db_operation')
-    props.add('args')
-    return props
-
-  def __repr__(self):
-    if hasattr(self, 'id'):
-      return f"<db_op_task:{self.id}>"
-    else:
-      return f"<db_op_task:no-id>"
-    
-    
-class IndelPrimerTask(Task):
-  def get_payload(self):
-    payload = super(IndelPrimerTask, self).get_payload()
-    payload['data_hash'] = self.data_hash
-    payload['strain_1'] = self.strain_1
-    payload['strain_2'] = self.strain_2
-    payload['site'] = self.site
-    payload['sv_bed_filename'] = self.sv_bed_filename
-    payload['sv_vcf_filename'] = self.sv_vcf_filename
-    return payload
-  
-  @classmethod
-  def get_props_set(cls):
-    props = super(IndelPrimerTask, cls).get_props_set()
-    props.add('data_hash')
-    props.add('strain_1')
-    props.add('strain_2')
-    props.add('site')
-    props.add('sv_bed_filename')
-    props.add('sv_vcf_filename')
-    return props
-
-  def __repr__(self):
-    if hasattr(self, 'id'):
-      return f"<indel_primer_task:{self.id}>"
-    else:
-      return f"<indel_primer_task:no-id>"
-    
-    
-class HeritabilityTask(Task):
-  def get_payload(self):
-    payload = super(HeritabilityTask, self).get_payload()
-    payload['data_hash'] = self.data_hash
-    return payload
-  
-  @classmethod
-  def get_props_set(cls):
-    props = super(HeritabilityTask, cls).get_props_set()
-    props.add('data_hash')
-    return props
-
-  def __repr__(self):
-    if hasattr(self, 'id'):
-      return f"<heritability_task:{self.id}>"
-    else:
-      return f"<heritability_task:no-id>"
-    
-    
-class GeneBrowserTracksTask(Task):
-  def get_payload(self):
-    payload = super(GeneBrowserTracksTask, self).get_payload()
-    payload['wormbase_version'] = self.wormbase_version
-    return payload
-  
-  @classmethod
-  def get_props_set(cls):
-    props = super(GeneBrowserTracksTask, cls).get_props_set()
-    props.add('wormbase_version')
-    return props
-
-  def __repr__(self):
-    if hasattr(self, 'id'):
-      return f"<gene_browser_tracks_task:{self.id}>"
-    else:
-      return f"<gene_browser_tracks_task:no-id>"
-    
+    return {
+      *super().get_props_set(),
+      'data_hash',
+      'species',
+    }

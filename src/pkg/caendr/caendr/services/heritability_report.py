@@ -2,22 +2,16 @@ import os
 
 from caendr.services.logger import logger
 
-from caendr.services.cloud.datastore import query_ds_entities
 from caendr.services.cloud.storage import upload_blob_from_string, generate_blob_url, check_blob_exists
 from caendr.models.task import HeritabilityTask
 from caendr.models.error import CachedDataError, DuplicateDataError
 from caendr.models.datastore import HeritabilityReport
 from caendr.utils.data import unique_id
-from caendr.services.cloud.task import add_task
-from caendr.services.cloud.secret import get_secret
 from caendr.services.tool_versions import get_current_container_version
 
 
 HERITABILITY_CONTAINER_NAME = os.environ.get('HERITABILITY_CONTAINER_NAME')
-HERITABILITY_TASK_QUEUE_NAME = os.environ.get('HERITABILITY_TASK_QUEUE_NAME')
-MODULE_API_PIPELINE_TASK_URL_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_URL_NAME')
 
-API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 
 
 def get_heritability_report(id):
@@ -26,93 +20,83 @@ def get_heritability_report(id):
 
 def get_all_heritability_results():
   logger.debug(f'Getting all heritability reports...')
-  results = query_ds_entities(HeritabilityReport.kind)
-  primers = [HeritabilityReport(entity) for entity in results]
-  return sorted(primers, key=lambda x: x.created_on, reverse=True)
+  results = HeritabilityReport.query_ds()
+  return HeritabilityReport.sort_by_created_date(results, reverse=True)
 
 
 def get_user_heritability_results(username):
   logger.debug(f'Getting all heritability reports for user: username:{username}')
   filters = [('username', '=', username)]
-  results = query_ds_entities(HeritabilityReport.kind, filters=filters)
-  primers = [HeritabilityReport(e) for e in results]
-  return sorted(primers, key=lambda x: x.created_on, reverse=True)
+  results = HeritabilityReport.query_ds(filters=filters)
+  return HeritabilityReport.sort_by_created_date(results, reverse=True)
+
 
 
 def create_new_heritability_report(id, username, label, data_hash, trait, data_tsv):
   logger.debug(f'Creating new Heritability Report: username:{username} label:{label} data_hash:{data_hash} trait:{trait}')
-  
+
   # Load container version info 
   c = get_current_container_version(HERITABILITY_CONTAINER_NAME)
   logger.debug(f"Creating heritability calculation with {c.repo}/{c.name}:{c.container_tag}")
-  
+
+  # Create Heritability Report entity & upload to datastore
   # TODO: assign properties from cached result if it exists
-  props = {'id': id,
-          'username': username,
-          'label': label,
-          'data_hash': data_hash,
-          'trait': trait,
-          'container_repo': c.repo,
-          'container_name': c.container_name,
-          'container_version': c.container_tag,
-          'status': 'SUBMITTED'}
-  
-  h2_new = HeritabilityReport(id)
-  
+  h2_new = HeritabilityReport(id, **{
+    'id':                id,
+    'username':          username,
+    'label':             label,
+    'data_hash':         data_hash,
+    'trait':             trait,
+    'container_repo':    c.repo,
+    'container_name':    c.container_name,
+    'container_version': c.container_tag,
+    'status':            'SUBMITTED',
+  })
+
   # check for heritability report with matching data hash and container version
   # and status as completed
   filters = [
     ('data_hash', '=', data_hash),
     ('status', '=', 'COMPLETE' )
   ]
-  reports = query_ds_entities(HeritabilityReport.kind, filters=filters)
+  reports = HeritabilityReport.query_ds(filters=filters)
   for h in reports:
-    h = HeritabilityReport(h)
     if h.container_version == c.container_tag:
       if h.username == username:
         logger.debug('User resubmitted identical heritability report data')
         raise DuplicateDataError('You have already submitted this heritability data')
       else:
         logger.debug('Heritability Report with identical Data Hash exists. Returning cached report.')
-        props['status'] = h.status
-        h2_new.set_properties(**props)
+        h2_new.status = h.status
         h2_new.save()
         e = CachedDataError()
         e.description = id
         raise e
 
-  h2_new.set_properties(**props)
+  # If no existing report was found, save & submit this one
   h2_new.save()
-  
+
   # Check if there is already a cached result from another user
   if check_blob_exists(h2_new.get_bucket_name(), h2_new.get_result_blob_path()):
     h2_new.status = 'COMPLETE'
     h2_new.save()
     return HeritabilityReport(id)
-  
+
   # Upload data.tsv to google storage
   bucket = h2_new.get_bucket_name()
   blob = h2_new.get_data_blob_path()
   upload_blob_from_string(bucket, data_tsv, blob)
 
   # Schedule mapping in task queue
-  task = _create_heritability_task(h2_new)
-  payload = task.get_payload()
-  task = add_task(HERITABILITY_TASK_QUEUE_NAME, f'{API_PIPELINE_TASK_URL}/task/start/{HERITABILITY_TASK_QUEUE_NAME}', payload)
-  if not task:
-    h2_new.status = 'ERROR'
-    h2_new.save()
+  task   = HeritabilityTask(h2_new)
+  result = task.submit()
+
+  # Update entity status to reflect whether task was submitted successfully
+  h2_new.status = 'SUBMITTED' if result else 'ERROR'
+  h2_new.save()
+
+  # Return resulting Heritability Report entity
   return h2_new
-  
-  
-def _create_heritability_task(h):
-  return HeritabilityTask(**{'id': h.id,
-                            'kind': HeritabilityReport.kind,
-                            'username': h.username,
-                            'data_hash': h.data_hash,
-                            'container_name': h.container_name,
-                            'container_version': h.container_version,
-                            'container_repo': h.container_repo})
 
 
 
