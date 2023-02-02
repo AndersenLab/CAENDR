@@ -6,6 +6,7 @@ from cyvcf2 import VCF
 from caendr.services.logger import logger
 
 from caendr.models.datastore import IndelPrimer
+from caendr.models.species import SPECIES_LIST
 from caendr.models.task import IndelPrimerTask
 
 from caendr.services.cloud.storage import upload_blob_from_string, get_blob, check_blob_exists
@@ -59,16 +60,19 @@ def get_user_indel_primers(username):
   return IndelPrimer.sort_by_created_date(primers, reverse=True)
 
 
-def get_bed_url(species, release = '20220216'):
+def get_bed_url(species, release = None):
+  release = release or SPECIES_LIST[species].indel_primer_ver
   filename = IndelPrimer.get_source_filename(species, release)
   return f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/{INDEL_PRIMER_TOOL_PATH}/{filename}.bed.gz"
 
-def get_vcf_url(species, release = '20220216'):
+def get_vcf_url(species, release = None):
+  release = release or SPECIES_LIST[species].indel_primer_ver
   filename = IndelPrimer.get_source_filename(species, release)
   return f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/{INDEL_PRIMER_TOOL_PATH}/{filename}.vcf.gz"
 
 
-def get_sv_strains(species, release = '20220216'):
+def get_sv_strains(species, release = None):
+  release = release or SPECIES_LIST[species].indel_primer_ver
   return VCF( get_vcf_url( species, release ) ).samples
 
 
@@ -76,7 +80,7 @@ def get_indel_primer_chrom_choices():
   return CHROMOSOME_CHOICES
   
   
-def get_indel_primer_strain_choices(species, release = '20220216'):
+def get_indel_primer_strain_choices(species, release = None):
   return [ (x, x) for x in get_sv_strains(species, release) ]
 
 
@@ -152,7 +156,7 @@ def create_new_indel_primer(username, species, site, strain_1, strain_2, size, d
   id = unique_id()
 
   # TODO: Pull this value from somewhere
-  release = '20220216'
+  release = SPECIES_LIST[species].indel_primer_ver
 
   # Create Indel Primer entity & upload to GCP
   ip = IndelPrimer(id, **{

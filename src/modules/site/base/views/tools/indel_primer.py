@@ -46,7 +46,7 @@ def indel_primer_get_tracks():
 @jwt_required()
 def indel_primer_get_strains():
   return jsonify({
-    species: get_sv_strains( species ) for species in ['c_elegans']
+    species: get_sv_strains( species ) for species in SPECIES_LIST.keys()
   })
 
 
