@@ -56,7 +56,7 @@
     resize: none;
   }
 
-  /* Map styles */
+  /* Leaflet Map styles */
   .leaflet-control-search.search-load .search-input {
     background: url("{{ ext_asset('img/icons/loader.gif') }}") no-repeat center right #fff;
   }
@@ -86,5 +86,60 @@
     filter: alpha(opacity=80);
     opacity: 0.8;   
   }
+
+  /* Genome Browser */
+  .label {
+    width: 80px;
+    height: 18px;
+    line-height: 12px;
+    margin-bottom: 4px;
+    display: inline-block;
+  }
   
+  .gt-3 {
+      background-color: white;
+      border: 1px dotted black;
+      color: black;
+  }
+  
+  .gt-0.PASS {
+    background-color: rgba(194,194,214,1.0);
+    border: 1px solid black;
+    color: black;
+  }
+  
+  .gt-2.PASS {
+    background-color: rgba(0, 102, 255,1.0);
+    border: 1px solid black;
+    color: white;
+  }
+  
+  .gt-0:not(.PASS) {
+    background-color: rgba(194,194,214,0.25);
+    border: 1px dotted black;
+    color: black;
+  }
+  
+  .gt-2:not(.PASS) {
+    background-color: rgba(0, 102, 255,0.25);
+    border: 1px dotted black;
+    color: black;
+  }
+  
+  .het {
+    background-color: #ffff00;
+    color: black;
+  }
+  
+  .gt_set {
+    border-right: 1px dotted #b3b3b3;
+  }
+  
+  th {
+    white-space: nowrap;
+  }
+  
+  #variants {
+    font-size: 1.0rem;
+  }
   
