@@ -10,9 +10,9 @@
 <body>
     {% include "_includes/navbar.html" %}
     {% include "_includes/warning.html" %}
+    {% include "_includes/breadcrumb.html" %}
+    {% include "_includes/title.html" %}
     <main>
-        {% include "_includes/breadcrumb.html" %}
-        {% include "_includes/title.html" %}
         {% block content %}{% endblock %}
         {% block script %}{% endblock %}
         <div id="alert"></div>
