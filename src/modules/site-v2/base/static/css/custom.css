@@ -1,3 +1,4 @@
+/* Feedback Button at bottom of site */
 #feedback {
     position: fixed;
     right: 15%;
@@ -25,7 +26,7 @@
   }
   
   .form-error {
-    text-size: 12px;
+    font-size: 12px;
     color: red;
     font-weight: 600;
   }
@@ -53,6 +54,37 @@
   
   #feedback-form textarea {
     resize: none;
+  }
+
+  /* Map styles */
+  .leaflet-control-search.search-load .search-input {
+    background: url("{{ ext_asset('img/icons/loader.gif') }}") no-repeat center right #fff;
+  }
+  
+  .leaflet-control-search .search-button {
+    display:block;
+    float:left;
+    width:30px;
+    height:30px;  
+    background: url("{{ ext_asset('img/icons/search-icon.png') }}") no-repeat 4px 4px #fff;
+    border-radius:4px;
+  }
+  
+  .leaflet-control-search .search-button:hover {
+    background: url("{{ ext_asset('img/icons/search-icon.png') }}") no-repeat 4px -20px #fafafa;
+  }
+  
+  .leaflet-control-search .search-cancel {
+    display:block;
+    width:22px;
+    height:22px;
+    position:absolute;
+    right:28px;
+    margin:6px 0;
+    background: url("{{ ext_asset('img/icons/search-icon.png') }}") no-repeat 0 -46px;
+    text-decoration:none;
+    filter: alpha(opacity=80);
+    opacity: 0.8;   
   }
   
   
