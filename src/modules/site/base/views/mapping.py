@@ -9,6 +9,7 @@ from base.forms import FileUploadForm
 
 from caendr.services.nemascan_mapping import create_new_mapping, get_mapping, get_all_mappings, get_user_mappings
 from caendr.services.cloud.storage import get_blob, generate_blob_url, get_blob_list
+from caendr.models.error import CachedDataError, DuplicateDataError
 from caendr.models.species import SPECIES_LIST
 
 
@@ -70,13 +71,15 @@ def submit_mapping_request():
     m = create_new_mapping(**props, check_duplicates=True)
     return redirect(url_for('mapping.mapping_report', id=m.id))
 
+  except DuplicateDataError as ex:
+    flash('It looks like you submitted that data already - redirecting to your list of Mapping Reports', 'danger')
+    return redirect(url_for('mapping.mapping_user_reports'))
+
+  except CachedDataError as ex:
+    flash('It looks like that data has already been submitted - redirecting to the saved results', 'danger')
+    return redirect(url_for('mapping.mapping_report', id=ex.description))
+
   except Exception as ex:
-    if str(type(ex).__name__) == 'DuplicateDataError':
-      flash('It looks like you submitted that data already - redirecting to your list of Mapping Reports', 'danger')
-      return redirect(url_for('mapping.mapping_user_reports'))
-    if str(type(ex).__name__) == 'CachedDataError':
-      flash('It looks like that data has already been submitted - redirecting to the saved results', 'danger')
-      return redirect(url_for('mapping.mapping_report', id=ex.description))
     logger.error(ex.description)
     flash(f"Unable to submit your request: \"{ex.description}\"", 'danger')
     return redirect(url_for('mapping.mapping'))

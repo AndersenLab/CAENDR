@@ -90,27 +90,30 @@ def create_new_mapping(username, email, label, file, species, status = 'SUBMITTE
   
   m_new = NemascanMapping(id)
 
+  # Check for duplicate jobs, if applicable
   if check_duplicates:
-    logger.warn(f"Skipping Nemascan duplicate check")    
-    # check for mappings with matching data hash and container version
-    mappings = NemascanMapping.query_ds(filters=[('data_hash', '=', data_hash)])
-    for m in mappings:
-      if m.container_version == c.container_tag:
-        if m.username == username:
-          logger.debug('User resubmitted identical nemascan mapping data')
-          os.remove(local_path)
-          raise DuplicateDataError('You have already submitted this mapping data')
-        else:
-          logger.debug('Nemascan Mapping with identical Data Hash exists. Returning cached report.')
-          props['status'] = m.status
-          props['report_path'] = get_report_blob_path(m)
-          m_new.set_properties(**props)
-          m_new.save()
-          os.remove(local_path)
-          e = CachedDataError()
-          e.description = id
-          raise e
+    try:
+      NemascanMapping.check_cache(data_hash, username, c, status = 'COMPLETE')
 
+    # If same job submitted by this user, redirect to their prior submission
+    except DuplicateDataError as e:
+      logger.debug('User resubmitted identical nemascan mapping data')
+      os.remove(local_path)
+      raise DuplicateDataError('You have already submitted this mapping data')
+
+    # If same job submitted by a different user, associate new job with the cached data
+    except CachedDataError as e:
+      logger.debug('Nemascan Mapping with identical Data Hash exists. Returning cached report.')
+      props['status']      = e.args[0].status
+      props['report_path'] = get_report_blob_path(e.args[0])
+      m_new.set_properties(**props)
+      m_new.save()
+      os.remove(local_path)
+      e = CachedDataError()
+      e.description = id
+      raise e
+
+  # If no cached data found, create and submit a new job
   m_new.set_properties(**props)
   m_new.save()
   

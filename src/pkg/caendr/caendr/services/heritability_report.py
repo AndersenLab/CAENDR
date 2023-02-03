@@ -38,8 +38,7 @@ def create_new_heritability_report(id, username, label, data_hash, trait, data_t
   c = Container.get_current_version(HERITABILITY_CONTAINER_NAME)
   logger.debug(f"Creating heritability calculation with {c.uri()}")
 
-  # Create Heritability Report entity & upload to datastore
-  # TODO: assign properties from cached result if it exists
+  # Create Heritability Report entity
   h2_new = HeritabilityReport(id, **{
     'id':                id,
     'username':          username,
@@ -52,31 +51,29 @@ def create_new_heritability_report(id, username, label, data_hash, trait, data_t
     'status':            'SUBMITTED',
   })
 
-  # check for heritability report with matching data hash and container version
-  # and status as completed
-  filters = [
-    ('data_hash', '=', data_hash),
-    ('status', '=', 'COMPLETE' )
-  ]
-  reports = HeritabilityReport.query_ds(filters=filters)
-  for h in reports:
-    if h.container_version == c.container_tag:
-      if h.username == username:
-        logger.debug('User resubmitted identical heritability report data')
-        raise DuplicateDataError('You have already submitted this heritability data')
-      else:
-        logger.debug('Heritability Report with identical Data Hash exists. Returning cached report.')
-        h2_new.status = h.status
-        h2_new.save()
-        e = CachedDataError()
-        e.description = id
-        raise e
+  # Check for cached results
+  try:
+    HeritabilityReport.check_cache(data_hash, username, c, status = 'COMPLETE')
+
+  # If same job submitted by this user, redirect to that report
+  except DuplicateDataError as e:
+    logger.debug('User resubmitted identical heritability report data')
+    DuplicateDataError('You have already submitted this heritability data')
+
+  # If same job submitted by a different user, point new report to cached results
+  except CachedDataError as e:
+    logger.debug('Heritability Report with identical Data Hash exists. Returning cached report.')
+    h2_new.status = 'COMPLETE'
+    h2_new.save()
+    e.description = id
+    raise e
 
   # If no existing report was found, save & submit this one
   h2_new.save()
 
   # Check if there is already a cached result from another user
-  if check_blob_exists(h2_new.get_bucket_name(), h2_new.get_result_blob_path()):
+  # TODO: This check is redundant, given the CachedDataError check above...
+  if h2_new.check_cached_result():
     h2_new.status = 'COMPLETE'
     h2_new.save()
     return HeritabilityReport(id)

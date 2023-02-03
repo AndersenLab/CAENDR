@@ -143,10 +143,9 @@ def create_new_indel_primer(username, species, site, strain_1, strain_2, size, d
 
   # Check for existing indel primer matching data_hash & user
   if not no_cache:
-    ips = IndelPrimer.query_ds(filters=[('data_hash', '=', data_hash)])
-    if len(ips):
-      if ips[0].username == username and ips[0].container_equals(c):
-        return ips[0]
+    cached_submission = IndelPrimer.check_cached_submission(data_hash, username, c)
+    if cached_submission:
+      return cached_submission
 
   # Compute unique ID for new Indel Primer entity
   id = unique_id()
@@ -176,7 +175,7 @@ def create_new_indel_primer(username, species, site, strain_1, strain_2, size, d
 
   # Check if there is already a result
   if not no_cache:
-    if check_blob_exists(ip.get_bucket_name(), ip.get_result_blob_path()):
+    if ip.check_cached_result():
       ip.status = 'COMPLETE'
       ip.save()
       return ip

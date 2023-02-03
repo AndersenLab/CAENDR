@@ -1,5 +1,4 @@
 import os
-from caendr.services.logger import logger
 
 from caendr.models.datastore import JobEntity
 
