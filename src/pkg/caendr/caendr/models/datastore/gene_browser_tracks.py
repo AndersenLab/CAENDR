@@ -30,6 +30,3 @@ class GeneBrowserTracks(JobEntity):
       'note', 
       'wormbase_version',
     }
-
-  def __repr__(self):
-    return f"<{self.kind}:{getattr(self, 'id', 'no-id')}>"

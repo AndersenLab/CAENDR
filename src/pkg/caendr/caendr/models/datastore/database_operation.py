@@ -31,9 +31,6 @@ class DatabaseOperation(JobEntity):
       'logs',
     }
 
-  def __repr__(self):
-    return f"<{self.kind}:{getattr(self, 'id', 'no-id')}>"
-
 
 
   ## Special Properties ##

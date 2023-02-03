@@ -15,9 +15,6 @@ class Container(Entity):
       'container_tag',
     }
 
-  def __repr__(self):
-    return f"<{self.kind}:{getattr(self, 'id', 'no-id')}>"
-
   def full_string(self):
     s = f"{self['repo']}/{self['container_name']}"
     if self['container_tag']:

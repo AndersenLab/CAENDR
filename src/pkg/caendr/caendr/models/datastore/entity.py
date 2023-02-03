@@ -123,7 +123,17 @@ class Entity(object):
 
 
   def __repr__(self):
-    return f"<{self.kind}:{getattr(self, 'name', 'no-name')}>"
+    '''
+      String representation of the Entity. Displays kind and name/ID.
+    '''
+
+    # Subclasses that define an ID field should use that as their display name
+    if ('id' in self.get_props_set()):
+      return f"<{self.kind}:{getattr(self, 'id', 'no-id')}>"
+
+    # Otherwise, try using the name field
+    else:
+      return f"<{self.kind}:{getattr(self, 'name', 'no-name')}>"
 
 
 

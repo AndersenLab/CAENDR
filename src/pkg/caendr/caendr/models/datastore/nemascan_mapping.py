@@ -59,6 +59,3 @@ class NemascanMapping(JobEntity):
       'trait',
       'report_path',
     }
-
-  def __repr__(self):
-    return f"<{self.kind}:{getattr(self, 'id', 'no-id')}>"

@@ -32,10 +32,6 @@ class IndelPrimer(JobEntity):
   __result_file = INDEL_RESULT_FILE
 
 
-  def __repr__(self):
-    return f"<{self.kind}:{getattr(self, 'id', 'no-id')}>"
-
-
   ## Bucket ##
 
   @classmethod

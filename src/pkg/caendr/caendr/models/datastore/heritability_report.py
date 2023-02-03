@@ -46,6 +46,3 @@ class HeritabilityReport(JobEntity):
       'label',
       'trait',
     }
-
-  def __repr__(self):
-    return f"<{self.kind}:{getattr(self, 'id', 'no-id')}>"

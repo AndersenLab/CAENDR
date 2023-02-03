@@ -16,6 +16,3 @@ class Markdown(Entity):
       'title',
       'content',
     }
-
-  def __repr__(self):
-    return f"<{self.kind}:{getattr(self, 'id', 'no-id')}>"

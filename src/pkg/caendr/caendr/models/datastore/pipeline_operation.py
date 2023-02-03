@@ -21,9 +21,6 @@ class PipelineOperation(Entity):
       'done'
     }
 
-  def __repr__(self):
-    return f"<{self.kind}:{getattr(self, 'id', 'no-id')}>"
-
 
 
 class PipelineOperationStatus(Entity):

@@ -28,6 +28,3 @@ class Protocol(Entity):
       'title',
       'pdf_blob_path',
     }
-
-  def __repr__(self):
-    return f"<{self.kind}:{getattr(self, 'id', 'no-id')}>"
