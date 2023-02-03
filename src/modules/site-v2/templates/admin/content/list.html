@@ -1,0 +1,51 @@
+{% extends "_layouts/default.html" %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-10"></div>
+  <div class="col-md-2">
+    <a id='create' href="{{ url_for('admin_content.markdown_create')}}" class="btn btn-primary btn-block"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> New Content </a>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-12">
+    <table class='table'>
+      <thead>
+        <tr>
+          <th class='col-md-1'><strong> Type </strong></th>
+          <th class='col-md-1'><strong> Title </strong></th>
+          <th class='col-md-1'><strong> Username </strong></th>
+          <th class='col-md-2'><strong> Created On </strong></th>
+          <th class='col-md-2'><strong> Modified On </strong></th>
+          <th class='col-md-1'><strong> Edit </strong></th>
+          <th class='col-md-1'><strong> Delete </strong></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for md in markdown %}
+          <tr>
+            <td> {{ md['type'] }} </td>
+            <td> {{ md['title'] }} </td>
+            <td> {{ md['username'] }} </td>
+            <td> {{ md['created_on']|date_format }} </td>
+            <td> {{ md['modified_on']|date_format }} </td>
+            <td>
+              <a href="{{ url_for('admin_content.markdown_edit', id=md.id) }}"> 
+                Edit
+              </a>
+            </td>
+            <td>
+              <a href="{{ url_for('admin_content.markdown_delete', id=md.id) }}"> 
+                Delete
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+	</div> <!-- /col-md-12 -->
+</div> <!-- /row -->
+
+
+{% endblock %}

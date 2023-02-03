@@ -1,0 +1,5 @@
+cron:
+
+- description: generate_bam_bai_signed_download_script
+  url: /tasks/create_bam_bai_download_script
+  schedule: every 24 hours
