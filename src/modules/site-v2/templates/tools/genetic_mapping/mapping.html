@@ -1,80 +1,122 @@
-{% extends "_layouts/default.html" %}
-
+{% extends "_layouts/default-nocontainer.html" %}
 {% block content %}
 
+<div class="container">
+  <div class="d-flex justify-content-around flex-wrap mb-5">
+      <!-- Description card -->
+      <div class="col-12 col-md-8 col-lg-4 mx-auto mb-5 align-self-center">
+          <div class="card p-2 shadow descriptionCard cardBorderBottom">
+              <div class="card-body">
+                  <p class="card-text">
+                      This portal will use your data to perform a genome-wide association mapping. Please enter your data using the format shown in the 
+                      <a target="_blank" href="{{ ext_asset('data/nemascan_sample_data.tsv') }}">example data file</a> 
+                      and upload the tab separated file below. This process will take your quantitative trait data for the set of strains that you scored and test for 
+                      correlations of genotype and phenotype at over 50,000 loci across the <em style="color:red">C. elegans</em> genome.</p>
+                      <p>You will be linked to a report for the mapping experiment along 
+                      with links to download the data. This mapping portal uses a <a target="_blank" href="{{ nemascan_container_url }}">containerized</a> version 
+                      of <a target="_blank" href="{{ nemascan_github_url }}">NemaScan</a> and can only map one quantitative trait at a time.</p>
+                    <p>
+                      Good luck hunting!
+                    </p>
+              </div>
+          </div>
+      </div>
+      <!-- /Description Card -->
+      <!-- Tool -->
+      <div class="col-12 col-md-8 col-lg-5 mx-auto mb-5">
+        <div class="card border-0 shadow text-center">
+          <!-- Tab Menu -->
+          <nav>
+            <div class="nav nav-tabs text-bg-light p-1 pb-0" id="nav-tab" role="tablist">
+              <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">New Mapping</button>
+              <button class="nav-link" id="nav-linkOne-tab" data-bs-toggle="tab" data-bs-target="#nav-linkOne" type="button" role="tab" aria-controls="nav-linkOne" aria-selected="false">Download Sample Report</button>
+              <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false"><a href="{{ url_for('genetic_mapping.user_reports') }}">My Reports</a></button>
+            </div>
+          </nav>
+          <div class="tab-content m-3" id="nav-tabContent">
+             <!-- Tab 1 -->
+            <div class="tab-pane fade show active px-5 py-2 text-start toolContent" id="nav-home" role="tabpanel"
+              aria-labelledby="nav-home-tab" tabindex="0">
+              <p class="card-text">
+              <h2 class="mb-4 text-center">New Mapping</h2>
+              <!-- UPLOAD FORM -->
+              <form id="form-submit" action="{{ url_for('genetic_mapping.submit') }}" method="post" onsubmit="disableButton()"
+                class="form form-inline" enctype="multipart/form-data">
+                <div class="mb-4">
+                  <label for="speciesSelect" class="form-label">Species:</label>
+                  <select class="form-select" aria-label="Choose species" id="speciesSelect">
+                    <option selected>Choose:</option>
+                    <option value="1">C. Elegans</option>
+                    <option value="2">C. Briggsae</option>
+                    <option value="3">C. Tropicalis</option>
+                  </select>
+                </div>
+                <div class="mb-4">
+                  {{ form.csrf_token }}
+                  <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">
+                  <label for="label" class="form-label">Description:</label>
+                  <input id="label" name="label" type="text" class="form-control input-margin" placeholder="Name your mapping"
+                    style="width:100%" required />
+                </div>
+                <div class="mb-4">
+                  <label for="formFile" class="form-label">Select file:</label>
+                  <div class="hstack gap-2 mb-4">
+                    <input class="form-control" type="file" id="file" accept=".tsv" required>
+                    <!-- Info Popover -->
+                    <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
+                      data-bs-trigger="focus" data-bs-title="More information"
+                      data-bs-content="Enter your data using the form shown in the example data file and upload as a TSV here."><i
+                        class="bi bi-info lh-1" aria-hidden="true"></i></a>
+                    <!-- /Info Popover -->
+                  </div>
+                </div>
+                <div class="d-grid mb-4">
+                  <button type="submit" id="submit-btn" class="btn btn-secondary text-light" data-bs-toggle="modal"
+                  data-bs-target="#infoModal">
+                    Submit
+                  </button>
+                  <!-- Modal - display on submit instead of going to new page -->
+                  <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5" id="infoModalLabel">Thank You</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                              <ul>
+                                <li>Your report will be complete in about 2-5 hours</li>
+                                <li>You will receive an email when your report is complete</li>
+                                <li>You may also check <a href="{{ url_for('genetic_mapping.user_reports') }}">My Results</a> for updates.</li>
+                              </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+              </form>
+              <!-- /UPLOAD FORM -->
+              </p>
+            </div>
+            <!-- Tab 2 -->
+            <div class="tab-pane fade text-start px-5 py-2 toolContent" id="nav-linkOne" role="tabpanel"
+                aria-labelledby="nav-linkOne-tab" tabindex="0">
+                <p class="card-text">
+                <h2 class="mb-4 text-center">Download Sample Report</h2>
+                <p>You may download a copy of the sample report here.</p>
+                <div class="d-grid mt-3">
+                  <a class="btn btn-secondary text-light" role="button" href="#">Download Sample Report</a>
+                </div>
+                </p>
+            </div>
+          </div>
+          <!-- /Tab Menu -->
+    </div>
+      </div>
 
-
-<div class="well instruction-well">
-
-
-  {#   Mapping instructions #}
-  <div class="row">
-
-    <div class="col-md-12 row-margin-top">
-      <p>
-        This portal will use your data to perform a genome-wide association mapping. Please enter your data using the format shown in the 
-        <a target="_blank" href="{{ ext_asset('data/nemascan_sample_data.tsv') }}">example data file</a> 
-        and upload the tab separated file below. This process will take your quantitative trait data for the set of strains that you scored and test for 
-        correlations of genotype and phenotype at over 50,000 loci across the <i>C. elegans</i> genome. You will be linked to a report for the mapping experiment along 
-        with links to download the data. This mapping portal uses a <a target="_blank" href="{{ nemascan_container_url }}">containerized</a> version 
-        of <a target="_blank" href="{{ nemascan_github_url }}">NemaScan</a> and can only map one quantitative trait at a time. 
-      </p>
-      <p>
-        Good luck hunting!
-      </p>
-    </div>{# /col #}
-
-  </div>{# /row #}
-
-
-
-{# Data upload form #}
-  <form id="form-submit" action="{{ url_for('genetic_mapping.submit') }}" method="post" onsubmit="disableButton()" class="form form-inline" enctype="multipart/form-data">
-    <div class="form-group" style="width:100%">
-
-      <div class="row">
-
-        <div class="col-lg-8 col-lg-offset-2 text-center">
-          {{ form.csrf_token }}
-          <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">
-          <input id="label" name="label" type="text" class="form-control input-margin" placeholder="Description" style="width:100%" required />
-        </div> {# /col #}
-
-      </div> {# /row #}
-
-      <div class="row">
-
-        <div class="col-lg-8 col-lg-offset-2 text-center">
-          <input id="file" name="file" type="file" accept=".tsv" class="form-control input-margin" style="width:100%" required /> 
-        </div> {# /col #}
-
-      </div> {# /row #}
-      
-      <div class="row">
-
-        <div class="col-lg-3 col-lg-offset-2 text-center">
-          <button type="submit" id="submit-btn" class="btn nu-alt-btn btn-block input-margin" style="width:100%">
-            <span class="glyphicon glyphicon-play"></span>
-            Run NemaScan Mapping
-          </button>
-        </div> {# /col #}
-
-        <div class="col-lg-3 col-lg-offset-2 text-center">
-          <a id="result-list" class="btn nu-alt-btn btn-block input-margin" style="width:100%" href="{{ url_for('genetic_mapping.user_reports') }}">
-            <span class="glyphicon glyphicon-list"></span>
-            View My Mapping Reports
-          </a>
-        </div> 
-            {# /col #}
-
-      </div> {# /row #}
-      
-    </div> {# /form-group #}
-
-  </form>
-
-</div> {# /well #}
-
+      <!-- /Tool -->
+      </div> <!-- /Flex -->
+</div> <!-- /Container -->
 
 {% endblock %}
 
@@ -86,7 +128,7 @@
 function disableButton() {
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
-  btn.innerText = 'Loading...'
+  btn.innerText = 'Submitting...'
 }
 
 </script>

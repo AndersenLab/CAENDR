@@ -22,7 +22,7 @@ def genetic_mapping():
   """
       This is the mapping submission page.
   """
-  title = 'Perform Mapping'
+  title = 'Genetic Mapping'
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   jwt_csrf_token = (get_jwt() or {}).get("csrf")
   form = FileUploadForm()
