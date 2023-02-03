@@ -5,12 +5,11 @@ import json
 from cyvcf2 import VCF
 from caendr.services.logger import logger
 
-from caendr.models.datastore import IndelPrimer
+from caendr.models.datastore import Container, IndelPrimer
 from caendr.models.species import SPECIES_LIST
 from caendr.models.task import IndelPrimerTask
 
 from caendr.services.cloud.storage import upload_blob_from_string, get_blob, check_blob_exists
-from caendr.services.tool_versions import get_current_container_version
 
 from caendr.utils.constants import CHROM_NUMERIC
 from caendr.utils.data import unique_id
@@ -140,10 +139,7 @@ def create_new_indel_primer(username, species, site, strain_1, strain_2, size, d
     cache:     {not no_cache}''')
 
   # Load container version info
-  c = get_current_container_version(INDEL_PRIMER_CONTAINER_NAME)
-  if c is None:
-    logger.error(f"Unable to find the container for [{INDEL_PRIMER_CONTAINER_NAME}]")
-    return
+  c = Container.get_current_version(INDEL_PRIMER_CONTAINER_NAME)
 
   # Check for existing indel primer matching data_hash & user
   if not no_cache:

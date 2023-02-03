@@ -91,8 +91,4 @@ def get_all_containers():
 
 
 def get_current_container_version(container_name: str):
-  filters =[('container_name', '=', container_name)]
-  e = query_ds_entities(Container.kind, filters=filters)
-  if e and e[0]:
-    logger.debug(e)
-    return Container(e[0])
+  return Container.get_current_version(container_name)

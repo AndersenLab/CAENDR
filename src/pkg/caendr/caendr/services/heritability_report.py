@@ -5,9 +5,8 @@ from caendr.services.logger import logger
 from caendr.services.cloud.storage import upload_blob_from_string, generate_blob_url, check_blob_exists
 from caendr.models.task import HeritabilityTask
 from caendr.models.error import CachedDataError, DuplicateDataError
-from caendr.models.datastore import HeritabilityReport
+from caendr.models.datastore import Container, HeritabilityReport
 from caendr.utils.data import unique_id
-from caendr.services.tool_versions import get_current_container_version
 
 
 HERITABILITY_CONTAINER_NAME = os.environ.get('HERITABILITY_CONTAINER_NAME')
@@ -36,8 +35,8 @@ def create_new_heritability_report(id, username, label, data_hash, trait, data_t
   logger.debug(f'Creating new Heritability Report: username:{username} label:{label} data_hash:{data_hash} trait:{trait}')
 
   # Load container version info 
-  c = get_current_container_version(HERITABILITY_CONTAINER_NAME)
-  logger.debug(f"Creating heritability calculation with {c.repo}/{c.name}:{c.container_tag}")
+  c = Container.get_current_version(HERITABILITY_CONTAINER_NAME)
+  logger.debug(f"Creating heritability calculation with {c.uri()}")
 
   # Create Heritability Report entity & upload to datastore
   # TODO: assign properties from cached result if it exists

@@ -4,14 +4,11 @@ import csv
 from caendr.services.logger import logger
 
 from caendr.models.task import NemaScanTask
-from caendr.models.datastore import NemascanMapping
+from caendr.models.datastore import Container, NemascanMapping
 from caendr.utils.data import unique_id
 from caendr.models.error import DataFormatError, DuplicateDataError, CachedDataError
 from caendr.services.cloud.storage import check_blob_exists, upload_blob_from_file, get_blob_list
-from caendr.services.tool_versions import get_current_container_version
 from caendr.utils.file import get_file_hash
-
-from caendr.models.datastore import Container
 
 NEMASCAN_NXF_CONTAINER_NAME = os.environ.get('NEMASCAN_NXF_CONTAINER_NAME')
 
@@ -67,13 +64,13 @@ def create_new_mapping(username, email, label, file, species, status = 'SUBMITTE
   # Save uploaded file to server temporarily
   local_path = os.path.join(uploads_dir, f'{id}.tsv')
   file.save(local_path)
-  
+
   # Validate file format and extract details
   trait, data_hash = validate_data_format(id, local_path)
-  
+
   # Load container version info 
-  c = get_current_container_version(NEMASCAN_NXF_CONTAINER_NAME)
-  
+  c = Container.get_current_version(NEMASCAN_NXF_CONTAINER_NAME)
+
   # TODO: assign properties from cached mapping if it exists   if is_mapping_cached(data_hash):
 
   props = {

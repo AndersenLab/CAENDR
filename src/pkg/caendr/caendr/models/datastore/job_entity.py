@@ -84,7 +84,7 @@ class JobEntity(Entity):
             results don't store that field.
     '''
     # Check whether repo + name + tag is the same for both Containers
-    return type(c) == Container and self.__container.full_string() == c.full_string()
+    return type(c) == Container and self.__container.uri() == c.uri()
 
 
 
