@@ -94,3 +94,24 @@
     border: 1px solid #CFD4D9;
   }
   
+  /* Variant Annotation */
+    table.dataTable thead .sorting_asc {
+      background: url("//cdn.datatables.net/1.10.0/images/sort_asc.png") no-repeat center left;
+    }
+  
+    table.dataTable thead .sorting_desc {
+      background: url("//cdn.datatables.net/1.10.0/images/sort_desc.png") no-repeat center left;
+    }
+  
+    table.dataTable thead .sorting {
+      background: url("//cdn.datatables.net/1.10.0/images/sort_both.png") no-repeat center left;
+    }
+  
+    mark {
+      background-color: inherit;
+      font-size: 0.8rem;
+    }
+  
+    .hl-mark {
+      background-color: yellow;
+    }
