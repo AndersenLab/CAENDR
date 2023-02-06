@@ -1,8 +1,10 @@
+import os
+
 from caendr.services.logger import logger
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 import bleach
 from flask import jsonify
-
+from werkzeug.utils import secure_filename
 
 from base.utils.auth import get_jwt, jwt_required, admin_required, get_current_user
 from base.forms import FileUploadForm
@@ -11,6 +13,10 @@ from caendr.services.nemascan_mapping import create_new_mapping, get_mapping, ge
 from caendr.services.cloud.storage import get_blob, generate_blob_url, get_blob_list
 from caendr.models.error import CachedDataError, DuplicateDataError
 from caendr.models.species import SPECIES_LIST
+from caendr.utils.data import unique_id
+
+uploads_dir = os.path.join('./', 'uploads')
+os.makedirs(uploads_dir, exist_ok=True)
 
 
 mapping_bp = Blueprint('mapping',
@@ -58,11 +64,17 @@ def submit_mapping_request():
   # Read fields from form
   label   = bleach.clean(request.form.get('label'))
   species = bleach.clean(request.form.get('species'))
+
+  # Save uploaded file to server temporarily with unique generated name
+  # TODO: Is there a better way to generate this name? E.g. using a Tempfile?
+  local_path = os.path.join(uploads_dir, secure_filename(f'{ unique_id() }.tsv'))
+  request.files['file'].save(local_path)
+
   props = {
     'username': user.name,
     'email':    user.email,
     'label':    label,
-    'file':     request.files['file'],
+    'filepath': local_path,
     'species':  species,
   }
 
@@ -77,7 +89,7 @@ def submit_mapping_request():
 
   except CachedDataError as ex:
     flash('It looks like that data has already been submitted - redirecting to the saved results', 'danger')
-    return redirect(url_for('mapping.mapping_report', id=ex.description))
+    return redirect(url_for('mapping.mapping_report', id=ex.args[0]))
 
   except Exception as ex:
     logger.error(ex.description)

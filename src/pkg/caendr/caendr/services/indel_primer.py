@@ -12,7 +12,7 @@ from caendr.models.task import IndelPrimerTask
 from caendr.services.cloud.storage import upload_blob_from_string, get_blob, check_blob_exists
 
 from caendr.utils.constants import CHROM_NUMERIC
-from caendr.utils.data import unique_id
+from caendr.utils.data import get_object_hash
 
 
 
@@ -85,7 +85,19 @@ def get_indel_primer_strain_choices(species, release = None):
 
 def overlaps(s1, e1, s2, e2):
   return s1 <= s2 <= e1 or s2 <= s1 <= e2
-  
+
+
+
+def parse_indel_primer_data(data):
+  data_file = json.dumps(data)
+  data_hash = get_object_hash(data, length=32)
+
+  # TODO: Pull this value from somewhere
+  release = SPECIES_LIST[ data['species'] ].indel_primer_ver
+
+  return data_file, data_hash, {'release': release}
+
+
 
 def fetch_ip_data(ip: IndelPrimer):
   return get_blob(ip.get_bucket_name(), ip.get_data_blob_path())
@@ -127,19 +139,22 @@ def query_indels_and_mark_overlaps(species, strain_1, strain_2, chromosome, star
   return []
 
 
-def create_new_indel_primer(username, species, site, strain_1, strain_2, size, data_hash, no_cache=False):
+def create_new_indel_primer(username, data, no_cache=False):
   logger.debug(f'''Creating new Indel Primer:
     username:  "{username}"
-    species:   {species}
-    site:      {site}
-    strain_1:  {strain_1}
-    strain_2:  {strain_2}
-    size:      {size}
-    data_hash: {data_hash}
+    species:   {data['species']}
+    site:      {data['site']}
+    strain_1:  {data['strain_1']}
+    strain_2:  {data['strain_2']}
+    size:      {data['size']}
     cache:     {not no_cache}''')
 
   # Load container version info
   c = Container.get_current_version(INDEL_PRIMER_CONTAINER_NAME)
+
+  species = data['species']
+
+  data_file, data_hash, data_vals = parse_indel_primer_data(data)
 
   # Check for existing indel primer matching data_hash & user
   if not no_cache:
@@ -147,30 +162,20 @@ def create_new_indel_primer(username, species, site, strain_1, strain_2, size, d
     if cached_submission:
       return cached_submission
 
-  # Compute unique ID for new Indel Primer entity
-  id = unique_id()
-
-  # TODO: Pull this value from somewhere
-  release = SPECIES_LIST[species].indel_primer_ver
-
   # Create Indel Primer entity & upload to GCP
-  ip = IndelPrimer(id, **{
-    'id':                id,
-    'data_hash':         data_hash,
+  ip = IndelPrimer(**{
     'username':          username,
     'status':            'SUBMITTED',
-    'site':              site,
-    'strain_1':          strain_1,
-    'strain_2':          strain_2,
-    'size':              size,
+    'site':              data['site'],
+    'strain_1':          data['strain_1'],
+    'strain_2':          data['strain_2'],
     'species':           species,
-    'release':           release,
-    'container_repo':    c.repo,
-    'container_name':    c.container_name,
-    'container_version': c.container_tag,
-    'sv_bed_filename':   IndelPrimer.get_source_filename(species, release) + '.bed.gz',
-    'sv_vcf_filename':   IndelPrimer.get_source_filename(species, release) + '.vcf.gz',
+    'release':           data_vals['release'],
+    'sv_bed_filename':   IndelPrimer.get_source_filename(species, data_vals['release']) + '.bed.gz',
+    'sv_vcf_filename':   IndelPrimer.get_source_filename(species, data_vals['release']) + '.vcf.gz',
   })
+  ip.set_container(c)
+  ip.data_hash = data_hash
   ip.save()
 
   # Check if there is already a result
@@ -180,20 +185,10 @@ def create_new_indel_primer(username, species, site, strain_1, strain_2, size, d
       ip.save()
       return ip
 
-  # Collect data about this run
-  data = {
-    'site':     site,
-    'strain_1': strain_1,
-    'strain_2': strain_2,
-    'size':     size,
-    'species':  species,
-    'release':  release,
-  }
-
   # Upload data.tsv to google storage
   bucket = ip.get_bucket_name()
-  blob = ip.get_data_blob_path()
-  upload_blob_from_string(bucket, json.dumps(data), blob)
+  blob   = ip.get_data_blob_path()
+  upload_blob_from_string(bucket, data_file, blob)
 
   # Schedule mapping in task queue
   task   = IndelPrimerTask(ip)

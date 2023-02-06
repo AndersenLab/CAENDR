@@ -5,7 +5,7 @@ from string import Template
 from caendr.services.logger import logger
 
 from caendr.models.error import EnvVarError
-from caendr.models.datastore import JobEntity
+from caendr.models.datastore import DataJobEntity
 
 
 
@@ -24,7 +24,7 @@ SOURCE_FILENAME = Template(SOURCE_FILENAME)
 
 
 
-class IndelPrimer(JobEntity):
+class IndelPrimer(DataJobEntity):
   kind = 'indel_primer'
   __bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
   __blob_prefix = INDEL_REPORT_PATH_PREFIX
@@ -70,11 +70,6 @@ class IndelPrimer(JobEntity):
   def get_props_set(cls):
     return {
       *super(IndelPrimer, cls).get_props_set(),
-
-      # Submission
-      'id',
-      'data_hash',
-      'username',
 
       # # Status
       # 'no_result',

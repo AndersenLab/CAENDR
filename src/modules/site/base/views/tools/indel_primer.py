@@ -165,28 +165,22 @@ def submit_indel_primer():
   user = get_current_user()
 
   # Get info about data
-  data      = request.get_json()
-  data_hash = get_object_hash(data, length=32)
+  data = request.get_json()
 
   # If user is admin, allow them to bypass cache with URL variable
   no_cache = bool(user_is_admin() and request.args.get("nocache", False))
 
   # Create new Indel Primer
   p = create_new_indel_primer(**{
-    'species':   data['species'],
-    'site':      data['site'],
-    'strain_1':  data['strain_1'],
-    'strain_2':  data['strain_2'],
-    'size':      data['size'],
-    'data_hash': data_hash,
     'username':  user.name,
+    'data':      data,
     'no_cache':  no_cache,
   })
 
   # Notify user that task has been started
   return jsonify({
     'started':   True,
-    'data_hash': data_hash,
+    'data_hash': p.data_hash,
     'id':        p.id,
   })
 

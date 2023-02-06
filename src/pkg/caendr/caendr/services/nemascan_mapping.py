@@ -53,76 +53,62 @@ def get_user_mappings(username):
   return NemascanMapping.sort_by_created_date(mappings, reverse=True)
   
   
-def create_new_mapping(username, email, label, file, species, status = 'SUBMITTED', check_duplicates=True):
+def create_new_mapping(username, email, label, filepath, species, status = 'SUBMITTED', check_duplicates=True):
   logger.debug(f'''Creating new Nemascan Mapping:
     username: "{username}"
     label:    "{label}"
-    file:     {file}
+    filepath: {filepath}
     species:  {species}''')
-  id = unique_id()
-
-  # Save uploaded file to server temporarily
-  local_path = os.path.join(uploads_dir, f'{id}.tsv')
-  file.save(local_path)
-
-  # Validate file format and extract details
-  trait, data_hash = validate_data_format(id, local_path)
 
   # Load container version info 
   c = Container.get_current_version(NEMASCAN_NXF_CONTAINER_NAME)
 
+  # Validate file format and extract details
+  data_hash, data_vals = parse_mapping_data(filepath)
+
+  # Create new Nemascan Mapping entity
+  m_new = NemascanMapping(**{
+    'username': username,
+    'email':    email,
+    'label':    label,
+    'trait':    data_vals['trait'],
+    'species':  species,
+    'status':   status
+  })
+  m_new.set_container(c)
+  m_new.data_hash = data_hash
+
   # TODO: assign properties from cached mapping if it exists   if is_mapping_cached(data_hash):
 
-  props = {
-    'id': id,
-    'username': username,
-    'email': email,
-    'label': label,
-    'trait': trait,
-    'species': species,
-    'data_hash': data_hash,
-    'container_repo': c.repo,
-    'container_name': c.container_name,
-    'container_version': c.container_tag,
-    'status': status
-  }
-  
-  
-  m_new = NemascanMapping(id)
-
-  # Check for duplicate jobs, if applicable
+  # Check for cached results, if applicable
   if check_duplicates:
     try:
-      NemascanMapping.check_cache(data_hash, username, c, status = 'COMPLETE')
+      NemascanMapping.check_cache(m_new.data_hash, username, c, status = 'COMPLETE')
 
     # If same job submitted by this user, redirect to their prior submission
     except DuplicateDataError as e:
       logger.debug('User resubmitted identical nemascan mapping data')
-      os.remove(local_path)
-      raise DuplicateDataError('You have already submitted this mapping data')
+      os.remove(filepath)
+      raise e
 
     # If same job submitted by a different user, associate new job with the cached data
     except CachedDataError as e:
       logger.debug('Nemascan Mapping with identical Data Hash exists. Returning cached report.')
-      props['status']      = e.args[0].status
-      props['report_path'] = get_report_blob_path(e.args[0])
-      m_new.set_properties(**props)
+      m_new['status']      = e.args[0].status
+      m_new['report_path'] = get_report_blob_path(e.args[0])
       m_new.save()
-      os.remove(local_path)
-      e = CachedDataError()
-      e.description = id
-      raise e
+      os.remove(filepath)
+      raise CachedDataError(m_new.id)
 
   # If no cached data found, create and submit a new job
-  m_new.set_properties(**props)
   m_new.save()
-  
+
   # Upload data.tsv to google storage
   bucket = NemascanMapping.get_bucket_name()
   blob = m_new.get_data_blob_path()
-  upload_blob_from_file(bucket, local_path, blob)
-  os.remove(local_path)
-  
+  upload_blob_from_file(bucket, filepath, blob)
+  os.remove(filepath)
+
   # Schedule mapping in task queue
   task   = NemaScanTask(m_new)
   result = task.submit()
@@ -153,21 +139,25 @@ def update_nemascan_mapping_status(id: str, status: str=None, operation_name: st
 
 
 
-def validate_data_format(id, local_path):
-  logger.debug(f'Validating Nemascan Mapping data format: id:{id}')
+def parse_mapping_data(filepath):
+  logger.debug(f'Validating Nemascan Mapping data format: {filepath}')
 
   # Read first line from tsv
-  with open(local_path, 'r') as f:
+  with open(filepath, 'r') as f:
     csv_reader = csv.reader(f, delimiter='\t')
-    csv_headings = next(csv_reader)
+    try:
+      csv_headings = next(csv_reader)
+    except StopIteration:
+      raise DataFormatError('Empty file')
 
   # Check first line for column headers (strain, {TRAIT})
   if csv_headings[0].lower() != 'strain' or len(csv_headings) != 2 or len(csv_headings[1]) == 0:
     raise DataFormatError()
-  
+
   trait = csv_headings[1].lower()
-  data_hash = get_file_hash(local_path, length=32)
-  return trait, data_hash
+  data_hash = get_file_hash(filepath, length=32)
+
+  return data_hash, {'trait': trait}
 
 
 def get_report_blob_path(m: NemascanMapping):

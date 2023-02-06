@@ -2,7 +2,6 @@ import io
 import re
 import os
 import pandas as pd
-import json
 import datetime
 from caendr.models.datastore.pipeline_operation import PipelineOperation
 
@@ -89,41 +88,40 @@ def heritability_user_results():
 def submit_h2():
   user = get_current_user()
   label = request.values['label']
-  columns = ["AssayNumber", "Strain", "TraitName", "Replicate", "Value"]
-
-  # Extract table data
-  data = json.loads(request.values['table_data'])
-  data = [x for x in data[1:] if x[0] is not None]
-  trait = data[0][2]
-
-  data_tsv = convert_data_table_to_tsv(data, columns)
-
-  # Generate an ID for the data based on its hash
-  data_hash = get_object_hash(data, length=32)
-  logger.debug(data_hash)
-  id = unique_id()
+  table_data = request.values['table_data']
 
   try:
-    h = create_new_heritability_report(id, user.name, label, data_hash, trait, data_tsv)
-  except DuplicateDataError:
+    h = create_new_heritability_report(user.name, label, table_data)
+
+  except DuplicateDataError as ex:
       flash('Oops! It looks like you submitted that data already - redirecting to your list of Heritability Reports', 'danger')
-      return jsonify({'duplicate': True,
-              'data_hash': data_hash,
-              'id': id})
-  except CachedDataError:
+      return jsonify({
+        'duplicate': True,
+        'data_hash': ex.args[0].data_hash,
+        'id':        ex.args[0].id,
+      })
+
+  except CachedDataError as ex:
       flash('Oops! It looks like that data has already been submitted - redirecting to the saved results', 'danger')
-      return jsonify({'cached': True,
-                  'data_hash': data_hash,
-                  'id': id})
+      return jsonify({
+        'cached':    True,
+        'data_hash': ex.args[0].data_hash,
+        'id':        ex.args[0].id,
+      })
+
   except Exception as ex:
       flash("Oops! There was a problem submitting your request: {ex}", 'danger')
-      return jsonify({'duplicate': True,
-              'data_hash': data_hash,
-              'id': id})
+      return jsonify({
+        'duplicate': True,
+        'data_hash': None,
+        'id':        None,
+      })
 
-  return jsonify({'started': True,
-                'data_hash': data_hash,
-                'id': id})
+  return jsonify({
+    'started':   True,
+    'data_hash': h.data_hash,
+    'id':        h.id,
+  })
 
 
 @heritability_bp.route("/heritability/h2/<id>/logs")

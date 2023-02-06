@@ -144,12 +144,16 @@ class Entity(object):
       Append metadata to the Entity and save it to the datastore.
     '''
     now = datetime.now(timezone.utc)
-    meta_props = {}
+
+    # Get dict of all meta properties
+    meta_props = {
+      prop: getattr(self, prop) for prop in self.get_props_set_meta()
+    }
 
     # Update timestamps
     if not self._exists:
       meta_props['created_on'] = now
-    meta_props.update({'modified_on': now})
+    meta_props['modified_on'] = now
 
     # Combine props dict with meta properties defined above
     props = { **dict(self), **meta_props }

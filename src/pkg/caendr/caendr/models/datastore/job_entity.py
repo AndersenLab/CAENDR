@@ -42,7 +42,7 @@ class JobEntity(Entity):
     self.__container = Container()
 
     # Initialize from superclass
-    super(JobEntity, self).__init__(*args, **kwargs)
+    super().__init__(*args, **kwargs)
 
 
 
@@ -52,7 +52,7 @@ class JobEntity(Entity):
   def get_props_set(cls):
     return {
       # Entity fields
-      *super(JobEntity, cls).get_props_set(),
+      *super().get_props_set(),
 
       # Container fields
       'container_repo',

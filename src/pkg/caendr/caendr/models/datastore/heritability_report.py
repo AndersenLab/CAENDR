@@ -1,6 +1,6 @@
 import os
 
-from caendr.models.datastore import JobEntity
+from caendr.models.datastore import DataJobEntity
 
 
 MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
@@ -9,7 +9,7 @@ H2_INPUT_FILE = 'data.tsv'
 H2_RESULT_FILE = 'heritability_result.tsv'
 
 
-class HeritabilityReport(JobEntity):
+class HeritabilityReport(DataJobEntity):
   kind = 'heritability_report'
   __bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
   __blob_prefix = H2_REPORT_PATH_PREFIX
@@ -34,12 +34,7 @@ class HeritabilityReport(JobEntity):
   @classmethod
   def get_props_set(cls):
     return {
-      *super(HeritabilityReport, cls).get_props_set(),
-
-      # Submission
-      'id',
-      'data_hash',
-      'username',
+      *super().get_props_set(),
 
       # Query
       'label',

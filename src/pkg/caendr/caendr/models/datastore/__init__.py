@@ -1,6 +1,7 @@
 from .entity import Entity
 from .container import Container
 from .job_entity import JobEntity
+from .data_job_entity import DataJobEntity
 from .user import User
 from .dataset_release import DatasetRelease
 from .profile import Profile

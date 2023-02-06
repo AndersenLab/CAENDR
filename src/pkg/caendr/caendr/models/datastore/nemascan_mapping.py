@@ -1,7 +1,7 @@
 import os
 from caendr.services.logger import logger
 
-from caendr.models.datastore import JobEntity
+from caendr.models.datastore import DataJobEntity
 
 
 MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
@@ -12,7 +12,7 @@ REPORT_DATA_PREFIX = 'Reports/NemaScan_Report_'
 NEMASCAN_INPUT_FILE = 'data.tsv'
 
 
-class NemascanMapping(JobEntity):
+class NemascanMapping(DataJobEntity):
   kind = 'nemascan_mapping'
   __bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
   __blob_prefix = NEMASCAN_REPORT_PATH_PREFIX
@@ -45,12 +45,9 @@ class NemascanMapping(JobEntity):
   @classmethod
   def get_props_set(cls):
     return {
-      *super(NemascanMapping, cls).get_props_set(),
+      *super().get_props_set(),
 
       # Submission
-      'id',
-      'data_hash',
-      'username',
       'email',
 
       # Query
