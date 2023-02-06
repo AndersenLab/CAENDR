@@ -1,34 +1,20 @@
 {% extends "_layouts/default.html" %}
 
 {% block custom_head %}
-	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-lightbox/0.7.0/bootstrap-lightbox.css" rel="stylesheet" />
-    <link rel="stylesheet" href="/static/css/d3-exploding-boxplot.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.7/d3.js" charset="utf-8"></script>
-    <script src="https://d3js.org/queue.v1.min.js"> </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.6.7/d3-tip.min.js"></script>
-    <script src="{{ ext_asset('js/d3-exploding-boxplot.js') }}"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.4.1/jspdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.2/FileSaver.min.js"></script>
-    <style type="text/css">
-		.rounded {
-			font-family: Helvetica, Tahoma, Geneva, sans-serif;
-			text-decoration:none;
-			border-radius: 30px 30px 30px 30px;
-			font-weight: bold;
-			display:inline-block;
-		}
-		.btn.clicked {
-			background: #44A9FC;
-        }
-        table th, td {
-            text-align: center;
-        }
-	</style>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-lightbox/0.7.0/bootstrap-lightbox.css" rel="stylesheet" />
+<link rel="stylesheet" href="/static/css/d3-exploding-boxplot.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.7/d3.js" charset="utf-8"></script>
+<script src="https://d3js.org/queue.v1.min.js"> </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.6.7/d3-tip.min.js"></script>
+<script src="{{ ext_asset('js/d3-exploding-boxplot.js') }}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.4.1/jspdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.2/FileSaver.min.js"></script>
 
-    {% if not (result or hr.status in ['ERROR','COMPLETE']) %}
-        <meta http-equiv="refresh" content="10; url={{ request.path }}">
-    {% endif %}
+{% if not (result or hr.status in ['ERROR','COMPLETE']) %}
+<meta http-equiv="refresh" content="10; url={{ request.path }}">
+{% endif %}
 
 {% endblock %}
 

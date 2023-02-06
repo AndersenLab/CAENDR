@@ -44,7 +44,7 @@ def heritability_calculator():
   form = HeritabilityForm()
   hide_form = True
   strain_list = []
-  return render_template('tools/heritability_calculator/submit.html', **locals())
+  return render_template('tools/heritability_calculator/heritability-calculator.html', **locals())
 
 
 @heritability_calculator_bp.route('/heritability-calculator/create', methods=["GET"])
@@ -222,5 +222,5 @@ def heritability_result(id):
   persistent_logger = PersistentLogger(service_name)
   error = persistent_logger.get(id)
 
-  return render_template("tools/heritability_calculator/view.html", **locals())
+  return render_template("tools/heritability_calculator/result.html", **locals())
 
