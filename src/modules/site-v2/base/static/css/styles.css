@@ -723,22 +723,22 @@ article {
 }
 
 /*  Message Snackbar */
-.flash-banner {
+/* .flash-banner {
   min-height: 50px;
   border: 0px;
   border-radius: 0px;
   padding: 0px;
   margin: 0px;
-}
+} */
 
-.snackbar-msg-txt {
+/* .snackbar-msg-txt {
   padding-top:12.5px;
   text-align: center;
   color: #000;
   font-size: 1.1em;
-}
+} */
 
-.alert-success {
+/* .alert-success {
   background-color: #58B947;
 }
 
@@ -754,7 +754,7 @@ article {
 .alert-warning {
   background-color: #FFC520;
   color: black;
-}
+} */
 
 .page-title-txt {
   padding-top: 25px;
@@ -990,7 +990,7 @@ footer .panel {
   font-size: 90%;
 }
 
-.welcome-article-img {
+/* .welcome-article-img {
   margin: 0.5rem;
   margin-bottom:1.0rem;
 }
@@ -1042,13 +1042,13 @@ footer .panel {
 .welcome-mailing-list-row .input-group-addon {
   padding: 0;
   border: 0;
-}
+} */
 
 .btn-subscribe {
   margin-left: 0px;
 }
 
-.welcome-news-title-row {
+/* .welcome-news-title-row {
   padding-top: 5.0rem;
   padding-bottom: 1.5rem;
 }
@@ -1061,7 +1061,7 @@ footer .panel {
   color: #000;
   font-size: 2.1rem;
   margin: 1.0rem;
-}
+} */
 
 .list-group-news-item {
   border: none;
