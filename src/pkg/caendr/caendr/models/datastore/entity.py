@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timezone
 
 from google.cloud import datastore
+from caendr.services.logger import logger
 
 from caendr.services.cloud.datastore import get_ds_entity, save_ds_entity, query_ds_entities
 
@@ -234,10 +235,14 @@ class Entity(object):
         KeyError: prop not found in props_set
     '''
     if prop in self.__class__.get_props_set():
-      if type(val) == datastore.entity.Entity:
-        setattr(self, prop, Entity._parse_entity_to_dict(val))
-      else:
-        setattr(self, prop, val)
+      try:
+        if type(val) == datastore.entity.Entity:
+          setattr(self, prop, Entity._parse_entity_to_dict(val))
+        else:
+          setattr(self, prop, val)
+      except Exception as ex:
+        logger.error(f"Error setting {self.__class__.__name__}['{prop}'] = {val}")
+        raise ex
     else:
       raise KeyError(f'Could not set property "{prop}": not defined in property set.')
 
