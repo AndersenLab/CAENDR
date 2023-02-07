@@ -1,0 +1,26 @@
+<!-- Used for homepage and Tools pages -->
+<!DOCTYPE html>
+<html lang='en-us'>
+
+<head>
+    {% include "_includes/head.html" %}
+    {% block custom_head %}{% endblock %}
+    {% block style %}{% endblock %}
+</head>
+
+<body>
+    {% include "_includes/navbar.html" %}
+    {% include "_includes/snackbar.html" %}
+    {% include "_includes/warning.html" %}
+    {% include "_includes/breadcrumb.html" %}
+    {% include "_includes/title.html" %}
+    <main>
+        {% block content %}{% endblock %}
+        {% block script %}{% endblock %}
+        <div id="alert"></div>
+    </main>
+    {% if config.DEBUG %} <div title='turn off DEBUG mode to hide these messages' class='visually-hidden'>{{ session }}
+    </div>{% endif %}
+    {% include "_includes/footer.html" %}
+</body>
+</html>

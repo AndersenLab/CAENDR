@@ -1,6 +1,3 @@
-import os
-import yaml
-
 from caendr.services.logger import logger
 from flask import (render_template,
                    request,
@@ -18,7 +15,6 @@ from extensions import cache
 
 from caendr.api.strain import get_strains, query_strains, get_strain_sets, get_strain_img_url
 from caendr.models.sql import Strain
-from caendr.services.cloud.storage import get_blob
 from caendr.utils.json import dump_json
 
 
@@ -127,50 +123,9 @@ def isotype_page(isotype_name, release=None):
 @strains_bp.route('/catalog', methods=['GET', 'POST'])
 @cache.memoize(60*60)
 def strains_catalog():
-    flash(Markup("Strain mapping sets 9 and 10 will not be available until later this year."), category="warning")
+    flash(Markup("Strain mapping sets 9 and 10 will not be available until later this year."), category="primary")
     title = "Strain Catalog"
     warning = request.args.get('warning')
     strain_listing = get_strains()
     strain_sets = get_strain_sets()
     return render_template('strain/catalog.html', **locals())
-
-#
-# Strain Submission
-#
-
-
-@strains_bp.route('/submit')
-@cache.memoize(60*60)
-def strains_submission_page():
-  """
-      Google form for submitting strains
-  """
-  title = "Strain Submission"
-  # TODO: Move this to configurable location
-  #STRAIN_SUBMISSION_FORM = '1w0VjB3jvAZmQlDbxoTx_SKkRo2uJ6TcjjX-emaQnHlQ'
-  #strain_submission_url = f'https://docs.google.com/forms/d/{STRAIN_SUBMISSION_FORM}/viewform?embedded=true'
-  strain_submission_url = "https://docs.google.com/forms/d/1w0VjB3jvAZmQlDbxoTx_SKkRo2uJ6TcjjX-emaQnHlQ/viewform?embedded=true"
-  return render_template('strain/submission.html', **locals())
-
-
-#
-# Protocols
-#
-
-@strains_bp.route("/protocols")
-@cache.memoize(60*60)
-def protocols():
-
-    # Get location of YAML file in GCP
-    MODULE_SITE_BUCKET_ASSETS_NAME = os.environ.get('MODULE_SITE_BUCKET_ASSETS_NAME')
-
-    # Download the YAML file as a string
-    blob = get_blob(MODULE_SITE_BUCKET_ASSETS_NAME, 'protocols/protocols.yaml')
-    content = blob.download_as_text()
-
-    # Initialize params and render HTML page
-    params = {
-      'title': "Protocols",
-      'protocols': yaml.safe_load(content),
-    }
-    return render_template('strain/protocols.html', **params)
