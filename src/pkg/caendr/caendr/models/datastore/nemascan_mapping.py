@@ -58,8 +58,12 @@ class NemascanMapping(DataJobEntity):
     }
 
   # TODO: Is there a better way to check? E.g. look for results?
-  # TODO: Propagate the status of the found Entity to the submission check. Prefer status = "COMPLETE"?
   def check_cached_result(self):
+    '''
+      Check whether the results for this data hash have already been cached.
+      Returns "COMPLETE" if any other user's submission is complete, otherwise
+      returns the last found status or None.
+    '''
 
     # Check for reports with a matching data hash & container version
     matches = NemascanMapping.query_ds( filters = [
@@ -67,7 +71,15 @@ class NemascanMapping(DataJobEntity):
       ('container_version', '=', self['container_version']),
     ])
 
-    # If any submission was found from a different user, return it
+    status = None
+
+    # Loop through all submissions by different users
     for match in matches:
       if match.username != self.username:
-        return match
+
+        # Update to match status, keeping 'COMPLETE' if it's found
+        if status != 'COMPLETE':
+          status = match.status
+
+    # Return the status
+    return status

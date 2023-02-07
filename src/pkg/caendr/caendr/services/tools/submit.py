@@ -190,8 +190,16 @@ class SubmissionManager():
 
     # Check if there is already a cached result, and skip creating a job if so
     if not no_cache:
-      if entity.check_cached_result():
-        entity['status'] = 'COMPLETE'  #TODO: Will this always be COMPLETE?
+      cached_result = entity.check_cached_result()
+      if cached_result:
+
+        # If cache check returned a status, use it; otherwise, default to "COMPLETE"
+        if isinstance(cached_result, str):
+          entity['status'] = cached_result
+        else:
+          entity['status'] = 'COMPLETE'
+
+        # Save the entity and "return" in a cached data error
         entity.save()
         raise CachedDataError(entity)
 
