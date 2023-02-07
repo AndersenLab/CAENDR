@@ -309,7 +309,6 @@ class MappingSubmissionManager(SubmissionManager):
     bucket = entity.get_bucket_name()
     blob   = entity.get_data_blob_path()
     upload_blob_from_file(bucket, data_file, blob)
-    os.remove(data_file)
 
   @classmethod
   def parse_data(cls, data):

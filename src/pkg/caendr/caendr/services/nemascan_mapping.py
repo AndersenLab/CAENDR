@@ -70,15 +70,11 @@ def create_new_mapping(user, data, no_cache=False):
   # If same job submitted by this user, redirect to their prior submission
   except DuplicateDataError as e:
     logger.debug('User resubmitted identical nemascan mapping data')
-    os.remove(data['filepath'])
     raise e
 
   # If same job submitted by a different user, associate new job with the cached data
   except CachedDataError as e:
     logger.debug('Nemascan Mapping with identical Data Hash exists. Returning cached report.')
-
-    # Remove the local file
-    os.remove(data['filepath'])
 
     # Add the report path to the Entity and save it
     new_report = e.args[0]
@@ -87,6 +83,13 @@ def create_new_mapping(user, data, no_cache=False):
 
     # Re-raise the edited Entity
     raise CachedDataError(new_report)
+
+  # Ensure the local file is removed
+  finally:
+    try:
+      os.remove(data['filepath'])
+    except FileNotFoundError:
+      pass
 
 
 
