@@ -69,7 +69,7 @@ class IndelPrimer(DataJobEntity):
   @classmethod
   def get_props_set(cls):
     return {
-      *super(IndelPrimer, cls).get_props_set(),
+      *super().get_props_set(),
 
       # # Status
       # 'no_result',

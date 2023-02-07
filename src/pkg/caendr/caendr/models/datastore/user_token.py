@@ -7,7 +7,7 @@ class UserToken(Entity):
   @classmethod
   def get_props_set(cls):
     return {
-      *super(UserToken, cls).get_props_set(),
+      *super().get_props_set(),
       'username',
       'revoked',
     }

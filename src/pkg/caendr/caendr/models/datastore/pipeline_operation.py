@@ -8,7 +8,7 @@ class PipelineOperation(Entity):
   @classmethod
   def get_props_set(cls):
     return {
-      *super(PipelineOperation, cls).get_props_set(),
+      *super().get_props_set(),
       'id',
       'operation',
       'operation_kind',
@@ -28,7 +28,7 @@ class PipelineOperationStatus(Entity):
   @classmethod
   def get_props_set(cls):
     return {
-      *super(PipelineOperationStatus, cls).get_props_set(),
+      *super().get_props_set(),
       'status'
     }
 

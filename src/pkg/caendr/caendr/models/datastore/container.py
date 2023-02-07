@@ -15,7 +15,7 @@ class Container(Entity):
   @classmethod
   def get_props_set(cls):
     return {
-      *super(Container, cls).get_props_set(),
+      *super().get_props_set(),
       'repo',
       'container_name',
       'container_registry',

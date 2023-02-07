@@ -17,7 +17,7 @@ class DatabaseOperation(JobEntity):
   @classmethod
   def get_props_set(cls):
     return {
-      *super(DatabaseOperation, cls).get_props_set(),
+      *super().get_props_set(),
 
       # Submission
       'id',

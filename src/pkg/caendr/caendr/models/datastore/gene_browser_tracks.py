@@ -20,7 +20,7 @@ class GeneBrowserTracks(JobEntity):
   @classmethod
   def get_props_set(cls):
     return {
-      *super(GeneBrowserTracks, cls).get_props_set(),
+      *super().get_props_set(),
 
       # Submission
       'id',

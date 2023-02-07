@@ -10,7 +10,7 @@ class Markdown(Entity):
   @classmethod
   def get_props_set(cls):
     return {
-      *super(Markdown, cls).get_props_set(),
+      *super().get_props_set(),
       'username',
       'type',
       'title',

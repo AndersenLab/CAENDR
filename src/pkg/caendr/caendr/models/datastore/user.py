@@ -42,7 +42,7 @@ class User(Entity):
   @classmethod
   def get_props_set(cls):
     return {
-      *super(User, cls).get_props_set(),
+      *super().get_props_set(),
       'username',
       'full_name',
       'password',
@@ -71,14 +71,14 @@ class User(Entity):
 
     # Handle other props with default method
     else:
-      return super(User, self).__setitem__( prop, val )
+      return super().__setitem__( prop, val )
 
 
 
   def set_properties(self, **kwargs):
 
     # Set non-container props through super method
-    super(User, self).set_properties(**{
+    super().set_properties(**{
       k: v for k, v in kwargs.items() if k not in ['password', 'salt']
     })
 
