@@ -91,4 +91,4 @@ def get_all_containers():
 
 
 def get_current_container_version(container_name: str):
-  return Container.get_current_version(container_name)
+  return Container.get(container_name)

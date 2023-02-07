@@ -30,21 +30,45 @@ class Container(Entity):
 
 
   @classmethod
-  def get_current_version(cls, container_name: str):
+  def get(cls, name: str, version: str = None):
     '''
-      Gets the most recent version of the container with the given name.
-      Raises a NotFoundError if no matching containers could be found.
+      Gets the container matching the given name and version tag.
+      If version is not provided, returns the current version.
+
+      Raises:
+        NotFoundError: No matching container could be found.
     '''
 
-    # Query for all containers matching the given name
-    all_versions = cls.query_ds( filters = [('container_name', '=', container_name)] )
+    # Create list of filters
+    filters = [('container_name', '=', name)]
+    if version is not None:
+      filters += [('container_version', '=', version)]
+
+    # Query for all matching containers
+    matches = cls.query_ds( filters = filters )
 
     # If matching version(s) found, return the most recent
-    if len(all_versions):
-      logger.debug(all_versions)
-      return all_versions[0]
+    if len(matches):
+      logger.debug(matches)
+      return matches[0]
 
     # Otherwise, raise an error
     else:
-      logger.error(f'Unable to find container named "{container_name}".')
-      raise NotFoundError(f'Unable to find container named "{container_name}".')
+      if version is None:
+        logger.error(f'Unable to find container "{name}".')
+        raise NotFoundError(f'Unable to find container "{name}".')
+      else:
+        logger.error(f'Unable to find container "{name}" with version "{version}".')
+        raise NotFoundError(f'Unable to find container "{name}" with version "{version}".')
+
+
+  @classmethod
+  def get_current_version(cls, container_name: str):
+    '''
+      Gets the most recent version of the container with the given name.
+      Equivalent to Container.get() with no version argument provided.
+
+      Raises:
+        NotFoundError: No matching container could be found.
+    '''
+    return Container.get(container_name)

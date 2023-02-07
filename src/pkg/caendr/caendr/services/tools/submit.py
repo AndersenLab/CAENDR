@@ -22,7 +22,7 @@ NEMASCAN_NXF_CONTAINER_NAME = os.environ.get('NEMASCAN_NXF_CONTAINER_NAME')
 
 
 
-def submit_job(entity_class, user, data, no_cache=False):
+def submit_job(entity_class, user, data, container_version=None, no_cache=False):
   '''
       Submit a job with the given data for the given user.
       Checks for cached submissions and cached results as defined in _Entity_Class.
@@ -60,7 +60,7 @@ def submit_job(entity_class, user, data, no_cache=False):
     raise ValueError(f'No submission manager defined for class "{entity_class.__name__}"')
 
   # Forward args to proper SubmissionManager subclass
-  entity_manager_mapping[entity_class.kind].submit(user, data, no_cache=no_cache)
+  entity_manager_mapping[entity_class.kind].submit(user, data, container_version=container_version, no_cache=no_cache)
 
 
 
@@ -130,7 +130,7 @@ class SubmissionManager():
 
 
   @classmethod
-  def submit(cls, user, data, no_cache=False):
+  def submit(cls, user, data, container_version=None, no_cache=False):
     '''
       Submit a job with the given data for the given user.
       Checks for cached submissions and cached results as defined in _Entity_Class.
@@ -139,6 +139,9 @@ class SubmissionManager():
         user: The user submitting the job.
         data: The user's input data. Will be run through SubmissionManager.parse_data() and used to populate
               the datastore Entity.
+        container_version:
+          The version of the tool container to use. If None is provided, uses the most recent version.
+          Defaults to None.
         no_cache (bool): Whether to skip checking cache (True) or not. Defaults to False.
 
       Returns:
@@ -160,8 +163,10 @@ class SubmissionManager():
     logger.debug(f'Submitting new {cls._Entity_Class.__name__} for user "{user.name}".')
 
     # Load container version info
-    container = Container.get_current_version(cls.container_name())
+    container = Container.get(cls.container_name(), version = container_version)
     logger.debug(f"Creating {cls._Entity_Class.__name__} with Container {container.uri()}")
+    if container_version is not None:
+      logger.warn(f'Container version {container_version} was specified manually - this may not be the most recent version.')
 
     # Parse the input data
     data_file, data_hash, data_vals = cls.parse_data(data)
