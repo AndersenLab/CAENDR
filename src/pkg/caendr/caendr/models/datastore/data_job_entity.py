@@ -1,6 +1,8 @@
 from caendr.services.logger import logger
 
 from caendr.models.datastore import JobEntity
+
+from caendr.services.cloud.storage import check_blob_exists
 from caendr.utils.data import unique_id
 
 
@@ -79,3 +81,32 @@ class DataJobEntity(JobEntity):
   def data_hash(self, val):
     logger.debug(f'Setting data hash for Entity {self.id} to {val}.')
     self.__dict__['data_hash'] = val
+
+
+
+  ## Cache ##
+
+  @classmethod
+  def check_cached_submission(cls, data_hash, username, container, status=None):
+
+    # Check for reports by this user with a matching data hash
+    filters = [
+      ('data_hash', '=', data_hash),
+      ('username',  '=', username),
+    ]
+
+    # If desired, filter by status as well
+    if status:
+      filters += [('status', '=', status)]
+
+    # Loop through each matching report, sorted newest to oldest
+    # Prefer a match with a date, if one exists
+    for match in cls.sort_by_created_date( cls.query_ds(filters=filters), set_none_max=True ):
+
+      # If containers match, return the matching Entity
+      if match.container_equals(container):
+        return match
+
+
+  def check_cached_result(self):
+    return check_blob_exists(self.get_bucket_name(), self.get_result_blob_path())

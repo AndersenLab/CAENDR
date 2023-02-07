@@ -1,9 +1,6 @@
 from caendr.services.logger import logger
 
 from caendr.models.datastore import Container, Entity
-from caendr.models.error import CachedDataError, DuplicateDataError
-
-from caendr.services.cloud.storage import check_blob_exists
 
 
 
@@ -121,32 +118,3 @@ class JobEntity(Entity):
   @container_version.setter
   def container_version(self, v):
     self.__container[ self.__container_prop_map['container_version'] ] = v
-
-
-
-  ## Cache ##
-
-  @classmethod
-  def check_cached_submission(cls, data_hash, username, container, status=None):
-
-    # Check for reports by this user with a matching data hash
-    filters = [
-      ('data_hash', '=', data_hash),
-      ('username',  '=', username),
-    ]
-
-    # If desired, filter by status as well
-    if status:
-      filters += [('status', '=', status)]
-
-    # Loop through each matching report, sorted newest to oldest
-    # Prefer a match with a date, if one exists
-    for match in cls.sort_by_created_date( cls.query_ds(filters=filters), set_none_max=True ):
-
-      # If containers match, return the matching Entity
-      if match.container_equals(container):
-        return match
-
-
-  def check_cached_result(self):
-    return check_blob_exists(self.get_bucket_name(), self.get_result_blob_path())
