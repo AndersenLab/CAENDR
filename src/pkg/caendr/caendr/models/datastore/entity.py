@@ -288,10 +288,19 @@ class Entity(object):
 
   @classmethod
   def sort_by_created_date(cls, arr, reverse = False, set_none_max = False):
+    '''
+      Sort a list of Entities by their creation date, with special handling for Entities that have no recorded creation date.
+      By default, sorts oldest to newest.
+    '''
     return sorted( arr, key = lambda e: _datetime_sort_key(e.created_on, set_none_max=set_none_max), reverse=reverse )
 
   @classmethod
   def sort_by_modified_date(cls, arr, reverse = False, set_none_max = False):
+    '''
+      Sort a list of Entities by the date they were last modified, with special handling for Entities that have no
+      recorded modified date.
+      By default, sorts oldest to newest.
+    '''
     return sorted( arr, key = lambda e: _datetime_sort_key(e.modified_on, set_none_max=set_none_max), reverse=reverse )
 
 
