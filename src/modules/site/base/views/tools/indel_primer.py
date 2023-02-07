@@ -197,7 +197,7 @@ def pairwise_indel_query_results(id, filename = None):
 
     # Check that user can view this report
     # TODO: Should admin users be able to view reports with different filenames?
-    if (not ip._exists) or (ip.username != user.name):
+    if (ip is None) or (ip.username != user.name):
       flash('You do not have access to that report', 'danger')
       abort(401)
 
@@ -208,7 +208,7 @@ def pairwise_indel_query_results(id, filename = None):
 
     # If no indel primer submission exists, return 404
     if data is None:
-        return abort(404, description="Indel primer report not found")
+      return abort(404, description="Indel primer report not found")
 
     # Parse submission data into JSON object
     data = json.loads(data.download_as_string().decode('utf-8'))

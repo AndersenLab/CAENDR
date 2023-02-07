@@ -6,7 +6,8 @@ from caendr.services.logger import logger
 from caendr.models.task import NemaScanTask
 from caendr.models.datastore import Container, NemascanMapping
 from caendr.utils.data import unique_id
-from caendr.models.error import DataFormatError, DuplicateDataError, CachedDataError
+from caendr.models.error import DataFormatError, DuplicateDataError, CachedDataError, NotFoundError
+
 from caendr.services.cloud.storage import check_blob_exists, upload_blob_from_file, get_blob_list
 from caendr.utils.file import get_file_hash
 
@@ -27,16 +28,29 @@ def is_data_cached(ns: NemascanMapping):
 
 
 def get_mapping(id):
+  '''
+    Get the Nemascan Mapping with the given ID.
+    If no such report exists, returns None.
+  '''
+
   logger.debug(f'Getting mapping: {id}')
-  m = NemascanMapping(id)
+
+  # Run the query
+  m = NemascanMapping.get_ds(id)
+
+  # If no matching Nemascan Mapping was found, return None
   if not m:
-    return None    
+    return None
+
+  # Otherwise, construct and add the report path if applicable
   if m.status != 'COMPLETE' and m.status != 'ERROR':
     report_path = get_report_blob_path(m)
     logger.debug(report_path)
     if report_path:
       m.set_properties(report_path=report_path, status='COMPLETE')
       m.save()
+
+  # Return the mapping Entity
   return m
 
 
@@ -124,12 +138,16 @@ def create_new_mapping(username, email, label, filepath, species, status = 'SUBM
 
 def update_nemascan_mapping_status(id: str, status: str=None, operation_name: str=None):
   logger.debug(f'update_nemascan_mapping_status: id:{id} status:{status} operation_name:{operation_name}')
-  m = NemascanMapping(id)
+
+  m = NemascanMapping.get_ds(id)
+  if m is None:
+    raise NotFoundError(f'No Nemascan Mapping with ID "{id}" was found.')
+
   if status:
     m.set_properties(status=status)
   if operation_name:
     m.set_properties(operation_name=operation_name)
-  
+
   report_path = get_report_blob_path(m)
   if report_path:
     m.set_properties(report_path=report_path, status='COMPLETE')

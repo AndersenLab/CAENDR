@@ -304,3 +304,20 @@ class Entity(object):
     '''
     return [ cls(e) for e in query_ds_entities(cls.kind, *args, **kwargs) ]
 
+
+  @classmethod
+  def get_ds(cls, name):
+    '''
+      Get the Entity from datastore with the matching name.
+    '''
+
+    # Ensure this is being run on a subclass of Entity, not Entity itself
+    if cls is Entity:
+      raise TypeError(f'Cannot run method "get_ds" on {cls.__name__}. Please run with subclass instead.')
+
+    # Query datastore using this class's kind and the provided name
+    match = get_ds_entity(cls.kind, name)
+
+    # If a match was found, initialize an Entity object from it
+    if match is not None:
+      return cls(name)

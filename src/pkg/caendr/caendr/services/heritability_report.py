@@ -5,7 +5,7 @@ from caendr.services.logger import logger
 
 from caendr.services.cloud.storage import upload_blob_from_string, generate_blob_url, check_blob_exists
 from caendr.models.task import HeritabilityTask
-from caendr.models.error import CachedDataError, DuplicateDataError
+from caendr.models.error import CachedDataError, DuplicateDataError, NotFoundError
 from caendr.models.datastore import Container, HeritabilityReport
 from caendr.utils.data import convert_data_table_to_tsv, get_object_hash
 
@@ -15,7 +15,12 @@ HERITABILITY_CONTAINER_NAME = os.environ.get('HERITABILITY_CONTAINER_NAME')
 
 
 def get_heritability_report(id):
-  return HeritabilityReport(id)
+  '''
+    Get the Heritability Report with the given ID.
+    If no such report exists, returns None.
+  '''
+  return HeritabilityReport.get_ds(id)
+
 
 
 def get_all_heritability_results():
@@ -103,7 +108,11 @@ def create_new_heritability_report(username, label, data_table):
 
 def update_heritability_report_status(id: str, status: str=None, operation_name: str=None):
   logger.debug(f'update_heritability_report_status: id:{id} status:{status} operation_name:{operation_name}')
-  h = HeritabilityReport(id)
+
+  h = HeritabilityReport.get_ds(id)
+  if h is None:
+    raise NotFoundError(f'No Heritability Report with ID "{id}" was found.')
+
   if status:
     h.set_properties(status=status)
   if operation_name:

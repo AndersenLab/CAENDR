@@ -6,6 +6,7 @@ from cyvcf2 import VCF
 from caendr.services.logger import logger
 
 from caendr.models.datastore import Container, IndelPrimer
+from caendr.models.error import NotFoundError
 from caendr.models.species import SPECIES_LIST
 from caendr.models.task import IndelPrimerTask
 
@@ -43,7 +44,11 @@ CHROMOSOME_CHOICES = [(x, x) for x in CHROM_NUMERIC.keys()]
 COLUMNS = ["CHROM", "START", "STOP", "?", "TYPE", "STRAND", ""]
 
 def get_indel_primer(id):
-  return IndelPrimer(id)
+  '''
+    Get the Indel Primer with the given ID.
+    If no such submission exists, returns None.
+  '''
+  return IndelPrimer.get_ds(id)
 
 
 def get_all_indel_primers():
@@ -205,11 +210,15 @@ def create_new_indel_primer(username, data, no_cache=False):
 
 def update_indel_primer_status(id: str, status: str=None, operation_name: str=None):
   logger.debug(f'update_indel_primer_status: id:{id} status:{status} operation_name:{operation_name}')
-  m = IndelPrimer(id)
+
+  m = IndelPrimer.get_ds(id)
+  if m is None:
+    raise NotFoundError(f'No Indel Primer with ID "{id}" was found.')
+
   if status:
     m.set_properties(status=status)
   if operation_name:
     m.set_properties(operation_name=operation_name)
-    
+
   m.save()
   return m

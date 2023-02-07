@@ -17,7 +17,7 @@ from caendr.services.logger import logger
 from datetime import datetime
 
 from base.forms import HeritabilityForm
-from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user
+from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user, user_is_admin
 
 from caendr.models.error import CachedDataError, DuplicateDataError
 from caendr.api.strain import get_strains
@@ -164,10 +164,21 @@ def heritability_result(id):
   user = get_current_user()
   hr = get_heritability_report(id)
 
-  if not hr._exists:
-    flash('You do not have access to that report', 'danger')
-    abort(401)
-  if not (hr.username == user.name or 'admin' in user.roles):
+  # If no such report exists, show an error message
+  if hr is None:
+
+    # Let admins know the report doesn't exist
+    if user_is_admin():
+      flash('This report does not exist', 'danger')
+      abort(404)
+
+    # For all other users, display a default "no access" message
+    else:
+      flash('You do not have access to that report', 'danger')
+      abort(401)
+
+  # If the user doesn't have permission to view this report, show an error message
+  if not (hr.username == user.name or user_is_admin()):
     flash('You do not have access to that report', 'danger')
     abort(401)
 
