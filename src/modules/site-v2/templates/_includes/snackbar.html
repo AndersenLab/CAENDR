@@ -1,9 +1,10 @@
+{% for category, msg in get_flashed_messages(with_categories=true) %}
 <div class="container pt-3 my-5 fw-bold text-center">
     <div id="messages">
-        {% for category, msg in get_flashed_messages(with_categories=true) %}
+        
         <div class="alert alert-{{ category }} alert-dismissible fade show">
             <p>{{ msg }}</p>
         </div>
-        {% endfor %}
     </div>
 </div>
+{% endfor %}
