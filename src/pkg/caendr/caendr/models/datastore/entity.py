@@ -273,6 +273,13 @@ class Entity(object):
     self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
 
 
+  def _get_meta_prop(self, key, fallback=None):
+    return self.__dict__.get(key, fallback)
+
+  def _set_meta_prop(self, key, val):
+    self.__dict__[key] = val
+
+
   @property
   def created_on(self):
     return self.__dict__.get('created_on')

@@ -25,26 +25,8 @@ def get_mapping(id):
     Get the Nemascan Mapping with the given ID.
     If no such report exists, returns None.
   '''
-
   logger.debug(f'Getting mapping: {id}')
-
-  # Run the query
-  m = NemascanMapping.get_ds(id)
-
-  # If no matching Nemascan Mapping was found, return None
-  if not m:
-    return None
-
-  # Otherwise, construct and add the report path if applicable
-  if m.status != 'COMPLETE' and m.status != 'ERROR':
-    report_path = get_report_blob_path(m)
-    logger.debug(report_path)
-    if report_path:
-      m.set_properties(report_path=report_path, status='COMPLETE')
-      m.save()
-
-  # Return the mapping Entity
-  return m
+  return NemascanMapping.get_ds(id)
 
 
 def get_all_mappings():
@@ -68,21 +50,14 @@ def create_new_mapping(user, data, no_cache=False):
     return submit_job(NemascanMapping, user, data, no_cache=no_cache)
 
   # If same job submitted by this user, redirect to their prior submission
-  except DuplicateDataError as e:
+  except DuplicateDataError:
     logger.debug('User resubmitted identical nemascan mapping data')
-    raise e
+    raise
 
   # If same job submitted by a different user, associate new job with the cached data
-  except CachedDataError as e:
+  except CachedDataError:
     logger.debug('Nemascan Mapping with identical Data Hash exists. Returning cached report.')
-
-    # Add the report path to the Entity and save it
-    new_report = e.args[0]
-    new_report['report_path'] = get_report_blob_path(new_report)
-    new_report.save()
-
-    # Re-raise the edited Entity
-    raise CachedDataError(new_report)
+    raise
 
   # Ensure the local file is removed
   finally:
@@ -105,27 +80,14 @@ def update_nemascan_mapping_status(id: str, status: str=None, operation_name: st
   if operation_name:
     m.set_properties(operation_name=operation_name)
 
-  report_path = get_report_blob_path(m)
-  if report_path:
-    m.set_properties(report_path=report_path, status='COMPLETE')
+  # Mark job as complete if report output file exists
+  if m.report_path is not None:
+    m['status'] = 'COMPLETE'
 
   m.save()
   return m
 
 
-
-# TODO: Move to NemascanMapping function / property?
-def get_report_blob_path(m: NemascanMapping):
-  logger.debug(f'Looking for a NemaScan Mapping HTML report: m:{m}')
-  result = list(get_blob_list(m.get_bucket_name(), m.get_report_blob_prefix()))
-  logger.debug(result)
-
-  if len(result) > 0:
-    for x in result:
-      logger.debug(x.name)
-      if x.name.endswith('.html'):
-        return x.name
-        
 
 
 

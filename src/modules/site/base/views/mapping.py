@@ -128,7 +128,7 @@ def mapping_report(id):
   fluid_container = True
   data_url = generate_blob_url(mapping.get_bucket_name(), mapping.get_data_blob_path())
   # if hasattr(mapping, 'mapping_report_url'):
-  if hasattr(mapping, 'report_path'):
+  if mapping.report_path is not None:
     report_url = generate_blob_url(mapping.get_bucket_name(), mapping.report_path)
   else:
     report_url = None
@@ -147,7 +147,7 @@ def mapping_report_fullscreen(id):
   fluid_container = True
   data_url = generate_blob_url(mapping.get_bucket_name(), mapping.get_data_blob_path())
   # if hasattr(mapping, 'mapping_report_url'):
-  if hasattr(mapping, 'report_path'):
+  if mapping.report_path is not None:
     blob = get_blob(mapping.get_bucket_name(), mapping.report_path)
     report_contents = blob.download_as_text()
   else:
@@ -160,6 +160,10 @@ def mapping_report_fullscreen(id):
 def mapping_report_status(id):
   mapping = get_mapping(id)
   data_url = generate_blob_url(mapping.get_bucket_name(), mapping.get_data_blob_path())
+
+  # TODO: Definition of report_path has been changed(?) since this was written, is now a property
+  #       that automatically searches for the HTML report filename. Is this the intended value here?
+  #       Should this be checking mapping.report_path?
   if hasattr(mapping, 'mapping_report_url'):
     report_url = generate_blob_url(mapping.get_bucket_name(), mapping.report_path)
   else:

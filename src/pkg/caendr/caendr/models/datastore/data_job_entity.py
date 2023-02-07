@@ -68,19 +68,19 @@ class DataJobEntity(JobEntity):
       This Entity's unique ID.
       This field cannot be set manually; it must be determined at initialization.
     '''
-    return self.__dict__.get('id')
+    return self._get_meta_prop('id')
 
   @property
   def data_hash(self):
     '''
       A hash value generated from the data associated with this Entity.
     '''
-    return self.__dict__.get('data_hash')
+    return self._get_meta_prop('data_hash')
 
   @data_hash.setter
   def data_hash(self, val):
     logger.debug(f'Setting data hash for Entity {self.id} to {val}.')
-    self.__dict__['data_hash'] = val
+    self._set_meta_prop('data_hash', val)
 
 
 

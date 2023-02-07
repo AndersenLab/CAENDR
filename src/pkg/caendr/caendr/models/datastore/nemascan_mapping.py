@@ -2,6 +2,7 @@ import os
 from caendr.services.logger import logger
 
 from caendr.models.datastore import DataJobEntity
+from caendr.services.cloud.storage import get_blob_list
 
 
 MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
@@ -42,6 +43,8 @@ class NemascanMapping(DataJobEntity):
     return f'{self.__input_data_path}'
 
 
+  ## Properties List ##
+
   @classmethod
   def get_props_set(cls):
     return {
@@ -54,8 +57,44 @@ class NemascanMapping(DataJobEntity):
       'species',
       'label',
       'trait',
+    }
+
+  @classmethod
+  def get_props_set_meta(cls):
+    return {
+      *super().get_props_set_meta(),
       'report_path',
     }
+
+
+  ## Meta Properties ##
+
+  @property
+  def report_path(self):
+    path = self._get_meta_prop('report_path')
+    if path is not None:
+      return path
+
+    # TODO: Don't try to compute if status is ERROR??
+
+    logger.debug(f'Looking for a NemaScan Mapping HTML report: {self.id}')
+
+    result = list(get_blob_list(self.get_bucket_name(), self.get_report_blob_prefix()))
+    logger.debug(result)
+
+    for file in result:
+      logger.debug(file.name)
+      if file.name.endswith('.html'):
+        self._set_meta_prop('report_path', file.name)
+        return file.name
+
+
+  @report_path.setter
+  def report_path(self, val):
+    self._set_meta_prop('report_path', val)
+
+
+  ## Cache ##
 
   # TODO: Is there a better way to check? E.g. look for results?
   def check_cached_result(self):
