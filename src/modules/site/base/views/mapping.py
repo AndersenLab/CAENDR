@@ -70,17 +70,16 @@ def submit_mapping_request():
   local_path = os.path.join(uploads_dir, secure_filename(f'{ unique_id() }.tsv'))
   request.files['file'].save(local_path)
 
-  props = {
-    'username': user.name,
-    'email':    user.email,
+  # Package submission data together into dict
+  data = {
     'label':    label,
-    'filepath': local_path,
     'species':  species,
+    'filepath': local_path,
   }
 
   try:
-    logger.warn("Check Duplicates is DISABLED !!!")
-    m = create_new_mapping(**props, check_duplicates=True)
+    # logger.warn("Check Duplicates is DISABLED !!!")
+    m = create_new_mapping(user, data, no_cache=False)
     return redirect(url_for('mapping.mapping_report', id=m.id))
 
   except DuplicateDataError as ex:
@@ -89,11 +88,13 @@ def submit_mapping_request():
 
   except CachedDataError as ex:
     flash('It looks like that data has already been submitted - redirecting to the saved results', 'danger')
-    return redirect(url_for('mapping.mapping_report', id=ex.args[0]))
+    return redirect(url_for('mapping.mapping_report', id = ex.args[0].id))
 
   except Exception as ex:
-    logger.error(ex.description)
-    flash(f"Unable to submit your request: \"{ex.description}\"", 'danger')
+    logger.error(ex)
+    logger.error(f"message: {getattr(ex, 'message', '')}")
+    logger.error(f"description: {getattr(ex, 'description', '')}")
+    flash(f"Unable to submit your request: \"{ getattr(ex, 'description', '') }\"", 'danger')
     return redirect(url_for('mapping.mapping'))
 
 

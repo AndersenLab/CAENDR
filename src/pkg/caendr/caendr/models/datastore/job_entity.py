@@ -127,38 +127,25 @@ class JobEntity(Entity):
   ## Cache ##
 
   @classmethod
-  def check_cache(cls, data_hash, username, container, status = None):
+  def check_cached_submission(cls, data_hash, username, container, status=None):
 
-    # Check for reports with a matching data hash & container version
+    # Check for reports by this user with a matching data hash
     filters = [
-      ('data_hash',         '=', data_hash),
-      ('container_version', '=', container.container_tag),
+      ('data_hash', '=', data_hash),
+      ('username',  '=', username),
     ]
 
     # If desired, filter by status as well
     if status:
       filters += [('status', '=', status)]
 
-    # Loop through each matching report
-    for report in cls.query_ds(filters=filters):
+    # Loop through each matching report, sorted newest to oldest
+    # Prefer a match with a date, if one exists
+    for match in cls.sort_by_created_date( cls.query_ds(filters=filters), set_none_max=True ):
 
-      # If same job submitted by this user, return Duplicate Data Error
-      if report.username == username:
-        raise DuplicateDataError(report)
-
-      # If same job submitted by a different user, return Cached Data Error
-      else:
-        raise CachedDataError(report)
-
-
-  @classmethod
-  def check_cached_submission(cls, data_hash, username, container):
-    matches = cls.query_ds(filters=[('data_hash', '=', data_hash)])
-    if len(matches) > 0:
-      if matches[0].username == username and matches[0].container_equals(container):
-        return matches[0]
-
-    return None
+      # If containers match, return the matching Entity
+      if match.container_equals(container):
+        return match
 
 
   def check_cached_result(self):

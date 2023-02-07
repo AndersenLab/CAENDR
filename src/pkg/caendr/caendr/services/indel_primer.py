@@ -1,19 +1,17 @@
 import tabix
 import os
-import json
 
 from cyvcf2 import VCF
 from caendr.services.logger import logger
 
-from caendr.models.datastore import Container, IndelPrimer
-from caendr.models.error import NotFoundError
-from caendr.models.species import SPECIES_LIST
-from caendr.models.task import IndelPrimerTask
+from caendr.models.datastore import IndelPrimer
+from caendr.models.error     import CachedDataError, DuplicateDataError, NotFoundError
+from caendr.models.species   import SPECIES_LIST
 
-from caendr.services.cloud.storage import upload_blob_from_string, get_blob, check_blob_exists
+from caendr.services.cloud.storage import get_blob
+from caendr.services.tools import submit_job
 
 from caendr.utils.constants import CHROM_NUMERIC
-from caendr.utils.data import get_object_hash
 
 
 
@@ -92,18 +90,6 @@ def overlaps(s1, e1, s2, e2):
   return s1 <= s2 <= e1 or s2 <= s1 <= e2
 
 
-
-def parse_indel_primer_data(data):
-  data_file = json.dumps(data)
-  data_hash = get_object_hash(data, length=32)
-
-  # TODO: Pull this value from somewhere
-  release = SPECIES_LIST[ data['species'] ].indel_primer_ver
-
-  return data_file, data_hash, {'release': release}
-
-
-
 def fetch_ip_data(ip: IndelPrimer):
   return get_blob(ip.get_bucket_name(), ip.get_data_blob_path())
 
@@ -144,67 +130,17 @@ def query_indels_and_mark_overlaps(species, strain_1, strain_2, chromosome, star
   return []
 
 
-def create_new_indel_primer(username, data, no_cache=False):
-  logger.debug(f'''Creating new Indel Primer:
-    username:  "{username}"
-    species:   {data['species']}
-    site:      {data['site']}
-    strain_1:  {data['strain_1']}
-    strain_2:  {data['strain_2']}
-    size:      {data['size']}
-    cache:     {not no_cache}''')
+def create_new_indel_primer(user, data, no_cache=False):
+  try:
+    return submit_job(IndelPrimer, user, data, no_cache=no_cache)
 
-  # Load container version info
-  c = Container.get_current_version(INDEL_PRIMER_CONTAINER_NAME)
+  except DuplicateDataError as ex:
+    print('Duplicate data found!')
+    return ex.args[0]
 
-  species = data['species']
-
-  data_file, data_hash, data_vals = parse_indel_primer_data(data)
-
-  # Check for existing indel primer matching data_hash & user
-  if not no_cache:
-    cached_submission = IndelPrimer.check_cached_submission(data_hash, username, c)
-    if cached_submission:
-      return cached_submission
-
-  # Create Indel Primer entity & upload to GCP
-  ip = IndelPrimer(**{
-    'username':          username,
-    'status':            'SUBMITTED',
-    'site':              data['site'],
-    'strain_1':          data['strain_1'],
-    'strain_2':          data['strain_2'],
-    'species':           species,
-    'release':           data_vals['release'],
-    'sv_bed_filename':   IndelPrimer.get_source_filename(species, data_vals['release']) + '.bed.gz',
-    'sv_vcf_filename':   IndelPrimer.get_source_filename(species, data_vals['release']) + '.vcf.gz',
-  })
-  ip.set_container(c)
-  ip.data_hash = data_hash
-  ip.save()
-
-  # Check if there is already a result
-  if not no_cache:
-    if ip.check_cached_result():
-      ip.status = 'COMPLETE'
-      ip.save()
-      return ip
-
-  # Upload data.tsv to google storage
-  bucket = ip.get_bucket_name()
-  blob   = ip.get_data_blob_path()
-  upload_blob_from_string(bucket, data_file, blob)
-
-  # Schedule mapping in task queue
-  task   = IndelPrimerTask(ip)
-  result = task.submit()
-
-  # Update entity status to reflect whether task was submitted successfully
-  ip.status = 'SUBMITTED' if result else 'ERROR'
-  ip.save()
-
-  # Return resulting Indel Primer entity
-  return ip
+  except CachedDataError as ex:
+    print('Cached results found!')
+    return ex.args[0]
 
 
 

@@ -87,41 +87,47 @@ def heritability_user_results():
 @jwt_required()
 def submit_h2():
   user = get_current_user()
-  label = request.values['label']
-  table_data = request.values['table_data']
+
+  # Package data for this submission into an object
+  data = {
+    'label':      request.values['label'],
+    'table_data': request.values['table_data'],
+  }
+
+  # If user is admin, allow them to bypass cache with URL variable
+  no_cache = bool(user_is_admin() and request.args.get("nocache", False))
 
   try:
-    h = create_new_heritability_report(user.name, label, table_data)
+    h = create_new_heritability_report(user, data, no_cache = False)
+    return jsonify({
+      'started':   True,
+      'data_hash': h.data_hash,
+      'id':        h.id,
+    })
 
   except DuplicateDataError as ex:
-      flash('Oops! It looks like you submitted that data already - redirecting to your list of Heritability Reports', 'danger')
-      return jsonify({
-        'duplicate': True,
-        'data_hash': ex.args[0].data_hash,
-        'id':        ex.args[0].id,
-      })
+    flash('Oops! It looks like you submitted that data already - redirecting to your list of Heritability Reports', 'danger')
+    return jsonify({
+      'duplicate': True,
+      'data_hash': ex.args[0].data_hash,
+      'id':        ex.args[0].id,
+    })
 
   except CachedDataError as ex:
-      flash('Oops! It looks like that data has already been submitted - redirecting to the saved results', 'danger')
-      return jsonify({
-        'cached':    True,
-        'data_hash': ex.args[0].data_hash,
-        'id':        ex.args[0].id,
-      })
+    flash('Oops! It looks like that data has already been submitted - redirecting to the saved results', 'danger')
+    return jsonify({
+      'cached':    True,
+      'data_hash': ex.args[0].data_hash,
+      'id':        ex.args[0].id,
+    })
 
   except Exception as ex:
-      flash("Oops! There was a problem submitting your request: {ex}", 'danger')
-      return jsonify({
-        'duplicate': True,
-        'data_hash': None,
-        'id':        None,
-      })
-
-  return jsonify({
-    'started':   True,
-    'data_hash': h.data_hash,
-    'id':        h.id,
-  })
+    flash(f"Oops! There was a problem submitting your request: {ex}", 'danger')
+    return jsonify({
+      'duplicate': True,
+      'data_hash': None,
+      'id':        None,
+    })
 
 
 @heritability_bp.route("/heritability/h2/<id>/logs")

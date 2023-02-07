@@ -15,7 +15,6 @@ from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefa
 from caendr.models.species import SPECIES_LIST
 from caendr.services.dataset_release import get_browser_tracks_path
 from caendr.utils.constants import CHROM_NUMERIC
-from caendr.utils.data import get_object_hash
 
 from caendr.services.indel_primer import get_sv_strains, query_indels_and_mark_overlaps, create_new_indel_primer, get_indel_primer, fetch_ip_data, fetch_ip_result, get_all_indel_primers, get_user_indel_primers
 
@@ -171,11 +170,7 @@ def submit_indel_primer():
   no_cache = bool(user_is_admin() and request.args.get("nocache", False))
 
   # Create new Indel Primer
-  p = create_new_indel_primer(**{
-    'username':  user.name,
-    'data':      data,
-    'no_cache':  no_cache,
-  })
+  p = create_new_indel_primer( user, data, no_cache=no_cache )
 
   # Notify user that task has been started
   return jsonify({
