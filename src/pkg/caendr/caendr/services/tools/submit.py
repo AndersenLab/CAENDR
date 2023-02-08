@@ -171,21 +171,22 @@ class SubmissionManager():
     # Parse the input data
     data_file, data_hash, data_vals = cls.parse_data(data)
 
-    # Check if user has already submitted this job, and return it if so
+    # Check if user has already submitted this job, and "return" it in a duplicate data error if so
     if not no_cache:
       cached_entity = cls.check_cached_submission(data_hash, user.name, container)
       if cached_entity:
         raise DuplicateDataError(cached_entity)
 
-    # Create entity to represent this job, and upload to datastore
-    entity = cls.create_entity(**{
-      'username': user.name,
-      'email':    user.email,  # Not all entity subclasses will use this field - may be ignored
-      'status':   'SUBMITTED', # TODO: Is this an OK initial value? What if there's an error before the task is submitted?
-      **data_vals,
-    })
-    entity.set_container(container)
+    # Create entity to represent this job and set data fields
+    entity = cls.create_entity(**data_vals)
     entity.data_hash = data_hash
+
+    # Set entity's container & user fields
+    entity.set_container(container)
+    entity.set_user(user)
+
+    # Upload the new entity to datastore
+    entity['status'] = 'SUBMITTED' # TODO: Is this an OK initial value? What if there's an error before the task is submitted?
     entity.save()
 
     # Check if there is already a cached result, and skip creating a job if so

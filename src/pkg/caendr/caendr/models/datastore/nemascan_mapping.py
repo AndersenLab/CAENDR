@@ -94,6 +94,17 @@ class NemascanMapping(DataJobEntity):
     self._set_meta_prop('report_path', val)
 
 
+  ## User Object ##
+
+  def set_user(self, user):
+    '''
+      Set user properties from a User object.
+      Sets username and email to match provided user.
+    '''
+    self['email'] = user['email']
+    return super().set_user(user)
+
+
   ## Cache ##
 
   # TODO: Is there a better way to check? E.g. look for results?
