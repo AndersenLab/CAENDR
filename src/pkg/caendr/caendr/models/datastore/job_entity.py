@@ -24,6 +24,10 @@ class JobEntity(Entity):
     'container_version':  'container_tag',
   }
 
+  # Status of the job
+  __status = None
+
+
 
   ## Initialization ##
 
@@ -40,6 +44,9 @@ class JobEntity(Entity):
 
     # Initialize from superclass
     super().__init__(*args, **kwargs)
+
+    if self['status'] is None:
+      self['status'] = 'UNKNOWN'
 
 
 
@@ -60,6 +67,24 @@ class JobEntity(Entity):
       'operation_name',
       'status',
     }
+
+
+
+  ## Status ##
+
+  @property
+  def status(self):
+    return self.__status
+
+  @status.setter
+  def status(self, val):
+    self.__status = val
+
+    # TODO: Validation
+    # if val in ['SUBMITTED', 'RUNNING', 'COMPLETE', 'ERROR', 'UNKNOWN']:
+    #   self.__status = val
+    # else:
+    #   raise TypeError(f'Cannot set status of {self.kind} job to "{val}".')
 
 
 
