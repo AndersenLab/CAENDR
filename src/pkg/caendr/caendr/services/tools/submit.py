@@ -60,7 +60,7 @@ def submit_job(entity_class, user, data, container_version=None, no_cache=False)
     raise ValueError(f'No submission manager defined for class "{entity_class.__name__}"')
 
   # Forward args to proper SubmissionManager subclass
-  entity_manager_mapping[entity_class.kind].submit(user, data, container_version=container_version, no_cache=no_cache)
+  return entity_manager_mapping[entity_class.kind].submit(user, data, container_version=container_version, no_cache=no_cache)
 
 
 
