@@ -84,11 +84,6 @@ class NemascanMapping(DataJobEntity):
         return file.name
 
 
-  @report_path.setter
-  def report_path(self, val):
-    self._set_meta_prop('report_path', val)
-
-
   ## User Object ##
 
   def set_user(self, user):
