@@ -189,13 +189,17 @@ def heritability_result(id):
     abort(401)
 
   ready = False
-  data_url = generate_blob_url(hr.get_bucket_name(), hr.get_data_blob_path())
 
-  data_hash = hr.data_hash
+  # Get blob paths
+  # Used in code as well as templating(?)
   data_blob = hr.get_data_blob_path()
   result_blob = hr.get_result_blob_path()
-  data = get_blob(hr.get_bucket_name(), hr.get_data_blob_path())
-  result = get_blob(hr.get_bucket_name(), hr.get_result_blob_path())
+
+  data_hash = hr.data_hash
+  data_url = generate_blob_url(hr.get_bucket_name(), data_blob)
+
+  data   = get_blob(hr.get_bucket_name(), data_blob)
+  result = get_blob(hr.get_bucket_name(), result_blob)
 
   # get this dynamically from the bp
   # logs_url = f"/heritability/h2/{hr.id}/logs"

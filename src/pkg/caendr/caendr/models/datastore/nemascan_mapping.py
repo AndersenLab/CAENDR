@@ -1,11 +1,9 @@
-import os
 from caendr.services.logger import logger
 
 from caendr.models.datastore import DataJobEntity
 from caendr.services.cloud.storage import get_blob_list
 
 
-MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
 NEMASCAN_REPORT_PATH_PREFIX = 'reports'
 NEMASCAN_RESULT_PATH_INFIX = 'results'
 INPUT_DATA_PATH = 'tools/nemascan/input_data'
@@ -15,23 +13,20 @@ NEMASCAN_INPUT_FILE = 'data.tsv'
 
 class NemascanMapping(DataJobEntity):
   kind = 'nemascan_mapping'
-  __bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
-  __blob_prefix = NEMASCAN_REPORT_PATH_PREFIX
+  _blob_prefix = NEMASCAN_REPORT_PATH_PREFIX
+  _input_file  = NEMASCAN_INPUT_FILE
+
   __result_infix = NEMASCAN_RESULT_PATH_INFIX
   __input_data_path = INPUT_DATA_PATH
-  __input_file = NEMASCAN_INPUT_FILE
   __report_path = REPORT_DATA_PREFIX
 
 
-  @classmethod
-  def get_bucket_name(cls):
-    return cls.__bucket_name
+  ## Buckets & Paths ##
 
-  def get_blob_path(self):
-    return f'{self.__blob_prefix}/{self.container_name}/{self.container_version}/{self.data_hash}'
-
-  def get_data_blob_path(self):
-    return f'{self.get_blob_path()}/{self.__input_file}'
+  # TODO: Overrides function in DataJobEntity parent class which isn't needed in this class.
+  #       Can this be merged with get_result_path for better inheritance?
+  def get_result_blob_path(self):
+    raise TypeError(f'Should not call get_result_blob_path on {self.__class__.__name__}')
 
   def get_result_path(self):
     return f'{self.get_blob_path()}/{self.__result_infix}'

@@ -1,9 +1,15 @@
+import os
+
 from caendr.services.logger import logger
 
 from caendr.models.datastore import JobEntity, User
 
 from caendr.services.cloud.storage import check_blob_exists
 from caendr.utils.data import unique_id
+
+
+
+MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
 
 
 
@@ -14,6 +20,12 @@ class DataJobEntity(JobEntity):
     Should never be instantiated directly -- in fact, this is prevented in this class's __new__ function.
     Instead, specific job types should be subclasses of this class.
   '''
+
+  # Datastore paths for data & results associated with a job type
+  # Must be overridden in subclasses
+  _blob_prefix = None
+  _input_file  = None
+  _result_file = None
 
 
   ## Initialization ##
@@ -33,6 +45,33 @@ class DataJobEntity(JobEntity):
 
     # Initialize from superclass
     super().__init__(name_or_obj, *args, **kwargs)
+
+
+
+  ## Buckets & Paths ##
+
+  @classmethod
+  def get_bucket_name(cls):
+    return MODULE_SITE_BUCKET_PRIVATE_NAME
+
+  def get_blob_path(self):
+    if self._blob_prefix is None:
+      raise NotImplementedError(f'Class {self.__class__.__name__} must define a value for _blob_prefix.')
+    else:
+      return f'{self._blob_prefix}/{self.container_name}/{self.container_version}/{self.data_hash}'
+
+  def get_data_blob_path(self):
+    if self._input_file is None:
+      raise NotImplementedError(f'Class {self.__class__.__name__} must define a value for _input_file.')
+    else:
+      return f'{self.get_blob_path()}/{self._input_file}'
+
+  def get_result_blob_path(self):
+    if self._result_file is None:
+      raise NotImplementedError(f'Class {self.__class__.__name__} must define a value for _result_file.')
+    else:
+      return f'{self.get_blob_path()}/{self._result_file}'
+
 
 
   ## Properties List ##
