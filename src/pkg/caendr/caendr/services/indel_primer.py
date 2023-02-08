@@ -8,7 +8,7 @@ from caendr.models.datastore import IndelPrimer
 from caendr.models.error     import CachedDataError, DuplicateDataError, NotFoundError
 from caendr.models.species   import SPECIES_LIST
 
-from caendr.services.cloud.storage import get_blob
+from caendr.services.cloud.storage import get_blob, generate_blob_url
 from caendr.services.tools import submit_job
 
 from caendr.utils.constants import CHROM_NUMERIC
@@ -62,15 +62,19 @@ def get_user_indel_primers(username):
   return IndelPrimer.sort_by_created_date(primers, reverse=True)
 
 
-def get_bed_url(species, release = None):
+def get_bed_url(species, release = None, secure = True):
   release = release or SPECIES_LIST[species].indel_primer_ver
   filename = IndelPrimer.get_source_filename(species, release)
-  return f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/{INDEL_PRIMER_TOOL_PATH}/{filename}.bed.gz"
+  return generate_blob_url(
+    MODULE_SITE_BUCKET_PRIVATE_NAME, f"{INDEL_PRIMER_TOOL_PATH}/{filename}.bed.gz", secure = secure
+  )
 
-def get_vcf_url(species, release = None):
+def get_vcf_url(species, release = None, secure = True):
   release = release or SPECIES_LIST[species].indel_primer_ver
   filename = IndelPrimer.get_source_filename(species, release)
-  return f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/{INDEL_PRIMER_TOOL_PATH}/{filename}.vcf.gz"
+  return generate_blob_url(
+    MODULE_SITE_BUCKET_PRIVATE_NAME, f"{INDEL_PRIMER_TOOL_PATH}/{filename}.vcf.gz", secure = secure
+  )
 
 
 def get_sv_strains(species, release = None):
@@ -102,7 +106,7 @@ def query_indels_and_mark_overlaps(species, strain_1, strain_2, chromosome, star
   results = []
   strain_cmp = [ strain_1, strain_2 ]
 
-  tb = tabix.open( get_bed_url(species) )
+  tb = tabix.open( get_bed_url(species, secure=False) )
   query = tb.query(chromosome, start, stop)
 
   for row in query:
