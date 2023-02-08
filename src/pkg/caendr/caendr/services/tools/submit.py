@@ -195,13 +195,10 @@ class SubmissionManager():
       if cached_result:
 
         # If cache check returned a status, use it; otherwise, default to "COMPLETE"
-        if isinstance(cached_result, str):
-          entity['status'] = cached_result
-        else:
-          entity['status'] = 'COMPLETE'
+        entity['status'] = cached_result if isinstance(cached_result, str) else 'COMPLETE'
+        entity.save()
 
         # Save the entity and "return" in a cached data error
-        entity.save()
         raise CachedDataError(entity)
 
     # Upload source data file to data store
