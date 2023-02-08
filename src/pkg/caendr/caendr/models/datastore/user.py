@@ -36,6 +36,13 @@ class User(Entity):
     return None
 
 
+  @classmethod
+  def from_username(self, username):
+    matches = User.query_ds( filters = [('username', '=', username)] )
+    if len(matches):
+      return matches[0]
+
+
 
   ## Properties List ##
 
