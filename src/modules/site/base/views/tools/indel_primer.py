@@ -12,6 +12,7 @@ from base.utils.auth import jwt_required, admin_required, get_current_user, user
 from base.forms import PairwiseIndelForm
 
 from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefault
+from caendr.models.error import NotFoundError, NonUniqueEntity
 from caendr.models.species import SPECIES_LIST
 from caendr.services.dataset_release import get_browser_tracks_path
 from caendr.utils.constants import CHROM_NUMERIC
@@ -34,12 +35,24 @@ from caendr.utils.constants import CHROM_NUMERIC
 def indel_primer_get_tracks():
 
   # Get the Divergent Regions browser track
-  divergent_track = BrowserTrackDefault.query_ds(filters=[('name', '=', 'Divergent Regions')])[0]
+  try:
+    divergent_track = BrowserTrackDefault.query_ds_unique('name', 'Divergent Regions', required=True)
 
-  return jsonify({
-    **divergent_track['params'],
-    'url': divergent_track.get_url_template(),
-  })
+  # If no track found, log an error message and continue raising with a more descriptive message
+  except NotFoundError as ex:
+    ex.description = 'Could not find Divergent Regions track.'
+    logger.error(ex.description)
+    raise ex
+
+  # If track could not be uniquely identified, log an error and continue with the first result
+  # TODO: Should this raise a further error?
+  except NonUniqueEntity as ex:
+    logger.error('Could not uniquely identify Divergent Regions track.')
+    divergent_track = ex.matches[0]
+
+  # Return the track parameters
+  return jsonify(divergent_track['params'])
+
 
 @indel_primer_bp.route('/pairwise_indel_finder/strains', methods=['GET'])
 @jwt_required()

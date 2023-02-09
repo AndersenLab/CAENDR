@@ -38,9 +38,7 @@ class User(Entity):
 
   @classmethod
   def from_username(self, username):
-    matches = User.query_ds( filters = [('username', '=', username)] )
-    if len(matches):
-      return matches[0]
+    return User.query_ds_unique('username', username)
 
 
 

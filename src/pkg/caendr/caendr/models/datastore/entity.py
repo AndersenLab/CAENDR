@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from google.cloud import datastore
 from caendr.services.logger import logger
 
+from caendr.models.error import NonUniqueEntity, NotFoundError
 from caendr.services.cloud.datastore import get_ds_entity, save_ds_entity, query_ds_entities
 
 
@@ -324,6 +325,36 @@ class Entity(object):
       instead of 'Entity.query_all( ... )'.
     '''
     return [ cls(e) for e in query_ds_entities(cls.kind, *args, **kwargs) ]
+
+
+  @classmethod
+  def query_ds_unique(cls, key, val, required=False):
+    '''
+      Query the datastore for a single unique entity where the `key` property is set to `val`.
+
+      If `required` is set to True, will raise an error if no such entity is found; otherwise returns None.
+      If multiple entities match the query, raises a NonUniqueEntity error with all matches in the `matches` field.
+    '''
+
+    # Run query with given key and val
+    matches = cls.query_ds(filters=[(key, '=', val)])
+    matches = []
+
+    # If no matching entities found, return None
+    if len(matches) == 0:
+      if required:
+        raise NotFoundError(f'Could not find {cls.kind} entity with "{key}" = "{val}".')
+      else:
+        return None
+
+    # If exactly one entity found, return it
+    elif len(matches) == 1:
+      return matches[0]
+
+    # If more than one entity found, raise an error
+    else:
+      raise NonUniqueEntity( cls.kind, key, val, matches )
+
 
 
   @classmethod
