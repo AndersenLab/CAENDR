@@ -31,23 +31,24 @@ from caendr.services.persistent_logger import PersistentLogger
 # ================== #
 
 # Tools blueprint
-heritability_bp = Blueprint('heritability',
-                            __name__)
+heritability_calculator_bp = Blueprint(
+  'heritability_calculator', __name__
+)
 
 
-@heritability_bp.route('/heritability')
-def heritability():
+@heritability_calculator_bp.route('/heritability-calculator')
+def heritability_calculator():
   title = "Heritability Calculator"
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   form = HeritabilityForm()
   hide_form = True
   strain_list = []
-  return render_template('tools/heritability/submit.html', **locals())
+  return render_template('tools/heritability_calculator/heritability-calculator.html', **locals())
 
 
-@heritability_bp.route('/heritability/create', methods=["GET"])
+@heritability_calculator_bp.route('/heritability-calculator/create', methods=["GET"])
 @jwt_required()
-def heritability_create():
+def create():
   """ This endpoint is used to create a heritability job. """
   title = "Heritability Calculator"
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
@@ -60,30 +61,30 @@ def heritability_create():
 
   hide_form = False
   id = unique_id()
-  return render_template('tools/heritability/submit.html', **locals())
+  return render_template('tools/heritability_calculator/submit.html', **locals())
 
 
-@heritability_bp.route("/heritability/all-results")
+@heritability_calculator_bp.route("/heritability-calculator/all-results")
 @admin_required()
-def heritability_all_results():
+def all_results():
   title = "All Heritability Results"
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   user = get_current_user()
   items = get_all_heritability_results()
-  return render_template('tools/heritability/list-all.html', **locals())
+  return render_template('tools/heritability_calculator/list-all.html', **locals())
 
 
-@heritability_bp.route("/heritability/my-results")
+@heritability_calculator_bp.route("/heritability-calculator/my-results")
 @jwt_required()
-def heritability_user_results():
+def user_results():
   title = "My Heritability Results"
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   user = get_current_user()
   items = get_user_heritability_results(user.name)
-  return render_template('tools/heritability/list-user.html', **locals())
+  return render_template('tools/heritability_calculator/list-user.html', **locals())
 
 
-@heritability_bp.route('/heritability/submit', methods=["POST"])
+@heritability_calculator_bp.route('/heritability-calculator/submit', methods=["POST"])
 @jwt_required()
 def submit_h2():
   user = get_current_user()
@@ -130,7 +131,7 @@ def submit_h2():
     })
 
 
-@heritability_bp.route("/heritability/h2/<id>/logs")
+@heritability_calculator_bp.route("/heritability-calculator/h2/<id>/logs")
 @jwt_required()
 def view_logs(id):
   hr = get_heritability_report(id)    
@@ -159,10 +160,10 @@ def view_logs(id):
     }
     logs.append(log)
 
-  return render_template("tools/heritability/logs.html", **locals())
+  return render_template("tools/heritability_calculator/logs.html", **locals())
 
 # TODO: Move this into a separate service
-@heritability_bp.route("/heritability/h2/<id>")
+@heritability_calculator_bp.route("/heritability-calculator/h2/<id>")
 @jwt_required()
 def heritability_result(id):
   title = "Heritability Results"
@@ -203,7 +204,7 @@ def heritability_result(id):
 
   # get this dynamically from the bp
   # logs_url = f"/heritability/h2/{hr.id}/logs"
-  logs_url = url_for('heritability.view_logs', id = hr.id)
+  logs_url = url_for('heritability_calculator.view_logs', id = hr.id)
 
   if data is None:
     return abort(404, description="Heritability report not found")
@@ -240,5 +241,5 @@ def heritability_result(id):
   persistent_logger = PersistentLogger(service_name)
   error = persistent_logger.get(id)
 
-  return render_template("tools/heritability/view.html", **locals())
+  return render_template("tools/heritability_calculator/result.html", **locals())
 

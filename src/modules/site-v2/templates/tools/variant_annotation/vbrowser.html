@@ -1,4 +1,4 @@
-{% extends "_layouts/default.html" %}
+{% extends "_layouts/default-nocontainer.html" %}
 
 
 {% block custom_head %}
@@ -8,240 +8,208 @@
     <script type="text/javascript" src="https://cdn.datatables.net/colreorder/1.5.3/js/dataTables.colReorder.min.js"></script>
 {% endblock %}
 
-
-{% block style %}
-<style>
-
-table.dataTable thead .sorting_asc {
-  background: url("//cdn.datatables.net/1.10.0/images/sort_asc.png") no-repeat center left;
-}
-table.dataTable thead .sorting_desc {
-  background: url("//cdn.datatables.net/1.10.0/images/sort_desc.png") no-repeat center left;
-}
-table.dataTable thead .sorting {
-  background: url("//cdn.datatables.net/1.10.0/images/sort_both.png") no-repeat center left;
-}
-
-mark {
-  background-color: inherit;
-  font-size: 0.8rem;
-}
-
-.hl-mark {
-  background-color: yellow;
-}
-
-
-</style>
-{% endblock %}
-
 {% block content %}
-
-<!-- <div class="container-fluid browser-row well"> -->
-  <div class="browser-row well">
-
-<div class="row">
-      {# Gene Search Block #}
-      <div class="col-lg-12">
-        <div class="row">
-      <div class="col-lg-4 col-lg-offset-0 col-md-10 col-md-offset-1 col-sm-8 col-sm-offset-2 col-xs-12 text-center">
-
-        <h3><label for="gene-search"> Species </label></h3>
-        <select name="species" id="species-selector" class="form-control" onchange="update_species()">
-          {% for s in species_list %}
-            <option value="{{s}}">{{species_list[s]["short_name"]}}</option>
-          {% endfor %}
-        </select>
-
-        <br /><br />
-
-        <h3><label for="gene-search"> Gene </label></h3>
-        <form id='form-submit-gene' method='post'>
-          <div class="form-group">
-            <input name="gene-search" id="gene-search" class="form-control text-center" placeholder="isw-1">
-          </div>
-        </form>
-        <small id="gene-search-label">Search by WBGeneID, alphanumeric name (F37A4.8), or gene name (isw-1)</small>
-        <div id="loading-search-table" style="display:none; margin-top:20px; ">
-          <div class="spinner">
-            <div class="bounce1"></div>
-            <div class="bounce2"></div>
-            <div class="bounce3"></div>
-          </div>
-        </div>
-
-        <table id="v-search-table" class='table table-striped' style="display:none; table-layout:fixed;">
-          <thead>
-            <tr>
-              <th>Gene</th>
-              <th>Name</th>
-              <th>ID</th>
-            </tr>
-          </thead>
-          <tbody id="orthologs"></tbody>
-        </table>
-
-      </div> {# /col-lg-4 #}
-      
-
-      {# Interval Search Block #}
-      <div class="col-lg-4 col-lg-offset-0 col-md-10 col-md-offset-1 col-sm-8 col-sm-offset-2 col-xs-12 text-center">
-        <h3><label for="interval"> Interval </label></h3>
-        <form id='form-submit-interval' method='post'>
-          <div class="form-group">
-            <input name="interval" id="interval" class="form-control text-center" placeholder="III:11,746,923-11,750,250" pattern="(I|II|III|IV|V|X|MtDNA):[0-9,]+-[0-9,]+">
-          </div>
-          <small>Search using the format [chromosome:START-STOP]</small>
-          <div class="btn-mid-row" style="width: 60%; margin: auto;">
-            <button class="btn nu-alt-btn btn-block" id="search-interval-btn">
-              <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> 
-              Search
-            </button>
-          </div>
-        </form>
-        <div class="btn-mid-row" style="width: 60%; margin: auto;">
-          <button class="btn nu-alt-btn btn-block" disabled id="download-result-btn" onClick="onDownload();">
-            <span class="glyphicon glyphicon-download" aria-hidden="true"></span> 
-            Download Results
-          </button>
-        </div>
-        <div class="btn-bottom-row" style="width: 60%; margin: auto;">
-          <a href="https://storage.googleapis.com/caendr-site-public-bucket/dataset_release/c_elegans/{{current_version}}/variation/WI.{{current_version}}.strain-annotation.tsv.gz"
-              type="button" class="btn nu-alt-btn btn-block" id="download-all-btn"
-            >
-            <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-            Download All Annotations
-          </a>
-        </div>
-      </div> {# /col-lg-4 #}
-
-
-  {# Column select list block #}
-  <div class="col-lg-2 col-lg-offset-0 col-md-4 col-md-offset-2 col-sm-6 col-xs-6">
-    <h3 class="text-center">Columns</h3>
-
-    <div class="chk-select-list" id="col-select">
+<div class="container-fluid px-5">
+  <div class="d-flex justify-content-around flex-wrap mt-2 pb-5">
+    <!-- Input Card -->
+    <div class="col-md-8 col-xl-3 text-bg-light mb-5 p-3 p-md-5 rounded-2 shadow-sm" style="max-height:80vh;">
+      <!-- Input Form -->
       <form>
-        <div class="form-group">
-          <div class="select-checkbox">
-            <div class="col-entry">
-              <input class="toggle-col-chk" type="checkbox" name="toggle_all_cols" id="toggle_all_cols"/>
-              <strong><label id="toggle_all_cols_label" for="toggle_all_cols"> Select All </label> </strong>
+        <div class="mb-4">
+          <label for="speciesSelect" class="form-label">Species:</label>
+          <select class="form-select" aria-label="Choose species" id="speciesSelect">
+            <option selected>Choose</option>
+            <option value="1">C. Elegans</option>
+            <option value="2">C. Briggsae</option>
+            <option value="3">C. Tropicalis</option>
+          </select>
+        </div>
+        <!-- Gene Search -->
+        <div class="mb-4">
+          <label for="gene-search" class="form-label">Gene Search:</label>
+          <!-- Info Popover -->
+          <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
+            data-bs-trigger="focus" data-bs-title="More information"
+            data-bs-content="Search by WBGeneID, alphanumeric name (F37A4.8), or gene name (isw-1)"><i
+              class="bi bi-info lh-1" aria-hidden="true"></i></a>
+          <!-- /Info Popover -->
+          <div class="dropdown">
+            <form id="form-submit-gene" method="post">
+              <input class="form-control dropdown-toggle" id="gene-search" placeholder="For example, trt-1"
+                data-bs-toggle="dropdown">
+            </form>
+            <div class="dropdown-menu table-responsive p-1 dropdownSelect">
+              <div class="p-3 text-center" id="loading-search-table" style="display:none;">
+                <div class="spinner-border" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              </div>
+              <table id="v-search-table" class='table table-hover table-striped' style="display:none;">
+                <thead>
+                  <tr>
+                    <th>Gene</th>
+                    <th>Name</th>
+                    <th>ID</th>
+                  </tr>
+                </thead>
+                <tbody id="orthologs"></tbody>
+              </table>
             </div>
-            <br>
-          {% for col in columns %}
-            <div class="col-entry">
-              <input class="toggle-col-chk" type="checkbox" name="toggle_{{ col['id'] }}" id="toggle_{{ col['id'] }}" data-column="{{ col['id'] }}"/>
-              <label for="toggle_{{ col['id'] }}"> {{ col['name'] }} </label>
-            </div>
-          {% endfor %}
           </div>
         </div>
-      </form>
-    </div> {# /col-list #}
-
-    <button class="btn nu-alt-btn btn-block" id="reset-cols-btn" onClick="select_default_columns()">
-      Reset Default Columns
-    </button>
-  </div> {# /col-md-2 #}
-
-  {# strain select list block #}
-  <div class="col-lg-2 col-md-4 col-sm-6 col-xs-6">
-      <h3 class="text-center">Strains</h3>
-
-      <div class="pre-scrollable chk-select-list sticky" id="strain-select">
-
-        <input id="strain-filter" type="text" class="chk-select-filter" placeholder="Search" action="#" autocomplete="off">
-
-        <form>
-          <div class="form-group">
-            <div class="select-checkbox">
-              <div class="strain-entry select-searchable">
-                <input class="toggle-strain-chk" type="checkbox" name="toggle_all_strains" id="toggle_all_strains" checked/>
-                <strong><label id="toggle_all_strains_label" for="toggle_all_strains"> Select All </label></strong>
+        <!-- /Gene Search -->
+        <!-- Interval Search -->
+        <div class="mb-4">
+          <label for="interval" class="form-label">Interval:</label>
+          <!-- Info Popover -->
+          <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
+            data-bs-trigger="focus" data-bs-title="More information"
+            data-bs-content="Search using the format [chromosome:START-STOP]"><i class="bi bi-info lh-1"
+              aria-hidden="true"></i></a>
+          <!-- /Info Popover -->
+          <form id='form-submit-interval' method='post'>
+            <div class="input-group">
+              <input name="interval" id="interval" class="form-control text-center"
+                placeholder="III:11,746,923-11,750,250" pattern="(I|II|III|IV|V|X|MtDNA):[0-9,]+-[0-9,]+">
+              <button class="btn btn-secondary text-light" id="search-interval-btn">Search</button>
+            </div>
+          </form>
+        </div>
+        <!-- /Interval Search -->
+        <div class="mb-4">
+          <!-- Column Select Dropdown -->
+          <div class="dropdown d-grid">
+            <button class="btn btn-secondary dropdown-toggle text-light" type="button" data-bs-toggle="dropdown"
+              data-bs-auto-close="false" aria-expanded="false">
+              Select Columns
+            </button>
+            <div class="dropdown-menu p-3 overflow-scroll dropdownSelect">
+              <div class="chk-select-list" id="col-select">
+                <form>
+                  <div class="form-group">
+                    <div class="fw-bold mb-3 col-entry">
+                      <input class="toggle-col-chk" type="checkbox" name="toggle_all_cols" id="toggle_all_cols" />
+                      <label id="toggle_all_cols_label" for="toggle_all_cols"> Select All</label>
+                    </div>
+                    {% for col in columns %}
+                    <div class="col-entry">
+                      <input class="toggle-col-chk" type="checkbox" name="toggle_{{ col['id'] }}"
+                        id="toggle_{{ col['id'] }}" data-column="{{ col['id'] }}" />
+                      <label for="toggle_{{ col['id'] }}"> {{ col['name'] }} </label>
+                    </div>
+                    {% endfor %}
+                  </div>
+                </form>
               </div>
-              <br>
-              {% for species in species_list %}
-              <div id="strain-entry-container-{{species}}" class="strain-entry-container">
-                {% for strain in strain_listing[species] %}
-                <div class="strain-entry select-searchable">
-                  <input class="toggle-strain-chk toggle-strain-chk-{{species}}" type="checkbox" data-column="{{strain}}" id="toggle_{{strain}}" checked/>
-                  <label for="toggle_{{strain}}"> {{ strain }} </label>
-                </div>
-                {% endfor %}
+              <div class="my-3 text-end">
+                <button class="btn btn-secondary text-light fw-bold" id="reset-cols-btn"
+                  onClick="select_default_columns()">
+                  Reset to defaults
+                </button>
               </div>
-              {% endfor %}
             </div>
           </div>
-        </form>
-      </div> {# /strain-list #}
-  </div> {# /col-md-2 #}
-</div>{# /row #}
-
-<div class="row">
-  <div class="col-lg-4 col-lg-offset-8 col-sm-8 col-sm-offset-2 col-xs-12">
-
-    <h3 class="text-center">Variant Impact</h3>
-
-      <form class="form-inline impact-chk-group">
-          <div class="row">
-
-          <div class="col-xs-6 form-group text-center">
-            <div class="impact-entry select-checkbox">
-              <input class="toggle-impact-chk" type="checkbox" name="impact_high" id="impact_high" checked/>
-              <strong><label id="impact_high_label" for="impact_high"> High </label> </strong>
+          <!-- /Column Select Dropdown -->
+        </div>
+        <!-- Strain List -->
+        <div class="mb-4">
+          <label for="strain-filter" class="form-label">Strains:</label>
+          <div class="dropdown">
+            <input class="form-control dropdown-toggle chk-select-filter" id="strain-filter" placeholder="Search..."
+              data-bs-toggle="dropdown" action="#" autocomplete="off">
+            <div class="dropdown-menu table-responsive p-2 dropdownSelect" style="height:20vh;">
+              <form>
+                <div class="strain-entry select-searchable mb-1">
+                  <input class="toggle-strain-chk" type="checkbox" name="toggle_all_strains" id="toggle_all_strains"
+                    checked />
+                  <strong><label id="toggle_all_strains_label" for="toggle_all_strains"> Select All </label></strong>
+                </div>
+                <table class="table table-striped table-hover">
+                  <caption class="visually-hidden">A list of strains.</caption>
+                  <tbody>
+                    {% for species in species_list %}
+                    {% for strain in strain_listing[species] %}
+                    <tr id="strain-entry-container-{{species}}" class="select-searchable strain-entry-container">
+                      <td>
+                        <input class="toggle-strain-chk" type="checkbox" data-column="{{strain}}" id="toggle_{{strain}}"
+                          checked />
+                        <label for="toggle_{{strain}}"> {{ strain }} </label>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </form>
             </div>
-          </div> {# /form group #}
-
-          <div class="col-xs-6 form-group text-center">
-            <div class="impact-entry select-checkbox">
-              <input class="toggle-impact-chk" type="checkbox" name="impact_low" id="impact_low"/>
-              <strong><label id="impact_low_label" for="impact_low"> Low </label> </strong>
+          </div>
+        </div>
+        <!-- /Strain List -->
+        <!-- Horizontal checkboxes -->
+        <div class="hstack gap-2 mb-4">
+          <label for="checkboxGroup" class="form-label">Variant Impact:</label>
+          <div class="hstack gap-2" id="checkboxGroup">
+            <div class="form-check">
+              <input class="form-check-input toggle-impact-chk" type="checkbox" name="impact_high" id="impact_high"
+                checked />
+              <label id="form-check-label impact_high_label" for="impact_high">High</label>
             </div>
-          </div> {# /form group #}
-
-        </div> {#/ row #}
-      
+            <div class="form-check">
+              <input class="form-check-input toggle-impact-chk" type="checkbox" name="impact_low" id="impact_low" />
+              <label id="form-check-label impact_low_label" for="impact_low">Low</label>
+            </div>
+          </div>
+        </div>
+        <!-- /Horiztonal checkboxes -->
       </form>
-
-    </div> {# /col #}
-</div> {# /row #}
-</div> {# /col-lg-12 #}
-</div> {# /row #}
-</div> {# /container #}
-
-<div class="row">
-  <div class="col-lg-12">
-    <div id="loading-variant-table" style="display:none; margin-top:20px;">
-      <div class="spinner">
-        <div class="bounce1"></div>
-        <div class="bounce2"></div>
-        <div class="bounce3"></div>
+      <!-- /Input Form -->
+    </div>
+    <!-- /Input Card -->
+    <!-- Tool column -->
+    <div class="d-flex flex-wrap flex-column col-md-12 col-xl-8">
+      <!-- Options Toolbar -->
+      <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar">
+        <div class="ps-3 pt-0">
+          <button class="btn btn-link" disabled id="download-result-btn" onClick="onDownload();"><i
+              class="bi bi-file-earmark-arrow-down-fill" aria-hidden="true"></i> Download My Results</button>
+        </div>
+        <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i> Fullscreen</a>
+        </div>
       </div>
+      <!-- /Options Toolbar -->
+      <!-- Annotation Table -->
+      <div class="col mx-auto" style="max-width:65vw;">
+        <div id="loading-variant-table" style="display:none;">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+        <div class="table-responsive" id="result-table">
+          <table id="variant-table" class="table-striped table-hover" style="width:100%;">
+            <caption class="visually-hidden">List of variant annotations</caption>
+            <thead>
+              <tr class="header">
+                {% for col in columns %}
+                <th class="data-{{col['id']}} sorting"><strong> {{ col['name'] }} </strong></th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                {% for col in columns %}
+                <td class="data-{{col['id']}}"> </td>
+                {% endfor %}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Annotation Table -->
     </div>
-
-    <div id='result-table'>
-      <table id='variant-table' class='table-striped table-hover table-compact'>
-        <thead>
-          <tr class="header">
-        {% for col in columns %}
-            <th class="data-{{col['id']}} sorting"><strong> {{ col['name'] }} </strong></th>
-        {% endfor %}
-          </tr>
-        </thead>
-
-        <tbody>
-            <tr>
-          {% for col in columns %}
-              <td class="data-{{col['id']}}"> </td>
-          {% endfor %}
-            </tr>
-        </tbody>
-      </table>
-    </div>
-  </div> {# /col-lg-12 #}
-</div> {# /row #}
-
+    <!-- /Tool Column -->
+  </div>
+  <!-- /Flex -->
+</div> <!-- /Container -->
 
 {% endblock %}
 
@@ -339,7 +307,7 @@ function update_selected_strains() {
 
 async function downloadCSV(json_data) {
   const csrfToken = "{{ form.csrf_token._value() }}";
-  const url = "{{ url_for('variant_browser.vbrowser_download_csv') }}"
+  const url = "{{ url_for('variant_annotation.vbrowser_download_csv') }}"
   const res = await fetch(url, {
     method: "POST",
     credentials: "include",
@@ -362,7 +330,7 @@ async function downloadCSV(json_data) {
   } else {
     const err = await res.json()
     console.error(err.message)
-    window.location.href = "{{ url_for('variant_browser.vbrowser', download_err=True ) }}"
+    window.location.href = "{{ url_for('variant_annotation.variant_annotation', download_err=True ) }}"
   }
 
 }
@@ -575,7 +543,7 @@ function fetchTargetConsequence(el, q) {
       type: "POST",
       contentType: 'application/json',
       dataType: 'json',
-      url: "{{ url_for('variant_browser.vbrowser_query_position') }}",
+      url: "{{ url_for('variant_annotation.vbrowser_query_position') }}",
       data: JSON.stringify({query: q}),
       success:function(result) {
         cachedTargets[q] = result;
@@ -820,7 +788,7 @@ $(document).ready(function() {
 				type: "POST",
         contentType: 'application/json',
         dataType: 'json',
-				url: "{{ url_for('variant_browser.vbrowser_query_interval') }}",
+				url: "{{ url_for('variant_annotation.vbrowser_query_interval') }}",
 				data: JSON.stringify(data),
 				success:function(result) {
           const has_results = !!Object.keys(result).length;

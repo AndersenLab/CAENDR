@@ -88,11 +88,24 @@ CONTAINER ID   IMAGE                                            COMMAND         
 75ef941c1e64   gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine   "/cloud_sql_proxy -i…"   3 minutes ago   Up 3 minutes   0.0.0.0:5432->5432/tcp   caendr-cloud-sql-proxy-1
 ```
 
-Open a second terminal window:
+*To make changes to the Legacy site (currently in production)*
+Open a second terminal window
 ```
 export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
 export ENV=main
-cd src/modules/sites
+cd src/modules/site
+make configure
+make dot-env
+make venv
+code ../../..
+```
+
+*To make changes to the NEW site-v2 templates*
+Open a second terminal window 
+```
+export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
+export ENV=main
+cd src/modules/site-v2
 make configure
 make dot-env
 make venv

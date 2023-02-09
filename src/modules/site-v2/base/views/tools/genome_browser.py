@@ -19,9 +19,9 @@ from caendr.api.isotype import get_isotypes
 from caendr.services.dataset_release import get_dataset_release, get_latest_dataset_release_version
 
 
-gene_browser_bp = Blueprint('gene_browser',
-                        __name__,
-                        template_folder='templates')
+genome_browser_bp = Blueprint(
+  'genome_browser', __name__, template_folder='templates'
+)
 
 
 
@@ -61,7 +61,7 @@ def replace_tokens_recursive(obj, **kwargs):
 
 
 
-@gene_browser_bp.route('/gbrowser/tracks', methods=['GET'])
+@genome_browser_bp.route('/gbrowser/tracks', methods=['GET'])
 def get_tracks():
   '''
   Get the list of browser tracks.
@@ -85,13 +85,13 @@ def get_tracks():
 
 
 
-@gene_browser_bp.route('/gbrowser')
-@gene_browser_bp.route('/gbrowser/')
-@gene_browser_bp.route('/gbrowser/<release_version>')
-@gene_browser_bp.route('/gbrowser/<release_version>/<region>')
-@gene_browser_bp.route('/gbrowser/<release_version>/<region>/<query>')
+@genome_browser_bp.route('/genome-browser')
+@genome_browser_bp.route('/genome-browser/')
+@genome_browser_bp.route('/genome-browser/<release_version>')
+@genome_browser_bp.route('/genome-browser/<release_version>/<region>')
+@genome_browser_bp.route('/genome-browser/<release_version>/<region>/<query>')
 @cache.memoize(60*60)
-def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
+def genome_browser(release_version=None, region="III:11746923-11750250", query=None):
   dataset_release = get_dataset_release_or_latest(release_version)
 
   # Allow WB version to be overridden w URL variable
@@ -123,13 +123,13 @@ def gbrowser(release_version=None, region="III:11746923-11750250", query=None):
   }
 
   # Render the page
-  return render_template('data/gbrowser.html', **{
+  return render_template('tools/genome_browser/gbrowser.html', **{
 
     # Page info
     'title': f"Genome Browser",
     'alt_parent_breadcrumb': {
-      "title": "Data",
-      "url": url_for('data.landing')
+      "title": "Tools",
+      "url": url_for('tools.tools')
     },
 
     # Data

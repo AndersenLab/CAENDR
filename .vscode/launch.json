@@ -5,19 +5,43 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Script: Create NemaScan Task",
+            "name": "Run Site-v2 (requires a local Postgres instance or cloud-sql-proxy)",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/src/modules/site/scripts/create-nemascan-mapping-task.py",
-            "cwd": "${workspaceFolder}/src/modules/site",
-            "envFile": "${workspaceFolder}/src/modules/site/.env",
-            "env": {},
-            "python": "${workspaceFolder}/src/modules/site/venv/bin/python",
+            "cwd": "${workspaceFolder}/src/modules/site-v2",
             "console": "integratedTerminal",
-            "justMyCode": true
+            "module": "flask",
+            "python": "${workspaceFolder}/src/modules/site-v2/venv/bin/python",
+            "envFile": "${workspaceFolder}/src/modules/site-v2/.env",
+            "env": {
+                "ENV": "main",
+                "FLASK_APP": "main.py",
+                "FLASK_ENV": "development",
+                "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "localhost",
+                // "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "file",
+                // "MODULE_DB_OPERATIONS_CONNECTION_FILE": "${workspaceFolder}/src/modules/db_operations/13.db",
+                "MODULE_DB_TIMEOUT": "3",
+                // "MODULE_API_PIPELINE_TASK_URL_NAME": "API_PIPELINE_TASK_URL",
+                // "API_PIPELINE_TASK_URL": "https://localhost:9090",
+                "CAENDR_USE_SSL": "1",
+                "SENTRY_URL": "",
+                "SITE_BASE_URL": "https://localhost:8080",
+                "SPECIES_LIST_FILE": "${workspaceFolder}/data/species_list.json",
+            },
+            "args": [
+                "run",
+                "--host",
+                "localhost",
+                "--port",
+                "8080",
+                "--cert",
+                "adhoc",
+                "--with-threads"
+            ],
+            "jinja": true
         },
         {
-            "name": "Run Site (local Postgres or cloud-sql-proxy)",
+            "name": "Run Site  (requires a local Postgres instance or cloud-sql-proxy)",
             "type": "python",
             "request": "launch",
             "cwd": "${workspaceFolder}/src/modules/site",
@@ -51,6 +75,18 @@
                 "--with-threads"
             ],
             "jinja": true
+        },
+        {
+            "name": "Script: Create NemaScan Task",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/modules/site/scripts/create-nemascan-mapping-task.py",
+            "cwd": "${workspaceFolder}/src/modules/site",
+            "envFile": "${workspaceFolder}/src/modules/site/.env",
+            "env": {},
+            "python": "${workspaceFolder}/src/modules/site/venv/bin/python",
+            "console": "integratedTerminal",
+            "justMyCode": true
         },
         {
             "name": "Run API pipeline server",

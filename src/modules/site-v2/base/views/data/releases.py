@@ -41,7 +41,7 @@ releases_bp = Blueprint('data_releases',
 def data_releases(release_version=None):
   """ Default data page - lists available releases. """
   title = "Genomic Data"
-  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.landing')}
+  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.data')}
   RELEASES = get_all_dataset_releases(order='-version')
   
   # Get the requested release and throw an error if it doesn't exist
@@ -67,7 +67,7 @@ def data_releases(release_version=None):
 @cache.memoize(60*60)
 def data_v02(RELEASE, RELEASES):
   title = "Genomic Data"
-  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.landing')}
+  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.data')}
   release_version = RELEASE.version
   strain_listing = query_strains(release_version=release_version)
 
@@ -84,7 +84,7 @@ def data_v02(RELEASE, RELEASES):
 def data_v01(RELEASE, RELEASES):
   # Legacy releases (Pre 20200101)
   title = "Genomic Data"
-  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.landing')}
+  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.data')}
   release_version = RELEASE.version
   strain_listing = query_strains(release_version=release_version)
 
@@ -131,7 +131,7 @@ def alignment_data(release_version=''):
   
   # Post-2020 releases
   title = "Alignment Data"
-  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.landing')}
+  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.data')}
   strain_listing = query_strains(release_version=release_version)
   '''
   DATASET_RELEASE, WORMBASE_VERSION = list(filter(lambda x: x[0] == release_version, RELEASES))[0]
@@ -171,7 +171,7 @@ def strain_issues(release_version=None):
   
   # Post-2020 releases
   title = "Strain Issues"
-  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.landing')}
+  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.data')}
   strain_listing_issues = query_strains(release_version=release_version, issues=True)
 
   return render_template('strain/issues.html', **locals())

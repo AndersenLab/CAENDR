@@ -1,0 +1,117 @@
+/* Feedback Button at bottom of site */
+#feedback {
+    position: fixed;
+    right: 15%;
+    bottom: 0;
+    z-index: 50000;
+    margin-left: -3px;
+    margin-bottom: -3px;
+  }
+  
+  #feedback-form {
+    float: left;
+    width: 300px;
+    height: 100%;
+    z-index: 50000;
+    padding-left: 5px;
+    padding-right: 10px;
+    background-clip: 'padding-box';
+    border: 1px solid rgba(0,0,0,.2);
+    -moz-border-radius: 0px;
+    -webkit-border-radius: 0px;
+    border-radius: 0px;
+    -webkit-box-shadow: 0 5px 10px rgba(0,0,0,.2);
+    -moz-box-shadow: 0 5px 10px rgba(0,0,0,.2);
+    box-shadow: 0 5px 10px rgba(0,0,0,.2);
+  }
+  
+  .form-error {
+    font-size: 12px;
+    color: red;
+    font-weight: 600;
+  }
+  
+  #feedback-tab {
+    float: right;
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+    text-align: center;
+    width: 120px;
+    height: 42px;
+    background-color: rgba(0,0,0,0.5);
+    margin-top: 60px;
+    margin-left: -42px;
+    padding-top: 5px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+  }
+  
+  #feedback-tab:hover {
+    background-color: rgba(0,0,0,0.4);
+  }
+  
+  #feedback-form textarea {
+    resize: none;
+  }
+
+  /* Leaflet Map styles */
+  .leaflet-control-search.search-load .search-input {
+    background: url("{{ ext_asset('img/icons/loader.gif') }}") no-repeat center right #fff;
+  }
+  
+  .leaflet-control-search .search-button {
+    display:block;
+    float:left;
+    width:30px;
+    height:30px;  
+    background: url("{{ ext_asset('img/icons/search-icon.png') }}") no-repeat 4px 4px #fff;
+    border-radius:4px;
+  }
+  
+  .leaflet-control-search .search-button:hover {
+    background: url("{{ ext_asset('img/icons/search-icon.png') }}") no-repeat 4px -20px #fafafa;
+  }
+  
+  .leaflet-control-search .search-cancel {
+    display:block;
+    width:22px;
+    height:22px;
+    position:absolute;
+    right:28px;
+    margin:6px 0;
+    background: url("{{ ext_asset('img/icons/search-icon.png') }}") no-repeat 0 -46px;
+    text-decoration:none;
+    filter: alpha(opacity=80);
+    opacity: 0.8;   
+  }
+
+  /* Genome Browser */
+  .gbrowserTracks {
+    height:15vh; 
+    background-color: #fff; 
+    border: 1px solid #CFD4D9;
+  }
+  
+  /* Variant Annotation */
+    table.dataTable thead .sorting_asc {
+      background: url("//cdn.datatables.net/1.10.0/images/sort_asc.png") no-repeat center left;
+    }
+  
+    table.dataTable thead .sorting_desc {
+      background: url("//cdn.datatables.net/1.10.0/images/sort_desc.png") no-repeat center left;
+    }
+  
+    table.dataTable thead .sorting {
+      background: url("//cdn.datatables.net/1.10.0/images/sort_both.png") no-repeat center left;
+    }
+  
+    mark {
+      background-color: inherit;
+      font-size: 0.8rem;
+    }
+  
+    .hl-mark {
+      background-color: yellow;
+    }

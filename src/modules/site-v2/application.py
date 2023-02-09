@@ -19,23 +19,26 @@ from base.utils.markdown import render_markdown, render_ext_markdown
 #  Routing  #
 # --------- #
 from base.views import primary_bp
-from base.views import about_bp
 from base.views import strains_bp
 from base.views import user_bp
 from base.views import order_bp
-from base.views import mapping_bp
 
 # Data
 from base.views.data import data_bp
 from base.views.data import releases_bp
-from base.views.data import gene_browser_bp
-from base.views.data import variant_browser_bp
 from base.views.data import data_downloads_bp
 
 # Tool
 from base.views.tools import tools_bp
-from base.views.tools import indel_primer_bp
-from base.views.tools import heritability_bp
+from base.views.tools import genome_browser_bp
+from base.views.tools import variant_annotation_bp
+from base.views.tools import genetic_mapping_bp
+from base.views.tools import pairwise_indel_finder_bp
+from base.views.tools import heritability_calculator_bp
+
+# About & Get Involved
+from base.views.about        import about_bp
+from base.views.get_involved import get_involved_bp
 
 # API
 from base.views.api import api_gene_bp
@@ -171,13 +174,12 @@ def register_blueprints(app):
   app.register_blueprint(about_bp, url_prefix='/about')
   app.register_blueprint(strains_bp, url_prefix='/strains')
   app.register_blueprint(order_bp, url_prefix='/order')
+  app.register_blueprint(get_involved_bp, url_prefix='/get-involved')
 
   # Data
   app.register_blueprint(data_bp, url_prefix='/data')
   app.register_blueprint(releases_bp, url_prefix='/data')
   app.register_blueprint(data_downloads_bp, url_prefix='/data')
-  app.register_blueprint(gene_browser_bp, url_prefix='/data')
-  app.register_blueprint(variant_browser_bp, url_prefix='/data')
   
   # User
   app.register_blueprint(user_bp, url_prefix='/user')
@@ -206,10 +208,12 @@ def register_blueprints(app):
   app.register_blueprint(google_bp, url_prefix='/login')
   
   # Tools
-  app.register_blueprint(mapping_bp, url_prefix='')
   app.register_blueprint(tools_bp, url_prefix='/tools')
-  app.register_blueprint(indel_primer_bp, url_prefix='/tools')
-  app.register_blueprint(heritability_bp, url_prefix='/tools')
+  app.register_blueprint(genome_browser_bp,          url_prefix='/tools')
+  app.register_blueprint(variant_annotation_bp,      url_prefix='/tools')
+  app.register_blueprint(genetic_mapping_bp,         url_prefix='/tools')
+  app.register_blueprint(pairwise_indel_finder_bp,   url_prefix='/tools')
+  app.register_blueprint(heritability_calculator_bp, url_prefix='/tools')
 
   '''
   app.register_blueprint(gene_bp, url_prefix='/gene')

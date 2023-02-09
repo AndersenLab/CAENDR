@@ -6,9 +6,48 @@
 
 {% block content %}
 <div class="row row-margin">
-  
-  <div class="text-center col-lg-4 col-lg-offset-1 col-md-6 col-sm-6 col-xs-12">
-    <a href="{{ url_for('indel_primer.indel_primer') }}" style="text-decoration: none;">
+
+  <div class="text-center col-lg-4 col-md-6 col-sm-6">
+    <a href="{{ url_for('genome_browser.genome_browser') }}" style="text-decoration: none;">
+      <div class="menu-card">
+        <img class="card-img-top" src="{{ ext_asset('img/icons/genome_browser.png') }}" alt="Genome Browser">
+        <div class="card-body">
+          <h4 class="card-title">Genome Browser</h4>
+          <p class="card-text text-center">Use the IGV browser to compare strain variant data</p>
+        </div>
+      </div> {# /card #}
+    </a>
+  </div> {#/col #}
+
+
+  <div class="text-center col-lg-4 col-md-6 col-sm-6">
+    <a href="{{ url_for('variant_annotation.variant_annotation') }}" style="text-decoration: none;">
+      <div class="menu-card">
+        <img class="card-img-top" src="{{ ext_asset('img/icons/variant_annotation.png') }}" alt="Variant Annotation">
+        <div class="card-body">
+          <h4 class="card-title">Variant Annotation</h4>
+          <p class="card-text text-center">Search and sort genetic variants and their predicted consequences by strain</p>
+        </div>
+      </div> {# /card #}
+    </a>
+  </div> {#/col #}
+
+
+  <div class="text-center col-lg-4 col-md-6 col-sm-6">
+    <a href="{{ url_for('genetic_mapping.genetic_mapping') }}" style="text-decoration: none;">
+      <div class="menu-card">
+        <img class="card-img-top" src="static/img/pin.png" alt="Genetic Mapping">
+        <div class="card-body">
+          <h4 class="card-title">Genetic Mapping</h4>
+          <p class="card-text text-center">Facilitation of genetic mappings to empower researchers in quantitative genetics</p>
+        </div>
+      </div> {# /card #}
+    </a>
+  </div> {#/col #}
+
+
+  <div class="text-center col-lg-4 col-md-6 col-sm-6">
+    <a href="{{ url_for('pairwise_indel_finder.pairwise_indel_finder') }}" style="text-decoration: none;">
       <div class="menu-card">
         <img class="card-img-top" src="{{ ext_asset('img/icons/pairwise_indel_finder.png') }}" alt="Pairwise Indel Finder">
         <div class="card-body">
@@ -18,10 +57,10 @@
       </div> {# /card #}
     </a>
   </div> {#/col #}
-  
-  
-  <div class="text-center col-lg-4 col-lg-offset-2 col-md-6 col-sm-6 col-xs-12">
-    <a href="{{ url_for('heritability.heritability') }}" style="text-decoration: none;">
+
+
+  <div class="text-center col-lg-4 col-md-6 col-sm-6">
+    <a href="{{ url_for('heritability_calculator.heritability_calculator') }}" style="text-decoration: none;">
       <div class="menu-card">
         <img class="card-img-top" src="{{ ext_asset('img/icons/heritability_calculator.png') }}" alt="Heritability Calculator">
         <div class="card-body">

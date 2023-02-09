@@ -22,7 +22,7 @@ def download_script_strain_v2(release_version):
 @cache.cached(timeout=60*60*24)
 @jwt_required()
 def download_script(release_version):
-  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.landing')}
+  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.data')}
   try:
     script_fname = fetch_bam_bai_download_script()
     if script_fname and os.path.exists(script_fname):
@@ -36,7 +36,7 @@ def download_script(release_version):
 @jwt_required()
 def download_bam_bai_file(strain_name='', ext=''):
   title = f'{strain_name}.{ext}'
-  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.landing')}
+  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.data')}
 
   signed_download_url = get_bam_bai_download_link(strain_name, ext)
   msg = 'download will begin shortly...'
@@ -44,5 +44,5 @@ def download_bam_bai_file(strain_name='', ext=''):
     msg = 'error fetching download link'
     signed_download_url = ''
   
-  return render_template('data/download.html', **locals())
+  return render_template('data/download-redirect.html', **locals())
 
