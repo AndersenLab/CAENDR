@@ -318,6 +318,8 @@ class MappingSubmissionManager(SubmissionManager):
     data = { k: v for k, v in data.items() if k != 'filepath' }
 
     # Validate file upload
+    # TODO: Further validation. Parse file into object, validating along the way?
+    #       This might also allow better data hashing? Since e.g. blank spaces in the file would be ignored.
     logger.debug(f'Validating Nemascan Mapping data format: {local_path}')
 
     # Read first line from tsv
@@ -326,11 +328,15 @@ class MappingSubmissionManager(SubmissionManager):
       try:
         csv_headings = next(csv_reader)
       except StopIteration:
-        raise DataFormatError('Empty file')
+        raise DataFormatError('Empty file.')
 
     # Check first line for column headers (strain, {TRAIT})
-    if csv_headings[0].lower() != 'strain' or len(csv_headings) != 2 or len(csv_headings[1]) == 0:
-      raise DataFormatError()
+    if csv_headings[0].lower() != 'strain':
+      raise DataFormatError('First column should be "strain".')
+    if len(csv_headings) != 2:
+      raise DataFormatError('File should have exactly two columns.')
+    if len(csv_headings[1]) == 0:
+      raise DataFormatError('Second column header should be trait name.')
 
     # Compute data hash using entire file
     data_hash = get_file_hash(local_path, length=32)
