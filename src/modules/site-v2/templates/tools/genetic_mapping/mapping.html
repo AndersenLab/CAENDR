@@ -4,7 +4,7 @@
 <div class="container">
   <div class="d-flex justify-content-around flex-wrap mb-5">
       <!-- Description card -->
-      <div class="col-12 col-md-8 col-lg-4 mx-auto mb-5 align-self-center">
+      <div class="col-10 col-md-8 col-lg-4 mx-auto mt-4 mt-lg-0 mb-5 align-self-center">
           <div class="card p-2 shadow descriptionCard cardBorderBottom">
               <div class="card-body">
                   <p class="card-text">
@@ -23,19 +23,19 @@
       </div>
       <!-- /Description Card -->
       <!-- Tool -->
-      <div class="col-12 col-md-8 col-lg-5 mx-auto mb-5">
+      <div class="col-12 col-sm-10 col-md-8 col-lg-5 mx-auto mb-5">
         <div class="card border-0 shadow text-center">
           <!-- Tab Menu -->
           <nav>
             <div class="nav nav-tabs text-bg-light p-1 pb-0" id="nav-tab" role="tablist">
               <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">New Mapping</button>
-              <button class="nav-link" id="nav-linkOne-tab" data-bs-toggle="tab" data-bs-target="#nav-linkOne" type="button" role="tab" aria-controls="nav-linkOne" aria-selected="false">Download Sample Report</button>
+              <button class="nav-link" id="nav-linkOne-tab" data-bs-toggle="tab" data-bs-target="#nav-linkOne" type="button" role="tab" aria-controls="nav-linkOne" aria-selected="false">Sample Report</button>
               <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false"><a href="{{ url_for('genetic_mapping.user_reports') }}">My Mapping Results</a></button>
             </div>
           </nav>
           <div class="tab-content m-3" id="nav-tabContent">
              <!-- Tab 1 -->
-            <div class="tab-pane fade show active px-5 py-2 text-start toolContent" id="nav-home" role="tabpanel"
+            <div class="tab-pane fade show active px-1 px-lg-5 py-2 text-start toolContent" id="nav-home" role="tabpanel"
               aria-labelledby="nav-home-tab" tabindex="0">
               <p class="card-text">
               <h2 class="mb-4 text-center">New Mapping</h2>
@@ -102,7 +102,7 @@
             <div class="tab-pane fade text-start px-5 py-2 toolContent" id="nav-linkOne" role="tabpanel"
                 aria-labelledby="nav-linkOne-tab" tabindex="0">
                 <p class="card-text">
-                <h2 class="mb-4 text-center">Download Sample Report</h2>
+                <h2 class="mb-4 text-center">Sample Report</h2>
                 <p>You may download a copy of the sample report here.</p>
                 <div class="d-grid mt-3">
                   <a class="btn btn-secondary text-light" role="button" href="#">Download Sample Report</a>
