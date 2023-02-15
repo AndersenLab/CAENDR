@@ -1,0 +1,48 @@
+{% extends "_layouts/default.html" %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-10"></div>
+  <div class="col-md-2">
+    <a id='create' href="{{ url_for('admin_profile.profile_create')}}" class="btn btn-primary btn-block"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Create Profile </a>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-12">
+    <table class='table'>
+      <thead>
+        <tr>
+          <th class='col-md-2'><strong> Last Name </strong></th>
+          <th class='col-md-2'><strong> First Name </strong></th>
+          <th class='col-md-2'><strong> Organization </strong></th>
+          <th class='col-md-2'><strong> Email </strong></th>
+          <th class='col-md-2'><strong> Profile Pages </strong></th>
+      </thead>
+      <tbody>
+        {% for profile in profiles %}
+          <tr>
+            <td> {{ profile['last_name'] }} </td>
+            <td> {{ profile['first_name'] }} </td>
+            <td> {{ profile['org'] }} </td>
+            <td> {{ profile['email'] }} </td>
+            <td> {{ profile['prof_roles'] }} </td>
+            <td>
+              <a href="{{ url_for('admin_profile.profile_edit', id=profile.id) }}"> 
+                Edit
+              </a>
+            </td>
+            <td>
+              <a href="{{ url_for('admin_profile.profile_delete', id=profile.id) }}"> 
+                Delete
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+	</div> <!-- /col-md-12 -->
+</div> <!-- /row -->
+
+
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "_layouts/default.html" %}
+
+{% block content %}
+{% from "_includes/macros.html" import render_field %}
+
+<form id='form-submit' method="POST" onsubmit="disableButton()" action="{{ kind }}">
+  {{ form.csrf_token }}
+  <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">
+
+
+  <div class="row">
+    <div class='col-md-3'>
+    </div> <!-- /col-md-3 -->
+    <div class='col-md-6'>
+      <table class='table table-striped table-condensed'>
+        <tr>{{ render_field(form.version) }}</td></tr>
+        <tr><td>Repository</td><td>{{ tool.repo }}</td></tr>
+        <tr><td>Container Name</td><td>{{ tool.container_name }}</td></tr>
+        <tr><td>Created On</td><td>{{ tool.created_on|date_format }}</td></tr>
+        <tr><td>Modified On</td><td>{{ tool.modified_on|date_format }}</td></tr>
+      </table>
+    </div> <!-- /col-md-6 -->
+  </div> <!-- /row -->
+
+
+  <div class="row">
+    <div class="col-md-5"></div> <!-- /col-md-5 -->
+    <div class="col-md-2">
+      <button id='save-btn' value="save-btn" type='submit' class="btn btn-primary btn-block">
+        <span class="glyphicon glyphicon-save" aria-hidden="true"></span> 
+        Save
+      </button>
+    </div> <!-- /col-md-2 -->
+  </div> <!-- /row -->
+      
+      
+
+</form>
+
+
+{% endblock %}
+
+
+{% block script %}
+
+<script>
+
+function disableButton() {
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.innerText = 'Loading...'
+}
+
+</script>
+
+{% endblock %}
+
+
