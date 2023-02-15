@@ -1,0 +1,55 @@
+{% extends "_layouts/default.html" %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-10"></div>
+  <div class="col-md-2">
+    <a id='create' href="{{ url_for('admin_dataset.dataset_create')}}" class="btn btn-primary btn-block"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Create Release </a>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-12">
+    <table class='table'>
+      <thead>
+        <tr>
+          <th class='col-md-1'><strong> Version </strong></th>
+          <th class='col-md-1'><strong> Report Type </strong></th>
+          <th class='col-md-1'><strong> Wormbase Version </strong></th>
+          <th class='col-md-1'><strong> Disabled </strong></th>
+          <th class='col-md-1'><strong> Hidden </strong></th>
+          <th class='col-md-2'><strong> Created On </strong></th>
+          <th class='col-md-2'><strong> Modified On </strong></th>
+          <th class='col-md-1'><strong> Edit </strong></th>
+          <th class='col-md-1'><strong> Delete </strong></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for dataset in datasets %}
+          <tr>
+            <td> {{ dataset['version'] }} </td>
+            <td> {{ dataset['report_type'] }} </td>
+            <td> {{ dataset['wormbase_version'] }} </td>
+            <td> {{ dataset['disabled'] }} </td>
+            <td> {{ dataset['hidden'] }} </td>
+            <td> {{ dataset['created_on']|date_format }} </td>
+            <td> {{ dataset['modified_on']|date_format }} </td>
+            <td>
+              <a href="{{ url_for('admin_dataset.dataset_edit', id=dataset.version) }}"> 
+                Edit
+              </a>
+            </td>
+            <td>
+              <a href="{{ url_for('admin_dataset.dataset_delete', id=dataset.version) }}"> 
+                Delete
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+	</div> <!-- /col-md-12 -->
+</div> <!-- /row -->
+
+
+{% endblock %}

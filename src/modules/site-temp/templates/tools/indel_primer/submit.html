@@ -1,0 +1,509 @@
+{% extends "_layouts/default-nocontainer.html" %}
+
+{% block custom_head %}
+    <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min.js"></script>
+    <script type="text/javascript" src="//igv.org/web/release/2.6.2/dist/igv.min.js"></script>
+    <link rel="stylesheet" href="//cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css" />
+    <script type="text/javascript" src="//cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+{% endblock %}
+
+
+{% block content %}
+{% from "_includes/macros.html" import render_field %}
+
+<div class="container-fluid px-5">
+  <div class="d-flex justify-content-around flex-wrap mt-2 pb-5">
+    <div class="col-10 col-md-8 col-xl-3">
+      <nav>
+        <div class="nav nav-tabs border-0" id="nav-tab" role="tablist">
+          <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home"
+            type="button" role="tab" aria-controls="nav-home" aria-selected="true">New Calculation</button>
+          <button class="nav-link" id="nav-about-tab" data-bs-toggle="tab" data-bs-target="#nav-about" type="button"
+            role="tab" aria-controls="nav-about" aria-selected="false">About</button>
+        </div>
+      </nav>
+      <div class="tab-content" id="nav-tabContent">
+        <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab"
+          tabindex="0">
+          <!-- Input Card -->
+          <div class="text-bg-light mb-5 p-3 p-md-5 rounded-2 shadow-sm">
+            <!-- Input Form -->
+            <form id='form-submit' method="POST">
+              {{ form.csrf_token }}
+              <div class="mb-4">
+                <label for="speciesSelect" class="form-label">Species:</label>
+                <select class="form-select" aria-label="Choose species" id="speciesSelect">
+                  <option selected>Choose</option>
+                  <option value="1">C. Elegans</option>
+                  <option value="2">C. Briggsae</option>
+                  <option value="3">C. Tropicalis</option>
+                </select>
+              </div>
+              <div class="mb-4">{{ render_field(form.strain_1) }}</div>
+              <div class="mb-4">{{ render_field(form.strain_2) }}</div>
+              <div class="mb-4">{{ render_field(form.chromosome) }}</div>
+              <div class="mb-4">{{ render_field(form.start, placeholder="2,028,824") }}</div>
+              <div class="mb-4">{{ render_field(form.stop, placeholder="2,029,217") }}</div>
+              <div class="d-grid gap-3 mb-4">
+                <button id='find_indels' type='submit' value="submit" class="btn btn-secondary text-light">Find Indels</button>
+                <button type='submit' value="submit" class="btn btn-secondary text-light generate-primers" data-bs-toggle="modal"
+                  data-bs-target="#generate-primers-modal">Generate Primers</button>
+                <!-- Modal -->
+                <div class="modal fade" id="generate-primers-modal" tabindex="-1" aria-labelledby="generate-primers-modal-label"
+                  aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="generate-primers-modal-label">Thank You</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <p><i class="bi bi-clock-fill me-1 text-secondary fs-3"></i> Your report will be complete in about
+                          5-10 minutes</li>
+                        </p>
+                        <p><i class="bi bi-envelope-fill me-1 text-secondary fs-3"></i>You will receive an email when your
+                          report is complete.</p>
+                        <p><i class="bi bi-journal me-1 text-secondary fs-3"></i>You may also check <a
+                            href='{{ url_for("pairwise_indel_finder.user_results") }}'>My
+                            Primer Results</a> for updates.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- /Modal -->
+              </div>
+              </form>
+              <!-- /Input Form -->
+              </div>
+              <!-- /Input Card -->
+        </div>
+
+        <div class="tab-pane fade" id="nav-about" role="tabpanel" aria-labelledby="nav-about-tab" tabindex="0">
+          <!-- About Card -->
+          <div class="text-bg-light mb-5 p-3 p-md-5 rounded-2 shadow-sm">
+            {% include "_includes/pairwise-about-info.html" %}
+          </div>
+          <!-- /About Card -->
+        </div>
+      </div>
+    </div>
+  <!-- Tool column -->
+  <div class="d-flex flex-wrap flex-column col-md-12 col-xl-8">
+      <!-- Options Toolbar -->
+      <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar">
+      <div class="ps-3 pt-0"><a href='{{ url_for("pairwise_indel_finder.user_results") }}'><i class="bi bi-journal" aria-hidden="true"></i> My Primer Reports</a></div>
+      <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i> Fullscreen</a></div>
+      </div>
+      <!-- /Options Toolbar -->
+      <!-- Browser -->
+      <div class="col">
+          <div id="browser" class="mb-5"></div>
+          <!-- <table id="results" class='table table-hover table-striped strain-table'></table> -->
+      </div>
+      <!--/Browser Placeholder -->
+  </div>
+  <!-- /Tool Column -->
+ </div>
+ <!-- /Flex -->
+</div> <!-- /Container -->
+
+{% endblock %}
+
+{% block script %}
+{% from "_includes/macros.html" import unpack_species_list %}
+
+<script>
+
+/* Species List */
+const species_list = {{ unpack_species_list(species_list, species_fields) }};
+var strains;
+
+/*
+	IGV Browser
+*/
+var browserDiv = $("#browser");
+var options = {
+    showNavigation: true,
+    showKaryo: false,
+    reference: {
+      id: "WS276",
+      fastaURL: replace_tokens("{{ fasta_url }}"),
+    },
+};
+
+var divergent_track_summary = {};
+
+var results
+var query_running = false
+var loaded = false
+var table
+var species;
+
+const COLORS = {
+  INS: 'blue',
+  DEL: 'red'
+}
+
+var divergent_track_name;
+
+
+
+function fetch_trackset() {
+  return fetch( "{{ url_for('pairwise_indel_finder.get_tracks') }}" )
+    .then( (response) => { return response.text();  } )
+    .then( (text)     => { return JSON.parse(text); } );
+}
+
+function fetch_strains() {
+  return fetch( "{{ url_for('pairwise_indel_finder.get_strains') }}" )
+    .then( (response) => { return response.text();  } )
+    .then( (text)     => { return JSON.parse(text); } );
+}
+
+
+$(document).ready(function(){
+
+  var form = document.getElementById('form-submit');
+
+  species = $("#species").val();
+
+  form.addEventListener('change', function() {
+    if (loaded) {
+      set_position( igv.getBrowser() );
+    }
+  });
+
+	reset_query = function() {
+		query_running = false
+	}
+
+	submitForm = function() {
+		if (query_running == false) {
+			query_running = true
+			$("form").submit()
+		}
+		setTimeout(reset_query, 200)
+	}
+
+  $('form').submit(function (e) {
+		e.preventDefault();
+		$.ajax({
+        type: "POST",
+				url:  "{{ url_for('pairwise_indel_finder.query') }}",
+				data: $('form').serialize(),
+				success: function(data) {
+          results = data["results"]
+
+          // Add the 'generate primers' HTML value to each result
+          _.each(results, function(x) {
+            x['generate_primers'] = `<div site="${x['CHROM']}:${x["START"]}-${x['END']}" svtype="${x['SVTYPE']}" size="${x["END"]-x["START"]}" class='btn-link generate-primers'>Generate Primers</div>`
+          })
+
+					// Handle errors
+					$(".form-error").remove();
+					if (Object.keys(data).indexOf("errors") > -1) {
+						for(error in data["errors"]) {
+							$("[for='" + error + "']").parent().append(`<div class='form-error'>${data["errors"][error]}</div>`)
+						}
+					}
+
+          // If no errors, update the page based on the retrieved results
+          else {
+            process_indel_finder_query_results(results);
+					}
+
+          query_running = false;
+				}
+      });    
+	});
+
+	$.ajaxSetup({
+		beforeSend: function(xhr, settings) {
+			if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+				xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
+			}
+		}
+	});
+
+  fetch_strains().then((data) => {
+    strains = data;
+    submitForm();
+  });
+});
+
+
+function process_indel_finder_query_results(results) {
+
+  // Handle data table
+  create_or_update_data_table(results);
+
+  // Handle genome browser
+  create_or_get_browser().then(({ browser, created }) => {
+
+    // Update the reference species, if applicable
+    new_species = $("#species").val();
+    if (created || species != new_species) {
+      species = new_species;
+
+      Promise.all([
+        update_browser_species(browser, species),
+        update_strain_dropdown("#strain_1", "{{ default_strains[0] }}"),
+        update_strain_dropdown("#strain_2", "{{ default_strains[1] }}"),
+      ])
+      .then(() => {
+
+        // Strain tracks must be (re)set AFTER reference species genome is changed
+        update_browser_tracks(browser, results);
+      });
+    }
+
+    // Update browser tracks
+    else {
+      update_browser_tracks(browser, results);
+    }
+  });
+}
+
+
+function update_strain_dropdown(id, initial_value = null) {
+  $(id).empty();
+  if (strains[species]) {
+    strains[species].forEach((val) => {
+      $(id).append( $("<option />").val(val).text(val) );
+    });
+    if (initial_value) {
+      $(id).val(initial_value);
+    }
+  }
+  else {
+    console.warn(`Couldn't find strains for species ${species}`);
+  }
+}
+
+
+/* Genome Browser Create & Update */
+
+
+function create_or_get_browser() {
+
+  // If browser not yet initialized, create it
+  if (!igv.getBrowser()) {
+    return igv.createBrowser(browserDiv, options).then(function(browser) {
+
+      // Set the browser's position
+      set_position(browser);
+      browser.on('locuschange', function(reference_frame, label) {
+        $("#chromosome").val(reference_frame["chr"]);
+        $("#start").val(reference_frame["start"]);
+        $("#stop").val(reference_frame["end"]);
+        setTimeout(submitForm, 500);
+      });
+      loaded = true;
+
+      // Return the browser object to make it accessible from further .then calls
+      return { browser, created: true };
+    });
+  }
+
+  // If browser exists, return it in a Promise
+  else {
+    return new Promise((resolve, reject) => {
+      resolve({
+        browser: igv.getBrowser(),
+        created: false,
+      });
+    });
+  }
+}
+
+
+function update_browser_species(browser, new_species) {
+
+  // Load the new species genome
+  return browser.loadGenome({
+    "id":       new_species,
+    "name":     new_species,
+    "fastaURL": replace_tokens("{{ fasta_url }}"),
+  }).then(() => {
+
+    // (Re)set the browser position, since it's removed when reference genome changes
+    set_position(browser);
+
+    // Load the divergent regions track
+    fetch_trackset().then((divergent_track_summary) => {
+      divergent_track_name = divergent_track_summary.name;
+
+      // Update divergent track summary
+      divergent_track_summary.url    = replace_tokens(divergent_track_summary.url);
+      divergent_track_summary.height = 40;
+      divergent_track_summary.color  = "#CB3466";
+      browser.loadTrack(divergent_track_summary);
+    })
+  })
+}
+
+
+// Load the individual strain tracks
+function update_browser_tracks(browser, results) {
+
+  // Clear existing strain tracks
+  browser.findTracks().forEach(track => {
+    if (!["", divergent_track_name].includes(track.name)) {
+      browser.removeTrackByName(track.name);
+    }
+  })
+
+  // Load new tracks
+  load_tracks(browser, results);
+}
+
+
+function load_tracks(browser, results) {
+    rowset = {}
+    rowset[$("#strain_1").val()] = []
+    rowset[$("#strain_2").val()] = []
+    tracks = []
+
+    // Restructure results by strain
+    for (idx in results) {
+      row = results[idx]
+      rowset[row["STRAIN"]].push(row)
+    }
+    for (strain in rowset) {
+      track = rowset[strain]
+      items = _.map(track, function(row) {
+        result = {
+          chr: row["CHROM"],
+          start: row["START"],
+          end: row["END"],
+          name: `${row["site"]}`,
+          color: COLORS[row["SVTYPE"]],
+        }
+        return(result)
+      })
+      igvTrack = {
+        name: strain,
+        type: "annotation",
+        features: items,
+      }
+      igv.getBrowser().loadTrack(igvTrack);
+    }
+  }
+
+
+
+/* Data Table Create & Update */
+
+
+function create_or_update_data_table(results) {
+
+  if (!table) {
+    table = $("#results").DataTable({
+      data:      results,
+      paging:    false,
+      ordering:  true,
+      searching: false,
+      order:     [[1, "asc"]],
+      columnDefs: [
+        { targets: [0], orderData: [1,2] },
+      ],
+      columns: [
+        { data: "site",   title: "Site"                  },
+        { data: "START",  title: "Start", visible: false },
+        { data: "END",    title: "End",   visible: false },
+        { data: "STRAIN", title: "Strain"                },
+        { data: "generate_primers", renderer: "html"     },
+      ],
+    });
+  }
+  else {
+    table.clear()
+    table.rows.add(results);
+    table.draw();
+  }
+
+  // Activate primer generation links
+  $(".generate-primers").on("click", generate_primers);
+}
+
+
+function generate_primers(e) {
+  console.log("Submitted")
+  $(this).text("Submitted")
+
+  // Get strain values and sort - consistent ordering of strains for hashing
+  var strains = [$("#strain_1").val(), $("#strain_2").val()].sort()
+
+  var data = {
+    site: $(this).attr("site"),
+    strain_1: strains[0],
+    strain_2: strains[1],
+    size: $(this).attr("size"),
+    species: $('#species').val(),
+    svtype: $(this).attr("svtype")
+  }
+
+  $.ajax({
+    type: "POST",
+    url:
+      {% if session["is_admin"] %}
+        "{{ url_for('pairwise_indel_finder.submit') }}" + ($('#no_cache_checkbox').prop('checked') ? "?nocache=1" : ""),
+      {% else %}
+        "{{ url_for('pairwise_indel_finder.submit') }}",
+      {% endif %}
+    data: JSON.stringify(data),
+    contentType: "application/json; charset=utf-8",
+    dataType: 'json',
+    success: function(result) {
+        window.open(`pairwise-indel-finder/result/${result.id}`, "_blank")
+    }
+  })
+}
+
+
+/* Helper Functions */
+
+
+// Set browser position based on input
+function set_position(browser) {
+  const MAX_DIFF = 1000000;
+
+  // Extract query information from form
+  let chromosome = $("#chromosome").val().trim();
+  let start = parseInt($("#start").val().trim().replace(/,/g, ''), 10);
+  let end   = parseInt($("#stop").val().trim().replace(/,/g, ''), 10);
+
+  // Check start and end relative to one another, defaulting to maximum diff if invalid
+  let diff = end - start
+  if (diff > MAX_DIFF || diff <= 0) {
+    end = +start + MAX_DIFF;
+  }
+
+  // Update the browser to the desired search window
+  browser.search(`${chromosome}:${start}-${end}`);
+}
+
+
+// Replace string tokens with species values
+// TODO: Uses of species name ID in filenames not yet standardized, so we drop the 'c_' prefix for now
+function replace_tokens(filename) {
+
+  // TODO: resolve call order (?) so this default value is unnecessary
+  if (!species) {
+    species = 'c_elegans'
+  }
+
+  filename = filename.replaceAll('$SPECIES',   species_list[species]['name'].substring(2));
+  filename = filename.replaceAll('${SPECIES}', species_list[species]['name'].substring(2));
+  {% for token, field in tokens.items() %}
+  filename = filename.replaceAll('${{ token }}',             species_list[species]['{{ field }}']);
+  filename = filename.replaceAll('${' + '{{ token }}' + '}', species_list[species]['{{ field }}']);
+  {% endfor %}
+  return filename;
+}
+
+</script>
+
+{% endblock %}
+
+

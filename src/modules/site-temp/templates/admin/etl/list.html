@@ -1,0 +1,128 @@
+{% extends "_layouts/default.html" %}
+
+{% block custom_head %}
+    <link rel="stylesheet" href="//cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css" />
+    <script type="text/javascript" src="//cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+{% endblock %}
+
+{% block style %}
+<style>
+  table.dataTable thead .sorting_asc {
+  background: url("//cdn.datatables.net/1.10.0/images/sort_asc.png") no-repeat center left;
+  }
+  table.dataTable thead .sorting_desc {
+    background: url("//cdn.datatables.net/1.10.0/images/sort_desc.png") no-repeat center left;
+  }
+  table.dataTable thead .sorting {
+    background: url("//cdn.datatables.net/1.10.0/images/sort_both.png") no-repeat center left;
+  }
+  .text-center {
+    text-align: center;
+  }
+  #etl-operations pre {
+    display: inline-block;
+    white-space: pre-wrap;       /* Since CSS 2.1 */
+    white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+    white-space: -pre-wrap;      /* Opera 4-6 */
+    white-space: -o-pre-wrap;    /* Opera 7 */
+    word-wrap: break-word;       /* Internet Explorer 5.5+ */
+  }
+  .database-operation-status.error {
+    background:rgba(236,73,105,.5);
+  }
+  .database-operation-status.running {
+    background: rgba(91,144,220,.5);
+  }
+  .database-operation-status.complete {
+    background: rgba(146,208,72,.5);
+  }
+  .database-operation-status.submitted {
+    background: rgba(213,225,231, 0.5);
+  }
+  .database-operation-status.unknown {
+    background: rgba(248,246,82,0.5);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+{% from "_includes/macros.html" import render_dataTable_top_menu %}
+{{ 
+  render_dataTable_top_menu(
+    actions = [
+      {'label':'New Operation', 'url':url_for('admin_etl_op.create_op'), 'classes':'btn btn-primary', 'style':'float:right;', 'icon': 'glyphicon glyphicon-plus' },
+    ]
+  ) 
+}}
+
+<div class="row">
+  <div class="col-md-12">
+    <table id='etl-operations' class='table etl-table'>
+      <thead>
+        <tr>
+          <th class='col-md-12'><strong>Status</strong></th>
+          <th class='col-md-12'><strong>Created</strong></th>
+          <th class='col-md-12'><strong>Modified</strong></th>
+          <th class='col-md-12'><strong>Operation & Args</strong></th>
+          <th class='col-md-12'><strong>Username</strong></th>
+          <th class='col-md-12'><strong>Actions</strong></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ops in etl_operations|sort(attribute='created_on', reverse=True) %}
+          <tr>
+            <td class="database-operation-status {{ (ops['status'] or 'unknown') | lower }} " style="text-align:center;vertical-align: middle;"> {{ ops['status'] or 'UNKNOWN' }} </td>
+            <td style="text-align: center;" data-order="{{ ops['created_on'] }}">{{ ops['created_on'] | date_format(fmt="%-m/%-d/%Y %-H:%M:%S%p %z") }}</td>
+            <td style="text-align: center;" data-order="{{ ops['modified_on'] }}">{{ ops['modified_on'] | date_format(fmt="%-m/%-d/%Y %-H:%M:%S%p %z") }}</td>
+            <td>
+                {{ ops['db_operation'] }}
+                <br/>
+                <pre style='font-size:0.8em; word-wrap: break-word;'> {{ ops['args'] }} </pre>
+                {{ ops['note'] }}
+            </td>
+            <td> 
+              <a href="/admin/users/{{ ops['username'] }}/edit/">
+                {{ ops['username'] }} 
+              </a>
+            </td>
+            <td class='text-center'>
+              <a href="{{ url_for('admin_etl_op.view_op', id=ops['id']) }}">View</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+	</div> <!-- /col-md-12 -->
+</div> <!-- /row -->
+{% endblock %}
+
+{% block script %}
+<script>
+  $(document).ready( function () {
+    const dTable = $('#etl-operations').DataTable({
+      paging: true,
+      pageLength: 25,
+      autoWidth: true,
+      scrollX: true,
+      aaSorting: [ [2,'desc'] ],
+      aoColumns: [
+        {"width": "20%"},
+        {"width": "10%"},
+        {"width": "10%"},
+        {"width": "20%"},
+        {"width": "20%"},
+        {"width": "20%"}
+      ],
+      dom:"tipr"
+    });
+
+    $('#filter').keyup(function(){  
+      dTable.search($(this).val()).draw();
+    });
+
+    $('#page-length').change(function(){  
+      dTable.page.len($(this).val()).draw();
+    });
+  });
+</script>
+{% endblock %}
