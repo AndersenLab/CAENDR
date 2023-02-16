@@ -20,6 +20,7 @@ from base.forms import HeritabilityForm
 from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user, user_is_admin
 
 from caendr.models.error import CachedDataError, DuplicateDataError
+from caendr.models.species import SPECIES_LIST
 from caendr.api.strain import get_strains
 from caendr.services.heritability_report import get_all_heritability_results, get_user_heritability_results, create_new_heritability_report, get_heritability_report
 from caendr.utils.data import unique_id, convert_data_table_to_tsv, get_object_hash
@@ -43,6 +44,7 @@ def heritability_calculator():
   form = HeritabilityForm()
   hide_form = True
   strain_list = []
+  species_list = SPECIES_LIST
   return render_template('tools/heritability_calculator/heritability-calculator.html', **locals())
 
 

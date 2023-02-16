@@ -26,15 +26,9 @@
     <div class="col-md-8 col-xl-3 text-bg-light mb-5 p-3 p-md-5 rounded-2 shadow-sm">
       <!-- Input Form -->
       <form>
-        <div class="mb-4">
-          <label for="speciesSelect" class="form-label">Species:</label>
-          <select class="form-select" aria-label="Choose species" id="speciesSelect">
-            <option selected>Choose</option>
-            <option value="1">C. Elegans</option>
-            <option value="2">C. Briggsae</option>
-            <option value="3">C. Tropicalis</option>
-          </select>
-        </div>
+        <!-- Species -->
+        {% with onchange = "update_species" %} {% include "_includes/species-selector.html" %} {% endwith %}
+        <!-- /Species -->
         <!-- Gene search -->
         <div class="mb-4">
           <label for="gene-search" class="form-label">Gene Search:</label>
@@ -412,14 +406,14 @@ function clear_track_checkboxes() {
 /* Changing Species */
 
 // Show only strains matching current species
-function update_strains() {
+function update_strains(species_id) {
   $('.strain-entry-container').hide();
   $(`.strain-entry-container-${species_id}`).show();
 }
 
 
 // Show/hide tracks to match list of tracks supported by current species
-function update_visible_track_checkboxes() {
+function update_visible_track_checkboxes(species_id) {
   const suffix = "-checkbox-container";
   $(".default-track-container").each((i, obj) => {
     const name = obj.id.substring( 0, obj.id.length - suffix.length );
@@ -429,8 +423,15 @@ function update_visible_track_checkboxes() {
 
 
 // Set up species variable & set to match species selector
-function update_species() {
-  species_id = document.getElementById('species-selector').value;
+function update_species(selector) {
+
+  // Check for selector element with value
+  if ( !selector || !selector.value ) {
+    return
+  }
+
+  // Get species from selector
+  species_id = selector.value;
   species    = species_list[species_id];
 
   document.getElementById('wormbase_version').innerHTML = species['wb_ver'];
@@ -440,8 +441,8 @@ function update_species() {
   update_strains();
 
   // Reset the checkboxes to the default for the new species
-  reset_track_checkboxes();
-  update_visible_track_checkboxes();
+  reset_track_checkboxes(species_id);
+  update_visible_track_checkboxes(species_id);
 
   // Ensure the browser exists and is displaying the correct species,
   // then sort out the tracks in it

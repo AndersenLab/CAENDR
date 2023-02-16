@@ -42,15 +42,9 @@
               <!-- UPLOAD FORM -->
               <form id="form-submit" action="{{ url_for('genetic_mapping.submit') }}" method="post" onsubmit="disableButton()"
                 class="form form-inline" enctype="multipart/form-data">
-                <div class="mb-4">
-                  <label for="speciesSelect" class="form-label">Species:</label>
-                  <select class="form-select" aria-label="Choose species" id="speciesSelect">
-                    <option selected>Choose:</option>
-                    {% for species in species_list %}
-                    <option value="{{ species }}">{{ species_list[species]["short_name"] }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
+                <!-- Species -->
+                {% include "_includes/species-selector.html" %}
+                <!-- /Species -->
                 <div class="mb-4">
                   {{ form.csrf_token }}
                   <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">

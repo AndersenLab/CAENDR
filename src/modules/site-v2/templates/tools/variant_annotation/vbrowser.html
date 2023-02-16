@@ -15,15 +15,9 @@
     <div class="col-md-8 col-xl-3 text-bg-light mb-5 p-3 p-md-5 rounded-2 shadow-sm" style="max-height:80vh;">
       <!-- Input Form -->
       <form>
-        <div class="mb-4">
-          <label for="speciesSelect" class="form-label">Species:</label>
-          <select class="form-select" aria-label="Choose species" id="speciesSelect">
-            <option selected>Choose</option>
-            <option value="1">C. Elegans</option>
-            <option value="2">C. Briggsae</option>
-            <option value="3">C. Tropicalis</option>
-          </select>
-        </div>
+        <!-- Species -->
+        {% with onchange = "update_species" %} {% include "_includes/species-selector.html" %} {% endwith %}
+        <!-- /Species -->
         <!-- Gene Search -->
         <div class="mb-4">
           <label for="gene-search" class="form-label">Gene Search:</label>
@@ -251,10 +245,15 @@ const strainListing = JSON.parse('{{ strain_listing | tojson }}');
 /* Species */
 
 // Track changes to selected species
-function update_species() {
+function update_species(selector) {
+
+  // Check for selector element with value
+  if ( !selector || !selector.value ) {
+    return
+  }
 
   // Get species from selector
-  species_id = document.getElementById('species-selector').value;
+  species_id = selector.value;
   species    = species_list[species_id];
 
   // Reprocess gene search with the new species
@@ -265,7 +264,7 @@ function update_species() {
   clear_interval_search();
 
   // Update the strain list table
-  update_strains();
+  update_strains(species_id);
 
   // Clear any previous species data from the data table
   clearDataTable();
@@ -275,7 +274,7 @@ function update_species() {
 
 /* Strains */
 
-function update_strains() {
+function update_strains(species_id) {
 
   // Show only strains matching current species
   $('.strain-entry-container').hide();

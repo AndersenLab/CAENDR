@@ -30,15 +30,10 @@
             <!-- Input Form -->
             <form id='form-submit' method="POST">
               {{ form.csrf_token }}
-              <div class="mb-4">
-                <label for="speciesSelect" class="form-label">Species:</label>
-                <select class="form-select" aria-label="Choose species" id="speciesSelect">
-                  <option selected>Choose</option>
-                  <option value="1">C. Elegans</option>
-                  <option value="2">C. Briggsae</option>
-                  <option value="3">C. Tropicalis</option>
-                </select>
-              </div>
+              <!-- Species -->
+              {% with onchange = "" %} {% include "_includes/species-selector.html" %} {% endwith %}
+              <!-- /Species -->
+              <!-- <div class='mb-4'>{{ render_field(form.species) }}</div> -->
               <div class="mb-4">{{ render_field(form.strain_1) }}</div>
               <div class="mb-4">{{ render_field(form.strain_2) }}</div>
               <div class="mb-4">{{ render_field(form.chromosome) }}</div>
@@ -241,7 +236,10 @@ function process_indel_finder_query_results(results) {
   create_or_get_browser().then(({ browser, created }) => {
 
     // Update the reference species, if applicable
-    new_species = $("#species").val();
+    new_species = $("#speciesSelect").val();
+    if (new_species == '') {
+      return
+    }
     if (created || species != new_species) {
       species = new_species;
 

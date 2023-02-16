@@ -34,15 +34,9 @@
                             <h2 class="mb-4 text-center">New Calculation</h2>
                                 <!-- Input Form -->
                                 <form>
-                                    <div class="mb-4">
-                                        <label for="speciesSelect" class="form-label">Species:</label>
-                                        <select class="form-select" aria-label="Choose species" id="speciesSelect">
-                                            <option selected>Choose:</option>
-                                            <option value="1">C. Elegans</option>
-                                            <option value="2">C. Briggsae</option>
-                                            <option value="3">C. Tropicalis</option>
-                                        </select>
-                                    </div>
+                                    <!-- Species -->
+                                    {% include "_includes/species-selector.html" %}
+                                    <!-- /Species -->
                                     <div class="mb-4">
                                         <label for="fileName" class="form-label">Description:</label>
                                         <input type="text" class="form-control" id="fileName" placeholder="Name your calculation.">
