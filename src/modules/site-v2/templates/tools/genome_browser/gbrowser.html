@@ -337,6 +337,7 @@ function add_track(track_name) {
 
 // Remove a single track from the browser
 function remove_track(track_name) {
+  if (track_name == '') return;
   i = tracks.indexOf(track_name);
   while (i != -1) {
     tracks.splice(i, 1);
@@ -424,7 +425,7 @@ function update_species(selector) {
   // Check for selector element with value
   if ( !selector || !selector.value ) {
     update_visible_track_checkboxes();
-    return
+    return;
   }
 
   // Get species from selector
