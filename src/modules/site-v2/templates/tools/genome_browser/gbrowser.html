@@ -118,30 +118,17 @@
           <!-- Tracks -->
           <div class="p-3 mb-4 rounded-2 overflow-auto gbrowserTracks">
             <form id="track-options">
-              {% for i in ["Genes", "Transcripts"] %}
-              <div class="checkbox">
-                <label><input type="checkbox" checked class="track-select normal-track" value="{{ i }}" /> {{ i }}</label>
-              </div>
+              {% for track in default_tracks %}
+                <div id="{{ track.name }}_checkbox_container" class="checkbox default-track-container">
+                  <label>
+                    <input id="{{ track.name }}_checkbox" type="checkbox" class="track-select normal-track" value="{{ track.name }}" />
+                    {{ track.name }}
+                    {% if track['source'] %}
+                      <br />(<a class="track-source-link" href="{{ track.source.url }}" target='_blank'>{{ track.source.title }}</a>)
+                    {% endif %}
+                  </label>
+                </div>
               {% endfor %}
-              {% for i in ["phyloP", "phastCons", "Dust", "Repeat Masker", "Divergent Regions Summary" ] %}
-              <div class="checkbox">
-                <label><input type="checkbox" class="track-select normal-track" value="{{ i }}" /> {{ i }}</label>
-              </div>
-              {% endfor %}
-              <div class="checkbox">
-                <label><input type="checkbox" class="track-select normal-track" value="Divergent Regions" /> Divergent
-                  Regions
-                  Strain<br /> (<a href="https://andersenlab.org/publications/2021LeeNatureEE.pdf" target='_blank'>Lee
-                    <em>et
-                      al.</em>
-                    2020)</a></label>
-              </div>
-              <div class="checkbox">
-                <label><input type="checkbox" class="track-select normal-track" value="Transposons" /> Transposons (<a
-                    href="https://andersenlab.org/publications/2017Laricchia.pdf" target='_blank'>Laricchia <em>et
-                      al.</em>
-                    2017)</a></label>
-              </div>
             </form>
           </div>
           <!-- /Tracks -->
