@@ -307,7 +307,7 @@ function update_selected_strains() {
 
 async function downloadCSV(json_data) {
   const csrfToken = "{{ form.csrf_token._value() }}";
-  const url = "{{ url_for('variant_annotation.vbrowser_download_csv') }}"
+  const url = "{{ url_for('variant_annotation.download_csv') }}"
   const res = await fetch(url, {
     method: "POST",
     credentials: "include",
@@ -543,7 +543,7 @@ function fetchTargetConsequence(el, q) {
       type: "POST",
       contentType: 'application/json',
       dataType: 'json',
-      url: "{{ url_for('variant_annotation.vbrowser_query_position') }}",
+      url: "{{ url_for('variant_annotation.query_position') }}",
       data: JSON.stringify({query: q}),
       success:function(result) {
         cachedTargets[q] = result;
@@ -788,7 +788,7 @@ $(document).ready(function() {
 				type: "POST",
         contentType: 'application/json',
         dataType: 'json',
-				url: "{{ url_for('variant_annotation.vbrowser_query_interval') }}",
+				url: "{{ url_for('variant_annotation.query_interval') }}",
 				data: JSON.stringify(data),
 				success:function(result) {
           const has_results = !!Object.keys(result).length;
