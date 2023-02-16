@@ -27,8 +27,8 @@ table.dataTable thead .sorting {
 {{ 
   render_dataTable_top_menu(
     actions = [
-      {'label':'My Results', 'url':url_for('indel_primer.indel_primer_user_results'), 'classes':'btn nu-alt-btn', 'style':'float:right;', 'icon': 'glyphicon glyphicon-list' },
-      {'label':'Find Indels', 'url':url_for('indel_primer.indel_primer'), 'classes':'btn nu-alt-btn', 'style':'float:right; margin-right: .5rem;', 'icon': 'glyphicon glyphicon-search' }
+      {'label':'My Results', 'url':url_for('pairwise_indel_finder.user_results'), 'classes':'btn nu-alt-btn', 'style':'float:right;', 'icon': 'glyphicon glyphicon-list' },
+      {'label':'Find Indels', 'url':url_for('pairwise_indel_finder.pairwise_indel_finder'), 'classes':'btn nu-alt-btn', 'style':'float:right; margin-right: .5rem;', 'icon': 'glyphicon glyphicon-search' }
     ]
   ) 
 }}
@@ -62,7 +62,7 @@ table.dataTable thead .sorting {
             {% endif %}
               <td class="data-status">
                 {% if item.status == 'COMPLETE' %}
-                <a href="{{ url_for('indel_primer.pairwise_indel_query_results', id=item.id) }}">
+                <a href="{{ url_for('pairwise_indel_finder.query_results', id=item.id) }}">
                   {{ item.status }}
                 </a>
                 {% else %}

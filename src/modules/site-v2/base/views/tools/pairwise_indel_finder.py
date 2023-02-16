@@ -22,17 +22,17 @@ from caendr.services.indel_primer import get_sv_strains, query_indels_and_mark_o
 
 
 # Tools blueprint
-indel_primer_bp = Blueprint('indel_primer',
-                            __name__,
-                            template_folder='tools')
+pairwise_indel_finder_bp = Blueprint(
+  'pairwise_indel_finder', __name__, template_folder='tools'
+)
 
 from caendr.utils.constants import CHROM_NUMERIC
 
 
 
-@indel_primer_bp.route('/pairwise_indel_finder/tracks', methods=['GET'])
+@pairwise_indel_finder_bp.route('/pairwise-indel-finder/tracks', methods=['GET'])
 @jwt_required()
-def indel_primer_get_tracks():
+def get_tracks():
 
   # Get the Divergent Regions browser track
   try:
@@ -54,21 +54,21 @@ def indel_primer_get_tracks():
   return jsonify(divergent_track['params'])
 
 
-@indel_primer_bp.route('/pairwise_indel_finder/strains', methods=['GET'])
+@pairwise_indel_finder_bp.route('/pairwise-indel-finder/strains', methods=['GET'])
 @jwt_required()
-def indel_primer_get_strains():
+def get_strains():
   return jsonify({
     species: get_sv_strains( species ) for species in SPECIES_LIST.keys()
   })
 
 
 
-@indel_primer_bp.route('/pairwise_indel_finder', methods=['GET'])
+@pairwise_indel_finder_bp.route('/pairwise-indel-finder', methods=['GET'])
 @jwt_required()
-def indel_primer():
+def pairwise_indel_finder():
 
   # Construct variables and render template
-  return render_template('tools/indel_primer/submit.html', **{
+  return render_template('tools/pairwise_indel_finder/submit.html', **{
 
     # Page info
     "title": "Pairwise Indel Finder",
@@ -108,10 +108,11 @@ def indel_primer():
 
 
 
-@indel_primer_bp.route("/pairwise_indel_finder/all-results")
+
+@pairwise_indel_finder_bp.route("/pairwise-indel-finder/all-results")
 @admin_required()
-def indel_primer_all_results():
-  return render_template('tools/indel_primer/list-all.html', **{
+def all_results():
+  return render_template('tools/pairwise_indel_finder/list-all.html', **{
 
     # Page info
     'title': "All Indel Primer Results",
@@ -124,14 +125,14 @@ def indel_primer_all_results():
 
 
 
-@indel_primer_bp.route("/pairwise_indel_finder/my-results")
+@pairwise_indel_finder_bp.route("/pairwise-indel-finder/my-results")
 @jwt_required()
-def indel_primer_user_results():
+def user_results():
 
   # Get user
   user = get_current_user()
 
-  return render_template('tools/indel_primer/list-user.html', **{
+  return render_template('tools/pairwise_indel_finder/list-user.html', **{
 
     # Page info
     'title': 'My Indel Primer Results',
@@ -144,9 +145,9 @@ def indel_primer_user_results():
 
 
 
-@indel_primer_bp.route("/pairwise_indel_finder/query_indels", methods=["POST"])
+@pairwise_indel_finder_bp.route("/pairwise-indel-finder/query-indels", methods=["POST"])
 @jwt_required()
-def pairwise_indel_finder_query():
+def query():
 
   # Validate query form
   form = PairwiseIndelForm()
@@ -169,9 +170,9 @@ def pairwise_indel_finder_query():
 
 
 
-@indel_primer_bp.route('/pairwise_indel_finder/submit', methods=["POST"])
+@pairwise_indel_finder_bp.route('/pairwise-indel-finder/submit', methods=["POST"])
 @jwt_required()
-def submit_indel_primer():
+def submit():
 
   # Get current user
   user = get_current_user()
@@ -194,10 +195,10 @@ def submit_indel_primer():
 
 
 # TODO: Move internals of this to a service function
-@indel_primer_bp.route("/indel_primer/result/<id>")
-@indel_primer_bp.route("/indel_primer/result/<id>/tsv/<filename>")
+@pairwise_indel_finder_bp.route("/pairwise-indel-finder/result/<id>")
+@pairwise_indel_finder_bp.route("/pairwise-indel-finder/result/<id>/tsv/<filename>")
 @jwt_required()
-def pairwise_indel_query_results(id, filename = None):
+def query_results(id, filename = None):
 
     # Get user and primer result
     user = get_current_user()
@@ -216,7 +217,7 @@ def pairwise_indel_query_results(id, filename = None):
 
     # If no indel primer submission exists, return 404
     if data is None:
-      return abort(404, description="Indel primer report not found")
+      return abort(404, description="Pairwise indel finder report not found")
 
     # Parse submission data into JSON object
     data = json.loads(data.download_as_string().decode('utf-8'))
@@ -317,7 +318,7 @@ def pairwise_indel_query_results(id, filename = None):
         return Response(format_table.to_csv(sep="\t"), mimetype="text/tab-separated-values")
 
     # Otherwise, return view page
-    return render_template("tools/indel_primer/view.html", **{
+    return render_template("tools/pairwise_indel_finder/view.html", **{
 
       # Page info
       'title':    f"Indel Primer Results {data['site']}",
@@ -341,5 +342,3 @@ def pairwise_indel_query_results(id, filename = None):
       'records': result.to_dict('records') if (result is not None) else None,
       'format_table': format_table,
     })
-
-

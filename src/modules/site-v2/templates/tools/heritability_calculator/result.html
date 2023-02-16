@@ -1,224 +1,103 @@
-{% extends "_layouts/default.html" %}
+{% extends "_layouts/default-nocontainer.html" %}
 
 {% block custom_head %}
-	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-lightbox/0.7.0/bootstrap-lightbox.css" rel="stylesheet" />
-    <link rel="stylesheet" href="/static/css/d3-exploding-boxplot.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.7/d3.js" charset="utf-8"></script>
-    <script src="https://d3js.org/queue.v1.min.js"> </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.6.7/d3-tip.min.js"></script>
-    <script src="{{ ext_asset('js/d3-exploding-boxplot.js') }}"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.4.1/jspdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.2/FileSaver.min.js"></script>
-    <style type="text/css">
-		.rounded {
-			font-family: Helvetica, Tahoma, Geneva, sans-serif;
-			text-decoration:none;
-			border-radius: 30px 30px 30px 30px;
-			font-weight: bold;
-			display:inline-block;
-		}
-		.btn.clicked {
-			background: #44A9FC;
-        }
-        table th, td {
-            text-align: center;
-        }
-	</style>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-lightbox/0.7.0/bootstrap-lightbox.css" rel="stylesheet" />
+<link rel="stylesheet" href="/static/css/d3-exploding-boxplot.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.7/d3.js" charset="utf-8"></script>
+<script src="https://d3js.org/queue.v1.min.js"> </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.6.7/d3-tip.min.js"></script>
+<script src="{{ ext_asset('js/d3-exploding-boxplot.js') }}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.4.1/jspdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.2/FileSaver.min.js"></script>
 
-    {% if not (result or hr.status in ['ERROR','COMPLETE']) %}
-        <meta http-equiv="refresh" content="10; url={{ request.path }}">
-    {% endif %}
+{% if not (result or hr.status in ['ERROR','COMPLETE']) %}
+<meta http-equiv="refresh" content="10; url={{ request.path }}">
+{% endif %}
 
 {% endblock %}
 
 
 {% block content %}
 
-
-<!-- 
-
-  <div class="row">
-    <h2 class="text-center">
-    {{ trait }}
-  </h2>
-</div>{# /row #}
-
-<div class="row">
-  <h4 class="text-center">
-    {{ hr.label }} 
-  </h4>
--->
-  
-<div class="row">
-  <div class="card" style="width: 28rem;margin-left:auto; margin-right:auto">
-    <div class="card-body">
-      <table class="table">
-        <tbody>
-          <tr>
-            <td class="key">Trait</td>
-            <td>{{ hr.trait}}</td>
-          </tr>
-          <tr>
-            <td class="key">Label</td>
-            <td>{{ hr.label}}</td>
-          </tr>
-          <tr>
-            <td class="key">Report ID</td>
-            <!-- <td title="using short hash (similar to git's short hash)" data-id="hr.id">{{ hr.id | short_hash}}</td> -->
-            <td>{{ hr.id }}</td>
-          </tr>
-          <tr>
-            <td class="key">Data Hash<br/>(GCP Bucket)</td>
-            <!-- <td title="using short hash (similar to git's short hash" data-data_hash="hr.data_hash">{{ hr.data_hash | short_hash }}</td> -->
-            <td>{{ hr.data_hash }} </td>
-          </tr>
-          <tr>
-            <td class="key">Created</td>
-            <td>{{ hr.created_on | date_format }}</td>
-          </tr>
-          <tr>
-            <td class="key">Logs</td>
-            <td><a target="_blank" href='{{logs_url}}'>View Logs</a></td>
-          </tr>
-          <tr class="{{ hr.status | get_status_css_class }}">
-            <td class="key">Status</td>
-            <td>{{ hr.status}}</td>
-          </tr>
-          {% if hr.status == 'ERROR' %}
-          <tr>
-            <td class="key">Error</td>
-            <td>{{ operation.error }}</td>
-          </tr>
-          {% endif %}
-
-          {% if not hr.status in ['COMPLETE','ERROR'] %}
-          <tr>
-            <td></td>
-            <td>
-              <a href="javascript:window.location.reload(true)" class="btn btn-primary">refresh</a>
-            </td>
-          </tr>
-          {% endif %}
-
-        </tbody>
-      </table>
-      <style>
-        table td {
-          text-align: left;
-        }
-        table td.key {
-          font-weight: bold;
-          text-align: right;
-        }
-        </style>
+<div class="container-fluid px-5 pb-5">
+  <div class="d-flex justify-content-around flex-wrap mt-2">
+  <!-- Results Card -->
+  <div class="col col-md-6 col-xl-3 text-bg-light mb-5 p-5 rounded-2 shadow-sm overflow-auto" style="max-height:500px">
+   <p>
+      <strong>Trait:</strong> {{ hr.trait}}
+   </p>
+   <p>
+      <strong>Description:</strong> {{ hr.label}}
+   </p>
+   <p>
+      <strong>Report ID:</strong> {{ hr.id }}
+   </p>
+   <p>
+      <strong>Created:</strong> {{ hr.created_on | date_format }}
+   </p>
+   <p>
+      <strong>Status:</strong>  {{ hr.status}}
+    
+    {% if hr.status == 'ERROR' %}
+      <strong>Error:</strong> <span class="text-danger">{{ operation.error }}</span>
+    {% endif %}
+   </p>
+   <p>
+    <strong>Broad-Sense Heritability (H<sup>2</sup>):</strong> {{ (result['H2']*100)|round(2) }}% <small>(range {{ (result['ci_l']*100)|round(2) }}% to {{ (result['ci_r']*100)|round(2) }}%)</small>
+   </p>
+  <div class="mt-5">
+    <div class="d-grid gap-3">
+      <a class="btn btn-secondary text-light" role="button" onClick="getPDF()">Download PDF</a>
+      <a class="btn btn-secondary text-light" role="button" onClick="window.open('{{ data_url }}')">Download TSV</a>
     </div>
   </div>
-</div>{# /row #}
-
-<!--
-  Status: [{{ hr.status}}]
-  ERROR: [{{ operation.error if operation and operation.error }}]
--->
-
-{% if data and not result %}
-
-<div class="row">
-    <div class='col-md-2'></div>
-    <div class='col-md-8'>
-      {% if not hr.status in ['COMPLETE','ERROR'] %}
+  </div>
+  <!-- /Input Card -->
+  <!-- Tool column -->
+  <div class="d-flex flex-wrap flex-column col-md-12 col-xl-8">
+      <!-- Options Toolbar -->
+      <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar">
+      <div class="ps-3 pt-0"><a href="{{ url_for('heritability_calculator.heritability_calculator') }}"><i class="bi bi-plus-circle" aria-hidden="true"></i> New Calculation</a></div>
+      <div class="ps-3 pt-0"><a href="{{ url_for('heritability_calculator.user_results') }}"><i class="bi bi-journal" aria-hidden="true"></i>View All My Heritability Results</a></div>
+      <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i> Fullscreen</a></div>
+      </div>
+      <!-- /Options Toolbar -->
+      <!-- Heritability Results -->
+      <div class="col">
+        {% if data and not result %}
+        {% if not hr.status in ['COMPLETE','ERROR'] %}
         <p class='text-info text-center'>
-            <strong>
-                The heritability calculation is currently being run. Please check back in a few minutes for results.
-                This page will reload automatically.
-            </strong>
+          <strong>
+            The heritability calculation is currently being run. Please check back in a few minutes for results.
+            This page will reload automatically.
+          </strong>
         </p>
-      {% endif %}
-    </div> {# /col-md-8 #}
-</div>{# /row #}
-
-{% else %}
-
-
-<div id="dataContainer" class="row">
-  <div class='col-md-12'>
-    <div id="htresarea"></div>
-  </div>{# /col-md-12 #}
-</div>{# /row #}
-
-<div class="row">
-  <div class="col-md-12">
-    {% if data %}
-      <div id="svgchartarea" class='col-md-12'></div>
-    {% endif %}
-  </div>
-</div>{# /row #}
-
-<div class="row">
-
-  {% if result %}
-
-  <div id='resultDiv' hidden>
-    <canvas id="canvas"></canvas>
-    <div id="png-container"></div>
-  </div>
-
-  {% endif %}
-</div>{# /row #}
-
-<div class="row">
-  <div class='col-md-2 col-md-offset-3 col-sm-4 col-sm-offset-0 col-xs-8 col-xs-offset-2 btn-mid-row'>
-    <a class="btn btn-nu btn-block" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
-      <span class="glyphicon glyphicon-collapse-down" aria-hidden="true"></span>
-      View Data
-    </a>
-  </div>
-  <div class='col-md-2 col-sm-4 col-sm-offset-0 col-xs-8 col-xs-offset-2  btn-mid-row'>
-    <a class="btn btn-nu btn-block" onClick="window.open('{{ data_url }}')" role="button">
-      <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-      Download Data
-    </a>
-  </div>
-  <div class='col-md-2 col-sm-4 col-sm-offset-0 col-xs-8 col-xs-offset-2 btn-mid-row'>
-    <a class="btn btn-nu btn-block"  onClick="getPDF()" role="button">
-      <span class="glyphicon glyphicon-stats" aria-hidden="true"></span>
-      Download PDF
-    </a>
-  </div>
-</div>{# /row #}
-
-<div class="row">
-  <div class="collapse" id="collapseExample">
-    <div class="card card-body">
-      <table class="table table-condensed table-striped table-hover">
-        <thead>
-          <tr>
-            <th class='col-md-2'>AssayNumber</th>
-            <th class='col-md-2'>Strain</th>
-            <th class='col-md-2'>TraitName</th>
-            <th class='col-md-2'>Replicate</th>
-            <th class='col-md-2'>Value</th>
-          </tr>
-        </thead>
-        <tbody>
-        {% for row in data %}
-          <tr>
-            <td> {{ row['AssayNumber'] }} </td>
-            <td> {{ row['Strain'] }} </td>
-            <td> {{ row['TraitName'] }} </td>
-            <td> {{ row['Replicate'] }} </td>
-            <td> {{ row['Value']|string|truncate(8, end= "") }} </td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-  </div>
-</div>
-</div>{# /row #}
-
-
-
-{% endif %}
+        {% endif %}
+      
+        {% else %}
+        <div id="dataContainer">
+          <div id="htresarea"></div>
+        </div>
+      
+        {% if data %}
+        <div id="svgchartarea"></div>
+        {% endif %}
+      
+        {% if result %}
+        <div id='resultDiv' hidden>
+          <canvas id="canvas"></canvas>
+          <div id="png-container"></div>
+        </div>
+      
+        {% endif %}
+        {% endif %}
+      </div>
+  <!-- /Tool Column -->
+ </div>
+ <!-- /Flex -->
+</div> <!-- /Container -->
 
 {% endblock %}
 
@@ -358,7 +237,7 @@
         page_height = doc.internal.pageSize.getHeight();
         page_width = doc.internal.pageSize.getWidth();
         /*doc.addImage(document.getElementById('svg'), 'SVG', 0, 0, page_width, page_height, NaN, 'NONE', 90);*/
-        doc.setFontSize(10);
+        doc.setFontSize(16);
         doc.fromHTML('Trait: {{ trait }}', 120, 10)
         doc.fromHTML('Broad-sense heritability (<i> H</i>',  120, 20)
         doc.setFontSize(4);
@@ -396,10 +275,10 @@
         $("#svgchartarea").html("")
         //node.querySelectorAll('*').forEach(n => n.remove());
         newPt = document.createElement("p")
-        newPt.innerHTML = "Broad-sense heritability (<i> H<sup>2</sup> </i>) = {{ (result['H2']*100)|round(2) }}% (range {{ (result['ci_l']*100)|round(2) }}% to {{ (result['ci_r']*100)|round(2) }}%)";
+        // newPt.innerHTML = "Broad-sense heritability (<i> H<sup>2</sup> </i>) = {{ (result['H2']*100)|round(2) }}% (range {{ (result['ci_l']*100)|round(2) }}% to {{ (result['ci_r']*100)|round(2) }}%)";
         document.getElementById("htresarea").appendChild(newPt);
         newPt = document.createElement("p")
-        newPt.appendChild(document.createTextNode("Trait: " + "{{ trait }}"));
+        // newPt.appendChild(document.createTextNode("Trait: " + "{{ trait }}"));
         document.getElementById("htresarea").appendChild(newPt);
 
         // chart(data,aes)

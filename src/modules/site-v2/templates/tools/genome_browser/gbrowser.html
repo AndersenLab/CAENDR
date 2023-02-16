@@ -1,4 +1,4 @@
-{% extends "_layouts/default.html" %}
+{% extends "_layouts/default-nocontainer.html" %}
 
 {% block custom_head %}
 
@@ -18,189 +18,164 @@
 
 {% endblock %}
 
-{% block style %}
-<style>
-
-.label {
-  width: 80px;
-  height: 18px;
-  line-height: 12px;
-  margin-bottom: 4px;
-  display: inline-block;
-}
-
-.gt-3 {
-    background-color: white;
-    border: 1px dotted black;
-    color: black;
-}
-
-.gt-0.PASS {
-  background-color: rgba(194,194,214,1.0);
-  border: 1px solid black;
-  color: black;
-}
-
-.gt-2.PASS {
-  background-color: rgba(0, 102, 255,1.0);
-  border: 1px solid black;
-  color: white;
-}
-
-.gt-0:not(.PASS) {
-  background-color: rgba(194,194,214,0.25);
-  border: 1px dotted black;
-  color: black;
-}
-
-.gt-2:not(.PASS) {
-  background-color: rgba(0, 102, 255,0.25);
-  border: 1px dotted black;
-  color: black;
-}
-
-.het {
-  background-color: #ffff00;
-  color: black;
-}
-
-.gt_set {
-  border-right: 1px dotted #b3b3b3;
-}
-
-th {
-  white-space: nowrap;
-}
-
-#variants {
-  font-size: 1.0rem;
-}
-
-</style>
-
-
-{% endblock %}
-
-
 {% block content %}
 
-
-<div class="browser-row well">
-
-  <div class="row">
-    <div class="col-lg-12">
-
-    <!-- Left column -->
-    <div class="col-lg-2 col-md-3 col-sm-12">
-
-      <!-- Species dropdown -->
-      <h5>Species</h5>
-      <select name="species" id="species-selector" class="form-control" onchange="update_species()">
-        {% for s in species_list %}
-          <option value="{{s}}">{{species_list[s]["short_name"]}}</option>
-        {% endfor %}
-      </select>
-
-      <!-- Trackset check boxes -->
-      <h5>Tracks</h5>
-      {% for track in default_tracks %}
-        <div id="{{ track.name }}_checkbox_container" class="checkbox default-track-container">
-          <label>
-            <input id="{{ track.name }}_checkbox" type="checkbox" class="track-select normal-track" value="{{ track.name }}" />
-            {{ track.name }}
-            {% if track['source'] %}
-              <br />(<a class="track-source-link" href="{{ track.source.url }}" target='_blank'>{{ track.source.title }}</a>)
-            {% endif %}
-          </label>
+<div class="container-fluid px-5">
+  <div class="d-flex justify-content-around flex-wrap mt-2 pb-5">
+    <!-- Input Card -->
+    <div class="col-md-8 col-xl-3 text-bg-light mb-5 p-3 p-md-5 rounded-2 shadow-sm">
+      <!-- Input Form -->
+      <form>
+        <div class="mb-4">
+          <label for="speciesSelect" class="form-label">Species:</label>
+          <select class="form-select" aria-label="Choose species" id="speciesSelect">
+            <option selected>Choose</option>
+            <option value="1">C. Elegans</option>
+            <option value="2">C. Briggsae</option>
+            <option value="3">C. Tropicalis</option>
+          </select>
         </div>
-      {% endfor %}
-    </div> {# /col-lg-2 #}
-
-
-    <div class="col-lg-4 col-md-5 col-sm-12 ">
-
-      <h5>Gene Search</h5>
-      <input type="text" class="form-control" id="gene-search" style="margin-bottom: 5px;" placeholder="Gene Search (e.g. trt-1)">
-      <div id="loading-search-table" style="display:none; margin-top:20px;">
-        <div class="spinner">
-          <div class="bounce1"></div>
-          <div class="bounce2"></div>
-          <div class="bounce3"></div>
+        <!-- Gene search -->
+        <div class="mb-4">
+          <label for="gene-search" class="form-label">Gene Search:</label>
+          <div class="dropdown">
+            <input type="text" class="form-control dropdown-toggle" id="gene-search" placeholder="For example, trt-1"
+              data-bs-toggle="dropdown">
+            <div class="dropdown-menu table-responsive p-1 dropdownSelect">
+              <div class="text-center p-3" id="loading-search-table" style="display:none;">
+                <div class="spinner-border" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              </div>
+              <table id="g-search-table" class='table table-hover table-striped' style="display:none;">
+                <caption class="visually-hidden">A list of species strains.</caption>
+                <thead>
+                  <tr>
+                    <th><em>C. elegans Gene</em></th>
+                    <th>Symbol/ID</th>
+                    <th>Species</th>
+                    <th>Source</th>
+                  </tr>
+                </thead>
+                <tbody id="orthologs"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <table id="g-search-table" class='table table-striped' style="display: none;">
-        <thead>
-          <tr>
-            <th>Gene</th>
-            <th>Symbol/ID</th>
-          </tr>
-        </thead>
-        <tbody id="orthologs"></tbody>
-      </table>
-
-    </div> {# /col-lg-4 #}
-
-
-    {# Right column -- Strain table #}
-    <div class="col-lg-4 col-md-4 col-sm-12 ">
-
-      <h5>Isotype (reference strain) <a href="{{ url_for('primary.help_item', filename = 'Genome-Browser') }}#ind-strains"><span class="glyphicon glyphicon-question-sign"></span></a></h5>
-
-      {# Strain table search bar #}
-      <form class="form-inline pull-xs-right">
-        <input class="form-control" id="filter" type="text" style="width:100%;  margin-bottom: 5px;" placeholder="e.g. JU360" autocomplete="off">
+        <!-- /Gene Search -->
+        <div class="mb-4">
+          <!-- Isotypes -->
+          <label for="filter" class="form-label">Isotype (Reference Strain):</label>
+          <div class="dropdown">
+            <input type="text" class="form-control dropdown-toggle" id="filter" placeholder="For example, JU360"
+              data-bs-toggle="dropdown">
+            <div class="dropdown-menu table-responsive dropdownSelect p-1">
+              <table id='browser_strain_list' class="table table-striped table-hover">
+                <caption class="visually-hidden">A list of strains with different file type options.</caption>
+                <tbody class="searchable">
+                  {% for strain in strain_listing %}
+                  <tr>
+                    <td>
+                      {{ strain.isotype }} ({{ strain.strain }})
+                    </td>
+                    <td>
+                      <label>
+                        <input type="checkbox" class="track-select isotype-item sample-track"
+                          value="{{ strain.strain }}" />
+                        VCF</label>
+                    </td>
+                    <td>
+                      <label>
+                        <input type="checkbox" class="track-select sample-track-alignment"
+                          value="{{ strain.strain }}_bam" />
+                        BAM</label>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <!-- /Isotypes -->
+        </div>
+        <div class="mb-4">
+          <label for="track-options" class="form-label">Tracks:</label>
+          <!-- Info Modal -->
+          <!-- Button trigger modal -->
+          <button type="button" class="btn btn-secondary rounded-circle infoButton" data-bs-toggle="modal"
+            data-bs-target="#infoModal" aria-label="More information">
+            <i class="bi bi-info lh-1" aria-hidden="true"></i>
+          </button>
+          <!-- Modal -->
+          <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h1 class="modal-title fs-5" id="infoModalLabel">Track Information</h1>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  {% include "_includes/gbrowser-tracks-info.html" %}
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- /Info Modal -->
+          <!-- Tracks -->
+          <div class="p-3 mb-4 rounded-2 overflow-auto gbrowserTracks">
+            <form id="track-options">
+              {% for i in ["Genes", "Transcripts"] %}
+              <div class="checkbox">
+                <label><input type="checkbox" checked class="track-select normal-track" value="{{ i }}" /> {{ i }}</label>
+              </div>
+              {% endfor %}
+              {% for i in ["phyloP", "phastCons", "Dust", "Repeat Masker", "Divergent Regions Summary" ] %}
+              <div class="checkbox">
+                <label><input type="checkbox" class="track-select normal-track" value="{{ i }}" /> {{ i }}</label>
+              </div>
+              {% endfor %}
+              <div class="checkbox">
+                <label><input type="checkbox" class="track-select normal-track" value="Divergent Regions" /> Divergent
+                  Regions
+                  Strain<br /> (<a href="https://andersenlab.org/publications/2021LeeNatureEE.pdf" target='_blank'>Lee
+                    <em>et
+                      al.</em>
+                    2020)</a></label>
+              </div>
+              <div class="checkbox">
+                <label><input type="checkbox" class="track-select normal-track" value="Transposons" /> Transposons (<a
+                    href="https://andersenlab.org/publications/2017Laricchia.pdf" target='_blank'>Laricchia <em>et
+                      al.</em>
+                    2017)</a></label>
+              </div>
+            </form>
+          </div>
+          <!-- /Tracks -->
+        </div>
+        <small>
+          <p>IGC (Data Release: {{ release_version }} | Wormbase Version: {{wormbase_version}})</p>
+        </small>
       </form>
-
-      {# Strain table #}
-      <table id='browser_strain_list' class="table table-striped table-hover table-condensed">
-        <tbody id="browser_strain_list_body" class="searchable">
-
-        {% for species in species_list %}
-          {% for strain in strain_listing[species] %}
-            <tr class="strain-entry-container strain-entry-container-{{species}}">
-              <td> {{ strain.isotype }} {{ ("(" + strain.strain + ")") if (strain.isotype != strain.strain) else "" }} </td>
-              <td><label>
-                  <input type="checkbox" class="track-select isotype-item sample-track" value="{{ strain.strain }}" /> VCF
-              </label></td>
-              <td><label>
-                  <input type="checkbox" class="track-select sample-track-alignment" value="{{ strain.strain }}_bam" /> BAM
-              </label></td>
-            </tr>
-          {% endfor %}
-        {% endfor %}
-
-        </tbody>
-      </table>
-    </div> {# /col-lg-4 #}
-</div>
-    
-
-  </div> {# /row #}
-
-  <div class="row">
-
-  
-    <div class='col-lg-2 col-lg-offset-9 col-md-4 col-md-offset-8 col-sm-offset-4 col-sm-4 col-xs-8 col-xs-offset-2'>
-      <a class="btn nu-alt-btn btn-block" href="{{ url_for('primary.help_item', filename = 'Genome-Browser') }}" role="button">
-        <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> 
-        Help
-      </a>
+      <!-- /Input Form -->
     </div>
-  </div> {# /row #}
-  
-
-</div> {# /container #}
-
-
-  <div class="row igv-browser-row">
-    <div class="col-lg-12 col-md-12">
-      <h3 class="center">
-        IGC (Data Release: <span id="release_version"></span> | Wormbase Version: <span id="wormbase_version"></span>)
-      </h3>
-      <div id="browser"></div>
-    </div>
+    <!-- /Input Card -->
+  <!-- Tool column -->
+  <div class="d-flex flex-wrap flex-column col-md-12 col-xl-8">
+      <!-- Options Toolbar -->
+      <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar">
+      <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i> Fullscreen</a></div>
+      </div>
+      <!-- /Options Toolbar -->
+      <!-- IGV Browser -->
+      <div class="col">
+          <div id="browser"></div>
+      </div>
+      <!-- IGV Browser -->
   </div>
+  <!-- /Tool Column -->
+ </div>
+ <!-- /Flex -->
+</div> <!-- /Container -->
 
 {% endblock %}
 
@@ -305,7 +280,7 @@ $(document).ready(function () {
 //   - 'default':   the list of tracks that are not specific to any one strain
 //   - 'templates': the list of track templates to be filled out with strain data
 function fetch_trackset() {
-  return fetch( "{{ url_for('gene_browser.get_tracks') }}" )
+  return fetch( "{{ url_for('genome_browser.get_tracks') }}" )
     .then( (response) => { return response.text();  } )
     .then( (text)     => { return JSON.parse(text); } );
 }

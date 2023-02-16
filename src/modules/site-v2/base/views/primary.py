@@ -54,22 +54,3 @@ def help_item(filename=""):
   subtitle = filename.replace("-", " ")
   return render_template('primary/help.html', **locals())
 
-
-@primary_bp.route('/outreach')
-@cache.memoize(60*60)
-def outreach():
-  title = "Outreach"
-  
-  # TODO: REPLACE THESE TEMPORARY ASSIGNMENTs
-  protocol_url = 'https://storage.googleapis.com/elegansvariation.org/static/protocols/SamplingIsolationC.elegansNaturalHabitat.pdf'
-  nematode_isolation_kit_form_url = 'http://docs.google.com/forms/d/15JXAQptqCSenZMyqHHOKQH1wJe7m0n8_Q0nHMe0eTUY/viewform?formkey=dERCQ1lsamU1ZFNtOGJJUkJqVzZOOVE6MQ#gid=0'
-  
-  return render_template('primary/outreach.html', **locals())
-
-
-@primary_bp.route('/contact-us')
-@cache.memoize(60*60)
-def contact():
-  title = "Contact Us"
-  return render_template('primary/contact.html', **locals())
-

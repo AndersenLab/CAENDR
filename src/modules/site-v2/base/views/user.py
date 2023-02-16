@@ -84,13 +84,21 @@ def user_recover():
   return redirect('/')
 
 
-@user_bp.route("/profile", methods=["GET"])
+@user_bp.route("/my-account", methods=["GET"])
 @jwt_required()
-def user_profile():
+def user_account():
   """ The User Account Profile """
-  title = 'Profile'
+  title = 'My Account'
   user = get_current_user()
-  return render_template('user/profile.html', **locals())
+  return render_template('user/my-account.html', **locals())
+
+
+@user_bp.route("/my-results", methods=["GET"])
+@jwt_required()
+def user_results():
+  title = 'My Results'
+  user = get_current_user()
+  return render_template('user/my-results.html', **locals())
 
 
 @user_bp.route("/update", methods=["GET", "POST"])

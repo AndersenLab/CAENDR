@@ -27,8 +27,8 @@ table.dataTable thead .sorting {
 {{ 
   render_dataTable_top_menu(
     actions = [
-      {'label':'All Mappings', 'url':url_for('mapping.mapping_all_reports'), 'classes':'btn nu-alt-btn', 'style':'float:right;', 'icon': 'glyphicon glyphicon-list', 'admin_only': True },
-      {'label':'New Mapping', 'url':url_for('mapping.mapping'), 'classes':'btn nu-alt-btn', 'style':'float:right; margin-right: .5rem;', 'icon':'glyphicon glyphicon-plus' }
+      {'label':'All Mappings', 'url':url_for('genetic_mapping.all_reports'), 'classes':'btn nu-alt-btn', 'style':'float:right;', 'icon': 'glyphicon glyphicon-list', 'admin_only': True },
+      {'label':'New Mapping', 'url':url_for('genetic_mapping.genetic_mapping'), 'classes':'btn nu-alt-btn', 'style':'float:right; margin-right: .5rem;', 'icon':'glyphicon glyphicon-plus' }
     ]
   ) 
 }}
@@ -60,11 +60,11 @@ table.dataTable thead .sorting {
               <td class='data-trait'> {{ item.trait }} </td>
               <td class='data-status'>
                 {% if item.status == 'COMPLETE' %}
-                <a href="{{ url_for('mapping.mapping_report', id=item.id) }}">
+                <a href="{{ url_for('genetic_mapping.report', id=item.id) }}">
                   {{ item.status }}
                 </a>
                 {% else %}
-                <a href="{{ url_for('mapping.mapping_report', id=item.id) }}">
+                <a href="{{ url_for('genetic_mapping.report', id=item.id) }}">
                   {{ item.status }}
                 </a>
                 {% endif %}

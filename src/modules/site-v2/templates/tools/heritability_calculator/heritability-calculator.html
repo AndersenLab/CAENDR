@@ -1,0 +1,112 @@
+{% extends "_layouts/default-nocontainer.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-around flex-wrap mb-5">
+        <!-- Description card -->
+        <div class="col-10 col-md-8 col-lg-4 mx-auto mt-4 mt-lg-0 mb-5 align-self-center">
+            <div class="card p-2 shadow descriptionCard cardBorderBottom">
+                <div class="card-body">
+                    <p class="card-text">
+                        This tool will calculate the broad-sense heritability for your trait of interest using a set of wild isolates. The broad-sense heritability is the amount of trait variance that comes from genetic differences in the assayed group of strains. Generally, it is the ratio of genetic variance to total (genetic plus environmental) variance. 
+                        <p>To obtain the best estimate of heritability, please measure a set of at least five wild strains in three independent assays. These assays should use different nematode growths, synchronizations, bacterial food preparations, and any other experimental condition. You should measure trait variance across as many different experimental conditions (in one block) as you would typically encounter in a large experiment.</p>
+                        <p>To obtain the best estimate of heritability, please measure a set of at least five wild strains in three independent assays. These assays should use different nematode growths, synchronizations, bacterial food preparations, and any other experimental condition. You should measure trait variance across as many different experimental conditions (in one block) as you would typically encounter in a large experiment.</p>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <!-- /Description Card -->
+        <!-- Tool -->
+        <div class="col-12 col-sm-10 col-md-8 col-lg-5 mx-auto mb-5">
+            <div class="card border-0 shadow text-center">
+                  <!-- Tab Menu -->
+                  <nav>
+                    <div class="nav nav-tabs text-bg-light p-1 pb-0" id="nav-tab" role="tablist">
+                      <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">New Calculation</button>
+                      <button class="nav-link" id="nav-linkOne-tab" type="button" role="tab" aria-controls="nav-linkOne" aria-selected="false"><a href="#">Sample Report</a></button>
+                      <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-" aria-selected="false"><a href="{{ url_for('heritability_calculator.user_results') }}">My Heritability Results</a></button>
+                    </div>
+                  </nav>
+                  <div class="tab-content m-3" id="nav-tabContent">
+                     <!-- Tab 1 -->
+                    <div class="tab-pane fade show active px-1 px-lg-5 py-2 text-start toolContent"  id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
+                        <p class="card-text">
+                            <h2 class="mb-4 text-center">New Calculation</h2>
+                                <!-- Input Form -->
+                                <form>
+                                    <div class="mb-4">
+                                        <label for="speciesSelect" class="form-label">Species:</label>
+                                        <select class="form-select" aria-label="Choose species" id="speciesSelect">
+                                            <option selected>Choose:</option>
+                                            <option value="1">C. Elegans</option>
+                                            <option value="2">C. Briggsae</option>
+                                            <option value="3">C. Tropicalis</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label for="fileName" class="form-label">Description:</label>
+                                        <input type="text" class="form-control" id="fileName" placeholder="Name your calculation.">
+                                    </div>
+                                    <div class="mb-4">
+                                        <label for="formFile" class="form-label">Select file:</label>
+                                        <div class="hstack gap-2 mb-4">
+                                        <input class="form-control" type="file" id="formFile">
+                                        <!-- Info Button with Modal -->
+                                        <button type="button" class="btn btn-secondary rounded-circle text-light text-center p-0 infoButton" data-bs-toggle="modal"
+                                            data-bs-target="#infoModal" aria-label="infoModalLabel">
+                                            <i class="bi bi-info lh-1" aria-hidden="true"></i>
+                                        </button>
+                                        <!-- Modal -->
+                                        <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h1 class="modal-title fs-5" id="infoModalLabel">File Format Information</h1>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        {% include "_includes/hcalculator-file-info.html" %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- /Modal -->
+                                        </div>
+                                        </div>
+                                    <div class="d-grid">
+                                        <button type="button" class="btn btn-secondary text-light" data-bs-toggle="modal" data-bs-target="#submit-modal"
+                                            aria-label="submit">Submit</button>
+                                        <!-- Modal - to display after submitting -->
+                                        <div class="modal fade" id="submit-modal" tabindex="-1" aria-labelledby="thankYouLabel" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h1 class="modal-title fs-5" id="thankYouLabel">Thank You</h1>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                    
+                                                        <p><i class="bi bi-clock-fill me-1 text-secondary fs-3"></i> Your report will be complete in about
+                                                            20 minutes</li>
+                                                        </p>
+                                                        <p><i class="bi bi-envelope-fill me-1 text-secondary fs-3"></i>You will receive an email when your
+                                                            report is complete.</p>
+                                                        <p><i class="bi bi-journal me-1 text-secondary fs-3"></i>You may also check <a href="#">My
+                                                                Results</a> for updates.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- /Modal -->
+                                    </div>
+                                </form>
+                            </p>
+                    </div>
+                  </div>
+                  <!-- /Tab Menu -->
+            </div>
+        </div>
+        <!-- /Tool -->
+        </div> <!-- /Flex -->
+</div> <!-- /Container -->
+{% endblock %}

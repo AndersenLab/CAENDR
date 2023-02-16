@@ -20,14 +20,14 @@ from caendr.services.dataset_release import get_latest_dataset_release_version
 from caendr.services.strain_annotated_variants import verify_interval_query, verify_position_query
 
 
-variant_browser_bp = Blueprint('variant_browser',
-                        __name__,
-                        template_folder='templates')
+variant_annotation_bp = Blueprint(
+  'variant_annotation', __name__, template_folder='templates'
+)
 
 
-@variant_browser_bp.route('/vbrowser')
+@variant_annotation_bp.route('/variant-annotation')
 @cache.memoize(60*60)
-def vbrowser():
+def variant_annotation():
 
   # Load columns from StrainAnnotatedVariant class
   columns = StrainAnnotatedVariant.get_column_details()
@@ -49,8 +49,8 @@ def vbrowser():
     # Page info
     "title": 'Variant Annotation',
     "alt_parent_breadcrumb": {
-      "title": "Data",
-      "url": url_for('data.landing')
+      "title": "Tools",
+      "url": url_for('tools.tools')
     },
     "form": VBrowserForm(),
 
@@ -74,10 +74,10 @@ def vbrowser():
     flash('CSV Download Failed.', 'error')
     return redirect(request.path)
 
-  return render_template('data/vbrowser.html', **vbrowser_options)
+  return render_template('tools/variant_annotation/vbrowser.html', **vbrowser_options)
 
 
-@variant_browser_bp.route('/vbrowser/query/interval', methods=['POST'])
+@variant_annotation_bp.route('/variant-annotation/query/interval', methods=['POST'])
 @cache.memoize(60*60)
 def vbrowser_query_interval():
   title = 'Variant Annotation'
@@ -94,7 +94,7 @@ def vbrowser_query_interval():
 
 
 
-@variant_browser_bp.route('/vbrowser/query/position', methods=['POST'])
+@variant_annotation_bp.route('/variant-annotation/query/position', methods=['POST'])
 @cache.memoize(60*60)
 def vbrowser_query_position():
   title = 'Variant Annotation'
@@ -110,7 +110,7 @@ def vbrowser_query_position():
   return jsonify({})
 
 
-@variant_browser_bp.route('/vbrowser/download/csv', methods=['POST'])
+@variant_annotation_bp.route('/variant-annotation/download/csv', methods=['POST'])
 def vbrowser_download_csv():
   try:
     data = request.data
@@ -123,5 +123,4 @@ def vbrowser_download_csv():
   except Exception as err:
     logger.error(err)
     return make_response(jsonify({ "message": "CSV download failed." }), 500)
-
 
