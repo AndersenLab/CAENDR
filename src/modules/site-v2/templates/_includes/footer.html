@@ -1,62 +1,58 @@
 <!-- Footer -->
 <footer>
   <div class="container-fluid mt-5 p-5">
-    <div class="row pt-5">
-      <div class="col-12 col-md-6 col-lg-4 col-xl-3 text-center mx-auto mb-5">
-        <a href="/"><img src="/static/img/caeNDRLogo.png" class="img-fluid footerImage"></a>
+    <div class="d-flex flex-sm-column flex-md-row flex-wrap justify-content-center pt-5">
+      <div class="col-12 col-md-3 mb-5">  
+        <a href="/"><img src="/static/img/caeNDRLogo.png" class="d-block img-fluid mx-auto footerImage"></a>
       </div>
-      <div class="col-12 col-xl-9">
-        <div class="row">
-          <div class="col-8 col-sm-3 col-lg-3 mx-auto mb-5">
-            <nav class="nav flex-column">
-              <h3 class="h5 text-dark">Tools</h3>
-              <li><a class="nav-link ps-0" href="{{ url_for('genome_browser.genome_browser')                   }}">
-                  Genome Browser
-                </a></li>
-              <li><a class="nav-link ps-0" href="{{ url_for('variant_annotation.variant_annotation')           }}">
-                  Variant
-                  Annotation </a></li>
-              <li><a class="nav-link ps-0" href="{{ url_for('genetic_mapping.genetic_mapping')                 }}">
-                  Genetic Mapping
-                </a></li>
-              <li><a class="nav-link ps-0" href="{{ url_for('pairwise_indel_finder.pairwise_indel_finder')     }}">
-                  Pairwise Indel
-                  Finder</a></li>
-              <li><a class="nav-link ps-0" href="{{ url_for('heritability_calculator.heritability_calculator') }}">
-                  Heritability
-                  Calculator </a></li>
-            </nav>
-          </div>
-          <div class="col-8 col-sm-3 col-lg-3 mx-auto mb-5">
-            <nav class="nav flex-column">
-              <h3 class="h5 text-dark">Data</h3>
-              <li><a class="nav-link ps-0" href="{{ url_for('data.download')      }}"> Download Data </a></li>
-              <li><a class="nav-link ps-0" href="{{ url_for('data.protocols')     }}"> Protocols </a></li>
-              <li><a class="nav-link ps-0" href="{{ url_for('data.submit_strain') }}"> Submit A Strain </a></li>
-            </nav>
-          </div>
-          <div class="col-8 col-sm-3 col-lg-3 mx-auto mb-5">
-            <nav class="nav flex-column">
-              <h3 class="h5 text-dark">About Us</h3>
-              <li><a class="nav-link ps-0" href="{{ url_for('about.about')      }}"> About CeNDR </a></li>
-              <li><a class="nav-link ps-0" href="{{ url_for('about.people')     }}"> People </a></li>
-              <li><a class="nav-link ps-0" href="{{ url_for('about.contact_us') }}"> Contact Us </a></li>
-            </nav>
-          </div>
-          <div class="col-8 col-sm-6 col-lg-3 mx-auto mb-5">
-            <nav class="nav flex-column">
-              <h3 class="h5 text-dark"><i class="bi bi-chat-left-quote-fill text-secondary me-1"
-                  aria-hidden="true"></i>Cite CaeNDR</h3>
-              <p>Cook DE, Zdraljevic S, Roberts JP, Andersen EC
-                <br>(2016 Oct 3) <em>Nucleic Acids Research</em>
-                <br>[ <a href="http://nar.oxfordjournals.org/content/early/2016/10/03/nar.gkw893.full"
-                  target="_blank">Article on Nucleic Acids Research</a> | <a
-                  href="https://dx.doi.org/10.1093/nar/gkw893" target="_blank">DOI</a> | <a
-                  href="https://www.ncbi.nlm.nih.gov/pubmed/27701074" target="_blank">Pubmed</a> ]
-              </p>
-            </nav>
-          </div>
-        </div>
+      <div class="col-3 col-md-2 mx-auto mb-5">
+        <nav class="nav flex-column">
+          <h3 class="h5 text-dark">Tools</h3>
+          <li><a class="nav-link ps-0" href="{{ url_for('genome_browser.genome_browser')                   }}">
+              Genome Browser
+            </a></li>
+          <li><a class="nav-link ps-0" href="{{ url_for('variant_annotation.variant_annotation')           }}">
+              Variant
+              Annotation </a></li>
+          <li><a class="nav-link ps-0" href="{{ url_for('genetic_mapping.genetic_mapping')                 }}">
+              Genetic Mapping
+            </a></li>
+          <li><a class="nav-link ps-0" href="{{ url_for('pairwise_indel_finder.pairwise_indel_finder')     }}">
+              Pairwise Indel
+              Finder</a></li>
+          <li><a class="nav-link ps-0" href="{{ url_for('heritability_calculator.heritability_calculator') }}">
+              Heritability
+              Calculator </a></li>
+        </nav>
+      </div>
+      <div class="col-3 col-md-2 mx-auto mb-5">
+        <nav class="nav flex-column">
+          <h3 class="h5 text-dark">Data</h3>
+          <li><a class="nav-link ps-0" href="{{ url_for('data.download')      }}"> Download Data </a></li>
+          <li><a class="nav-link ps-0" href="{{ url_for('data.protocols')     }}"> Protocols </a></li>
+          <li><a class="nav-link ps-0" href="{{ url_for('data.submit_strain') }}"> Submit A Strain </a></li>
+        </nav>
+      </div>
+      <div class="col-3 col-md-2 mx-auto mb-5">
+        <nav class="nav flex-column">
+          <h3 class="h5 text-dark">About Us</h3>
+          <li><a class="nav-link ps-0" href="{{ url_for('about.about')      }}"> About CeNDR </a></li>
+          <li><a class="nav-link ps-0" href="{{ url_for('about.people')     }}"> People </a></li>
+          <li><a class="nav-link ps-0" href="{{ url_for('about.contact_us') }}"> Contact Us </a></li>
+        </nav>
+      </div>
+      <div class="col-5 col-md-2 mx-auto mb-5">
+        <nav class="nav flex-column">
+          <h3 class="h5 text-dark"><i class="bi bi-chat-left-quote-fill text-secondary me-1" aria-hidden="true"></i>Cite
+            CaeNDR</h3>
+          <p>Cook DE, Zdraljevic S, Roberts JP, Andersen EC
+            <br>(2016 Oct 3) <em>Nucleic Acids Research</em>
+            <br>[ <a href="http://nar.oxfordjournals.org/content/early/2016/10/03/nar.gkw893.full"
+              target="_blank">Article on Nucleic Acids Research</a> | <a href="https://dx.doi.org/10.1093/nar/gkw893"
+              target="_blank">DOI</a> | <a href="https://www.ncbi.nlm.nih.gov/pubmed/27701074"
+              target="_blank">Pubmed</a> ]
+          </p>
+        </nav>
       </div>
     </div>
   </div>
@@ -102,3 +98,48 @@
   }
   );
 </script> -->
+
+
+
+
+
+<!-- Feedback Form -->
+<div id="feedback" class='hidden-print'>
+  <div id="feedback-tab" onclick="window.open('https://goo.gl/forms/rfWz4AlCIP');">
+    Feedback
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="/static/js/bootstrap.js"></script>
+
+<!-- Google Analytics -->
+<script>
+  (function (i, s, o, g, r, a, m) {
+    i['GoogleAnalyticsObject'] = r;
+    i[r] = i[r] || function () {
+      (i[r].q = i[r].q || []).push(arguments)
+    }, i[r].l = 1 * new Date();
+    a = s.createElement(o),
+      m = s.getElementsByTagName(o)[0];
+    a.async = 1;
+    a.src = g;
+    m.parentNode.insertBefore(a, m)
+  })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+  ga('create', 'UA-24677584-4', 'auto',
+    { user: "{{ user['name'] if user else None }}" });
+  ga('send', 'pageview');
+</script>
+
+<!-- <script type="text/javascript">
+  function set_alert(alert_type, title, text) {
+    $("#alert").hide().html("<div class='alert alert-dismissible alert-" + alert_type + "'><button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button><strong>" + title + "</strong> " + text + "</div>").fadeIn();
+  }
+
+  $(document).ready(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+  }
+  );
+</script> -->
+
