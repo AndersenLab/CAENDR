@@ -42,12 +42,10 @@
               <!-- UPLOAD FORM -->
               <form id="form-submit" action="{{ url_for('genetic_mapping.submit') }}" method="post" onsubmit="disableButton()"
                 class="form form-inline" enctype="multipart/form-data">
-                <!-- Species -->
-                {% include "_includes/species-selector.html" %}
-                <!-- /Species -->
                 <div class="mb-4">
                   {{ form.csrf_token }}
                   <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">
+                  {% include "_includes/species-selector.html" %}
                   <label for="label" class="form-label">Description:</label>
                   <input id="label" name="label" type="text" class="form-control input-margin" placeholder="Name your mapping"
                     style="width:100%" required />
@@ -55,7 +53,7 @@
                 <div class="mb-4">
                   <label for="formFile" class="form-label">Select file:</label>
                   <div class="hstack gap-2 mb-4">
-                    <input class="form-control" type="file" id="file" accept=".tsv" required>
+                    <input class="form-control" type="file" name="file" id="file" accept=".tsv" required>
                     <!-- Info Popover -->
                     <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
                       data-bs-trigger="focus" data-bs-title="More information"
