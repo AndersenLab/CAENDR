@@ -159,7 +159,9 @@
 
 {% block script %}
 {% from "_includes/macros.html" import unpack_species_list %}
-{% from "_includes/strain-listing.html" import filter_strains, replace_tokens %}
+{% from "_includes/strain-listing.html" import replace_tokens %}
+<script src="{{ url_for('static', filename='js/strains.js') }}"></script>
+
 <script type="text/javascript">
 
 
@@ -224,9 +226,7 @@ $(document).ready(function () {
   (function($) {
       var patterns = [];
       $('#filter').keyup(function() {
-          species_id = species['name'];
-          search_terms = $(this).val().split(',');
-          {{ filter_strains("species_id", "search_terms") }}
+          filter_strains(species['name'], $(this).val().split(','))
       })
   }(jQuery));
 
@@ -385,12 +385,6 @@ function clear_track_checkboxes() {
 
 /* Changing Species */
 
-// Show only strains matching current species
-function update_strains(species_id) {
-  {{ filter_strains("species_id") }}
-}
-
-
 // Show/hide tracks to match list of tracks supported by current species
 function update_visible_track_checkboxes(species_id) {
   if (!species_id) {
@@ -426,7 +420,7 @@ function update_species(species_id) {
   document.getElementById('release_version').innerHTML  = species['latest_release'];
 
   // Update list of strains to match current species
-  update_strains(species_id);
+  filter_strains(species_id);
 
   // Reset the checkboxes to the default for the new species
   reset_track_checkboxes(species_id);

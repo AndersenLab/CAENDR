@@ -208,7 +208,7 @@
 
 {% block script %}
 {% from "_includes/macros.html" import unpack_species_list %}
-{% from "_includes/strain-listing.html" import filter_strains %}
+<script src="{{ url_for('static', filename='js/strains.js') }}"></script>
 <script>
 
 
@@ -262,8 +262,11 @@ function update_species(species_id) {
   // Clear the interval search on switching species, to help avoid confusion
   clear_interval_search();
 
-  // Update the strain list table
-  update_strains(species_id);
+  // Show only strains matching current species
+  filter_strains(species_id)
+
+  // Update selected strains set to match selections for current species
+  update_selected_strains();
 
   // Clear any previous species data from the data table
   clearDataTable();
@@ -272,16 +275,6 @@ function update_species(species_id) {
 
 
 /* Strains */
-
-function update_strains(species_id) {
-
-  // Show only strains matching current species
-  {{ filter_strains("species_id") }}
-
-  // Update selected strains set to match current species
-  update_selected_strains();
-}
-
 
 function update_selected_strains() {
 
@@ -691,9 +684,7 @@ $(document).ready(function() {
 
     /* Strain search */
     $('#strain-filter').keyup(function() {
-        species_id = species['name']
-        search_terms = $(this).val().split(',');
-        {{ filter_strains("species_id", "search_terms") }}
+        filter_strains(species['name'], $(this).val().split(','))
     });
 
     /* Filter by impact */
