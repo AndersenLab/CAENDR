@@ -107,6 +107,7 @@
 
 {% block script %}
 {% from "_includes/macros.html" import unpack_species_list %}
+{% from "_includes/strain-listing.html" import replace_tokens %}
 
 <script>
 
@@ -489,15 +490,10 @@ function replace_tokens(filename) {
 
   // TODO: resolve call order (?) so this default value is unnecessary
   if (!species) {
-    species = 'c_elegans'
+    species = species_list['c_elegans']
   }
 
-  filename = filename.replaceAll('$SPECIES',   species_list[species]['name'].substring(2));
-  filename = filename.replaceAll('${SPECIES}', species_list[species]['name'].substring(2));
-  {% for token, field in tokens.items() %}
-  filename = filename.replaceAll('${{ token }}',             species_list[species]['{{ field }}']);
-  filename = filename.replaceAll('${' + '{{ token }}' + '}', species_list[species]['{{ field }}']);
-  {% endfor %}
+  {{ replace_tokens('filename', 'species', tokens) }}
   return filename;
 }
 

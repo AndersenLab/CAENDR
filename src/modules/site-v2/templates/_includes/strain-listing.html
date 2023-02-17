@@ -72,3 +72,18 @@
   }
   {% endif %}
 {% endmacro %}
+
+
+
+{#
+  Replace string tokens with species-specific variables.
+  Takes the name of an input variable, the name of a species object, and a dictionary
+  mapping token strings to the species field they should be replaced with.
+ #}
+{% macro replace_tokens(target_var, species_var, tokens) %}
+  // TODO: Uses of species name ID in filenames not yet standardized, so we drop the 'c_' prefix for now
+  {{target_var}} = {{target_var}}.replaceAll('${SPECIES}', {{species_var}}['name'].substring(2));
+  {% for token, field in tokens.items() -%}
+  {{target_var}} = {{target_var}}.replaceAll('${' + '{{ token }}' + '}', {{species_var}}['{{ field }}']);
+  {% endfor -%}
+{% endmacro %}

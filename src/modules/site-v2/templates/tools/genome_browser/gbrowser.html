@@ -159,7 +159,7 @@
 
 {% block script %}
 {% from "_includes/macros.html" import unpack_species_list %}
-{% from "_includes/strain-listing.html" import filter_strains %}
+{% from "_includes/strain-listing.html" import filter_strains, replace_tokens %}
 <script type="text/javascript">
 
 
@@ -494,10 +494,7 @@ function set_position(coord) {
 // Replace string tokens with species values
 // TODO: Uses of species name ID in filenames not yet standardized, so we drop the 'c_' prefix for now
 function replace_tokens(filename) {
-  filename = filename.replaceAll('${SPECIES}', species['name'].substring(2));
-  {% for token, field in tokens.items() %}
-  filename = filename.replaceAll('${' + '{{ token }}' + '}', species['{{ field }}']);
-  {% endfor %}
+  {{ replace_tokens('filename', 'species', tokens) }}
   return filename;
 }
 
