@@ -1,0 +1,17 @@
+{% macro list_strains(species_list, strain_list) %}
+  {% for species in species_list %}
+  {% for strain in strain_list[species] %}
+  <tr class="strain-entry-container strain-entry-container-{{species}}">
+    {{ caller(strain) }}
+  </tr>
+  {% endfor %}
+  {% endfor %}
+{% endmacro %}
+
+{%- macro strain_query(species_var) -%}
+  {%- if species_var -%}
+    `.strain-entry-container-${ {{species_var}} }`
+  {%- else -%}
+    '.strain-entry-container'
+  {%- endif -%}
+{% endmacro %}
