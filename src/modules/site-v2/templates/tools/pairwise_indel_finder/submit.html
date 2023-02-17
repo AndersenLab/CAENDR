@@ -366,8 +366,13 @@ function update_browser_tracks(browser, results) {
 
 function load_tracks(browser, results) {
     rowset = {}
-    rowset[$("#strain_1").val()] = []
-    rowset[$("#strain_2").val()] = []
+
+    if ($("#strain_1").val()) {
+      rowset[$("#strain_1").val()] = []
+    }
+    if ($("#strain_2").val()) {
+      rowset[$("#strain_2").val()] = []
+    }
     tracks = []
 
     // Restructure results by strain
