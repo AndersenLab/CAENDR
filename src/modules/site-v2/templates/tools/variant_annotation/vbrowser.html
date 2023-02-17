@@ -123,9 +123,9 @@
                   <tbody>
                     {% for species in species_list %}
                     {% for strain in strain_listing[species] %}
-                    <tr id="strain-entry-container-{{species}}" class="select-searchable strain-entry-container">
+                    <tr class="select-searchable strain-entry-container strain-entry-container-{{species}}">
                       <td>
-                        <input class="toggle-strain-chk" type="checkbox" data-column="{{strain}}" id="toggle_{{strain}}"
+                        <input class="toggle-strain-chk toggle-strain-chk-{{species}}" type="checkbox" data-column="{{strain}}" id="toggle_{{strain}}"
                           checked />
                         <label for="toggle_{{strain}}"> {{ strain }} </label>
                       </td>
@@ -278,7 +278,7 @@ function update_strains(species_id) {
 
   // Show only strains matching current species
   $('.strain-entry-container').hide();
-  $(`#strain-entry-container-${species_id}`).show();
+  $(`.strain-entry-container-${species_id}`).show();
 
   // Update selected strains set to match current species
   update_selected_strains();
@@ -696,7 +696,7 @@ $(document).ready(function() {
         $('.select-searchable').hide();
         $(this).val().split(',').forEach(function(r) {
             var rex = new RegExp(r, "i");
-            $('.select-searchable').filter(function() {
+            $(`.strain-entry-container-${species['name']}`).filter(function() {
                 return rex.test($(this).text());
             }).show();
         });
