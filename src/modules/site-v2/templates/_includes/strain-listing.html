@@ -1,3 +1,7 @@
+{#
+  Generate a table row for each strain.
+  Caller should provide markup for the contents of the row.
+#}
 {% macro list_strains(species_list, strain_list) %}
   {% for species in species_list %}
   {% for strain in strain_list[species] %}
@@ -8,10 +12,42 @@
   {% endfor %}
 {% endmacro %}
 
+{#
+  Get a JQuery selector for strain rows.
+  Takes the name of a variable containing the species ID as an optional parameter.
+  If species ID not provided, generates a selector for all rows.
+#}
 {%- macro strain_query(species_var) -%}
   {%- if species_var -%}
     `.strain-entry-container-${ {{species_var}} }`
   {%- else -%}
     '.strain-entry-container'
   {%- endif -%}
+{% endmacro %}
+
+{#
+  Show/hide strain rows based on a search term.
+  Takes the name of a variable containing the species ID as a parameter.
+#}
+{% macro filter_strains(species_var, search_var) %}
+  $({{ strain_query() }}).hide();
+
+  {% if species_var %}
+  if ({{ species_var }}) {
+
+    {# If search string(s) provided, show matching strains #}
+    {% if search_var %}
+    {{ search_var }}.forEach(function(r) {
+        var rex = new RegExp(r, "i");
+        $({{ strain_query(species_var) }}).filter(function() {
+            return rex.test($(this).text());
+        }).show();
+    })
+
+    {# Otherwise, show all strains matching given species #}
+    {% else %}
+    $({{ strain_query(species_var) }}).show()
+    {% endif %}
+  }
+  {% endif %}
 {% endmacro %}

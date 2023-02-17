@@ -159,7 +159,7 @@
 
 {% block script %}
 {% from "_includes/macros.html" import unpack_species_list %}
-{% from "_includes/strain-listing.html" import strain_query %}
+{% from "_includes/strain-listing.html" import filter_strains %}
 <script type="text/javascript">
 
 
@@ -224,14 +224,9 @@ $(document).ready(function () {
   (function($) {
       var patterns = [];
       $('#filter').keyup(function() {
-          $('.searchable tr').hide();
-          species_id = species['name']
-          $(this).val().split(',').forEach(function(r) {
-              var rex = new RegExp(r, "i");
-              $({{ strain_query("species_id") }}).filter(function() {
-                  return rex.test($(this).text());
-              }).show();
-          })
+          species_id = species['name'];
+          search_terms = $(this).val().split(',');
+          {{ filter_strains("species_id", "search_terms") }}
       })
   }(jQuery));
 
@@ -392,8 +387,7 @@ function clear_track_checkboxes() {
 
 // Show only strains matching current species
 function update_strains(species_id) {
-  $({{ strain_query() }}).hide();
-  $({{ strain_query("species_id") }}).show();
+  {{ filter_strains("species_id") }}
 }
 
 
