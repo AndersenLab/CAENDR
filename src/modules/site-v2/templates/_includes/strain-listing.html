@@ -6,7 +6,7 @@
   {% for species in species_list %}
   {% for strain in strain_list[species] %}
   <tr class="strain-entry-container strain-entry-container-{{species}}" style="display: none;">
-    {{ caller(strain) }}
+    {{ caller(species, strain) }}
   </tr>
   {% endfor %}
   {% endfor %}
