@@ -1,6 +1,8 @@
 {% extends "_layouts/default-nocontainer.html" %}
 
 {% block content %}
+{% from "_includes/strain-listing.html" import species_selector %}
+
 <div class="container">
     <div class="d-flex justify-content-around flex-wrap mb-5">
         <!-- Description card -->
@@ -35,7 +37,7 @@
                                 <!-- Input Form -->
                                 <form>
                                     <!-- Species -->
-                                    {% include "_includes/species-selector.html" %}
+                                    {{ species_selector(species_list) }}
                                     <!-- /Species -->
                                     <div class="mb-4">
                                         <label for="fileName" class="form-label">Description:</label>

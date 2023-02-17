@@ -10,6 +10,7 @@
 
 {% block content %}
 {% from "_includes/macros.html" import render_field %}
+{% from "_includes/strain-listing.html" import species_selector %}
 
 <div class="container-fluid px-5">
   <div class="d-flex justify-content-around flex-wrap mt-2 pb-5">
@@ -31,7 +32,7 @@
             <form id='form-submit' method="POST">
               {{ form.csrf_token }}
               <!-- Species -->
-              {% with onchange = "" %} {% include "_includes/species-selector.html" %} {% endwith %}
+              {{ species_selector(species_list) }}
               <!-- /Species -->
               <!-- <div class='mb-4'>{{ render_field(form.species) }}</div> -->
               <div class="mb-4">{{ render_field(form.strain_1) }}</div>

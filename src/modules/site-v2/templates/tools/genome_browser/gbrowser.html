@@ -19,7 +19,7 @@
 {% endblock %}
 
 {% block content %}
-{% from "_includes/strain-listing.html" import list_strains %}
+{% from "_includes/strain-listing.html" import species_selector, list_strains %}
 
 <div class="container-fluid px-5">
   <div class="d-flex justify-content-around flex-wrap mt-2 pb-5">
@@ -28,7 +28,7 @@
       <!-- Input Form -->
       <form>
         <!-- Species -->
-        {% with onchange = "update_species" %} {% include "_includes/species-selector.html" %} {% endwith %}
+        {{ species_selector(species_list, "update_species") }}
         <!-- /Species -->
         <!-- Gene search -->
         <div class="mb-4">
@@ -411,17 +411,16 @@ function hide_track_checkboxes() {
 
 
 // Set up species variable & set to match species selector
-function update_species(selector) {
+function update_species(species_id) {
 
-  // Check for selector element with value
-  if ( !selector || !selector.value ) {
+  // Check if value provided
+  if ( !species_id ) {
     update_visible_track_checkboxes();
     return;
   }
 
-  // Get species from selector
-  species_id = selector.value;
-  species    = species_list[species_id];
+  // Set species object from ID
+  species = species_list[species_id];
 
   document.getElementById('wormbase_version').innerHTML = species['wb_ver'];
   document.getElementById('release_version').innerHTML  = species['latest_release'];

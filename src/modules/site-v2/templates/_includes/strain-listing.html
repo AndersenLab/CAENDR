@@ -1,4 +1,25 @@
 {#
+  Create a species dropdown selector.
+  If onchange callback function is provided, calls it with selector value.
+ #}
+{% macro species_selector(species_list, onchange) %}
+  <div class="mb-4">
+    <label for="speciesSelect" class="form-label">Species:</label>
+    <select
+      class="form-select" aria-label="Choose species" id="speciesSelect" name="species"
+      {% if onchange %}onchange="{{ onchange }}(this.value)"{% endif %}
+    >
+      <option selected value="">Choose</option>
+      {% for s in species_list %}
+      <option value="{{s}}">{{species_list[s]["short_name"]}}</option>
+      {% endfor %}
+    </select>
+  </div>
+{% endmacro %}
+
+
+
+{#
   Generate a table row for each strain.
   Caller should provide markup for the contents of the row.
 #}
