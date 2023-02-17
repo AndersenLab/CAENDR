@@ -6,7 +6,7 @@ import bleach
 from flask import jsonify
 from werkzeug.utils import secure_filename
 
-from base.utils.auth import get_jwt, jwt_required, admin_required, get_current_user
+from base.utils.auth import get_jwt, jwt_required, admin_required, get_current_user, user_is_admin
 from base.forms import FileUploadForm
 
 from caendr.services.nemascan_mapping import create_new_mapping, get_mapping, get_all_mappings, get_user_mappings
@@ -58,6 +58,9 @@ def submit():
   form = FileUploadForm(request.form)
   user = get_current_user()
 
+  # If user is admin, allow them to bypass cache with URL variable
+  no_cache = bool(user_is_admin() and request.args.get("nocache", False))
+
   # Validate form
   if not form.validate_on_submit():
     flash("You must include a description of your data and a TSV file to upload", "error")
@@ -81,7 +84,7 @@ def submit():
 
   try:
     # logger.warn("Check Duplicates is DISABLED !!!")
-    m = create_new_mapping(user, data, no_cache=False)
+    m = create_new_mapping(user, data, no_cache=no_cache)
     return redirect(url_for('genetic_mapping.report', id=m.id))
 
   except DuplicateDataError as ex:

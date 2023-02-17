@@ -89,6 +89,7 @@
                 </div>
               </form>
               <!-- /UPLOAD FORM -->
+              {%- include "_includes/ignore-cache-checkbox.html" %}
               </p>
             </div>
             <!-- Tab 2 -->
@@ -117,6 +118,16 @@
 {% block script %}
 
 <script>
+
+{%- if session["is_admin"] %}
+
+$("#no_cache_checkbox").change(() => {
+  const url = "{{ url_for('genetic_mapping.submit') }}" + ($('#no_cache_checkbox').prop('checked') ? "?nocache=1" : "")
+  console.log(url)
+  $('#form-submit').attr('action', url)
+})
+
+{%- endif %}
 
 function disableButton() {
   const btn = document.getElementById('submit-btn');
