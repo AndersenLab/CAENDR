@@ -162,7 +162,7 @@ $(document).ready(function(){
 
   var form = document.getElementById('form-submit');
 
-  species = $("#species").val();
+  species = species_list[$("#species").val()];
 
   form.addEventListener('change', function() {
     if (loaded) {
@@ -242,8 +242,8 @@ function process_indel_finder_query_results(results) {
     if (new_species == '') {
       return
     }
-    if (created || species != new_species) {
-      species = new_species;
+    if (created || species['name'] != new_species) {
+      species = species_list[new_species];
 
       Promise.all([
         update_browser_species(browser, species),
@@ -267,8 +267,8 @@ function process_indel_finder_query_results(results) {
 
 function update_strain_dropdown(id, initial_value = null) {
   $(id).empty();
-  if (strains[species]) {
-    strains[species].forEach((val) => {
+  if (strains[species['name']]) {
+    strains[species['name']].forEach((val) => {
       $(id).append( $("<option />").val(val).text(val) );
     });
     if (initial_value) {
@@ -276,7 +276,7 @@ function update_strain_dropdown(id, initial_value = null) {
     }
   }
   else {
-    console.warn(`Couldn't find strains for species ${species}`);
+    console.warn(`Couldn't find strains for species ${species['name']}`);
   }
 }
 
