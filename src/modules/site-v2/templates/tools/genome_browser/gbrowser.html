@@ -65,10 +65,11 @@
               <table id='browser_strain_list' class="table table-striped table-hover">
                 <caption class="visually-hidden">A list of strains with different file type options.</caption>
                 <tbody class="searchable">
-                  {% for strain in strain_listing %}
-                  <tr>
+                  {% for species in species_list %}
+                  {% for strain in strain_listing[species] %}
+                  <tr class="strain-entry-container strain-entry-container-{{species}}">
                     <td>
-                      {{ strain.isotype }} ({{ strain.strain }})
+                      {{ strain.isotype }} {{ ("(" + strain.strain + ")") if (strain.isotype != strain.strain) else "" }}
                     </td>
                     <td>
                       <label>
@@ -83,6 +84,7 @@
                         BAM</label>
                     </td>
                   </tr>
+                  {% endfor %}
                   {% endfor %}
                 </tbody>
               </table>
@@ -229,7 +231,7 @@ $(document).ready(function () {
           $('.searchable tr').hide();
           $(this).val().split(',').forEach(function(r) {
               var rex = new RegExp(r, "i");
-              $('.searchable tr').filter(function() {
+              $(`.strain-entry-container-${species['name']}`).filter(function() {
                   return rex.test($(this).text());
               }).show();
           })
@@ -434,7 +436,7 @@ function update_species(selector) {
   document.getElementById('release_version').innerHTML  = species['latest_release'];
 
   // Update list of strains to match current species
-  update_strains();
+  update_strains(species_id);
 
   // Reset the checkboxes to the default for the new species
   reset_track_checkboxes(species_id);
