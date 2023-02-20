@@ -409,11 +409,11 @@ function generate_primers(e) {
   $.ajax({
     type: "POST",
     url:
-      {% if session["is_admin"] %}
+      {%- if session["is_admin"] -%}
         "{{ url_for('pairwise_indel_finder.submit') }}" + ($('#no_cache_checkbox').prop('checked') ? "?nocache=1" : ""),
-      {% else %}
+      {%- else -%}
         "{{ url_for('pairwise_indel_finder.submit') }}",
-      {% endif %}
+      {%- endif %}
     data: JSON.stringify(data),
     contentType: "application/json; charset=utf-8",
     dataType: 'json',
