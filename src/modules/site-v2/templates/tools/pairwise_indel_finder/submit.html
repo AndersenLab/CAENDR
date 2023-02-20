@@ -109,6 +109,7 @@
 {% block script %}
 {% from "_includes/macros.html" import unpack_species_list %}
 {% from "_includes/strain-listing.html" import replace_tokens %}
+<script src="{{ url_for('static', filename='js/strains.js') }}"></script>
 
 <script>
 {% include '_scripts/igv-browser.js' %}
@@ -235,8 +236,8 @@ function update_species(species_id) {
   // Update the browser species & the strain dropdown lists
   create_or_update_browser(browser_div, browser_options, species).then(({browser}) => {
     Promise.all([
-      update_strain_dropdown("#strain_1", "{{ default_strains[0] }}"),
-      update_strain_dropdown("#strain_2", "{{ default_strains[1] }}"),
+      update_strain_dropdown("#strain_1", strains, species, "{{ default_strains[0] }}"),
+      update_strain_dropdown("#strain_2", strains, species, "{{ default_strains[1] }}"),
     ])
     .then(() => {
 
@@ -290,21 +291,6 @@ function process_indel_finder_query_results(results) {
   update_browser_tracks(browser, results);
 }
 
-
-function update_strain_dropdown(id, initial_value = null) {
-  $(id).empty();
-  if (strains[species['name']]) {
-    strains[species['name']].forEach((val) => {
-      $(id).append( $("<option />").val(val).text(val) );
-    });
-    if (initial_value) {
-      $(id).val(initial_value);
-    }
-  }
-  else {
-    console.warn(`Couldn't find strains for species ${species['name']}`);
-  }
-}
 
 
 /* Genome Browser Tracks */
