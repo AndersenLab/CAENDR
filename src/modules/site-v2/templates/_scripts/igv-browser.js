@@ -1,5 +1,5 @@
 // Tracks
-var tracks   = [];
+var tracks   = new Set();
 var trackset = {};
 
 function set_trackset(val) {
@@ -44,7 +44,7 @@ function create_or_update_browser(browser_div, browser_options, species) {
     // Otherwise, load the new reference genome
     // Updating the browser clears the list of tracks
     else {
-      tracks = [];
+      clear_tracks();
       return browser.loadGenome(reference).then(() => {
         return {browser, created: false, changed: true };
       });
@@ -74,9 +74,9 @@ function create_or_update_browser(browser_div, browser_options, species) {
 
 // Add a single track to the browser by name
 function add_track(track_name, track_data = null) {
-  if (!tracks.includes(track_name)) {
-    tracks.push(track_name);
+  if (!tracks.has(track_name)) {
     const track = track_data || get_track(track_name)
+    tracks.add(track_name);
     return igv.getBrowser().loadTrack(track);
   }
 }
@@ -84,11 +84,7 @@ function add_track(track_name, track_data = null) {
 // Remove a single track from the browser by name
 function remove_track(track_name) {
   if (track_name == '') return;
-  i = tracks.indexOf(track_name);
-  while (i != -1) {
-    tracks.splice(i, 1);
-    i = tracks.indexOf(track_name);
-  }
+  tracks.delete(track_name);
   return igv.getBrowser().removeTrackByName(track_name);
 }
 
@@ -104,12 +100,9 @@ function clear_tracks() {
 // Clear all tracks from the browser, except those specified in `track_names`
 function clear_tracks_except(track_names) {
 
-  // Prevent the default track from being removed
-  track_names.push('')
-
   tracks.forEach(track => {
-    if (!track_names.includes(track.name)) {
-      remove_track(track.name);
+    if (!track_names.includes(track)) {
+      remove_track(track);
     }
   });
 }
