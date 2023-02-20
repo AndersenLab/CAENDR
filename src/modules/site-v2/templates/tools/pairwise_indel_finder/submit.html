@@ -113,30 +113,28 @@
 <script>
 {% include '_scripts/igv-browser.js' %}
 
-/* Species List */
+/* Species */
 const species_list = {{ unpack_species_list(species_list, species_fields) }};
-var strains;
-
-/*
-	IGV Browser
-*/
-var browser_div = $("#browser");
-var browser_options = {}
-
-var divergent_track_summary = {};
-
-var results
-var query_running = false
-var loaded = false
-var table
 var species;
 
+/* Strains */
+var strains;
+
+/* IGV Browser */
+const browser_div = $("#browser");
+const browser_options = {}
+var divergent_track_name;
 const COLORS = {
   INS: 'blue',
   DEL: 'red'
 }
 
-var divergent_track_name;
+/* Data Table */
+var table;
+
+/* Status */
+var query_running = false
+var loaded = false
 
 
 
