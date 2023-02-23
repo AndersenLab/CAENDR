@@ -12,7 +12,7 @@
       </button>
       <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
         <div class="navbar-nav">
-          <a class="nav-link mx-5" href="{{ url_for('strains.strains_catalog') }}">Request Strains</a>
+          <a class="nav-link" href="{{ url_for('strains.strains_catalog') }}">Request Strains</a>
           <div class="nav-item dropdown mx-5">
             <a class="nav-link dropdown-toggle" href="#" id="toolsDropdown" role="button" data-bs-toggle="dropdown"
               aria-expanded="false">
@@ -62,8 +62,8 @@
             </ul>
           </div>
           <div class="nav-item dropdown mx-5">
-            <a class="nav-link dropdown-toggle" href="#" id="getInvolvedDropdown" role="button"
-              data-bs-toggle="dropdown" aria-expanded="false">
+            <a class="nav-link dropdown-toggle" href="#" id="getInvolvedDropdown" role="button" data-bs-toggle="dropdown"
+              aria-expanded="false">
               Get Involved
             </a>
             <ul class="dropdown-menu" aria-labelledby="getInvolvedDropdown">
@@ -74,7 +74,7 @@
           </div>
           <a class="nav-link mx-5 mb-3" href="{{ url_for('primary.help_item') }}">FAQs</a>
           <!-- User Menu -->
-          <div class="nav-item dropdown mx-5">
+          <div class="nav-item dropdown mx-1">
             <a class="dropdown-toggle rounded-circle userMenu" data-bs-toggle="dropdown" id="userMenuDropDown"
               data-bs-auto-close="false" aria-expanded="false" aria-label="User Menu"><i class="bi bi-person-fill lh-1"
                 aria-hidden="true"></i></a>
@@ -106,15 +106,4 @@
       </div>
   </nav>
   <!-- /Navbar -->
-
-  <div id="snackbar">
-    <div id="messages">
-      {% for category, msg in get_flashed_messages(with_categories=true) %}
-      <div class="flash-{{ category }} alert alert-dismissable alert-{{ category }} flash-banner">
-        <p class="snackbar-msg-txt snackbar-msg-txt-{{ category }}">{{ msg }}</p>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-
 </header>

@@ -53,7 +53,7 @@ class Task(object):
         )
 
       # If all checks passed, copy the properties of the source Entity
-      self.set_properties( **dict(source_obj) )
+      self.set_properties( **dict(source_obj), id = source_obj.id )
 
     # Set properties from keyword arguments
     self.set_properties(**kwargs)

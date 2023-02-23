@@ -23,7 +23,7 @@ class Profile(Entity):
   @classmethod
   def get_props_set(cls):
     return {
-      *super(Profile, cls).get_props_set(),
+      *super().get_props_set(),
       'id',
       'first_name',
       'last_name',
@@ -34,9 +34,6 @@ class Profile(Entity):
       'website',
       'email',
     }
-
-  def __repr__(self):
-    return f"<{self.kind}:{getattr(self, 'id', 'no-id')}>"
 
 
   ## Special Properties ##

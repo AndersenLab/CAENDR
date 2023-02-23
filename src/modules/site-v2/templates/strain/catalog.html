@@ -45,7 +45,8 @@
     <div class="row">
         <div class="col-md-12">
 
-            <table class="table table-hover table-striped strain-table" style="table-layout: fixed">
+            <div class="table-responsive mb-5" style="height:45vh;">
+            <table class="table table-hover table-striped strain-table">
                 <thead>
                     <tr>
                         <th style="width:7%;"> </th>
@@ -80,7 +81,7 @@
                         <td><strong><label for="set-{{ i }}">Mapping Set {{ i }}</label></strong></td>
                         <td>{{ len(strain_sets["{}".format(i)]) }}</td>
                         <td>
-                            <a class="btn btn-link btn-block view-strain-link" data-toggle="collapse" data-target="#view_set_{{ i }}">View Strains</a>
+                            <a class="btn btn-link btn-block view-strain-link" data-bs-toggle="collapse" data-bs-target="#view_set_{{ i }}">View Strains</a>
                             <div class="collapse" id="view_set_{{ i }}">
                                 <ul class="view-strain-list">
                                     {% for strain in strain_sets["{}".format(i)] %}
@@ -93,8 +94,10 @@
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
+
 
     <div class="row">
         <div class="col-md-6">
@@ -107,7 +110,7 @@
           Individual strains can be ordered below.
         </div>
         <div class="col-md-2">
-            <button style="margin-left: auto;" type="button" class="btn btn-nu btn-block" data-toggle="modal" tooltip data-target="#myModal" data-placement="top" title="Paste a list of strains to select">Paste List</button>
+            <button style="margin-left: auto;" type="button" class="btn btn-nu btn-block" data-bs-toggle="modal" tooltip data-bs-target="#myModal" data-bs-placement="top" title="Paste a list of strains to select">Paste List</button>
         </div>
         <div class="col-md-4">
             <input id="filter" type="text" class="form-control" placeholder="Enter Strain Name" action="#" autocomplete="off">
@@ -116,27 +119,28 @@
     <br />
     <div class="row">
       <div class="col-md-12">
-        <table class="table table-hover table-striped strain-table" style="table-layout: fixed">
+        <div class="table-responsive" style="height:70vh;">
+        <table class="table table-hover table-striped strain-table">
           <thead>
             <tr>
               <th style="width:7%;"></th>
               <th style="width:18%;">
-                <span class="tooltip-item" data-toggle="tooltip" data-placement="bottom" title="Name of strain we distribute as a representative of an isotype.">
+                <span class="tooltip-item" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Name of strain we distribute as a representative of an isotype.">
                   Reference Strain
                 </span>
               </th>
               <th style="width:18%;">
-                <span class="tooltip-item" data-toggle="tooltip" data-placement="bottom" title="Name assigned to a group of strains that share the same genome-wide haplotype.">
+                <span class="tooltip-item" data-bs-toggle="tooltip" data-placement="bottom" title="Name assigned to a group of strains that share the same genome-wide haplotype.">
                   Isotype
                 </span>
               </th>
               <th style="width:18%;">
-                <span class="tooltip-item" data-toggle="tooltip" data-placement="bottom" title="Individually isolated strains; If strains are assigned to the same isotype they are > 99.93% genetically identical">
+                <span class="tooltip-item" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Individually isolated strains; If strains are assigned to the same isotype they are > 99.93% genetically identical">
                   Strains
                 </span>
               </th>
-              <th style="width:18%;"><span class="tooltip-item" data-toggle="tooltip" data-placement="bottom" title="Date of original release">Release</span></th>
-              <th style="width:21%;"><span class="tooltip-item" data-toggle="tooltip" data-placement="bottom" title="Previous names assigned to a strain or alternative names">Alternative Names</span>
+              <th style="width:18%;"><span class="tooltip-item" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Date of original release">Release</span></th>
+              <th style="width:21%;"><span class="tooltip-item" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Previous names assigned to a strain or alternative names">Alternative Names</span>
                 <!--<div class="pull-right"><a href="https://docs.google.com/spreadsheets/d/1V6YHzblaDph01sFDI8YK_fP0H7sVebHQTXypGdiQIjI/pub?output=tsv">Download Strain Information (.tsv)</a></div>-->
               </th>
             </tr>
@@ -165,6 +169,7 @@
             <input name="from_catalog" type="hidden" value="true">
           </tbody>
         </table>
+        </div>
       </div> {# /col-md-12 #}
     </div> {# /row #}
     
@@ -177,7 +182,7 @@
             </div>
             <div id='alert-modal'></div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-nu" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-nu" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-nu" id="submitPaste">Submit</button>
             </div>
         </div>
@@ -278,7 +283,7 @@
     });
 
     $(function() {
-        $('[data-toggle="tooltip"]').tooltip()
+        $('[data-bs-toggle="tooltip"]').tooltip()
     })
 
 </script>

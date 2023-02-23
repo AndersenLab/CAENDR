@@ -1,3 +1,5 @@
+from caendr.services.logger import logger
+
 from caendr.models.datastore import Container, Entity
 
 
@@ -22,6 +24,10 @@ class JobEntity(Entity):
     'container_version':  'container_tag',
   }
 
+  # Status of the job
+  __status = None
+
+
 
   ## Initialization ##
 
@@ -37,7 +43,10 @@ class JobEntity(Entity):
     self.__container = Container()
 
     # Initialize from superclass
-    super(JobEntity, self).__init__(*args, **kwargs)
+    super().__init__(*args, **kwargs)
+
+    if self['status'] is None:
+      self['status'] = 'UNKNOWN'
 
 
 
@@ -47,7 +56,7 @@ class JobEntity(Entity):
   def get_props_set(cls):
     return {
       # Entity fields
-      *super(JobEntity, cls).get_props_set(),
+      *super().get_props_set(),
 
       # Container fields
       'container_repo',
@@ -58,6 +67,24 @@ class JobEntity(Entity):
       'operation_name',
       'status',
     }
+
+
+
+  ## Status ##
+
+  @property
+  def status(self):
+    return self.__status
+
+  @status.setter
+  def status(self, val):
+    self.__status = val
+
+    # TODO: Validation
+    # if val in ['SUBMITTED', 'RUNNING', 'COMPLETE', 'ERROR', 'UNKNOWN']:
+    #   self.__status = val
+    # else:
+    #   raise TypeError(f'Cannot set status of {self.kind} job to "{val}".')
 
 
 
@@ -84,7 +111,7 @@ class JobEntity(Entity):
             results don't store that field.
     '''
     # Check whether repo + name + tag is the same for both Containers
-    return type(c) == Container and self.__container.full_string() == c.full_string()
+    return type(c) == Container and self.__container.uri() == c.uri()
 
 
 

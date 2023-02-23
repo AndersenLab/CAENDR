@@ -1,13 +1,15 @@
+import os
+
 from caendr.models.datastore import Entity
+from caendr.services.cloud.storage import generate_blob_url
 
 
-SITE_PREFIX = "//storage.googleapis.com"
+MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
+MODULE_SITE_BUCKET_PUBLIC_NAME  = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME')
+
 
 
 class BrowserTrack(Entity):
-
-  __release_path = "caendr-site-public-bucket/dataset_release/c_${SPECIES}/${RELEASE}"
-  __bam_bai_path = "caendr-site-private-bucket/bam"
 
 
   ## Initialization ##
@@ -20,33 +22,35 @@ class BrowserTrack(Entity):
 
   ## Filepaths ##
 
-  @classmethod
-  def release_path(cls):
-    return cls.__release_path
+  @staticmethod
+  def release_path():
+    return (MODULE_SITE_BUCKET_PUBLIC_NAME, 'dataset_release/c_${SPECIES}/${RELEASE}')
 
-  @classmethod
-  def bam_bai_path(cls):
-    return cls.__bam_bai_path
+  @staticmethod
+  def bam_bai_path():
+    return (MODULE_SITE_BUCKET_PRIVATE_NAME, 'bam')
 
   def get_path(self):
     '''
       Get the path in GCP to this specific Browser Track. Overwritten in subclass(es).
     '''
-    return BrowserTrack.__release_path
+    return BrowserTrack.release_path()
 
   def get_url_template(self):
-    return f'{ SITE_PREFIX }/{ self.get_path() }/{ self["filename"] }'
+    bucket, path = self.get_path()
+    return generate_blob_url(bucket, f'{path}/{self["filename"]}')
 
 
   ## FASTA ##
 
-  @classmethod
-  def get_fasta_filename(cls):
+  @staticmethod
+  def get_fasta_filename():
     return "browser_tracks/c_${SPECIES}.${PRJ}.${WB}.genome.fa"
 
-  @classmethod
-  def get_fasta_path_full(cls):
-    return f'{ SITE_PREFIX }/{ cls.release_path() }/{ cls.get_fasta_filename() }'
+  @staticmethod
+  def get_fasta_path_full():
+    bucket, path = BrowserTrack.release_path()
+    return generate_blob_url(bucket, f'{ path }/{ BrowserTrack.get_fasta_filename() }')
 
 
   ## Props ##

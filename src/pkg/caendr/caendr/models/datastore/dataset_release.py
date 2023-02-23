@@ -15,10 +15,14 @@ class DatasetRelease(Entity):
   __blob_prefix = f'{kind}/c_elegans'
 
 
+  def __repr__(self):
+    return f"<{self.kind}:{getattr(self, 'name', 'no-name')}>"
+
+
   @classmethod
   def get_props_set(cls):
     return {
-      *super(DatasetRelease, cls).get_props_set(),
+      *super().get_props_set(),
       'id',
       'version',
       'wormbase_version',

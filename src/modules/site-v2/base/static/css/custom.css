@@ -88,58 +88,30 @@
   }
 
   /* Genome Browser */
-  .label {
-    width: 80px;
-    height: 18px;
-    line-height: 12px;
-    margin-bottom: 4px;
-    display: inline-block;
+  .gbrowserTracks {
+    height:15vh; 
+    background-color: #fff; 
+    border: 1px solid #CFD4D9;
   }
   
-  .gt-3 {
-      background-color: white;
-      border: 1px dotted black;
-      color: black;
-  }
+  /* Variant Annotation */
+    table.dataTable thead .sorting_asc {
+      background: url("//cdn.datatables.net/1.10.0/images/sort_asc.png") no-repeat center left;
+    }
   
-  .gt-0.PASS {
-    background-color: rgba(194,194,214,1.0);
-    border: 1px solid black;
-    color: black;
-  }
+    table.dataTable thead .sorting_desc {
+      background: url("//cdn.datatables.net/1.10.0/images/sort_desc.png") no-repeat center left;
+    }
   
-  .gt-2.PASS {
-    background-color: rgba(0, 102, 255,1.0);
-    border: 1px solid black;
-    color: white;
-  }
+    table.dataTable thead .sorting {
+      background: url("//cdn.datatables.net/1.10.0/images/sort_both.png") no-repeat center left;
+    }
   
-  .gt-0:not(.PASS) {
-    background-color: rgba(194,194,214,0.25);
-    border: 1px dotted black;
-    color: black;
-  }
+    mark {
+      background-color: inherit;
+      font-size: 0.8rem;
+    }
   
-  .gt-2:not(.PASS) {
-    background-color: rgba(0, 102, 255,0.25);
-    border: 1px dotted black;
-    color: black;
-  }
-  
-  .het {
-    background-color: #ffff00;
-    color: black;
-  }
-  
-  .gt_set {
-    border-right: 1px dotted #b3b3b3;
-  }
-  
-  th {
-    white-space: nowrap;
-  }
-  
-  #variants {
-    font-size: 1.0rem;
-  }
-  
+    .hl-mark {
+      background-color: yellow;
+    }

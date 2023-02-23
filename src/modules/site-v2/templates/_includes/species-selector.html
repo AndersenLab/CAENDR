@@ -1,0 +1,9 @@
+<div class="mb-4">
+  <label for="speciesSelect" class="form-label">Species:</label>
+  <select class="form-select" aria-label="Choose species" id="speciesSelect" onchange="{{ onchange }}(this)">
+    <option selected value="">Choose</option>
+    {% for s in species_list %}
+    <option value="{{s}}">{{species_list[s]["short_name"]}}</option>
+    {% endfor %}
+  </select>
+</div>

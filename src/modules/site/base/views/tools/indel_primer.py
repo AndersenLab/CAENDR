@@ -12,10 +12,10 @@ from base.utils.auth import jwt_required, admin_required, get_current_user, user
 from base.forms import PairwiseIndelForm
 
 from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefault
+from caendr.models.error import NotFoundError, NonUniqueEntity
 from caendr.models.species import SPECIES_LIST
 from caendr.services.dataset_release import get_browser_tracks_path
 from caendr.utils.constants import CHROM_NUMERIC
-from caendr.utils.data import get_object_hash
 
 from caendr.services.indel_primer import get_sv_strains, query_indels_and_mark_overlaps, create_new_indel_primer, get_indel_primer, fetch_ip_data, fetch_ip_result, get_all_indel_primers, get_user_indel_primers
 
@@ -35,18 +35,30 @@ from caendr.utils.constants import CHROM_NUMERIC
 def indel_primer_get_tracks():
 
   # Get the Divergent Regions browser track
-  divergent_track = BrowserTrackDefault.query_ds(filters=[('name', '=', 'Divergent Regions')])[0]
+  try:
+    divergent_track = BrowserTrackDefault.query_ds_unique('name', 'Divergent Regions', required=True)
 
-  return jsonify({
-    **divergent_track['params'],
-    'url': divergent_track.get_url_template(),
-  })
+  # If no track found, log an error message and continue raising with a more descriptive message
+  except NotFoundError as ex:
+    ex.description = 'Could not find Divergent Regions track.'
+    logger.error(ex.description)
+    raise ex
+
+  # If track could not be uniquely identified, log an error and continue with the first result
+  # TODO: Should this raise a further error?
+  except NonUniqueEntity as ex:
+    logger.error('Could not uniquely identify Divergent Regions track.')
+    divergent_track = ex.matches[0]
+
+  # Return the track parameters
+  return jsonify(divergent_track['params'])
+
 
 @indel_primer_bp.route('/pairwise_indel_finder/strains', methods=['GET'])
 @jwt_required()
 def indel_primer_get_strains():
   return jsonify({
-    species: get_sv_strains( species ) for species in ['c_elegans']
+    species: get_sv_strains( species ) for species in SPECIES_LIST.keys()
   })
 
 
@@ -165,28 +177,18 @@ def submit_indel_primer():
   user = get_current_user()
 
   # Get info about data
-  data      = request.get_json()
-  data_hash = get_object_hash(data, length=32)
+  data = request.get_json()
 
   # If user is admin, allow them to bypass cache with URL variable
   no_cache = bool(user_is_admin() and request.args.get("nocache", False))
 
   # Create new Indel Primer
-  p = create_new_indel_primer(**{
-    'species':   data['species'],
-    'site':      data['site'],
-    'strain_1':  data['strain_1'],
-    'strain_2':  data['strain_2'],
-    'size':      data['size'],
-    'data_hash': data_hash,
-    'username':  user.name,
-    'no_cache':  no_cache,
-  })
+  p = create_new_indel_primer( user, data, no_cache=no_cache )
 
   # Notify user that task has been started
   return jsonify({
     'started':   True,
-    'data_hash': data_hash,
+    'data_hash': p.data_hash,
     'id':        p.id,
   })
 
@@ -203,7 +205,7 @@ def pairwise_indel_query_results(id, filename = None):
 
     # Check that user can view this report
     # TODO: Should admin users be able to view reports with different filenames?
-    if (not ip._exists) or (ip.username != user.name):
+    if (ip is None) or (ip.username != user.name):
       flash('You do not have access to that report', 'danger')
       abort(401)
 
@@ -214,7 +216,7 @@ def pairwise_indel_query_results(id, filename = None):
 
     # If no indel primer submission exists, return 404
     if data is None:
-        return abort(404, description="Indel primer report not found")
+      return abort(404, description="Indel primer report not found")
 
     # Parse submission data into JSON object
     data = json.loads(data.download_as_string().decode('utf-8'))

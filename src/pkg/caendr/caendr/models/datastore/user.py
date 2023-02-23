@@ -36,13 +36,18 @@ class User(Entity):
     return None
 
 
+  @classmethod
+  def from_username(self, username):
+    return User.query_ds_unique('username', username)
+
+
 
   ## Properties List ##
 
   @classmethod
   def get_props_set(cls):
     return {
-      *super(User, cls).get_props_set(),
+      *super().get_props_set(),
       'username',
       'full_name',
       'password',
@@ -71,20 +76,18 @@ class User(Entity):
 
     # Handle other props with default method
     else:
-      return super(User, self).__setitem__( prop, val )
+      return super().__setitem__( prop, val )
 
 
 
-  def set_properties(self, **kwargs):
-
-    # Set non-container props through super method
-    super(User, self).set_properties(**{
-      k: v for k, v in kwargs.items() if k not in ['password', 'salt']
-    })
+  def set_properties(self, password=None, salt=None, **kwargs):
 
     # Set password and salt together
-    if 'password' and 'salt' in kwargs:
-      self.set_password(kwargs.get('password'), kwargs.get('salt'))
+    if password is not None and salt is not None:
+      self.set_password(password, salt)
+
+    # Forward the rest of the properties to the parent method
+    super().set_properties(**kwargs)
 
 
 

@@ -22,12 +22,9 @@ class Protocol(Entity):
   @classmethod
   def get_props_set(cls):
     return {
-      *super(Protocol, cls).get_props_set(),
+      *super().get_props_set(),
       'id',
       'group',
       'title',
       'pdf_blob_path',
     }
-
-  def __repr__(self):
-    return f"<{self.kind}:{getattr(self, 'id', 'no-id')}>"

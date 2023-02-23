@@ -17,7 +17,7 @@ class DatabaseOperation(JobEntity):
   @classmethod
   def get_props_set(cls):
     return {
-      *super(DatabaseOperation, cls).get_props_set(),
+      *super().get_props_set(),
 
       # Submission
       'id',
@@ -30,9 +30,6 @@ class DatabaseOperation(JobEntity):
       'args',
       'logs',
     }
-
-  def __repr__(self):
-    return f"<{self.kind}:{getattr(self, 'id', 'no-id')}>"
 
 
 

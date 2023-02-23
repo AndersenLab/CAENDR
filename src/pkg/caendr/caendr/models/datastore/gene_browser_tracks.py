@@ -20,7 +20,7 @@ class GeneBrowserTracks(JobEntity):
   @classmethod
   def get_props_set(cls):
     return {
-      *super(GeneBrowserTracks, cls).get_props_set(),
+      *super().get_props_set(),
 
       # Submission
       'id',
@@ -30,6 +30,3 @@ class GeneBrowserTracks(JobEntity):
       'note', 
       'wormbase_version',
     }
-
-  def __repr__(self):
-    return f"<{self.kind}:{getattr(self, 'id', 'no-id')}>"

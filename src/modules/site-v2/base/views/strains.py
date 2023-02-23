@@ -123,7 +123,7 @@ def isotype_page(isotype_name, release=None):
 @strains_bp.route('/catalog', methods=['GET', 'POST'])
 @cache.memoize(60*60)
 def strains_catalog():
-    flash(Markup("Strain mapping sets 9 and 10 will not be available until later this year."), category="warning")
+    flash(Markup("Strain mapping sets 9 and 10 will not be available until later this year."), category="primary")
     title = "Strain Catalog"
     warning = request.args.get('warning')
     strain_listing = get_strains()

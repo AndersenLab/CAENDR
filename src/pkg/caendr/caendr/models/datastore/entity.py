@@ -2,7 +2,9 @@ import json
 from datetime import datetime, timezone
 
 from google.cloud import datastore
+from caendr.services.logger import logger
 
+from caendr.models.error import NonUniqueEntity, NotFoundError
 from caendr.services.cloud.datastore import get_ds_entity, save_ds_entity, query_ds_entities
 
 
@@ -123,7 +125,17 @@ class Entity(object):
 
 
   def __repr__(self):
-    return f"<{self.kind}:{getattr(self, 'name', 'no-name')}>"
+    '''
+      String representation of the Entity. Displays kind and name/ID.
+    '''
+
+    # Subclasses that define an ID field should use that as their display name
+    if ('id' in self.get_props_set()):
+      return f"<{self.kind}:{getattr(self, 'id', 'no-id')}>"
+
+    # Otherwise, try using the name field
+    else:
+      return f"<{self.kind}:{getattr(self, 'name', 'no-name')}>"
 
 
 
@@ -134,12 +146,16 @@ class Entity(object):
       Append metadata to the Entity and save it to the datastore.
     '''
     now = datetime.now(timezone.utc)
-    meta_props = {}
+
+    # Get dict of all meta properties
+    meta_props = {
+      prop: getattr(self, prop) for prop in self.get_props_set_meta()
+    }
 
     # Update timestamps
     if not self._exists:
       meta_props['created_on'] = now
-    meta_props.update({'modified_on': now})
+    meta_props['modified_on'] = now
 
     # Combine props dict with meta properties defined above
     props = { **dict(self), **meta_props }
@@ -220,10 +236,14 @@ class Entity(object):
         KeyError: prop not found in props_set
     '''
     if prop in self.__class__.get_props_set():
-      if type(val) == datastore.entity.Entity:
-        setattr(self, prop, Entity._parse_entity_to_dict(val))
-      else:
-        setattr(self, prop, val)
+      try:
+        if type(val) == datastore.entity.Entity:
+          setattr(self, prop, Entity._parse_entity_to_dict(val))
+        else:
+          setattr(self, prop, val)
+      except Exception as ex:
+        logger.error(f"Error setting {self.__class__.__name__}['{prop}'] = {val}")
+        raise ex
     else:
       raise KeyError(f'Could not set property "{prop}": not defined in property set.')
 
@@ -254,6 +274,13 @@ class Entity(object):
     self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
 
 
+  def _get_meta_prop(self, key, fallback=None):
+    return self.__dict__.get(key, fallback)
+
+  def _set_meta_prop(self, key, val):
+    self.__dict__[key] = val
+
+
   @property
   def created_on(self):
     return self.__dict__.get('created_on')
@@ -269,10 +296,19 @@ class Entity(object):
 
   @classmethod
   def sort_by_created_date(cls, arr, reverse = False, set_none_max = False):
+    '''
+      Sort a list of Entities by their creation date, with special handling for Entities that have no recorded creation date.
+      By default, sorts oldest to newest.
+    '''
     return sorted( arr, key = lambda e: _datetime_sort_key(e.created_on, set_none_max=set_none_max), reverse=reverse )
 
   @classmethod
   def sort_by_modified_date(cls, arr, reverse = False, set_none_max = False):
+    '''
+      Sort a list of Entities by the date they were last modified, with special handling for Entities that have no
+      recorded modified date.
+      By default, sorts oldest to newest.
+    '''
     return sorted( arr, key = lambda e: _datetime_sort_key(e.modified_on, set_none_max=set_none_max), reverse=reverse )
 
 
@@ -290,3 +326,50 @@ class Entity(object):
     '''
     return [ cls(e) for e in query_ds_entities(cls.kind, *args, **kwargs) ]
 
+
+  @classmethod
+  def query_ds_unique(cls, key, val, required=False):
+    '''
+      Query the datastore for a single unique entity where the `key` property is set to `val`.
+
+      If `required` is set to True, will raise an error if no such entity is found; otherwise returns None.
+      If multiple entities match the query, raises a NonUniqueEntity error with all matches in the `matches` field.
+    '''
+
+    # Run query with given key and val
+    matches = cls.query_ds(filters=[(key, '=', val)])
+    matches = []
+
+    # If no matching entities found, return None
+    if len(matches) == 0:
+      if required:
+        raise NotFoundError(f'Could not find {cls.kind} entity with "{key}" = "{val}".')
+      else:
+        return None
+
+    # If exactly one entity found, return it
+    elif len(matches) == 1:
+      return matches[0]
+
+    # If more than one entity found, raise an error
+    else:
+      raise NonUniqueEntity( cls.kind, key, val, matches )
+
+
+
+  @classmethod
+  def get_ds(cls, name):
+    '''
+      Get the Entity from datastore with the matching name.
+    '''
+
+    # Ensure this is being run on a subclass of Entity, not Entity itself
+    if cls is Entity:
+      raise TypeError(f'Cannot run method "get_ds" on {cls.__name__}. Please run with subclass instead.')
+
+    # Query datastore using this class's kind and the provided name
+    match = get_ds_entity(cls.kind, name)
+
+    # If a match was found, initialize an Entity object from it
+    if match is not None:
+      return cls(name)

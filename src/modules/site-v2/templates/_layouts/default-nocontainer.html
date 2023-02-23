@@ -1,3 +1,4 @@
+<!-- Used for homepage and Tools pages -->
 <!DOCTYPE html>
 <html lang='en-us'>
 
@@ -14,11 +15,9 @@
     {% include "_includes/breadcrumb.html" %}
     {% include "_includes/title.html" %}
     <main>
-        <div class="container my-5 pb-5">
-            {% block content %}{% endblock %}
-            {% block script %}{% endblock %}
-            <div id="alert"></div>
-        </div>
+        {% block content %}{% endblock %}
+        {% block script %}{% endblock %}
+        <div id="alert"></div>
     </main>
     {% if config.DEBUG %} <div title='turn off DEBUG mode to hide these messages' class='visually-hidden'>{{ session }}
     </div>{% endif %}
