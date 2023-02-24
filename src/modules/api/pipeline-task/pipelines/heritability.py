@@ -63,15 +63,26 @@ def _generate_heritability_pipeline_req(task: HeritabilityTask):
   # prepare args
   # VCF_VERSION = "20210121"
   VCF_VERSION = "20220216"
-  GOOGLE_PROJECT = "caendr"
-  GOOGLE_ZONE = "us-central1-a"
+  GOOGLE_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT_ID", None)
+  GOOGLE_ZONE = os.getenv("GOOGLE_CLOUD_ZONE", None)
+  MODULE_SITE_BUCKET_PRIVATE_NAME = os.getenv("MODULE_SITE_BUCKET_PRIVATE_NAME", None)
+  MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME = os.getenv("MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME", None)
+
+  # validation
+  if GOOGLE_PROJECT is None:
+    raise "Missing GOOGLE_PROJECT"
+  if GOOGLE_ZONE is None:
+    raise "Missing GOOGLE_ZONE"
+  if MODULE_SITE_BUCKET_PRIVATE_NAME is None:
+    raise "Missing MODULE_SITE_BUCKET_PRIVATE_NAME"
+  if MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME is None:
+    raise "Missing MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME"
 
   # GOOGLE_SERVICE_ACCOUNT_EMAIL = "mti-caendr-service-account@mti-caendr.iam.gserviceaccount.com"
-  TRAIT_FILE = "gs://elegansvariation.org/reports/heritability/kse_test_hert/ExampleTraitData.csv"
-  WORK_DIR = f"gs://caendr-nextflow-work-bucket/{h.data_hash}"
-  OUTPUT_DIR = f"gs://caendr-site-private-bucket/reports/heritability/v0.3/{h.data_hash}"
+  TRAIT_FILE = f"{MODULE_SITE_BUCKET_PRIVATE_NAME}/reports/heritability/{h.container_version}/{h.data_hash}/data.tsv"
+  WORK_DIR   = f"gs://{MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME}/{h.data_hash}"
+  OUTPUT_DIR = f"gs://{MODULE_SITE_BUCKET_PRIVATE_NAME}/reports/heritability/{h.container_version}/{h.data_hash}"
 
-  
   container_name = f"heritability-{h.id}"
   environment = {
     "GOOGLE_SERVICE_ACCOUNT_EMAIL": sa_email,
