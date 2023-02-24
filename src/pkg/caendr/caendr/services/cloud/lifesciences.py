@@ -1,5 +1,6 @@
 import os
 from caendr.models.datastore.heritability_report import HeritabilityReport
+from caendr.models.task import TaskStatus
 
 from caendr.services.logger import logger
 from googleapiclient import discovery
@@ -63,6 +64,20 @@ def create_pipeline_operation_record(task, response):
 
 
 def get_pipeline_status(operation_name):
+  """Return pipeline status
+  Retrieves and returns the status for a pipeline
+  Args:
+    operation_name (string): The name of the operation
+  Sample Args:
+    operation_name = "projects/111111111111/locations/us-central1/operations/1111111111111111111"
+
+  Return:
+    {} (GlS Request Response
+  Sample Return:
+    {
+      done: true
+    }
+  """
   logger.debug(f'get_pipeline_status: operation_name:{operation_name}')
   request = gls_service.projects().locations().operations().get(name=operation_name)
   response = request.execute()
@@ -91,11 +106,9 @@ def update_all_linked_status_records(kind, operation_name):
   done = status.get('done')
   error = status.get('error')
   if done:
-    status = "COMPLETE"
-    if error:
-      status = "ERROR"
+    status = TaskStatus.ERROR if error  else TaskStatus.COMPLETE
   else:
-    status = "RUNNING"
+    status = TaskStatus.RUNNING
 
   filters=[("operation_name", "=", operation_name)]
   ds_entities = query_ds_entities(kind, filters=filters, keys_only=True)
