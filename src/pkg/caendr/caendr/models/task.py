@@ -1,5 +1,12 @@
 from caendr.services.logger import logger
 
+# Define the Status values
+class TaskStatus:
+  ERROR = "ERROR"
+  RUNNING = "RUNNING"
+  COMPLETE = "COMPLETE"
+  PENDING ="PENDING"
+
 class Task(object):
   
   def __init__(self, *args, **kwargs):
