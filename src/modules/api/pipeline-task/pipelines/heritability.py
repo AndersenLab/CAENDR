@@ -79,8 +79,6 @@ def _generate_heritability_pipeline_req(task: HeritabilityTask):
     raise "Missing MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME"
 
   # GOOGLE_SERVICE_ACCOUNT_EMAIL = "mti-caendr-service-account@mti-caendr.iam.gserviceaccount.com"
-  # TRAIT_FILE = "gs://elegansvariation.org/reports/heritability/kse_test_hert/ExampleTraitData.csv"
-  # https://storage.googleapis.com/caendr-site-private-bucket/reports/heritability/v0.3/98d9cc3b6dacfe7062a982b8ffb092c7/data.tsv
   TRAIT_FILE = f"{MODULE_SITE_BUCKET_PRIVATE_NAME}/reports/heritability/{h.container_version}/{h.data_hash}/data.tsv"
   WORK_DIR   = f"gs://{MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME}/{h.data_hash}"
   OUTPUT_DIR = f"gs://{MODULE_SITE_BUCKET_PRIVATE_NAME}/reports/heritability/{h.container_version}/{h.data_hash}"
