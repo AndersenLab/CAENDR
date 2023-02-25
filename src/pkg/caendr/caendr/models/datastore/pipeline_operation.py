@@ -7,6 +7,7 @@ class PipelineOperation(Entity):
   
   def __init__(self, *args, **kwargs):
     super(PipelineOperation, self).__init__(*args, **kwargs)
+    self.exclude_from_indexes = ('metadata',)
     self.set_properties(**kwargs)
 
   def set_properties(self, **kwargs):
