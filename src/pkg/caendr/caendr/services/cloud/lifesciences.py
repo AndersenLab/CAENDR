@@ -72,7 +72,7 @@ def get_pipeline_status(operation_name):
     operation_name = "projects/111111111111/locations/us-central1/operations/1111111111111111111"
 
   Return:
-    {} (GlS Request Response
+    {} (GlS Request Response)
   Sample Return:
     {
       done: true
