@@ -342,3 +342,25 @@ A: Install via homebrew:
 brew install postgresql
 ```
 
+Q:  I'm seeing this error when running `make venv` from the `src/modules/site-v2` folder: "_libintl_textdomain", referenced from:
+      _PyIntl_textdomain in libpython3.7m.a(_localemodule.o)
+      _PyIntl_textdomain in libpython3.7m.a(_localemodule.o)
+A: Install gettext
+```
+$ brew  -arch x86_64 install gettext
+```
+
+Q: I'm seeing this error when runing `make venv` from the `src/modules/site-v2` folder: "ModuleNotFoundError: No module named 'readline'"
+A: 
+```
+brew -arch x86_64 install readline
+```
+
+Q: I'm seeing this error when running `make venv` from the `src/modules/site-v2` folder: 
+"ERROR: The Python ssl extension was not compiled. Missing the OpenSSL lib?"
+A: 
+```
+brew  -arch x86_64 install openssl
+```
+
+
