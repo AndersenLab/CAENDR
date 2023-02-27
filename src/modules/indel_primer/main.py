@@ -39,9 +39,6 @@ RELEASE        = os.environ.get('RELEASE')
 RESULT_BUCKET = os.environ.get('RESULT_BUCKET')
 RESULT_BLOB   = os.environ.get('RESULT_BLOB')
 
-# WormBase Version
-WORMBASE_VERSION  = os.environ.get('WORMBASE_VERSION')
-
 # Name for local cache directory (to download files from GCP)
 INDEL_CACHE_DIR = os.environ.get('INDEL_CACHE_DIR', '.download')
 
@@ -57,7 +54,6 @@ required_env_vars = {
   'RELEASE',
   'RESULT_BUCKET',
   'RESULT_BLOB',
-  'WORMBASE_VERSION',
 }
 
 # Save current list of vars
