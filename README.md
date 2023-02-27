@@ -11,22 +11,52 @@ open -a Finder ~/.gcp
 ```
 The last line should open MacOS Finder on the `~/.gcp/` folder. Drop the `.json` service account file there. 
 
-## MacOS setup
+## MacOS setup - Requirements
 
-*Requirements*
+### Visual Studio Code
 
-* VS Code
-* Docker Mac (https://docs.docker.com/desktop/install/mac-install/) 
-* homebrew (install from https://brew.sh/)
+Download from https://code.visualstudio.com/
 
-Steps:
+### Docker Mac 
+
+Download from https://docs.docker.com/desktop/install/mac-install/
+
+### Homebrew
+
 ```
-brew update
-brew install python-devel
-brew install pyenv
+$ cd $HOME
+$ mkdir homebrew && curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C homebrew
 ```
 
-Edit your `~/.bash_profile` and add this to the bottom of the file. If the file doens't exist, create a new one. 
+Add this line to the bottom of your file `~/.bash_profile`:
+```
+export PATH=$HOME/homebrew/bin:$PATH
+```
+
+
+### Set terminal to run in x86_64 mode under Rosetta
+- Open Finder on your Mac
+- Navigate to Applications/Utilities/Terminal.app, 
+- Right-click/GetInfo
+- Enable the checkbox "Open with Rosetta". 
+- Close and reopen the terminal app. 
+- Inside Terminal, type;
+```
+$ arch
+```
+Expected result:
+```
+i386
+```
+
+### Install Dependencies:
+```
+brew -arch x86_64 update
+brew -arch x86_64  install python-devel
+brew -arch x86_64  install pyenv OpenSSL readline gettext xz
+```
+
+Edit your `~/.bash_profile` and add this to the bottom of the file. If the file `~/.bash_profile` doens't exist check if you are using a different shell (eg: zsh, etc). In that case you might need to edit the file `~/.zshrc` or `~/.zprofile`. 
 
 ```
 # if using bash, do 
