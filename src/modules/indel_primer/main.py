@@ -95,10 +95,10 @@ target_fasta_file_name = f'{ genome_directory }/{ fasta_path["name"] }/{ fasta_p
 if not os.path.exists(f'{genome_directory}/{fasta_path["name"]}'):
   os.mkdir(f'{genome_directory}/{fasta_path["name"]}')
 
-# Download FASTA file
-# TODO: Index too?
+# Download FASTA file & FASTA index file
 if not os.path.exists(target_fasta_file_name):
-  download_blob_to_file(fasta_path['bucket'], source_fasta_file_name, target_fasta_file_name)
+  download_blob_to_file(fasta_path['bucket'], source_fasta_file_name,          target_fasta_file_name)
+  download_blob_to_file(fasta_path['bucket'], source_fasta_file_name + ".fai", target_fasta_file_name + '.fai')
 
 
 #
@@ -113,10 +113,10 @@ target_vcf_file_name = f'{ INDEL_CACHE_DIR }/{ IndelPrimer.get_source_filename(S
 if not os.path.exists(INDEL_CACHE_DIR):
   os.mkdir(INDEL_CACHE_DIR)
 
-# Download VCF file
-# TODO: Index too?
+# Download VCF file & VCF Index file
 if not os.path.exists(target_vcf_file_name):
-  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, source_vcf_file_name, target_vcf_file_name)
+  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, source_vcf_file_name,          target_vcf_file_name)
+  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, source_vcf_file_name + '.csi', target_vcf_file_name + '.csi')
 
 
 #
