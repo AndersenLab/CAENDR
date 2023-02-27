@@ -1,24 +1,18 @@
-import json
-import os
-
 from logzero import logger
 
+from caendr.models.datastore import Entity
 from caendr.models.datastore import WormbaseVersion, WormbaseProjectNumber
-from caendr.models.error import BadRequestError, EnvVarError
+from caendr.models.error import BadRequestError
 
 
 
-class Species:
-
-
-    ## Parameters & Initialization ##
+class Species(Entity):
+    kind = 'species'
 
     @classmethod
-    def parameters(cls):
-        '''
-        Parameters that should be provided by keyword when constructing a Species object.
-        '''
+    def get_props_set(cls):
         return {
+            *super().get_props_set(),
             'scientific_name',     # Scientific name of the species (e.g. 'Caenorhabditis elegans')
             'project_num',         # WormBase project number associated with species release (e.g. 'PRJNA13758')
             'wb_ver',              # WormBase version associated with species release (e.g. 'WS276)
@@ -27,60 +21,8 @@ class Species:
             'indel_primer_ver',
             'gene_prefix',         # Species-specific prefix for genes. Will be removed from gene names whenever found.
             'browser_tracks',      # List of browser tracks species supports, by name
+            'order',
         }
-
-    @classmethod
-    def properties(cls):
-        '''
-        All properties of a Species object.  Superset of `Species.parameters()`.
-        '''
-        return {
-            'name',                # Name used to uniquely identify the species
-            'short_name',          # Abridged version of scientific name
-            *Species.parameters(), # Load the rest of the parameters
-        }
-
-    def __init__(self, name, **params):
-        '''
-        For keyword args, see list of parameters in `Species.parameters()`.
-
-          Args:
-            name (str): [Name of the species. Standard format is initial of genus, underscore, species name, e.g. 'c_elegans' for Caenorhabditis elegans.]
-        '''
-
-        # Set the species unique name ID
-        self.name = name
-
-        # Load parameters from parameter list
-        for param in Species.parameters():
-            setattr(self, param, params.get(param))
-
-        # Flag any keyword params that aren't in the parameter list, since they will be ignored
-        for param in params:
-            if param not in Species.parameters():
-                logger.warn(f'Unrecognized parameter "{param}" passed to Species constructor. Ignoring value...')
-
-
-
-    ## JSON ##
-
-    @classmethod
-    def parse_json_file(cls, filename):
-        '''
-        Read a JSON file, interpreting each top-level element as a new Species object.
-
-          Returns:
-            species_list (dict(str, Species)): [A dict mapping species name (ID) to Species objects.]
-        '''
-        with open(filename) as f:
-            species_list = {
-                name: Species(name, **params) for name, params in json.load(f).items()
-            }
-        return species_list
-
-
-    def __iter__(self):
-        yield from { key: getattr(self, key) for key in Species.properties() }.items()
 
 
 
@@ -156,7 +98,7 @@ class Species:
 
 
 # Load species list
-SPECIES_LIST_FILE = os.environ['SPECIES_LIST_FILE']
-if not SPECIES_LIST_FILE:
-    raise EnvVarError()
-SPECIES_LIST = Species.parse_json_file(SPECIES_LIST_FILE)
+SPECIES_LIST = {
+    e.name: e for e in Species.query_ds()
+}
+SPECIES_LIST = dict(sorted(SPECIES_LIST.items(), key=lambda e: e[1]['order']))

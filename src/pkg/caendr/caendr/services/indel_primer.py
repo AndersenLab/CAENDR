@@ -4,9 +4,8 @@ import os
 from cyvcf2 import VCF
 from caendr.services.logger import logger
 
-from caendr.models.datastore import IndelPrimer
+from caendr.models.datastore import IndelPrimer, SPECIES_LIST
 from caendr.models.error     import CachedDataError, DuplicateDataError, NotFoundError
-from caendr.models.species   import SPECIES_LIST
 
 from caendr.services.cloud.storage import get_blob, generate_blob_url
 from caendr.services.tools import submit_job

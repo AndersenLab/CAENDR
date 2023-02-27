@@ -13,3 +13,4 @@ from .heritability_report import HeritabilityReport
 from .gene_browser_tracks import GeneBrowserTracks
 from .markdown import Markdown
 from .wormbase import WormbaseVersion, WormbaseProjectNumber
+from .species import Species, SPECIES_LIST

@@ -35,8 +35,7 @@ from caendr.services.user import get_user_role_form_options, get_local_user_by_e
 from caendr.services.database_operation import get_db_op_form_options
 from caendr.services.indel_primer import get_indel_primer_chrom_choices, get_indel_primer_strain_choices
 from caendr.services.markdown import get_content_type_form_options
-from caendr.models.datastore import User
-from caendr.models.species import SPECIES_LIST
+from caendr.models.datastore import User, SPECIES_LIST
 from caendr.api.strain import query_strains
 from base.forms.validators import (validate_duplicate_strain, 
                                    validate_duplicate_isotype, 

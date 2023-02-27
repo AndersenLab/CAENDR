@@ -11,8 +11,8 @@ from base.forms import FileUploadForm
 
 from caendr.services.nemascan_mapping import create_new_mapping, get_mapping, get_all_mappings, get_user_mappings
 from caendr.services.cloud.storage import get_blob, generate_blob_url, get_blob_list
+from caendr.models.datastore import SPECIES_LIST
 from caendr.models.error import CachedDataError, DuplicateDataError
-from caendr.models.species import SPECIES_LIST
 from caendr.utils.data import unique_id
 
 uploads_dir = os.path.join('./', 'uploads')

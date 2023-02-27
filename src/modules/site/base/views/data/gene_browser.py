@@ -7,7 +7,7 @@ from caendr.models.error import EnvVarError, InternalError
 from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefault, BrowserTrackTemplate
 from caendr.models.datastore.dataset_release import DatasetRelease
 from caendr.models.datastore.wormbase import WormbaseVersion
-from caendr.models.species import SPECIES_LIST
+from caendr.models.datastore.species import SPECIES_LIST
 from flask import (render_template,
                     Blueprint,
                     jsonify,

@@ -4,9 +4,8 @@ import json
 
 from caendr.services.logger import logger
 
-from caendr.models.datastore import Container, IndelPrimer, HeritabilityReport, NemascanMapping
+from caendr.models.datastore import Container, IndelPrimer, HeritabilityReport, NemascanMapping, SPECIES_LIST
 from caendr.models.error     import CachedDataError, DuplicateDataError, DataFormatError
-from caendr.models.species   import SPECIES_LIST
 from caendr.models.task      import IndelPrimerTask, HeritabilityTask, NemaScanTask
 
 from caendr.services.cloud.storage import upload_blob_from_string, upload_blob_from_file
