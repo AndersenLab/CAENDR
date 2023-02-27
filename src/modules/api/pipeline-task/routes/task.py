@@ -1,5 +1,6 @@
 from caendr.services.logger import logger
 import os
+import json
 
 from flask import Blueprint, jsonify, request
 
@@ -16,7 +17,7 @@ from caendr.models.datastore.heritability_report import HeritabilityReport
 from caendr.models.datastore.gene_browser_tracks import GeneBrowserTracks
 
 from caendr.models.error import APIBadRequestError, APIInternalError
-from caendr.models.task import NemaScanTask, DatabaseOperationTask, IndelPrimerTask, HeritabilityTask, GeneBrowserTracksTask
+from caendr.models.task import TaskStatus, NemaScanTask, DatabaseOperationTask, IndelPrimerTask, HeritabilityTask, GeneBrowserTracksTask
 from caendr.models.pub_sub import PubSubAttributes, PubSubMessage, PubSubStatus
 
 from caendr.services.cloud.task import update_task_status, verify_task_headers
@@ -30,7 +31,6 @@ from caendr.services.heritability_report import update_heritability_report_statu
 from caendr.services.gene_browser_tracks import update_gene_browser_track_status
 from caendr.services.persistent_logger import PersistentLogger
 
-from caendr.utils.json import extract_json_payload
 from caendr.utils import monitor
 
 monitor.init_sentry("pipeline-task")
@@ -52,7 +52,7 @@ def start_task(task_route):
   logger.info(f"Task: {queue}:{task}")
 
   try:
-    payload = extract_json_payload(request)
+    payload = json.loads(request.data)
   except:
     raise APIBadRequestError('Failed to parse request body as valid JSON')
 
@@ -107,7 +107,8 @@ def handle_task(payload, task_route):
 
   persistent_logger = PersistentLogger(task_route)
 
-  status = 'RUNNING'
+  # status = 'RUNNING'
+  status = TaskStatus.RUNNING
   operation_name = ''
   try:
     op = create_pipeline_operation_record(task, response)
@@ -124,7 +125,7 @@ def handle_task(payload, task_route):
 def update_task():
   try:
     try:
-      payload = extract_json_payload(request)
+      payload = json.loads(request.data)
       logger.info(f"Task Status Payload: {payload}")
     except Exception as e:
       logger.error(e)
@@ -132,9 +133,7 @@ def update_task():
 
     # Marshall JSON to PubSubStatus object
     try:
-      message = payload.get('message')
-      attributes = message.get('attributes')
-      operation = attributes.get('operation')
+      operation = payload.get('message').get("attributes").get("operation")
     except Exception as e:
       logger.error(e)
       raise APIBadRequestError('Error parsing PubSub status message.')
@@ -148,8 +147,10 @@ def update_task():
       logger.debug(operation)
     except Exception as e:
       logger.error(f"Unable to update pipeline record[s]: {e}")
-      raise APIInternalError('Error updating status records')
-  except Exception as e:
-    logger.error(e)
-    pass
-  return jsonify({}), 200
+      raise APIInternalError(f"Error updating status records. Error: {e}")
+
+  except Exception as error:
+    logger.error(f"Error updating records for operation. {type(error).__name__}: {str(error)}")
+    return jsonify({'error': f"{type(error).__name__}: {str(error)}" }), 500
+
+  return jsonify({'status': 'OK'}), 200
