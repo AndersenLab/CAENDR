@@ -51,9 +51,9 @@ i386
 
 ### Install Dependencies:
 ```
-brew -arch x86_64 update
-brew -arch x86_64  install python-devel
-brew -arch x86_64  install pyenv OpenSSL readline gettext xz
+arch -x86_64 brew  update
+arch -x86_64 brew install python-devel
+arch -x86_64 brew install pyenv OpenSSL readline gettext xz
 ```
 
 Edit your `~/.bash_profile` and add this to the bottom of the file. If the file `~/.bash_profile` doens't exist check if you are using a different shell (eg: zsh, etc). In that case you might need to edit the file `~/.zshrc` or `~/.zprofile`. 
@@ -347,20 +347,20 @@ Q:  I'm seeing this error when running `make venv` from the `src/modules/site-v2
       _PyIntl_textdomain in libpython3.7m.a(_localemodule.o)
 A: Install gettext
 ```
-$ brew  -arch x86_64 install gettext
+$ arch -x86_64 brew install gettext
 ```
 
 Q: I'm seeing this error when runing `make venv` from the `src/modules/site-v2` folder: "ModuleNotFoundError: No module named 'readline'"
 A: 
 ```
-brew -arch x86_64 install readline
+$ arch -x86_64 brew install readline
 ```
 
 Q: I'm seeing this error when running `make venv` from the `src/modules/site-v2` folder: 
 "ERROR: The Python ssl extension was not compiled. Missing the OpenSSL lib?"
 A: 
 ```
-brew  -arch x86_64 install openssl
+$ arch -x86_64 brew install openssl
 ```
 
 
