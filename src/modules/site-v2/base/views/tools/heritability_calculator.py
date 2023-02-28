@@ -15,6 +15,8 @@ from flask import (flash,
                    abort)
 from caendr.services.logger import logger
 from datetime import datetime
+import bleach
+from werkzeug.utils import secure_filename
 
 from base.forms import HeritabilityForm
 from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user, user_is_admin
@@ -26,6 +28,11 @@ from caendr.services.heritability_report import get_all_heritability_results, ge
 from caendr.utils.data import unique_id, convert_data_table_to_tsv, get_object_hash
 from caendr.services.cloud.storage import get_blob, generate_blob_url
 from caendr.services.persistent_logger import PersistentLogger
+
+uploads_dir = os.path.join('./', 'uploads')
+os.makedirs(uploads_dir, exist_ok=True)
+
+
 
 # ================== #
 #   heritability     #
@@ -89,19 +96,36 @@ def user_results():
 @heritability_calculator_bp.route('/heritability-calculator/submit', methods=["POST"])
 @jwt_required()
 def submit_h2():
+  form = HeritabilityForm(request.form)
   user = get_current_user()
 
-  # Package data for this submission into an object
-  data = {
-    'label':      request.values['label'],
-    'table_data': request.values['table_data'],
-  }
+  # TODO: Validate form
+  if not form.validate_on_submit():
+    pass
+    # flash("You must include a description of your data and a TSV file to upload", "error")
+    # return redirect(url_for('heritability_calculator.submit_h2'))
 
   # If user is admin, allow them to bypass cache with URL variable
   no_cache = bool(user_is_admin() and request.args.get("nocache", False))
 
+  # Read fields from form
+  label   = bleach.clean(request.form.get('label'))
+  species = bleach.clean(request.form.get('species'))
+
+  # Save uploaded file to server temporarily with unique generated name
+  # TODO: Is there a better way to generate this name? E.g. using a Tempfile?
+  local_path = os.path.join(uploads_dir, secure_filename(f'{ unique_id() }.tsv'))
+  request.files['file'].save(local_path)
+
+  # Package submission data together into dict
+  data = {
+    'label':    label,
+    'species':  species,
+    'filepath': local_path,
+  }
+
   try:
-    h = create_new_heritability_report(user, data, no_cache = False)
+    h = create_new_heritability_report(user, data, no_cache=no_cache)
     return jsonify({
       'started':   True,
       'data_hash': h.data_hash,
