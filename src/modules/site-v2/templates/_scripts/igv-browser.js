@@ -34,21 +34,13 @@ function create_or_update_browser(browser_div, browser_options, species) {
   // If browser exists, swap out species params (name and FASTA file)
   if (browser) {
 
-    // If browser already configured for this species, return it in a Promise
-    if (browser.config.reference.id == species['name']) {
-      return new Promise((resolve, reject) => {
-        resolve({ browser, created: false, changed: false });
-      })
-    }
-
-    // Otherwise, load the new reference genome
     // Updating the browser clears the list of tracks
-    else {
-      clear_tracks();
-      return browser.loadGenome(reference).then(() => {
-        return {browser, created: false, changed: true };
-      });
-    }
+    clear_tracks();
+
+    // Load the new reference genome
+    return browser.loadGenome(reference).then(() => {
+      return {browser, created: false, changed: true };
+    });
   }
 
   // If not, create a new browser
