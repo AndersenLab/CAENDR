@@ -97,25 +97,58 @@ cd src/modules/site
 make clean
 make configure
 make cloud-sql-proxy-start
-
-# once you are done working on the PR, then stop the 
-make cloud-sql-proxy-stop
-# if this does not stop the container, do this: 
-docker ps
-(base) rbv218@imac:site{docs/developer-getting-started} $ docker ps
-CONTAINER ID   IMAGE                                            COMMAND                  CREATED          STATUS          PORTS                    NAMES
-75ef941c1e64   gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine   "/cloud_sql_proxy -i…"   29 minutes ago   Up 29 minutes   0.0.0.0:5432->5432/tcp   caendr-cloud-sql-proxy-1
-
-then stop the container manually with:
-$ docker kill 75ef941c1e64
- 
 ```
 
-Expected result:
+Check that the cloud-sql-proxy docker container is running:
 ```
 $ docker ps
-CONTAINER ID   IMAGE                                            COMMAND                  CREATED         STATUS         PORTS                    NAMES
-75ef941c1e64   gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine   "/cloud_sql_proxy -i…"   3 minutes ago   Up 3 minutes   0.0.0.0:5432->5432/tcp   caendr-cloud-sql-proxy-1
+```
+
+Expected Result:
+```
+CONTAINER ID   IMAGE                                            COMMAND                  CREATED       STATUS        PORTS                    NAMES
+9413d4f448f0   gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine   "/cloud_sql_proxy -i…"   3 weeks ago   Up 23 hours   0.0.0.0:5432->5432/tcp   caendr-cloud-sql-proxy-1
+```
+Please note that the CONTAINER_ID will be different on your machine. 
+
+Keep this docker container running while running the site below. 
+
+## To make changes to the NEW site-v2 templates*
+Open a second terminal window 
+```
+export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
+export ENV=main
+cd src/modules/site-v2
+make configure
+make dot-env
+make venv
+code ../../..
+```
+
+The last command will open Visual Studio Code at the root of the project. Form the DEBUG->List of options, select "Run Site-v2 (requires a local Postgres instance or cloud-sql-proxy)" and click "Play'.
+
+## Stopping the Database Proxy
+
+Once you are done working on the site and no longer need the database, then close the connection:
+
+```
+make cloud-sql-proxy-stop
+```
+
+if this does not stop the container, do this: 
+```
+docker ps
+```
+
+Expected Result:
+```
+CONTAINER ID   IMAGE                                            COMMAND                  CREATED          STATUS          PORTS                    NAMES
+75ef941c1e64   gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine   "/cloud_sql_proxy -i…"   29 minutes ago   Up 29 minutes   0.0.0.0:5432->5432/tcp   caendr-cloud-sql-proxy-1
+```
+
+Find the CONTAINER_ID (first column) and stop the container manually with:
+```
+$ docker kill 75ef941c1e64
 ```
 
 *To make changes to the Legacy site (currently in production)*
@@ -130,17 +163,6 @@ make venv
 code ../../..
 ```
 
-*To make changes to the NEW site-v2 templates*
-Open a second terminal window 
-```
-export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
-export ENV=main
-cd src/modules/site-v2
-make configure
-make dot-env
-make venv
-code ../../..
-```
 
 
 ## Linux Setup
