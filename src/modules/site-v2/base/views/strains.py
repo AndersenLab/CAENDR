@@ -126,6 +126,7 @@ def strains_catalog():
     flash(Markup("Strain mapping sets 9 and 10 will not be available until later this year."), category="primary")
     title = "Strain Catalog"
     warning = request.args.get('warning')
+    disable_parent_breadcrumb = True
     strain_listing = get_strains()
     strain_sets = get_strain_sets()
     return render_template('strain/catalog.html', **locals())
