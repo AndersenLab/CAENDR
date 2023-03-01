@@ -338,7 +338,6 @@ class Entity(object):
 
     # Run query with given key and val
     matches = cls.query_ds(filters=[(key, '=', val)])
-    matches = []
 
     # If no matching entities found, return None
     if len(matches) == 0:

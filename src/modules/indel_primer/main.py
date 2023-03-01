@@ -10,6 +10,8 @@ from caendr.models.error import EnvVarError
 from caendr.models.datastore import IndelPrimer
 from caendr.services.cloud.storage import download_blob_to_file, upload_blob_from_file
 
+from vcfkit.utils.reference import get_genome_directory
+
 
 
 dotenv_file = '.env'
@@ -17,6 +19,10 @@ load_dotenv(dotenv_file)
 
 monitor.init_sentry("indel_primer")
 
+
+#
+# Read & Set Environment Variables
+#
 
 # Source locations in GCP
 MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
@@ -33,9 +39,6 @@ RELEASE        = os.environ.get('RELEASE')
 RESULT_BUCKET = os.environ.get('RESULT_BUCKET')
 RESULT_BLOB   = os.environ.get('RESULT_BLOB')
 
-# WormBase Version
-WORMBASE_VERSION  = os.environ.get('WORMBASE_VERSION')
-
 # Name for local cache directory (to download files from GCP)
 INDEL_CACHE_DIR = os.environ.get('INDEL_CACHE_DIR', '.download')
 
@@ -51,7 +54,6 @@ required_env_vars = {
   'RELEASE',
   'RESULT_BUCKET',
   'RESULT_BLOB',
-  'WORMBASE_VERSION',
 }
 
 # Save current list of vars
@@ -68,6 +70,36 @@ vars_strings = [ f'{x}="{VARS.get(x)}"' for x in required_env_vars ]
 logger.info( f'Indel Primer: { " ".join(vars_strings) }' )
 
 
+#
+# Download FASTA Reference File(s)
+#
+
+# Use VCF-Kit to init / get genome directory
+genome_directory = get_genome_directory()
+
+# Construct FASTA file path
+fasta_path = IndelPrimer.get_fasta_filepath(SPECIES, RELEASE)
+
+# Define the source and target filenames
+# TODO: This adds the .gz extension to the end of the file because it's what VCF-Kit looks for,
+#       but this file isn't actually zipped. Does it need to be?
+#       (Can accomplish using `bgzip`.)
+source_fasta_file_name = '/'.join(fasta_path['path']) + '/' + fasta_path['name'] + fasta_path['ext']
+target_fasta_file_name = f'{ genome_directory }/{ fasta_path["name"] }/{ fasta_path["name"] }.fa.gz'
+
+# Create a folder at the desired path if one does not yet exist
+if not os.path.exists(f'{genome_directory}/{fasta_path["name"]}'):
+  os.mkdir(f'{genome_directory}/{fasta_path["name"]}')
+
+# Download FASTA file & FASTA index file
+if not os.path.exists(target_fasta_file_name):
+  download_blob_to_file(fasta_path['bucket'], source_fasta_file_name,          target_fasta_file_name)
+  download_blob_to_file(fasta_path['bucket'], source_fasta_file_name + ".fai", target_fasta_file_name + '.fai')
+
+
+#
+# Download VCF Files
+#
 
 # Generate local name for VCF file
 source_vcf_file_name = f'{ INDEL_TOOL_PATH }/{ IndelPrimer.get_source_filename(SPECIES, RELEASE) }.vcf.gz'
@@ -77,11 +109,15 @@ target_vcf_file_name = f'{ INDEL_CACHE_DIR }/{ IndelPrimer.get_source_filename(S
 if not os.path.exists(INDEL_CACHE_DIR):
   os.mkdir(INDEL_CACHE_DIR)
 
-# Download VCF file
-# Index too?
+# Download VCF file & VCF Index file
 if not os.path.exists(target_vcf_file_name):
-  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, source_vcf_file_name, target_vcf_file_name)
+  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, source_vcf_file_name,          target_vcf_file_name)
+  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, source_vcf_file_name + '.csi', target_vcf_file_name + '.csi')
 
+
+#
+# Run VCF-Kit Command
+#
 
 # Prepare command for VCF-kit Indel Primer tool
 cmd = (
@@ -94,7 +130,7 @@ cmd = (
   '--region',      INDEL_SITE,
   '--nprimers',    '10',
   '--polymorphic',
-  '--ref',         WORMBASE_VERSION,
+  '--ref',         fasta_path['name'],
   '--samples',     f'{INDEL_STRAIN_1},{INDEL_STRAIN_2}',
 
   # VCF file to run tool on

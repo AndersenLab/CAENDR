@@ -10,6 +10,7 @@
 
 {% block content %}
 {% from "_includes/macros.html" import render_field %}
+{% from "_includes/strain-listing.html" import species_selector %}
 
 <div class="container-fluid px-5">
   <div class="d-flex justify-content-around flex-wrap mt-2 pb-5">
@@ -31,7 +32,7 @@
             <form id='form-submit' method="POST">
               {{ form.csrf_token }}
               <!-- Species -->
-              {% with onchange = "" %} {% include "_includes/species-selector.html" %} {% endwith %}
+              {{ species_selector(species_list, "update_species") }}
               <!-- /Species -->
               <!-- <div class='mb-4'>{{ render_field(form.species) }}</div> -->
               <div class="mb-4">{{ render_field(form.strain_1) }}</div>
@@ -69,6 +70,7 @@
               </div>
               </form>
               <!-- /Input Form -->
+              {% include "_includes/ignore-cache-checkbox.html" %}
               </div>
               <!-- /Input Card -->
         </div>
@@ -106,40 +108,34 @@
 
 {% block script %}
 {% from "_includes/macros.html" import unpack_species_list %}
+{% from "_includes/strain-listing.html" import replace_tokens %}
+<script src="{{ url_for('static', filename='js/strains.js') }}"></script>
 
 <script>
+{% include '_scripts/igv-browser.js' %}
 
-/* Species List */
+/* Species */
 const species_list = {{ unpack_species_list(species_list, species_fields) }};
-var strains;
-
-/*
-	IGV Browser
-*/
-var browserDiv = $("#browser");
-var options = {
-    showNavigation: true,
-    showKaryo: false,
-    reference: {
-      id: "WS276",
-      fastaURL: replace_tokens("{{ fasta_url }}"),
-    },
-};
-
-var divergent_track_summary = {};
-
-var results
-var query_running = false
-var loaded = false
-var table
 var species;
 
+/* Strains */
+var strains;
+
+/* IGV Browser */
+const browser_div = $("#browser");
+const browser_options = {}
+var divergent_track_name;
 const COLORS = {
   INS: 'blue',
   DEL: 'red'
 }
 
-var divergent_track_name;
+/* Data Table */
+var table;
+
+/* Status */
+var query_running = false
+var loaded = false
 
 
 
@@ -160,7 +156,7 @@ $(document).ready(function(){
 
   var form = document.getElementById('form-submit');
 
-  species = $("#species").val();
+  species = species_list[$("#species").val()];
 
   form.addEventListener('change', function() {
     if (loaded) {
@@ -227,69 +223,28 @@ $(document).ready(function(){
 });
 
 
-function process_indel_finder_query_results(results) {
+function update_species(species_id) {
 
-  // Handle data table
-  create_or_update_data_table(results);
-
-  // Handle genome browser
-  create_or_get_browser().then(({ browser, created }) => {
-
-    // Update the reference species, if applicable
-    new_species = $("#speciesSelect").val();
-    if (new_species == '') {
-      return
-    }
-    if (created || species != new_species) {
-      species = new_species;
-
-      Promise.all([
-        update_browser_species(browser, species),
-        update_strain_dropdown("#strain_1", "{{ default_strains[0] }}"),
-        update_strain_dropdown("#strain_2", "{{ default_strains[1] }}"),
-      ])
-      .then(() => {
-
-        // Strain tracks must be (re)set AFTER reference species genome is changed
-        update_browser_tracks(browser, results);
-      });
-    }
-
-    // Update browser tracks
-    else {
-      update_browser_tracks(browser, results);
-    }
-  });
-}
-
-
-function update_strain_dropdown(id, initial_value = null) {
-  $(id).empty();
-  if (strains[species]) {
-    strains[species].forEach((val) => {
-      $(id).append( $("<option />").val(val).text(val) );
-    });
-    if (initial_value) {
-      $(id).val(initial_value);
-    }
+  // Check if value provided
+  if ( !species_id ) {
+    return;
   }
-  else {
-    console.warn(`Couldn't find strains for species ${species}`);
-  }
-}
 
+  // Set species object from ID
+  species = species_list[species_id];
 
-/* Genome Browser Create & Update */
+  // Update the browser species & the strain dropdown lists
+  create_or_update_browser(browser_div, browser_options, species).then(({browser}) => {
+    Promise.all([
+      update_strain_dropdown("#strain_1", strains, species, "{{ default_strains[0] }}"),
+      update_strain_dropdown("#strain_2", strains, species, "{{ default_strains[1] }}"),
+    ])
+    .then(() => {
 
-
-function create_or_get_browser() {
-
-  // If browser not yet initialized, create it
-  if (!igv.getBrowser()) {
-    return igv.createBrowser(browserDiv, options).then(function(browser) {
-
-      // Set the browser's position
+      // (Re)set the browser position, since it's removed when reference genome changes
       set_position(browser);
+
+      // Make browser responsive
       browser.on('locuschange', function(reference_frame, label) {
         $("#chromosome").val(reference_frame["chr"]);
         $("#start").val(reference_frame["start"]);
@@ -298,58 +253,53 @@ function create_or_get_browser() {
       });
       loaded = true;
 
-      // Return the browser object to make it accessible from further .then calls
-      return { browser, created: true };
-    });
-  }
+      clear_tracks();
 
-  // If browser exists, return it in a Promise
-  else {
-    return new Promise((resolve, reject) => {
-      resolve({
-        browser: igv.getBrowser(),
-        created: false,
-      });
+      // Load the divergent regions track
+      fetch_trackset().then((divergent_track_summary) => {
+        divergent_track_name = divergent_track_summary.name;
+
+        // Replace species tokens in URL
+        divergent_track_summary.url = replace_tokens(divergent_track_summary.url);
+
+        // Update display properties
+        // TODO: Should be able to specify these in datastore somehow
+        divergent_track_summary.height = 40;
+        divergent_track_summary.color  = "#CB3466";
+
+        // Add the track to the browser
+        add_track(divergent_track_name, divergent_track_summary);
+      })
+
+      // Update browser tracks
+      update_browser_tracks(browser, results);
     });
-  }
+  });
 }
 
 
-function update_browser_species(browser, new_species) {
+function process_indel_finder_query_results(results) {
 
-  // Load the new species genome
-  return browser.loadGenome({
-    "id":       new_species,
-    "name":     new_species,
-    "fastaURL": replace_tokens("{{ fasta_url }}"),
-  }).then(() => {
+  // Ensure browser already exists
+  const browser = igv.getBrowser();
+  if (!browser) return;
 
-    // (Re)set the browser position, since it's removed when reference genome changes
-    set_position(browser);
+  // Handle data table
+  create_or_update_data_table(results);
 
-    // Load the divergent regions track
-    fetch_trackset().then((divergent_track_summary) => {
-      divergent_track_name = divergent_track_summary.name;
-
-      // Update divergent track summary
-      divergent_track_summary.url    = replace_tokens(divergent_track_summary.url);
-      divergent_track_summary.height = 40;
-      divergent_track_summary.color  = "#CB3466";
-      browser.loadTrack(divergent_track_summary);
-    })
-  })
+  // Handle genome browser
+  update_browser_tracks(browser, results);
 }
 
+
+
+/* Genome Browser Tracks */
 
 // Load the individual strain tracks
 function update_browser_tracks(browser, results) {
 
   // Clear existing strain tracks
-  browser.findTracks().forEach(track => {
-    if (!["", divergent_track_name].includes(track.name)) {
-      browser.removeTrackByName(track.name);
-    }
-  })
+  clear_tracks_except([divergent_track_name]);
 
   // Load new tracks
   load_tracks(browser, results);
@@ -358,34 +308,41 @@ function update_browser_tracks(browser, results) {
 
 function load_tracks(browser, results) {
     rowset = {}
-    rowset[$("#strain_1").val()] = []
-    rowset[$("#strain_2").val()] = []
-    tracks = []
+
+    // Create a new array in `rowset` for each selected strain
+    if ($("#strain_1").val()) {
+      rowset[$("#strain_1").val()] = []
+    }
+    if ($("#strain_2").val()) {
+      rowset[$("#strain_2").val()] = []
+    }
 
     // Restructure results by strain
     for (idx in results) {
       row = results[idx]
-      rowset[row["STRAIN"]].push(row)
+      if (rowset[row["STRAIN"]]) {
+        rowset[row["STRAIN"]].push(row)
+      }
     }
+
+    // Map the sets of track features to single track objects
+    // Add the result features to each track
     for (strain in rowset) {
       track = rowset[strain]
-      items = _.map(track, function(row) {
-        result = {
-          chr: row["CHROM"],
-          start: row["START"],
-          end: row["END"],
-          name: `${row["site"]}`,
-          color: COLORS[row["SVTYPE"]],
-        }
-        return(result)
-      })
-      igvTrack = {
+      update_track(strain, {
         name: strain,
         type: "annotation",
-        features: items,
-      }
-      igv.getBrowser().loadTrack(igvTrack);
-    }
+        features: track.map(row => {
+          return {
+            chr:   row["CHROM"],
+            start: row["START"],
+            end:   row["END"],
+            name:  row["site"],
+            color: COLORS[row["SVTYPE"]],
+          };
+        }),
+      });
+    };
   }
 
 
@@ -444,11 +401,11 @@ function generate_primers(e) {
   $.ajax({
     type: "POST",
     url:
-      {% if session["is_admin"] %}
+      {%- if session["is_admin"] -%}
         "{{ url_for('pairwise_indel_finder.submit') }}" + ($('#no_cache_checkbox').prop('checked') ? "?nocache=1" : ""),
-      {% else %}
+      {%- else -%}
         "{{ url_for('pairwise_indel_finder.submit') }}",
-      {% endif %}
+      {%- endif %}
     data: JSON.stringify(data),
     contentType: "application/json; charset=utf-8",
     dataType: 'json',
@@ -485,18 +442,7 @@ function set_position(browser) {
 // Replace string tokens with species values
 // TODO: Uses of species name ID in filenames not yet standardized, so we drop the 'c_' prefix for now
 function replace_tokens(filename) {
-
-  // TODO: resolve call order (?) so this default value is unnecessary
-  if (!species) {
-    species = 'c_elegans'
-  }
-
-  filename = filename.replaceAll('$SPECIES',   species_list[species]['name'].substring(2));
-  filename = filename.replaceAll('${SPECIES}', species_list[species]['name'].substring(2));
-  {% for token, field in tokens.items() %}
-  filename = filename.replaceAll('${{ token }}',             species_list[species]['{{ field }}']);
-  filename = filename.replaceAll('${' + '{{ token }}' + '}', species_list[species]['{{ field }}']);
-  {% endfor %}
+  {{ replace_tokens('filename', 'species', tokens) }}
   return filename;
 }
 

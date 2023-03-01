@@ -13,7 +13,7 @@ from base.forms import PairwiseIndelForm
 
 from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefault
 from caendr.models.error import NotFoundError, NonUniqueEntity
-from caendr.models.species import SPECIES_LIST
+from caendr.models.datastore.species import SPECIES_LIST
 from caendr.services.dataset_release import get_browser_tracks_path
 from caendr.utils.constants import CHROM_NUMERIC
 

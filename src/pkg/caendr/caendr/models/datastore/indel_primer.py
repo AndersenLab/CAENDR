@@ -13,6 +13,7 @@ INDEL_REPORT_PATH_PREFIX = 'reports'
 INDEL_INPUT_FILE = 'input.json'
 INDEL_RESULT_FILE = 'results.tsv'
 
+MODULE_SITE_BUCKET_PUBLIC_NAME = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME')
 
 SOURCE_FILENAME = os.environ.get('INDEL_PRIMER_SOURCE_FILENAME')
 
@@ -52,6 +53,28 @@ class IndelPrimer(DataJobEntity):
 
     # Fill in template with vars
     return SOURCE_FILENAME.substitute({ 'SPECIES': species, 'RELEASE': release })
+
+
+  @staticmethod
+  def get_fasta_filepath(species, release = None):
+    from caendr.models.datastore import SPECIES_LIST
+    species_obj = SPECIES_LIST[species]
+
+    # Default to the latest version defined for the species
+    if release is None:
+      release = species_obj['indel_primer_ver']
+
+    # TODO: Look up these values using release version
+    species_prj = species_obj['project_num']
+    species_wb  = species_obj['wb_ver']
+
+    # Return filepath
+    return {
+      'bucket': MODULE_SITE_BUCKET_PUBLIC_NAME,
+      'path': ('dataset_release', species, release, 'browser_tracks'),
+      'name': f'{ species }.{ species_prj }.{ species_wb }.genome',
+      'ext':  '.fa',
+    }
 
 
   ## All Properties ##

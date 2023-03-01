@@ -1,5 +1,6 @@
 {% extends "_layouts/default-nocontainer.html" %}
 {% block content %}
+{% from "_includes/strain-listing.html" import species_selector %}
 
 <div class="container">
   <div class="d-flex justify-content-around flex-wrap mb-5">
@@ -42,12 +43,10 @@
               <!-- UPLOAD FORM -->
               <form id="form-submit" action="{{ url_for('genetic_mapping.submit') }}" method="post" onsubmit="disableButton()"
                 class="form form-inline" enctype="multipart/form-data">
-                <!-- Species -->
-                {% include "_includes/species-selector.html" %}
-                <!-- /Species -->
                 <div class="mb-4">
                   {{ form.csrf_token }}
                   <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">
+                  {{ species_selector(species_list) }}
                   <label for="label" class="form-label">Description:</label>
                   <input id="label" name="label" type="text" class="form-control input-margin" placeholder="Name your mapping"
                     style="width:100%" required />
@@ -55,7 +54,7 @@
                 <div class="mb-4">
                   <label for="formFile" class="form-label">Select file:</label>
                   <div class="hstack gap-2 mb-4">
-                    <input class="form-control" type="file" id="file" accept=".tsv" required>
+                    <input class="form-control" type="file" name="file" id="file" accept=".tsv" required>
                     <!-- Info Popover -->
                     <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
                       data-bs-trigger="focus" data-bs-title="More information"
@@ -90,6 +89,7 @@
                 </div>
               </form>
               <!-- /UPLOAD FORM -->
+              {%- include "_includes/ignore-cache-checkbox.html" %}
               </p>
             </div>
             <!-- Tab 2 -->
@@ -118,6 +118,16 @@
 {% block script %}
 
 <script>
+
+{%- if session["is_admin"] %}
+
+$("#no_cache_checkbox").change(() => {
+  const url = "{{ url_for('genetic_mapping.submit') }}" + ($('#no_cache_checkbox').prop('checked') ? "?nocache=1" : "")
+  console.log(url)
+  $('#form-submit').attr('action', url)
+})
+
+{%- endif %}
 
 function disableButton() {
   const btn = document.getElementById('submit-btn');

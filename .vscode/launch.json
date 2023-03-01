@@ -61,7 +61,6 @@
                 "CAENDR_USE_SSL": "1",
                 "SENTRY_URL": "",
                 "SITE_BASE_URL": "https://localhost:8080",
-                "SPECIES_LIST_FILE": "${workspaceFolder}/data/species_list.json",
             },
             "args": [
                 "run",
@@ -162,7 +161,6 @@
             "envFile": "${workspaceFolder}/src/modules/db_operations/.env",
             "env": {
                 "DATABASE_OPERATION": "DROP_AND_POPULATE_WORMBASE_GENES",
-                "SPECIES_LIST_FILE": "${workspaceFolder}/data/species_list.json",
                 // "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "localhost",
                 "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "file",
                 "MODULE_DB_OPERATIONS_CONNECTION_FILE": "${workspaceFolder}/src/modules/db_operations/13.db",
@@ -183,7 +181,6 @@
             "envFile": "${workspaceFolder}/src/modules/db_operations/.env",
             "env": {
                 "DATABASE_OPERATION": "DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS",
-                "SPECIES_LIST_FILE": "${workspaceFolder}/data/species_list.json",
                 // "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "localhost",
                 // "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "memory",
                 "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "file",
@@ -207,7 +204,6 @@
                 "DATABASE_OPERATION": "DROP_AND_POPULATE_ALL_TABLES",
                 "EMAIL": "no-reply@example.com",
                 "USE_MEMOIZATION": "1",
-                "SPECIES_LIST_FILE": "${workspaceFolder}/data/species_list.json",
                 // "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "localhost",
                 // "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "memory",
                 "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "file",
@@ -232,7 +228,6 @@
                 "EMAIL": "no-reply@example.com",
                 "USE_MEMOIZATION": "1",
                 "USE_MOCK_DATA": "1",
-                "SPECIES_LIST_FILE": "${workspaceFolder}/data/species_list.json",
                 // "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "localhost",
                 "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "memory",
                 // "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "file",
