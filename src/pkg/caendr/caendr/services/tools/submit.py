@@ -263,32 +263,33 @@ class HeritabilitySubmissionManager(SubmissionManager):
   def upload_data_file(cls, entity, data_file):
     bucket = entity.get_bucket_name()
     blob   = entity.get_data_blob_path()
-    upload_blob_from_string(bucket, data_file, blob)
+    upload_blob_from_file(bucket, data_file, blob)
 
   @classmethod
   def parse_data(cls, data):
 
-    # Pull table_data out of the data object
+    # Extract local filepath from the data object
     # Note that we don't change the underlying object itself, as this would
     # affect the data dict in calling functions
-    table_data = data['table_data']
-    data = { k: v for k, v in data.items() if k != 'table_data' }
+    local_path = data['filepath']
+    data = { k: v for k, v in data.items() if k != 'filepath' }
 
-    # Extract table data
-    table_data = json.loads(table_data)
-    table_data = [x for x in table_data[1:] if x[0] is not None]
+    # Read first line from tsv
+    with open(local_path, 'r') as f:
+      csv_reader = csv.reader(f, delimiter='\t')
+      try:
+        csv_headings  = next(csv_reader)
+        csv_first_row = next(csv_reader)
+      except StopIteration:
+        raise DataFormatError('Empty file.')
 
-    # Create TSV file for upload
-    columns = ["AssayNumber", "Strain", "TraitName", "Replicate", "Value"]
-    data_file = convert_data_table_to_tsv(table_data, columns)
-
-    # Compute hash from table data
-    data_hash = get_object_hash(table_data, length=32)
+    # Compute hash from table data\
+    data_hash = get_file_hash(local_path, length=32)
 
     # Extract trait from table data
-    data['trait'] = table_data[0][2]
+    data['trait'] = csv_first_row[2]
 
-    return data_file, data_hash, data
+    return local_path, data_hash, data
 
 
 

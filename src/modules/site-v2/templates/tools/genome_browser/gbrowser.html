@@ -326,6 +326,9 @@ function update_species(species_id) {
   document.getElementById('wormbase_version').innerHTML = species['wb_ver'];
   document.getElementById('release_version').innerHTML  = species['latest_release'];
 
+  document.getElementById('gene-search').value  = "";
+  process_gene_search();
+
   // Update list of strains to match current species
   filter_strains(species_id);
 
