@@ -339,22 +339,22 @@ class MappingSubmissionManager(SubmissionManager):
       try:
         csv_headings = next(csv_reader)
       except StopIteration:
-        raise DataFormatError('Empty file.')
+        raise DataFormatError('Empty file')
 
       # Check first line for column headers (strain, trait)
       if len(csv_headings) != 2:
-        raise DataFormatError(f'File should have exactly two columns. (Line: {1})')
+        raise DataFormatError(f'File should have exactly two columns', 1)
       if csv_headings[0].lower() != 'strain':
-        raise DataFormatError('First column header should be "strain".')
+        raise DataFormatError('First column header should be "strain"', 1)
       if csv_headings[1].lower() != 'trait':
-        raise DataFormatError('Second column header should be "trait".')
+        raise DataFormatError('Second column header should be "trait"', 1)
 
       # Loop through all remaining lines in the file
       for line, csv_row in enumerate(csv_reader, start=2):
 
         # Check that exactly two columns defined
         if len(csv_row) != 2:
-          raise DataFormatError(f'File should have exactly two columns. (Line: {line})')
+          raise DataFormatError(f'File should have exactly two columns', line)
 
         # Extract the two values in this row
         strain = csv_row[0].strip()
@@ -363,13 +363,13 @@ class MappingSubmissionManager(SubmissionManager):
         # Check that first column is a valid strain name for the desired species
         if strain not in valid_strain_names_species:
           if strain in valid_strain_names_all:
-            raise DataFormatError(f'Strain "{strain}" is not a member of {SPECIES_LIST[data["species"]].short_name}. (Line: {line})')
+            raise DataFormatError(f'Strain "{strain}" is not a member of {SPECIES_LIST[data["species"]].short_name}', line)
           else:
-            raise DataFormatError(f'Unrecognized strain name "{strain}". (Line: {line})')
+            raise DataFormatError(f'Unrecognized strain name "{strain}"', line)
 
         # Check that second column is a valid number, or "NA"
         if not is_num_or_na(value):
-          raise DataFormatError(f'Trait value must be a number or "NA", but got "{value}". (Line: {line}, Strain: "{strain}")')
+          raise DataFormatError(f'Trait value must be a number or "NA", but got "{value}" for strain "{strain}"', line)
 
     # Compute data hash using entire file
     data_hash = get_file_hash(local_path, length=32)

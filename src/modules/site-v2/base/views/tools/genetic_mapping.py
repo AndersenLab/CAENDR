@@ -97,8 +97,14 @@ def submit():
 
   except DataFormatError as ex:
     logger.error(ex)
-    msg = ex.args[0] if len(ex.args) > 0 else ex.description
-    flash(f"Incorrect file format: { msg }", 'danger')
+
+    # Construct error message with optional line number
+    msg = f'Incorrect file format: { ex.msg }.'
+    if ex.line is not None:
+      msg += f' (Line: { ex.line })'
+
+    # Flash the error message & refresh the page
+    flash(msg, 'danger')
     return redirect(url_for('genetic_mapping.genetic_mapping'))
 
   except Exception as ex:

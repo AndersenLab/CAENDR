@@ -67,7 +67,14 @@ class DuplicateTaskError(InternalError):
   
 class DataFormatError(InternalError):
   description = "Error parsing data with expected format"
-  
+  def __init__(self, msg, line: int=None):
+    self.msg  = msg.strip()
+    self.line = line
+
+    # Strip trailing period
+    if self.msg[-1] == '.':
+      self.msg = self.msg[:-1]
+
 class GoogleSheetsParseError(InternalError):
   description = "Unable to parse Google Sheets document"
 
