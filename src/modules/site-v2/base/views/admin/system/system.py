@@ -60,5 +60,9 @@ def system_dashboard():
   instances = _get_instances()
   now = datetime.today()
 
+  module_name = os.getenv("MODULE_NAME", "n/a")
+  module_version = os.getenv("MODULE_VERSION", "n/a")
+
+
   return render_template('admin/system/system.html', **locals())
 
