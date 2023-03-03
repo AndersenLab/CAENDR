@@ -350,6 +350,7 @@ class MappingSubmissionManager(SubmissionManager):
         raise DataFormatError('Second column header should be "trait"', 1)
 
       # Loop through all remaining lines in the file
+      has_data = False
       for line, csv_row in enumerate(csv_reader, start=2):
 
         # Check that exactly two columns defined
@@ -370,6 +371,13 @@ class MappingSubmissionManager(SubmissionManager):
         # Check that second column is a valid number, or "NA"
         if not is_num_or_na(value):
           raise DataFormatError(f'Trait value must be a number or "NA", but got "{value}" for strain "{strain}"', line)
+
+        # Track that we parsed at least one line of data properly
+        has_data = True
+
+      # Check that the loop ran at least once (i.e. is not just headers)
+      if not has_data:
+        raise DataFormatError('No data provided')
 
     # Compute data hash using entire file
     data_hash = get_file_hash(local_path, length=32)
