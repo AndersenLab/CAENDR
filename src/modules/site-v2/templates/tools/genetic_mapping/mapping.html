@@ -23,13 +23,14 @@
       </div>
       <!-- /Description Card -->
       <!-- Tool -->
-      <div class="col-12 col-sm-10 col-md-8 col-lg-5 mx-auto mb-5">
+      <div class="col-12 col-sm-10 col-md-8 col-lg-6 mx-auto mb-5">
         <div class="card border-0 shadow text-center">
           <!-- Tab Menu -->
           <nav>
             <div class="nav nav-tabs text-bg-light p-1 pb-0" id="nav-tab" role="tablist">
-              <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">New Mapping</button>
+              <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">New</button>
               <button class="nav-link" id="nav-linkOne-tab" data-bs-toggle="tab" data-bs-target="#nav-linkOne" type="button" role="tab" aria-controls="nav-linkOne" aria-selected="false">Sample Report</button>
+              <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false"><a href="{{ url_for('data_releases.data_releases') }}">Release Notes</a></button>
               <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false"><a href="{{ url_for('genetic_mapping.user_reports') }}">My Mapping Results</a></button>
             </div>
           </nav>

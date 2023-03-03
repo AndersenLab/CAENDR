@@ -17,9 +17,10 @@
       <nav>
         <div class="nav nav-tabs border-0" id="nav-tab" role="tablist">
           <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home"
-            type="button" role="tab" aria-controls="nav-home" aria-selected="true">New Calculation</button>
+            type="button" role="tab" aria-controls="nav-home" aria-selected="true">New</button>
           <button class="nav-link" id="nav-about-tab" data-bs-toggle="tab" data-bs-target="#nav-about" type="button"
             role="tab" aria-controls="nav-about" aria-selected="false">About</button>
+            <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false"><a href="{{ url_for('data_releases.data_releases') }}">Release Notes</a></button>
         </div>
       </nav>
       <div class="tab-content" id="nav-tabContent">
@@ -100,7 +101,7 @@
           <div id="browser" class="mb-5"></div>
           <!-- <table id="results" class='table table-hover table-striped strain-table'></table> -->
       </div>
-      <!--/Browser Placeholder -->
+      <!--/Browser -->
   </div>
   <!-- /Tool Column -->
  </div>
