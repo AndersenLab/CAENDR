@@ -6,6 +6,8 @@ from sqlalchemy import or_
 from flask import request
 from datetime import timedelta
 
+from caendr.models.datastore import SPECIES_LIST
+from caendr.models.error import BadRequestError
 from caendr.models.sql import Strain
 from caendr.services.cloud.postgresql import db
 from caendr.services.cloud.storage import get_blob, generate_download_signed_url_v4, download_blob_to_file, upload_blob_from_file, get_google_storage_credentials
@@ -20,7 +22,16 @@ bam_prefix = 'bam/c_elegans'
 
 #def query_strains(strain_name=None, isotype_name=None, release=None, all_strain_names=False, resolve_isotype=False, issues=False, is_sequenced=False):
 
-def query_strains(strain_name: str=None, isotype_name: str=None, release_version=None, all_strain_names: bool=False, resolve_isotype: bool=False, issues: bool=False, is_sequenced: bool=False):
+def query_strains(
+    strain_name:      str  = None,
+    isotype_name:     str  = None,
+    species:          str  = None,
+    release_version        = None,
+    all_strain_names: bool = False,
+    resolve_isotype:  bool = False,
+    issues:           bool = False,
+    is_sequenced:     bool = False
+  ):
   
   """
       Return the full strain database set
@@ -53,6 +64,12 @@ def query_strains(strain_name: str=None, isotype_name: str=None, release_version
   else:
     query = query
 
+  if species is not None:
+    if species in SPECIES_LIST.keys():
+      query = query.filter(Strain.species_name == species)
+    else:
+      raise BadRequestError(f'Unrecognized species ID "{species}".')
+
   if is_sequenced is True:
     query = query.filter(Strain.sequenced == True)
 
@@ -66,6 +83,7 @@ def query_strains(strain_name: str=None, isotype_name: str=None, release_version
   if all_strain_names:
     previous_strain_names = sum([x.previous_names.split(",") for x in query if x.previous_names], [])
     results = [x.strain for x in query] + previous_strain_names
+    return results
 
   if resolve_isotype:
     if query:

@@ -8,6 +8,7 @@ from caendr.models.datastore import Container, IndelPrimer, HeritabilityReport, 
 from caendr.models.error     import CachedDataError, DuplicateDataError, DataFormatError
 from caendr.models.task      import IndelPrimerTask, HeritabilityTask, NemaScanTask
 
+from caendr.api.strain             import query_strains
 from caendr.services.cloud.storage import upload_blob_from_string, upload_blob_from_file
 
 from caendr.utils.data import convert_data_table_to_tsv, get_object_hash
@@ -318,9 +319,19 @@ class MappingSubmissionManager(SubmissionManager):
     data = { k: v for k, v in data.items() if k != 'filepath' }
 
     # Validate file upload
-    # TODO: Further validation. Parse file into object, validating along the way?
-    #       This might also allow better data hashing? Since e.g. blank spaces in the file would be ignored.
     logger.debug(f'Validating Nemascan Mapping data format: {local_path}')
+
+    # Get the list of all valid strain names for this species and for any species
+    valid_strain_names_species = query_strains(all_strain_names=True, species=data['species'])
+    valid_strain_names_all     = query_strains(all_strain_names=True)
+
+    # Inline function to check whether a value is a valid number, or "NA"
+    def is_num_or_na(n):
+      try:
+        float(n)
+        return True
+      except:
+        return n == 'NA'
 
     # Read first line from tsv
     with open(local_path, 'r') as f:
@@ -330,13 +341,35 @@ class MappingSubmissionManager(SubmissionManager):
       except StopIteration:
         raise DataFormatError('Empty file.')
 
-    # Check first line for column headers (strain, {TRAIT})
-    if csv_headings[0].lower() != 'strain':
-      raise DataFormatError('First column should be "strain".')
-    if len(csv_headings) != 2:
-      raise DataFormatError('File should have exactly two columns.')
-    if len(csv_headings[1]) == 0:
-      raise DataFormatError('Second column header should be trait name.')
+      # Check first line for column headers (strain, trait)
+      if len(csv_headings) != 2:
+        raise DataFormatError(f'File should have exactly two columns. (Line: {1})')
+      if csv_headings[0].lower() != 'strain':
+        raise DataFormatError('First column header should be "strain".')
+      if csv_headings[1].lower() != 'trait':
+        raise DataFormatError('Second column header should be "trait".')
+
+      # Loop through all remaining lines in the file
+      for line, csv_row in enumerate(csv_reader, start=2):
+
+        # Check that exactly two columns defined
+        if len(csv_row) != 2:
+          raise DataFormatError(f'File should have exactly two columns. (Line: {line})')
+
+        # Extract the two values in this row
+        strain = csv_row[0].strip()
+        value  = csv_row[1].strip()
+
+        # Check that first column is a valid strain name for the desired species
+        if strain not in valid_strain_names_species:
+          if strain in valid_strain_names_all:
+            raise DataFormatError(f'Strain "{strain}" is not a member of {SPECIES_LIST[data["species"]].short_name}. (Line: {line})')
+          else:
+            raise DataFormatError(f'Unrecognized strain name "{strain}". (Line: {line})')
+
+        # Check that second column is a valid number, or "NA"
+        if not is_num_or_na(value):
+          raise DataFormatError(f'Trait value must be a number or "NA", but got "{value}". (Line: {line}, Strain: "{strain}")')
 
     # Compute data hash using entire file
     data_hash = get_file_hash(local_path, length=32)
