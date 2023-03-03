@@ -57,7 +57,7 @@ COPY pkg/caendr/ caendr
 RUN python -m pip install  -r requirements.txt
 RUN python -m pip install ./caendr
 
-COPY modules/site-v2/* .
+COPY modules/site-v2/* ./
 
 CMD export $(cat .env | sed -e '/^\s*$/d' | sed -e '/^\#/d' | xargs) && \
   gunicorn -b :$PORT main:app
