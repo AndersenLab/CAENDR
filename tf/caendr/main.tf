@@ -67,7 +67,7 @@ module "ext_assets" {
 
 
 module "site" {
-  source = "./modules/site-v2"
+  source = "./modules/site"
   ENVIRONMENT = var.ENVIRONMENT
 
   google_cloud_vars = local.google_cloud_vars
