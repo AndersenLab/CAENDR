@@ -47,31 +47,6 @@
               <div class="mb-4">{{ render_field(form.stop, placeholder="2,029,217") }}</div>
               <div class="d-grid gap-3 mb-4">
                 <button id='find_indels' type='submit' value="submit" class="btn btn-secondary text-light">Find Indels</button>
-                <button type='submit' value="submit" class="btn btn-secondary text-light generate-primers" data-bs-toggle="modal"
-                  data-bs-target="#generate-primers-modal">Generate Primers</button>
-                <!-- Modal -->
-                <div class="modal fade" id="generate-primers-modal" tabindex="-1" aria-labelledby="generate-primers-modal-label"
-                  aria-hidden="true">
-                  <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="generate-primers-modal-label">Thank You</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                      </div>
-                      <div class="modal-body">
-                        <p><i class="bi bi-clock-fill me-1 text-secondary fs-3"></i> Your report will be complete in about
-                          5-10 minutes</li>
-                        </p>
-                        <p><i class="bi bi-envelope-fill me-1 text-secondary fs-3"></i>You will receive an email when your
-                          report is complete.</p>
-                        <p><i class="bi bi-journal me-1 text-secondary fs-3"></i>You may also check <a
-                            href='{{ url_for("pairwise_indel_finder.user_results") }}'>My
-                            Primer Results</a> for updates.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <!-- /Modal -->
               </div>
               </form>
               <!-- /Input Form -->
@@ -98,8 +73,33 @@
       <!-- /Options Toolbar -->
       <!-- Browser -->
       <div class="col">
-          <div id="browser" class="mb-5"></div>
-          <!-- <table id="results" class='table table-hover table-striped strain-table'></table> -->
+        <h2>Indel Finder</h2>
+          <div id="browser" class="mt-3 mb-5"></div>
+          <h2>Primers</h2>
+          <table id="results" class='table table-hover table-striped strain-table'></table>
+                          <!-- Modal -->
+                          <div class="modal fade" id="generate-primers-modal" tabindex="-1" aria-labelledby="generate-primers-modal-label"
+                          aria-hidden="true">
+                          <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <h1 class="modal-title fs-5" id="generate-primers-modal-label">Thank You</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body">
+                                <p><i class="bi bi-clock-fill me-1 text-secondary fs-3"></i> Your report will be complete in about
+                                  5-10 minutes</li>
+                                </p>
+                                <p><i class="bi bi-envelope-fill me-1 text-secondary fs-3"></i>You will receive an email when your
+                                  report is complete.</p>
+                                <p><i class="bi bi-journal me-1 text-secondary fs-3"></i>You may also check <a
+                                    href='{{ url_for("pairwise_indel_finder.user_results") }}'>My
+                                    Primer Results</a> for updates.</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <!-- /Modal -->
       </div>
       <!--/Browser -->
   </div>
@@ -245,7 +245,7 @@ $(document).ready(function(){
 				data: $('form').serialize(),
 				success: function(data) {
           results = data["results"]
-          _.each(results, function(x) { x['generate_primers'] = `<div site="${x['CHROM']}:${x["START"]}-${x['END']}" svtype="${x['SVTYPE']}" size="${x["END"]-x["START"]}" class='btn-link generate-primers'>Generate Primers</div>` })
+          _.each(results, function(x) { x['generate_primers'] = `<div site="${x['CHROM']}:${x["START"]}-${x['END']}" svtype="${x['SVTYPE']}" size="${x["END"]-x["START"]}" class='btn btn-secondary text-light generate-primers' data-bs-toggle="modal" data-bs-target="#generate-primers-modal">Generate Primers</div>` })
 
 					// Handle errors
 					$(".form-error").remove();
