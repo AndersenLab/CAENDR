@@ -3,7 +3,7 @@ import os
 from logzero import logger
 
 from caendr.models.error import InternalError
-from caendr.services.cloud.storage import download_blob_to_file
+from caendr.services.cloud.storage import download_blob_to_file, generate_blob_url
 from caendr.utils.file import download_file
 
 from ._env import MODULE_DB_OPERATIONS_BUCKET_NAME
@@ -33,7 +33,7 @@ def get_fetch_params_internal(manager, db_url_name: str, species_name: str):
     blob_name = manager.get_blob(db_url_name, species_name)
 
     # Construct URL
-    url = f'gs://{MODULE_DB_OPERATIONS_BUCKET_NAME}/{blob_name}'
+    url = generate_blob_url(MODULE_DB_OPERATIONS_BUCKET_NAME, blob_name, secure=True)
 
     # Construct filename
     filename = f'{manager.get_download_path(species_name)}/{blob_name.rsplit("/", 1)[-1]}'

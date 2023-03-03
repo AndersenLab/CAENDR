@@ -38,39 +38,6 @@ def prefetch_all_external_dbs(self, **kwargs):
 
 ## Specific fetch functions ##
 
-def fetch_gene_gtf_db(self, species, **kwargs):
-    '''
-      Fetches WormBase gene GTF file. Accepts all keyword args of fetch_external_db, except species_name.
-        Args:
-          species (str): [Name of species to retrieve DB file for.]
-        Returns:
-          gene_gtf_fname (str): [path of downloaded wormbase gene gtf.gz file]
-    '''
-    return self.fetch_external_db('GENE_GTF', species, **kwargs)
-
-
-def fetch_gene_gff_db(self, species, **kwargs):
-    '''
-      Fetches WormBase gene GFF file. Accepts all keyword args of fetch_external_db, except species_name.
-        Args:
-          species (str): [Name of species to retrieve DB file for.]
-        Returns:
-          gene_gff_fname (str): [Path of downloaded wormbase gene gff file.]
-    '''
-    return self.fetch_external_db('GENE_GFF', species, **kwargs)
-
-
-def fetch_gene_ids_db(self, species, **kwargs):
-    '''
-      Fetches WormBase gene IDs file. Accepts all keyword args of fetch_external_db, except species_name.
-        Args:
-          species (str): [Name of species to retrieve DB file for.]
-        Returns:
-          gene_ids_fname (str): [path of downloaded wormbase gene IDs file]
-    '''
-    return self.fetch_external_db('GENE_IDS', species, **kwargs)
-
-
 # def fetch_ortholog_db(self, species, **kwargs):
 #     '''
 #       Fetches WormBase orthologs file. Accepts all keyword args of fetch_external_db, except species_name.
