@@ -74,7 +74,7 @@ def get_tracks():
   '''
   return jsonify({
     'default': {
-      track['name']: dict(track)
+      track['name']: json.dumps( dict(track) )
         for track in BrowserTrackDefault.query_ds_visible()
     },
     'templates': {
