@@ -59,5 +59,7 @@ RUN pip install --no-cache-dir -e /caendr
 COPY modules/site-v2/* ${APP_HOME}/
 COPY modules/site-v2/.env ${APP_HOME}/.env
 
+RUN python test.py
+
 CMD export $(cat .env | sed -e '/^\s*$/d' | sed -e '/^\#/d' | xargs) && \
   gunicorn -b :$PORT main:app
