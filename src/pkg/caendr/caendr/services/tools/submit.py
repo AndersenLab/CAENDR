@@ -230,16 +230,16 @@ class SubmissionManager():
       try:
         csv_headings  = next(csv_reader)
       except StopIteration:
-        raise DataFormatError('Empty file')
+        raise DataFormatError('The file is empty. Please edit the file to include your data.')
 
       # Check that first line has correct number of columns
       if len(csv_headings) != num_cols:
-        raise DataFormatError(f'File should have exactly { num_cols } columns', 1)
+        raise DataFormatError(f'File contains incorrect number of columns. Please edit the file to ensure it contains { num_cols } columns.', 1)
 
       # Check first line for column headers
       for col in range(num_cols):
         if csv_headings[col] != columns[col]['header']:
-          raise DataFormatError(f'Column header #{col} should be "{ columns[col]["header"] }", but got "{ csv_headings[col] }"', 1)
+          raise DataFormatError(f'File contains incorrect column headers. Column #{ col + 1 } should be { columns[col]["header"] }.', 1)
 
       # Loop through all remaining lines in the file
       has_data = False
@@ -247,7 +247,7 @@ class SubmissionManager():
 
         # Check that line has the correct number of columns
         if len(csv_row) != num_cols:
-          raise DataFormatError(f'File should have exactly { num_cols } columns', line)
+          raise DataFormatError(f'File contains incorrect number of columns. Please edit the file to ensure it contains { num_cols } columns.', line)
 
         # Check that all columns have valid data
         for col, val in enumerate(csv_row):
@@ -260,7 +260,7 @@ class SubmissionManager():
           as_string = '\t'.join(csv_row)
           prev_line = rows.get(as_string)
           if prev_line is not None:
-            raise DataFormatError(f'Line {line} is a duplicate of line {prev_line}')
+            raise DataFormatError(f'Line #{ line } is a duplicate of line #{ prev_line }. Please ensure that each row contains unique values.')
           else:
             rows[as_string] = line
 
@@ -269,7 +269,7 @@ class SubmissionManager():
 
       # Check that the loop ran at least once (i.e. is not just headers)
       if not has_data:
-        raise DataFormatError('No data provided')
+        raise DataFormatError('The file is empty. Please edit the file to include your data.')
 
 
 class IndelPrimerSubmissionManager(SubmissionManager):
@@ -373,7 +373,7 @@ class HeritabilitySubmissionManager(SubmissionManager):
 
     # Raise an error if not enough strains were found
     if len(unique_strains) < 5:
-      raise DataFormatError("Fewer than five strains are present. Please measure trait values for at least five wild strains in at least three independent assays.")
+      raise DataFormatError("The data contains less than five unique strains. Please be sure to measure trait values for at least five wild strains in at least three independent assays.")
 
     # Compute hash from file
     data_hash = get_file_hash(local_path, length=32)
@@ -441,11 +441,9 @@ def validate_num(accept_float = False, accept_na = False):
 
   # Construct a message for the expected data type
   if accept_float:
-    msg = 'a number'
+    data_type = 'decimal'
   else:
-    msg = 'an integer'
-  if accept_na:
-    msg += ' or "NA"'
+    data_type = 'integer'
 
   # Define the validator function
   def func(header, value, line):
@@ -460,7 +458,7 @@ def validate_num(accept_float = False, accept_na = False):
     # If casting fails, raise an error (with an exception for 'NA', if applicable)
     except:
       if not (accept_na and value == 'NA'):
-        raise DataFormatError(f'{header} column must be {msg}, but got "{value}"', line)
+        raise DataFormatError(f'Column { header } is not a valid { data_type }. Please edit { header } to ensure only { data_type } values are included.', line)
 
   return func
 
@@ -474,11 +472,13 @@ def validate_strain(species):
 
   # Define the validator function
   def func(header, value, line):
+     if value == '':
+       raise DataFormatError(f'Strain values cannot be blank. Please check line { line } to ensure a valid strain has been entered.', line)
      if value not in valid_strain_names_species:
       if value in valid_strain_names_all:
-        raise DataFormatError(f'Strain "{value}" is not a member of {species.short_name}', line)
+        raise DataFormatError(f'The value { value } is not a valid strain for { species.short_name }. Please enter a valid { species.short_name } strain.', line)
       else:
-        raise DataFormatError(f'Unrecognized strain name "{value}"', line)
+        raise DataFormatError(f'The value { value } is not a valid strain name. Please ensure that { value } is valid.', line)
   return func
 
 
@@ -490,5 +490,5 @@ def validate_trait():
     if trait_name is None:
       trait_name = value
     elif value != trait_name:
-      raise DataFormatError(f'Trait name has multiple unique values: expected "{trait_name}", but got "{value}"', line)
+      raise DataFormatError(f'The data contains multiple unique trait name values. Only one trait name may be tested per file.', line)
   return func

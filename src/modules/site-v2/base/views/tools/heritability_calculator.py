@@ -152,7 +152,7 @@ def submit_h2():
     logger.error(ex)
 
     # Construct error message with optional line number
-    msg = f'Incorrect file format: { ex.msg }.'
+    msg = f'There was an error with your file. { ex.msg }'
     if ex.line is not None:
       msg += f' (Line: { ex.line })'
 

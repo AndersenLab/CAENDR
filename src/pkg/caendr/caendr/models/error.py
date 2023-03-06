@@ -71,10 +71,6 @@ class DataFormatError(InternalError):
     self.msg  = msg.strip()
     self.line = line
 
-    # Strip trailing period
-    if self.msg[-1] == '.':
-      self.msg = self.msg[:-1]
-
 class GoogleSheetsParseError(InternalError):
   description = "Unable to parse Google Sheets document"
 
