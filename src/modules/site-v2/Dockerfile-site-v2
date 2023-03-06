@@ -34,34 +34,27 @@ RUN apt-get update && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
-ENV APP_HOME /site
+ENV APP_HOME=/site
 WORKDIR $APP_HOME
 
 RUN mkdir /gcloud
 RUN cd /gcloud && curl -O "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-380.0.0-linux-x86_64.tar.gz" && tar xvzf google-cloud-sdk-380.0.0-linux-x86_64.tar.gz
 
 # make venv
-ENV VIRTUAL_ENV $APP_HOME/venv 
-RUN virtualenv -p python3 $VIRTUAL_ENV
-ENV PATH $VIRTUAL_ENV/bin:$PATH
+ENV VIRTUAL_ENV=/venv 
+# RUN virtualenv -p python3 $VIRTUAL_ENV
+RUN python3 -m venv ${VIRTUAL_ENV}
+ENV PATH=$VIRTUAL_ENV/bin:$PATH
+
+# upgrade pip
 RUN python -m pip install --upgrade pip
 
 # Install python modules from pip
 COPY modules/site-v2/requirements.txt ${APP_HOME}/requirements.txt
-# RUN python -m pip install --no-cache-dir -r requirements.txt
-RUN --mount=type=cache,target=/pip_cache python -m pip install --cache-dir /pip_cache -r requirements.txt
-# RUN --mount=type=cache,target=/pip_cache python -m pip install --no-cache-dir -e /caendr
-RUN mkdir -p /caendr
+RUN python -m pip install --no-cache-dir -r requirements.txt
+
 COPY pkg/caendr /caendr
-RUN --mount=type=cache,target=/pip_cache python -m pip install --cache-dir /pip_cache -e /caendr
-
-FROM gcr.io/google-appengine/python
-
-ENV APP_HOME /site
-WORKDIR $APP_HOME
-
-COPY --from=build /site/venv/ ${APP_HOME}/venv/
-COPY --from=build /caendr /caendr
+RUN pip install --no-cache-dir -e /caendr
 
 COPY modules/site-v2/* ${APP_HOME}/
 
