@@ -245,6 +245,10 @@ class SubmissionManager():
       has_data = False
       for line, csv_row in enumerate(csv_reader, start=2):
 
+        # Check for empty lines
+        if ''.join(csv_row).strip() == '':
+          raise DataFormatError(f'Rows cannot be blank. Please check line #{ line } to ensure valid data has been entered.', line)
+
         # Check that line has the correct number of columns
         if len(csv_row) != num_cols:
           raise DataFormatError(f'File contains incorrect number of columns. Please edit the file to ensure it contains { num_cols } columns.', line)
