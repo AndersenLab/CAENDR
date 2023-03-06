@@ -11,7 +11,7 @@ from caendr.models.task      import IndelPrimerTask, HeritabilityTask, NemaScanT
 from caendr.api.strain             import query_strains
 from caendr.services.cloud.storage import upload_blob_from_string, upload_blob_from_file
 
-from caendr.utils.data import convert_data_table_to_tsv, get_object_hash
+from caendr.utils.data import get_object_hash
 from caendr.utils.file import get_file_hash
 
 
@@ -212,9 +212,64 @@ class SubmissionManager():
     entity['status'] = 'SUBMITTED' if result else 'ERROR'
     entity.save()
 
-    # Return resulting Indel Primer entity
+    # Return resulting Job entity
     return entity
 
+
+  @staticmethod
+  def validate_file(local_path, columns, unique_rows=False):
+
+    num_cols = len(columns)
+    rows = {}
+
+    # Read first line from tsv
+    with open(local_path, 'r') as f:
+      csv_reader = csv.reader(f, delimiter='\t')
+
+      # Get the header line, throwing an empty file error if not found
+      try:
+        csv_headings  = next(csv_reader)
+      except StopIteration:
+        raise DataFormatError('Empty file')
+
+      # Check that first line has correct number of columns
+      if len(csv_headings) != num_cols:
+        raise DataFormatError(f'File should have exactly { num_cols } columns', 1)
+
+      # Check first line for column headers
+      for col in range(num_cols):
+        if csv_headings[col] != columns[col]['header']:
+          raise DataFormatError(f'Column header #{col} should be "{ columns[col]["header"] }", but got "{ csv_headings[col] }"', 1)
+
+      # Loop through all remaining lines in the file
+      has_data = False
+      for line, csv_row in enumerate(csv_reader, start=2):
+
+        # Check that line has the correct number of columns
+        if len(csv_row) != num_cols:
+          raise DataFormatError(f'File should have exactly { num_cols } columns', line)
+
+        # Check that all columns have valid data
+        for col, val in enumerate(csv_row):
+          header = columns[col]['header']
+          validator = columns[col]['validator']
+          validator( header, val.strip(), line )
+
+        # If desired, check that this row is unique
+        if unique_rows:
+          as_string = '\t'.join(csv_row)
+          prev_line = rows.get(as_string)
+          if prev_line is not None:
+            raise DataFormatError(f'Line {line} is a duplicate of line {prev_line}')
+          else:
+            rows[as_string] = line
+
+        # Track that we parsed at least one line of data properly
+        has_data = True
+
+      # Check that the loop ran at least once (i.e. is not just headers)
+      if not has_data:
+        raise DataFormatError('No data provided')
 
 
 class IndelPrimerSubmissionManager(SubmissionManager):
@@ -275,20 +330,56 @@ class HeritabilitySubmissionManager(SubmissionManager):
     local_path = data['filepath']
     data = { k: v for k, v in data.items() if k != 'filepath' }
 
-    # Read first line from tsv
+    # Define an expected header & a validator function for each column in the file
+    columns = [
+      {
+        'header': 'AssayNumber',
+        'validator': validate_num(),
+      },
+      {
+        'header': 'Strain',
+        'validator': validate_strain( SPECIES_LIST[data['species']] ),
+      },
+      {
+        'header': 'TraitName',
+        'validator': validate_trait(),
+      },
+      {
+        'header': 'Replicate',
+        'validator': validate_num(),
+      },
+      {
+        'header': 'Value',
+        'validator': validate_num(accept_float=True),
+      },
+    ]
+
+    # Validate each line in the file
+    # Will raise an error if any problems are found, otherwise silently passes
+    SubmissionManager.validate_file(local_path, columns, unique_rows=True)
+
+    # Extra validation - check that five or more unique strains are provided
+    unique_strains = set()
+
+    # Open the file, skipping the header line
     with open(local_path, 'r') as f:
       csv_reader = csv.reader(f, delimiter='\t')
-      try:
-        csv_headings  = next(csv_reader)
-        csv_first_row = next(csv_reader)
-      except StopIteration:
-        raise DataFormatError('Empty file.')
+      next(csv_reader)
 
-    # Compute hash from table data\
+      # Track all unique strain vals in a set
+      for line in csv_reader:
+        unique_strains.add(line[1])
+        csv_row = line
+
+    # Raise an error if not enough strains were found
+    if len(unique_strains) < 5:
+      raise DataFormatError("Fewer than five strains are present. Please measure trait values for at least five wild strains in at least three independent assays.")
+
+    # Compute hash from file
     data_hash = get_file_hash(local_path, length=32)
 
     # Extract trait from table data
-    data['trait'] = csv_first_row[2]
+    data['trait'] = csv_row[2]
 
     return local_path, data_hash, data
 
@@ -321,68 +412,83 @@ class MappingSubmissionManager(SubmissionManager):
     # Validate file upload
     logger.debug(f'Validating Nemascan Mapping data format: {local_path}')
 
-    # Get the list of all valid strain names for this species and for any species
-    valid_strain_names_species = query_strains(all_strain_names=True, species=data['species'])
-    valid_strain_names_all     = query_strains(all_strain_names=True)
+    columns = [
+      {
+        'header': 'strain',
+        'validator': validate_strain( SPECIES_LIST[data['species']] ),
+      },
+      {
+        'header': 'trait',
+        'validator': validate_num(accept_float=True, accept_na=True),
+      },
+    ]
 
-    # Inline function to check whether a value is a valid number, or "NA"
-    def is_num_or_na(n):
-      try:
-        float(n)
-        return True
-      except:
-        return n == 'NA'
-
-    # Read first line from tsv
-    with open(local_path, 'r') as f:
-      csv_reader = csv.reader(f, delimiter='\t')
-      try:
-        csv_headings = next(csv_reader)
-      except StopIteration:
-        raise DataFormatError('Empty file')
-
-      # Check first line for column headers (strain, trait)
-      if len(csv_headings) != 2:
-        raise DataFormatError(f'File should have exactly two columns', 1)
-      if csv_headings[0].lower() != 'strain':
-        raise DataFormatError('First column header should be "strain"', 1)
-      if csv_headings[1].lower() != 'trait':
-        raise DataFormatError('Second column header should be "trait"', 1)
-
-      # Loop through all remaining lines in the file
-      has_data = False
-      for line, csv_row in enumerate(csv_reader, start=2):
-
-        # Check that exactly two columns defined
-        if len(csv_row) != 2:
-          raise DataFormatError(f'File should have exactly two columns', line)
-
-        # Extract the two values in this row
-        strain = csv_row[0].strip()
-        value  = csv_row[1].strip()
-
-        # Check that first column is a valid strain name for the desired species
-        if strain not in valid_strain_names_species:
-          if strain in valid_strain_names_all:
-            raise DataFormatError(f'Strain "{strain}" is not a member of {SPECIES_LIST[data["species"]].short_name}', line)
-          else:
-            raise DataFormatError(f'Unrecognized strain name "{strain}"', line)
-
-        # Check that second column is a valid number, or "NA"
-        if not is_num_or_na(value):
-          raise DataFormatError(f'Trait value must be a number or "NA", but got "{value}" for strain "{strain}"', line)
-
-        # Track that we parsed at least one line of data properly
-        has_data = True
-
-      # Check that the loop ran at least once (i.e. is not just headers)
-      if not has_data:
-        raise DataFormatError('No data provided')
+    # Validate file
+    SubmissionManager.validate_file(local_path, columns)
 
     # Compute data hash using entire file
     data_hash = get_file_hash(local_path, length=32)
 
-    # Add prop(s) from file to data object
-    data['trait'] = csv_headings[1].lower()
-
     return local_path, data_hash, data
+
+
+
+#
+# Validator Functions
+#
+
+def validate_num(accept_float = False, accept_na = False):
+
+  # Construct a message for the expected data type
+  if accept_float:
+    msg = 'a number'
+  else:
+    msg = 'an integer'
+  if accept_na:
+    msg += ' or "NA"'
+
+  # Define the validator function
+  def func(header, value, line):
+
+    # Try casting the value to the appropriate num type
+    try:
+      if accept_float:
+        float(value)
+      else:
+        int(value)
+
+    # If casting fails, raise an error (with an exception for 'NA', if applicable)
+    except:
+      if not (accept_na and value == 'NA'):
+        raise DataFormatError(f'{header} column must be {msg}, but got "{value}"', line)
+
+  return func
+
+
+# Check that column is a valid strain name for the desired species
+def validate_strain(species):
+
+  # Get the list of all valid strain names for this species and for any species
+  valid_strain_names_species = query_strains(all_strain_names=True, species=species.name)
+  valid_strain_names_all     = query_strains(all_strain_names=True)
+
+  # Define the validator function
+  def func(header, value, line):
+     if value not in valid_strain_names_species:
+      if value in valid_strain_names_all:
+        raise DataFormatError(f'Strain "{value}" is not a member of {species.short_name}', line)
+      else:
+        raise DataFormatError(f'Unrecognized strain name "{value}"', line)
+  return func
+
+
+# Check that all values in a column have the same trait name
+def validate_trait():
+  trait_name = None
+  def func(header, value, line):
+    nonlocal trait_name
+    if trait_name is None:
+      trait_name = value
+    elif value != trait_name:
+      raise DataFormatError(f'Trait name has multiple unique values: expected "{trait_name}", but got "{value}"', line)
+  return func

@@ -21,7 +21,7 @@ from werkzeug.utils import secure_filename
 from base.forms import HeritabilityForm
 from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user, user_is_admin
 
-from caendr.models.error import CachedDataError, DuplicateDataError
+from caendr.models.error import CachedDataError, DuplicateDataError, DataFormatError
 from caendr.models.datastore import SPECIES_LIST
 from caendr.api.strain import get_strains
 from caendr.services.heritability_report import get_all_heritability_results, get_user_heritability_results, create_new_heritability_report, get_heritability_report
@@ -148,12 +148,28 @@ def submit_h2():
       'id':        ex.args[0].id,
     })
 
+  except DataFormatError as ex:
+    logger.error(ex)
+
+    # Construct error message with optional line number
+    msg = f'Incorrect file format: { ex.msg }.'
+    if ex.line is not None:
+      msg += f' (Line: { ex.line })'
+
+    # Flash the error message & refresh the page
+    flash(msg, 'danger')
+    # return redirect(url_for('heritability_calculator.heritability_calculator'))
+    return jsonify({
+      'error':   True,
+      'message': msg,
+    })
+
   except Exception as ex:
     flash(f"Oops! There was a problem submitting your request: {ex}", 'danger')
+    # return redirect(url_for('heritability_calculator.heritability_calculator'))
     return jsonify({
-      'duplicate': True,
-      'data_hash': None,
-      'id':        None,
+      'error':   True,
+      'message': f"There was a problem submitting your request: {ex}",
     })
 
 
