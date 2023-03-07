@@ -172,6 +172,13 @@ def submit_h2():
       'message': f"There was a problem submitting your request: {ex}",
     })
 
+  # Ensure the local file is removed
+  finally:
+    try:
+      os.remove(local_path)
+    except FileNotFoundError:
+      pass
+
 
 @heritability_calculator_bp.route("/heritability-calculator/h2/<id>/logs")
 @jwt_required()

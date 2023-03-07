@@ -114,6 +114,13 @@ def submit():
     flash(f"Unable to submit your request: \"{ getattr(ex, 'description', '') }\"", 'danger')
     return redirect(url_for('genetic_mapping.genetic_mapping'))
 
+  # Ensure the local file is removed
+  finally:
+    try:
+      os.remove(local_path)
+    except FileNotFoundError:
+      pass
+
 
 @genetic_mapping_bp.route('/genetic-mapping/reports/all', methods=['GET', 'POST'])
 @admin_required()
