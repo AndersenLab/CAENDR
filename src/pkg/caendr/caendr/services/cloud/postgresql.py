@@ -41,6 +41,8 @@ def get_db_conn_uri():
     connection_type = os.getenv('MODULE_DB_OPERATIONS_CONNECTION_TYPE', "host")
     if connection_type == "localhost":
         return f'postgresql+psycopg2://{MODULE_DB_OPERATIONS_DB_USER_NAME}:{POSTGRES_DB_PASSWORD}@localhost/{MODULE_DB_OPERATIONS_DB_NAME}'
+    if connection_type == "host.docker.internal":
+        return f'postgresql+psycopg2://{MODULE_DB_OPERATIONS_DB_USER_NAME}:{POSTGRES_DB_PASSWORD}@host.docker.internal/{MODULE_DB_OPERATIONS_DB_NAME}'
     if connection_type == "host":
         return db_conn_uri
     if connection_type == "memory":

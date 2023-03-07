@@ -46,6 +46,7 @@ def get_config():
 
   # Load environment config values
   config.update(dotenv_values('.env'))
+  config.update(dotenv_values('module.env'))
   
   config['PERMANENT_SESSION_LIFETIME'] = int(config.get('PERMANENT_SESSION_LIFETIME', '86400'))
   

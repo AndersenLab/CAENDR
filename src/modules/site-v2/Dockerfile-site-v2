@@ -9,7 +9,7 @@ RUN apt-get update && \
     ca-certificates \
     curl \
     fuse \
-    git \
+    # git \
     graphviz \
     gunicorn \
     libbz2-dev \
@@ -37,8 +37,8 @@ RUN apt-get update && \
 ENV APP_HOME=/site
 WORKDIR $APP_HOME
 
-RUN mkdir /gcloud
-RUN cd /gcloud && curl -O "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-380.0.0-linux-x86_64.tar.gz" && tar xvzf google-cloud-sdk-380.0.0-linux-x86_64.tar.gz
+# RUN mkdir /gcloud
+# RUN cd /gcloud && curl -O "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-380.0.0-linux-x86_64.tar.gz" && tar xvzf google-cloud-sdk-380.0.0-linux-x86_64.tar.gz
 
 # make venv
 ENV VIRTUAL_ENV=/venv 
@@ -56,10 +56,9 @@ RUN python -m pip install --no-cache-dir -r requirements.txt
 COPY pkg/caendr /caendr
 RUN pip install --no-cache-dir -e /caendr
 
-COPY modules/site-v2/* ${APP_HOME}/
-COPY modules/site-v2/.env ${APP_HOME}/.env
-
-RUN python test.py
+COPY modules/site-v2/ ${APP_HOME}/
+# COPY env/$ENV/global.env ${APP_HOME}/
+# COPY src/modules/site-v2/.env ${APP_HOME}/.env
 
 CMD export $(cat .env | sed -e '/^\s*$/d' | sed -e '/^\#/d' | xargs) && \
-  gunicorn -b :$PORT main:app
+  gunicorn -b 0.0.0.0:$PORT main:app
