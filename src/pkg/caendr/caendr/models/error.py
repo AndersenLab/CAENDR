@@ -77,6 +77,15 @@ class GoogleSheetsParseError(InternalError):
 class EnvVarError(InternalError):
   description = "A required environment variable is not defined"
 
+  def __init__(self, var_name: str):
+    self.var_name = var_name
+
+    # If variable name provided, update the description
+    if self.var_name is not None:
+      self.description = f"The environment variable {self.var_name} is not defined"
+
+    super().__init__()
+
 class NonUniqueEntity(InternalError):
   def __init__(self, kind, key, val, matches):
     self.kind = kind
