@@ -116,8 +116,10 @@ def get_blob(self, db_url_name: str, species_name: str):
 def get_download_path(self, species_name: str = ''):
   if species_name == '':
     return self.local_download_path
-  else:
+  elif species_name in self.species_list.keys():
     return f'{self.local_download_path}/{species_name}'
+  else:
+    raise BadRequestError(f'Unrecognized species name "{species_name}".')
 
 
 def get_file_suffix(self, db_url_name: str):
