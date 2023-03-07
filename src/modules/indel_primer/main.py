@@ -6,7 +6,6 @@ from caendr.services.logger import logger
 from dotenv import load_dotenv
 
 from caendr.utils import monitor
-from caendr.models.error import EnvVarError
 from caendr.models.datastore import IndelPrimer
 from caendr.services.cloud.storage import download_blob_to_file, upload_blob_from_file
 from caendr.utils.env import get_env_var

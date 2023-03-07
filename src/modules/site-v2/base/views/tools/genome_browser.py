@@ -3,7 +3,7 @@ import re
 
 from string import Template
 
-from caendr.models.error import EnvVarError, InternalError
+from caendr.models.error import InternalError
 from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefault, BrowserTrackTemplate
 from caendr.models.datastore.dataset_release import DatasetRelease
 from caendr.models.datastore.wormbase import WormbaseVersion
