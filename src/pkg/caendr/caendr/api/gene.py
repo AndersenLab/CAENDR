@@ -16,18 +16,29 @@ def get_gene(query: str):
     Returns:
         result (dict): List of dictionaries describing the homolog.
   """
-  query = request.args.get('query') or query
-  query = str(query).lower()
+
+  # Extract query value from request or function argument
+  query = request.args.get('query', query).lower()
+
   # First identify exact match
-  result = WormbaseGeneSummary.query.filter(or_(func.lower(WormbaseGeneSummary.locus) == query,
-                                                func.lower(WormbaseGeneSummary.sequence_name) == query,
-                                                func.lower(WormbaseGeneSummary.gene_id) == query)) \
-                                              .first()
+  result = WormbaseGeneSummary.query.filter(
+    or_(
+      func.lower(WormbaseGeneSummary.locus)         == query,
+      func.lower(WormbaseGeneSummary.sequence_name) == query,
+      func.lower(WormbaseGeneSummary.gene_id)       == query
+    )
+  ).first()
+
+  # If no exact match found, search for gene that starts with query
   if not result:
-      result = WormbaseGeneSummary.query.filter(or_(func.lower(WormbaseGeneSummary.locus).startswith(query),
-                                                    func.lower(WormbaseGeneSummary.sequence_name).startswith(query),
-                                                    func.lower(WormbaseGeneSummary.gene_id).startswith(query))) \
-                                                  .first()
+    result = WormbaseGeneSummary.query.filter(
+      or_(
+        func.lower(WormbaseGeneSummary.locus).startswith(query),
+        func.lower(WormbaseGeneSummary.sequence_name).startswith(query),
+        func.lower(WormbaseGeneSummary.gene_id).startswith(query)
+      )
+    ).first()
+
   return result
 
 
@@ -76,8 +87,9 @@ def search_homologs(query: str, species: str = None):
       results (list): List of dictionaries describing the homolog.
 
   """
-  query = request.args.get('query') or query
-  query = query.lower()
+
+  # Extract query value from request or function argument
+  query = request.args.get('query', query).lower()
 
   # Initialize search to match gene info with query
   search = (func.lower(Homolog.homolog_gene)).startswith(query)
@@ -124,17 +136,17 @@ def gene_variants(query: str):
   #    row['ANN'] = [x for x in row['ANN'] if gene_record.gene_id == x['gene_id']]
   return gene_variants
 
-  
-  
+
+
 def search_interval(gene: str):
   result = get_gene(gene)
   if result:
-    return {'result': 
-            [
-              {"chromosome": result.chrom,
-              'start': result.start,
-              'end': result.end}
-              ]
-            }
+    return {
+      'result': [{
+        "chromosome": result.chrom,
+        'start':      result.start,
+        'end':        result.end,
+      }],
+    }
   else:
     return {'error': 'not found'}
