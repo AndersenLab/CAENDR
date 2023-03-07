@@ -3,15 +3,21 @@ function filter_strains(species_id='', search_terms=[]) {
   // Hide all strains
   $('.strain-entry-container').hide();
 
-  // If no species ID provided
+  // If no species ID provided, no strains will be shown
   if (species_id) {
 
+    // Filter out blank search terms
+    search_terms = search_terms.filter(t => t.trim())
+
     // If search string(s) provided, show matching strains
+    // Since any matching strain is shown, acts like "OR"
     if (search_terms.length > 0) {
       search_terms.forEach(function(r) {
         var rex = new RegExp(r, "i");
+
+        // Show all containers where the first child element (the table cell with the strain name) matches the RegEx
         $(`.strain-entry-container-${ species_id }`).filter(function() {
-          return rex.test($(this).text());
+          return rex.test($(this).children(":first").text());
         }).show();
       })
     }
