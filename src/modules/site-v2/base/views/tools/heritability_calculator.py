@@ -149,9 +149,11 @@ def submit_h2():
     })
 
   except DataFormatError as ex:
-    logger.error(ex)
 
-    # Construct error message with optional line number
+    # Log the error
+    logger.error(f'Data formatting error in Heritability Calculator: {ex.msg} (Line: {ex.line})')
+
+    # Construct user-friendly error message with optional line number
     msg = f'There was an error with your file. { ex.msg }'
     if ex.line is not None:
       msg += f' (Line: { ex.line })'
@@ -165,11 +167,21 @@ def submit_h2():
     })
 
   except Exception as ex:
-    flash(f"Oops! There was a problem submitting your request: {ex}", 'danger')
+
+    # Get message and description, if they exist
+    msg  = getattr(ex, 'message',     '')
+    desc = getattr(ex, 'description', '')
+
+    # Log the full error
+    logger.error(f'Error submitting Heritability calculation. Message = "{msg}", Description = "{desc}". Full Error: {ex}')
+
+    # Flash an error message for the user
+    # TODO: Update this wording
+    flash(f"Oops! There was a problem submitting your request.", 'danger')
     # return redirect(url_for('heritability_calculator.heritability_calculator'))
     return jsonify({
       'error':   True,
-      'message': f"There was a problem submitting your request: {ex}",
+      'message': f"There was a problem submitting your request.",
     })
 
   # Ensure the local file is removed
