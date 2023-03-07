@@ -3,6 +3,7 @@ import os
 from string import Template
 
 from caendr.services.logger import logger
+from caendr.utils.env import get_env_var
 
 from caendr.models.error import EnvVarError
 from caendr.models.datastore import DataJobEntity
@@ -13,12 +14,9 @@ INDEL_REPORT_PATH_PREFIX = 'reports'
 INDEL_INPUT_FILE = 'input.json'
 INDEL_RESULT_FILE = 'results.tsv'
 
-MODULE_SITE_BUCKET_PUBLIC_NAME = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME')
-
-SOURCE_FILENAME = os.environ.get('INDEL_PRIMER_SOURCE_FILENAME')
-
-if not SOURCE_FILENAME:
-  raise EnvVarError("INDEL_PRIMER_SOURCE_FILENAME")
+# Get environment variables
+MODULE_SITE_BUCKET_PUBLIC_NAME = get_env_var('MODULE_SITE_BUCKET_PUBLIC_NAME')
+SOURCE_FILENAME = get_env_var('INDEL_PRIMER_SOURCE_FILENAME')
 
 SOURCE_FILENAME = Template(SOURCE_FILENAME)
 
