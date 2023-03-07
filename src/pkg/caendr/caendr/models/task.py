@@ -6,9 +6,10 @@ from caendr.models.datastore import Entity, DatabaseOperation, GeneBrowserTracks
 
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.task   import add_task
+from caendr.utils.env             import get_env_var
 
 
-MODULE_API_PIPELINE_TASK_URL_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_URL_NAME')
+MODULE_API_PIPELINE_TASK_URL_NAME = get_env_var('MODULE_API_PIPELINE_TASK_URL_NAME')
 API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 
 
