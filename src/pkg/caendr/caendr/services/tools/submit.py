@@ -253,12 +253,6 @@ class SubmissionManager():
         if len(csv_row) != num_cols:
           raise DataFormatError(f'File contains incorrect number of columns. Please edit the file to ensure it contains { num_cols } columns.', line)
 
-        # Check that all columns have valid data
-        for col, val in enumerate(csv_row):
-          header = columns[col]['header']
-          validator = columns[col]['validator']
-          validator( header, val.strip(), line )
-
         # If desired, check that this row is unique
         if unique_rows:
           as_string = '\t'.join(csv_row)
@@ -267,6 +261,12 @@ class SubmissionManager():
             raise DataFormatError(f'Line #{ line } is a duplicate of line #{ prev_line }. Please ensure that each row contains unique values.')
           else:
             rows[as_string] = line
+
+        # Check that all columns have valid data
+        for column, value in zip(columns, csv_row):
+          header    = column['header']
+          validator = column['validator']
+          validator( header, value.strip(), line )
 
         # Track that we parsed at least one line of data properly
         has_data = True
@@ -419,7 +419,7 @@ class MappingSubmissionManager(SubmissionManager):
     columns = [
       {
         'header': 'strain',
-        'validator': validate_strain( SPECIES_LIST[data['species']] ),
+        'validator': validate_strain( SPECIES_LIST[data['species']], force_unique=True ),
       },
       {
         'header': 'trait',
@@ -428,7 +428,7 @@ class MappingSubmissionManager(SubmissionManager):
     ]
 
     # Validate file
-    SubmissionManager.validate_file(local_path, columns)
+    SubmissionManager.validate_file(local_path, columns, unique_rows=True)
 
     # Compute data hash using entire file
     data_hash = get_file_hash(local_path, length=32)
@@ -451,6 +451,7 @@ def validate_num(accept_float = False, accept_na = False):
 
   # Define the validator function
   def func(header, value, line):
+    nonlocal data_type
 
     # Try casting the value to the appropriate num type
     try:
@@ -468,31 +469,56 @@ def validate_num(accept_float = False, accept_na = False):
 
 
 # Check that column is a valid strain name for the desired species
-def validate_strain(species):
+def validate_strain(species, force_unique=False):
 
   # Get the list of all valid strain names for this species and for any species
   valid_strain_names_species = query_strains(all_strain_names=True, species=species.name)
   valid_strain_names_all     = query_strains(all_strain_names=True)
 
+  # Dict to track the first line each strain occurs on
+  # Used to ensure strains are unique, if applicable
+  strain_line_numbers = {}
+
   # Define the validator function
   def func(header, value, line):
-     if value == '':
-       raise DataFormatError(f'Strain values cannot be blank. Please check line { line } to ensure a valid strain has been entered.', line)
-     if value not in valid_strain_names_species:
+    nonlocal strain_line_numbers, valid_strain_names_species, valid_strain_names_all
+
+    # Check for blank strain
+    if value == '':
+      raise DataFormatError(f'Strain values cannot be blank. Please check line { line } to ensure a valid strain has been entered.', line)
+
+    # Check if strain is valid for the desired species
+    if value not in valid_strain_names_species:
       if value in valid_strain_names_all:
         raise DataFormatError(f'The value { value } is not a valid strain for { species.short_name }. Please enter a valid { species.short_name } strain.', line)
       else:
         raise DataFormatError(f'The value { value } is not a valid strain name. Please ensure that { value } is valid.', line)
+
+    # If desired, keep track of list of strains and throw an error if a duplicate is found
+    if force_unique:
+      if value in strain_line_numbers:
+        raise DataFormatError(f'Line #{ line } has the same strain as line #{ strain_line_numbers[value] }. Please ensure that each row contains unique values.')
+      strain_line_numbers[value] = line
+
   return func
 
 
 # Check that all values in a column have the same trait name
 def validate_trait():
+
+  # Initialize var to track the single valid trait name
   trait_name = None
+
+  # Define the validator function
   def func(header, value, line):
     nonlocal trait_name
+
+    # If no trait name has been encountered yet, save the first value
     if trait_name is None:
       trait_name = value
+
+    # If the trait name has been set, ensure this line matches it
     elif value != trait_name:
       raise DataFormatError(f'The data contains multiple unique trait name values. Only one trait name may be tested per file.', line)
+
   return func
