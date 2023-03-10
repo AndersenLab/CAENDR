@@ -90,3 +90,10 @@ class ReportLookupError(InternalError):
   def __init__(self, msg, code):
     self.msg = msg
     self.code = code
+
+class FileUploadError(InternalError):
+  description = "Could not upload file"
+
+  def __init__(self, description=None):
+    if description is not None:
+      self.description = description
