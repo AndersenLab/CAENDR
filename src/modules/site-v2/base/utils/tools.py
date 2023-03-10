@@ -1,6 +1,14 @@
-from base.utils.auth import get_current_user, user_is_admin
+import os
 
-from caendr.models.error import ReportLookupError
+from base.utils.auth import get_current_user, user_is_admin
+from werkzeug.utils import secure_filename
+
+from caendr.models.error import ReportLookupError, FileUploadError
+from caendr.utils.data import unique_id
+
+
+uploads_dir = os.path.join('./', 'uploads')
+os.makedirs(uploads_dir, exist_ok=True)
 
 
 def validate_report(report, user=None):
@@ -23,3 +31,28 @@ def validate_report(report, user=None):
   # If the user doesn't have permission to view this report, show an error message
   if not (report.username == user.name or user_is_admin()):
     raise ReportLookupError('You do not have access to that report', 401)
+
+
+def upload_file(request, filename):
+  '''
+    Save uploaded file to server temporarily with unique generated name.
+  '''
+
+  # Create a unique local filename for the file
+  # TODO: Is there a better way to generate this name?
+  #       Using a Tempfile, using the user's ID and the time, etc.?
+  local_path = os.path.join(uploads_dir, secure_filename(f'{ unique_id() }.tsv'))
+
+  # Get the FileStorage object from the request
+  file = request.files.get(filename)
+  if file is None:
+    raise FileUploadError()
+
+  # Save the file, alerting the user if this fails
+  try:
+    file.save(local_path)
+  except Exception:
+    raise FileUploadError()
+
+  # Return the name of the file on the server
+  return local_path

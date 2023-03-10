@@ -16,22 +16,24 @@ from flask import (flash,
 from caendr.services.logger import logger
 from datetime import datetime
 import bleach
-from werkzeug.utils import secure_filename
 
 from base.forms import HeritabilityForm
 from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user, user_is_admin
-from base.utils.tools import validate_report
+from base.utils.tools import validate_report, upload_file
 
-from caendr.models.error import CachedDataError, DuplicateDataError, DataFormatError, ReportLookupError
+from caendr.models.error import (
+    CachedDataError,
+    DataFormatError,
+    DuplicateDataError,
+    FileUploadError,
+    ReportLookupError,
+)
 from caendr.models.datastore import SPECIES_LIST
 from caendr.api.strain import get_strains
 from caendr.services.heritability_report import get_all_heritability_results, get_user_heritability_results, create_new_heritability_report, get_heritability_report
 from caendr.utils.data import unique_id, convert_data_table_to_tsv, get_object_hash
 from caendr.services.cloud.storage import get_blob, generate_blob_url
 from caendr.services.persistent_logger import PersistentLogger
-
-uploads_dir = os.path.join('./', 'uploads')
-os.makedirs(uploads_dir, exist_ok=True)
 
 
 
@@ -113,10 +115,12 @@ def submit_h2():
   label   = bleach.clean(request.form.get('label'))
   species = bleach.clean(request.form.get('species'))
 
-  # Save uploaded file to server temporarily with unique generated name
-  # TODO: Is there a better way to generate this name? E.g. using a Tempfile?
-  local_path = os.path.join(uploads_dir, secure_filename(f'{ unique_id() }.tsv'))
-  request.files['file'].save(local_path)
+  # Save uploaded file to server temporarily, displaying an error message if this fails
+  try:
+    local_path = upload_file(request, 'file')
+  except FileUploadError as ex:
+    flash('There was a problem uploading your file to the server. Please try again.', 'danger')
+    return redirect(url_for('genetic_mapping.genetic_mapping'))
 
   # Package submission data together into dict
   data = {
