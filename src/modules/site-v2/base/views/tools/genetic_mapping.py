@@ -73,6 +73,18 @@ def submit():
   label   = bleach.clean(request.form.get('label'))
   species = bleach.clean(request.form.get('species'))
 
+  # Check that label is not empty
+  # TODO: Move to FileUploadForm validator?
+  if len(label.strip()) == 0:
+    flash('Invalid label.', 'danger')
+    return redirect(url_for('genetic_mapping.genetic_mapping'))
+
+  # Check that species is valid
+  # TODO: Move to FileUploadForm validator?
+  if species not in SPECIES_LIST.keys():
+    flash('Invalid species.', 'danger')
+    return redirect(url_for('genetic_mapping.genetic_mapping'))
+
   # Save uploaded file to server temporarily, displaying an error message if this fails
   try:
     local_path = upload_file(request, 'file')

@@ -115,6 +115,22 @@ def submit_h2():
   label   = bleach.clean(request.form.get('label'))
   species = bleach.clean(request.form.get('species'))
 
+  # Check that label is not empty
+  # TODO: Move to HeritabilityForm validator?
+  if len(label.strip()) == 0:
+    flash('Invalid label.', 'danger')
+    return jsonify({
+      'error': True, 'message': f"There was a problem submitting your request.",
+    })
+
+  # Check that species is valid
+  # TODO: Move to HeritabilityForm validator?
+  if species not in SPECIES_LIST.keys():
+    flash('Invalid species.', 'danger')
+    return jsonify({
+      'error': True, 'message': f"There was a problem submitting your request.",
+    })
+
   # Save uploaded file to server temporarily, displaying an error message if this fails
   try:
     local_path = upload_file(request, 'file')
