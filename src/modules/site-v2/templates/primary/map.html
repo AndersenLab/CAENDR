@@ -22,7 +22,7 @@
 
 {% block script %}
 
-<script>
+<script type="module">
 
 // Icons
 {% autoescape off %}
@@ -160,6 +160,14 @@ function showStrains() {
   overlays.addLayer(tropicalis_layer)
   }
 }
+
+document.querySelector('#strains').addEventListener('click', e => {
+  if (e.target.tagName !== 'INPUT') return;
+
+  const input = e.target
+  const value = input.value;
+  showStrains(value)
+})
 
 $(document).ready(function() {
 
