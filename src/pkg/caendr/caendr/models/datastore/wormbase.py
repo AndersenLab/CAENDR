@@ -6,6 +6,8 @@ from caendr.models.error import InternalError
 
 
 
+# TODO: Make these both subclasses of the same class, to avoid code duplication
+
 class WormbaseVersion():
 
     def __init__(self, value):
@@ -15,7 +17,7 @@ class WormbaseVersion():
 
         # Copy value of another Wormbase Version object
         elif isinstance(value, WormbaseVersion):
-            self._value = value._value
+            self._value = value._value.upper()
 
         # Filter out types other than str
         elif not isinstance(value, str):
@@ -36,10 +38,21 @@ class WormbaseVersion():
         return f'<WB Ver "{self._value}">'
 
     def __str__(self):
-        return self._value
+        return self._value.upper() if self else None
 
     def __eq__(self, other):
-        return self._value == other._value
+
+        # If other object isn't a WormbaseVersion, not equal
+        if not isinstance(other, WormbaseVersion):
+            return False
+
+        # If both values not None, check for equality ignoring case
+        if self and other:
+            return self._value.upper() == other._value.upper()
+
+        # Otherwise, check if both values are None
+        else:
+            return (not self) and (not other)
 
     def __bool__(self):
         return self._value is not None
@@ -70,7 +83,7 @@ class WormbaseProjectNumber():
 
         # Copy value of another Wormbase Project Number object
         elif isinstance(value, WormbaseProjectNumber):
-            self._value = value._value
+            self._value = value._value.upper()
 
         # Filter out types other than str
         elif not isinstance(value, str):
@@ -91,10 +104,21 @@ class WormbaseProjectNumber():
         return f'<WB Proj Num "{self._value}">'
 
     def __str__(self):
-        return self._value
+        return self._value.upper() if self else None
 
     def __eq__(self, other):
-        return self._value == other._value
+
+        # If other object isn't a WormbaseProjectNumber, not equal
+        if not isinstance(other, WormbaseProjectNumber):
+            return False
+
+        # If both values not None, check for equality ignoring case
+        if self and other:
+            return self._value.upper() == other._value.upper()
+
+        # Otherwise, check if both values are None
+        else:
+            return (not self) and (not other)
 
     def __bool__(self):
         return self._value is not None
