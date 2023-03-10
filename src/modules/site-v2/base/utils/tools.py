@@ -45,7 +45,7 @@ def upload_file(request, filename):
 
   # Get the FileStorage object from the request
   file = request.files.get(filename)
-  if file is None:
+  if not file:
     raise FileUploadError()
 
   # Save the file, alerting the user if this fails
