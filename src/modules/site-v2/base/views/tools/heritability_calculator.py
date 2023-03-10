@@ -120,7 +120,10 @@ def submit_h2():
     local_path = upload_file(request, 'file')
   except FileUploadError as ex:
     flash('There was a problem uploading your file to the server. Please try again.', 'danger')
-    return redirect(url_for('genetic_mapping.genetic_mapping'))
+    return jsonify({
+      'error':   True,
+      'message': f"There was a problem submitting your request.",
+    })
 
   # Package submission data together into dict
   data = {
