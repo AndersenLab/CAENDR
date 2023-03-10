@@ -31,7 +31,7 @@ def about():
   ''' About us Page - Gives an overview of CaeNDR '''
   title = "About CaeNDR"
   disable_parent_breadcrumb = True
-  isotypes = get_isotypes(known_origin=True, species='c_elegans')
+  isotypes = get_isotypes(known_origin=True)
   strain_listing = [s.to_json() for s in isotypes]
   return render_template('about/about.html', **locals())
 
@@ -41,7 +41,7 @@ def about():
 def getting_started():
   ''' Getting Started - provides information on how to get started with CeNDR '''
   title = "Getting Started"
-  isotypes = get_isotypes(known_origin=True, species='c_elegans')
+  isotypes = get_isotypes(known_origin=True)
   strain_listing = [s.to_json() for s in isotypes]
   disable_parent_breadcrumb = True
   return render_template('about/getting_started.html', **locals())
