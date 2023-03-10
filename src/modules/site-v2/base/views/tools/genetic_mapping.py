@@ -1,18 +1,19 @@
 import os
 
 from caendr.services.logger import logger
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
 import bleach
 from flask import jsonify
 from werkzeug.utils import secure_filename
 
-from base.utils.auth import get_jwt, jwt_required, admin_required, get_current_user, user_is_admin
 from base.forms import FileUploadForm
+from base.utils.auth  import get_jwt, jwt_required, admin_required, get_current_user, user_is_admin
+from base.utils.tools import validate_report
 
 from caendr.services.nemascan_mapping import create_new_mapping, get_mapping, get_all_mappings, get_user_mappings
-from caendr.services.cloud.storage import get_blob, generate_blob_url, get_blob_list
+from caendr.services.cloud.storage import get_blob, generate_blob_url, get_blob_list, check_blob_exists
 from caendr.models.datastore import SPECIES_LIST
-from caendr.models.error import CachedDataError, DuplicateDataError, DataFormatError
+from caendr.models.error import CachedDataError, DuplicateDataError, DataFormatError, ReportLookupError
 from caendr.utils.data import unique_id
 
 uploads_dir = os.path.join('./', 'uploads')
@@ -156,22 +157,46 @@ def user_reports():
 @genetic_mapping_bp.route('/genetic-mapping/report/<id>', methods=['GET'])
 @jwt_required()
 def report(id):
-  title = 'Genetic Mapping Report'
-  alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
-  user = get_current_user()
+
+  # Get user and requested mapping
   mapping = get_mapping(id)
-  subtitle = mapping.label +': ' + mapping.trait
-  fluid_container = True
-  data_url = generate_blob_url(mapping.get_bucket_name(), mapping.get_data_blob_path())
-  # if hasattr(mapping, 'mapping_report_url'):
+
+  # Ensure the report exists and the user has permission to view it
+  try:
+    validate_report(mapping)
+  except ReportLookupError as ex:
+    flash(ex.msg, 'danger')
+    abort(ex.code)
+
+  # Get a link to download the data, if the file exists
+  if check_blob_exists(mapping.get_bucket_name(), mapping.get_data_blob_path()):
+    data_download_url = generate_blob_url(mapping.get_bucket_name(), mapping.get_data_blob_path())
+  else:
+    data_download_url = None
+
+  # Get a link to the report files, if they exist
   if mapping.report_path is not None:
     report_url = generate_blob_url(mapping.get_bucket_name(), mapping.report_path)
   else:
     report_url = None
 
-  report_status_url = url_for("genetic_mapping.report_status", id=id)
+  return render_template('tools/genetic_mapping/report.html', **{
 
-  return render_template('tools/genetic_mapping/report.html', **locals())
+    # Page info
+    'title': 'Genetic Mapping Report',
+    'subtitle': f'{mapping.label}: {mapping.trait}',
+    'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+
+    # Job status
+    'mapping_status': mapping['status'],
+
+    # URLs
+    'report_url': report_url,
+    'report_status_url': url_for("genetic_mapping.report_status", id=id),
+    'data_download_url': data_download_url,
+
+    'fluid_container': True,
+  })
 
 
 @genetic_mapping_bp.route('/genetic-mapping/report/<id>/fullscreen', methods=['GET'])

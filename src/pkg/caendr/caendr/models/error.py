@@ -85,3 +85,8 @@ class NonUniqueEntity(InternalError):
     self.matches = matches
     self.description = f'Found multiple {kind} entities with field "{key}" = "{val}".'
     super().__init__()
+
+class ReportLookupError(InternalError):
+  def __init__(self, msg, code):
+    self.msg = msg
+    self.code = code

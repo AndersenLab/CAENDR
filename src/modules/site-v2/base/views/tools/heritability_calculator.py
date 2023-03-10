@@ -20,8 +20,9 @@ from werkzeug.utils import secure_filename
 
 from base.forms import HeritabilityForm
 from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user, user_is_admin
+from base.utils.tools import validate_report
 
-from caendr.models.error import CachedDataError, DuplicateDataError, DataFormatError
+from caendr.models.error import CachedDataError, DuplicateDataError, DataFormatError, ReportLookupError
 from caendr.models.datastore import SPECIES_LIST
 from caendr.api.strain import get_strains
 from caendr.services.heritability_report import get_all_heritability_results, get_user_heritability_results, create_new_heritability_report, get_heritability_report
@@ -232,23 +233,12 @@ def heritability_result(id):
   user = get_current_user()
   hr = get_heritability_report(id)
 
-  # If no such report exists, show an error message
-  if hr is None:
-
-    # Let admins know the report doesn't exist
-    if user_is_admin():
-      flash('This report does not exist', 'danger')
-      abort(404)
-
-    # For all other users, display a default "no access" message
-    else:
-      flash('You do not have access to that report', 'danger')
-      abort(401)
-
-  # If the user doesn't have permission to view this report, show an error message
-  if not (hr.username == user.name or user_is_admin()):
-    flash('You do not have access to that report', 'danger')
-    abort(401)
+  # Ensure the report exists and the user has permission to view it
+  try:
+    validate_report(hr, user)
+  except ReportLookupError as ex:
+    flash(ex.msg, 'danger')
+    abort(ex.code)
 
   ready = False
 
