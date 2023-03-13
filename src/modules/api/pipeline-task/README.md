@@ -99,6 +99,157 @@ Where `task_route` is one of the following values:
 * `h2calc` - HeritabilityTask(payload)
 * `gene-browser-tracks` - GeneBrowserTracks(payload)
 
+### Heritability
+
+#### Pipeline Status
+POST /task/status
+
+Payload:
+```
+{
+    "message":{
+        "attributes": {
+            "operation": "projects/[GOOGLE_PROJECT_ID]/locations/us-central1/operations/[OPERATION_ID]"
+        }
+    }
+}
+```
+
+NOTE: Fields in square brackets are redacted. 
+Sample Error Response: 
+```
+{
+  "name": "projects/[GOOGLE_PROJECT_ID]/locations/us-central1/operations/[OPERATION_ID]",
+  "metadata": {
+    "@type": "type.googleapis.com/google.cloud.lifesciences.v2beta.Metadata",
+    "pipeline": {
+      "actions": [
+        {
+          "containerName": "heritability-[DATA_HASH]",
+          "imageUri": "[CONTAINER_NAME]:[CONTAINER_VERSION]",
+          "commands": [
+            "./heritability-nxf.sh"
+          ],
+          "environment": {
+            "WORK_DIR": "gs://[REDACTED__BUCKET_NAME]/[REDACTED_DATA_HASH]",
+            "GOOGLE_ZONE": "[GOOGLE_ZONE]",
+            "GOOGLE_PROJECT": "[GOOGLE_PROJECT_ID]",
+            "VCF_VERSION": "20220216",
+            "DATA_BUCKET": "[BUCKET_NAME]",
+            "TRAIT_FILE": "[BUKCET_NAME]/reports/heritability/[CONTAINER_VERSION]/[DATA_HASH]/data.tsv",
+            "DATA_HASH": "[DATA_HASH]",
+            "DATA_BLOB_PATH": "reports/heritability/[CONTAINER_VERSION]/[DATA_HASH]",
+            "GOOGLE_SERVICE_ACCOUNT_EMAIL": "[SERVICE_ACCOUNT_EMAIL_ADDRESS]",
+            "OUTPUT_DIR": "gs://[BUKCET_NAME]/reports/heritability/[CONTAINER_VERSION]/[DATA_HASH]"
+          },
+          "timeout": "9000s"
+        }
+      ],
+      "resources": {
+        "zones": [
+          "us-central1-a"
+        ],
+        "virtualMachine": {
+          "machineType": "n1-standard-1",
+          "labels": {
+            "goog-pipelines-worker": "true"
+          },
+          "serviceAccount": {
+            "email": "[SERVICE_ACCOUNT_EMAIL_ADDRESS]",
+            "scopes": [
+              "https://www.googleapis.com/auth/cloud-platform"
+            ]
+          },
+          "bootDiskSizeGb": 10,
+          "bootImage": "projects/cos-cloud/global/images/family/cos-stable",
+          "nvidiaDriverVersion": "450.51.06",
+          "enableStackdriverMonitoring": true
+        }
+      },
+      "timeout": "9000s"
+    },
+    "events": [
+      {
+        "timestamp": "2023-02-24T21:01:07.814651908Z",
+        "description": "Worker released",
+        "workerReleased": {
+          "zone": "us-central1-a",
+          "instance": "google-pipelines-worker-[WORKER_ID]"
+        }
+      },
+      {
+        "timestamp": "2023-02-24T21:01:07.263988705Z",
+        "description": "Execution failed: generic::failed_precondition: while running \"heritability-7ca074fbac0b4f8c90a40eb864429768\": unexpected exit status 1 was not ignored",
+        "failed": {
+          "code": "FAILED_PRECONDITION",
+          "cause": "Execution failed: generic::failed_precondition: while running \"heritability-7ca074fbac0b4f8c90a40eb864429768\": unexpected exit status 1 was not ignored"
+        }
+      },
+      {
+        "timestamp": "2023-02-24T21:01:07.230111520Z",
+        "description": "Unexpected exit status 1 while running \"heritability-7ca074fbac0b4f8c90a40eb864429768\"",
+        "unexpectedExitStatus": {
+          "actionId": 1,
+          "exitStatus": 1
+        }
+      },
+      {
+        "timestamp": "2023-02-24T21:01:07.230103909Z",
+        "description": "Stopped running \"heritability-7ca074fbac0b4f8c90a40eb864429768\": exit status 1",
+        "containerStopped": {
+          "actionId": 1,
+          "exitStatus": 1
+        }
+      },
+      {
+        "timestamp": "2023-02-24T21:00:44.068364130Z",
+        "description": "Started running \"heritability-7ca074fbac0b4f8c90a40eb864429768\"",
+        "containerStarted": {
+          "actionId": 1
+        }
+      },
+      {
+        "timestamp": "2023-02-24T21:00:41.553112938Z",
+        "description": "Stopped pulling \"andersenlab/heritability:v0.3\"",
+        "pullStopped": {
+          "imageUri": "andersenlab/heritability:v0.3"
+        }
+      },
+      {
+        "timestamp": "2023-02-24T20:59:27.249417257Z",
+        "description": "Started pulling \"andersenlab/heritability:v0.3\"",
+        "pullStarted": {
+          "imageUri": "andersenlab/heritability:v0.3"
+        }
+      },
+      {
+        "timestamp": "2023-02-24T20:58:48.542631851Z",
+        "description": "Worker \"google-pipelines-worker-[WORKER_ID]\" assigned in \"us-central1-a\" on a \"n1-standard-1\" machine",
+        "workerAssigned": {
+          "zone": "us-central1-a",
+          "instance": "google-pipelines-worker-[WORKER_ID]",
+          "machineType": "n1-standard-1"
+        }
+      }
+    ],
+    "createTime": "2023-02-24T20:58:33.788877Z",
+    "startTime": "2023-02-24T20:58:48.542631851Z",
+    "endTime": "2023-02-24T21:01:07.814651908Z",
+    "pubSubTopic": "[PUBSUB_TOPIC]"
+  },
+  "done": true,
+  "error": {
+    "code": 9,
+    "message": "Execution failed: generic::failed_precondition: while running \"heritability-7ca074fbac0b4f8c90a40eb864429768\": unexpected exit status 1 was not ignored"
+  }
+}
+```
+
+
+
+
+### Other
+
 Method: POST
 
 *Payload Schema*

@@ -15,6 +15,12 @@ API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 
 ## Task Superclass Definition ##
 
+# Define the Status values
+class TaskStatus:
+  ERROR = "ERROR"
+  RUNNING = "RUNNING"
+  COMPLETE = "COMPLETE"
+  PENDING ="PENDING"
 
 class Task(object):
 

@@ -3,6 +3,7 @@ from flask import render_template, url_for, redirect, Blueprint
 from extensions import cache
 
 from caendr.utils.file import get_dir_list_sorted
+from caendr.api.strain import get_strains
 
 primary_bp = Blueprint('primary', __name__)
 
@@ -12,12 +13,14 @@ primary_bp = Blueprint('primary', __name__)
 def primary():
   ''' Site home page '''
   page_title = "Caenorhabditis elegans Natural Diversity Resource"
+  strains = get_strains()
   # TODO: make news dynamic
   #files = sorted_files("base/static/content/news/")
   VARS = {
     'page_title': page_title,
     #'files': files,
-    'fluid_container': True 
+    'fluid_container': True ,
+    'strain_listing': [s.to_json() for s in strains]
   }
   return render_template('primary/home.html', **VARS)
 

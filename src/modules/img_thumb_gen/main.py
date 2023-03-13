@@ -14,7 +14,10 @@ load_dotenv(dotenv_file)
 
 client = storage.Client()
 
-source_path = os.environ.get('MODULE_IMG_THUMB_GEN_SOURCE_PATH')
+source_path = os.environ.get('MODULE_IMG_THUMB_GEN_SOURCE_PATH', None)
+if source_path is None:
+  raise "Missing MODULE_IMG_THUMB_GEN_SOURCE_PATH"
+
 if source_path.endswith('/'):
   source_path = source_path[:-1]
 if source_path.startswith('/'):
