@@ -39,7 +39,7 @@
           <label for="items-{{ isotype_loop_index }}">{{ strains[0].reference_strain }}</label>
         </td>
         <td>
-          <a href="{{ url_for('strains.isotype_page', isotype_name=isotype) }}">{{ isotype }}</a>
+          <a href="{{ url_for('request-strains.isotype_page', isotype_name=isotype) }}">{{ isotype }}</a>
         </td>
         <td>
           {{ strains|join(", ") }}

@@ -18,7 +18,7 @@ from caendr.models.sql import Strain
 from caendr.utils.json import dump_json
 
 
-strains_bp = Blueprint('strains',
+strains_bp = Blueprint('request-strains',
                         __name__,
                         template_folder='templates')
 #
@@ -27,9 +27,9 @@ strains_bp = Blueprint('strains',
 @strains_bp.route('/')
 @cache.memoize(60*60)
 def strains():
-  """ Redirect base route to the strain list page """
+  """ Load landing page """
   disable_parent_breadcrumb = True
-  return render_template('strain/strains.html', **locals())
+  return render_template('strain/landing_page.html', **locals())
 
 @strains_bp.route('/map')
 @cache.memoize(60*60)
@@ -130,3 +130,4 @@ def strains_catalog():
     strain_listing = get_strains()
     strain_sets = get_strain_sets()
     return render_template('strain/catalog.html', **locals())
+
