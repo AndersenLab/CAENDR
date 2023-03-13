@@ -236,8 +236,8 @@ function update_species(species_id) {
   // Update the browser species & the strain dropdown lists
   create_or_update_browser(browser_div, browser_options, species).then(({browser}) => {
     Promise.all([
-      update_strain_dropdown("#strain_1", strains, species, "{{ default_strains[0] }}"),
-      update_strain_dropdown("#strain_2", strains, species, "{{ default_strains[1] }}"),
+      update_strain_dropdown("strain_1", strains, species, "{{ default_strains[0] }}"),
+      update_strain_dropdown("strain_2", strains, species, "{{ default_strains[1] }}"),
     ])
     .then(() => {
 

@@ -1,22 +1,25 @@
 import os
 
 from caendr.services.logger import logger
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
 import bleach
 from flask import jsonify
-from werkzeug.utils import secure_filename
 
-from base.utils.auth import get_jwt, jwt_required, admin_required, get_current_user, user_is_admin
 from base.forms import FileUploadForm
+from base.utils.auth  import get_jwt, jwt_required, admin_required, get_current_user, user_is_admin
+from base.utils.tools import validate_report, upload_file
 
 from caendr.services.nemascan_mapping import create_new_mapping, get_mapping, get_all_mappings, get_user_mappings
-from caendr.services.cloud.storage import get_blob, generate_blob_url, get_blob_list
+from caendr.services.cloud.storage import get_blob, generate_blob_url, get_blob_list, check_blob_exists
 from caendr.models.datastore import SPECIES_LIST
-from caendr.models.error import CachedDataError, DuplicateDataError
-from caendr.utils.data import unique_id
+from caendr.models.error import (
+    CachedDataError,
+    DataFormatError,
+    DuplicateDataError,
+    FileUploadError,
+    ReportLookupError,
+)
 
-uploads_dir = os.path.join('./', 'uploads')
-os.makedirs(uploads_dir, exist_ok=True)
 
 
 genetic_mapping_bp = Blueprint(
@@ -64,16 +67,30 @@ def submit():
   # Validate form
   if not form.validate_on_submit():
     flash("You must include a description of your data and a TSV file to upload", "error")
-    return redirect(url_for('genetic_mapping.mapping'))
+    return redirect(url_for('genetic_mapping.genetic_mapping'))
 
   # Read fields from form
   label   = bleach.clean(request.form.get('label'))
   species = bleach.clean(request.form.get('species'))
 
-  # Save uploaded file to server temporarily with unique generated name
-  # TODO: Is there a better way to generate this name? E.g. using a Tempfile?
-  local_path = os.path.join(uploads_dir, secure_filename(f'{ unique_id() }.tsv'))
-  request.files['file'].save(local_path)
+  # Check that label is not empty
+  # TODO: Move to FileUploadForm validator?
+  if len(label.strip()) == 0:
+    flash('Invalid label.', 'danger')
+    return redirect(url_for('genetic_mapping.genetic_mapping'))
+
+  # Check that species is valid
+  # TODO: Move to FileUploadForm validator?
+  if species not in SPECIES_LIST.keys():
+    flash('Invalid species.', 'danger')
+    return redirect(url_for('genetic_mapping.genetic_mapping'))
+
+  # Save uploaded file to server temporarily, displaying an error message if this fails
+  try:
+    local_path = upload_file(request, 'file')
+  except FileUploadError as ex:
+    flash('There was a problem uploading your file to the server. Please try again.', 'danger')
+    return redirect(url_for('genetic_mapping.genetic_mapping'))
 
   # Package submission data together into dict
   data = {
@@ -95,12 +112,40 @@ def submit():
     flash('It looks like that data has already been submitted - redirecting to the saved results', 'danger')
     return redirect(url_for('genetic_mapping.report', id = ex.args[0].id))
 
+  except DataFormatError as ex:
+
+    # Log the error
+    logger.error(f'Data formatting error in Genetic Mapping: {ex.msg} (Line: {ex.line})')
+
+    # Construct user-friendly error message with optional line number
+    msg = f'There was an error with your file. { ex.msg }'
+    if ex.line is not None:
+      msg += f' (Line: { ex.line })'
+
+    # Flash the error message & refresh the page
+    flash(msg, 'danger')
+    return redirect(url_for('genetic_mapping.genetic_mapping'))
+
   except Exception as ex:
-    logger.error(ex)
-    logger.error(f"message: {getattr(ex, 'message', '')}")
-    logger.error(f"description: {getattr(ex, 'description', '')}")
-    flash(f"Unable to submit your request: \"{ getattr(ex, 'description', '') }\"", 'danger')
-    return redirect(url_for('genetic_mapping.mapping'))
+
+    # Get message and description, if they exist
+    msg  = getattr(ex, 'message',     '')
+    desc = getattr(ex, 'description', '')
+
+    # Log the full error
+    logger.error(f'Error submitting Genetic Mapping. Message = "{msg}", Description = "{desc}". Full Error: {ex}')
+
+    # Flash an error message for the user
+    # TODO: Update this wording
+    flash(f"Unable to submit your request.", 'danger')
+    return redirect(url_for('genetic_mapping.genetic_mapping'))
+
+  # Ensure the local file is removed
+  finally:
+    try:
+      os.remove(local_path)
+    except FileNotFoundError:
+      pass
 
 
 @genetic_mapping_bp.route('/genetic-mapping/reports/all', methods=['GET', 'POST'])
@@ -128,22 +173,46 @@ def user_reports():
 @genetic_mapping_bp.route('/genetic-mapping/report/<id>', methods=['GET'])
 @jwt_required()
 def report(id):
-  title = 'Genetic Mapping Report'
-  alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
-  user = get_current_user()
+
+  # Get user and requested mapping
   mapping = get_mapping(id)
-  subtitle = mapping.label +': ' + mapping.trait
-  fluid_container = True
-  data_url = generate_blob_url(mapping.get_bucket_name(), mapping.get_data_blob_path())
-  # if hasattr(mapping, 'mapping_report_url'):
+
+  # Ensure the report exists and the user has permission to view it
+  try:
+    validate_report(mapping)
+  except ReportLookupError as ex:
+    flash(ex.msg, 'danger')
+    abort(ex.code)
+
+  # Get a link to download the data, if the file exists
+  if check_blob_exists(mapping.get_bucket_name(), mapping.get_data_blob_path()):
+    data_download_url = generate_blob_url(mapping.get_bucket_name(), mapping.get_data_blob_path())
+  else:
+    data_download_url = None
+
+  # Get a link to the report files, if they exist
   if mapping.report_path is not None:
     report_url = generate_blob_url(mapping.get_bucket_name(), mapping.report_path)
   else:
     report_url = None
 
-  report_status_url = url_for("genetic_mapping.report_status", id=id)
+  return render_template('tools/genetic_mapping/report.html', **{
 
-  return render_template('tools/genetic_mapping/report.html', **locals())
+    # Page info
+    'title': 'Genetic Mapping Report',
+    'subtitle': f'{mapping.label}: {mapping.trait}',
+    'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+
+    # Job status
+    'mapping_status': mapping['status'],
+
+    # URLs
+    'report_url': report_url,
+    'report_status_url': url_for("genetic_mapping.report_status", id=id),
+    'data_download_url': data_download_url,
+
+    'fluid_container': True,
+  })
 
 
 @genetic_mapping_bp.route('/genetic-mapping/report/<id>/fullscreen', methods=['GET'])

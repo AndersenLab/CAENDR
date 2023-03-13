@@ -131,13 +131,13 @@ class DatasetManager:
     from ._db_external import (
         fetch_external_db,
         prefetch_all_external_dbs,
-        fetch_gene_gff_db,
-        fetch_gene_gtf_db,
-        fetch_gene_ids_db,
     )
 
     from ._db_internal import (
         fetch_internal_db,
         prefetch_all_internal_dbs,
+        fetch_gene_gff_db,
+        fetch_gene_gtf_db,
+        fetch_gene_ids_db,
         fetch_sva_db,
     )

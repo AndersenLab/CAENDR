@@ -59,13 +59,6 @@ def create_new_mapping(user, data, no_cache=False):
     logger.debug('Nemascan Mapping with identical Data Hash exists. Returning cached report.')
     raise
 
-  # Ensure the local file is removed
-  finally:
-    try:
-      os.remove(data['filepath'])
-    except FileNotFoundError:
-      pass
-
 
 
 def update_nemascan_mapping_status(id: str, status: str=None, operation_name: str=None):

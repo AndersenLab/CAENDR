@@ -6,7 +6,7 @@
   <div class="mb-4">
     <label for="speciesSelect" class="form-label">Species:</label>
     <select
-      class="form-select" aria-label="Choose species" id="speciesSelect" name="species"
+      class="form-select" aria-label="Choose species" id="speciesSelect" name="species" required
       {% if onchange %}onchange="{{ onchange }}(this.value)"{% endif %}
     >
       <option selected value="">Choose</option>

@@ -107,7 +107,7 @@ function get_track(track_name) {
   // Retrieve or generate the track
   // If track is in default set, use it
   if (track_name in trackset) {
-    var track = trackset[track_name];
+    var track = JSON.parse( trackset[track_name] );
   }
 
   // If not, generate the track from a template

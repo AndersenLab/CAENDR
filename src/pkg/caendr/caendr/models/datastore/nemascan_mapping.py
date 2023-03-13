@@ -1,7 +1,7 @@
 from caendr.services.logger import logger
 
 from caendr.models.datastore import DataJobEntity
-from caendr.services.cloud.storage import get_blob_list
+from caendr.services.cloud.storage import check_blob_exists, get_blob_list
 
 
 NEMASCAN_REPORT_PATH_PREFIX = 'reports'
@@ -66,17 +66,27 @@ class NemascanMapping(DataJobEntity):
 
   @property
   def report_path(self):
+
+    # Check if this value has been cached already, and if so, make sure the file exists
     path = self._get_meta_prop('report_path')
     if path is not None:
-      return path
+      if check_blob_exists(self.get_bucket_name(), path):
+        return path
+      else:
+        logger.error(f'Genetic Mapping report {self.id} lists its report path as "{path}", but this file does not exist. Recomputing...')
 
-    # TODO: Don't try to compute if status is ERROR??
+    # If job threw an error, don't search for report path
+    if self['status'] == 'ERROR':
+      logger.error(f'Trying to compute report path for Genetic Mapping report "{self.id}", but job returned an error.')
+      return None
 
-    logger.debug(f'Looking for a NemaScan Mapping HTML report: {self.id}')
-
+    # Get a list of all files with this report's prefix
+    logger.debug(f'Looking for a Genetic Mapping HTML report for ID "{self.id}"')
     result = list(get_blob_list(self.get_bucket_name(), self.get_report_blob_prefix()))
     logger.debug(result)
 
+    # Search the list for an HTML file, and return it if found
+    # Implicitly returns None if no such file is found
     for file in result:
       logger.debug(file.name)
       if file.name.endswith('.html'):

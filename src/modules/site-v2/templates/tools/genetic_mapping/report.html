@@ -8,7 +8,11 @@
 
   <div class="row">
     <div class="col-lg-2 col-lg-offset-3 col-md-4 col-sm-4 btn-mid-row">
-      <a class="btn btn-block btn-nu " href="{{ data_url }}" role="button">
+    {% if data_download_url %}
+      <a class="btn btn-block btn-nu" href="{{ data_download_url }}" role="button">
+    {% else %}
+      <a class="btn btn-block btn-nu" href="" role="button" disabled>
+    {% endif %}
         <span class="glyphicon glyphicon-download" aria-hidden="true"></span> 
         Download Data
       </a>
@@ -45,7 +49,7 @@
   </div>{# /row #}
 
 
-{% if mapping.status == 'COMPLETE' %}
+{% if mapping_status == 'COMPLETE' %}
 
   <div class="row">
     <div class="col-md-12 text-center" >
@@ -71,7 +75,7 @@
     </div>
   </div> {# /row #}
 
-{% elif mapping.status == 'ERROR' %}
+{% elif mapping_status == 'ERROR' %}
 
 <div class="row">
   <div class='col-md-12'>

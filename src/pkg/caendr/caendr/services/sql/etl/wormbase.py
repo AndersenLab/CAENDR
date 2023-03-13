@@ -123,7 +123,7 @@ def parse_gene_gff_summary(species, gff_fname: str):
         logger.debug(f"Processed {idx} lines;{gene_count} genes; {line[0]}:{line[4]}")
 
       # Only parse if line represents a gene from Wormbase
-      if 'WormBase' in line[1] and 'gene' in line[2]:
+      if ('WormBase' in line[1] or 'AndersenLab' in line[1]) and 'gene' in line[2]:
 
         # Convert fields column into dict object & include chromosome information
         gene = dict([x.split("=") for x in line[8].split(";")])

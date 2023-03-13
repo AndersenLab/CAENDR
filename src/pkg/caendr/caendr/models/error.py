@@ -67,7 +67,10 @@ class DuplicateTaskError(InternalError):
   
 class DataFormatError(InternalError):
   description = "Error parsing data with expected format"
-  
+  def __init__(self, msg, line: int=None):
+    self.msg  = msg.strip()
+    self.line = line
+
 class GoogleSheetsParseError(InternalError):
   description = "Unable to parse Google Sheets document"
 
@@ -82,3 +85,15 @@ class NonUniqueEntity(InternalError):
     self.matches = matches
     self.description = f'Found multiple {kind} entities with field "{key}" = "{val}".'
     super().__init__()
+
+class ReportLookupError(InternalError):
+  def __init__(self, msg, code):
+    self.msg = msg
+    self.code = code
+
+class FileUploadError(InternalError):
+  description = "Could not upload file"
+
+  def __init__(self, description=None):
+    if description is not None:
+      self.description = description
