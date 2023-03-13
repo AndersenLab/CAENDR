@@ -1,7 +1,7 @@
 
 <style>
   #map {
-    height: 500px;
+    height: 50vh;
     width: 100%;
     z-index: 1
   }
@@ -35,7 +35,7 @@
   }
 </style>
 
-<div>
+<div class="position-relaitve">
   <div class="map-container">
     <div id="map"></div>
     <form id="strains">
@@ -48,7 +48,7 @@
    
     <div class='text-center'>
         <small><strong>Click a pin to see information about <i>species</i> wild isolate</strong></small>
-    </div>{# /text-center #}
+    </div>
 </div>
 
 {% block script %}
@@ -86,27 +86,27 @@ const icon_hover = L.icon({
 });
 {% endautoescape %}
 
-  const MB_ATTR = 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, METI, TomTom, 2012';
-  const MB_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
-  const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-  const OSM_ATTRIB = '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+const MB_ATTR = 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, METI, TomTom, 2012';
+const MB_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
+const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+const OSM_ATTRIB = '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
-  const southWest = L.latLng(-90, -180);
-  const northEast = L.latLng(90, 180);
-  const bounds = L.latLngBounds(southWest, northEast);
+const southWest = L.latLng(-90, -180);
+const northEast = L.latLng(90, 180);
+const bounds = L.latLngBounds(southWest, northEast);
 
-  const map = L.map('map', {minZoom:2, maxBounds: bounds}).setView([20, -100], 2);
-  L.tileLayer(MB_URL, {attribution: MB_ATTR, id: 'mapbox.streets', continuousWorld: false, worldCopyJump: true}).addTo(map);
-  const strain_names = [];
-  const elegans = [];
-  const briggsae = [];
-  const tropicalis = [];
+const map = L.map('map', {minZoom:2, maxBounds: bounds}).setView([20, -100], 2);
+L.tileLayer(MB_URL, {attribution: MB_ATTR, id: 'mapbox.streets', continuousWorld: false, worldCopyJump: true}).addTo(map);
+const strain_names = [];
+const elegans = [];
+const briggsae = [];
+const tropicalis = [];
 
-  const Species = {
+const Species = Object.freeze({
   ELEGANS: 'Caenorhabditis elegans',
   BRIGGSAE: 'Caenorhabditis briggsae',
   TROPICALIS: 'Caenorhabditis tropicalis'
-};
+});
 
 function naturalCompare(a, b) {
   const ax = [], bx = [];
