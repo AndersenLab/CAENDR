@@ -8,7 +8,10 @@
     <script type="text/javascript" src="https://cdn.datatables.net/colreorder/1.5.3/js/dataTables.colReorder.min.js"></script>
 {% endblock %}
 
+
 {% block content %}
+{% from "_includes/strain-listing.html" import species_selector, list_strains %}
+
 <div class="container-fluid px-5">
   <div class="d-flex justify-content-around flex-wrap mt-2 pb-5">
     <div class="col-10 col-md-8 col-xl-3 mb-5" style="max-height:80vh;">
@@ -26,15 +29,9 @@
           <div class="text-bg-light mb-5 p-3 p-md-5 rounded-2 shadow-sm">
              <!-- Input Form -->
       <form>
-        <div class="mb-4">
-          <label for="speciesSelect" class="form-label">Species:</label>
-          <select class="form-select" aria-label="Choose species" id="speciesSelect">
-            <option selected>Choose</option>
-            <option value="1">C. Elegans</option>
-            <option value="2">C. Briggsae</option>
-            <option value="3">C. Tropicalis</option>
-          </select>
-        </div>
+        <!-- Species -->
+        {{ species_selector(species_list, "update_species") }}
+        <!-- /Species -->
         <!-- Gene Search -->
         <div class="mb-4">
           <label for="gene-search" class="form-label">Gene Search:</label>
@@ -138,15 +135,13 @@
                 <table class="table table-striped table-hover">
                   <caption class="visually-hidden">A list of strains.</caption>
                   <tbody>
-                    {% for strain in strain_listing %}
-                    <tr class="select-searchable">
+                    {% call(species, strain) list_strains(species_list, strain_listing) %}
                       <td>
-                        <input class="toggle-strain-chk" type="checkbox" data-column="{{strain}}" id="toggle_{{strain}}"
+                        <input class="toggle-strain-chk toggle-strain-chk-{{species}}" type="checkbox" data-column="{{strain}}" id="toggle_{{strain}}"
                           checked />
                         <label for="toggle_{{strain}}"> {{ strain }} </label>
                       </td>
-                    </tr>
-                    {% endfor %}
+                    {% endcall %}
                   </tbody>
                 </table>
               </form>
@@ -226,7 +221,12 @@
 {% endblock %}
 
 {% block script %}
+{% from "_includes/macros.html" import unpack_species_list %}
+<script src="{{ url_for('static', filename='js/strains.js') }}"></script>
 <script>
+
+
+/* Variables */
 
 const doneTypingInterval = 1000;  //time in ms (5 seconds)
 const col_max_len = 20;
@@ -246,10 +246,72 @@ let toggle_strain_lock = false;
 let result_data = {};
 let cachedTargets = {};
 
+// Species dictionary & selected species
+const species_list = {{ unpack_species_list(species_list, species_fields) }};
+var species = null
+
+const columnList = JSON.parse('{{ columns | tojson }}');
+
+const strainListing = JSON.parse('{{ strain_listing | tojson }}');
+
+
+
+/* Species */
+
+// Track changes to selected species
+function update_species(species_id) {
+
+  // Check if value provided
+  if ( !species_id ) {
+    return
+  }
+
+  // Set species object from ID
+  species = species_list[species_id];
+
+  // Reprocess gene search with the new species
+  $("#loading-search-table").fadeIn();
+  process_gene_search();
+
+  // Clear the interval search on switching species, to help avoid confusion
+  clear_interval_search();
+
+  // Show only strains matching current species
+  filter_strains(species_id)
+
+  // Update selected strains set to match selections for current species
+  update_selected_strains();
+
+  // Clear any previous species data from the data table
+  clearDataTable();
+}
+
+
+
+/* Strains */
+
+function update_selected_strains() {
+
+  // Clear selected strains
+  selected_strains.clear();
+
+  // Loop through each strain checkbox associated with the current species
+  $(`.toggle-strain-chk-${species.name}`).each((i, obj) => {
+
+    // If box is checked, add to strain set
+    if (obj.checked) {
+      selected_strains.add(obj.dataset.column);
+    }
+  });
+}
+
+
+
+/* CSV Download */
 
 async function downloadCSV(json_data) {
   const csrfToken = "{{ form.csrf_token._value() }}";
-  const url = "{{ url_for('variant_annotation.vbrowser_download_csv') }}"
+  const url = "{{ url_for('variant_annotation.download_csv') }}"
   const res = await fetch(url, {
     method: "POST",
     credentials: "include",
@@ -282,11 +344,9 @@ function onDownload() {
   downloadCSV(jsonData);
 }
 
-const strainListing = JSON.parse('{{ strain_listing | tojson }}');
 
-function init_selected_strain_set() {
-  strainListing.forEach(strain => selected_strains.add(strain));
-}
+
+/* Gene Search */
 
 function process_gene_search() {
   $("#loading-search-table").fadeOut();
@@ -296,7 +356,7 @@ function process_gene_search() {
   } else {
     $("#orthologs").html("");
     $.ajax({
-         url: "{{ url_for('api_gene.api_search_combined', query='') }}" + gene,
+         url: "{{ url_for('api_gene.api_search_genes', query='') }}" + gene + '?species=' + species.name,
          method: "GET",
          contentType: 'application/xml',
          }).done(function(results) {
@@ -304,7 +364,11 @@ function process_gene_search() {
           genes.forEach(gene => {
             const position = gene["chrom"] + ":" + gene["start"] + "-" + gene["end"];
             const link = `<a onclick="set_position('${position}')" link='${position}' class='ortholink'>${gene['gene_id']}</a>`;
-            const result = [gene['homolog_gene'] || gene["gene_symbol"], gene['sequence_name'], link]
+            const result = [
+              gene['gene_symbol'],
+              gene['sequence_name'],
+              link,
+            ]
             const table_data = "<tr><td>" + result.join("</td><td>").slice(0,-4) + "</tr>";
             $("#orthologs").append(table_data);
           });
@@ -318,18 +382,19 @@ function set_position(pos) {
   $('#search-interval-btn').click();
 }
 
-function chunk_substr(data, size) {
-  if (typeof data === 'string' && data.length > col_max_len) {
-    let numChunks = Math.ceil(data.length / size)
-    let chunks = new Array(numChunks)
-    for (let i = 0, o = 0; i < numChunks; ++i, o += size) {
-      chunks[i] = data.substr(o, size)
-    }
-    return chunks.join('<br/>')
-  } else {
-    return data;
-  }
+function clear_interval_search() {
+  $('#interval').val(null);
 }
+
+function toggleDisableForm(disabled = false) {
+  // false = form enabled, true = form disabled
+  $("#search-interval-btn").attr("disabled", disabled);
+  $('#interval').attr("disabled", disabled);
+}
+
+
+
+/* Table Visibility */
 
 function hideTable() {
   $("#result-table").fadeOut();
@@ -341,24 +406,31 @@ function showTable() {
   $("#result-table").fadeIn();
 }
 
-function toggleDisableForm(disabled = false) {
-  // false = form enabled, true = form disabled
-  $("#search-interval-btn").attr("disabled", disabled);
-  $('#interval').attr("disabled", disabled);
-}
+
+
+/* Table Filtering */
 
 function filter_rows_by_strains() {
-  /* build regex from strain set and filter */
-  let r = '|';
-  selected_strains.forEach(function(s) { if (s) { r += `${s},|` } });
-  if (r === '|') {
-    r = '^$';  /* prevent matching all with empty regex */
-  }
-  var rex = new RegExp(r);
+
+  // Construct a RegEx string to search for strain names:
+  //   - Add the word boundary token '\b' to the end of each strain name
+  //   - Concatenate all names with 'or' operator, and default to empty
+  //   - Default to empty expression to prevent matching everything if no strains selected
+  var r = [ ...selected_strains ].map((s) => `${s}\\b`).join('|') || '^$';
+
+  // Hide the table while filtering
   hideTable();
-  $('#variant-table').dataTable().fnFilter(rex, 'strains:name', true, false);
+
+  // Construct the filtered table
+  // Note: Don't create a RegExp object, or fnFilter will only work if a '|' character is added to the front and end
+  //       of the expression. Not sure why this happens...
+  $('#variant-table').dataTable().fnFilter(r, 'strains:name', true, false);
   $('#variant-table').DataTable().draw();
+
+  // If specific strains are selected, highlight them in the table
   highlight_selected_strains();
+
+  // Show the table
   showTable();
 }
 
@@ -374,11 +446,23 @@ function filter_rows_by_impact() {
     $('#variant-table').dataTable().fnFilter(r, 'variant_impact:name', true, false);
 }
 
-function highlight_selected_strains() {
-  $("mark").removeClass('hl-mark');
-  selected_strains.forEach(strain => {
-    $(`.mark_${strain}`).addClass('hl-mark');
-  });
+
+
+
+/* Result Table -- General Columns */
+
+
+function chunk_substr(data, size) {
+  if (typeof data === 'string' && data.length > col_max_len) {
+    let numChunks = Math.ceil(data.length / size)
+    let chunks = new Array(numChunks)
+    for (let i = 0, o = 0; i < numChunks; ++i, o += size) {
+      chunks[i] = data.substr(o, size)
+    }
+    return chunks.join('<br/>')
+  } else {
+    return data;
+  }
 }
 
 function processCol(col, id) {
@@ -387,6 +471,37 @@ function processCol(col, id) {
   }
   return chunk_substr(col, col_max_len)
 }
+
+
+
+/* Result Table -- Strains Column */
+
+function highlight_selected_strains() {
+  $("mark").removeClass('hl-mark');
+  selected_strains.forEach(strain => {
+    $(`.mark_${strain}`).addClass('hl-mark');
+  });
+}
+
+function renderStrainsCol(data, type, row) {
+  // let result = '<mark></mark>';
+  let strains = data.split(',');
+
+  // Map each strain to a mark tag
+  let result = strains.map( (strain) => `<mark class="mark_${strain}">${strain}</mark>` )
+
+  // Add a line break after every strains_per_row elements
+  for (let i = strains_per_row; i < result.length; i += strains_per_row) {
+    result[i] = "<br/>" + result[i];
+  }
+
+  // Concatenate result together with commas and return
+  return result.join(', ');
+}
+
+
+
+/* Result Table -- Target Consequence Column */
 
 function renderTargetConsequenceCol(data, type, row) {
   if (data) {
@@ -432,7 +547,7 @@ function fetchTargetConsequence(el, q) {
       type: "POST",
       contentType: 'application/json',
       dataType: 'json',
-      url: "{{ url_for('variant_annotation.vbrowser_query_position') }}",
+      url: "{{ url_for('variant_annotation.query_position') }}",
       data: JSON.stringify({query: q}),
       success:function(result) {
         cachedTargets[q] = result;
@@ -462,7 +577,9 @@ function expandTargetConsequence(el, pos) {
   }
 }
 
-const columnList = JSON.parse('{{ columns | tojson }}');
+
+
+/* Table Data */
 
 function populateDataTable() {
   // clear the table before populating it with more data
@@ -481,19 +598,17 @@ function populateDataTable() {
   dTable.columns.adjust().draw();
 }
 
-
-function renderStrainsCol(data, type, row) {
-  let result = '<mark></mark>';
-  let strains = data.split(',');
-  let i = 0;
-  for(let strain of strains) {
-    if ((++i % strains_per_row) === 0) {
-      result += '<br/>'
-    }
-    result += `<mark class="mark_${strain}">${strain},</mark>`;
+function clearDataTable() {
+  if (dTable !== null) {
+    dTable.clear();
+    dTable.columns.adjust().draw();
   }
-  return result;
 }
+
+
+
+
+/* Initialization - Helper functions */
 
 
 function init_data_table() {
@@ -555,11 +670,16 @@ function select_default_columns() {
 }
 
 
+
+/* Initialization - Set up event handlers */
+
 $(document).ready(function() {
+
+  // Get the default species from the selector
+  update_species();
 
   (function($) {
 
-    init_selected_strain_set();
     init_data_table();
 
     select_default_columns();
@@ -578,13 +698,7 @@ $(document).ready(function() {
 
     /* Strain search */
     $('#strain-filter').keyup(function() {
-        $('.select-searchable').hide();
-        $(this).val().split(',').forEach(function(r) {
-            var rex = new RegExp(r, "i");
-            $('.select-searchable').filter(function() {
-                return rex.test($(this).text());
-            }).show();
-        });
+        filter_strains(species['name'], $(this).val().split(','))
     });
 
     /* Filter by impact */
@@ -603,14 +717,12 @@ $(document).ready(function() {
       toggle_strain_lock = true;
       const state = $(this).prop('checked');
 
-      $(".toggle-strain-chk").each(function(i, e) {
+      // Apply new selection to all strains for current species
+      $(`.toggle-strain-chk-${species.name}`).each(function(i, e) {
         e.checked = state;
       });
-      if (state) {
-        init_selected_strain_set();
-      } else {
-        selected_strains.clear();
-      }
+      update_selected_strains();
+
       setTimeout(filter_rows_by_strains, 50); /* allow checkbox to be clicked before processing */
       setTimeout(function() { 
         toggle_strain_lock = false;
@@ -674,7 +786,7 @@ $(document).ready(function() {
 				type: "POST",
         contentType: 'application/json',
         dataType: 'json',
-				url: "{{ url_for('variant_annotation.vbrowser_query_interval') }}",
+				url: "{{ url_for('variant_annotation.query_interval') }}",
 				data: JSON.stringify(data),
 				success:function(result) {
           const has_results = !!Object.keys(result).length;
@@ -708,4 +820,3 @@ $(document).ready(function() {
 
 </script>
 {% endblock %}
-

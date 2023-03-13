@@ -43,17 +43,18 @@ def start_indel_primer_pipeline(task: IndelPrimerTask):
 def _generate_indel_primer_pipeline_req(task: IndelPrimerTask):
   ip = IndelPrimer(task.id)
   
+  # TODO: Should be able to replace with ip.get_container().uri()
   image_uri = f"{task.container_repo}/{task.container_name}:{task.container_version}"
   
   container_name = f"indel-primer-{ip.id}"
   environment = {
-    "INDEL_STRAIN_1":               ip.strain_1,
-    "INDEL_STRAIN_2":               ip.strain_2,
-    "INDEL_SITE":                   ip.site,
-    "RESULT_BUCKET":                ip.get_bucket_name(),
-    "RESULT_BLOB":                  ip.get_result_blob_path(),
-    "INDEL_PRIMER_SV_BED_FILENAME": ip.sv_bed_filename,
-    "INDEL_PRIMER_SV_VCF_FILENAME": ip.sv_vcf_filename,
+    "INDEL_STRAIN_1": ip.strain_1,
+    "INDEL_STRAIN_2": ip.strain_2,
+    "INDEL_SITE":     ip.site,
+    "RESULT_BUCKET":  ip.get_bucket_name(),
+    "RESULT_BLOB":    ip.get_result_blob_path(),
+    "SPECIES":        ip.species,
+    "RELEASE":        ip.release,
   }
 
   service_account = ServiceAccount(email=sa_email, scopes=SCOPES)

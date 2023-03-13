@@ -43,22 +43,23 @@ def start_nemascan_pipeline(task: NemaScanTask):
 
 def _generate_nemascan_pipeline_req(task: NemaScanTask):
   m = NemascanMapping(task.id)
-  
+
   trait_file = f"gs://{m.get_bucket_name()}/{m.get_data_blob_path()}"
   output_dir = f"gs://{m.get_bucket_name()}/{m.get_result_path()}"
   work_dir = f"gs://{MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME}/{m.data_hash}"
   data_dir = f"gs://{m.get_bucket_name()}/{m.get_input_data_path()}"
   google_project = GOOGLE_CLOUD_PROJECT_ID
   google_zone = GOOGLE_CLOUD_ZONE
-  
+
   image_uri = f"{task.container_repo}/{task.container_name}:{task.container_version}"
-  
+
   container_name = f"nemascan-{m.id}"
   environment = {
     "USERNAME": m.username if m.username else None,
     "EMAIL": m.email if m.email else None,
-    "TRAIT_FILE": trait_file, 
-    "OUTPUT_DIR": output_dir, 
+    "SPECIES": m.species,
+    "TRAIT_FILE": trait_file,
+    "OUTPUT_DIR": output_dir,
     "WORK_DIR": work_dir,
     "DATA_DIR": data_dir,
     "GOOGLE_PROJECT": google_project,

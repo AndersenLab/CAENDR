@@ -11,22 +11,52 @@ open -a Finder ~/.gcp
 ```
 The last line should open MacOS Finder on the `~/.gcp/` folder. Drop the `.json` service account file there. 
 
-## MacOS setup
+## MacOS setup - Requirements
 
-*Requirements*
+### Visual Studio Code
 
-* VS Code
-* Docker Mac (https://docs.docker.com/desktop/install/mac-install/) 
-* homebrew (install from https://brew.sh/)
+Download from https://code.visualstudio.com/
 
-Steps:
+### Docker Mac 
+
+Download from https://docs.docker.com/desktop/install/mac-install/
+
+### Homebrew
+
 ```
-brew update
-brew install python-devel
-brew install pyenv
+$ cd $HOME
+$ mkdir homebrew && curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C homebrew
 ```
 
-Edit your `~/.bash_profile` and add this to the bottom of the file. If the file doens't exist, create a new one. 
+Add this line to the bottom of your file `~/.bash_profile`:
+```
+export PATH=$HOME/homebrew/bin:$PATH
+```
+
+
+### Set terminal to run in x86_64 mode under Rosetta
+- Open Finder on your Mac
+- Navigate to Applications/Utilities/Terminal.app, 
+- Right-click/GetInfo
+- Enable the checkbox "Open with Rosetta". 
+- Close and reopen the terminal app. 
+- Inside Terminal, type;
+```
+$ arch
+```
+Expected result:
+```
+i386
+```
+
+### Install Dependencies:
+```
+arch -x86_64 brew  update
+arch -x86_64 brew install python-devel
+arch -x86_64 brew install pyenv OpenSSL readline gettext xz
+```
+
+Edit your `~/.bash_profile` and add this to the bottom of the file. If the file `~/.bash_profile` doens't exist check if you are using a different shell (eg: zsh, etc). In that case you might need to edit the file `~/.zshrc` or `~/.zprofile`. 
 
 ```
 # if using bash, do 
@@ -67,25 +97,58 @@ cd src/modules/site
 make clean
 make configure
 make cloud-sql-proxy-start
-
-# once you are done working on the PR, then stop the 
-make cloud-sql-proxy-stop
-# if this does not stop the container, do this: 
-docker ps
-(base) rbv218@imac:site{docs/developer-getting-started} $ docker ps
-CONTAINER ID   IMAGE                                            COMMAND                  CREATED          STATUS          PORTS                    NAMES
-75ef941c1e64   gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine   "/cloud_sql_proxy -i…"   29 minutes ago   Up 29 minutes   0.0.0.0:5432->5432/tcp   caendr-cloud-sql-proxy-1
-
-then stop the container manually with:
-$ docker kill 75ef941c1e64
- 
 ```
 
-Expected result:
+Check that the cloud-sql-proxy docker container is running:
 ```
 $ docker ps
-CONTAINER ID   IMAGE                                            COMMAND                  CREATED         STATUS         PORTS                    NAMES
-75ef941c1e64   gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine   "/cloud_sql_proxy -i…"   3 minutes ago   Up 3 minutes   0.0.0.0:5432->5432/tcp   caendr-cloud-sql-proxy-1
+```
+
+Expected Result:
+```
+CONTAINER ID   IMAGE                                            COMMAND                  CREATED       STATUS        PORTS                    NAMES
+9413d4f448f0   gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine   "/cloud_sql_proxy -i…"   3 weeks ago   Up 23 hours   0.0.0.0:5432->5432/tcp   caendr-cloud-sql-proxy-1
+```
+Please note that the CONTAINER_ID will be different on your machine. 
+
+Keep this docker container running while running the site below. 
+
+## To make changes to the NEW site-v2 templates*
+Open a second terminal window 
+```
+export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
+export ENV=main
+cd src/modules/site-v2
+make configure
+make dot-env
+make venv
+code ../../..
+```
+
+The last command will open Visual Studio Code at the root of the project. Form the DEBUG->List of options, select "Run Site-v2 (requires a local Postgres instance or cloud-sql-proxy)" and click "Play'.
+
+## Stopping the Database Proxy
+
+Once you are done working on the site and no longer need the database, then close the connection:
+
+```
+make cloud-sql-proxy-stop
+```
+
+if this does not stop the container, do this: 
+```
+docker ps
+```
+
+Expected Result:
+```
+CONTAINER ID   IMAGE                                            COMMAND                  CREATED          STATUS          PORTS                    NAMES
+75ef941c1e64   gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine   "/cloud_sql_proxy -i…"   29 minutes ago   Up 29 minutes   0.0.0.0:5432->5432/tcp   caendr-cloud-sql-proxy-1
+```
+
+Find the CONTAINER_ID (first column) and stop the container manually with:
+```
+$ docker kill 75ef941c1e64
 ```
 
 *To make changes to the Legacy site (currently in production)*
@@ -100,17 +163,6 @@ make venv
 code ../../..
 ```
 
-*To make changes to the NEW site-v2 templates*
-Open a second terminal window 
-```
-export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
-export ENV=main
-cd src/modules/site-v2
-make configure
-make dot-env
-make venv
-code ../../..
-```
 
 
 ## Linux Setup
@@ -311,4 +363,26 @@ A: Install via homebrew:
 ```
 brew install postgresql
 ```
+
+Q:  I'm seeing this error when running `make venv` from the `src/modules/site-v2` folder: "_libintl_textdomain", referenced from:
+      _PyIntl_textdomain in libpython3.7m.a(_localemodule.o)
+      _PyIntl_textdomain in libpython3.7m.a(_localemodule.o)
+A: Install gettext
+```
+$ arch -x86_64 brew install gettext
+```
+
+Q: I'm seeing this error when runing `make venv` from the `src/modules/site-v2` folder: "ModuleNotFoundError: No module named 'readline'"
+A: 
+```
+$ arch -x86_64 brew install readline
+```
+
+Q: I'm seeing this error when running `make venv` from the `src/modules/site-v2` folder: 
+"ERROR: The Python ssl extension was not compiled. Missing the OpenSSL lib?"
+A: 
+```
+$ arch -x86_64 brew install openssl
+```
+
 
