@@ -47,7 +47,7 @@
   </div>
    
     <div class='text-center'>
-        <small><strong>Hover over or click a pin to see information about a <i>C. elegans</i> wild isolate</strong></small>
+        <small><strong>Click a pin to see information about <i>species</i> wild isolate</strong></small>
     </div>{# /text-center #}
 </div>
 
@@ -97,15 +97,19 @@ const icon_hover = L.icon({
 
   const map = L.map('map', {minZoom:2, maxBounds: bounds}).setView([20, -100], 2);
   L.tileLayer(MB_URL, {attribution: MB_ATTR, id: 'mapbox.streets', continuousWorld: false, worldCopyJump: true}).addTo(map);
-  let strain_info = [];
   const strain_names = [];
   const elegans = [];
   const briggsae = [];
   const tropicalis = [];
 
+  const Species = {
+  ELEGANS: 'Caenorhabditis elegans',
+  BRIGGSAE: 'Caenorhabditis briggsae',
+  TROPICALIS: 'Caenorhabditis tropicalis'
+};
 
 function naturalCompare(a, b) {
-    const ax = [], bx = [];
+  const ax = [], bx = [];
   a = a.strain
   b = b.strain
 
@@ -123,21 +127,24 @@ function naturalCompare(a, b) {
 }
 
 function set_marker_color (species) {
-  if (species === 'Caenorhabditis elegans') {
+  if (species === Species.ELEGANS) {
     return icon_elegans;
   }
-  if (species === 'Caenorhabditis briggsae') {
+  if (species === Species.BRIGGSAE) {
     return icon_briggsae;
   }
-  if (species === 'Caenorhabditis tropicalis') {
+  if (species === Species.TROPICALIS) {
     return icon_tropicalis;
   }
 }
 
-const data = {{ strain_listing|tojson|safe }}
-  data.sort(naturalCompare)
-  strain_info = data;
-  data.forEach(function(d) {
+function formatDate(date) {
+  return String(date).replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3")
+}
+
+const strain_info = {{ strain_listing|tojson|safe }};
+strain_info.sort(naturalCompare)
+strain_info.forEach(function(d) {
   if (d.latitude) {
     strain_names.push(d.strain);
     const popup_content = `
@@ -148,8 +155,8 @@ const data = {{ strain_listing|tojson|safe }}
         ${d.isotype_ref_strain ? `<li><strong>Reference Strain:</strong> ${d.isotype_ref_strain}</li>` : ''}
         ${d.strain ? `<li><strong>Strains:</strong> ${d.strain}</li>` : ''}
         ${d.previous_names ? `<li><strong>Alternative Names:</strong> ${d.previous_names}</li>` : ''}
-        ${d.release ? `<li><strong>Release Date:</strong> ${String(d.release).replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3")}</li>` : ''}
-        ${d.release ? `<li><strong>Substrate:</strong> ${d.substrate}</li>` : ''}
+        ${d.release ? `<li><strong>Release Date:</strong> ${formatDate(d.release)}</li>` : ''}
+        ${d.substrate ? `<li><strong>Substrate:</strong> ${d.substrate}</li>` : ''}
         ${d.substrate_temp ? `<li><strong>Substrate Temp (C):</strong> ${d.substrate_temp}</li>` : ''}
         ${d.ambient_humidity ? `<li><strong>Ambient Humidity:</strong> ${d.ambient_humidity} </li>` : ''}
         ${d.sampled_by ? `<li><strong>Sampled by:</strong> ${d.sampled_by}</li>` : ''}
@@ -157,26 +164,26 @@ const data = {{ strain_listing|tojson|safe }}
       </ul>
     </div>`
 
-    const m = L.marker([d.latitude, d.longitude], { icon: set_marker_color(d.species),
+    const marker = L.marker([d.latitude, d.longitude], { icon: set_marker_color(d.species),
                                                     species: d.species})
                                                     .on('mouseover', function(){
-                                                      m.setIcon(icon_hover)
+                                                      marker.setIcon(icon_hover)
                                                     })
                                                     .on('mouseout', function(){
                                                       const original_icon = set_marker_color(d.species)
-                                                      m.setIcon(original_icon)
+                                                      marker.setIcon(original_icon)
                                                     })
                             
-    m.bindPopup(popup_content)
+    marker.bindPopup(popup_content)
 
-    if (m.options.species === 'Caenorhabditis elegans') {
-      elegans.push(m)
+    if (marker.options.species === Species.ELEGANS) {
+      elegans.push(marker)
     }
-    if (m.options.species === 'Caenorhabditis briggsae') {
-      briggsae.push(m)
+    if (marker.options.species === Species.BRIGGSAE) {
+      briggsae.push(marker)
     }
-    if (m.options.species === 'Caenorhabditis tropicalis') {
-      tropicalis.push(m)
+    if (marker.options.species === Species.TROPICALIS) {
+      tropicalis.push(marker)
     }
   }
 });

@@ -19,8 +19,8 @@ def primary():
   VARS = {
     'page_title': page_title,
     #'files': files,
-    'fluid_container': True ,
-    'strain_listing': [s.to_json() for s in strains]
+    'fluid_container': True,
+    'strain_listing': [strain.to_json() for strain in strains]
   }
   return render_template('primary/home.html', **VARS)
 
