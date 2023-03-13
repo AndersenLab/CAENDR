@@ -1,62 +1,100 @@
 import os
+
+from string import Template
+
 from caendr.services.logger import logger
 
-from caendr.models.datastore import Entity
+from caendr.models.error import EnvVarError
+from caendr.models.datastore import DataJobEntity
 
 
-MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
+
 INDEL_REPORT_PATH_PREFIX = 'reports'
 INDEL_INPUT_FILE = 'input.json'
 INDEL_RESULT_FILE = 'results.tsv'
 
-class IndelPrimer(Entity):
-  kind = 'indel_primer'
-  __bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
-  __blob_prefix = INDEL_REPORT_PATH_PREFIX
-  __input_file = INDEL_INPUT_FILE
-  __result_file = INDEL_RESULT_FILE
-  
-  def __init__(self, *args, **kwargs):
-    super(IndelPrimer, self).__init__(*args, **kwargs)
-    self.set_properties(**kwargs)
+MODULE_SITE_BUCKET_PUBLIC_NAME = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME')
 
-  def set_properties(self, **kwargs):
-    props = self.get_props_set()
-    self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
-      
-  @classmethod
-  def get_bucket_name(cls):
-    return cls.__bucket_name
-  
+SOURCE_FILENAME = os.environ.get('INDEL_PRIMER_SOURCE_FILENAME')
+
+if not SOURCE_FILENAME:
+  raise EnvVarError("INDEL_PRIMER_SOURCE_FILENAME")
+
+SOURCE_FILENAME = Template(SOURCE_FILENAME)
+
+
+
+class IndelPrimer(DataJobEntity):
+  kind = 'indel_primer'
+  _blob_prefix = INDEL_REPORT_PATH_PREFIX
+  _input_file  = INDEL_INPUT_FILE
+  _result_file = INDEL_RESULT_FILE
+
+
+  ## Bucket ##
+
+  # TODO: Indel primer results currently don't have subdirectories for container versions. Should they?
   def get_blob_path(self):
-    return f'{self.__blob_prefix}/{self.container_name}/{self.data_hash}'
-  
-  def get_data_blob_path(self):
-    return f'{self.get_blob_path()}/{self.__input_file}'
-  
-  def get_result_blob_path(self):
-    return f'{self.get_blob_path()}/{self.__result_file}'
-  
+    return f'{self._blob_prefix}/{self.container_name}/{self.data_hash}'
+
+
+  @classmethod
+  def get_source_filename(cls, species, release):
+
+    # Validate species
+    if species is None:
+      raise ValueError('Please provide a species for Indel Primer source filename.')
+    # elif species not in SPECIES_LIST.keys():
+    #   raise ValueError(f'Cannot construct Indel Primer filename for unknown species "{species}".')
+
+    # Validate release
+    if release is None:
+      raise ValueError('Please provide a release for Indel Primer source filename.')
+
+    # Fill in template with vars
+    return SOURCE_FILENAME.substitute({ 'SPECIES': species, 'RELEASE': release })
+
+
+  @staticmethod
+  def get_fasta_filepath(species, release = None):
+    from caendr.models.datastore import SPECIES_LIST
+    species_obj = SPECIES_LIST[species]
+
+    # Default to the latest version defined for the species
+    if release is None:
+      release = species_obj['indel_primer_ver']
+
+    # TODO: Look up these values using release version
+    species_prj = species_obj['project_num']
+    species_wb  = species_obj['wb_ver']
+
+    # Return filepath
+    return {
+      'bucket': MODULE_SITE_BUCKET_PUBLIC_NAME,
+      'path': ('dataset_release', species, release, 'browser_tracks'),
+      'name': f'{ species }.{ species_prj }.{ species_wb }.genome',
+      'ext':  '.fa',
+    }
+
+
+  ## All Properties ##
 
   @classmethod
   def get_props_set(cls):
-    return {'id',
-            'site', 
-            'strain_1',
-            'strain_2',
-            'data_hash', 
-            'username',
-            'no_result',
-            'container_name',
-            'container_version',
-            'container_repo',
-            'operation_name',
-            'sv_bed_filename',
-            'sv_vcf_filename',
-            'status'}
-    
-  def __repr__(self):
-    if hasattr(self, 'id'):
-      return f"<{self.kind}:{self.id}>"
-    else:
-      return f"<{self.kind}:no-id>"
+    return {
+      *super().get_props_set(),
+
+      # # Status
+      # 'no_result',
+
+      # Query
+      'site',
+      'strain_1',
+      'strain_2',
+
+      # Versioning
+      'sv_bed_filename',
+      'sv_vcf_filename',
+      'species',
+      'release'
+    }

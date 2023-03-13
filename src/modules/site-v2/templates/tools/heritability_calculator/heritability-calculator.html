@@ -1,6 +1,8 @@
 {% extends "_layouts/default-nocontainer.html" %}
 
 {% block content %}
+{% from "_includes/strain-listing.html" import species_selector %}
+
 <div class="container">
     <div class="d-flex justify-content-around flex-wrap mb-5">
         <!-- Description card -->
@@ -33,24 +35,20 @@
                         <p class="card-text">
                             <h2 class="mb-4 text-center">New Calculation</h2>
                                 <!-- Input Form -->
-                                <form>
-                                    <div class="mb-4">
-                                        <label for="speciesSelect" class="form-label">Species:</label>
-                                        <select class="form-select" aria-label="Choose species" id="speciesSelect">
-                                            <option selected>Choose:</option>
-                                            <option value="1">C. Elegans</option>
-                                            <option value="2">C. Briggsae</option>
-                                            <option value="3">C. Tropicalis</option>
-                                        </select>
-                                    </div>
+                                <form id='form-submit' action="{{ url_for('heritability_calculator.submit_h2') }}" method="post" enctype='multipart/form-data' onsubmit="disableButton()">
+                                    {{ form.csrf_token }}
+                                    <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">
+                                    <!-- Species -->
+                                    {{ species_selector(species_list) }}
+                                    <!-- /Species -->
                                     <div class="mb-4">
                                         <label for="fileName" class="form-label">Description:</label>
-                                        <input type="text" class="form-control" id="fileName" placeholder="Name your calculation.">
+                                        <input type="text" class="form-control" id="fileName" name="label" placeholder="Name your calculation." required>
                                     </div>
                                     <div class="mb-4">
                                         <label for="formFile" class="form-label">Select file:</label>
                                         <div class="hstack gap-2 mb-4">
-                                        <input class="form-control" type="file" id="formFile">
+                                        <input class="form-control" type="file" id="formFile" name="file" required>
                                         <!-- Info Button with Modal -->
                                         <button type="button" class="btn btn-secondary rounded-circle text-light text-center p-0 infoButton" data-bs-toggle="modal"
                                             data-bs-target="#infoModal" aria-label="infoModalLabel">
@@ -74,7 +72,7 @@
                                         </div>
                                         </div>
                                     <div class="d-grid">
-                                        <button type="button" class="btn btn-secondary text-light" data-bs-toggle="modal" data-bs-target="#submit-modal"
+                                        <button type="submit" id="submit-btn" class="btn btn-secondary text-light" data-bs-toggle="modal" data-bs-target="#submit-modal"
                                             aria-label="submit">Submit</button>
                                         <!-- Modal - to display after submitting -->
                                         <div class="modal fade" id="submit-modal" tabindex="-1" aria-labelledby="thankYouLabel" aria-hidden="true">
@@ -101,6 +99,7 @@
                                     </div>
                                 </form>
                             </p>
+                            {%- include "_includes/ignore-cache-checkbox.html" %}
                     </div>
                   </div>
                   <!-- /Tab Menu -->
@@ -109,4 +108,24 @@
         <!-- /Tool -->
         </div> <!-- /Flex -->
 </div> <!-- /Container -->
+{% endblock %}
+
+{% block script %}
+<script>
+
+{%- if session["is_admin"] %}
+$("#no_cache_checkbox").change(() => {
+  const url = "{{ url_for('heritability_calculator.submit_h2') }}" + ($('#no_cache_checkbox').prop('checked') ? "?nocache=1" : "")
+  console.log(url)
+  $('#form-submit').attr('action', url)
+})
+{%- endif %}
+
+function disableButton() {
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerText = 'Submitting...'
+}
+
+</script>
 {% endblock %}

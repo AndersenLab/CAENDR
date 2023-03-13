@@ -14,32 +14,58 @@ class DatasetRelease(Entity):
   __bucket_name = MODULE_SITE_BUCKET_PUBLIC_NAME
   __blob_prefix = f'{kind}/c_elegans'
 
-  def __init__(self, *args, **kwargs):
-    super(DatasetRelease, self).__init__(*args, **kwargs)
-  
-  def set_properties(self, **kwargs):
-    props = self.get_props_set()
-    self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
-    
-    if not self.report_type and int(self.version) > 0:
-      if int(self.version) < V1_V2_Cutoff_Date:
-        self.report_type = 'V1'
-      else:
-        self.report_type = 'V2'
+
+  def __repr__(self):
+    return f"<{self.kind}:{getattr(self, 'name', 'no-name')}>"
+
 
   @classmethod
   def get_props_set(cls):
-    return {'id',
-            'version', 
-            'wormbase_version',
-            'report_type',
-            'disabled',
-            'hidden'}
-    
+    return {
+      *super().get_props_set(),
+      'id',
+      'version',
+      'wormbase_version',
+      'report_type',
+      'disabled',
+      'hidden',
+    }
+
+
+
+  @property
+  def report_type(self):
+    '''
+      The report format for this release.
+      If not set explicitly, it can also be calculated from the release version.
+    '''
+
+    # If set explicitly in object's dictionary, return that value
+    if self.__dict__['report_type']:
+      return self.__dict__['report_type']
+
+    # If not, try to compute from version
+    elif int(self.version) > 0:
+      if int(self.version) < V1_V2_Cutoff_Date:
+        return 'V1'
+      else:
+        return 'V2'
+
+    # If all else fails, default to None
+    return None
+
+
+  @report_type.setter
+  def report_type(self, val):
+    # Save prop in object's local dictionary
+    self.__dict__['report_type'] = val
+
+
+
   @classmethod
   def get_bucket_name(cls):
     return cls.__bucket_name
-  
+
   @classmethod
   def get_blob_prefix(cls):
     return cls.__blob_prefix

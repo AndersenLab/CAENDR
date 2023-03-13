@@ -7,27 +7,16 @@ from caendr.services.logger import logger
 from urllib.request import urlretrieve
 from tempfile import NamedTemporaryFile
 
-from caendr.models.sql import Homolog, WormbaseGeneSummary
-from caendr.services.sql.db import external_db_url_templates
+from caendr.models.sql import WormbaseGeneSummary
+from caendr.services.sql.dataset import TAXON_ID_URL
 
-C_ELEGANS_PREFIX = 'CELE_'
-C_ELEGANS_HOMOLOG_ID = 6239
-
-TAXON_ID_URL = external_db_url_templates['generic']['TAXON_ID_URL']
-
-def load_homologs(db, homologene_fname: str):
-  logger.info('Loading homologenes from NIH homologene.data file')
-  homologene = fetch_homologene(homologene_fname)
-  db.session.bulk_insert_mappings(Homolog, homologene)
-  db.session.commit()
-  logger.info(f'Inserted {Homolog.query.count()} Homologs')
 
 
 def fetch_taxon_ids():
   """
-      Downloads mapping of taxon-ids to species names.
+      Downloads mapping of taxonomic IDs to species names.
   """
-  # TODO: combine fetching taxon ids with the rest of the external DBs
+  # TODO: combine fetching taxonomic ids with the rest of the external DBs
   taxon_file = NamedTemporaryFile(suffix='tar')
   out, err = urlretrieve(TAXON_ID_URL, taxon_file.name)
   tar = tarfile.open(out)
@@ -39,7 +28,7 @@ def fetch_taxon_ids():
   return taxon_ids
 
 
-def fetch_homologene(homologene_fname: str):
+def parse_homologene(species, homologene_fname: str):
   """
     Download the homologene database and load
 
@@ -66,35 +55,49 @@ def fetch_homologene(homologene_fname: str):
 
   taxon_ids = fetch_taxon_ids()
 
-  # First, fetch records with a homolog ID that possesses a C. elegans gene.
-  elegans_set = dict([[int(x[0]), x[3]] for x in response_csv if x[1] == str(C_ELEGANS_HOMOLOG_ID)])
+  # First, fetch records with a homolog ID that possesses a gene for the current species
+  species_set = dict([[int(x[0]), x[3]] for x in response_csv if x[1] == str(species.homolog_id)])
 
-  # Remove CELE_ prefix from some gene names
-  for k, v in elegans_set.items():
-    elegans_set[k] = v.replace(C_ELEGANS_PREFIX, '')
+  # Remove species-specific prefix from some gene names
+  for k, v in species_set.items():
+    species_set[k] = v.replace(species.homolog_prefix, '')
 
-  idx = 0
+  # Initialize counter for matching homologs
   count = 0
-  for line in response_csv:
-    idx += 1
+
+  # Loop through each line in the file (indexed)
+  for idx, line in enumerate(response_csv):
+
+    # If testing, finish early
     if os.getenv('USE_MOCK_DATA') and idx > 10:
       logger.warn("USE_MOCK_DATA Early Return!!!")
-      return    
+      return
+
+    # Read IDs
     tax_id = int(line[1])
     homolog_id = int(line[0])
-    if homolog_id in elegans_set.keys() and tax_id != int(C_ELEGANS_HOMOLOG_ID):
+
+    if homolog_id in species_set.keys() and tax_id != int(species.homolog_id):
+
       # Try to resolve the wormbase WB ID if possible.
-      gene_name = elegans_set[homolog_id]
+      gene_name = species_set[homolog_id]
       gene_id = WormbaseGeneSummary.resolve_gene_id(gene_name)
       ref = WormbaseGeneSummary.query.filter(WormbaseGeneSummary.gene_id == gene_id).first()
+
+      # Progress update
       if idx % 10000 == 0:
         logger.info(f'Processed {idx} records yielding {count} inserts')
+
+      # If gene matches, add it to the dataset
       if ref:
         count += 1
-        yield {'gene_id': gene_id,
-                'gene_name': gene_name,
-                'homolog_species': taxon_ids[tax_id],
-                'homolog_taxon_id': tax_id,
-                'homolog_gene': line[3],
-                'homolog_source': "Homologene",
-                'is_ortholog': False }
+        yield {
+          'gene_id':          gene_id,
+          'gene_name':        gene_name,
+          'homolog_species':  taxon_ids[tax_id],
+          'homolog_taxon_id': tax_id,
+          'homolog_gene':     line[3],
+          'homolog_source':   "Homologene",
+          'is_ortholog':      False,
+          'species_name':     species.name,
+        }
