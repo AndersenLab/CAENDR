@@ -61,20 +61,28 @@ const icon_elegans = L.icon({
     iconUrl: '{{ ext_asset("img/icons/marker.png") }}',
     iconSize: [24, 24],
     iconAnchor: [12, 16],
-    popupAnchor: [-3, -76]
+    popupAnchor: [0, -15],
 });
 
 const icon_briggsae = L.icon({
     iconUrl: '{{ ext_asset("img/icons/selected.png") }}',
     iconSize: [24, 24],
     iconAnchor: [12, 16],
-    popupAnchor: [-3, -76]
+    popupAnchor: [0, -15],
 });
 const icon_tropicalis = L.icon({
     iconUrl: "{{ url_for('static', filename='img/tropicalis-marker.png') }}",
     iconSize: [24, 24],
     iconAnchor: [12, 16],
-    popupAnchor: [-3, -76]
+    popupAnchor: [0, -15],
+});
+
+
+const icon_hover = L.icon({
+    iconUrl: "{{ url_for('static', filename='img/hover-icon.png') }}",
+    iconSize: [24, 24],
+    iconAnchor: [10, 16],
+    popupAnchor: [0, -15],
 });
 {% endautoescape %}
 
@@ -151,6 +159,13 @@ const data = {{ strain_listing|tojson|safe }}
 
     const m = L.marker([d.latitude, d.longitude], { icon: set_marker_color(d.species),
                                                     species: d.species})
+                                                    .on('mouseover', function(){
+                                                      m.setIcon(icon_hover)
+                                                    })
+                                                    .on('mouseout', function(){
+                                                      const original_icon = set_marker_color(d.species)
+                                                      m.setIcon(original_icon)
+                                                    })
                             
     m.bindPopup(popup_content)
 
