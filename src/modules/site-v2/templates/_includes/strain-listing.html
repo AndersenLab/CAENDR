@@ -1,0 +1,89 @@
+{#
+  Create a species dropdown selector.
+  If onchange callback function is provided, calls it with selector value.
+ #}
+{% macro species_selector(species_list, onchange) %}
+  <div class="mb-4">
+    <label for="speciesSelect" class="form-label">Species:</label>
+    <select
+      class="form-select" aria-label="Choose species" id="speciesSelect" name="species" required
+      {% if onchange %}onchange="{{ onchange }}(this.value)"{% endif %}
+    >
+      <option selected value="">Choose</option>
+      {% for s in species_list %}
+      <option value="{{s}}">{{species_list[s]["short_name"]}}</option>
+      {% endfor %}
+    </select>
+  </div>
+{% endmacro %}
+
+
+
+{#
+  Generate a table row for each strain.
+  Caller should provide markup for the contents of the row.
+#}
+{% macro list_strains(species_list, strain_list) %}
+  {% for species in species_list %}
+  {% for strain in strain_list[species] %}
+  <tr class="strain-entry-container strain-entry-container-{{species}}" style="display: none;">
+    {{ caller(species, strain) }}
+  </tr>
+  {% endfor %}
+  {% endfor %}
+{% endmacro %}
+
+{#
+  Get a JQuery selector for strain rows.
+  Takes the name of a variable containing the species ID as an optional parameter.
+  If species ID not provided, generates a selector for all rows.
+#}
+{%- macro strain_query(species_var) -%}
+  {%- if species_var -%}
+    `.strain-entry-container-${ {{species_var}} }`
+  {%- else -%}
+    '.strain-entry-container'
+  {%- endif -%}
+{% endmacro %}
+
+{#
+  Show/hide strain rows based on a search term.
+  Takes the name of a variable containing the species ID as a parameter.
+#}
+{% macro filter_strains(species_var, search_var) %}
+  $({{ strain_query() }}).hide();
+
+  {% if species_var %}
+  if ({{ species_var }}) {
+
+    {# If search string(s) provided, show matching strains #}
+    {% if search_var %}
+    {{ search_var }}.forEach(function(r) {
+        var rex = new RegExp(r, "i");
+        $({{ strain_query(species_var) }}).filter(function() {
+            return rex.test($(this).text());
+        }).show();
+    })
+
+    {# Otherwise, show all strains matching given species #}
+    {% else %}
+    $({{ strain_query(species_var) }}).show()
+    {% endif %}
+  }
+  {% endif %}
+{% endmacro %}
+
+
+
+{#
+  Replace string tokens with species-specific variables.
+  Takes the name of an input variable, the name of a species object, and a dictionary
+  mapping token strings to the species field they should be replaced with.
+ #}
+{% macro replace_tokens(target_var, species_var, tokens) %}
+  // TODO: Uses of species name ID in filenames not yet standardized, so we drop the 'c_' prefix for now
+  {{target_var}} = {{target_var}}.replaceAll('${SPECIES}', {{species_var}}['name'].substring(2));
+  {% for token, field in tokens.items() -%}
+  {{target_var}} = {{target_var}}.replaceAll('${' + '{{ token }}' + '}', {{species_var}}['{{ field }}']);
+  {% endfor -%}
+{% endmacro %}

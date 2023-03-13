@@ -3,6 +3,7 @@ from caendr.models.sql.dict_serializable import DictSerializable
 
 class Homolog(DictSerializable, db.Model):
   id = db.Column(db.Integer, primary_key=True)
+  species_name = db.Column(db.String(20), index=True)
   gene_id = db.Column(db.ForeignKey('wormbase_gene_summary.gene_id'), nullable=True, index=True)
   gene_name = db.Column(db.String(60), index=True)
   homolog_species = db.Column(db.String(60), index=True)

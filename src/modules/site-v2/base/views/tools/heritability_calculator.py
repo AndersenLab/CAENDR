@@ -2,7 +2,6 @@ import io
 import re
 import os
 import pandas as pd
-import json
 import datetime
 from caendr.models.datastore.pipeline_operation import PipelineOperation
 
@@ -16,16 +15,27 @@ from flask import (flash,
                    abort)
 from caendr.services.logger import logger
 from datetime import datetime
+import bleach
 
 from base.forms import HeritabilityForm
-from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user
+from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user, user_is_admin
+from base.utils.tools import validate_report, upload_file
 
-from caendr.models.error import CachedDataError, DuplicateDataError
+from caendr.models.error import (
+    CachedDataError,
+    DataFormatError,
+    DuplicateDataError,
+    FileUploadError,
+    ReportLookupError,
+)
+from caendr.models.datastore import SPECIES_LIST
 from caendr.api.strain import get_strains
 from caendr.services.heritability_report import get_all_heritability_results, get_user_heritability_results, create_new_heritability_report, get_heritability_report
 from caendr.utils.data import unique_id, convert_data_table_to_tsv, get_object_hash
 from caendr.services.cloud.storage import get_blob, generate_blob_url
 from caendr.services.persistent_logger import PersistentLogger
+
+
 
 # ================== #
 #   heritability     #
@@ -44,6 +54,7 @@ def heritability_calculator():
   form = HeritabilityForm()
   hide_form = True
   strain_list = []
+  species_list = SPECIES_LIST
   return render_template('tools/heritability_calculator/heritability-calculator.html', **locals())
 
 
@@ -88,43 +99,121 @@ def user_results():
 @heritability_calculator_bp.route('/heritability-calculator/submit', methods=["POST"])
 @jwt_required()
 def submit_h2():
+  form = HeritabilityForm(request.form)
   user = get_current_user()
-  label = request.values['label']
-  columns = ["AssayNumber", "Strain", "TraitName", "Replicate", "Value"]
 
-  # Extract table data
-  data = json.loads(request.values['table_data'])
-  data = [x for x in data[1:] if x[0] is not None]
-  trait = data[0][2]
+  # TODO: Validate form
+  if not form.validate_on_submit():
+    pass
+    # flash("You must include a description of your data and a TSV file to upload", "error")
+    # return redirect(url_for('heritability_calculator.submit_h2'))
 
-  data_tsv = convert_data_table_to_tsv(data, columns)
+  # If user is admin, allow them to bypass cache with URL variable
+  no_cache = bool(user_is_admin() and request.args.get("nocache", False))
 
-  # Generate an ID for the data based on its hash
-  data_hash = get_object_hash(data, length=32)
-  logger.debug(data_hash)
-  id = unique_id()
+  # Read fields from form
+  label   = bleach.clean(request.form.get('label'))
+  species = bleach.clean(request.form.get('species'))
+
+  # Check that label is not empty
+  # TODO: Move to HeritabilityForm validator?
+  if len(label.strip()) == 0:
+    flash('Invalid label.', 'danger')
+    return jsonify({
+      'error': True, 'message': f"There was a problem submitting your request.",
+    })
+
+  # Check that species is valid
+  # TODO: Move to HeritabilityForm validator?
+  if species not in SPECIES_LIST.keys():
+    flash('Invalid species.', 'danger')
+    return jsonify({
+      'error': True, 'message': f"There was a problem submitting your request.",
+    })
+
+  # Save uploaded file to server temporarily, displaying an error message if this fails
+  try:
+    local_path = upload_file(request, 'file')
+  except FileUploadError as ex:
+    flash('There was a problem uploading your file to the server. Please try again.', 'danger')
+    return jsonify({
+      'error':   True,
+      'message': f"There was a problem submitting your request.",
+    })
+
+  # Package submission data together into dict
+  data = {
+    'label':    label,
+    'species':  species,
+    'filepath': local_path,
+  }
 
   try:
-    h = create_new_heritability_report(id, user.name, label, data_hash, trait, data_tsv)
-  except DuplicateDataError:
-      flash('Oops! It looks like you submitted that data already - redirecting to your list of Heritability Reports', 'danger')
-      return jsonify({'duplicate': True,
-              'data_hash': data_hash,
-              'id': id})
-  except CachedDataError:
-      flash('Oops! It looks like that data has already been submitted - redirecting to the saved results', 'danger')
-      return jsonify({'cached': True,
-                  'data_hash': data_hash,
-                  'id': id})
-  except Exception as ex:
-      flash("Oops! There was a problem submitting your request: {ex}", 'danger')
-      return jsonify({'duplicate': True,
-              'data_hash': data_hash,
-              'id': id})
+    h = create_new_heritability_report(user, data, no_cache=no_cache)
+    return jsonify({
+      'started':   True,
+      'data_hash': h.data_hash,
+      'id':        h.id,
+    })
 
-  return jsonify({'started': True,
-                'data_hash': data_hash,
-                'id': id})
+  except DuplicateDataError as ex:
+    flash('Oops! It looks like you submitted that data already - redirecting to your list of Heritability Reports', 'danger')
+    return jsonify({
+      'duplicate': True,
+      'data_hash': ex.args[0].data_hash,
+      'id':        ex.args[0].id,
+    })
+
+  except CachedDataError as ex:
+    flash('Oops! It looks like that data has already been submitted - redirecting to the saved results', 'danger')
+    return jsonify({
+      'cached':    True,
+      'data_hash': ex.args[0].data_hash,
+      'id':        ex.args[0].id,
+    })
+
+  except DataFormatError as ex:
+
+    # Log the error
+    logger.error(f'Data formatting error in Heritability Calculator: {ex.msg} (Line: {ex.line})')
+
+    # Construct user-friendly error message with optional line number
+    msg = f'There was an error with your file. { ex.msg }'
+    if ex.line is not None:
+      msg += f' (Line: { ex.line })'
+
+    # Flash the error message & refresh the page
+    flash(msg, 'danger')
+    # return redirect(url_for('heritability_calculator.heritability_calculator'))
+    return jsonify({
+      'error':   True,
+      'message': msg,
+    })
+
+  except Exception as ex:
+
+    # Get message and description, if they exist
+    msg  = getattr(ex, 'message',     '')
+    desc = getattr(ex, 'description', '')
+
+    # Log the full error
+    logger.error(f'Error submitting Heritability calculation. Message = "{msg}", Description = "{desc}". Full Error: {ex}')
+
+    # Flash an error message for the user
+    # TODO: Update this wording
+    flash(f"Oops! There was a problem submitting your request.", 'danger')
+    # return redirect(url_for('heritability_calculator.heritability_calculator'))
+    return jsonify({
+      'error':   True,
+      'message': f"There was a problem submitting your request.",
+    })
+
+  # Ensure the local file is removed
+  finally:
+    try:
+      os.remove(local_path)
+    except FileNotFoundError:
+      pass
 
 
 @heritability_calculator_bp.route("/heritability-calculator/h2/<id>/logs")
@@ -167,21 +256,25 @@ def heritability_result(id):
   user = get_current_user()
   hr = get_heritability_report(id)
 
-  if not hr._exists:
-    flash('You do not have access to that report', 'danger')
-    abort(401)
-  if not (hr.username == user.name or 'admin' in user.roles):
-    flash('You do not have access to that report', 'danger')
-    abort(401)
+  # Ensure the report exists and the user has permission to view it
+  try:
+    validate_report(hr, user)
+  except ReportLookupError as ex:
+    flash(ex.msg, 'danger')
+    abort(ex.code)
 
   ready = False
-  data_url = generate_blob_url(hr.get_bucket_name(), hr.get_data_blob_path())
 
-  data_hash = hr.data_hash
+  # Get blob paths
+  # Used in code as well as templating(?)
   data_blob = hr.get_data_blob_path()
   result_blob = hr.get_result_blob_path()
-  data = get_blob(hr.get_bucket_name(), hr.get_data_blob_path())
-  result = get_blob(hr.get_bucket_name(), hr.get_result_blob_path())
+
+  data_hash = hr.data_hash
+  data_url = generate_blob_url(hr.get_bucket_name(), data_blob)
+
+  data   = get_blob(hr.get_bucket_name(), data_blob)
+  result = get_blob(hr.get_bucket_name(), result_blob)
 
   # get this dynamically from the bp
   # logs_url = f"/heritability/h2/{hr.id}/logs"
@@ -223,4 +316,3 @@ def heritability_result(id):
   error = persistent_logger.get(id)
 
   return render_template("tools/heritability_calculator/result.html", **locals())
-

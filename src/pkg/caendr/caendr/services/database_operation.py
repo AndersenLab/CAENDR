@@ -7,17 +7,14 @@ from caendr.models.task import DatabaseOperationTask
 from caendr.models.sql import Homolog, StrainAnnotatedVariant, Strain, WormbaseGene, WormbaseGeneSummary
 from caendr.services.tool_versions import GCR_REPO_NAME
 from caendr.services.cloud.datastore import get_ds_entity, query_ds_entities
-from caendr.services.cloud.task import add_task
-from caendr.services.cloud.secret import get_secret
 from caendr.utils.data import unique_id
+
 
 
 MODULE_DB_OPERATIONS_CONTAINER_NAME = os.environ.get('MODULE_DB_OPERATIONS_CONTAINER_NAME')
 MODULE_DB_OPERATIONS_CONTAINER_VERSION = os.environ.get('MODULE_DB_OPERATIONS_CONTAINER_VERSION')
-MODULE_DB_OPERATIONS_TASK_QUEUE_NAME = os.environ.get('MODULE_DB_OPERATIONS_TASK_QUEUE_NAME')
-MODULE_API_PIPELINE_TASK_URL_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_URL_NAME')
 
-API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
+
 
 DB_OPS = {
   'DROP_AND_POPULATE_STRAINS': 'Rebuild strain table from google sheet',
@@ -29,6 +26,7 @@ DB_OPS = {
 }
 
 
+# TODO: Should this return DatabaseOperation entity objects?
 def get_all_db_ops(keys_only=False, order=None, placeholder=True):
   logger.debug(f'get_all_db_ops(keys_only={keys_only}, order={order})')
   ds_entities = query_ds_entities(DatabaseOperation.kind, keys_only=keys_only, order=order)
@@ -89,55 +87,43 @@ def get_etl_op(op_id, keys_only=False, order=None, placeholder=True):
   op = get_ds_entity(DatabaseOperation.kind, op_id)
   logger.debug(op)
   return op
-      
+
 def get_db_op_form_options(): 
   return [(key, val) for key, val in DB_OPS.items()]
-  
-  
+
+
 def create_new_db_op(op, username, email, args=None, note=None):
   logger.debug(f'Creating new Database Operation: op:{op}, username:{username}, email:{email}, args:{args}, note:{note}')
-  
+
+  # Compute unique ID for new Database Operation entity
   id = unique_id()
-  props = {'id': id,
-          'note': note, 
-          'args': args,
-          'db_operation': op,
-          'username': username,
-          'email': email,
-          'container_repo': GCR_REPO_NAME,
-          'container_name': MODULE_DB_OPERATIONS_CONTAINER_NAME,
-          'container_version': MODULE_DB_OPERATIONS_CONTAINER_VERSION}
-  db_op = DatabaseOperation(id)
-  db_op.set_properties(**props)
-  db_op.save()
-  
-  # Schedule mapping in task queue
-  task = _create_db_op_task(db_op)
-  payload = task.get_payload()
-  task = add_task(MODULE_DB_OPERATIONS_TASK_QUEUE_NAME, F'{API_PIPELINE_TASK_URL}/task/start/{MODULE_DB_OPERATIONS_TASK_QUEUE_NAME}', payload)
-  db_op = DatabaseOperation(id)
-  if task:
-    db_op.set_properties(status='SUBMITTED')
-  else:
-    db_op.set_properties(status='ERROR')
+
+  # Create Database Operation entity & upload to datastore
+  db_op = DatabaseOperation(id, **{
+    'id':                id,
+    'username':          username,
+    'email':             email,
+    'note':              note,
+    'db_operation':      op,
+    'args':              args,
+    'container_repo':    GCR_REPO_NAME,
+    'container_name':    MODULE_DB_OPERATIONS_CONTAINER_NAME,
+    'container_version': MODULE_DB_OPERATIONS_CONTAINER_VERSION,
+  })
   db_op.save()
 
+  # Schedule mapping in task queue
+  task   = DatabaseOperationTask(db_op)
+  result = task.submit()
+
+  # Update entity status to reflect whether task was submitted successfully
+  db_op.status = 'SUBMITTED' if result else 'ERROR'
+  db_op.save()
+
+  # Return resulting Database Operation entity
   return db_op
-  
-  
-def _create_db_op_task(db_op):
-  return DatabaseOperationTask(**{'id': db_op.id,
-                                  'kind': DatabaseOperation.kind,
-                                  'db_operation': db_op.db_operation,
-                                  'args': db_op.args,
-                                  'username': db_op.username, 
-                                  'email': db_op.email,
-                                  'logs': '',
-                                  'container_name': db_op.container_name,
-                                  'container_version': db_op.container_version,
-                                  'container_repo': db_op.container_repo})
-  
-  
+
+
 
 def update_db_op_status(id: str, status: str=None, operation_name: str=None):
   logger.debug(f'update_db_op_status: id:{id} status:{status} operation_name:{operation_name}')

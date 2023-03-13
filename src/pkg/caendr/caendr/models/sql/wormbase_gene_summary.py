@@ -10,6 +10,7 @@ class WormbaseGeneSummary(DictSerializable, db.Model):
       (not exons/introns/etc.)
   """
   id = db.Column(db.Integer, primary_key=True)
+  species_name = db.Column(db.String(20), index=True)
   chrom = db.Column(db.String(7), index=True)
   chrom_num = db.Column(db.Integer(), index=True)
   start = db.Column(db.Integer(), index=True)
