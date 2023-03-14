@@ -95,7 +95,7 @@ const southWest = L.latLng(-90, -180);
 const northEast = L.latLng(90, 180);
 const bounds = L.latLngBounds(southWest, northEast);
 
-const map = L.map('map', {minZoom:2, maxBounds: bounds}).setView([20, -100], 2);
+const map = L.map('map', {minZoom:2, maxBounds: bounds, scrollWheelZoom: false}).setView([20, -100], 2);
 L.tileLayer(MB_URL, {attribution: MB_ATTR, id: 'mapbox.streets', continuousWorld: false, worldCopyJump: true}).addTo(map);
 const strain_names = [];
 const elegans = [];
@@ -150,7 +150,7 @@ strain_info.forEach(function(d) {
     const popup_content = `
     <div>
       <ul class='popup'>
-        ${d.species ? `<li><strong>Species:</strong> ${d.species}</li>` : ''}
+        ${d.species ? `<li><strong>Species:</strong> <i>${d.species}</i></li>` : ''}
         ${d.isotype ? `<li><strong>Isotype:</strong> ${d.isotype}</li>` : ''}
         ${d.isotype_ref_strain ? `<li><strong>Reference Strain:</strong> ${d.isotype_ref_strain}</li>` : ''}
         ${d.strain ? `<li><strong>Strains:</strong> ${d.strain}</li>` : ''}
@@ -160,7 +160,6 @@ strain_info.forEach(function(d) {
         ${d.substrate_temp ? `<li><strong>Substrate Temp (C):</strong> ${d.substrate_temp}</li>` : ''}
         ${d.ambient_humidity ? `<li><strong>Ambient Humidity:</strong> ${d.ambient_humidity} </li>` : ''}
         ${d.sampled_by ? `<li><strong>Sampled by:</strong> ${d.sampled_by}</li>` : ''}
-        <li><strong>Peel-1 Zeel-1 inc:</strong> </li>
       </ul>
     </div>`
 
