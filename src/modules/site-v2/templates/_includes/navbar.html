@@ -18,7 +18,7 @@
       </button>
       <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
         <div class="navbar-nav ">
-          <a class="nav-link {{'nav-link-active' if request.blueprint == 'strains'}}" href="{{ url_for('request-strains.strains') }}">Request Strains</a>
+          <a class="nav-link {{'nav-link-active' if request.blueprint == 'request_strains'}}" href="{{ url_for('request_strains.strains') }}">Request Strains</a>
           <div class="nav-item dropdown mx-5">
             <a class="nav-link dropdown-toggle {{'nav-link-active' if '/tools/' in request.full_path}}" href="#" id="toolsDropdown" role="button" data-bs-toggle="dropdown"
               aria-expanded="false">
