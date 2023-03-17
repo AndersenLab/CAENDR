@@ -22,15 +22,15 @@ def validate_report(report, user=None):
 
     # Let admins know the report doesn't exist
     if user_is_admin():
-      raise ReportLookupError('This report does not exist', 404)
+      raise ReportLookupError('This is not a valid report URL.', 404)
 
     # For all other users, display a default "no access" message
     else:
-      raise ReportLookupError('You do not have access to that report', 401)
+      raise ReportLookupError('You do not have access to that report.', 401)
 
   # If the user doesn't have permission to view this report, show an error message
   if not (report.username == user.name or user_is_admin()):
-    raise ReportLookupError('You do not have access to that report', 401)
+    raise ReportLookupError('You do not have access to that report.', 401)
 
 
 def upload_file(request, filename):
