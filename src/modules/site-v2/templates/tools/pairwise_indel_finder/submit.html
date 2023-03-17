@@ -68,12 +68,15 @@
       <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i> Fullscreen</a></div>
       </div>
       <!-- /Options Toolbar -->
+      <!-- Select Species Prompt -->
+      {% include '_includes/select-species-prompt.html' %}
+      <!-- /Select Species Prompt -->
       <!-- Browser -->
-      <div class="col">
+      <div id="browser-container" class="col">
         <h2>Indel Finder</h2>
-          <div id="browser" class="mt-3 mb-5"></div>
-          <h2>Primers</h2>
-          <table id="results" class='table table-hover table-striped strain-table'></table>
+        <div id="browser" class="mt-3 mb-5"></div>
+        <h2>Primers</h2>
+        <table id="results" class='table table-hover table-striped strain-table'></table>
                           <!-- Modal -->
                           <div class="modal fade" id="generate-primers-modal" tabindex="-1" aria-labelledby="generate-primers-modal-label"
                           aria-hidden="true">
@@ -159,6 +162,7 @@ $(document).ready(function(){
   var form = document.getElementById('form-submit');
 
   species = species_list[$("#species").val()];
+  update_species();
 
   form.addEventListener('change', function() {
     if (loaded) {
@@ -248,6 +252,15 @@ function form_change() {
 
 
 function update_species(species_id) {
+
+  // Prompt user to select species if none selected
+  if (species_id) {
+    $('#select-species-prompt').hide();
+    $('#browser-container').show();
+  } else {
+    $('#browser-container').hide();
+    $('#select-species-prompt').show();
+  }
 
   // Enable or disable form inputs that depend on species being defined
   const form_ids = [
