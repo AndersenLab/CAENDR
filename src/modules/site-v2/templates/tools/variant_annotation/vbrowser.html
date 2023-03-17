@@ -360,31 +360,42 @@ function onDownload() {
 /* Gene Search */
 
 function process_gene_search() {
-  $("#loading-search-table").fadeOut();
   let gene = $('#gene-search').val().trim();
-  if (!gene.length) {
+
+  // If no search term provided, hide both dropdown elements
+  if (gene.length == 0) {
+    $("#loading-search-table").fadeOut();
     $("#v-search-table").fadeOut();
-  } else {
+  }
+
+  // If search provided, query the database
+  else {
     $("#orthologs").html("");
     $.ajax({
-         url: "{{ url_for('api_gene.api_search_genes', query='') }}" + gene + '?species=' + species.name,
-         method: "GET",
-         contentType: 'application/xml',
-         }).done(function(results) {
-          const genes = results.filter(result => !!result.chrom && !!result.start && !!result.end)
-          genes.forEach(gene => {
-            const position = gene["chrom"] + ":" + gene["start"] + "-" + gene["end"];
-            const link = `<a onclick="set_position('${position}')" link='${position}' class='ortholink'>${gene['gene_id']}</a>`;
-            const result = [
-              gene['gene_symbol'],
-              gene['sequence_name'],
-              link,
-            ]
-            const table_data = "<tr><td>" + result.join("</td><td>").slice(0,-4) + "</tr>";
-            $("#orthologs").append(table_data);
-          });
-          $("#v-search-table").fadeIn();
-        });
+      url:         "{{ url_for('api_gene.api_search_genes', query='') }}" + gene + '?species=' + species.name,
+      method:      "GET",
+      contentType: 'application/xml',
+    }).done(function(results) {
+
+      // Fill out dropdown table
+      const genes = results.filter(result => !!result.chrom && !!result.start && !!result.end)
+      genes.forEach(gene => {
+        const position = gene["chrom"] + ":" + gene["start"] + "-" + gene["end"];
+        const link = `<a onclick="set_position('${position}')" link='${position}' class='ortholink'>${gene['gene_id']}</a>`;
+        const result = [
+          gene['gene_symbol'],
+          gene['sequence_name'],
+          link,
+        ]
+        const table_data = "<tr><td>" + result.join("</td><td>").slice(0,-4) + "</tr>";
+        $("#orthologs").append(table_data);
+      });
+
+      // Hide the loading symbol & show the table
+      $("#loading-search-table").fadeOut().promise().done(() => {
+        $("#v-search-table").fadeIn();
+      })
+    });
   }
 }
 
@@ -702,7 +713,18 @@ $(document).ready(function() {
 
     /* Gene ortholog search */
     $("#gene-search").on("input", function(e) {
-      $("#loading-search-table").fadeIn();
+
+      var gene = $('#gene-search').val().trim();
+      if (gene.length == 0) {
+        $("#v-search-table").fadeOut();
+        $("#loading-search-table").fadeOut();
+      }
+      else {
+        $("#v-search-table").fadeOut().promise().done(() => {
+          $("#loading-search-table").fadeIn();
+        })
+      }
+
       clearTimeout(typingTimer);
       typingTimer = setTimeout(process_gene_search, doneTypingInterval);
     })
