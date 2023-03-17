@@ -178,6 +178,7 @@
 
 <script type="text/javascript">
 {% include '_scripts/igv-browser.js' %}
+{% include '_scripts/gene-search.js' %} {#/* defines: prep_gene_search, run_gene_search, format_locus_string */#}
 
 
 /* Variables */
@@ -256,15 +257,7 @@ $(document).ready(function () {
   $("#gene-search").on("input", function(e) {
 
     var gene = $('#gene-search').val().trim();
-    if (gene.length == 0) {
-      $("#g-search-table").fadeOut();
-      $("#loading-search-table").fadeOut();
-    }
-    else {
-      $("#g-search-table").fadeOut().promise().done(() => {
-        $("#loading-search-table").fadeIn();
-      })
-    }
+    prep_gene_search(gene, "#g-search-table", "#loading-search-table");
 
     clearTimeout(typingTimer);
     typingTimer = setTimeout(process_gene_search, doneTypingInterval);
@@ -403,45 +396,11 @@ function update_species(species_id) {
 function process_gene_search() {
   var gene = $('#gene-search').val().trim();
 
-  // If no search term provided, hide both dropdown elements
-  if (gene.length == 0) {
-    $("#loading-search-table").fadeOut();
-    $("#g-search-table").fadeOut();
-  }
-
-  // If search provided, query the database
-  else {
-    $("#orthologs").html("");
-    $.ajax({
-      url:         "{{ url_for('api_gene.api_search_genes', query='') }}" + gene + '?species=' + species.name,
-      method:      "GET",
-      contentType: "application/xml",
-    }).done(function(msg) {
-
-      // Fill out dropdown table
-      row = Array();
-      $.each(msg, function(i, row) {
-        if ("chrom" in row) {
-          link = row["chrom"] + ":" + row["start"] + "-" + row["end"];
-        } else {
-          link = row["locus"];
-        }
-        gene_name = `<a onclick="set_position('${link}')" link='${link}' class='ortholink'>${row["locus"]}</a>`;
-        result = [
-          gene_name,
-          row["gene_symbol"],
-        ];
-        result = "<tr><td>" + result.join("</td><td>") + "</td></tr>";
-        position = row["chrom"] + ":" + row["start"];
-        $("#orthologs").append(result);
-      });
-
-      // Hide the loading symbol & show the table
-      $("#loading-search-table").fadeOut().promise().done(() => {
-        $("#g-search-table").fadeIn();
-      });
-    });
-  }
+  run_gene_search(gene, species, "#g-search-table", "#loading-search-table", (i, row) => {
+    link = ("chrom" in row) ? format_locus_string(row["chrom"], row["start"], row["end"]) : row["locus"];
+    gene_name = `<a onclick="set_position('${link}')" link='${link}' class='ortholink'>${row["locus"]}</a>`;
+    return [ gene_name, row["gene_symbol"] ];
+  });
 }
 
 function set_position(coord) {

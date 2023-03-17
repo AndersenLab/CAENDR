@@ -224,6 +224,7 @@
 {% from "_includes/macros.html" import unpack_species_list %}
 <script src="{{ url_for('static', filename='js/strains.js') }}"></script>
 <script>
+{% include '_scripts/gene-search.js' %} {#/* defines: prep_gene_search, run_gene_search, format_locus_string */#}
 
 
 /* Variables */
@@ -362,41 +363,16 @@ function onDownload() {
 function process_gene_search() {
   let gene = $('#gene-search').val().trim();
 
-  // If no search term provided, hide both dropdown elements
-  if (gene.length == 0) {
-    $("#loading-search-table").fadeOut();
-    $("#v-search-table").fadeOut();
-  }
-
-  // If search provided, query the database
-  else {
-    $("#orthologs").html("");
-    $.ajax({
-      url:         "{{ url_for('api_gene.api_search_genes', query='') }}" + gene + '?species=' + species.name,
-      method:      "GET",
-      contentType: 'application/xml',
-    }).done(function(results) {
-
-      // Fill out dropdown table
-      const genes = results.filter(result => !!result.chrom && !!result.start && !!result.end)
-      genes.forEach(gene => {
-        const position = gene["chrom"] + ":" + gene["start"] + "-" + gene["end"];
-        const link = `<a onclick="set_position('${position}')" link='${position}' class='ortholink'>${gene['gene_id']}</a>`;
-        const result = [
-          gene['gene_symbol'],
-          gene['sequence_name'],
-          link,
-        ]
-        const table_data = "<tr><td>" + result.join("</td><td>").slice(0,-4) + "</tr>";
-        $("#orthologs").append(table_data);
-      });
-
-      // Hide the loading symbol & show the table
-      $("#loading-search-table").fadeOut().promise().done(() => {
-        $("#v-search-table").fadeIn();
-      })
-    });
-  }
+  run_gene_search(gene, species, "#v-search-table", "#loading-search-table", (i, gene) => {
+    if (!gene["chrom"] || !gene["start"] || !gene["end"]) return null;
+    const position = format_locus_string(gene["chrom"], gene["start"], gene["end"]);
+    const link = `<a onclick="set_position('${position}')" link='${position}' class='ortholink'>${gene['gene_id']}</a>`;
+    return [
+      gene['gene_symbol'],
+      gene['sequence_name'],
+      link,
+    ]
+  });
 }
 
 function set_position(pos) {
@@ -715,15 +691,7 @@ $(document).ready(function() {
     $("#gene-search").on("input", function(e) {
 
       var gene = $('#gene-search').val().trim();
-      if (gene.length == 0) {
-        $("#v-search-table").fadeOut();
-        $("#loading-search-table").fadeOut();
-      }
-      else {
-        $("#v-search-table").fadeOut().promise().done(() => {
-          $("#loading-search-table").fadeIn();
-        })
-      }
+      prep_gene_search(gene, "#v-search-table", "#loading-search-table");
 
       clearTimeout(typingTimer);
       typingTimer = setTimeout(process_gene_search, doneTypingInterval);
