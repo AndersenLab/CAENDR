@@ -89,8 +89,10 @@
 
   /* Genome Browser */
   .gbrowserTracks {
-    height:15vh; 
-    background-color: #fff; 
+    --disabled-color: #e9ecef;
+    --enabled-color:  #fff;
+    height: 15vh;
+    background-color: var(--disabled-color);
     border: 1px solid #CFD4D9;
   }
   

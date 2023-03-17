@@ -33,7 +33,7 @@ from constants import PRICES, SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS,
 from caendr.services.profile import get_profile_role_form_options
 from caendr.services.user import get_user_role_form_options, get_local_user_by_email
 from caendr.services.database_operation import get_db_op_form_options
-from caendr.services.indel_primer import get_indel_primer_chrom_choices, get_indel_primer_strain_choices
+from caendr.services.indel_primer import get_indel_primer_chrom_choices
 from caendr.services.markdown import get_content_type_form_options
 from caendr.models.datastore import User, SPECIES_LIST
 from caendr.api.strain import query_strains
@@ -198,19 +198,15 @@ class StrainSelectField(SelectField):
 
 
 class PairwiseIndelForm(Form):
-  CHROMOSOME_CHOICES = get_indel_primer_chrom_choices()
+  CHROMOSOME_CHOICES = [('', ''), *get_indel_primer_chrom_choices()]
   SPECIES_CHOICES = [(name, value.short_name) for name, value in SPECIES_LIST.items()]
-  
-  species = SelectField('Species', choices=SPECIES_CHOICES, default="c_elegans", validators=[Required()])
-  strain_1 = StrainSelectField('Strain 1', choices=[], default="N2",     validators=[Required(), validate_uniq_strains])
-  strain_2 = StrainSelectField('Strain 2', choices=[], default="CB4856", validators=[Required()])
-  chromosome = SelectField('Chromosome', choices=CHROMOSOME_CHOICES, default="V", validators=[Required()])
-  start = FlexIntegerField('Start', default="6,271,913", validators=[Required(), validate_start_lt_stop])
-  stop = FlexIntegerField('Stop', default="6,272,025", validators=[Required()])
 
-  @classmethod
-  def default_strain_choices(cls):
-    return ("N2", "CB4856")
+  species = SelectField('Species', choices=SPECIES_CHOICES, validators=[Required()])
+  strain_1 = StrainSelectField('Strain 1', choices=[], validators=[Required(), validate_uniq_strains])
+  strain_2 = StrainSelectField('Strain 2', choices=[], validators=[Required()])
+  chromosome = SelectField('Chromosome', choices=CHROMOSOME_CHOICES, validators=[Required()])
+  start = FlexIntegerField('Start', validators=[Required(), validate_start_lt_stop])
+  stop  = FlexIntegerField('Stop',  validators=[Required()])
 
   
 class OrderForm(Form):

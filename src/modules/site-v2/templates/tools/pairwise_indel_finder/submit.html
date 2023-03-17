@@ -30,19 +30,19 @@
           <!-- Input Card -->
           <div class="text-bg-light mb-5 p-3 p-md-5 rounded-2 shadow-sm">
             <!-- Input Form -->
-            <form id='form-submit' method="POST">
+            <form id='form-submit' method="POST" onchange="form_change()">
               {{ form.csrf_token }}
               <!-- Species -->
               {{ species_selector(species_list, "update_species") }}
               <!-- /Species -->
               <!-- <div class='mb-4'>{{ render_field(form.species) }}</div> -->
-              <div class="mb-4">{{ render_field(form.strain_1) }}</div>
-              <div class="mb-4">{{ render_field(form.strain_2) }}</div>
-              <div class="mb-4">{{ render_field(form.chromosome) }}</div>
-              <div class="mb-4">{{ render_field(form.start, placeholder="2,028,824") }}</div>
-              <div class="mb-4">{{ render_field(form.stop, placeholder="2,029,217") }}</div>
+              <div class="mb-4">{{ render_field(form.strain_1,   disabled='', onchange="update_browser_tracks()") }}</div>
+              <div class="mb-4">{{ render_field(form.strain_2,   disabled='', onchange="update_browser_tracks()") }}</div>
+              <div class="mb-4">{{ render_field(form.chromosome, disabled='') }}</div>
+              <div class="mb-4">{{ render_field(form.start,      disabled='', placeholder="2,028,824") }}</div>
+              <div class="mb-4">{{ render_field(form.stop,       disabled='', placeholder="2,029,217") }}</div>
               <div class="d-grid gap-3 mb-4">
-                <button id='find_indels' type='submit' value="submit" class="btn btn-secondary text-light">Find Indels</button>
+                <button id='find_indels' type='submit' value="submit" class="btn btn-secondary text-light" disabled>Find Indels</button>
               </div>
               </form>
               <!-- /Input Form -->
@@ -130,6 +130,7 @@ const COLORS = {
   INS: 'blue',
   DEL: 'red'
 }
+var current_chromosome = '';
 
 /* Data Table */
 var table;
@@ -219,12 +220,45 @@ $(document).ready(function(){
 
   fetch_strains().then((data) => {
     strains = data;
-    submitForm();
   });
 });
 
 
+function form_change() {
+
+  const species_id = $("#speciesSelect");
+  const chromosome = $("#chromosome").val().trim();
+
+  document.getElementById('start').disabled = !species_id || !chromosome;
+  document.getElementById('stop').disabled  = !species_id || !chromosome;
+
+  if (current_chromosome != chromosome) {
+    current_chromosome = chromosome;
+    if (current_chromosome == '') {
+      $('#start').val('');
+      $('#stop').val('');
+    } else {
+      $('#start').val(1);
+      $('#stop').val(1000000);
+    }
+    set_position(igv.getBrowser());
+  }
+
+}
+
+
 function update_species(species_id) {
+
+  // Enable or disable form inputs that depend on species being defined
+  const form_ids = [
+    'strain_1',
+    'strain_2',
+    'chromosome',
+    'find_indels',
+  ]
+  form_ids.forEach((form_id) => {
+    document.getElementById(form_id).disabled = !species_id;
+  })
 
   // Check if value provided
   if ( !species_id ) {
@@ -237,8 +271,8 @@ function update_species(species_id) {
   // Update the browser species & the strain dropdown lists
   create_or_update_browser(browser_div, browser_options, species).then(({browser}) => {
     Promise.all([
-      update_strain_dropdown("strain_1", strains, species, "{{ default_strains[0] }}"),
-      update_strain_dropdown("strain_2", strains, species, "{{ default_strains[1] }}"),
+      update_strain_dropdown("strain_1", strains, species, ""),
+      update_strain_dropdown("strain_2", strains, species, ""),
     ])
     .then(() => {
 
@@ -429,6 +463,10 @@ function set_position(browser) {
   let start = parseInt($("#start").val().trim().replace(/,/g, ''), 10);
   let end   = parseInt($("#stop").val().trim().replace(/,/g, ''), 10);
 
+  // Don't update position if no end value entered
+  // TODO: Should this default to the maximum difference?
+  if (isNaN(end)) return;
+
   // Check start and end relative to one another, defaulting to maximum diff if invalid
   let diff = end - start
   if (diff > MAX_DIFF || diff <= 0) {
@@ -436,7 +474,11 @@ function set_position(browser) {
   }
 
   // Update the browser to the desired search window
-  browser.search(`${chromosome}:${start}-${end}`);
+  if (chromosome == '') {
+    browser.search('all');
+  } else {
+    browser.search(`${chromosome}:${start}-${end}`);
+  }
 }
 
 
