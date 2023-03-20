@@ -221,7 +221,7 @@
 {% endblock %}
 
 {% block script %}
-{% from "_includes/macros.html" import unpack_species_list %}
+{% from "_includes/strain-listing.html" import unpack_species_list %}
 <script src="{{ url_for('static', filename='js/strains.js') }}"></script>
 <script>
 {% include '_scripts/gene-search.js' %} {#/* defines: prep_gene_search, run_gene_search, format_locus_string */#}

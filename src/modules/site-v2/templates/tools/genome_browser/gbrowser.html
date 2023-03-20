@@ -175,8 +175,7 @@
 {% endblock %}
 
 {% block script %}
-{% from "_includes/macros.html" import unpack_species_list %}
-{% from "_includes/strain-listing.html" import replace_tokens %}
+{% from "_includes/strain-listing.html" import unpack_species_list, replace_tokens %}
 <script src="{{ url_for('static', filename='js/strains.js') }}"></script>
 
 <script type="text/javascript">

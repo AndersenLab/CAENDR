@@ -1,4 +1,19 @@
 {#
+  Parse the list of species into a JS object.
+  If species_fields is provided, only exposes these fields; otherwise, exposes all attributes.
+#}
+{% macro unpack_species_list(species_list, species_fields) %}{
+  {%- for name, species in species_list.items() %}
+  '{{ name }}': {
+    {% for key in ( species_fields or dict(species) ) -%}
+      '{{ key }}': '{{ species[key] }}',
+    {% endfor -%}
+  },
+  {%- endfor %}
+}{% endmacro %}
+
+
+{#
   Create a species dropdown selector.
   If onchange callback function is provided, calls it with selector value.
  #}
