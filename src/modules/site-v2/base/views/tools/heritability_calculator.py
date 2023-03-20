@@ -150,7 +150,14 @@ def submit():
 
   # Try submitting the job & returning a JSON status message
   try:
-    return jsonify( try_submit(HeritabilityReport, user, data, no_cache) )
+    response = try_submit(HeritabilityReport, user, data, no_cache)
+
+    # If there was an error, flash it
+    if not response['succeeded']:
+      flash(response['message'], 'danger')
+
+    # Return the response
+    return jsonify( response )
 
   # Ensure the local file is removed, even if an error is uncaught in the submission process
   finally:

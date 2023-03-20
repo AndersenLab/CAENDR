@@ -42,8 +42,7 @@
               <p class="card-text">
               <h2 class="mb-4 text-center">New Mapping</h2>
               <!-- UPLOAD FORM -->
-              <form id="form-submit" action="{{ url_for('genetic_mapping.submit') }}" method="post" onsubmit="disableButton()"
-                class="form form-inline" enctype="multipart/form-data">
+              <form id="form-submit" class="form form-inline" enctype="multipart/form-data">
                 <div class="mb-4">
                   {{ form.csrf_token }}
                   <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">
@@ -65,8 +64,7 @@
                   </div>
                 </div>
                 <div class="d-grid mb-4">
-                  <button type="submit" id="submit-btn" class="btn btn-secondary text-light" data-bs-toggle="modal"
-                  data-bs-target="#infoModal">
+                  <button type="submit" id="submit-btn" class="btn btn-secondary text-light">
                     Submit
                   </button>
                   <!-- Modal - display on submit instead of going to new page -->
@@ -117,24 +115,33 @@
 
 
 {% block script %}
-
+{% from "_scripts/submit-job.js" import submit_job %}
 <script>
-
-{%- if session["is_admin"] %}
-
-$("#no_cache_checkbox").change(() => {
-  const url = "{{ url_for('genetic_mapping.submit') }}" + ($('#no_cache_checkbox').prop('checked') ? "?nocache=1" : "")
-  console.log(url)
-  $('#form-submit').attr('action', url)
-})
-
-{%- endif %}
 
 function disableButton() {
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
   btn.innerText = 'Submitting...'
 }
+
+function enableButton() {
+  const btn = document.getElementById('submit-btn');
+  btn.disabled  = false;
+  btn.innerText = 'Submit';
+}
+
+function resetForm() {
+  document.getElementById('form-submit').reset();
+  enableButton();
+}
+
+// Submit result
+$("#form-submit").on("submit", function(e) {
+  e.preventDefault();
+  disableButton();
+
+  {{ submit_job('genetic_mapping', 'form#form-submit', '#infoModal') }}
+});
 
 </script>
 

@@ -36,7 +36,7 @@
                         <p class="card-text">
                             <h2 class="mb-4 text-center">New Calculation</h2>
                                 <!-- Input Form -->
-                                <form id='form-submit' action="{{ url_for('heritability_calculator.submit') }}" method="post" enctype='multipart/form-data' onsubmit="disableButton()">
+                                <form id='form-submit' enctype="multipart/form-data">
                                     {{ form.csrf_token }}
                                     <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">
                                     <!-- Species -->
@@ -73,8 +73,7 @@
                                         </div>
                                         </div>
                                     <div class="d-grid">
-                                        <button type="submit" id="submit-btn" class="btn btn-secondary text-light" data-bs-toggle="modal" data-bs-target="#submit-modal"
-                                            aria-label="submit">Submit</button>
+                                        <button type="submit" id="submit-btn" class="btn btn-secondary text-light" aria-label="submit">Submit</button>
                                         <!-- Modal - to display after submitting -->
                                         <div class="modal fade" id="submit-modal" tabindex="-1" aria-labelledby="thankYouLabel" aria-hidden="true">
                                             <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
@@ -112,22 +111,33 @@
 {% endblock %}
 
 {% block script %}
-{# {% from "_scripts/job-submit.html" import job_submit %} #}
+{% from "_scripts/submit-job.js" import submit_job %}
 <script>
-
-{%- if session["is_admin"] %}
-$("#no_cache_checkbox").change(() => {
-  const url = "{{ url_for('heritability_calculator.submit') }}" + ($('#no_cache_checkbox').prop('checked') ? "?nocache=1" : "")
-  console.log(url)
-  $('#form-submit').attr('action', url)
-})
-{%- endif %}
 
 function disableButton() {
   const btn = document.getElementById('submit-btn');
-  btn.disabled = true;
-  btn.innerText = 'Submitting...'
+  btn.disabled  = true;
+  btn.innerText = 'Submitting...';
 }
+
+function enableButton() {
+  const btn = document.getElementById('submit-btn');
+  btn.disabled  = false;
+  btn.innerText = 'Submit';
+}
+
+function resetForm() {
+  document.getElementById('form-submit').reset();
+  enableButton();
+}
+
+// Submit result
+$("#form-submit").on("submit", function(e) {
+  e.preventDefault();
+  disableButton();
+
+  {{ submit_job('heritability_calculator', 'form#form-submit', '#submit-modal') }}
+});
 
 </script>
 {% endblock %}
