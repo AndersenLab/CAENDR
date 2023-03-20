@@ -8,11 +8,12 @@ import io
 from caendr.services.logger import logger
 from flask import Response, Blueprint, render_template, request, url_for, jsonify, redirect, flash, abort
 
-from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
 from base.forms import PairwiseIndelForm
+from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
+from base.utils.tools import try_submit
 
 from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefault
-from caendr.models.datastore import SPECIES_LIST
+from caendr.models.datastore import SPECIES_LIST, IndelPrimer
 from caendr.models.error import NotFoundError, NonUniqueEntity
 from caendr.services.dataset_release import get_browser_tracks_path
 from caendr.utils.constants import CHROM_NUMERIC
@@ -183,15 +184,9 @@ def submit():
   # If user is admin, allow them to bypass cache with URL variable
   no_cache = bool(user_is_admin() and request.args.get("nocache", False))
 
-  # Create new Indel Primer
-  p = create_new_indel_primer( user, data, no_cache=no_cache )
+  # Try submitting the job & returning a JSON status message
+  return jsonify( try_submit(IndelPrimer, user, data, no_cache) )
 
-  # Notify user that task has been started
-  return jsonify({
-    'started':   True,
-    'data_hash': p.data_hash,
-    'id':        p.id,
-  })
 
 
 # TODO: Move internals of this to a service function

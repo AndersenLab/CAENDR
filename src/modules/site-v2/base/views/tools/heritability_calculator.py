@@ -19,7 +19,7 @@ import bleach
 
 from base.forms import HeritabilityForm
 from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user, user_is_admin
-from base.utils.tools import validate_report, upload_file
+from base.utils.tools import validate_report, upload_file, try_submit
 
 from caendr.models.error import (
     CachedDataError,
@@ -28,7 +28,7 @@ from caendr.models.error import (
     FileUploadError,
     ReportLookupError,
 )
-from caendr.models.datastore import SPECIES_LIST
+from caendr.models.datastore import SPECIES_LIST, HeritabilityReport
 from caendr.api.strain import get_strains
 from caendr.services.heritability_report import get_all_heritability_results, get_user_heritability_results, create_new_heritability_report, get_heritability_report
 from caendr.utils.data import unique_id, convert_data_table_to_tsv, get_object_hash
@@ -148,67 +148,11 @@ def submit_h2():
     'filepath': local_path,
   }
 
+  # Try submitting the job & returning a JSON status message
   try:
-    h = create_new_heritability_report(user, data, no_cache=no_cache)
-    return jsonify({
-      'started':   True,
-      'data_hash': h.data_hash,
-      'id':        h.id,
-    })
+    return jsonify( try_submit(HeritabilityReport, user, data, no_cache) )
 
-  except DuplicateDataError as ex:
-    flash('Oops! It looks like you submitted that data already - redirecting to your list of Heritability Reports', 'danger')
-    return jsonify({
-      'duplicate': True,
-      'data_hash': ex.args[0].data_hash,
-      'id':        ex.args[0].id,
-    })
-
-  except CachedDataError as ex:
-    flash('Oops! It looks like that data has already been submitted - redirecting to the saved results', 'danger')
-    return jsonify({
-      'cached':    True,
-      'data_hash': ex.args[0].data_hash,
-      'id':        ex.args[0].id,
-    })
-
-  except DataFormatError as ex:
-
-    # Log the error
-    logger.error(f'Data formatting error in Heritability Calculator: {ex.msg} (Line: {ex.line})')
-
-    # Construct user-friendly error message with optional line number
-    msg = f'There was an error with your file. { ex.msg }'
-    if ex.line is not None:
-      msg += f' (Line: { ex.line })'
-
-    # Flash the error message & refresh the page
-    flash(msg, 'danger')
-    # return redirect(url_for('heritability_calculator.heritability_calculator'))
-    return jsonify({
-      'error':   True,
-      'message': msg,
-    })
-
-  except Exception as ex:
-
-    # Get message and description, if they exist
-    msg  = getattr(ex, 'message',     '')
-    desc = getattr(ex, 'description', '')
-
-    # Log the full error
-    logger.error(f'Error submitting Heritability calculation. Message = "{msg}", Description = "{desc}". Full Error: {ex}')
-
-    # Flash an error message for the user
-    # TODO: Update this wording
-    flash(f"Oops! There was a problem submitting your request.", 'danger')
-    # return redirect(url_for('heritability_calculator.heritability_calculator'))
-    return jsonify({
-      'error':   True,
-      'message': f"There was a problem submitting your request.",
-    })
-
-  # Ensure the local file is removed
+  # Ensure the local file is removed, even if an error is uncaught in the submission process
   finally:
     try:
       os.remove(local_path)

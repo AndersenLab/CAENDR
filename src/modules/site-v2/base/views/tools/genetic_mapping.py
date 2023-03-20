@@ -7,11 +7,11 @@ from flask import jsonify
 
 from base.forms import FileUploadForm
 from base.utils.auth  import get_jwt, jwt_required, admin_required, get_current_user, user_is_admin
-from base.utils.tools import validate_report, upload_file
+from base.utils.tools import validate_report, upload_file, try_submit
 
 from caendr.services.nemascan_mapping import create_new_mapping, get_mapping, get_all_mappings, get_user_mappings
 from caendr.services.cloud.storage import get_blob, generate_blob_url, get_blob_list, check_blob_exists
-from caendr.models.datastore import SPECIES_LIST
+from caendr.models.datastore import SPECIES_LIST, NemascanMapping
 from caendr.models.error import (
     CachedDataError,
     DataFormatError,
@@ -99,48 +99,11 @@ def submit():
     'filepath': local_path,
   }
 
+  # Try submitting the job & returning a JSON status message
   try:
-    # logger.warn("Check Duplicates is DISABLED !!!")
-    m = create_new_mapping(user, data, no_cache=no_cache)
-    return redirect(url_for('genetic_mapping.report', id=m.id))
+    return jsonify( try_submit(NemascanMapping, user, data, no_cache) )
 
-  except DuplicateDataError as ex:
-    flash('It looks like you submitted that data already - redirecting to your list of Mapping Reports', 'danger')
-    return redirect(url_for('genetic_mapping.user_reports'))
-
-  except CachedDataError as ex:
-    flash('It looks like that data has already been submitted - redirecting to the saved results', 'danger')
-    return redirect(url_for('genetic_mapping.report', id = ex.args[0].id))
-
-  except DataFormatError as ex:
-
-    # Log the error
-    logger.error(f'Data formatting error in Genetic Mapping: {ex.msg} (Line: {ex.line})')
-
-    # Construct user-friendly error message with optional line number
-    msg = f'There was an error with your file. { ex.msg }'
-    if ex.line is not None:
-      msg += f' (Line: { ex.line })'
-
-    # Flash the error message & refresh the page
-    flash(msg, 'danger')
-    return redirect(url_for('genetic_mapping.genetic_mapping'))
-
-  except Exception as ex:
-
-    # Get message and description, if they exist
-    msg  = getattr(ex, 'message',     '')
-    desc = getattr(ex, 'description', '')
-
-    # Log the full error
-    logger.error(f'Error submitting Genetic Mapping. Message = "{msg}", Description = "{desc}". Full Error: {ex}')
-
-    # Flash an error message for the user
-    # TODO: Update this wording
-    flash(f"Unable to submit your request.", 'danger')
-    return redirect(url_for('genetic_mapping.genetic_mapping'))
-
-  # Ensure the local file is removed
+  # Ensure the local file is removed, even if an error is uncaught in the submission process
   finally:
     try:
       os.remove(local_path)
