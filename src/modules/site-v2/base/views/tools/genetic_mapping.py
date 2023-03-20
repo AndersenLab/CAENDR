@@ -166,11 +166,14 @@ def report(id):
   else:
     report_url = None
 
+  # Get the trait name, if it exists
+  trait = mapping['trait']
+
   return render_template('tools/genetic_mapping/report.html', **{
 
     # Page info
     'title': 'Genetic Mapping Report',
-    'subtitle': f'{mapping.label}: {mapping.trait}',
+    'subtitle': mapping['label'] + (f': {trait}' if trait is not None else ''),
     'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
 
     # Job status
