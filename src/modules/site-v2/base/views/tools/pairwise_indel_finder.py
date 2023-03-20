@@ -10,11 +10,11 @@ from flask import Response, Blueprint, render_template, request, url_for, jsonif
 
 from base.forms import PairwiseIndelForm
 from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
-from base.utils.tools import try_submit
+from base.utils.tools import validate_report, try_submit
 
 from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefault
 from caendr.models.datastore import SPECIES_LIST, IndelPrimer
-from caendr.models.error import NotFoundError, NonUniqueEntity
+from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupError
 from caendr.services.dataset_release import get_browser_tracks_path
 from caendr.utils.constants import CHROM_NUMERIC
 
@@ -184,8 +184,15 @@ def submit():
   # If user is admin, allow them to bypass cache with URL variable
   no_cache = bool(user_is_admin() and request.args.get("nocache", False))
 
-  # Try submitting the job & returning a JSON status message
-  return jsonify( try_submit(IndelPrimer, user, data, no_cache) )
+  # Try submitting the job & getting a JSON status message
+  response = try_submit(IndelPrimer, user, data, no_cache)
+
+  # If there was an error, flash it
+  if not response['succeeded']:
+    flash(response['message'], 'danger')
+
+  # Return the response
+  return jsonify( response )
 
 
 
@@ -199,11 +206,12 @@ def report(id, filename = None):
     user = get_current_user()
     ip = get_indel_primer(id)
 
-    # Check that user can view this report
-    # TODO: Should admin users be able to view reports with different filenames?
-    if (ip is None) or (ip.username != user.name):
-      flash('You do not have access to that report', 'danger')
-      abort(401)
+    # Ensure the report exists and the user has permission to view it
+    try:
+      validate_report(ip)
+    except ReportLookupError as ex:
+      flash(ex.msg, 'danger')
+      abort(ex.code)
 
     # Fetch job data (parameters of original query) and results
     data   = fetch_ip_data(ip)
