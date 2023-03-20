@@ -7,7 +7,7 @@
             <li class="breadcrumb-item"><a href="/">Home</a></li>
             {% if request.blueprint != "primary" %}
             {% if disable_parent_breadcrumb %}
-            <li class="breadcrumb-item">{% if request.blueprint == 'strains' %} Request {{request.blueprint|title}} {% else %} {{request.blueprint|title|replace('_', ' ')}} {% endif %}</li>
+            <li class="breadcrumb-item"> {{request.blueprint|title|replace('_', ' ')}}</li>
             {% elif alt_parent_breadcrumb %}
             <li class="breadcrumb-item">{{ alt_parent_breadcrumb["title"] }}</li>
             {% else %}

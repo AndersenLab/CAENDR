@@ -31,7 +31,7 @@ order_bp = Blueprint('order', __name__)
 
 @order_bp.route("/", methods=['GET', 'POST'])
 def order():
-  return redirect(url_for('strains.strains_catalog'))
+  return redirect(url_for('request_strains.strains_catalog'))
 
 
 @order_bp.route('/create', methods=['GET', 'POST'])
@@ -50,7 +50,7 @@ def order_page():
 
   if (len(items) == 0):
     flash("You must select strains/sets from the catalog", 'error')
-    return redirect(url_for("strains.strains_catalog"))
+    return redirect(url_for("request_strains.strains_catalog"))
 
   # Is the user coming from the catalog?
   user_from_catalog = request.form.get('from_catalog') == "true"
