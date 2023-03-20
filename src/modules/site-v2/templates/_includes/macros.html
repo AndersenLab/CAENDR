@@ -3,29 +3,20 @@
     {{ field.label }}
     {% if form_prefix or form_suffix %}
     <div class="input-group">
-        {% endif %}
-        {% if form_prefix %}
-            <span class="input-group-addon">{{ form_prefix }}</span>
-        {% endif %}
-                {% if field.type == 'RadioField' %}
-                    {{ field(**kwargs) }}
-                {% else %}
-                    {{ field(class="form-control", **kwargs) }}
-                {% endif %}
-        {% if form_suffix %}
-            <span class="input-group-addon">{{ form_prefix }}</span>
-        {% endif %}
+    {% endif %}
+      {% if form_prefix %}<span class="input-group-addon">{{ form_prefix }}</span>{% endif %}
+      {% if field.type == 'RadioField' %}
+        {{ field(**kwargs) }}
+      {% else %}
+        {{ field(class="form-control", **kwargs) }}
+      {% endif %}
+      {% if form_suffix %}<span class="input-group-addon">{{ form_prefix }}</span>{% endif %}
     {% if form_prefix or form_suffix %}
     </div>
     {% endif %}
-
     {% for error in field.errors %}
-        <p class='text-danger'>
-            {{ error|safe|e }}
-        </p>
+      <p class='text-danger'>{{ error|safe|e }}</p>
     {% endfor %}
-
-
   </div>
 {% endmacro %}
 
