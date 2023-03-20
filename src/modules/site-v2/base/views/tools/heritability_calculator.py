@@ -98,7 +98,7 @@ def user_results():
 
 @heritability_calculator_bp.route('/heritability-calculator/submit', methods=["POST"])
 @jwt_required()
-def submit_h2():
+def submit():
   form = HeritabilityForm(request.form)
   user = get_current_user()
 
@@ -106,7 +106,7 @@ def submit_h2():
   if not form.validate_on_submit():
     pass
     # flash("You must include a description of your data and a TSV file to upload", "error")
-    # return redirect(url_for('heritability_calculator.submit_h2'))
+    # return redirect(url_for('heritability_calculator.submit'))
 
   # If user is admin, allow them to bypass cache with URL variable
   no_cache = bool(user_is_admin() and request.args.get("nocache", False))
@@ -194,7 +194,7 @@ def view_logs(id):
 # TODO: Move this into a separate service
 @heritability_calculator_bp.route("/heritability-calculator/h2/<id>")
 @jwt_required()
-def heritability_result(id):
+def report(id):
   title = "Heritability Results"
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   user = get_current_user()

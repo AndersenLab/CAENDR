@@ -193,7 +193,7 @@ def submit():
 @pairwise_indel_finder_bp.route("/pairwise-indel-finder/result/<id>")
 @pairwise_indel_finder_bp.route("/pairwise-indel-finder/result/<id>/tsv/<filename>")
 @jwt_required()
-def query_results(id, filename = None):
+def report(id, filename = None):
 
     # Get user and primer result
     user = get_current_user()

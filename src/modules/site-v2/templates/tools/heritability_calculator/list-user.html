@@ -57,7 +57,7 @@ table.dataTable thead .sorting {
           <tr>
             {% if item %}
               <td class='data-label' data-item-id="{{item.id}}">
-                <a href="{{ url_for('heritability_calculator.heritability_result', id=item.id) }}">
+                <a href="{{ url_for('heritability_calculator.report', id=item.id) }}">
                  {{ item.label }} 
                 </a>
                 </td>
