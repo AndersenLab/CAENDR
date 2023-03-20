@@ -95,7 +95,7 @@ const southWest = L.latLng(-90, -180);
 const northEast = L.latLng(90, 180);
 const bounds = L.latLngBounds(southWest, northEast);
 
-const map = L.map('map', {minZoom:2, maxBounds: bounds}).setView([20, -100], 2);
+const map = L.map('map', {minZoom:2, maxBounds: bounds, scrollWheelZoom: false}).setView([20, -100], 2);
 L.tileLayer(MB_URL, {attribution: MB_ATTR, id: 'mapbox.streets', continuousWorld: false, worldCopyJump: true}).addTo(map);
 const strain_names = [];
 const elegans = [];
