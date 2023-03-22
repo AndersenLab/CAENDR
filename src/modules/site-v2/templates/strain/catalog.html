@@ -43,6 +43,23 @@
 table {
     text-align: center;
 }
+.view-strain-list {
+    list-style-type: none;
+    column-count: 3
+}
+#search-results {
+    height: auto;
+    max-height: 200px;
+    width: 180px;
+    overflow-x: hidden;
+}
+#search-results > li:nth-child(odd) {
+    background-color: rgb(241, 241, 241);
+}
+#alert {
+    display: none;
+    text-align:center
+}
 
 </style>
 {% endblock %}
@@ -77,9 +94,10 @@ table {
                             <option value="Caenorhabditis tropicalis">C. tropicalis</option>
                           </select>
                     </div>
-                    <div class="search">
+                    <div class="dropdown">
                         <p>Search by Strains:</p>
-                        <input id="search" type="text" class="form-control" placeholder="For example, AB1 ..." action="#" autocomplete="off">
+                        <input id="search" type="text" class="form-control" data-bs-toggle="dropdown" placeholder="For example, AB1 ..." action="#" autocomplete="off">
+                        <ul class="dropdown-menu" role="menu" id="search-results"></ul>
                     </div>
                     <div class="paste-list">
                         <p>Paste List:</p>
@@ -95,9 +113,13 @@ table {
                         </div>
                     </div>
                 </div>
+                <div id="alert" class="alert alert-danger" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill d-inline"></i>
+                    <p class="d-inline m-2"></p>
+                </div>
                 <!-- Individual Strains Table -->
-                <div class="table-responsive my-5 strainSets">
-                    <table class="table table-hover table-bordered">
+                <div class="table-responsive my-5">
+                    <table class="table table-hover table-bordered" id="indStrainsTable">
                         <thead class="table-secondary">
                             <tr>
                               <th>#</th>
@@ -158,17 +180,6 @@ table {
             <div class="tab-pane fade" id="strain-sets-tab-pane" role="tabpanel" aria-labelledby="strain-sets-tab" tabindex="0">
                 <h5>Strain Sets</h5>  
                 <p>Pre-defined sets of strains can be ordered below.</p>
-                <div class="filters">
-                    <div class="species">
-                        <p>Species:</p>
-                        <select id='species' class="form-select">
-                            <option value="">Choose</option>
-                            <option value="Caenorhabditis elegans">C. elegans</option>
-                            <option value="Caenorhabditis briggsae">C. briggsae</option>
-                            <option value="Caenorhabditis tropicalis">C. tropicalis</option>
-                          </select>
-                    </div>
-                </div>
                 <div class="accordion" id="aboutStrainSets">
                     <div class="accordion-item">
                         <h3 class="accordion-header" id="divergentSets">
@@ -205,12 +216,11 @@ table {
                     <table class="table table-hover table-bordered strain-table">
                         <thead class="table-secondary">
                             <tr>
-                                <th>#</th>
+                                <th style="width:7%;">#</th>
                                 <th style="width:7%;">Select</th>
-                                <th style="width:15%;">Species</th>
                                 <th style="width:20%;">Set Name</th>
-                                <th style="width:15%;">Number of Strains</th>
-                                <th style="width:43%;">Strains</th>
+                                <th style="width:20%;">Number of Strains</th>
+                                <th style="width:46%;">Strains</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -220,8 +230,7 @@ table {
                                     <input class="form-check-input"  type="checkbox" name="items-10000" id="divergent" value="set_divergent" class="styled-checkbox" />
                                     <label class="form-check-label"  for="divergent">&nbsp;</label>
                                 </td>
-                                <td></td>
-                                <td><strong><label for="divergent">Divergent Set</label></strong></td>
+                                <td><label for="divergent">Divergent Set</label></td>
                                 <td>{{ len(strain_sets["D"]) }}</td>
                                 <td>
                                     <small>{{ strain_sets["D"]|join(' ') }}</small>
@@ -235,7 +244,6 @@ table {
                                     <input class="form-check-input" id="set-{{ i }}" type="checkbox" name="items-{{ i + 1000 }}" value="set_{{ i }}" class="styled-checkbox" {% if i>= 9 %}disabled{% endif %}/>
                                     <label class="form-check-label" for="set-{{ i }}">&nbsp;</label>
                                 </td>
-                                <td></td>
                                 <td><label for="set-{{ i }}">Mapping Set {{ i }}</label></td>
                                 <td>{{ len(strain_sets["{}".format(i)]) }}</td>
                                 <td>
@@ -275,25 +283,28 @@ table {
                 $('.searchable tr').hide();
                 $(this).val().split(',').forEach(function(r) {
                     var rex = new RegExp(r, "i");
-                    $('.searchable tr').filter(function() {
+                    var foundStrains = $('.searchable tr').filter(function() {
                         return rex.test($(this).text());
                     }).show();
+
+                    $('#search-results').empty()
+                    foundStrains.each(function() {
+                        var foundStrain = $(this).find('td:nth-child(5)').text()
+                        $('#search-results').append(`<li class='dropdown-item'>${foundStrain}</li>`)
+                    })
                 })
+
             })
 
         }(jQuery));
 
         $(document).ready(function() {
-
-
         if($("#species").val() === '') {
             $('#search').prop('disabled', true)
             $('#pasteStrains').prop('disabled', true)
-            // $('.form-check-input').prop('disabled', true)
         }
 
         $("#species").change(function() {
-
             var selectedVal = $(this).val()
             if (selectedVal) {
                 $('.searchable tr').hide()
@@ -304,7 +315,6 @@ table {
                 $('.searchable tr').show()
                 $('#search').prop('disabled', true)
                 $('#pasteStrains').prop('disabled', true)
-                // $('.form-check-input').prop('disabled', true)
             }
         })
 
@@ -329,12 +339,12 @@ table {
         })
 
         $("#submitPaste").click(function() {
+            $('#alert').hide()
             pastedStrains = $("#copyPasteStrains").val().split(/[\s,\n,\t]+/);
             lost_strains = [];
             for (i in pastedStrains) {
                 upperCaseStrain = pastedStrains[i].toUpperCase(); // Just in case users submit lower case
                 found_strain = $("[info~='" + upperCaseStrain + "']");
-
                 if (found_strain.length > 0) {
                     pasted = found_strain.prop("checked", true); // Use the word selector (~=)
                 } else {
@@ -342,8 +352,17 @@ table {
                 }
             }
             if (lost_strains.length > 0) {
-                set_alert("warning", "The following strain(s) were not found", lost_strains.join(", "));
+                set_alert(`The following strain(s) were not found ${lost_strains.join(", ")}`)
             }
+            var rows = $('.searchable tr')
+            rows.sort(function(a, b) {
+                var value1 = $(a).find('td > input:checkbox').is(":checked")
+                var value2 = $(b).find('td > input:checkbox').is(":checked")
+                return (value1 > value2) ? -1 : 1
+            })
+            $.each(rows, function (idx, row) {
+                $('#indStrainsTable > tbody').append(row)
+            })
             $('#checkoutBox').prop('disabled', !$("input:checkbox").is(":checked"));
         })
 
@@ -366,8 +385,10 @@ table {
         });
     });
 
-        
-
+    set_alert = function(msg) {
+            $('#alert > p').html(msg)
+            $('#alert').show()
+    }
 
     highlight_set_buttons = function() {
         set_names = ["set_divergent", "set_1", "set_2", "set_3", "set_4"];
@@ -379,6 +400,7 @@ table {
             }
         }
     }
+
 
     $(document).ready(function() {
         $('#search').keydown(function(event) {
