@@ -1,7 +1,5 @@
-import io
 import re
 import os
-import pandas as pd
 import datetime
 from caendr.models.datastore.pipeline_operation import PipelineOperation
 
@@ -25,12 +23,15 @@ from caendr.models.error import (
     CachedDataError,
     DataFormatError,
     DuplicateDataError,
+    EmptyReportDataError,
+    EmptyReportResultsError,
     FileUploadError,
     ReportLookupError,
+    UnfinishedReportError,
 )
 from caendr.models.datastore import SPECIES_LIST, HeritabilityReport
 from caendr.api.strain import get_strains
-from caendr.services.heritability_report import get_all_heritability_results, get_user_heritability_results, create_new_heritability_report, get_heritability_report
+from caendr.services.heritability_report import get_all_heritability_results, get_user_heritability_results, create_new_heritability_report, get_heritability_report, fetch_heritability_report
 from caendr.utils.data import unique_id, convert_data_table_to_tsv, get_object_hash
 from caendr.services.cloud.storage import get_blob, generate_blob_url
 from caendr.services.persistent_logger import PersistentLogger
@@ -198,12 +199,11 @@ def view_logs(id):
 
   return render_template("tools/heritability_calculator/logs.html", **locals())
 
-# TODO: Move this into a separate service
+
 @heritability_calculator_bp.route("/heritability-calculator/h2/<id>")
 @jwt_required()
 def report(id):
-  title = "Heritability Results"
-  alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
+
   user = get_current_user()
 
   # Fetch requested heritability report
@@ -216,45 +216,32 @@ def report(id):
     flash(ex.msg, 'danger')
     abort(ex.code)
 
-  ready = False
-
-  # Get blob paths
-  # Used in code as well as templating(?)
-  data_blob = hr.get_data_blob_path()
-  result_blob = hr.get_result_blob_path()
-
+  # TODO: Is this used?
   data_hash = hr.data_hash
-  data_url = generate_blob_url(hr.get_bucket_name(), data_blob)
 
-  data   = get_blob(hr.get_bucket_name(), data_blob)
-  result = get_blob(hr.get_bucket_name(), result_blob)
+  # Try getting & parsing the report data file and results
+  try:
+    data, result = fetch_heritability_report(hr)
+    ready = True
 
-  # get this dynamically from the bp
-  # logs_url = f"/heritability/h2/{hr.id}/logs"
-  logs_url = url_for('heritability_calculator.view_logs', id = hr.id)
+  # If report hasn't finished computing yet, display a waiting page
+  except UnfinishedReportError:
+    data, result = ex.data, None
+    ready = False
 
-  if data is None:
+  # If no submission exists, return 404
+  except EmptyReportDataError:
     return abort(404, description="Heritability report not found")
 
-  data = data.download_as_string().decode('utf-8')
-  data = pd.read_csv(io.StringIO(data), sep="\t")
-  data['AssayNumber'] = data['AssayNumber'].astype(str)
-  data['label'] = data.apply(lambda x: f"{x['AssayNumber']}: {x['Value']}", 1)
-  data = data.to_dict('records')
   trait = data[0]['TraitName']
-  # Get trait and set title
-  subtitle = trait
 
+  # If result exists, mark as complete
+  # TODO: Is this the right place for this?
   if result:
     hr.status = 'COMPLETE'
     hr.save()
-    result = result.download_as_string().decode('utf-8')
-    result = pd.read_csv(io.StringIO(result), sep="\t")
-    result = result.to_dict('records')[0]
 
-    fname =  datetime.today().strftime('%Y%m%d.')+trait
-    ready = True
-
+  # TODO: Are either of these values used?
   format = '%I:%M %p %m/%d/%Y'
   now = datetime.now().strftime(format)
 
@@ -264,8 +251,29 @@ def report(id):
   except:
     operation = None
 
+  # TODO: Is this used? It looks like the error message(s) come from the operation (above)
   service_name = os.getenv('HERITABILITY_CONTAINER_NAME')
   persistent_logger = PersistentLogger(service_name)
   error = persistent_logger.get(id)
 
-  return render_template("tools/heritability_calculator/result.html", **locals())
+  return render_template("tools/heritability_calculator/result.html", **{
+    'title': "Heritability Results",
+    'subtitle': trait,
+    'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+
+    'ready': ready,
+
+    # TODO: The HTML file expects a variable called "fnam" -- is that a typo?
+    'fname': datetime.today().strftime('%Y%m%d.') + trait,
+
+    'hr': hr,
+    'data': data,
+    'result': result,
+
+    'data_hash': data_hash,
+    'operation': operation,
+    'error': error,
+
+    'data_url': generate_blob_url(hr.get_bucket_name(), hr.get_data_blob_path()),
+    'logs_url': url_for('heritability_calculator.view_logs', id = id),
+  })

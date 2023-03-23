@@ -1,10 +1,13 @@
 import os
+import io
+import pandas as pd
 
 from caendr.services.logger import logger
 
-from caendr.models.error import CachedDataError, DuplicateDataError, NotFoundError
+from caendr.models.error import CachedDataError, DuplicateDataError, NotFoundError, EmptyReportDataError, EmptyReportResultsError, UnfinishedReportError
 from caendr.models.datastore import HeritabilityReport
 
+from caendr.services.cloud.storage import get_blob
 from caendr.services.tools.submit import submit_job
 
 
@@ -67,3 +70,39 @@ def update_heritability_report_status(id: str, status: str=None, operation_name:
     
   h.save()
   return h
+
+
+
+def fetch_heritability_report(report):
+
+  # Get blob paths
+  data_blob   = report.get_data_blob_path()
+  result_blob = report.get_result_blob_path()
+
+  data   = get_blob(report.get_bucket_name(), data_blob)
+  result = get_blob(report.get_bucket_name(), result_blob)
+
+  # If no submission file exists, return error
+  if data is None:
+    raise EmptyReportDataError(report.id)
+
+  # Parse data file
+  data = data.download_as_string().decode('utf-8')
+  data = pd.read_csv(io.StringIO(data), sep="\t")
+  data['AssayNumber'] = data['AssayNumber'].astype(str)
+  data['label'] = data.apply(lambda x: f"{x['AssayNumber']}: {x['Value']}", 1)
+  data = data.to_dict('records')
+
+  # If results file is empty, report is unfinished
+  # TODO: will get_blob always return None if empty?
+  if not result:
+    raise UnfinishedReportError(report.id, data=data)
+
+  # Parse results file
+  # TODO: Check for empty/error results file?
+  result = result.download_as_string().decode('utf-8')
+  result = pd.read_csv(io.StringIO(result), sep="\t")
+  result = result.to_dict('records')[0]
+
+  # Return parsed data & result
+  return data, result
