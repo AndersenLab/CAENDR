@@ -86,10 +86,28 @@ class NonUniqueEntity(InternalError):
     self.description = f'Found multiple {kind} entities with field "{key}" = "{val}".'
     super().__init__()
 
+
 class ReportLookupError(InternalError):
   def __init__(self, msg, code):
     self.msg = msg
     self.code = code
+
+class EmptyReportDataError(InternalError):
+  def __init__(self, report_id):
+    self.id = report_id
+    self.description = 'Empty report'
+
+class EmptyReportResultsError(InternalError):
+  def __init__(self, report_id):
+    self.id = report_id
+    self.description = 'Empty report'
+
+class UnfinishedReportError(InternalError):
+  def __init__(self, report_id, data=None):
+    self.id = report_id
+    self.data = data
+    self.description = 'Report is not finished'
+
 
 class FileUploadError(InternalError):
   description = "Could not upload file"
