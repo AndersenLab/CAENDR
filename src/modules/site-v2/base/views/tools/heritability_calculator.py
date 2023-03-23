@@ -19,7 +19,7 @@ import bleach
 
 from base.forms import HeritabilityForm
 from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user, user_is_admin
-from base.utils.tools import validate_report, upload_file, try_submit
+from base.utils.tools import lookup_report, upload_file, try_submit
 
 from caendr.models.error import (
     CachedDataError,
@@ -205,11 +205,13 @@ def report(id):
   title = "Heritability Results"
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   user = get_current_user()
-  hr = get_heritability_report(id)
 
-  # Ensure the report exists and the user has permission to view it
+  # Fetch requested heritability report
+  # Ensures the report exists and the user has permission to view it
   try:
-    validate_report(hr, user)
+    hr = lookup_report(HeritabilityReport, id, user=user)
+
+  # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:
     flash(ex.msg, 'danger')
     abort(ex.code)

@@ -7,7 +7,7 @@ from flask import jsonify
 
 from base.forms import FileUploadForm
 from base.utils.auth  import get_jwt, jwt_required, admin_required, get_current_user, user_is_admin
-from base.utils.tools import validate_report, upload_file, try_submit
+from base.utils.tools import lookup_report, upload_file, try_submit
 
 from caendr.services.nemascan_mapping import create_new_mapping, get_mapping, get_all_mappings, get_user_mappings
 from caendr.services.cloud.storage import get_blob, generate_blob_url, get_blob_list, check_blob_exists
@@ -144,12 +144,12 @@ def user_reports():
 @jwt_required()
 def report(id):
 
-  # Get user and requested mapping
-  mapping = get_mapping(id)
-
-  # Ensure the report exists and the user has permission to view it
+  # Fetch requested mapping report
+  # Ensures the report exists and the user has permission to view it
   try:
-    validate_report(mapping)
+    mapping = lookup_report(NemascanMapping, id)
+
+  # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:
     flash(ex.msg, 'danger')
     abort(ex.code)
@@ -191,20 +191,25 @@ def report(id):
 @genetic_mapping_bp.route('/genetic-mapping/report/<id>/fullscreen', methods=['GET'])
 @jwt_required()
 def report_fullscreen(id):
-  title = 'Genetic Mapping Report'
-  alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
-  user = get_current_user()
-  mapping = get_mapping(id)
-  subtitle = mapping.label +': ' + mapping.trait
-  fluid_container = True
-  data_url = generate_blob_url(mapping.get_bucket_name(), mapping.get_data_blob_path())
-  # if hasattr(mapping, 'mapping_report_url'):
+
+  # Fetch requested mapping report
+  # Ensures the report exists and the user has permission to view it
+  try:
+    mapping = lookup_report(NemascanMapping, id)
+
+  # If the report lookup request is invalid, show an error message
+  except ReportLookupError as ex:
+    flash(ex.msg, 'danger')
+    abort(ex.code)
+
+  # Download the report files, if they exist
   if mapping.report_path is not None:
     blob = get_blob(mapping.get_bucket_name(), mapping.report_path)
     report_contents = blob.download_as_text()
   else:
     report_contents = None
 
+  # Return the report
   return report_contents
 
 @genetic_mapping_bp.route('/genetic-mapping/report/<id>/status', methods=['GET'])

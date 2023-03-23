@@ -5,7 +5,7 @@ from flask import Response, Blueprint, render_template, request, url_for, jsonif
 
 from base.forms import PairwiseIndelForm
 from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
-from base.utils.tools import validate_report, try_submit
+from base.utils.tools import lookup_report, try_submit
 
 from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefault
 from caendr.models.datastore import SPECIES_LIST, IndelPrimer
@@ -206,12 +206,12 @@ def submit():
 @jwt_required()
 def report(id, filename = None):
 
-    # Get primer report
-    report = get_indel_primer(id)
-
-    # Ensure the report exists and the user has permission to view it
+    # Fetch requested primer report
+    # Ensures the report exists and the user has permission to view it
     try:
-      validate_report(report)
+      report = lookup_report(IndelPrimer, id)
+
+    # If the report lookup request is invalid, show an error message
     except ReportLookupError as ex:
       flash(ex.msg, 'danger')
       abort(ex.code)

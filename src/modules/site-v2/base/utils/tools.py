@@ -20,11 +20,14 @@ uploads_dir = os.path.join('./', 'uploads')
 os.makedirs(uploads_dir, exist_ok=True)
 
 
-def validate_report(report, user=None):
+def lookup_report(EntityClass, reportId, user=None):
 
   # If no user explicitly provided, default to current user
   if user is None:
     user = get_current_user()
+
+  # Retrieve the report entity from datastore, or None if no entity with that ID exists
+  report = EntityClass.get_ds(reportId)
 
   # If no such report exists, show an error message
   if report is None:
@@ -40,6 +43,9 @@ def validate_report(report, user=None):
   # If the user doesn't have permission to view this report, show an error message
   if not (report.username == user.name or user_is_admin()):
     raise ReportLookupError('You do not have access to that report', 401)
+
+  # If all checks passed, return the report entity
+  return report
 
 
 def upload_file(request, filename):
@@ -67,12 +73,12 @@ def upload_file(request, filename):
   return local_path
 
 
-def try_submit(entityClass, user, data, no_cache):
+def try_submit(EntityClass, user, data, no_cache):
 
   # Try submitting the job
   try:
     # report = create_report_func(user, data, no_cache=no_cache)
-    report = submit_job(entityClass, user, data, no_cache=no_cache)
+    report = submit_job(EntityClass, user, data, no_cache=no_cache)
     return {
       'succeeded': True,
       'cached':    False,
@@ -109,7 +115,7 @@ def try_submit(entityClass, user, data, no_cache):
   except DataFormatError as ex:
 
     # Log the error
-    logger.error(f'Data formatting error in {entityClass.kind} file upload: {ex.msg} (Line: {ex.line})')
+    logger.error(f'Data formatting error in {EntityClass.kind} file upload: {ex.msg} (Line: {ex.line})')
 
     # Construct user-friendly error message with optional line number
     msg = f'There was an error with your file. { ex.msg }'
@@ -130,7 +136,7 @@ def try_submit(entityClass, user, data, no_cache):
     desc = getattr(ex, 'description', '')
 
     # Log the full error
-    logger.error(f'Error submitting {entityClass.kind} calculation. Message = "{msg}", Description = "{desc}". Full Error: {ex}')
+    logger.error(f'Error submitting {EntityClass.kind} calculation. Message = "{msg}", Description = "{desc}". Full Error: {ex}')
 
     # Return the error message
     # TODO: Update this wording
