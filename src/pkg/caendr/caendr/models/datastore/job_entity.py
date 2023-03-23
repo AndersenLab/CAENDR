@@ -1,6 +1,7 @@
 from caendr.services.logger import logger
 
 from caendr.models.datastore import Container, Entity
+from caendr.models.datastore.pipeline_operation import PipelineOperation
 
 
 
@@ -85,6 +86,17 @@ class JobEntity(Entity):
     #   self.__status = val
     # else:
     #   raise TypeError(f'Cannot set status of {self.kind} job to "{val}".')
+
+
+
+  ## Pipeline Operation ##
+
+  def get_pipeline_operation(self) -> PipelineOperation:
+    try:
+      operation_id = self['operation_name'].split('/').pop()
+      return PipelineOperation(operation_id)
+    except:
+      return None
 
 
 

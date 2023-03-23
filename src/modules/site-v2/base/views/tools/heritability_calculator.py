@@ -245,13 +245,7 @@ def report(id):
   format = '%I:%M %p %m/%d/%Y'
   now = datetime.now().strftime(format)
 
-  try:
-    operation_id = hr.operation_name.split('/').pop()
-    operation = PipelineOperation(operation_id)
-  except:
-    operation = None
-
-  # TODO: Is this used? It looks like the error message(s) come from the operation (above)
+  # TODO: Is this used? It looks like the error message(s) come from the entity's PipelineOperation
   service_name = os.getenv('HERITABILITY_CONTAINER_NAME')
   persistent_logger = PersistentLogger(service_name)
   error = persistent_logger.get(id)
@@ -271,7 +265,7 @@ def report(id):
     'result': result,
 
     'data_hash': data_hash,
-    'operation': operation,
+    'operation': hr.get_pipeline_operation(),
     'error': error,
 
     'data_url': generate_blob_url(hr.get_bucket_name(), hr.get_data_blob_path()),
