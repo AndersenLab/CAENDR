@@ -121,23 +121,24 @@ def submit():
 @genetic_mapping_bp.route('/genetic-mapping/reports/all', methods=['GET', 'POST'])
 @admin_required()
 def all_reports():
-  title = 'All Genetic Mappings'
-  subtitle = 'Report List'
-  alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
-  user = get_current_user()
-  mappings = get_all_mappings()
-  return render_template('tools/genetic_mapping/list-all.html', **locals())
+  return render_template('tools/genetic_mapping/list-all.html', **{
+    'title': 'All Genetic Mappings',
+    'subtitle': 'Report List',
+    'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+    'mappings': get_all_mappings(),
+  })
 
 
 @genetic_mapping_bp.route('/genetic-mapping/reports', methods=['GET', 'POST'])
 @jwt_required()
 def user_reports():
-  title = 'My Genetic Mappings'
-  subtitle = 'Report List'
-  alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   user = get_current_user()
-  mappings = get_user_mappings(user.name)
-  return render_template('tools/genetic_mapping/list-user.html', **locals())
+  return render_template('tools/genetic_mapping/list-user.html', **{
+    'title': 'My Genetic Mappings',
+    'subtitle': 'Report List',
+    'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+    'mappings': get_user_mappings(user.name),
+  })
 
 
 @genetic_mapping_bp.route('/genetic-mapping/report/<id>', methods=['GET'])
@@ -212,6 +213,7 @@ def report_fullscreen(id):
   # Return the report
   return report_contents
 
+
 @genetic_mapping_bp.route('/genetic-mapping/report/<id>/status', methods=['GET'])
 @jwt_required()
 def report_status(id):
@@ -236,31 +238,37 @@ def report_status(id):
 @genetic_mapping_bp.route('/genetic-mapping/report/<id>/results/', methods=['GET'])
 @jwt_required()
 def results(id):
-  title = 'Genetic Mapping Result Files'
-  alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
-  user = get_current_user()
-  mapping = get_mapping(id)
-  subtitle = mapping.label + ': ' + mapping.trait
-  blobs = get_blob_list(mapping.get_bucket_name(), mapping.get_result_path())
-  file_list = []
-  for blob in blobs:
-    file_list.append({
-      "name": blob.name.rsplit('/', 2)[1] + '/' + blob.name.rsplit('/', 2)[2],
-      "url": blob.public_url
-    })
-    
-  return render_template('tools/genetic_mapping/result_files.html', **locals())
 
+  # Fetch requested mapping report
+  # Ensures the report exists and the user has permission to view it
+  try:
+    mapping = lookup_report(NemascanMapping, id)
 
+  # If the report lookup request is invalid, show an error message
+  except ReportLookupError as ex:
+    flash(ex.msg, 'danger')
+    abort(ex.code)
 
+  # Get the trait, if it exists
+  trait = mapping['trait']
 
-  data_blob = RESULT_BLOB_PATH.format(data_hash=ns.data_hash)
-  blobs = list_files(data_blob)
-  file_list = []
-  for blob in blobs:
-    file_list.append({
-      "name": blob.name.rsplit('/', 2)[1] + '/' + blob.name.rsplit('/', 2)[2],
-      "url": blob.public_url
-    })
-    
-  return render_template('mapping_result_files.html', **locals())
+  # # Old way to compute list of blobs, that was hidden beneath 'return'
+  # # Can this be deleted?
+  # data_blob = RESULT_BLOB_PATH.format(data_hash=ns.data_hash)
+  # blobs = list_files(data_blob)
+
+  # Get the list of files in this report, truncating all names to everything after second-to-last '/'
+  file_list = [
+    {
+      "name": '/'.join( blob.name.rsplit('/', 2)[1:] ),
+      "url":  blob.public_url,
+    }
+    for blob in get_blob_list(mapping.get_bucket_name(), mapping.get_result_path())
+  ]
+
+  return render_template('tools/genetic_mapping/result_files.html', **{
+    'title': 'Genetic Mapping Result Files',
+    'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+    'subtitle': mapping.label + (f': {trait}' if trait else ''),
+    'file_list': file_list,
+  })
