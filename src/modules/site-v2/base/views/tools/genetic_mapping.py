@@ -180,6 +180,8 @@ def report(id):
     # Job status
     'mapping_status': mapping['status'],
 
+    'id': id,
+
     # URLs
     'report_url': report_url,
     'report_status_url': url_for("genetic_mapping.report_status", id=id),
