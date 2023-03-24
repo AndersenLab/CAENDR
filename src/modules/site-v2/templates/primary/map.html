@@ -40,9 +40,9 @@
     <div id="map"></div>
     <form id="strains">
       <p><strong>Species:</strong></p>
-      <div><input type='checkbox' name='filters' value='elegans_layer' checked><i> C. Elegans</i></div>
-      <div><input type='checkbox' name='filters' value='briggsae_layer'><i> C. Briggsae</i></div>
-      <div><input type='checkbox' name='filters' value='tropicalis_layer'><i> C. Tropicalis</i></div>
+      <div><input type='checkbox' name='filters' value='elegans_layer' checked><i> C. elegans</i></div>
+      <div><input type='checkbox' name='filters' value='briggsae_layer'><i> C. briggsae</i></div>
+      <div><input type='checkbox' name='filters' value='tropicalis_layer'><i> C. tropicalis</i></div>
     </form>
   </div>
    
@@ -81,7 +81,7 @@ const icon_tropicalis = L.icon({
 const icon_hover = L.icon({
     iconUrl: "{{ url_for('static', filename='img/hover-icon.png') }}",
     iconSize: [24, 24],
-    iconAnchor: [10, 16],
+    iconAnchor: [12, 16],
     popupAnchor: [0, -15],
 });
 {% endautoescape %}
