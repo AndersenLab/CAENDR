@@ -1,7 +1,7 @@
 
 <style>
   #map {
-    height: 50vh;
+    height: 48vh;
     z-index: 0;
   }
   .leaflet-control-zoom.leaflet-bar {
@@ -37,7 +37,7 @@
     position:absolute;
     top: 30px;
     right: 30px;
-    z-index: 1;
+    z-index: 1000;
     background-color: #0719BC;
     color: white;
     padding: 15px;
@@ -59,22 +59,17 @@
   }
 </style>
 
-
-  <div class="container-fluid position-relative map-container">
-    <div id="map"></div>
-    <form id="strains">
-      <p><strong>Species:</strong></p>
-      <div><input type='checkbox' name='filters' value='elegans_layer' checked><i> C. elegans</i></div>
-      <div><input type='checkbox' name='filters' value='briggsae_layer'><i> C. briggsae</i></div>
-      <div><input type='checkbox' name='filters' value='tropicalis_layer'><i> C. tropicalis</i></div>
-    </form>
-    <div class='text-center'>
+    <div class="position-relative" id="map">
+      <form id="strains">
+        <p><strong>Species:</strong></p>
+        <div><input type='checkbox' name='filters' value='elegans_layer' checked><i> C. elegans</i></div>
+        <div><input type='checkbox' name='filters' value='briggsae_layer'><i> C. briggsae</i></div>
+        <div><input type='checkbox' name='filters' value='tropicalis_layer'><i> C. tropicalis</i></div>
+      </form>
+    </div>
+    <div class="text-center my-2">
       <small><strong>Click a pin to see information about <i>species</i> wild isolate</strong></small>
-  </div>
-  </div>
-   
-
-
+    </div>
 
 {% block script %}
 
