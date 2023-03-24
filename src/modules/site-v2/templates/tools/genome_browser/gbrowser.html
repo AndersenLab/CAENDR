@@ -131,9 +131,6 @@
                   <label>
                     <input id="{{ track.name }}_checkbox" type="checkbox" class="track-select normal-track" value="{{ track.name }}" />
                     {{ track.name }}
-                    {% if track['source'] %}
-                      <br />(<a class="track-source-link" href="{{ track.source.url }}" target='_blank'>{{ track.source.title }}</a>)
-                    {% endif %}
                   </label>
                 </div>
               {% endfor %}

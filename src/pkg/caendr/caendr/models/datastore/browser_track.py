@@ -121,7 +121,6 @@ class BrowserTrackDefault(BrowserTrack):
     return {
       *super().get_props_set(),
       'checked',
-      'source',
     }
 
 
