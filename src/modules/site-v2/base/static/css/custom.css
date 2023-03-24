@@ -117,3 +117,11 @@
     .hl-mark {
       background-color: yellow;
     }
+
+
+  /* Striped table rows in filterable table */
+  /* Modified from Bootstrap implementation of table-striped */
+  .table-striped-filterable .table-striped-row {
+    --bs-table-accent-bg: var(--bs-table-striped-bg);
+    color: var(--bs-table-striped-color);
+  }
