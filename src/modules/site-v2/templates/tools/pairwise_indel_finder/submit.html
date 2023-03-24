@@ -309,10 +309,9 @@ function update_species(species_id) {
         // Replace species tokens in URL
         divergent_track_summary.url = replace_tokens(divergent_track_summary.url);
 
-        // Update display properties
-        // TODO: Should be able to specify these in datastore somehow
-        divergent_track_summary.height = 40;
-        divergent_track_summary.color  = "#CB3466";
+        // Set tool-specific display properties
+        divergent_track_summary.height = 40; // Height to view two rows would be 70
+        divergent_track_summary.removable = false;
 
         // Add the track to the browser
         add_track(divergent_track_name, divergent_track_summary);
