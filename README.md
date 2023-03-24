@@ -117,7 +117,7 @@ Keep this docker container running while running the site below.
 Open a second terminal window 
 ```
 export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
-export ENV=main
+export ENV=development
 cd src/modules/site-v2
 make configure
 make dot-env
