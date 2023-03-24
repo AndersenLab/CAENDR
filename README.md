@@ -155,7 +155,7 @@ $ docker kill 75ef941c1e64
 Open a second terminal window
 ```
 export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
-export ENV=main
+export ENV=development
 cd src/modules/site
 make configure
 make dot-env
