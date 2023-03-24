@@ -92,7 +92,7 @@ virtualenv 20.13.0 from /Users/rbv218/.pyenv/versions/3.7.12/lib/python3.7/site-
 Open one terminal window and run:
 ```
 export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
-export ENV=main
+export ENV=development
 cd src/modules/site
 make clean
 make configure
