@@ -262,6 +262,8 @@ const strainListing = JSON.parse('{{ strain_listing | tojson }}');
 // Track changes to selected species
 function update_species(species_id) {
 
+  const species_empty = species_id == null || species_id == '';
+
   // Enable or disable form inputs that depend on species being defined
   const form_ids = [
     'gene-search',
@@ -270,13 +272,11 @@ function update_species(species_id) {
     'strain-filter',
   ]
   form_ids.forEach((form_id) => {
-    document.getElementById(form_id).disabled = !species_id;
+    document.getElementById(form_id).disabled = species_empty;
   })
 
-  // Check if value provided
-  if ( !species_id ) {
-    return
-  }
+  // If no species selected, end the update function here
+  if (species_empty) return;
 
   // Set species object from ID
   species = species_list[species_id];

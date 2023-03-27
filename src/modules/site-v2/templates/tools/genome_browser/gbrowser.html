@@ -331,14 +331,11 @@ function update_visible_track_checkboxes(species_id) {
 // Set up species variable & set to match species selector
 function update_species(species_id) {
 
-  // Prompt user to select species if none selected
-  if (species_id) {
-    $('#select-species-prompt').hide();
-    $('#browser-container').show();
-  } else {
-    $('#browser-container').hide();
-    $('#select-species-prompt').show();
-  }
+  const species_empty = species_id == null || species_id == '';
+
+  // If no species selected, prompt user to select one; otherwise show the IGV browser
+  $('#select-species-prompt').toggle(species_empty);
+  $('#browser-container').toggle(!species_empty);
 
   // Enable or disable form inputs that depend on species being defined
   const form_ids = [
@@ -346,12 +343,15 @@ function update_species(species_id) {
     'gene-search',
   ]
   form_ids.forEach((form_id) => {
-    document.getElementById(form_id).disabled = !species_id;
+    document.getElementById(form_id).disabled = species_empty;
   })
-  document.getElementById('track-options-container').style.backgroundColor = `var(--${ species_id ? 'enabled' : 'disabled' }-color)`;
 
-  // Check if value provided
-  if ( !species_id ) {
+  // Special case for track options container, which isn't technically an input itself
+  // Update element background color to match disabled input elements
+  document.getElementById('track-options-container').style.backgroundColor = `var(--${ species_empty ? 'disabled' : 'enabled' }-color)`;
+
+  // If no species selected, clear track checkboxes and end update function here
+  if (species_empty) {
     update_visible_track_checkboxes();
     return;
   }
