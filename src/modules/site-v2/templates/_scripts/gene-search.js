@@ -39,35 +39,33 @@ function run_gene_search(gene, species, table_id, loading_id, callback) {
 
   // Get the body of the table to fill out
   const tbody = $(`${table_id} > tbody`);
-  console.log(tbody);
-  
+
   // If no search term provided, hide both dropdown elements
   if (gene.length == 0) {
     $(table_id).fadeOut();
     $(loading_id).fadeOut();
+    return;
   }
-  
-  // If search provided, query the database
-  else {
-    tbody.html("");
-    $.ajax({
-      url:         "{{ url_for('api_gene.api_search_genes', query='') }}" + gene + '?species=' + species.name,
-      method:      "GET",
-      contentType: 'application/xml',
-    }).done(function(results) {
 
-      // Map each gene to a set of cell values, and add to the table as <td> elements (if applicable)
-      $.each(results, (i, row) => {
-        const cell_values = callback(i, row);
-        if (cell_values !== null) {
-          tbody.append("<tr><td>" + cell_values.join("</td><td>") + "</td></tr>");
-        }
-      });
+  // If search provided, clear the current table and query the database
+  tbody.html("");
+  $.ajax({
+    url:         "{{ url_for('api_gene.api_search_genes', query='') }}" + gene + '?species=' + species.name,
+    method:      "GET",
+    contentType: 'application/xml',
+  }).done(function(results) {
 
-      // Hide the loading symbol & show the table
-      $(loading_id).fadeOut().promise().done(() => { $(table_id).fadeIn(); });
+    // Map each gene to a set of cell values, and add to the table as <td> elements (if applicable)
+    $.each(results, (i, row) => {
+      const cell_values = callback(i, row);
+      if (cell_values !== null) {
+        tbody.append("<tr><td>" + cell_values.join("</td><td>") + "</td></tr>");
+      }
     });
-  }
+
+    // Hide the loading symbol & show the table
+    $(loading_id).fadeOut().promise().done(() => { $(table_id).fadeIn(); });
+  });
 }
 
 
