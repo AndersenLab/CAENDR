@@ -178,9 +178,7 @@ def submit_h2():
     logger.error(f'Data formatting error in Heritability Calculator: {ex.msg} (Line: {ex.line})')
 
     # Construct user-friendly error message with optional line number
-    msg = f'There was an error with your file. { ex.msg }'
-    if ex.line is not None:
-      msg += f' (Line: { ex.line })'
+    msg = ex.msg + (f' (Line: { ex.line })' if ex.line is not None else '')
 
     # Flash the error message & refresh the page
     flash(msg, 'danger')
