@@ -10,7 +10,6 @@
 
 {% block content %}
 {% from "_includes/macros.html" import render_field %}
-{% from "_includes/strain-listing.html" import species_selector %}
 
 <div class="container-fluid px-5">
   <div class="d-flex justify-content-around flex-wrap mt-2 pb-5">
@@ -32,10 +31,7 @@
             <!-- Input Form -->
             <form id='form-submit' method="POST" onchange="form_change()">
               {{ form.csrf_token }}
-              <!-- Species -->
-              {{ species_selector(species_list, "update_species") }}
-              <!-- /Species -->
-              <!-- <div class='mb-4'>{{ render_field(form.species) }}</div> -->
+              <div class='mb-4'>{{ render_field(form.species,                 onchange="update_species") }}</div>
               <div class="mb-4">{{ render_field(form.strain_1,   disabled='', onchange="update_browser_tracks()") }}</div>
               <div class="mb-4">{{ render_field(form.strain_2,   disabled='', onchange="update_browser_tracks()") }}</div>
               <div class="mb-4">{{ render_field(form.chromosome, disabled='') }}</div>
@@ -232,7 +228,7 @@ function form_change() {
   const browser = igv.getBrowser()
 
   // Get the new values from the form elements
-  const species_id = $("#speciesSelect").val().trim();
+  const species_id = $("#{{ form.species.elementId }}").val().trim();
   const chromosome = $("#chromosome").val().trim();
   const strain_1 = $("#strain_1").val();
   const strain_2 = $("#strain_2").val();

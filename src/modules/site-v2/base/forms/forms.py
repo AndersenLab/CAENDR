@@ -57,6 +57,16 @@ class MultiCheckboxField(SelectMultipleField):
   widget = widgets.ListWidget(prefix_label=False)
   option_widget = widgets.CheckboxInput() 
 
+
+class SpeciesSelectField(SelectField):
+  type = 'SpeciesSelectField'
+  elementId = 'speciesSelect'
+  CHOICES = [(name, value.short_name) for name, value in SPECIES_LIST.items()]
+
+  def __init__(self, **kwargs):
+    super().__init__('Species', id=SpeciesSelectField.elementId, choices=[ ('', "Choose"), *SpeciesSelectField.CHOICES ], **kwargs)
+
+
 class EmptyForm(FlaskForm):
   pass
 
@@ -199,9 +209,8 @@ class StrainSelectField(SelectField):
 
 class PairwiseIndelForm(Form):
   CHROMOSOME_CHOICES = [('', ''), *get_indel_primer_chrom_choices()]
-  SPECIES_CHOICES = [(name, value.short_name) for name, value in SPECIES_LIST.items()]
 
-  species = SelectField('Species', choices=SPECIES_CHOICES, validators=[Required()])
+  species = SpeciesSelectField(validators=[Required()])
   strain_1 = StrainSelectField('Strain 1', choices=[], validators=[Required(), validate_uniq_strains])
   strain_2 = StrainSelectField('Strain 2', choices=[], validators=[Required()])
   chromosome = SelectField('Chromosome', choices=CHROMOSOME_CHOICES, validators=[Required()])

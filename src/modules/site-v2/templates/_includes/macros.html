@@ -1,3 +1,11 @@
+{%- macro species_onchange(onchange=None) -%}
+  this.classList.toggle('fst-italic', this.value);{% if onchange %} {{ onchange }}(this.value);{% endif %}
+{%- endmacro -%}
+
+{% macro render_species_field(field, onchange=None) %}
+  {{ field(class="form-control", onchange=species_onchange(onchange), **kwargs) }}
+{% endmacro %}
+
 {% macro render_field(field, form_prefix=None, form_suffix=None) %}
   <div class="form-group {% if field.errors %}has-error{% endif %}">
     {{ field.label }}
@@ -7,6 +15,8 @@
       {% if form_prefix %}<span class="input-group-addon">{{ form_prefix }}</span>{% endif %}
       {% if field.type == 'RadioField' %}
         {{ field(**kwargs) }}
+      {% elif field.type == 'SpeciesSelectField' %}
+        {{ render_species_field(field, **kwargs) }}
       {% else %}
         {{ field(class="form-control", **kwargs) }}
       {% endif %}
