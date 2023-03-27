@@ -132,7 +132,13 @@ const COLORS = {
   INS: 'blue',
   DEL: 'red'
 }
-var current_chromosome = '';
+
+/* Form */
+var current_form_data = {
+  chromosome: '',
+  strain_1:   '',
+  strain_2:   '',
+}
 
 /* Data Table */
 var table;
@@ -163,55 +169,11 @@ $(document).ready(function(){
   species = species_list[$("#species").val()];
   update_species();
 
-  form.addEventListener('change', function() {
-    if (loaded) {
-      set_position( igv.getBrowser() );
-    }
-  });
-
-	reset_query = function() {
-		query_running = false
-	}
-
-	submitForm = function() {
-		if (query_running == false) {
-			query_running = true
-			$("form").submit()
-		}
-		setTimeout(reset_query, 200)
-	}
-
+  // Prevent form submission from reloading page, then redirect to form change logic
   $('form').submit(function (e) {
-		e.preventDefault();
-		$.ajax({
-        type: "POST",
-				url:  "{{ url_for('pairwise_indel_finder.query') }}",
-				data: $('form').serialize(),
-				success: function(data) {
-          results = data["results"]
-
-          // Add the 'generate primers' HTML value to each result
-          _.each(results, function(x) {
-            x['generate_primers'] = `<div site="${x['CHROM']}:${x["START"]}-${x['END']}" svtype="${x['SVTYPE']}" size="${x["END"]-x["START"]}" class='btn-link generate-primers'>Generate Primers</div>`
-          })
-
-					// Handle errors
-					$(".form-error").remove();
-					if (Object.keys(data).indexOf("errors") > -1) {
-						for(error in data["errors"]) {
-							$("[for='" + error + "']").parent().append(`<div class='form-error'>${data["errors"][error]}</div>`)
-						}
-					}
-
-          // If no errors, update the page based on the retrieved results
-          else {
-            process_indel_finder_query_results(results);
-					}
-
-          query_running = false;
-				}
-      });    
-	});
+    e.preventDefault();
+    form_change();
+  });
 
 	$.ajaxSetup({
 		beforeSend: function(xhr, settings) {
@@ -227,26 +189,91 @@ $(document).ready(function(){
 });
 
 
+// Query the database for indel data based on the currently selected species, strains, & chromosome
+// TODO: Do we have to worry about multiple queries running at once? Will we need to invalidate an older one?
+function run_query() {
+  query_running = true;
+  $.ajax({
+    type: "POST",
+    url:  "{{ url_for('pairwise_indel_finder.query') }}",
+    data: $('form').serialize(),
+    success: function(data) {
+      results = data["results"]
+
+      // Add the 'generate primers' HTML value to each result
+      _.each(results, function(x) {
+        x['generate_primers'] = `<div site="${x['CHROM']}:${x["START"]}-${x['END']}" svtype="${x['SVTYPE']}" size="${x["END"]-x["START"]}" class='btn-link generate-primers'>Generate Primers</div>`
+      })
+
+      // Handle errors
+      $(".form-error").remove();
+      if (Object.keys(data).indexOf("errors") > -1) {
+        for(error in data["errors"]) {
+          $("[for='" + error + "']").parent().append(`<div class='form-error'>${data["errors"][error]}</div>`)
+        }
+      }
+
+      // If no errors, update the page based on the retrieved results
+      else {
+        process_indel_finder_query_results(results);
+      }
+
+      query_running = false;
+    },
+  });
+}
+
+
+
 function form_change() {
 
+  // Ensure browser is loaded
+  if (!loaded) return;
+  const browser = igv.getBrowser()
+
+  // Get the new values from the form elements
   const species_id = $("#speciesSelect");
   const chromosome = $("#chromosome").val().trim();
+  const strain_1 = $("#strain_1").val();
+  const strain_2 = $("#strain_2").val();
 
+  // Variable to track whether a new query is needed
+  // Will be true if chromosome, strain_1, or strain_2 has changed
+  var needs_update = false;
+
+  // Enable / disable the start & stop input fields based on whether a species
+  // and chromosome have been chosen
   document.getElementById('start').disabled = !species_id || !chromosome;
   document.getElementById('stop').disabled  = !species_id || !chromosome;
 
-  if (current_chromosome != chromosome) {
-    current_chromosome = chromosome;
-    if (current_chromosome == '') {
-      $('#start').val('');
-      $('#stop').val('');
-    } else {
-      $('#start').val(1);
-      $('#stop').val(1000000);
-    }
-    set_position(igv.getBrowser());
+  // Update strain values
+  if (current_form_data.strain_1 !== strain_1) {
+    current_form_data.strain_1 = strain_1;
+    needs_update = true;
+  }
+  if (current_form_data.strain_2 !== strain_2) {
+    current_form_data.strain_2 = strain_2;
+    needs_update = true;
   }
 
+  // Update chromosome, resetting start & stop if value has changed
+  if (current_form_data.chromosome != chromosome) {
+    current_form_data.chromosome = chromosome;
+    needs_update = true;
+    $('#start').val(1);
+    $('#stop').val(null);
+  }
+
+  // Update position and wait until new locus values are computed
+  // Need browser to compute start & end, in case e.g. range is invalid or the whole chromosome is selected
+  set_position(browser).then(({chromosome, start, end}) => {
+
+    // If a new query is needed (chromosome or strain change), run now that position updated
+    // Run query if one chromosome and at least one strain are chosen
+    if (needs_update && (chromosome !== 'all' && (strain_1 || strain_2))) {
+      run_query();
+    }
+  });
 }
 
 
@@ -289,20 +316,29 @@ function update_species(species_id) {
     .then(() => {
 
       // (Re)set the browser position, since it's removed when reference genome changes
+      // TODO: Is this the desired behavior? Or should it reset with species change?
       set_position(browser);
 
       // Make browser responsive
+      // If locus is changed from within the browser, update the form values
+      // and run a new query if (and only if) the chromosome value has changed
+      // Have to be careful here not to create a feedback loop between browser & form
       browser.on('locuschange', function(reference_frame, label) {
-        $("#chromosome").val(reference_frame["chr"]);
-        $("#start").val(reference_frame["start"]);
+        const chrom_old = $("#chromosome").val();
+        const chrom_new = reference_frame["chr"];
+        $("#chromosome").val(chrom_new);
+        $("#start").val(reference_frame["start"][0] === '-' ? 1 : reference_frame["start"]);
         $("#stop").val(reference_frame["end"]);
-        setTimeout(submitForm, 500);
+        if (chrom_old !== chrom_new) {
+          run_query();
+        }
       });
+
+      // Flag the browser as loaded
       loaded = true;
 
+      // Clear all tracks & reload the divergent regions track
       clear_tracks();
-
-      // Load the divergent regions track
       fetch_trackset().then((divergent_track_summary) => {
         divergent_track_name = divergent_track_summary.name;
 
@@ -466,30 +502,54 @@ function generate_primers(e) {
 
 
 // Set browser position based on input
+// If input position is invalid or incomplete, the final position of the browser
+// will be returned by the Promise
 function set_position(browser) {
-  const MAX_DIFF = 1000000;
+  const DEFAULT_SIZE = 1000000;
 
-  // Extract query information from form
-  let chromosome = $("#chromosome").val().trim();
-  let start = parseInt($("#start").val().trim().replace(/,/g, ''), 10);
-  let end   = parseInt($("#stop").val().trim().replace(/,/g, ''), 10);
+  return new Promise((resolve) => {
 
-  // Don't update position if no end value entered
-  // TODO: Should this default to the maximum difference?
-  if (isNaN(end)) return;
+    let search_locus = null;
 
-  // Check start and end relative to one another, defaulting to maximum diff if invalid
-  let diff = end - start
-  if (diff > MAX_DIFF || diff <= 0) {
-    end = +start + MAX_DIFF;
-  }
+    // Extract query information from form
+    let chromosome = $("#chromosome").val().trim();
+    let start = parseInt($("#start").val().trim().replace(/,/g, ''), 10);
+    let end   = parseInt($("#stop").val().trim().replace(/,/g, ''), 10);
 
-  // Update the browser to the desired search window
-  if (chromosome == '') {
-    browser.search('all');
-  } else {
-    browser.search(`${chromosome}:${start}-${end}`);
-  }
+    // If start is invalid, default to 1
+    if (isNaN(start) || start < 1) {
+      start = 1;
+    }
+
+    // If no chromosome specified, show all chromosomes
+    if (chromosome == '') {
+      search_locus = 'all';
+    }
+
+    // If no end coordinate specified, show entire chromosome
+    // TODO: Might want to tweak this behavior a bit
+    else if (isNaN(end)) {
+      search_locus = chromosome;
+    }
+
+    // Otherwise, ensure start < end, then go to desired location
+    else {
+      if (end <= start) {
+        end = start + DEFAULT_SIZE;
+      }
+      search_locus = `${chromosome}:${start}-${end}`
+    }
+
+    // Go to the desired locus, then return it from the Promise
+    browser.search(search_locus).then(([locus]) => {
+      const chromosome = locus.chromosome.name;
+      resolve({
+        chromosome,
+        start: chromosome === 'all' ? null : locus.start,
+        end:   chromosome === 'all' ? null : locus.end,
+      });
+    });
+  })
 }
 
 
