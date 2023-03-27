@@ -77,7 +77,10 @@ class FileUploadForm(FlaskForm):
   label = StringField('Description:', validators=[Required(message='You must include a description of your data.')])
   # file = FileField('Select file:', validators=[Required(message='You must include a TSV file to upload.')])
 
-class HeritabilityForm(Form):
+class HeritabilityForm(FileUploadForm):
+  pass
+
+class MappingForm(FileUploadForm):
   pass
 
 class VBrowserForm(FlaskForm):

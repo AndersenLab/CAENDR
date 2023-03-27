@@ -5,7 +5,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 import bleach
 from flask import jsonify
 
-from base.forms import FileUploadForm
+from base.forms import MappingForm
 from base.utils.auth  import get_jwt, jwt_required, admin_required, get_current_user, user_is_admin
 from base.utils.tools import validate_report, upload_file
 
@@ -41,7 +41,7 @@ def genetic_mapping():
 
     # Form info
     'jwt_csrf_token': (get_jwt() or {}).get("csrf"),
-    'form': FileUploadForm(),
+    'form': MappingForm(),
 
     # TODO: change
     'nemascan_container_url': 'https://github.com/AndersenLab/dockerfile/tree/nemarun/nemarun',
@@ -58,7 +58,7 @@ def genetic_mapping():
 @genetic_mapping_bp.route('/genetic-mapping/upload', methods = ['POST'])
 @jwt_required()
 def submit():
-  form = FileUploadForm(request.form)
+  form = MappingForm(request.form)
   user = get_current_user()
 
   # If user is admin, allow them to bypass cache with URL variable
