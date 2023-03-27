@@ -501,44 +501,54 @@ function generate_primers(e) {
 /* Helper Functions */
 
 
+// Create a search locus for the IGV browser
+function create_search_locus(chromosome, start, end) {
+  const DEFAULT_SIZE = 1000000;
+
+  // If no chromosome specified, show all chromosomes
+  if (chromosome === '' || chromosome === 'all') {
+    return 'all';
+  }
+
+  // If no end coordinate specified, show entire chromosome
+  // TODO: Might want to tweak this behavior a bit
+  if (isNaN(end)) {
+    return chromosome;
+  }
+
+  // If start is invalid, default to 1
+  if (isNaN(start) || start < 1) {
+    start = 1;
+  }
+
+  // If end is invalid, set to default size
+  if (end <= start) {
+    end = start + DEFAULT_SIZE;
+  }
+
+  return `${chromosome}:${start}-${end}`
+}
+
+
+// Parse an integer form input field to an int
+function parse_int_input(selector) {
+  return parseInt($(selector).val().trim().replace(/,/g, ''), 10);
+}
+
+
 // Set browser position based on input
 // If input position is invalid or incomplete, the final position of the browser
 // will be returned by the Promise
 function set_position(browser) {
-  const DEFAULT_SIZE = 1000000;
-
   return new Promise((resolve) => {
 
-    let search_locus = null;
-
     // Extract query information from form
-    let chromosome = $("#chromosome").val().trim();
-    let start = parseInt($("#start").val().trim().replace(/,/g, ''), 10);
-    let end   = parseInt($("#stop").val().trim().replace(/,/g, ''), 10);
+    const chromosome = $("#chromosome").val().trim();
+    const start      = parse_int_input("#start");
+    const end        = parse_int_input("#stop");
 
-    // If start is invalid, default to 1
-    if (isNaN(start) || start < 1) {
-      start = 1;
-    }
-
-    // If no chromosome specified, show all chromosomes
-    if (chromosome == '') {
-      search_locus = 'all';
-    }
-
-    // If no end coordinate specified, show entire chromosome
-    // TODO: Might want to tweak this behavior a bit
-    else if (isNaN(end)) {
-      search_locus = chromosome;
-    }
-
-    // Otherwise, ensure start < end, then go to desired location
-    else {
-      if (end <= start) {
-        end = start + DEFAULT_SIZE;
-      }
-      search_locus = `${chromosome}:${start}-${end}`
-    }
+    // Construct search locus string from form info
+    const search_locus = create_search_locus(chromosome, start, end)
 
     // Go to the desired locus, then return it from the Promise
     browser.search(search_locus).then(([locus]) => {
