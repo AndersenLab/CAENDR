@@ -232,7 +232,7 @@ function form_change() {
   const browser = igv.getBrowser()
 
   // Get the new values from the form elements
-  const species_id = $("#speciesSelect");
+  const species_id = $("#speciesSelect").val().trim();
   const chromosome = $("#chromosome").val().trim();
   const strain_1 = $("#strain_1").val();
   const strain_2 = $("#strain_2").val();
