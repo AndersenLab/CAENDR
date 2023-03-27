@@ -260,7 +260,7 @@ function form_change() {
   if (current_form_data.chromosome != chromosome) {
     current_form_data.chromosome = chromosome;
     needs_update = true;
-    $('#start').val(1);
+    $('#start').val(null);
     $('#stop').val(null);
   }
 
