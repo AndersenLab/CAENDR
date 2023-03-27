@@ -61,17 +61,21 @@ class MultiCheckboxField(SelectMultipleField):
 class SpeciesSelectField(SelectField):
   type = 'SpeciesSelectField'
   elementId = 'speciesSelect'
+
+  # Automatically validates that species choice is in this list
   CHOICES = [(name, value.short_name) for name, value in SPECIES_LIST.items()]
 
   def __init__(self, **kwargs):
-    super().__init__('Species', id=SpeciesSelectField.elementId, choices=[ ('', "Choose"), *SpeciesSelectField.CHOICES ], **kwargs)
+    return super().__init__('Species:', id=SpeciesSelectField.elementId, choices=[ ('', "Choose"), *SpeciesSelectField.CHOICES ], **kwargs)
 
 
 class EmptyForm(FlaskForm):
   pass
 
 class FileUploadForm(FlaskForm):
-  pass
+  species = SpeciesSelectField()
+  label = StringField('Description:', validators=[Required(message='You must include a description of your data.')])
+  # file = FileField('Select file:', validators=[Required(message='You must include a TSV file to upload.')])
 
 class HeritabilityForm(Form):
   pass
@@ -211,11 +215,11 @@ class PairwiseIndelForm(Form):
   CHROMOSOME_CHOICES = [('', ''), *get_indel_primer_chrom_choices()]
 
   species = SpeciesSelectField(validators=[Required()])
-  strain_1 = StrainSelectField('Strain 1', choices=[], validators=[Required(), validate_uniq_strains])
-  strain_2 = StrainSelectField('Strain 2', choices=[], validators=[Required()])
-  chromosome = SelectField('Chromosome', choices=CHROMOSOME_CHOICES, validators=[Required()])
-  start = FlexIntegerField('Start', validators=[Required(), validate_start_lt_stop])
-  stop  = FlexIntegerField('Stop',  validators=[Required()])
+  strain_1 = StrainSelectField('Strain 1:', choices=[], validators=[Required(), validate_uniq_strains])
+  strain_2 = StrainSelectField('Strain 2:', choices=[], validators=[Required()])
+  chromosome = SelectField('Chromosome:', choices=CHROMOSOME_CHOICES, validators=[Required()])
+  start = FlexIntegerField('Start:', validators=[Required(), validate_start_lt_stop])
+  stop  = FlexIntegerField('Stop:',  validators=[Required()])
 
   
 class OrderForm(Form):

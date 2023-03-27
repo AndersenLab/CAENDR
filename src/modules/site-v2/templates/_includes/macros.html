@@ -3,12 +3,12 @@
 {%- endmacro -%}
 
 {% macro render_species_field(field, onchange=None) %}
-  {{ field(class="form-control", onchange=species_onchange(onchange), **kwargs) }}
+  {{ field(class="form-control", onchange=species_onchange(onchange), required=true, **kwargs) }}
 {% endmacro %}
 
 {% macro render_field(field, form_prefix=None, form_suffix=None) %}
   <div class="form-group {% if field.errors %}has-error{% endif %}">
-    {{ field.label }}
+    {{ field.label(class='form-label') }}
     {% if form_prefix or form_suffix %}
     <div class="input-group">
     {% endif %}
@@ -18,7 +18,7 @@
       {% elif field.type == 'SpeciesSelectField' %}
         {{ render_species_field(field, **kwargs) }}
       {% else %}
-        {{ field(class="form-control", **kwargs) }}
+        {{ field(class="form-control", required=kwargs.get('required', field.flags.required), **kwargs) }}
       {% endif %}
       {% if form_suffix %}<span class="input-group-addon">{{ form_prefix }}</span>{% endif %}
     {% if form_prefix or form_suffix %}
