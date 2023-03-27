@@ -92,7 +92,7 @@ virtualenv 20.13.0 from /Users/rbv218/.pyenv/versions/3.7.12/lib/python3.7/site-
 Open one terminal window and run:
 ```
 export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
-export ENV=main
+export ENV=development
 cd src/modules/site
 make clean
 make configure
@@ -117,7 +117,7 @@ Keep this docker container running while running the site below.
 Open a second terminal window 
 ```
 export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
-export ENV=main
+export ENV=development
 cd src/modules/site-v2
 make configure
 make dot-env
@@ -155,7 +155,7 @@ $ docker kill 75ef941c1e64
 Open a second terminal window
 ```
 export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
-export ENV=main
+export ENV=development
 cd src/modules/site
 make configure
 make dot-env
@@ -267,6 +267,21 @@ Open a terminal at the root of the project:
 Troubleshooting:
 * Even if ENV and GOOGLE_APPLICATION_CREDENTIALS are set correctly you will need to be [logged into gcloud and configure docker](#setting-the-environment-and-gcloud-login) to enable publishing containers to GCR since the service account does not have permissions to publish.
 * Sometimes after deployment of the full application the ext_assets folder will not copy to the GCP static bucket, but terraform state will reflect the correct bucket resources. You'll notice the CeNDR logo and worms video will not show up on the home page. Simply redeploy the full application and the assets should be correctly copied to the GCP static bucket, fixing the issue.
+* Deployment will not work if a virtual environment exists in `img_thumb_gen`, giving an error like the following:
+    ```
+    ╷
+    │ Error: Error while updating cloudfunction configuration: Error waiting for Updating CloudFunctions Function: Error code 14, message: The service has encountered an error during container import. Please try again later
+    │ 
+    │   with module.img_thumb_gen.google_cloudfunctions_function.generate_thumbnails,
+    │   on modules/img_thumb_gen/cloud-function.tf line 1, in resource "google_cloudfunctions_function" "generate_thumbnails":
+    │    1: resource "google_cloudfunctions_function" "generate_thumbnails" {
+    │ 
+    ╵
+    make: *** [cloud-resource-deploy] Error 1
+    ```
+  Remove the `venv` directory and try redeploying.
+* Due to a race condition, sometimes Terraform will attempt to access the new site image before it has been built and published to GCP. Manually publishing the image by running `make publish` in `src/modules/site` (or `src/modules/site-v2`), then deploying, should fix this issue.
+
 
 ## Deployment of Individual Components
 -------------------------------------------------------------------

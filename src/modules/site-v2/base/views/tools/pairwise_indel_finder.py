@@ -90,9 +90,6 @@ def pairwise_indel_finder():
     # Data locations
     "fasta_url": BrowserTrack.get_fasta_path_full(),
 
-    # Default strains for form dropdowns
-    "default_strains": PairwiseIndelForm.default_strain_choices(),
-
     # List of Species class fields to expose to the template
     # Optional - exposes all attributes if not provided
     'species_fields': [

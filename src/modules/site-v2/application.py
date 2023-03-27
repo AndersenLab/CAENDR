@@ -172,7 +172,7 @@ def register_blueprints(app):
   """Register blueprints with the Flask application."""
   app.register_blueprint(primary_bp, url_prefix='')
   app.register_blueprint(about_bp, url_prefix='/about')
-  app.register_blueprint(strains_bp, url_prefix='/strains')
+  app.register_blueprint(strains_bp, url_prefix='/request-strains')
   app.register_blueprint(order_bp, url_prefix='/order')
   app.register_blueprint(get_involved_bp, url_prefix='/get-involved')
 

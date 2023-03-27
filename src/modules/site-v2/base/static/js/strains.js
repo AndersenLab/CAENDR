@@ -1,7 +1,20 @@
-function filter_strains(species_id='', search_terms=[]) {
+function update_row_striping(table_selector, visible_only=true) {
+
+  // Get all strain container elements (rows) in the given table, optionally filtering to only visible rows
+  // Table data often initialized while the table itself is hidden, so getting all containers is useful
+  // for initializing in that case
+  const selector = `${ table_selector } .strain-entry-container` + (visible_only ? ':visible' : '');
+
+  $(selector).each(function (index) {
+    $(this).toggleClass("table-striped-row", !!(index & 1));
+  });
+}
+
+
+function filter_strains(table_selector, species_id='', search_terms=[]) {
 
   // Hide all strains
-  $('.strain-entry-container').hide();
+  $(`${ table_selector } .strain-entry-container`).hide();
 
   // If no species ID provided, no strains will be shown
   if (species_id) {
@@ -16,7 +29,7 @@ function filter_strains(species_id='', search_terms=[]) {
         var rex = new RegExp(r, "i");
 
         // Show all containers where the first child element (the table cell with the strain name) matches the RegEx
-        $(`.strain-entry-container-${ species_id }`).filter(function() {
+        $(`${ table_selector } .strain-entry-container-${ species_id }`).filter(function() {
           return rex.test($(this).children(":first").text());
         }).show();
       })
@@ -24,9 +37,15 @@ function filter_strains(species_id='', search_terms=[]) {
 
     // Otherwise, show all strains matching given species
     else {
-      $(`.strain-entry-container-${ species_id }`).show()
+      $(`${ table_selector } .strain-entry-container-${ species_id }`).show();
     }
   }
+
+  // Fix the striping pattern of the rows
+  // If no search terms are provided, resets to original striping pattern (ignores whether rows are hidden)
+  // since with no filters, no rows will be hidden
+  // Useful for resetting the pattern if the entire table is hidden
+  update_row_striping(table_selector, search_terms.length > 0);
 }
 
 
