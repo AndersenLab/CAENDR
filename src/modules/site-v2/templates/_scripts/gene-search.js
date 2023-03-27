@@ -49,11 +49,12 @@ function run_gene_search(gene, species, table_id, loading_id, callback) {
 
   // If search provided, clear the current table and query the database
   tbody.html("");
-  $.ajax({
+  return $.ajax({
     url:         "{{ url_for('api_gene.api_search_genes', query='') }}" + gene + '?species=' + species.name,
     method:      "GET",
     contentType: 'application/xml',
-  }).done(function(results) {
+  })
+  .done(function(results) {
 
     // Map each gene to a set of cell values, and add to the table as <td> elements (if applicable)
     $.each(results, (i, row) => {
@@ -65,6 +66,9 @@ function run_gene_search(gene, species, table_id, loading_id, callback) {
 
     // Hide the loading symbol & show the table
     $(loading_id).fadeOut().promise().done(() => { $(table_id).fadeIn(); });
+  })
+  .fail(function() {
+    console.error('Gene query failed.');
   });
 }
 
