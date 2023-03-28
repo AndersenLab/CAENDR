@@ -37,7 +37,7 @@
           <!-- Input Card -->
           <div class="text-bg-light mb-5 p-3 p-md-5 rounded-2 shadow-sm">
                  <!-- Input Form -->
-      <form>
+      <form id="form-submit">
         <!-- Species -->
         {{ species_selector(species_list, "update_species") }}
         <!-- /Species -->
@@ -219,6 +219,13 @@ const default_checked_tracks = [
 
 
 /* Initialization */
+
+
+// Reset the form every time the page is shown
+// This includes from browser back/forward, and is necessary to reset species
+addEventListener("pageshow", (event) => {
+  document.getElementById('form-submit').reset();
+});
 
 
 $(document).ready(function () {

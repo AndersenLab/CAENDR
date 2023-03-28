@@ -146,6 +146,13 @@ var loaded = false
 
 
 
+// Reset the form every time the page is shown
+// This includes from browser back/forward, and is necessary to reset species
+addEventListener("pageshow", (event) => {
+  document.getElementById('form-submit').reset();
+});
+
+
 $(document).ready(function(){
 
   var form = document.getElementById('form-submit');
