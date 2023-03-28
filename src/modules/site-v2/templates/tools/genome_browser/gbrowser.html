@@ -342,12 +342,9 @@ function update_species(species_id) {
   const form_ids = [
     'filter',
     'gene-search',
+    'track-options-container',
   ];
   form_ids.forEach((form_id) => toggle_input(form_id, !species_empty));
-
-  // Special case for track options container, which isn't technically an input itself
-  // Update element background color to match disabled input elements
-  document.getElementById('track-options-container').style.backgroundColor = `var(--${ species_empty ? 'disabled' : 'enabled' }-color)`;
 
   // If no species selected, clear track checkboxes and end update function here
   if (species_empty) {
