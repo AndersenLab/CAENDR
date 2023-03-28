@@ -12,6 +12,7 @@ from wtforms import (StringField,
                      IntegerField,
                      SelectField,
                      SelectMultipleField,
+                     FileField,
                      widgets,
                      FieldList,
                      HiddenField,
@@ -75,7 +76,7 @@ class EmptyForm(FlaskForm):
 class FileUploadForm(FlaskForm):
   species = SpeciesSelectField()
   label = StringField('Description:', validators=[Required(message='You must include a description of your data.')])
-  # file = FileField('Select file:', validators=[Required(message='You must include a TSV file to upload.')])
+  file = FileField('Select file:', render_kw={'accept': '.tsv'})
 
 class HeritabilityForm(FileUploadForm):
   pass

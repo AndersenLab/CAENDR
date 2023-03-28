@@ -51,16 +51,14 @@
                 <div class='mb-4'>{{ render_field(form.species) }}</div>
                 <div class='mb-4'>{{ render_field(form.label, class_="input-margin", placeholder="Enter a name for your mapping, such as the trait.", style="width:100%") }}</div>
                 <div class="mb-4">
-                  <label for="formFile" class="form-label">Select file:</label>
-                  <div class="hstack gap-2 mb-4">
-                    <input class="form-control" type="file" name="file" id="file" accept=".tsv" required>
+                  {% call render_field(form.file) %}
                     <!-- Info Popover -->
                     <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
                       data-bs-trigger="focus" data-bs-title="More information"
                       data-bs-content="Enter your data using the form shown in the example data file and upload as a TSV here."><i
                         class="bi bi-info lh-1" aria-hidden="true"></i></a>
                     <!-- /Info Popover -->
-                  </div>
+                  {% endcall %}
                 </div>
                 <div class="d-grid mb-4">
                   <button type="submit" id="submit-btn" class="btn btn-secondary text-light" data-bs-toggle="modal"

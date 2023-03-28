@@ -42,9 +42,7 @@
                                     <div class='mb-4'>{{ render_field(form.species) }}</div>
                                     <div class='mb-4'>{{ render_field(form.label, placeholder="Name your calculation.") }}</div>
                                     <div class="mb-4">
-                                        <label for="formFile" class="form-label">Select file:</label>
-                                        <div class="hstack gap-2 mb-4">
-                                        <input class="form-control" type="file" id="formFile" name="file" required>
+                                    {% call render_field(form.file) %}
                                         <!-- Info Button with Modal -->
                                         <button type="button" class="btn btn-secondary rounded-circle text-light text-center p-0 infoButton" data-bs-toggle="modal"
                                             data-bs-target="#infoModal" aria-label="infoModalLabel">
@@ -65,7 +63,7 @@
                                             </div>
                                         </div>
                                         <!-- /Modal -->
-                                        </div>
+                                    {% endcall %}
                                     </div>
                                     <div class="d-grid">
                                         <button type="submit" id="submit-btn" class="btn btn-secondary text-light" data-bs-toggle="modal" data-bs-target="#submit-modal"

@@ -46,13 +46,13 @@ def upload_file(request, filename):
   # Get the FileStorage object from the request
   file = request.files.get(filename)
   if not file:
-    raise FileUploadError()
+    raise FileUploadError('You must include a TSV file with your data to upload. If this message persists, try refreshing the page and re-uploading your file.')
 
   # Save the file, alerting the user if this fails
   try:
     file.save(local_path)
   except Exception:
-    raise FileUploadError()
+    raise FileUploadError('There was a problem uploading your file to the server. Please try again.')
 
   # Return the name of the file on the server
   return local_path

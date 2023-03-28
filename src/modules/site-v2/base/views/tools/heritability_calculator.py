@@ -121,10 +121,10 @@ def submit_h2():
   try:
     local_path = upload_file(request, 'file')
   except FileUploadError as ex:
-    flash('There was a problem uploading your file to the server. Please try again.', 'danger')
+    flash(ex.description, 'danger')
     return jsonify({
       'error':   True,
-      'message': f"There was a problem submitting your request.",
+      'message': ex.description,
     })
 
   # Package submission data together into dict

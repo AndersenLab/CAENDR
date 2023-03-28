@@ -78,7 +78,7 @@ def submit():
   try:
     local_path = upload_file(request, 'file')
   except FileUploadError as ex:
-    flash('There was a problem uploading your file to the server. Please try again.', 'danger')
+    flash(ex.description, 'danger')
     return redirect(url_for('genetic_mapping.genetic_mapping'))
 
   # Package submission data together into dict
