@@ -106,6 +106,14 @@
 
 {% block script %}
 <script>
+{% include '_scripts/utils.js' %} {#/* defines: toggle_input */#}
+
+// Reset the form every time the page is shown
+// This includes from browser back/forward, and is necessary to reset species
+addEventListener("pageshow", (event) => {
+  document.getElementById('form-submit').reset();
+  toggle_input(document.getElementById('{{ form.species.elementId }}').options[0], false);
+});
 
 {%- if session["is_admin"] %}
 $("#no_cache_checkbox").change(() => {

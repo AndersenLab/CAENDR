@@ -1,5 +1,7 @@
 {%- macro species_onchange(onchange=None) -%}
-  this.classList.toggle('fst-italic', this.value);{% if onchange %} {{ onchange }}(this.value);{% endif %}
+  this.classList.toggle('fst-italic', this.value);
+  if (this.value && !this.options[0].value) this.options[0].disabled = true;
+  {% if onchange %}{{ onchange }}(this.value);{% endif %}
 {%- endmacro -%}
 
 {% macro render_species_field(field, onchange=None) %}

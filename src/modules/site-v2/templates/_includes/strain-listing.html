@@ -24,7 +24,7 @@
       class="form-select" aria-label="Choose species" id="speciesSelect" name="species" required
       onchange="this.classList.toggle('fst-italic', this.value);{% if onchange %} {{ onchange }}(this.value);{% endif %}"
     >
-      <option selected value="">Choose</option>
+      <option selected value="" disabled aria-disabled="true">Choose</option>
       {% for s in species_list %}
       <option value="{{s}}">{{species_list[s]["short_name"]}}</option>
       {% endfor %}
