@@ -7,6 +7,14 @@
 {% macro render_species_field(field, onchange=None) %}
   {% set _ = kwargs.update({'aria-label': 'Choose species'})  %}
   {{ field(class="form-control", onchange=species_onchange(onchange), required=true, **kwargs) }}
+  <script>
+    // Reset the selector every time the page is shown
+    // This includes from browser back/forward, and is necessary to reset species
+    addEventListener("pageshow", (event) => {
+      const selector = document.getElementById('{{ field.elementId }}');
+      selector.value = '';
+    });
+  </script>
 {% endmacro %}
 
 {% macro render_field(field, form_prefix=None, form_suffix=None) %}
