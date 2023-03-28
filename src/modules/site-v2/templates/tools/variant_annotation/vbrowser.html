@@ -10,7 +10,8 @@
 
 
 {% block content %}
-{% from "_includes/strain-listing.html" import species_selector, list_strains %}
+{% from "_includes/macros.html" import render_field %}
+{% from "_includes/strain-listing.html" import list_strains %}
 
 <div class="container-fluid px-5">
   <div class="d-flex justify-content-around flex-wrap mt-2 pb-5">
@@ -30,7 +31,7 @@
              <!-- Input Form -->
       <form id="form-submit">
         <!-- Species -->
-        {{ species_selector(species_list, "update_species") }}
+        <div class='mb-4'>{{ render_field(form.species, onchange="update_species") }}</div>
         <!-- /Species -->
         <!-- Gene Search -->
         <div class="mb-4">
@@ -255,14 +256,6 @@ var species = null
 const columnList = JSON.parse('{{ columns | tojson }}');
 
 const strainListing = JSON.parse('{{ strain_listing | tojson }}');
-
-
-
-// Reset the form every time the page is shown
-// This includes from browser back/forward, and is necessary to reset species
-addEventListener("pageshow", (event) => {
-  document.getElementById('form-submit').reset();
-});
 
 
 

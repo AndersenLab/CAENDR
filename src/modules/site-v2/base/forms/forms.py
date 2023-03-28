@@ -60,6 +60,9 @@ class MultiCheckboxField(SelectMultipleField):
 
 
 class SpeciesSelectField(SelectField):
+  """
+    Special dropdown selector field for selecting a species.
+  """
   type = 'SpeciesSelectField'
   elementId = 'speciesSelect'
 
@@ -73,6 +76,12 @@ class SpeciesSelectField(SelectField):
 class EmptyForm(FlaskForm):
   pass
 
+class SpeciesSelectForm(FlaskForm):
+  """
+    Dummy form with just a species selector. Useful for tools/pages that need a species selector, but not a full form.
+  """
+  species = SpeciesSelectField()
+
 class FileUploadForm(FlaskForm):
   species = SpeciesSelectField()
   label = StringField('Description:', validators=[Required(message='You must include a description of your data.')])
@@ -85,7 +94,7 @@ class MappingForm(FileUploadForm):
   pass
 
 class VBrowserForm(FlaskForm):
-  pass
+  species = SpeciesSelectField()
 
 
 class BasicLoginForm(FlaskForm):
