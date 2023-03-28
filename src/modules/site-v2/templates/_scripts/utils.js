@@ -17,3 +17,10 @@ function toggle_input(id, val) {
     el.style.backgroundColor = `var(--${ val ? 'enabled' : 'disabled' }-color)`;
   }
 }
+
+
+function fetch_json(url) {
+  return fetch(url)
+    .then( (response) => { return response.text();  } )
+    .then( (text)     => { return JSON.parse(text); } );
+}

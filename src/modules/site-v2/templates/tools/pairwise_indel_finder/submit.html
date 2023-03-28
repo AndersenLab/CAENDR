@@ -111,7 +111,7 @@
 <script src="{{ url_for('static', filename='js/strains.js') }}"></script>
 
 <script>
-{% include '_scripts/utils.js' %}       {#/* defines: toggle_input */#}
+{% include '_scripts/utils.js' %}       {#/* defines: fetch_json, toggle_input */#}
 {% include '_scripts/igv-browser.js' %}
 
 /* Species */
@@ -146,19 +146,6 @@ var loaded = false
 
 
 
-function fetch_trackset() {
-  return fetch( "{{ url_for('pairwise_indel_finder.get_tracks') }}" )
-    .then( (response) => { return response.text();  } )
-    .then( (text)     => { return JSON.parse(text); } );
-}
-
-function fetch_strains() {
-  return fetch( "{{ url_for('pairwise_indel_finder.get_strains') }}" )
-    .then( (response) => { return response.text();  } )
-    .then( (text)     => { return JSON.parse(text); } );
-}
-
-
 $(document).ready(function(){
 
   var form = document.getElementById('form-submit');
@@ -180,7 +167,7 @@ $(document).ready(function(){
 		}
 	});
 
-  fetch_strains().then((data) => {
+  fetch_json("{{ url_for('pairwise_indel_finder.get_strains') }}").then((data) => {
     strains = data;
   });
 });
@@ -329,7 +316,7 @@ function update_species(species_id) {
 
       // Clear all tracks & reload the divergent regions track
       clear_tracks();
-      fetch_trackset().then((divergent_track_summary) => {
+      fetch_json("{{ url_for('pairwise_indel_finder.get_tracks') }}").then((divergent_track_summary) => {
         divergent_track_name = divergent_track_summary.name;
 
         // Replace species tokens in URL

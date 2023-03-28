@@ -176,7 +176,7 @@
 <script src="{{ url_for('static', filename='js/strains.js') }}"></script>
 
 <script type="text/javascript">
-{% include '_scripts/utils.js' %}       {#/* defines: toggle_input */#}
+{% include '_scripts/utils.js' %}       {#/* defines: fetch_json, toggle_input */#}
 {% include '_scripts/igv-browser.js' %}
 {% include '_scripts/gene-search.js' %} {#/* defines: prep_gene_search, run_gene_search, format_locus_string */#}
 
@@ -223,8 +223,11 @@ const default_checked_tracks = [
 
 $(document).ready(function () {
 
-  // Fetch the browser track objects
-  fetch_trackset().then((data) => {
+  // Fetch the list of browser track objects
+  // Retrieves an object with two fields:
+  //   - 'default':   the list of tracks that are not specific to any one strain
+  //   - 'templates': the list of track templates to be filled out with strain data
+  fetch_json("{{ url_for('genome_browser.get_tracks') }}").then((data) => {
     set_trackset(data.default);
     set_templates(data.templates);
 
@@ -264,17 +267,6 @@ $(document).ready(function () {
   })
 
 });
-
-
-// Get the list of tracks
-// Retrieves an object with two fields:
-//   - 'default':   the list of tracks that are not specific to any one strain
-//   - 'templates': the list of track templates to be filled out with strain data
-function fetch_trackset() {
-  return fetch( "{{ url_for('genome_browser.get_tracks') }}" )
-    .then( (response) => { return response.text();  } )
-    .then( (text)     => { return JSON.parse(text); } );
-}
 
 
 
