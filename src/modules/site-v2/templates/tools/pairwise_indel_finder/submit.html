@@ -111,6 +111,7 @@
 <script src="{{ url_for('static', filename='js/strains.js') }}"></script>
 
 <script>
+{% include '_scripts/utils.js' %}       {#/* defines: toggle_input */#}
 {% include '_scripts/igv-browser.js' %}
 
 /* Species */
@@ -239,8 +240,8 @@ function form_change() {
 
   // Enable / disable the start & stop input fields based on whether a species
   // and chromosome have been chosen
-  document.getElementById('start').disabled = !species_id || !chromosome;
-  document.getElementById('stop').disabled  = !species_id || !chromosome;
+  toggle_input('start', species_id && chromosome);
+  toggle_input('stop',  species_id && chromosome);
 
   // Update strain values
   if (current_form_data.strain_1 !== strain_1) {
@@ -287,10 +288,8 @@ function update_species(species_id) {
     'strain_2',
     'chromosome',
     'find_indels',
-  ]
-  form_ids.forEach((form_id) => {
-    document.getElementById(form_id).disabled = species_empty;
-  })
+  ];
+  form_ids.forEach((form_id) => toggle_input(form_id, !species_empty));
 
   // If no species chosen, end the update function here
   if (species_empty) return;

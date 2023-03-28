@@ -176,6 +176,7 @@
 <script src="{{ url_for('static', filename='js/strains.js') }}"></script>
 
 <script type="text/javascript">
+{% include '_scripts/utils.js' %}       {#/* defines: toggle_input */#}
 {% include '_scripts/igv-browser.js' %}
 {% include '_scripts/gene-search.js' %} {#/* defines: prep_gene_search, run_gene_search, format_locus_string */#}
 
@@ -341,10 +342,8 @@ function update_species(species_id) {
   const form_ids = [
     'filter',
     'gene-search',
-  ]
-  form_ids.forEach((form_id) => {
-    document.getElementById(form_id).disabled = species_empty;
-  })
+  ];
+  form_ids.forEach((form_id) => toggle_input(form_id, !species_empty));
 
   // Special case for track options container, which isn't technically an input itself
   // Update element background color to match disabled input elements
