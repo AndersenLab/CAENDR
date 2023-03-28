@@ -10,6 +10,8 @@ from caendr.utils.data import unique_id
 uploads_dir = os.path.join('./', 'uploads')
 os.makedirs(uploads_dir, exist_ok=True)
 
+SUPPORT_EMAIL = os.environ.get('SUPPORT_EMAIL')
+
 
 def validate_report(report, user=None):
 
@@ -52,7 +54,7 @@ def upload_file(request, filename):
   try:
     file.save(local_path)
   except Exception:
-    raise FileUploadError('There was a problem uploading your file to the server. Please try again.')
+    raise FileUploadError(f'There was a problem uploading your submission. Please try again. If this problem persists, please contact us at {SUPPORT_EMAIL}')
 
   # Return the name of the file on the server
   return local_path
