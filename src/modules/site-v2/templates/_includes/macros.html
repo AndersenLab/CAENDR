@@ -5,6 +5,7 @@
 {%- endmacro -%}
 
 {% macro render_species_field(field, onchange=None) %}
+  {% set _ = kwargs.update({'aria-label': 'Choose species'})  %}
   {{ field(class="form-control", onchange=species_onchange(onchange), required=true, **kwargs) }}
 {% endmacro %}
 
