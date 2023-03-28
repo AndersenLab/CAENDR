@@ -162,7 +162,7 @@ $(document).ready(function(){
 
   var form = document.getElementById('form-submit');
 
-  species = species_list[$("#species").val()];
+  species = species_list[$("#{{ form.species.elementId }}").val()];
   update_species();
 
   // Prevent form submission from reloading page, then redirect to form change logic
