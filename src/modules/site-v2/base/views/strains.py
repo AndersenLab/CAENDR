@@ -43,7 +43,7 @@ strains_bp = Blueprint('request_strains',
 #
 @strains_bp.route('/')
 @cache.memoize(60*60)
-def strains():
+def request_strains():
   """ Load landing page """
   disable_parent_breadcrumb = True
   return render_template('strain/landing_page.html', **locals())
@@ -143,7 +143,6 @@ def strains_catalog():
     flash(Markup("Strain mapping sets 9 and 10 will not be available until later this year."), category="primary")
     title = "Strain Catalog"
     warning = request.args.get('warning')
-    disable_parent_breadcrumb = True
     strain_listing = get_strains()
     strain_sets = get_strain_sets()
     return render_template('strain/catalog.html', **locals())
@@ -163,9 +162,8 @@ def order_page():
 
   # Fetch items
   items = form.items.data
-  
-  disable_parent_breadcrumb = True
-  title = "Order"
+  strain_listing = get_strains()
+  title = "Order Summary"
 
   if (len(items) == 0):
     flash("You must select strains/sets from the catalog", 'error')
@@ -209,3 +207,18 @@ def order_confirmation(invoice_hash):
     return render_template('order/order_confirm.html', **locals())
   else:
     abort(404)
+    
+
+
+@strains_bp.route('/submit')
+@cache.memoize(60*60)
+def strains_submission_page():
+  """
+      Google form for submitting strains
+  """
+  title = "Strain Submission"
+  # TODO: Move this to configurable location
+  #STRAIN_SUBMISSION_FORM = '1w0VjB3jvAZmQlDbxoTx_SKkRo2uJ6TcjjX-emaQnHlQ'
+  #strain_submission_url = f'https://docs.google.com/forms/d/{STRAIN_SUBMISSION_FORM}/viewform?embedded=true'
+  strain_submission_url = "https://docs.google.com/forms/d/1w0VjB3jvAZmQlDbxoTx_SKkRo2uJ6TcjjX-emaQnHlQ/viewform?embedded=true"
+  return render_template('strain/submission.html', **locals())
