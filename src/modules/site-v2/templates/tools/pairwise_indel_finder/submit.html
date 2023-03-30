@@ -35,8 +35,8 @@
               <div class="mb-4">{{ render_field(form.strain_1,   disabled='', onchange="update_browser_tracks()") }}</div>
               <div class="mb-4">{{ render_field(form.strain_2,   disabled='', onchange="update_browser_tracks()") }}</div>
               <div class="mb-4">{{ render_field(form.chromosome, disabled='') }}</div>
-              <div class="mb-4">{{ render_field(form.start,      disabled='', placeholder="2,028,824") }}</div>
-              <div class="mb-4">{{ render_field(form.stop,       disabled='', placeholder="2,029,217") }}</div>
+              <div class="mb-4">{{ render_field(form.start,      disabled='', placeholder="2,028,824", make_err_container=true) }}</div>
+              <div class="mb-4">{{ render_field(form.stop,       disabled='', placeholder="2,029,217", make_err_container=true) }}</div>
               <input type="submit" hidden />
             </form>
             <!-- /Input Form -->
@@ -261,7 +261,12 @@ function form_change() {
 
   // Update position and wait until new locus values are computed
   // Need browser to compute start & end, in case e.g. range is invalid or the whole chromosome is selected
-  set_position(browser).then(({chromosome, start, end}) => {
+  set_position(browser, chrom_change)
+  .then(({chromosome, start, end}) => {
+
+    // Clear & hide front-end error containers
+    $(".err-container").text('');
+    $(".err-container").hide();
 
     // If the chromosome changed, save its size so we can reuse it in later queries
     // (in case the browser is zoomed in & one of the strains changes)
@@ -274,6 +279,15 @@ function form_change() {
     if (needs_update && (chromosome !== 'all' && (strain_1 || strain_2))) {
       run_query();
     }
+  })
+  .catch((e) => {
+    // Find the error container associated with the invalid field
+    const field_el = $(`#${e.position}`);
+    const err_container = field_el.closest('.form-group').find('.err-container');
+
+    // Display the error message
+    err_container.text(e.message);
+    err_container.show();
   });
 }
 
@@ -493,30 +507,40 @@ function generate_primers(e) {
 
 /* Helper Functions */
 
+class SearchLocusError extends Error {
+  constructor(position, message = "", ...args) {
+    super(message, ...args);
+    this.position = position;
+  }
+}
 
 // Create a search locus for the IGV browser
 function create_search_locus(chromosome, start, end) {
-  const DEFAULT_SIZE = 1000000;
 
   // If no chromosome specified, show all chromosomes
   if (chromosome === '' || chromosome === 'all') {
     return 'all';
   }
 
-  // If no end coordinate specified, show entire chromosome
-  // TODO: Might want to tweak this behavior a bit
-  if (isNaN(end)) {
+  // If no start/stop are desired, search for the whole chromosome
+  if (start === null && end === null) {
     return chromosome;
   }
 
-  // If start is invalid, default to 1
-  if (isNaN(start) || start < 1) {
-    start = 1;
+  // Validate start position
+  if (isNaN(start)) {
+    throw new SearchLocusError('start', 'This field is required.');
+  }
+  if (start < 1) {
+    throw new SearchLocusError('start', 'Start position must be 1 or greater.');
   }
 
-  // If end is invalid, set to default size
+  // Validate stop position
+  if (isNaN(end)) {
+    throw new SearchLocusError('stop', 'This field is required.');
+  }
   if (end <= start) {
-    end = start + DEFAULT_SIZE;
+    throw new SearchLocusError('stop', 'Stop position must be greater than start position.');
   }
 
   return `${chromosome}:${start}-${end}`
@@ -532,16 +556,23 @@ function parse_int_input(selector) {
 // Set browser position based on input
 // If input position is invalid or incomplete, the final position of the browser
 // will be returned by the Promise
-function set_position(browser) {
-  return new Promise((resolve) => {
+function set_position(browser, ignore_start_stop=false) {
+  return new Promise((resolve, reject) => {
 
     // Extract query information from form
     const chromosome = $("#chromosome").val().trim();
-    const start      = parse_int_input("#start");
-    const end        = parse_int_input("#stop");
+    const start      = ignore_start_stop ? null : parse_int_input("#start");
+    const end        = ignore_start_stop ? null : parse_int_input("#stop");
 
     // Construct search locus string from form info
-    const search_locus = create_search_locus(chromosome, start, end)
+    let search_locus;
+    try {
+      search_locus = create_search_locus(chromosome, start, end);
+    }
+    catch (e) {
+      reject(e);
+      return;
+    }
 
     // Go to the desired locus, then return it from the Promise
     browser.search(search_locus).then(([locus]) => {

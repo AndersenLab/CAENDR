@@ -18,7 +18,7 @@
   </script>
 {% endmacro %}
 
-{% macro render_field(field, form_prefix=None, form_suffix=None) %}
+{% macro render_field(field, form_prefix=None, form_suffix=None, make_err_container=false) %}
   <div class="form-group {% if field.errors %}has-error{% endif %}">
     {{ field.label(class='form-label') }}
     {% if form_prefix or form_suffix %}
@@ -44,6 +44,9 @@
     {% for error in field.errors %}
       <p class='text-danger'>{{ error|safe|e }}</p>
     {% endfor %}
+    {% if make_err_container %}
+      <p class='text-danger err-container'></p>
+    {% endif %}
   </div>
 {% endmacro %}
 
