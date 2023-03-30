@@ -5,12 +5,13 @@ from werkzeug.utils import secure_filename
 
 from caendr.models.error import ReportLookupError, FileUploadError
 from caendr.utils.data import unique_id
+from caendr.services.cloud.secret import get_secret
 
 
 uploads_dir = os.path.join('./', 'uploads')
 os.makedirs(uploads_dir, exist_ok=True)
 
-SUPPORT_EMAIL = os.environ.get('SUPPORT_EMAIL')
+SUPPORT_EMAIL = get_secret('SUPPORT_EMAIL')
 
 
 def validate_report(report, user=None):
