@@ -24,3 +24,13 @@ function fetch_json(url) {
     .then( (response) => { return response.text();  } )
     .then( (text)     => { return JSON.parse(text); } );
 }
+
+
+// Get form data as an object
+function form_data_to_object(form_id) {
+  var data = {};
+  $(`#${form_id}`).serializeArray().forEach(({name, value}) => {
+    data[name] = value;
+  });
+  return data;
+}

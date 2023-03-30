@@ -111,7 +111,7 @@
 <script src="{{ url_for('static', filename='js/strains.js') }}"></script>
 
 <script>
-{% include '_scripts/utils.js' %}       {#/* defines: fetch_json, toggle_input */#}
+{% include '_scripts/utils.js' %}       {#/* defines: fetch_json, form_data_to_object, toggle_input */#}
 {% include '_scripts/igv-browser.js' %}
 
 /* Species */
@@ -135,7 +135,8 @@ var current_form_data = {
   chromosome: '',
   strain_1:   '',
   strain_2:   '',
-}
+};
+var current_chrom_size = null;
 
 /* Data Table */
 var table;
@@ -176,11 +177,21 @@ $(document).ready(function(){
 // Query the database for indel data based on the currently selected species, strains, & chromosome
 // TODO: Do we have to worry about multiple queries running at once? Will we need to invalidate an older one?
 function run_query() {
+
+  // Get form data as an object
+  var data = form_data_to_object('form-submit');
+
+  // Update start and stop to be full chromosome size
+  data['start'] = 1;
+  data['stop']  = current_chrom_size;
+
+  // Run query
   query_running = true;
   $.ajax({
     type: "POST",
     url:  "{{ url_for('pairwise_indel_finder.query') }}",
-    data: $('form').serialize(),
+    data: data,
+    dataType: 'json',
     success: function(data) {
       results = data["results"]
 
@@ -224,6 +235,7 @@ function form_change() {
   // Variable to track whether a new query is needed
   // Will be true if chromosome, strain_1, or strain_2 has changed
   var needs_update = false;
+  var chrom_change = false;
 
   // Enable / disable the start & stop input fields based on whether a species
   // and chromosome have been chosen
@@ -244,6 +256,7 @@ function form_change() {
   if (current_form_data.chromosome != chromosome) {
     current_form_data.chromosome = chromosome;
     needs_update = true;
+    chrom_change = true;
     $('#start').val(null);
     $('#stop').val(null);
   }
@@ -251,6 +264,12 @@ function form_change() {
   // Update position and wait until new locus values are computed
   // Need browser to compute start & end, in case e.g. range is invalid or the whole chromosome is selected
   set_position(browser).then(({chromosome, start, end}) => {
+
+    // If the chromosome changed, save its size so we can reuse it in later queries
+    // (in case the browser is zoomed in & one of the strains changes)
+    if (chrom_change) {
+      current_chrom_size = end;
+    }
 
     // If a new query is needed (chromosome or strain change), run now that position updated
     // Run query if one chromosome and at least one strain are chosen
