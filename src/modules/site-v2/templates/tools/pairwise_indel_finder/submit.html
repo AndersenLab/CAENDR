@@ -262,33 +262,33 @@ function form_change() {
   // Update position and wait until new locus values are computed
   // Need browser to compute start & end, in case e.g. range is invalid or the whole chromosome is selected
   set_position(browser, chrom_change)
-  .then(({chromosome, start, end}) => {
+    .then(({chromosome, start, end}) => {
 
-    // Clear & hide front-end error containers
-    $(".err-container").text('');
-    $(".err-container").hide();
+      // Clear & hide front-end error containers
+      $(".err-container").text('');
+      $(".err-container").hide();
 
-    // If the chromosome changed, save its size so we can reuse it in later queries
-    // (in case the browser is zoomed in & one of the strains changes)
-    if (chrom_change) {
-      current_chrom_size = end;
-    }
+      // If the chromosome changed, save its size so we can reuse it in later queries
+      // (in case the browser is zoomed in & one of the strains changes)
+      if (chrom_change) {
+        current_chrom_size = end;
+      }
 
-    // If a new query is needed (chromosome or strain change), run now that position updated
-    // Run query if one chromosome and at least one strain are chosen
-    if (needs_update && (chromosome !== 'all' && (strain_1 || strain_2))) {
-      run_query();
-    }
-  })
-  .catch((e) => {
-    // Find the error container associated with the invalid field
-    const field_el = $(`#${e.position}`);
-    const err_container = field_el.closest('.form-group').find('.err-container');
+      // If a new query is needed (chromosome or strain change), run now that position updated
+      // Run query if one chromosome and at least one strain are chosen
+      if (needs_update && (chromosome !== 'all' && (strain_1 || strain_2))) {
+        run_query();
+      }
+    })
+    .catch((e) => {
+      // Find the error container associated with the invalid field
+      const field_el = $(`#${e.position}`);
+      const err_container = field_el.closest('.form-group').find('.err-container');
 
-    // Display the error message
-    err_container.text(e.message);
-    err_container.show();
-  });
+      // Display the error message
+      err_container.text(e.message);
+      err_container.show();
+    });
 }
 
 
