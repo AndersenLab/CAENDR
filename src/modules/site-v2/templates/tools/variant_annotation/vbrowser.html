@@ -185,8 +185,11 @@
         </div>
       </div>
       <!-- /Options Toolbar -->
+      <!-- Select Species Prompt -->
+      {% include '_includes/select-species-prompt.html' %}
+      <!-- /Select Species Prompt -->
       <!-- Annotation Table -->
-      <div class="col mx-auto" style="max-width:65vw;">
+      <div id="variant-table-container" class="col mx-auto" style="max-width:65vw;">
         <div id="loading-variant-table" style="display:none;">
           <div class="spinner-border" role="status">
             <span class="visually-hidden">Loading...</span>
@@ -265,6 +268,10 @@ const strainListing = JSON.parse('{{ strain_listing | tojson }}');
 function update_species(species_id) {
 
   const species_empty = species_id == null || species_id == '';
+
+  // If no species selected, prompt user to select one; otherwise show results table
+  $('#select-species-prompt').toggle(species_empty);
+  $('#variant-table-container').toggle(!species_empty);
 
   // Enable or disable form inputs that depend on species being defined
   const form_ids = [
