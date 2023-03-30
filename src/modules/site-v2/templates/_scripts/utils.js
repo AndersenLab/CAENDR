@@ -4,9 +4,13 @@ function can_be_disabled(tag) {
 
 function toggle_input(idOrEl, val) {
   const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
-  const tag = el.tagName.toLowerCase();
+  if (!el) {
+    console.error('Could not toggle input', idOrEl);
+    return;
+  }
 
   // If element supports 'disabled' property, set that (incl. ARIA)
+  const tag = el.tagName.toLowerCase();
   if (can_be_disabled(tag)) {
     el.disabled     = !val;
     el.ariaDisabled = !val;

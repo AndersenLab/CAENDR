@@ -37,14 +37,12 @@
               <div class="mb-4">{{ render_field(form.chromosome, disabled='') }}</div>
               <div class="mb-4">{{ render_field(form.start,      disabled='', placeholder="2,028,824") }}</div>
               <div class="mb-4">{{ render_field(form.stop,       disabled='', placeholder="2,029,217") }}</div>
-              <div class="d-grid gap-3 mb-4">
-                <button id='find_indels' type='submit' value="submit" class="btn btn-secondary text-light" disabled>Find Indels</button>
-              </div>
-              </form>
-              <!-- /Input Form -->
-              {% include "_includes/ignore-cache-checkbox.html" %}
-              </div>
-              <!-- /Input Card -->
+              <input type="submit" hidden />
+            </form>
+            <!-- /Input Form -->
+            {% include "_includes/ignore-cache-checkbox.html" %}
+          </div>
+          <!-- /Input Card -->
         </div>
 
         <div class="tab-pane fade" id="nav-about" role="tabpanel" aria-labelledby="nav-about-tab" tabindex="0">
@@ -293,7 +291,6 @@ function update_species(species_id) {
     'strain_1',
     'strain_2',
     'chromosome',
-    'find_indels',
   ];
   form_ids.forEach((form_id) => toggle_input(form_id, !species_empty));
 
