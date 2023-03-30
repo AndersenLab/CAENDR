@@ -43,12 +43,12 @@
             </ul>
           </div>
           <div class="nav-item dropdown mx-5">
-            <a class="nav-link dropdown-toggle {{'nav-link-active' if request.blueprint == 'data'}}" href="#" id="dataDropdown" role="button" data-bs-toggle="dropdown"
+            <a class="nav-link dropdown-toggle {{'nav-link-active' if request.blueprint == 'data' or request.blueprint == 'data_releases'}}" href="#" id="dataDropdown" role="button" data-bs-toggle="dropdown"
               aria-expanded="false">
               Data
             </a>
             <ul class="dropdown-menu" aria-labelledby="dataDropdown">
-              <li><a class="dropdown-item" href="{{ url_for('data.download')      }}"> Download Data </a></li>
+              <li><a class="dropdown-item" href="{{ url_for('data_releases.data_releases') }}"> Data Releases </a></li>
               <li><a class="dropdown-item" href="{{ url_for('data.protocols')     }}"> Protocols </a></li>
               <li><a class="dropdown-item" href="{{ url_for('data.submit_strain') }}"> Submit A Strain </a></li>
             </ul>

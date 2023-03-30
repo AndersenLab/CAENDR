@@ -35,12 +35,12 @@ releases_bp = Blueprint('data_releases',
 #   Data Page   #
 # ============= #
 
-@releases_bp.route('/release/latest')
-@releases_bp.route('/release/<string:release_version>')
+@releases_bp.route('/data-release/latest')
+@releases_bp.route('/data-release/<string:release_version>')
 @cache.memoize(60*60)
 def data_releases(release_version=None):
   """ Default data page - lists available releases. """
-  title = "Genomic Data"
+  title = "Data Releases"
   alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.data')}
   RELEASES = get_all_dataset_releases(order='-version')
   
@@ -66,7 +66,7 @@ def data_releases(release_version=None):
 
 @cache.memoize(60*60)
 def data_v02(RELEASE, RELEASES):
-  title = "Genomic Data"
+  title = "Data Releases"
   alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.data')}
   release_version = RELEASE.version
   strain_listing = query_strains(release_version=release_version)
@@ -83,7 +83,7 @@ def data_v02(RELEASE, RELEASES):
 @cache.memoize(60*60)
 def data_v01(RELEASE, RELEASES):
   # Legacy releases (Pre 20200101)
-  title = "Genomic Data"
+  title = "Data Releases"
   alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.data')}
   release_version = RELEASE.version
   strain_listing = query_strains(release_version=release_version)

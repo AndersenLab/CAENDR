@@ -8,6 +8,7 @@ from caendr.models.datastore.profile import Profile
 from caendr.utils.data import unique_id
 
 
+# TODO: Move to Profile class
 PROFILE_ROLES = {
   'staff': 'Staff',
   'sac': 'Scientific Advisory Committee',
@@ -18,9 +19,8 @@ def get_profile_role_form_options():
   return [(key, val) for key, val in PROFILE_ROLES.items()]
   
 
-def get_all_profiles(keys_only=False):
-  ds_entities = query_ds_entities(Profile.kind, keys_only=keys_only)
-  return [Profile(e.key.name) for e in ds_entities]
+def get_all_profiles():
+  return Profile.query_ds()
 
 
 def get_profile(id: str):
@@ -68,34 +68,23 @@ def update_profile(p, **kwargs):
   return p
 
 
+
 def get_collaborator_profiles():
   logger.debug('Retrieving collaborator profiles from datastore')
-  profiles = _get_profiles_with_photos('collab')
-  return profiles
+
+  # Filtering against a list property returns a result if any value in the list matches
+  return Profile.query_ds( filters = [('prof_roles', '=', 'collab')] )
 
 
 def get_committee_profiles():
   logger.debug('Retrieving committee profiles from datastore')
-  profiles = _get_profiles_with_photos('sac')
-  return profiles
 
+  # Filtering against a list property returns a result if any value in the list matches
+  return Profile.query_ds( filters = [('prof_roles', '=', 'sac')] )
 
 
 def get_staff_profiles():
   logger.debug('Retrieving staff profiles from datastore')
-  profiles = _get_profiles_with_photos('staff')
-  return profiles
 
-
-def _get_profiles_with_photos(prof_role: str):
-  # filtering against a list property returns a result if any value in the list matches
-  filters = [('prof_roles', '=', prof_role)] 
-  ds_entities = query_ds_entities(Profile.kind, filters=filters)
-  profiles = []
-  bucket = Profile.get_bucket_name()
-  for e in ds_entities:
-    p = Profile(e)
-    if hasattr(p, 'img_blob_path'):
-      p.img_url = generate_blob_url(bucket, p.img_blob_path)
-    profiles.append(p)
-  return profiles
+  # Filtering against a list property returns a result if any value in the list matches
+  return Profile.query_ds( filters = [('prof_roles', '=', 'staff')] )

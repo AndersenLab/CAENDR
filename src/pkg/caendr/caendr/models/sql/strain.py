@@ -4,6 +4,7 @@ from caendr.models.sql.dict_serializable import DictSerializable
 class Strain(DictSerializable, db.Model):
   species_id_method = db.Column(db.String(50), nullable=True)
   species = db.Column(db.String(50), index=True)
+  species_name = db.Column(db.String(20), index=True)
   isotype_ref_strain = db.Column(db.Boolean(), index=True)
   strain = db.Column(db.String(25), primary_key=True)
   isotype = db.Column(db.String(25), index=True, nullable=True)

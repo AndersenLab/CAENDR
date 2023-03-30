@@ -3,6 +3,7 @@ from caendr.models.sql.dict_serializable import DictSerializable
 
 class WormbaseGene(DictSerializable, db.Model):
   id = db.Column(db.Integer, primary_key=True)
+  species_name = db.Column(db.String(20), index=True)
   chrom = db.Column(db.String(20), index=True)
   chrom_num = db.Column(db.Integer(), index=True)  # For sorting purposes
   start = db.Column(db.Integer(), index=True)
