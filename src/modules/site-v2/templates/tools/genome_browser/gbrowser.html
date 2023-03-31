@@ -19,7 +19,8 @@
 {% endblock %}
 
 {% block content %}
-{% from "_includes/strain-listing.html" import species_selector, list_strains %}
+{% from "_includes/macros.html" import render_field %}
+{% from "_includes/strain-listing.html" import list_strains %}
 
 <div class="container-fluid px-5">
   <div class="d-flex justify-content-around flex-wrap mt-2 pb-5">
@@ -37,9 +38,9 @@
           <!-- Input Card -->
           <div class="text-bg-light mb-5 p-3 p-md-5 rounded-2 shadow-sm">
                  <!-- Input Form -->
-      <form>
+      <form id="form-submit">
         <!-- Species -->
-        {{ species_selector(species_list, "update_species") }}
+        <div class='mb-4'>{{ render_field(form.species, onchange="update_species") }}</div>
         <!-- /Species -->
         <!-- Gene search -->
         <div class="mb-4">
@@ -176,6 +177,7 @@
 <script src="{{ url_for('static', filename='js/strains.js') }}"></script>
 
 <script type="text/javascript">
+{% include '_scripts/utils.js' %}       {#/* defines: fetch_json, toggle_input */#}
 {% include '_scripts/igv-browser.js' %}
 {% include '_scripts/gene-search.js' %} {#/* defines: prep_gene_search, run_gene_search, format_locus_string */#}
 
@@ -222,14 +224,22 @@ const default_checked_tracks = [
 
 $(document).ready(function () {
 
-  // Fetch the browser track objects
-  fetch_trackset().then((data) => {
-    set_trackset(data.default);
-    set_templates(data.templates);
+  // Fetch the list of browser track objects
+  // Retrieves an object with two fields:
+  //   - 'default':   the list of tracks that are not specific to any one strain
+  //   - 'templates': the list of track templates to be filled out with strain data
+  fetch_json("{{ url_for('genome_browser.get_tracks') }}")
+    .then((data) => {
+      set_trackset(data.default);
+      set_templates(data.templates);
 
-    // Once we know the trackset exists, update the species & browser
-    update_species();
-  })
+      // Once we know the trackset exists, update the species & browser
+      update_species();
+    })
+    .catch((err) => {
+      // TODO: better error handling?
+      console.error("Failed to retrieve browser tracks.", err);
+    })
 
   // Italicize 'et al.' in track sources
   $('.track-source-link').each((i, obj) => {
@@ -263,17 +273,6 @@ $(document).ready(function () {
   })
 
 });
-
-
-// Get the list of tracks
-// Retrieves an object with two fields:
-//   - 'default':   the list of tracks that are not specific to any one strain
-//   - 'templates': the list of track templates to be filled out with strain data
-function fetch_trackset() {
-  return fetch( "{{ url_for('genome_browser.get_tracks') }}" )
-    .then( (response) => { return response.text();  } )
-    .then( (text)     => { return JSON.parse(text); } );
-}
 
 
 
@@ -341,14 +340,9 @@ function update_species(species_id) {
   const form_ids = [
     'filter',
     'gene-search',
-  ]
-  form_ids.forEach((form_id) => {
-    document.getElementById(form_id).disabled = species_empty;
-  })
-
-  // Special case for track options container, which isn't technically an input itself
-  // Update element background color to match disabled input elements
-  document.getElementById('track-options-container').style.backgroundColor = `var(--${ species_empty ? 'disabled' : 'enabled' }-color)`;
+    'track-options-container',
+  ];
+  form_ids.forEach((form_id) => toggle_input(form_id, !species_empty));
 
   // If no species selected, clear track checkboxes and end update function here
   if (species_empty) {

@@ -5,7 +5,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 import bleach
 from flask import jsonify
 
-from base.forms import FileUploadForm
+from base.forms import MappingForm
 from base.utils.auth  import get_jwt, jwt_required, admin_required, get_current_user, user_is_admin
 from base.utils.tools import lookup_report, upload_file, try_submit
 
@@ -42,7 +42,7 @@ def genetic_mapping():
 
     # Form info
     'jwt_csrf_token': (get_jwt() or {}).get("csrf"),
-    'form': FileUploadForm(),
+    'form': MappingForm(),
 
     # TODO: change
     'nemascan_container_url': 'https://github.com/AndersenLab/dockerfile/tree/nemarun/nemarun',
@@ -59,38 +59,27 @@ def genetic_mapping():
 @genetic_mapping_bp.route('/genetic-mapping/upload', methods = ['POST'])
 @jwt_required()
 def submit():
-  form = FileUploadForm(request.form)
+  form = MappingForm(request.form)
   user = get_current_user()
 
   # If user is admin, allow them to bypass cache with URL variable
   no_cache = bool(user_is_admin() and request.args.get("nocache", False))
 
-  # Validate form
+  # Validate form fields
+  # Checks that species is in species list & label is not empty
   if not form.validate_on_submit():
-    flash("You must include a description of your data and a TSV file to upload", "error")
+    flash("You must include a description of your data and a TSV file to upload.", "danger")
     return redirect(url_for('genetic_mapping.genetic_mapping'))
 
   # Read fields from form
   label   = bleach.clean(request.form.get('label'))
   species = bleach.clean(request.form.get('species'))
 
-  # Check that label is not empty
-  # TODO: Move to FileUploadForm validator?
-  if len(label.strip()) == 0:
-    flash('Invalid label.', 'danger')
-    return redirect(url_for('genetic_mapping.genetic_mapping'))
-
-  # Check that species is valid
-  # TODO: Move to FileUploadForm validator?
-  if species not in SPECIES_LIST.keys():
-    flash('Invalid species.', 'danger')
-    return redirect(url_for('genetic_mapping.genetic_mapping'))
-
   # Save uploaded file to server temporarily, displaying an error message if this fails
   try:
     local_path = upload_file(request, 'file')
   except FileUploadError as ex:
-    flash('There was a problem uploading your file to the server. Please try again.', 'danger')
+    flash(ex.description, 'danger')
     return redirect(url_for('genetic_mapping.genetic_mapping'))
 
   # Package submission data together into dict

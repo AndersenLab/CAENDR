@@ -107,11 +107,13 @@ def submit():
   form = HeritabilityForm(request.form)
   user = get_current_user()
 
-  # TODO: Validate form
+  # Validate form fields
+  # Checks that species is in species list & label is not empty
   if not form.validate_on_submit():
-    pass
-    # flash("You must include a description of your data and a TSV file to upload", "error")
-    # return redirect(url_for('heritability_calculator.submit'))
+    flash("You must include a description of your data and a TSV file to upload.", "danger")
+    return jsonify({
+      'error': True, 'message': "You must include a description of your data and a TSV file to upload.",
+    })
 
   # If user is admin, allow them to bypass cache with URL variable
   no_cache = bool(user_is_admin() and request.args.get("nocache", False))
@@ -120,30 +122,14 @@ def submit():
   label   = bleach.clean(request.form.get('label'))
   species = bleach.clean(request.form.get('species'))
 
-  # Check that label is not empty
-  # TODO: Move to HeritabilityForm validator?
-  if len(label.strip()) == 0:
-    flash('Invalid label.', 'danger')
-    return jsonify({
-      'error': True, 'message': f"There was a problem submitting your request.",
-    })
-
-  # Check that species is valid
-  # TODO: Move to HeritabilityForm validator?
-  if species not in SPECIES_LIST.keys():
-    flash('Invalid species.', 'danger')
-    return jsonify({
-      'error': True, 'message': f"There was a problem submitting your request.",
-    })
-
   # Save uploaded file to server temporarily, displaying an error message if this fails
   try:
     local_path = upload_file(request, 'file')
   except FileUploadError as ex:
-    flash('There was a problem uploading your file to the server. Please try again.', 'danger')
+    flash(ex.description, 'danger')
     return jsonify({
       'error':   True,
-      'message': f"There was a problem submitting your request.",
+      'message': ex.description,
     })
 
   # Package submission data together into dict

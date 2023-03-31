@@ -10,6 +10,7 @@ from flask import (render_template,
                     request,
                     url_for)
 from extensions import cache
+from base.forms import SpeciesSelectForm
 
 from caendr.api.isotype import get_isotypes
 from caendr.services.dataset_release import get_dataset_release, get_latest_dataset_release_version
@@ -117,6 +118,8 @@ def genome_browser(region="III:11746923-11750250", query=None):
     'query':          query,
     'strain_listing': strain_listing,
     'species_list':   SPECIES_LIST,
+
+    'form': SpeciesSelectForm(),
 
     # Tracks
     'default_tracks': sorted(BrowserTrackDefault.query_ds_visible(), key = lambda x: x['order'] ),

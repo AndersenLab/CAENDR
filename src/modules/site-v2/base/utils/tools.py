@@ -15,10 +15,13 @@ from caendr.models.error import (
 from caendr.models.task import TaskStatus
 from caendr.services.tools import submit_job
 from caendr.utils.data import unique_id
+from caendr.services.cloud.secret import get_secret
 
 
 uploads_dir = os.path.join('./', 'uploads')
 os.makedirs(uploads_dir, exist_ok=True)
+
+SUPPORT_EMAIL = get_secret('SUPPORT_EMAIL')
 
 
 def lookup_report(EntityClass, reportId, user=None):
@@ -62,13 +65,13 @@ def upload_file(request, filename):
   # Get the FileStorage object from the request
   file = request.files.get(filename)
   if not file:
-    raise FileUploadError()
+    raise FileUploadError('You must include a TSV file with your data to upload. If this message persists, try refreshing the page and re-uploading your file.')
 
   # Save the file, alerting the user if this fails
   try:
     file.save(local_path)
   except Exception:
-    raise FileUploadError()
+    raise FileUploadError(f'There was a problem uploading your submission. Please try again. If this problem persists, please contact us at {SUPPORT_EMAIL}')
 
   # Return the name of the file on the server
   return local_path

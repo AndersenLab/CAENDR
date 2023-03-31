@@ -1,14 +1,41 @@
-{% macro render_field(field, form_prefix=None, form_suffix=None) %}
+{%- macro species_onchange(onchange=None) -%}
+  this.classList.toggle('fst-italic', this.value);
+  if (this.value && !this.options[0].value) this.options[0].disabled = true;
+  {% if onchange %}{{ onchange }}(this.value);{% endif %}
+{%- endmacro -%}
+
+{% macro render_species_field(field, onchange=None) %}
+  {% set _ = kwargs.update({'aria-label': 'Choose species'})  %}
+  {{ field(class="form-control", onchange=species_onchange(onchange), required=true, **kwargs) }}
+  <script>
+    // Reset the selector every time the page is shown
+    // This includes from browser back/forward, and is necessary to reset species
+    addEventListener("pageshow", (event) => {
+      const selector = document.getElementById('{{ field.elementId }}');
+      selector.value = '';
+      {#/* toggle_input(selector.options[0], false); // Un-comment to disable "Choose" from start. Is this compatible with all browsers? */#}
+    });
+  </script>
+{% endmacro %}
+
+{% macro render_field(field, form_prefix=None, form_suffix=None, make_err_container=false) %}
   <div class="form-group {% if field.errors %}has-error{% endif %}">
-    {{ field.label }}
+    {{ field.label(class='form-label') }}
     {% if form_prefix or form_suffix %}
     <div class="input-group">
     {% endif %}
       {% if form_prefix %}<span class="input-group-addon">{{ form_prefix }}</span>{% endif %}
       {% if field.type == 'RadioField' %}
         {{ field(**kwargs) }}
+      {% elif field.type == 'FileField' %}
+        <div class="hstack gap-2 mb-4">
+          {{ field(class_="form-control", required=kwargs.get('required', field.flags.required), **kwargs) }}
+          {{ caller() }} {# Any HTML inside the {% call %} block is rendered here, inside this inner div #}
+        </div>
+      {% elif field.type == 'SpeciesSelectField' %}
+        {{ render_species_field(field, **kwargs) }}
       {% else %}
-        {{ field(class="form-control", **kwargs) }}
+        {{ field(class="form-control", required=kwargs.get('required', field.flags.required), **kwargs) }}
       {% endif %}
       {% if form_suffix %}<span class="input-group-addon">{{ form_prefix }}</span>{% endif %}
     {% if form_prefix or form_suffix %}
@@ -17,6 +44,9 @@
     {% for error in field.errors %}
       <p class='text-danger'>{{ error|safe|e }}</p>
     {% endfor %}
+    {% if make_err_container %}
+      <p class='text-danger err-container'></p>
+    {% endif %}
   </div>
 {% endmacro %}
 
