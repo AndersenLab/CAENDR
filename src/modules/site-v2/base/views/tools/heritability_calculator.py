@@ -80,21 +80,22 @@ def create():
 @heritability_calculator_bp.route("/heritability-calculator/all-results")
 @admin_required()
 def all_results():
-  title = "All Heritability Results"
-  alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
-  user = get_current_user()
-  items = get_all_heritability_results()
-  return render_template('tools/heritability_calculator/list-all.html', **locals())
+  return render_template('tools/heritability_calculator/list-all.html', **{
+    'title': "All Heritability Results",
+    'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+    'items': get_all_heritability_results(),
+  })
 
 
 @heritability_calculator_bp.route("/heritability-calculator/my-results")
 @jwt_required()
 def user_results():
-  title = "My Heritability Results"
-  alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   user = get_current_user()
-  items = get_user_heritability_results(user.name)
-  return render_template('tools/heritability_calculator/list-user.html', **locals())
+  return render_template('tools/heritability_calculator/list-user.html', **{
+    'title': "My Heritability Results",
+    'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+    'items': get_user_heritability_results(user.name),
+  })
 
 
 @heritability_calculator_bp.route('/heritability-calculator/submit', methods=["POST"])
