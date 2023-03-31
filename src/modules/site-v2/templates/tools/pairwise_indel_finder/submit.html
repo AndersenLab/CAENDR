@@ -148,13 +148,12 @@ let dragging = false
 
 $(document).ready(function(){
 
-  var form = document.getElementById('form-submit');
-
+  // Get initial species value & update page to match
   species = species_list[$("#{{ form.species.elementId }}").val()];
   update_species();
 
   // Prevent form submission from reloading page, then redirect to form change logic
-  $('form').submit(function (e) {
+  $('#form-submit').submit(function (e) {
     e.preventDefault();
     form_change();
   });
