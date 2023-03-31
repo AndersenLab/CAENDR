@@ -476,6 +476,7 @@ function create_or_update_data_table(results) {
       data:      results,
       paging:    false,
       ordering:  true,
+      dom:       'lrtip', // Hides the default search bar -- see https://legacy.datatables.net/ref#bFilter
       order:     [[1, "asc"]],
       columnDefs: [
         { targets: [0], orderData: [1,2] },
