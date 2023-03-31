@@ -23,13 +23,6 @@
     // Handle results
     success: function(result) {
 
-      // Error - Reload to show flashed message
-      // TODO: Preserve species & label values across reload?
-      if (!result.succeeded) {
-        window.location.reload();
-        return;
-      }
-
       // TODO: Display message based on cache status?
 
       // Results are ready to be viewed
@@ -47,9 +40,16 @@
       resetForm();
     },
 
-    // TODO: Error handling
+    // Error - check for flashed message, and reload to show if found
     error: function(error) {
-      enableButton();
+      if (error.responseJSON) {
+        const message = error.responseJSON.message;
+        if (message) {
+          window.location.reload();
+        } else {
+          console.error(error);
+        }
+      }
     }
   });
 {% endmacro %}

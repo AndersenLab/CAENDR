@@ -191,14 +191,14 @@ def submit():
   no_cache = bool(user_is_admin() and request.args.get("nocache", False))
 
   # Try submitting the job & getting a JSON status message
-  response = try_submit(IndelPrimer, user, data, no_cache)
+  response, code = try_submit(IndelPrimer, user, data, no_cache)
 
   # If there was an error, flash it
-  if not response['succeeded']:
+  if not code == 200:
     flash(response['message'], 'danger')
 
   # Return the response
-  return jsonify( response )
+  return jsonify( response ), code
 
 
 

@@ -509,8 +509,9 @@ function create_or_update_data_table(results) {
 
 
 function generate_primers(e) {
-  console.log("Submitted")
-  $(this).text("Submitted")
+  $(this).text("Submitting");
+
+  const self = $(this);
 
   // Get strain values and sort - consistent ordering of strains for hashing
   const strains = [$("#strain_1").val(), $("#strain_2").val()].sort()
@@ -536,7 +537,11 @@ function generate_primers(e) {
     contentType: "application/json; charset=utf-8",
     dataType: 'json',
     success: function(result) {
-        window.open(`pairwise-indel-finder/result/${result.id}`, "_blank")
+      self.text("Submitted");
+      window.open(`pairwise-indel-finder/result/${result.id}`, "_blank")
+    },
+    error: function(error) {
+      self.text("Failed");
     }
   })
 }

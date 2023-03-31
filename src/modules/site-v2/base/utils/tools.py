@@ -65,13 +65,13 @@ def upload_file(request, filename):
   # Get the FileStorage object from the request
   file = request.files.get(filename)
   if not file:
-    raise FileUploadError('You must include a TSV file with your data to upload. If this message persists, try refreshing the page and re-uploading your file.')
+    raise FileUploadError('You must include a TSV file with your data to upload. If this message persists, try refreshing the page and re-uploading your file.', 400)
 
   # Save the file, alerting the user if this fails
   try:
     file.save(local_path)
   except Exception:
-    raise FileUploadError(f'There was a problem uploading your submission. Please try again. If this problem persists, please contact us at {SUPPORT_EMAIL}')
+    raise FileUploadError(f'There was a problem uploading your submission. Please try again. If this problem persists, please contact us at {SUPPORT_EMAIL}', 500)
 
   # Return the name of the file on the server
   return local_path
@@ -84,36 +84,34 @@ def try_submit(EntityClass, user, data, no_cache):
     # report = create_report_func(user, data, no_cache=no_cache)
     report = submit_job(EntityClass, user, data, no_cache=no_cache)
     return {
-      'succeeded': True,
       'cached':    False,
+      'same_user': None,
       'ready':     False,
       'data_hash': report.data_hash,
       'id':        report.id,
-    }
+    }, 200
 
   # Duplicate job submission from this user
   except DuplicateDataError as ex:
     # flash('Oops! It looks like you submitted that data already - redirecting to your list of Heritability Reports', 'danger')
     return {
-      'succeeded': True,
       'cached':    True,
       'same_user': True,
       'ready':     ex.args[0]['status'] == TaskStatus.COMPLETE,
       'data_hash': ex.args[0].data_hash,
       'id':        ex.args[0].id,
-    }
+    }, 200
 
   # Duplicate job submission from another user
   except CachedDataError as ex:
     # flash('Oops! It looks like that data has already been submitted - redirecting to the saved results', 'danger')
     return {
-      'succeeded': True,
       'cached':    True,
       'same_user': False,
       'ready':     ex.args[0]['status'] == TaskStatus.COMPLETE,
       'data_hash': ex.args[0].data_hash,
       'id':        ex.args[0].id,
-    }
+    }, 200
 
   # Formatting error in uploaded data file
   except DataFormatError as ex:
@@ -127,10 +125,7 @@ def try_submit(EntityClass, user, data, no_cache):
       msg += f' (Line: { ex.line })'
 
     # Return the error message
-    return {
-      'succeeded': False,
-      'message':   msg,
-    }
+    return { 'message': msg }, 400
 
   # General error
   except Exception as ex:
@@ -144,7 +139,4 @@ def try_submit(EntityClass, user, data, no_cache):
 
     # Return the error message
     # TODO: Update this wording
-    return {
-      'succeeded': False,
-      'message':   "There was a problem submitting your request.",
-    }
+    return { 'message': "There was a problem submitting your request." }, 500

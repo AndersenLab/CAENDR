@@ -110,10 +110,9 @@ def submit():
   # Validate form fields
   # Checks that species is in species list & label is not empty
   if not form.validate_on_submit():
-    flash("You must include a description of your data and a TSV file to upload.", "danger")
-    return jsonify({
-      'error': True, 'message': "You must include a description of your data and a TSV file to upload.",
-    })
+    msg = "You must include a description of your data and a TSV file to upload."
+    flash(msg, "danger")
+    return jsonify({ 'message': msg }), 400
 
   # If user is admin, allow them to bypass cache with URL variable
   no_cache = bool(user_is_admin() and request.args.get("nocache", False))
@@ -127,10 +126,7 @@ def submit():
     local_path = upload_file(request, 'file')
   except FileUploadError as ex:
     flash(ex.description, 'danger')
-    return jsonify({
-      'error':   True,
-      'message': ex.description,
-    })
+    return jsonify({ 'message': ex.description }), ex.code
 
   # Package submission data together into dict
   data = {
@@ -141,14 +137,14 @@ def submit():
 
   # Try submitting the job & returning a JSON status message
   try:
-    response = try_submit(HeritabilityReport, user, data, no_cache)
+    response, code = try_submit(HeritabilityReport, user, data, no_cache)
 
     # If there was an error, flash it
-    if not response['succeeded']:
+    if not code == 200:
       flash(response['message'], 'danger')
 
     # Return the response
-    return jsonify( response )
+    return jsonify( response ), code
 
   # Ensure the local file is removed, even if an error is uncaught in the submission process
   finally:

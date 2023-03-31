@@ -112,6 +112,7 @@ class UnfinishedReportError(InternalError):
 class FileUploadError(InternalError):
   description = "Could not upload file"
 
-  def __init__(self, description=None):
+  def __init__(self, description=None, code=500):
     if description is not None:
       self.description = description
+    self.code = code
