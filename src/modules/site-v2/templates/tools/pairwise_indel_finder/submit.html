@@ -142,6 +142,7 @@ var table;
 /* Status */
 var query_running = false
 var loaded = false
+var dragging = false
 
 
 
@@ -274,10 +275,15 @@ function form_change() {
         current_chrom_size = end;
       }
 
-      // If a new query is needed (chromosome or strain change), run now that position updated
+      // If a new query is needed (chromosome or strain change), run it now that the position is updated
       // Run query if one chromosome and at least one strain are chosen
       if (needs_update && (chromosome !== 'all' && (strain_1 || strain_2))) {
         run_query();
+      }
+
+      // Otherwise, redraw the table to match the new search region
+      else {
+        if (table) table.draw();
       }
     })
     .catch((e) => {
@@ -339,7 +345,22 @@ function update_species(species_id) {
         if (chrom_old !== chrom_new) {
           run_query();
         }
+
+        // Redraw the table if the user is not currently dragging
+        // Prevents this event from spamming redraw requests
+        if (!dragging) {
+          if (table) table.draw();
+        }
       });
+
+      // Keep track of when browser is being dragged
+      browser.on('trackdrag', () => {
+        dragging = true;
+      })
+      browser.on('trackdragend', () => {
+        dragging = false;
+        if (table) table.draw();
+      })
 
       // Flag the browser as loaded
       loaded = true;
@@ -446,7 +467,6 @@ function create_or_update_data_table(results) {
       data:      results,
       paging:    false,
       ordering:  true,
-      searching: false,
       order:     [[1, "asc"]],
       columnDefs: [
         { targets: [0], orderData: [1,2] },
@@ -458,6 +478,13 @@ function create_or_update_data_table(results) {
         { data: "STRAIN", title: "Strain"                },
         { data: "generate_primers", renderer: "html"     },
       ],
+    });
+
+    // Create filter function based on start & stop values
+    $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+      const start = parse_int_input('#start');
+      const stop  = parse_int_input('#stop');
+      return (start <= data[1] && data[1] <= stop) || (start <= data[2] && data[2] <= stop)
     });
   }
   else {
