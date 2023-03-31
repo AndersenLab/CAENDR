@@ -12,6 +12,7 @@ from wtforms import (StringField,
                      IntegerField,
                      SelectField,
                      SelectMultipleField,
+                     FileField,
                      widgets,
                      FieldList,
                      HiddenField,
@@ -57,17 +58,43 @@ class MultiCheckboxField(SelectMultipleField):
   widget = widgets.ListWidget(prefix_label=False)
   option_widget = widgets.CheckboxInput() 
 
+
+class SpeciesSelectField(SelectField):
+  """
+    Special dropdown selector field for selecting a species.
+  """
+  type = 'SpeciesSelectField'
+  elementId = 'speciesSelect'
+
+  # Automatically validates that species choice is in this list
+  CHOICES = [(name, value.short_name) for name, value in SPECIES_LIST.items()]
+
+  def __init__(self, **kwargs):
+    return super().__init__('Species:', id=SpeciesSelectField.elementId, choices=[ ('', "Choose"), *SpeciesSelectField.CHOICES ], **kwargs)
+
+
 class EmptyForm(FlaskForm):
   pass
 
+class SpeciesSelectForm(FlaskForm):
+  """
+    Dummy form with just a species selector. Useful for tools/pages that need a species selector, but not a full form.
+  """
+  species = SpeciesSelectField()
+
 class FileUploadForm(FlaskForm):
+  species = SpeciesSelectField()
+  label = StringField('Description:', validators=[Required(message='You must include a description of your data.')])
+  file = FileField('Select file:', render_kw={'accept': '.tsv'})
+
+class HeritabilityForm(FileUploadForm):
   pass
 
-class HeritabilityForm(Form):
+class MappingForm(FileUploadForm):
   pass
 
 class VBrowserForm(FlaskForm):
-  pass
+  species = SpeciesSelectField()
 
 
 class BasicLoginForm(FlaskForm):
@@ -199,14 +226,13 @@ class StrainSelectField(SelectField):
 
 class PairwiseIndelForm(Form):
   CHROMOSOME_CHOICES = [('', ''), *get_indel_primer_chrom_choices()]
-  SPECIES_CHOICES = [(name, value.short_name) for name, value in SPECIES_LIST.items()]
 
-  species = SelectField('Species', choices=SPECIES_CHOICES, validators=[Required()])
-  strain_1 = StrainSelectField('Strain 1', choices=[], validators=[Required(), validate_uniq_strains])
-  strain_2 = StrainSelectField('Strain 2', choices=[], validators=[Required()])
-  chromosome = SelectField('Chromosome', choices=CHROMOSOME_CHOICES, validators=[Required()])
-  start = FlexIntegerField('Start', validators=[Required(), validate_start_lt_stop])
-  stop  = FlexIntegerField('Stop',  validators=[Required()])
+  species = SpeciesSelectField(validators=[Required()])
+  strain_1 = StrainSelectField('Strain 1:', choices=[], validators=[Required(), validate_uniq_strains])
+  strain_2 = StrainSelectField('Strain 2:', choices=[], validators=[Required()])
+  chromosome = SelectField('Chromosome:', choices=CHROMOSOME_CHOICES, validators=[Required()])
+  start = FlexIntegerField('Start:', validators=[Required(), validate_start_lt_stop])
+  stop  = FlexIntegerField('Stop:',  validators=[Required()])
 
   
 class OrderForm(Form):
