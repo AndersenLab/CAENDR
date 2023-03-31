@@ -220,7 +220,7 @@ def report(id, filename = None):
 
     # If report hasn't finished computing yet, display a waiting page
     except UnfinishedReportError as ex:
-      data, result = ex['data'], None
+      data, result = ex.data, None
       ready = False
 
     # Error reading data JSON file
