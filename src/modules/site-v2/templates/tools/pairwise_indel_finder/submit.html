@@ -114,35 +114,35 @@
 
 /* Species */
 const species_list = {{ unpack_species_list(species_list, species_fields) }};
-var species;
+let species;
 
 /* Strains */
-var strains;
+let strains;
 
 /* IGV Browser */
 const browser_div = $("#browser");
 const browser_options = {}
-var divergent_track_name;
+let divergent_track_name;
 const COLORS = {
   INS: 'blue',
   DEL: 'red'
 }
 
 /* Form */
-var current_form_data = {
+let current_form_data = {
   chromosome: '',
   strain_1:   '',
   strain_2:   '',
 };
-var current_chrom_size = null;
+let current_chrom_size = null;
 
 /* Data Table */
-var table;
+let table;
 
 /* Status */
-var query_running = false
-var loaded = false
-var dragging = false
+let query_running = false
+let loaded = false
+let dragging = false
 
 
 
@@ -178,7 +178,7 @@ $(document).ready(function(){
 function run_query() {
 
   // Get form data as an object
-  var data = form_data_to_object('form-submit');
+  let data = form_data_to_object('form-submit');
 
   // Update start and stop to be full chromosome size
   data['start'] = 1;
@@ -233,8 +233,8 @@ function form_change() {
 
   // Variable to track whether a new query is needed
   // Will be true if chromosome, strain_1, or strain_2 has changed
-  var needs_update = false;
-  var chrom_change = false;
+  let needs_update = false;
+  let chrom_change = false;
 
   // Enable / disable the start & stop input fields based on whether a species
   // and chromosome have been chosen
@@ -503,9 +503,9 @@ function generate_primers(e) {
   $(this).text("Submitted")
 
   // Get strain values and sort - consistent ordering of strains for hashing
-  var strains = [$("#strain_1").val(), $("#strain_2").val()].sort()
+  const strains = [$("#strain_1").val(), $("#strain_2").val()].sort()
 
-  var data = {
+  const data = {
     site: $(this).attr("site"),
     strain_1: strains[0],
     strain_2: strains[1],

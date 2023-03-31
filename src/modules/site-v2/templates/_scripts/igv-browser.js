@@ -1,6 +1,6 @@
 // Tracks
-var tracks   = new Set();
-var trackset = {};
+let tracks   = new Set();
+let trackset = {};
 
 function set_trackset(val) {
   trackset = val;
@@ -8,7 +8,7 @@ function set_trackset(val) {
 
 
 // Strain track templates
-var templates = {};
+let templates = {};
 
 function set_templates(val) {
   templates = val;
@@ -104,23 +104,25 @@ function clear_tracks_except(track_names) {
 // Construct a track from a template
 function get_track(track_name) {
 
+  let track;
+
   // Retrieve or generate the track
   // If track is in default set, use it
   if (track_name in trackset) {
-    var track = JSON.parse( trackset[track_name] );
+    track = JSON.parse( trackset[track_name] );
   }
 
   // If not, generate the track from a template
   else {
     if (track_name.endsWith('bam')) {
-      var track = fill_track_template('bam', track_name.substring(0, track_name.length - 4));
+      track = fill_track_template('bam', track_name.substring(0, track_name.length - 4));
     } else {
-      var track = fill_track_template('vcf', track_name);
+      track = fill_track_template('vcf', track_name);
     }
   }
 
   // Get track params
-  var params = track.params;
+  let params = track.params;
 
   // Create the full URL and replace all tokens
   params.url = replace_tokens( params.url );
@@ -136,17 +138,17 @@ function get_track(track_name) {
 
 
 function fill_track_template(template_name, strain_name) {
-  var template = JSON.parse( templates[template_name] );
+  let template = JSON.parse( templates[template_name] );
 
   // Fill in strain names in top level string fields
-  for (var key in template) {
+  for (let key in template) {
     if (typeof template[key] == "string") {
       template[key] = template[key].replaceAll("${STRAIN}", strain_name);
     }
   }
 
   // Fill in strain name in params
-  for (var key in template['params']) {
+  for (let key in template['params']) {
     if (typeof template['params'][key] == "string") {
       template['params'][key] = template['params'][key].replaceAll("${STRAIN}", strain_name);
     }

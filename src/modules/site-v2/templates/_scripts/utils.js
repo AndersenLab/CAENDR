@@ -32,7 +32,7 @@ function fetch_json(url) {
 
 // Get form data as an object
 function form_data_to_object(form_id) {
-  var data = {};
+  let data = {};
   $(`#${form_id}`).serializeArray().forEach(({name, value}) => {
     data[name] = value;
   });
