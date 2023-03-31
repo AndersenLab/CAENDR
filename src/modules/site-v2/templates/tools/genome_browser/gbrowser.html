@@ -228,13 +228,18 @@ $(document).ready(function () {
   // Retrieves an object with two fields:
   //   - 'default':   the list of tracks that are not specific to any one strain
   //   - 'templates': the list of track templates to be filled out with strain data
-  fetch_json("{{ url_for('genome_browser.get_tracks') }}").then((data) => {
-    set_trackset(data.default);
-    set_templates(data.templates);
+  fetch_json("{{ url_for('genome_browser.get_tracks') }}")
+    .then((data) => {
+      set_trackset(data.default);
+      set_templates(data.templates);
 
-    // Once we know the trackset exists, update the species & browser
-    update_species();
-  })
+      // Once we know the trackset exists, update the species & browser
+      update_species();
+    })
+    .catch((err) => {
+      // TODO: better error handling?
+      console.error("Failed to retrieve browser tracks.", err);
+    })
 
   // Italicize 'et al.' in track sources
   $('.track-source-link').each((i, obj) => {

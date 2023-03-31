@@ -24,9 +24,7 @@ function toggle_input(idOrEl, val) {
 
 
 function fetch_json(url) {
-  return fetch(url)
-    .then( (response) => { return response.text();  } )
-    .then( (text)     => { return JSON.parse(text); } );
+  return fetch(url).then(res => res.json())
 }
 
 

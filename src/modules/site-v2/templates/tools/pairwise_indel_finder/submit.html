@@ -166,9 +166,14 @@ $(document).ready(function(){
 		}
 	});
 
-  fetch_json("{{ url_for('pairwise_indel_finder.get_strains') }}").then((data) => {
-    strains = data;
-  });
+  fetch_json("{{ url_for('pairwise_indel_finder.get_strains') }}")
+    .then((data) => {
+      strains = data;
+    })
+    .catch((err) => {
+      // TODO: Better error handling?
+      console.error("Failed to retrieve strain values.", err);
+    });
 });
 
 
@@ -366,19 +371,24 @@ function update_species(species_id) {
 
       // Clear all tracks & reload the divergent regions track
       clear_tracks();
-      fetch_json("{{ url_for('pairwise_indel_finder.get_tracks') }}").then((divergent_track_summary) => {
-        divergent_track_name = divergent_track_summary.name;
+      fetch_json("{{ url_for('pairwise_indel_finder.get_tracks') }}")
+        .then((divergent_track_summary) => {
+          divergent_track_name = divergent_track_summary.name;
 
-        // Replace species tokens in URL
-        divergent_track_summary.url = replace_tokens(divergent_track_summary.url);
+          // Replace species tokens in URL
+          divergent_track_summary.url = replace_tokens(divergent_track_summary.url);
 
-        // Set tool-specific display properties
-        divergent_track_summary.height = 40; // Height to view two rows would be 70
-        divergent_track_summary.removable = false;
+          // Set tool-specific display properties
+          divergent_track_summary.height = 40; // Height to view two rows would be 70
+          divergent_track_summary.removable = false;
 
-        // Add the track to the browser
-        add_track(divergent_track_name, divergent_track_summary);
-      })
+          // Add the track to the browser
+          add_track(divergent_track_name, divergent_track_summary);
+        })
+        .catch((err) => {
+          // TODO: Better error handling
+          console.error("Failed to retrieve divergent regions track.", err);
+        })
 
       // Update browser tracks
       update_browser_tracks(browser, results);
