@@ -124,6 +124,8 @@ def all_results():
     # User info
     'user':  get_current_user(),
     'items': get_all_indel_primers(),
+
+    'TaskStatus': TaskStatus,
   })
 
 
@@ -144,6 +146,8 @@ def user_results():
     # User info
     'user':  user,
     'items': get_user_indel_primers(user.name),
+
+    'TaskStatus': TaskStatus,
   })
 
 
