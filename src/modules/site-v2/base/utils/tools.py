@@ -12,6 +12,7 @@ from caendr.models.error import (
     FileUploadError,
     ReportLookupError,
 )
+from caendr.models.task import TaskStatus
 from caendr.services.tools import submit_job
 from caendr.utils.data import unique_id
 
@@ -94,7 +95,7 @@ def try_submit(EntityClass, user, data, no_cache):
       'succeeded': True,
       'cached':    True,
       'same_user': True,
-      'ready':     ex.args[0]['status'] == "COMPLETE",
+      'ready':     ex.args[0]['status'] == TaskStatus.COMPLETE,
       'data_hash': ex.args[0].data_hash,
       'id':        ex.args[0].id,
     }
@@ -106,7 +107,7 @@ def try_submit(EntityClass, user, data, no_cache):
       'succeeded': True,
       'cached':    True,
       'same_user': False,
-      'ready':     ex.args[0]['status'] == "COMPLETE",
+      'ready':     ex.args[0]['status'] == TaskStatus.COMPLETE,
       'data_hash': ex.args[0].data_hash,
       'id':        ex.args[0].id,
     }

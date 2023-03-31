@@ -30,6 +30,7 @@ from caendr.models.error import (
     UnfinishedReportError,
 )
 from caendr.models.datastore import SPECIES_LIST, HeritabilityReport
+from caendr.models.task import TaskStatus
 from caendr.api.strain import get_strains
 from caendr.services.heritability_report import get_all_heritability_results, get_user_heritability_results, create_new_heritability_report, get_heritability_report, fetch_heritability_report
 from caendr.utils.data import unique_id, convert_data_table_to_tsv, get_object_hash
@@ -84,6 +85,7 @@ def all_results():
     'title': "All Heritability Results",
     'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
     'items': get_all_heritability_results(),
+    'TaskStatus': TaskStatus,
   })
 
 
@@ -95,6 +97,7 @@ def user_results():
     'title': "My Heritability Results",
     'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
     'items': get_user_heritability_results(user.name),
+    'TaskStatus': TaskStatus,
   })
 
 
@@ -239,7 +242,7 @@ def report(id):
   # If result exists, mark as complete
   # TODO: Is this the right place for this?
   if result:
-    hr.status = 'COMPLETE'
+    hr.status = TaskStatus.COMPLETE
     hr.save()
 
   # TODO: Are either of these values used?

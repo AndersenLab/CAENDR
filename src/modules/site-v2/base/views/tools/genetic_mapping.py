@@ -19,6 +19,7 @@ from caendr.models.error import (
     FileUploadError,
     ReportLookupError,
 )
+from caendr.models.task import TaskStatus
 
 
 
@@ -126,6 +127,7 @@ def all_reports():
     'subtitle': 'Report List',
     'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
     'mappings': get_all_mappings(),
+    'TaskStatus': TaskStatus,
   })
 
 
@@ -138,6 +140,7 @@ def user_reports():
     'subtitle': 'Report List',
     'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
     'mappings': get_user_mappings(user.name),
+    'TaskStatus': TaskStatus,
   })
 
 

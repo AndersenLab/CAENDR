@@ -61,7 +61,7 @@ table.dataTable thead .sorting {
               <td class="data-empty" data-order='0'></td>
             {% endif %}
               <td class="data-status">
-                {% if item.status == 'COMPLETE' %}
+                {% if item.status == TaskStatus.COMPLETE %}
                 <a href="{{ url_for('pairwise_indel_finder.report', id=item.id) }}">
                   {{ item.status }}
                 </a>

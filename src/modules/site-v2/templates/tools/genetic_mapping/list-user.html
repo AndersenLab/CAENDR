@@ -59,7 +59,7 @@ table.dataTable thead .sorting {
               <td class='data-label'> {{ item.label }} </td>
               <td class='data-trait'> {{ item.trait }} </td>
               <td class='data-status'>
-                {% if item.status == 'COMPLETE' %}
+                {% if item.status == TaskStatus.COMPLETE %}
                 <a href="{{ url_for('genetic_mapping.report', id=item.id) }}">
                   {{ item.status }}
                 </a>

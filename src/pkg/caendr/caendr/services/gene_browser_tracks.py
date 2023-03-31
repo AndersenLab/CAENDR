@@ -2,7 +2,7 @@ import os
 from caendr.services.logger import logger
 
 from caendr.models.datastore import GeneBrowserTracks
-from caendr.models.task import GeneBrowserTracksTask
+from caendr.models.task import GeneBrowserTracksTask, TaskStatus
 from caendr.services.tool_versions import GCR_REPO_NAME
 from caendr.utils.data import unique_id
 
@@ -43,7 +43,7 @@ def create_new_gene_browser_track(wormbase_version, username, note=None):
   result = task.submit()
 
   # Update entity status to reflect whether task was submitted successfully
-  t.status = 'SUBMITTED' if result else 'ERROR'
+  t.status = TaskStatus.SUBMITTED if result else TaskStatus.ERROR
   t.save()
 
   # Return resulting Gene Browser Tracks entity

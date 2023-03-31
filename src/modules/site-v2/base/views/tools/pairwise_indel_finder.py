@@ -10,6 +10,7 @@ from base.utils.tools import lookup_report, try_submit
 from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefault
 from caendr.models.datastore import SPECIES_LIST, IndelPrimer
 from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupError, EmptyReportDataError, EmptyReportResultsError, UnfinishedReportError
+from caendr.models.task import TaskStatus
 from caendr.services.dataset_release import get_browser_tracks_path
 from caendr.utils.constants import CHROM_NUMERIC
 
@@ -230,7 +231,7 @@ def report(id, filename = None):
 
     # Results file exists, but is empty - error
     except EmptyReportResultsError:
-      report.status = 'ERROR'
+      report.status = TaskStatus.ERROR
       report.save()
       return abort(404, description="Pairwise indel finder report not found")
 
@@ -249,8 +250,8 @@ def report(id, filename = None):
     # Update indel primer entity
     # TODO: Is this the right time/place for this?
     if ready:
-      if report['status'] != 'ERROR':
-        report['status'] = 'COMPLETE'
+      if report['status'] != TaskStatus.ERROR:
+        report['status'] = TaskStatus.COMPLETE
       report.empty = result is None
       report.save()
 

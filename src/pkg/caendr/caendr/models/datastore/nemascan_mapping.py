@@ -66,6 +66,7 @@ class NemascanMapping(DataJobEntity):
 
   @property
   def report_path(self):
+    from caendr.models.task import TaskStatus
 
     # Check if this value has been cached already, and if so, make sure the file exists
     path = self._get_meta_prop('report_path')
@@ -76,7 +77,7 @@ class NemascanMapping(DataJobEntity):
         logger.error(f'Genetic Mapping report {self.id} lists its report path as "{path}", but this file does not exist. Recomputing...')
 
     # If job threw an error, don't search for report path
-    if self['status'] == 'ERROR':
+    if self['status'] == TaskStatus.ERROR:
       logger.error(f'Trying to compute report path for Genetic Mapping report "{self.id}", but job returned an error.')
       return None
 
@@ -114,6 +115,7 @@ class NemascanMapping(DataJobEntity):
       Returns "COMPLETE" if any other user's submission is complete, otherwise
       returns the last found status or None.
     '''
+    from caendr.models.task import TaskStatus
 
     # Check for reports with a matching data hash & container version
     matches = NemascanMapping.query_ds( filters = [
@@ -128,7 +130,7 @@ class NemascanMapping(DataJobEntity):
       if match.username != self.username:
 
         # Update to match status, keeping 'COMPLETE' if it's found
-        if status != 'COMPLETE':
+        if status != TaskStatus.COMPLETE:
           status = match.status
 
     # Return the status

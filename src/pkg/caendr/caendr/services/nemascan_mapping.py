@@ -4,6 +4,7 @@ from caendr.services.logger import logger
 
 from caendr.models.datastore import NemascanMapping
 from caendr.models.error     import DuplicateDataError, CachedDataError, NotFoundError
+from caendr.models.task      import TaskStatus
 
 from caendr.services.cloud.storage import get_blob_list
 from caendr.services.tools.submit import submit_job
@@ -75,7 +76,7 @@ def update_nemascan_mapping_status(id: str, status: str=None, operation_name: st
 
   # Mark job as complete if report output file exists
   if m.report_path is not None:
-    m['status'] = 'COMPLETE'
+    m['status'] = TaskStatus.COMPLETE
 
   m.save()
   return m
