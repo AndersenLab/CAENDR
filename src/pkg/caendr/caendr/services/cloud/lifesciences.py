@@ -105,6 +105,8 @@ def update_all_linked_status_records(kind, operation_name):
   status = get_pipeline_status(operation_name)
   done = status.get('done')
   error = status.get('error')
+  if error:
+    logger.error(f"Error: Kind: {kind} Operation Name: {operation_name} error: {error}")
   if done:
     status = TaskStatus.ERROR if error  else TaskStatus.COMPLETE
   else:
