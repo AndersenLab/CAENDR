@@ -78,7 +78,7 @@ def get_vcf_url(species, release = None, secure = True):
 
 def get_sv_strains(species, release = None):
   release = release or SPECIES_LIST[species].indel_primer_ver
-  return VCF( get_vcf_url( species, release ) ).samples
+  return VCF( get_vcf_url( species, release, secure=False ) ).samples
 
 
 def get_indel_primer_chrom_choices(): 
