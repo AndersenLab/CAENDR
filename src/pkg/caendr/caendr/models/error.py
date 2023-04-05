@@ -74,17 +74,24 @@ class DataFormatError(InternalError):
 class GoogleSheetsParseError(InternalError):
   description = "Unable to parse Google Sheets document"
 
-class EnvVarError(InternalError):
-  description = "A required environment variable is not defined"
 
+class EnvVarError(InternalError):
+  '''
+    Thrown if an environment variable is requested, but cannot be found.
+
+    Important: This error will also be thrown if trying to access *any* environment variable *before* the .env file is loaded.
+  '''
   def __init__(self, var_name: str):
     self.var_name = var_name
-
-    # If variable name provided, update the description
-    if self.var_name is not None:
-      self.description = f"The environment variable {self.var_name} is not defined"
+    self.description = f'{ self._format_var_name(self.var_name) } is not defined. Please ensure the ".env" file defines this variable, and is loaded before trying to access it.'
 
     super().__init__()
+
+  def _format_var_name(var_name: str):
+    if var_name:
+      return 'The environment variable ' + var_name
+    else:
+      return 'A required environment variable'
 
 class NonUniqueEntity(InternalError):
   def __init__(self, kind, key, val, matches):
