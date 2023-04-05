@@ -75,6 +75,16 @@ class GoogleSheetsParseError(InternalError):
   description = "Unable to parse Google Sheets document"
 
 
+class EnvLoadError(InternalError):
+  def __init__(self, filename, source):
+    self.filename = filename
+    self.source = source
+    self.description = f'Error loading environment variables from file {filename}: {self.source}'
+
+class EnvNotLoadedError(InternalError):
+  def __init__(self, var_name):
+    self.description = f"Must load a .env file before trying to access environment variable {var_name}"
+
 class EnvVarError(InternalError):
   '''
     Thrown if an environment variable is requested, but cannot be found.
@@ -92,6 +102,7 @@ class EnvVarError(InternalError):
       return 'The environment variable ' + var_name
     else:
       return 'A required environment variable'
+
 
 class NonUniqueEntity(InternalError):
   def __init__(self, kind, key, val, matches):
