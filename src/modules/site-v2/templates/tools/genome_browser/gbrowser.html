@@ -19,23 +19,35 @@
 {% endblock %}
 
 {% block content %}
-{% from "_includes/strain-listing.html" import species_selector, list_strains %}
+{% from "_includes/macros.html" import render_field %}
+{% from "_includes/strain-listing.html" import list_strains %}
 
 <div class="container-fluid px-5">
   <div class="d-flex justify-content-around flex-wrap mt-2 pb-5">
-    <!-- Input Card -->
-    <div class="col-md-8 col-xl-3 text-bg-light mb-5 p-3 p-md-5 rounded-2 shadow-sm">
-      <!-- Input Form -->
-      <form>
+    <div class="col-10 col-md-8 col-xl-3 mb-5" style="max-height:80vh;">
+      <nav>
+        <div class="nav nav-tabs border-0" id="nav-tab" role="tablist">
+          <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home"
+            type="button" role="tab" aria-controls="nav-home" aria-selected="true">Browse</button>
+            <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false"><a href="{{ url_for('data_releases.data_releases') }}">Release Notes</a></button>
+        </div>
+      </nav>
+      <div class="tab-content" id="nav-tabContent">
+        <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab"
+          tabindex="0">
+          <!-- Input Card -->
+          <div class="text-bg-light mb-5 p-3 p-md-5 rounded-2 shadow-sm">
+                 <!-- Input Form -->
+      <form id="form-submit">
         <!-- Species -->
-        {{ species_selector(species_list, "update_species") }}
+        <div class='mb-4'>{{ render_field(form.species, onchange="update_species") }}</div>
         <!-- /Species -->
         <!-- Gene search -->
         <div class="mb-4">
           <label for="gene-search" class="form-label">Gene Search:</label>
           <div class="dropdown">
             <input type="text" class="form-control dropdown-toggle" id="gene-search" placeholder="For example, trt-1"
-              data-bs-toggle="dropdown">
+              data-bs-toggle="dropdown" disabled>
             <div class="dropdown-menu table-responsive p-1 dropdownSelect">
               <div class="text-center p-3" id="loading-search-table" style="display:none;">
                 <div class="spinner-border" role="status">
@@ -61,9 +73,9 @@
           <label for="filter" class="form-label">Isotype (Reference Strain):</label>
           <div class="dropdown">
             <input type="text" class="form-control dropdown-toggle" id="filter" placeholder="For example, JU360"
-              data-bs-toggle="dropdown">
+              data-bs-toggle="dropdown" disabled>
             <div class="dropdown-menu table-responsive dropdownSelect p-1">
-              <table id='browser_strain_list' class="table table-striped table-hover">
+              <table id='browser_strain_list' class="table table-striped-filterable table-hover">
                 <caption class="visually-hidden">A list of strains with different file type options.</caption>
                 <tbody class="searchable">
                   {% call(species, strain) list_strains(species_list, strain_listing) %}
@@ -113,16 +125,13 @@
           </div>
           <!-- /Info Modal -->
           <!-- Tracks -->
-          <div class="p-3 mb-4 rounded-2 overflow-auto gbrowserTracks">
+          <div id="track-options-container" class="p-3 mb-4 rounded-2 overflow-auto gbrowserTracks">
             <form id="track-options">
               {% for track in default_tracks %}
                 <div id="{{ track.name }}_checkbox_container" class="checkbox default-track-container" style="display: none;">
                   <label>
                     <input id="{{ track.name }}_checkbox" type="checkbox" class="track-select normal-track" value="{{ track.name }}" />
                     {{ track.name }}
-                    {% if track['source'] %}
-                      <br />(<a class="track-source-link" href="{{ track.source.url }}" target='_blank'>{{ track.source.title }}</a>)
-                    {% endif %}
                   </label>
                 </div>
               {% endfor %}
@@ -135,20 +144,26 @@
         </small>
       </form>
       <!-- /Input Form -->
+              </div>
+              <!-- /Input Card -->
+        </div>
+      </div>
     </div>
-    <!-- /Input Card -->
   <!-- Tool column -->
-  <div class="d-flex flex-wrap flex-column col-md-12 col-xl-8">
+  <div class="d-flex flex-wrap flex-column col-md-12 col-xl-8 mt-5 mt-xl-0">
       <!-- Options Toolbar -->
       <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar">
       <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i> Fullscreen</a></div>
       </div>
       <!-- /Options Toolbar -->
+      <!-- Select Species Prompt -->
+      {% include '_includes/select-species-prompt.html' %}
+      <!-- /Select Species Prompt -->
       <!-- IGV Browser -->
-      <div class="col">
+      <div id="browser-container" class="col">
           <div id="browser"></div>
       </div>
-      <!-- IGV Browser -->
+      <!-- /IGV Browser -->
   </div>
   <!-- /Tool Column -->
  </div>
@@ -158,12 +173,13 @@
 {% endblock %}
 
 {% block script %}
-{% from "_includes/macros.html" import unpack_species_list %}
-{% from "_includes/strain-listing.html" import replace_tokens %}
+{% from "_includes/strain-listing.html" import unpack_species_list, replace_tokens %}
 <script src="{{ url_for('static', filename='js/strains.js') }}"></script>
 
 <script type="text/javascript">
+{% include '_scripts/utils.js' %}       {#/* defines: fetch_json, toggle_input */#}
 {% include '_scripts/igv-browser.js' %}
+{% include '_scripts/gene-search.js' %} {#/* defines: prep_gene_search, run_gene_search, format_locus_string */#}
 
 
 /* Variables */
@@ -208,14 +224,22 @@ const default_checked_tracks = [
 
 $(document).ready(function () {
 
-  // Fetch the browser track objects
-  fetch_trackset().then((data) => {
-    set_trackset(data.default);
-    set_templates(data.templates);
+  // Fetch the list of browser track objects
+  // Retrieves an object with two fields:
+  //   - 'default':   the list of tracks that are not specific to any one strain
+  //   - 'templates': the list of track templates to be filled out with strain data
+  fetch_json("{{ url_for('genome_browser.get_tracks') }}")
+    .then((data) => {
+      set_trackset(data.default);
+      set_templates(data.templates);
 
-    // Once we know the trackset exists, update the species & browser
-    update_species();
-  })
+      // Once we know the trackset exists, update the species & browser
+      update_species();
+    })
+    .catch((err) => {
+      // TODO: better error handling?
+      console.error("Failed to retrieve browser tracks.", err);
+    })
 
   // Italicize 'et al.' in track sources
   $('.track-source-link').each((i, obj) => {
@@ -226,7 +250,7 @@ $(document).ready(function () {
   (function($) {
       var patterns = [];
       $('#filter').keyup(function() {
-          filter_strains(species['name'], $(this).val().split(','))
+          filter_strains('#browser_strain_list', species['name'], $(this).val().split(','))
       })
   }(jQuery));
 
@@ -240,23 +264,15 @@ $(document).ready(function () {
 
   // Ortholog search
   $("#gene-search").on("input", function(e) {
-    $("#loading-search-table").fadeIn();
+
+    var gene = $('#gene-search').val().trim();
+    prep_gene_search(gene, "#g-search-table", "#loading-search-table");
+
     clearTimeout(typingTimer);
     typingTimer = setTimeout(process_gene_search, doneTypingInterval);
   })
 
 });
-
-
-// Get the list of tracks
-// Retrieves an object with two fields:
-//   - 'default':   the list of tracks that are not specific to any one strain
-//   - 'templates': the list of track templates to be filled out with strain data
-function fetch_trackset() {
-  return fetch( "{{ url_for('genome_browser.get_tracks') }}" )
-    .then( (response) => { return response.text();  } )
-    .then( (text)     => { return JSON.parse(text); } );
-}
 
 
 
@@ -314,8 +330,22 @@ function update_visible_track_checkboxes(species_id) {
 // Set up species variable & set to match species selector
 function update_species(species_id) {
 
-  // Check if value provided
-  if ( !species_id ) {
+  const species_empty = species_id == null || species_id == '';
+
+  // If no species selected, prompt user to select one; otherwise show the IGV browser
+  $('#select-species-prompt').toggle(species_empty);
+  $('#browser-container').toggle(!species_empty);
+
+  // Enable or disable form inputs that depend on species being defined
+  const form_ids = [
+    'filter',
+    'gene-search',
+    'track-options-container',
+  ];
+  form_ids.forEach((form_id) => toggle_input(form_id, !species_empty));
+
+  // If no species selected, clear track checkboxes and end update function here
+  if (species_empty) {
     update_visible_track_checkboxes();
     return;
   }
@@ -330,7 +360,7 @@ function update_species(species_id) {
   process_gene_search();
 
   // Update list of strains to match current species
-  filter_strains(species_id);
+  filter_strains('#browser_strain_list', species_id);
 
   // Reset the checkboxes to the default for the new species
   reset_track_checkboxes(species_id);
@@ -366,36 +396,13 @@ function update_species(species_id) {
 
 
 function process_gene_search() {
-  $("#loading-search-table").fadeOut();
-  var gene = $('#gene-search').val();
-  if (gene.length == 0) {
-    $("#g-search-table").fadeOut();
-  } else {
-    $("#orthologs").html("");
-    $.ajax({
-        url:         "{{ url_for('api_gene.api_search_genes', query='') }}" + gene + '?species=' + species.name,
-        method:      "GET",
-        contentType: "application/xml",
-    }).done(function(msg) {
-        row = Array();
-        $.each(msg, function(i, row) {
-            if ("chrom" in row) {
-                link = row["chrom"] + ":" + row["start"] + "-" + row["end"];
-            } else {
-                link = row["locus"];
-            }
-            gene_name = `<a onclick="set_position('${link}')" link='${link}' class='ortholink'>${row["locus"]}</a>`;
-            result = [
-                gene_name,
-                row["gene_symbol"],
-            ];
-            result = "<tr><td>" + result.join("</td><td>") + "</td></tr>";
-            position = row["chrom"] + ":" + row["start"];
-            $("#orthologs").append(result);
-        });
-        $("#g-search-table").fadeIn();
-    });
-  }
+  var gene = $('#gene-search').val().trim();
+
+  run_gene_search(gene, species, "#g-search-table", "#loading-search-table", (i, row) => {
+    link = ("chrom" in row) ? format_locus_string(row["chrom"], row["start"], row["end"]) : row["locus"];
+    gene_name = `<a onclick="set_position('${link}')" link='${link}' class='ortholink'>${row["locus"]}</a>`;
+    return [ gene_name, row["gene_symbol"] ];
+  });
 }
 
 function set_position(coord) {

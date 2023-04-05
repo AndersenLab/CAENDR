@@ -1,7 +1,7 @@
 {% extends "_layouts/default-nocontainer.html" %}
 
 {% block content %}
-{% from "_includes/strain-listing.html" import species_selector %}
+{% from "_includes/macros.html" import render_field %}
 
 <div class="container">
     <div class="d-flex justify-content-around flex-wrap mb-5">
@@ -24,8 +24,9 @@
                   <!-- Tab Menu -->
                   <nav>
                     <div class="nav nav-tabs text-bg-light p-1 pb-0" id="nav-tab" role="tablist">
-                      <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">New Calculation</button>
+                      <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">New</button>
                       <button class="nav-link" id="nav-linkOne-tab" type="button" role="tab" aria-controls="nav-linkOne" aria-selected="false"><a href="#">Sample Report</a></button>
+                      <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false"><a href="{{ url_for('data_releases.data_releases') }}">Release Notes</a></button>
                       <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-" aria-selected="false"><a href="{{ url_for('heritability_calculator.user_results') }}">My Heritability Results</a></button>
                     </div>
                   </nav>
@@ -38,17 +39,10 @@
                                 <form id='form-submit' action="{{ url_for('heritability_calculator.submit_h2') }}" method="post" enctype='multipart/form-data' onsubmit="disableButton()">
                                     {{ form.csrf_token }}
                                     <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">
-                                    <!-- Species -->
-                                    {{ species_selector(species_list) }}
-                                    <!-- /Species -->
+                                    <div class='mb-4'>{{ render_field(form.species) }}</div>
+                                    <div class='mb-4'>{{ render_field(form.label, placeholder="Name your calculation.") }}</div>
                                     <div class="mb-4">
-                                        <label for="fileName" class="form-label">Description:</label>
-                                        <input type="text" class="form-control" id="fileName" name="label" placeholder="Name your calculation.">
-                                    </div>
-                                    <div class="mb-4">
-                                        <label for="formFile" class="form-label">Select file:</label>
-                                        <div class="hstack gap-2 mb-4">
-                                        <input class="form-control" type="file" id="formFile" name="file">
+                                    {% call render_field(form.file) %}
                                         <!-- Info Button with Modal -->
                                         <button type="button" class="btn btn-secondary rounded-circle text-light text-center p-0 infoButton" data-bs-toggle="modal"
                                             data-bs-target="#infoModal" aria-label="infoModalLabel">
@@ -69,8 +63,8 @@
                                             </div>
                                         </div>
                                         <!-- /Modal -->
-                                        </div>
-                                        </div>
+                                    {% endcall %}
+                                    </div>
                                     <div class="d-grid">
                                         <button type="submit" id="submit-btn" class="btn btn-secondary text-light" data-bs-toggle="modal" data-bs-target="#submit-modal"
                                             aria-label="submit">Submit</button>

@@ -4,7 +4,7 @@ from caendr.models.datastore import Entity
 
 class PipelineOperation(Entity):
   kind = 'pipeline_operation'
-
+  
   @classmethod
   def get_props_set(cls):
     return {

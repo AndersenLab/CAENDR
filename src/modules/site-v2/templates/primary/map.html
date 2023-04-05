@@ -1,0 +1,266 @@
+
+<style>
+  #map {
+    height: 48vh;
+    z-index: 0;
+  }
+  .leaflet-control-zoom.leaflet-bar {
+    border: 0;
+  }
+  .leaflet-bar a {
+    background-color: #0719BC;
+    color: #fff;
+  }
+
+  .leaflet-bar a:hover {
+    background-color: #5D9878;
+    color: #fff;
+  }
+
+  .leaflet-bar a.leaflet-disabled {
+    background-color: #6F85D9;
+    color: #fff;
+  }
+
+  .leaflet-popup-content-wrapper {
+    background-color: #FEFCFB;
+    color: #000;
+    font-size: 16px;
+    padding: .5em;
+  }
+
+  .leaflet-popup-tip {
+    background-color: #FEFCFB;
+  }
+
+  #strains {
+    position:absolute;
+    top: 30px;
+    right: 30px;
+    z-index: 1000;
+    background-color: #0719BC;
+    color: white;
+    padding: 15px;
+  }
+
+  #strains > p {
+    text-align: center;
+  }
+
+  .popup {
+    position:relative;
+    z-index: 2;
+  }
+
+  .popup ul {
+    list-style-type: none;
+    line-height: 1.75em;
+    padding:0;
+  }
+</style>
+
+    <div class="position-relative" id="map">
+      <form id="strains">
+        <p><strong>Species:</strong></p>
+        <div><input type='checkbox' name='filters' value='elegans_layer' checked><i> C. elegans</i></div>
+        <div><input type='checkbox' name='filters' value='briggsae_layer'><i> C. briggsae</i></div>
+        <div><input type='checkbox' name='filters' value='tropicalis_layer'><i> C. tropicalis</i></div>
+      </form>
+    </div>
+    <div class="text-center my-2">
+      <small><strong>Click a pin to see information about <i>species</i> wild isolate</strong></small>
+    </div>
+
+{% block script %}
+
+<script type="module">
+
+// Icons
+{% autoescape off %}
+const icon_elegans = L.icon({
+    iconUrl: '{{ ext_asset("img/icons/marker.png") }}',
+    iconSize: [24, 24],
+    iconAnchor: [12, 16],
+    popupAnchor: [0, -15],
+});
+
+const icon_briggsae = L.icon({
+    iconUrl: '{{ ext_asset("img/icons/selected.png") }}',
+    iconSize: [24, 24],
+    iconAnchor: [12, 16],
+    popupAnchor: [0, -15],
+});
+const icon_tropicalis = L.icon({
+    iconUrl: "{{ url_for('static', filename='img/tropicalis-marker.png') }}",
+    iconSize: [24, 24],
+    iconAnchor: [12, 16],
+    popupAnchor: [0, -15],
+});
+
+
+const icon_hover = L.icon({
+    iconUrl: "{{ url_for('static', filename='img/hover-icon.png') }}",
+    iconSize: [24, 24],
+    iconAnchor: [10, 16],
+    popupAnchor: [0, -15],
+});
+{% endautoescape %}
+
+const MB_ATTR = 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, METI, TomTom, 2012';
+const MB_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
+const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+const OSM_ATTRIB = '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+const southWest = L.latLng(-90, -180);
+const northEast = L.latLng(90, 180);
+const bounds = L.latLngBounds(southWest, northEast);
+
+const map = L.map('map', {minZoom:2, maxBounds: bounds, scrollWheelZoom: false}).setView([20, -100], 2);
+L.tileLayer(MB_URL, {attribution: MB_ATTR, id: 'mapbox.streets', continuousWorld: false, worldCopyJump: true}).addTo(map);
+const strain_names = [];
+const elegans = [];
+const briggsae = [];
+const tropicalis = [];
+
+const Species = Object.freeze({
+  ELEGANS: 'Caenorhabditis elegans',
+  BRIGGSAE: 'Caenorhabditis briggsae',
+  TROPICALIS: 'Caenorhabditis tropicalis'
+});
+
+function naturalCompare(a, b) {
+  const ax = [], bx = [];
+  a = a.strain
+  b = b.strain
+
+  a.replace(/(\d+)|(\D+)/g, function(_, $1, $2) { ax.push([$1 || Infinity, $2 || ""]) });
+  b.replace(/(\d+)|(\D+)/g, function(_, $1, $2) { bx.push([$1 || Infinity, $2 || ""]) });
+  
+  while(ax.length && bx.length) {
+    const an = ax.shift();
+    const bn = bx.shift();
+    const nn = (an[0] - bn[0]) || an[1].localeCompare(bn[1]);
+    if(nn) return nn;
+  }
+
+  return ax.length - bx.length;
+}
+
+function set_marker_color (species) {
+  if (species === Species.ELEGANS) {
+    return icon_elegans;
+  }
+  if (species === Species.BRIGGSAE) {
+    return icon_briggsae;
+  }
+  if (species === Species.TROPICALIS) {
+    return icon_tropicalis;
+  }
+}
+
+function formatDate(date) {
+  return String(date).replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3")
+}
+
+const strain_info = {{ strain_listing|tojson|safe }};
+strain_info.sort(naturalCompare)
+strain_info.forEach(function(d) {
+  if (d.latitude) {
+    strain_names.push(d.strain);
+    const popup_content = `
+    <div class="popup">
+      <ul>
+        ${d.species ? `<li><strong>Species:</strong> <i>${d.species}</i></li>` : ''}
+        ${d.isotype ? `<li><strong>Isotype:</strong> ${d.isotype}</li>` : ''}
+        ${d.isotype_ref_strain ? `<li><strong>Reference Strain:</strong> ${d.isotype_ref_strain}</li>` : ''}
+        ${d.strain ? `<li><strong>Strains:</strong> ${d.strain}</li>` : ''}
+        ${d.previous_names ? `<li><strong>Alternative Names:</strong> ${d.previous_names}</li>` : ''}
+        ${d.release ? `<li><strong>Release Date:</strong> ${formatDate(d.release)}</li>` : ''}
+        ${d.substrate ? `<li><strong>Substrate:</strong> ${d.substrate}</li>` : ''}
+        ${d.substrate_temp ? `<li><strong>Substrate Temp (C):</strong> ${d.substrate_temp}</li>` : ''}
+        ${d.ambient_humidity ? `<li><strong>Ambient Humidity:</strong> ${d.ambient_humidity} </li>` : ''}
+        ${d.sampled_by ? `<li><strong>Sampled by:</strong> ${d.sampled_by}</li>` : ''}
+      </ul>
+    </div>`
+
+    const marker = L.marker([d.latitude, d.longitude], { icon: set_marker_color(d.species),
+                                                    species: d.species})
+                                                    .on('mouseover', function(){
+                                                      marker.setIcon(icon_hover)
+                                                    })
+                                                    .on('mouseout', function(){
+                                                      const original_icon = set_marker_color(d.species)
+                                                      marker.setIcon(original_icon)
+                                                    })
+                            
+    marker.bindPopup(popup_content)
+
+    if (marker.options.species === Species.ELEGANS) {
+      elegans.push(marker)
+    }
+    if (marker.options.species === Species.BRIGGSAE) {
+      briggsae.push(marker)
+    }
+    if (marker.options.species === Species.TROPICALIS) {
+      tropicalis.push(marker)
+    }
+  }
+});
+
+const elegans_layer = L.layerGroup(elegans)
+const briggsae_layer = L.layerGroup(briggsae)
+const tropicalis_layer = L.layerGroup(tropicalis)
+
+let overlays = L.layerGroup().addLayer(elegans_layer).addTo(map)
+
+function showStrains() {
+  const filters = document.getElementById('strains').filters
+
+  const checked_species = []
+  for (let i = 0; i < filters.length; i++) {
+    if(filters[i].checked) checked_species.push(filters[i].value)
+  }
+  overlays.clearLayers()
+
+  if(checked_species.includes('elegans_layer')) {
+  overlays.addLayer(elegans_layer)
+  }
+  if(checked_species.includes('briggsae_layer')) {
+  overlays.addLayer(briggsae_layer)
+  }
+  if(checked_species.includes('tropicalis_layer')) {
+  overlays.addLayer(tropicalis_layer)
+  }
+}
+
+document.querySelector('#strains').addEventListener('click', e => {
+  if (e.target.tagName !== 'INPUT') return;
+
+  const input = e.target
+  const value = input.value;
+  showStrains(value)
+})
+
+$(document).ready(function() {
+
+    (function($) {
+        $('[data-toggle="tooltip"]').tooltip()
+
+        const patterns = [];
+        $('#filter').keyup(function() {
+            $('.searchable tr').hide();
+            console.log($(this).val());
+            $(this).val().split(',').forEach(function(r) {
+                const rex = new RegExp(r, "i");
+                $('.searchable tr').filter(function() {
+                    return rex.test($(this).text());
+                }).show();
+            })  
+        })
+
+    }(jQuery));
+});
+
+</script>
+
+{% endblock %}

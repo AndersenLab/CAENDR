@@ -235,12 +235,12 @@ class SubmissionManager():
 
       # Check that first line has correct number of columns
       if len(csv_headings) != num_cols:
-        raise DataFormatError(f'File contains incorrect number of columns. Please edit the file to ensure it contains { num_cols } columns.', 1)
+        raise DataFormatError(f'The file contains an incorrect number of columns. Please edit the file to ensure it contains { num_cols } columns.', 1)
 
       # Check first line for column headers
       for col in range(num_cols):
         if csv_headings[col] != columns[col]['header']:
-          raise DataFormatError(f'File contains incorrect column headers. Column #{ col + 1 } should be { columns[col]["header"] }.', 1)
+          raise DataFormatError(f'The file contains an incorrect column header. Column #{ col + 1 } should be { columns[col]["header"] }.', 1)
 
       # Loop through all remaining lines in the file
       has_data = False
@@ -248,7 +248,7 @@ class SubmissionManager():
 
         # Check for empty lines
         if ''.join(csv_row).strip() == '':
-          raise DataFormatError(f'Rows cannot be blank. Please check line #{ line } to ensure valid data has been entered.', line)
+          raise DataFormatError(f'Rows cannot be blank. Please check line #{ line } to ensure valid data have been entered.', line)
 
         # Check that line has the correct number of columns
         if len(csv_row) != num_cols:
@@ -378,7 +378,7 @@ class HeritabilitySubmissionManager(SubmissionManager):
 
     # Raise an error if not enough strains were found
     if len(unique_strains) < 5:
-      raise DataFormatError("The data contains less than five unique strains. Please be sure to measure trait values for at least five wild strains in at least three independent assays.")
+      raise DataFormatError("The heritability data contain fewer than five unique strains. Please be sure to measure trait values for at least five wild strains in at least three independent assays.")
 
     # Compute hash from file
     data_hash = get_file_hash(local_path, length=32)
@@ -417,10 +417,15 @@ class MappingSubmissionManager(SubmissionManager):
     # Validate file upload
     logger.debug(f'Validating Nemascan Mapping data format: {local_path}')
 
+    # Define a formatting function that customizes the message if duplicate strains are found
+    # Do this so we can explicitly reference "trait" values for mapping only
+    duplicate_strain_formatter = lambda prev_line, curr_line: \
+      f'Lines #{ prev_line } and #{ curr_line } contain duplicate trait values for the same strain. Please ensure that only one unique trait value exists per strain.'
+
     columns = [
       {
         'header': 'strain',
-        'validator': validate_strain( SPECIES_LIST[data['species']], force_unique=True ),
+        'validator': validate_strain(SPECIES_LIST[data['species']], force_unique=True, force_unique_msg=duplicate_strain_formatter)
       },
       {
         'header': 'trait',
@@ -470,7 +475,7 @@ def validate_num(accept_float = False, accept_na = False):
 
 
 # Check that column is a valid strain name for the desired species
-def validate_strain(species, force_unique=False):
+def validate_strain(species, force_unique=False, force_unique_msg=None):
 
   # Get the list of all valid strain names for this species and for any species
   valid_strain_names_species = query_strains(all_strain_names=True, species=species.name)
@@ -480,8 +485,15 @@ def validate_strain(species, force_unique=False):
   # Used to ensure strains are unique, if applicable
   strain_line_numbers = {}
 
+  # Provide a default message if the same strain is found more than once
+  # Only used if force_unique is True and if the calling function doesn't customize this message
+  if force_unique_msg is None:
+    force_unique_msg = lambda prev_line, curr_line: \
+      f'Lines #{ prev_line } and #{ curr_line } contain duplicate values for the same strain. Please ensure that only one unique value exists per strain.'
+
   # Define the validator function
   def func(header, value, line):
+    nonlocal force_unique, force_unique_msg
     nonlocal strain_line_numbers, valid_strain_names_species, valid_strain_names_all
 
     # Check for blank strain
@@ -491,14 +503,14 @@ def validate_strain(species, force_unique=False):
     # Check if strain is valid for the desired species
     if value not in valid_strain_names_species:
       if value in valid_strain_names_all:
-        raise DataFormatError(f'The value { value } is not a valid strain for { species.short_name }. Please enter a valid { species.short_name } strain.', line)
+        raise DataFormatError(f'The strain { value } is not a valid strain for { species.short_name }. Please enter a valid { species.short_name } strain.', line)
       else:
-        raise DataFormatError(f'The value { value } is not a valid strain name. Please ensure that { value } is valid.', line)
+        raise DataFormatError(f'The strain { value } is not a valid strain name. Please ensure that { value } is valid.', line)
 
     # If desired, keep track of list of strains and throw an error if a duplicate is found
     if force_unique:
       if value in strain_line_numbers:
-        raise DataFormatError(f'Line #{ line } has the same strain as line #{ strain_line_numbers[value] }. Please ensure that each row contains unique values.')
+        raise DataFormatError(force_unique_msg(prev_line=strain_line_numbers[value], curr_line=line))
       strain_line_numbers[value] = line
 
   return func
@@ -520,6 +532,6 @@ def validate_trait():
 
     # If the trait name has been set, ensure this line matches it
     elif value != trait_name:
-      raise DataFormatError(f'The data contains multiple unique trait name values. Only one trait name may be tested per file.', line)
+      raise DataFormatError(f'The data contain multiple unique trait name values. Only one trait name may be tested per file.', line)
 
   return func

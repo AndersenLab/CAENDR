@@ -8,6 +8,8 @@ MODULE_DB_OPERATIONS_BUCKET_NAME = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME
 STRAIN_VARIANT_ANNOTATION_PATH   = get_env_var('STRAIN_VARIANT_ANNOTATION_PATH')
 DB_OPS_FILEPATH                  = get_env_var('DB_OPS_FILEPATH')
 
+STRAIN_VARIANT_ANNOTATION_PATH = STRAIN_VARIANT_ANNOTATION_PATH.replace('{', '${')
+
 
 # Construct URL templates for external DBs (not managed by CaeNDR)
 # TODO: Is this even still necessary?

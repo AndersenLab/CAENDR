@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block content %}
-<form method="POST" action="{{ url_for('order.order_page') }}">
+<form method="POST" action="{{ url_for('request_strains.order_page') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
     <div class="row">
         <div class="col-md-10">
@@ -36,7 +36,7 @@
                 <div class="panel-heading">Strain Data</div>
                 <div class="panel-body">
                     Strain Data including isolation location, isotype information, and more is available for download.<br /><br />
-                    <a href="{{ url_for('strains.strains_data_tsv') }}" type="button" class="btn btn-default btn-block btn-success">Download Strain Data</a>
+                    <a href="{{ url_for('request_strains.strains_data_tsv') }}" type="button" class="btn btn-default btn-block btn-success">Download Strain Data</a>
                 </div>
             </div>
         </div>
@@ -156,7 +156,7 @@
               <td>
                 <label for="items-{{ isotype_loop_index }}">{{ strains[0].reference_strain }}</label>
               </td>
-              <td><a href="{{ url_for('strains.isotype_page', isotype_name=isotype) }}">{{ isotype }}</a></td>
+              <td><a href="{{ url_for('request_strains.isotype_page', isotype_name=isotype) }}">{{ isotype }}</a></td>
               <td>{{ strains|join(", ") }}</td>
               <td>{{ strains[0]['release'] }}</td>
             {% if strains[0].previous_names %}

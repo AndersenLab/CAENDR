@@ -50,6 +50,7 @@ def protocols():
     # Initialize params and render HTML page
     params = {
       'title': "Protocols",
+      'disable_parent_breadcrumb': True,
       'protocols': yaml.safe_load(content),
     }
     return render_template('data/protocols.html', **params)
@@ -65,6 +66,8 @@ def submit_strain():
       Google form for submitting strains
   """
   title = "Submit A Strain"
+  disable_parent_breadcrumb = True
+
   # TODO: Move this to configurable location
   #STRAIN_SUBMISSION_FORM = '1w0VjB3jvAZmQlDbxoTx_SKkRo2uJ6TcjjX-emaQnHlQ'
   #strain_submission_url = f'https://docs.google.com/forms/d/{STRAIN_SUBMISSION_FORM}/viewform?embedded=true'

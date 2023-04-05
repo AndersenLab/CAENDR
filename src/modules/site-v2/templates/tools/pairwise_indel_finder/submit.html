@@ -10,7 +10,6 @@
 
 {% block content %}
 {% from "_includes/macros.html" import render_field %}
-{% from "_includes/strain-listing.html" import species_selector %}
 
 <div class="container-fluid px-5">
   <div class="d-flex justify-content-around flex-wrap mt-2 pb-5">
@@ -18,9 +17,10 @@
       <nav>
         <div class="nav nav-tabs border-0" id="nav-tab" role="tablist">
           <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home"
-            type="button" role="tab" aria-controls="nav-home" aria-selected="true">New Calculation</button>
+            type="button" role="tab" aria-controls="nav-home" aria-selected="true">New</button>
           <button class="nav-link" id="nav-about-tab" data-bs-toggle="tab" data-bs-target="#nav-about" type="button"
             role="tab" aria-controls="nav-about" aria-selected="false">About</button>
+            <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false"><a href="{{ url_for('data_releases.data_releases') }}">Release Notes</a></button>
         </div>
       </nav>
       <div class="tab-content" id="nav-tabContent">
@@ -29,50 +29,20 @@
           <!-- Input Card -->
           <div class="text-bg-light mb-5 p-3 p-md-5 rounded-2 shadow-sm">
             <!-- Input Form -->
-            <form id='form-submit' method="POST">
+            <form id='form-submit' method="POST" onchange="form_change()">
               {{ form.csrf_token }}
-              <!-- Species -->
-              {{ species_selector(species_list, "update_species") }}
-              <!-- /Species -->
-              <!-- <div class='mb-4'>{{ render_field(form.species) }}</div> -->
-              <div class="mb-4">{{ render_field(form.strain_1) }}</div>
-              <div class="mb-4">{{ render_field(form.strain_2) }}</div>
-              <div class="mb-4">{{ render_field(form.chromosome) }}</div>
-              <div class="mb-4">{{ render_field(form.start, placeholder="2,028,824") }}</div>
-              <div class="mb-4">{{ render_field(form.stop, placeholder="2,029,217") }}</div>
-              <div class="d-grid gap-3 mb-4">
-                <button id='find_indels' type='submit' value="submit" class="btn btn-secondary text-light">Find Indels</button>
-                <button type='submit' value="submit" class="btn btn-secondary text-light generate-primers" data-bs-toggle="modal"
-                  data-bs-target="#generate-primers-modal">Generate Primers</button>
-                <!-- Modal -->
-                <div class="modal fade" id="generate-primers-modal" tabindex="-1" aria-labelledby="generate-primers-modal-label"
-                  aria-hidden="true">
-                  <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="generate-primers-modal-label">Thank You</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                      </div>
-                      <div class="modal-body">
-                        <p><i class="bi bi-clock-fill me-1 text-secondary fs-3"></i> Your report will be complete in about
-                          5-10 minutes</li>
-                        </p>
-                        <p><i class="bi bi-envelope-fill me-1 text-secondary fs-3"></i>You will receive an email when your
-                          report is complete.</p>
-                        <p><i class="bi bi-journal me-1 text-secondary fs-3"></i>You may also check <a
-                            href='{{ url_for("pairwise_indel_finder.user_results") }}'>My
-                            Primer Results</a> for updates.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <!-- /Modal -->
-              </div>
-              </form>
-              <!-- /Input Form -->
-              {% include "_includes/ignore-cache-checkbox.html" %}
-              </div>
-              <!-- /Input Card -->
+              <div class='mb-4'>{{ render_field(form.species,                 onchange="update_species") }}</div>
+              <div class="mb-4">{{ render_field(form.strain_1,   disabled='', onchange="update_browser_tracks()") }}</div>
+              <div class="mb-4">{{ render_field(form.strain_2,   disabled='', onchange="update_browser_tracks()") }}</div>
+              <div class="mb-4">{{ render_field(form.chromosome, disabled='') }}</div>
+              <div class="mb-4">{{ render_field(form.start,      disabled='', placeholder="2,028,824", make_err_container=true) }}</div>
+              <div class="mb-4">{{ render_field(form.stop,       disabled='', placeholder="2,029,217", make_err_container=true) }}</div>
+              <input type="submit" hidden />
+            </form>
+            <!-- /Input Form -->
+            {% include "_includes/ignore-cache-checkbox.html" %}
+          </div>
+          <!-- /Input Card -->
         </div>
 
         <div class="tab-pane fade" id="nav-about" role="tabpanel" aria-labelledby="nav-about-tab" tabindex="0">
@@ -92,12 +62,40 @@
       <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i> Fullscreen</a></div>
       </div>
       <!-- /Options Toolbar -->
+      <!-- Select Species Prompt -->
+      {% include '_includes/select-species-prompt.html' %}
+      <!-- /Select Species Prompt -->
       <!-- Browser -->
-      <div class="col">
-          <div id="browser" class="mb-5"></div>
-          <!-- <table id="results" class='table table-hover table-striped strain-table'></table> -->
+      <div id="browser-container" class="col">
+        <h2>Indel Finder</h2>
+        <div id="browser" class="mt-3 mb-5"></div>
+        <h2>Primers</h2>
+        <table id="results" class='table table-hover table-striped strain-table'></table>
+                          <!-- Modal -->
+                          <div class="modal fade" id="generate-primers-modal" tabindex="-1" aria-labelledby="generate-primers-modal-label"
+                          aria-hidden="true">
+                          <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <h1 class="modal-title fs-5" id="generate-primers-modal-label">Thank You</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body">
+                                <p><i class="bi bi-clock-fill me-1 text-secondary fs-3"></i> Your report will be complete in about
+                                  5-10 minutes</li>
+                                </p>
+                                <p><i class="bi bi-envelope-fill me-1 text-secondary fs-3"></i>You will receive an email when your
+                                  report is complete.</p>
+                                <p><i class="bi bi-journal me-1 text-secondary fs-3"></i>You may also check <a
+                                    href='{{ url_for("pairwise_indel_finder.user_results") }}'>My
+                                    Primer Results</a> for updates.</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <!-- /Modal -->
       </div>
-      <!--/Browser Placeholder -->
+      <!--/Browser -->
   </div>
   <!-- /Tool Column -->
  </div>
@@ -107,106 +105,58 @@
 {% endblock %}
 
 {% block script %}
-{% from "_includes/macros.html" import unpack_species_list %}
-{% from "_includes/strain-listing.html" import replace_tokens %}
+{% from "_includes/strain-listing.html" import unpack_species_list, replace_tokens %}
 <script src="{{ url_for('static', filename='js/strains.js') }}"></script>
 
 <script>
+{% include '_scripts/utils.js' %}       {#/* defines: fetch_json, form_data_to_object, toggle_input */#}
 {% include '_scripts/igv-browser.js' %}
 
 /* Species */
 const species_list = {{ unpack_species_list(species_list, species_fields) }};
-var species;
+let species;
 
 /* Strains */
-var strains;
+let strains;
 
 /* IGV Browser */
 const browser_div = $("#browser");
 const browser_options = {}
-var divergent_track_name;
+let divergent_track_name;
 const COLORS = {
   INS: 'blue',
   DEL: 'red'
 }
 
+/* Form */
+let current_form_data = {
+  chromosome: '',
+  strain_1:   '',
+  strain_2:   '',
+};
+let current_chrom_size = null;
+
 /* Data Table */
-var table;
+let table;
 
 /* Status */
-var query_running = false
-var loaded = false
+let query_running = false
+let loaded = false
+let dragging = false
 
-
-
-function fetch_trackset() {
-  return fetch( "{{ url_for('pairwise_indel_finder.get_tracks') }}" )
-    .then( (response) => { return response.text();  } )
-    .then( (text)     => { return JSON.parse(text); } );
-}
-
-function fetch_strains() {
-  return fetch( "{{ url_for('pairwise_indel_finder.get_strains') }}" )
-    .then( (response) => { return response.text();  } )
-    .then( (text)     => { return JSON.parse(text); } );
-}
 
 
 $(document).ready(function(){
 
-  var form = document.getElementById('form-submit');
+  // Get initial species value & update page to match
+  species = species_list[$("#{{ form.species.elementId }}").val()];
+  update_species();
 
-  species = species_list[$("#species").val()];
-
-  form.addEventListener('change', function() {
-    if (loaded) {
-      set_position( igv.getBrowser() );
-    }
+  // Prevent form submission from reloading page, then redirect to form change logic
+  $('#form-submit').submit(function (e) {
+    e.preventDefault();
+    form_change();
   });
-
-	reset_query = function() {
-		query_running = false
-	}
-
-	submitForm = function() {
-		if (query_running == false) {
-			query_running = true
-			$("form").submit()
-		}
-		setTimeout(reset_query, 200)
-	}
-
-  $('form').submit(function (e) {
-		e.preventDefault();
-		$.ajax({
-        type: "POST",
-				url:  "{{ url_for('pairwise_indel_finder.query') }}",
-				data: $('form').serialize(),
-				success: function(data) {
-          results = data["results"]
-
-          // Add the 'generate primers' HTML value to each result
-          _.each(results, function(x) {
-            x['generate_primers'] = `<div site="${x['CHROM']}:${x["START"]}-${x['END']}" svtype="${x['SVTYPE']}" size="${x["END"]-x["START"]}" class='btn-link generate-primers'>Generate Primers</div>`
-          })
-
-					// Handle errors
-					$(".form-error").remove();
-					if (Object.keys(data).indexOf("errors") > -1) {
-						for(error in data["errors"]) {
-							$("[for='" + error + "']").parent().append(`<div class='form-error'>${data["errors"][error]}</div>`)
-						}
-					}
-
-          // If no errors, update the page based on the retrieved results
-          else {
-            process_indel_finder_query_results(results);
-					}
-
-          query_running = false;
-				}
-      });    
-	});
 
 	$.ajaxSetup({
 		beforeSend: function(xhr, settings) {
@@ -216,19 +166,160 @@ $(document).ready(function(){
 		}
 	});
 
-  fetch_strains().then((data) => {
-    strains = data;
-    submitForm();
-  });
+  fetch_json("{{ url_for('pairwise_indel_finder.get_strains') }}")
+    .then((data) => {
+      strains = data;
+    })
+    .catch((err) => {
+      // TODO: Better error handling?
+      console.error("Failed to retrieve strain values.", err);
+    });
 });
+
+
+// Query the database for indel data based on the currently selected species, strains, & chromosome
+// TODO: Do we have to worry about multiple queries running at once? Will we need to invalidate an older one?
+function run_query() {
+
+  // Get form data as an object
+  let data = form_data_to_object('form-submit');
+
+  // Update start and stop to be full chromosome size
+  data['start'] = 1;
+  data['stop']  = current_chrom_size;
+
+  // Run query
+  query_running = true;
+  $.ajax({
+    type: "POST",
+    url:  "{{ url_for('pairwise_indel_finder.query') }}",
+    data: data,
+    dataType: 'json',
+    success: function(data) {
+      results = data["results"]
+
+      // Add the 'generate primers' HTML value to each result
+      _.each(results, function(x) {
+        x['generate_primers'] = `<div site="${x['CHROM']}:${x["START"]}-${x['END']}" svtype="${x['SVTYPE']}" size="${x["END"]-x["START"]}" class='btn-link generate-primers'>Generate Primers</div>`
+      })
+
+      // Handle errors
+      $(".form-error").remove();
+      if (Object.keys(data).indexOf("errors") > -1) {
+        for(error in data["errors"]) {
+          $("[for='" + error + "']").parent().append(`<div class='form-error'>${data["errors"][error]}</div>`)
+        }
+      }
+
+      // If no errors, update the page based on the retrieved results
+      else {
+        process_indel_finder_query_results(results);
+      }
+
+      query_running = false;
+    },
+  });
+}
+
+
+
+function form_change() {
+
+  // Ensure browser is loaded
+  if (!loaded) return;
+  const browser = igv.getBrowser()
+
+  // Get the new values from the form elements
+  const species_id = $("#{{ form.species.elementId }}").val().trim();
+  const chromosome = $("#chromosome").val().trim();
+  const strain_1 = $("#strain_1").val();
+  const strain_2 = $("#strain_2").val();
+
+  // Variable to track whether a new query is needed
+  // Will be true if chromosome, strain_1, or strain_2 has changed
+  let needs_update = false;
+  let chrom_change = false;
+
+  // Enable / disable the start & stop input fields based on whether a species
+  // and chromosome have been chosen
+  toggle_input('start', species_id && chromosome);
+  toggle_input('stop',  species_id && chromosome);
+
+  // Update strain values
+  if (current_form_data.strain_1 !== strain_1) {
+    current_form_data.strain_1 = strain_1;
+    needs_update = true;
+  }
+  if (current_form_data.strain_2 !== strain_2) {
+    current_form_data.strain_2 = strain_2;
+    needs_update = true;
+  }
+
+  // Update chromosome, resetting start & stop if value has changed
+  if (current_form_data.chromosome != chromosome) {
+    current_form_data.chromosome = chromosome;
+    needs_update = true;
+    chrom_change = true;
+    $('#start').val(null);
+    $('#stop').val(null);
+  }
+
+  // Update position and wait until new locus values are computed
+  // Need browser to compute start & end, in case e.g. range is invalid or the whole chromosome is selected
+  set_position(browser, chrom_change)
+    .then(({chromosome, start, end}) => {
+
+      // Clear & hide front-end error containers
+      $(".err-container").text('');
+      $(".err-container").hide();
+
+      // If the chromosome changed, save its size so we can reuse it in later queries
+      // (in case the browser is zoomed in & one of the strains changes)
+      if (chrom_change) {
+        current_chrom_size = end;
+      }
+
+      // If a new query is needed (chromosome or strain change), run it now that the position is updated
+      // Run query if one chromosome and at least one strain are chosen
+      if (needs_update && (chromosome !== 'all' && (strain_1 || strain_2))) {
+        run_query();
+      }
+
+      // Otherwise, redraw the table to match the new search region
+      else {
+        if (table) table.draw();
+      }
+    })
+    .catch((e) => {
+      // Find the error container associated with the invalid field
+      const field_el = $(`#${e.position}`);
+      const err_container = field_el.closest('.form-group').find('.err-container');
+
+      // Display the error message
+      err_container.text(e.message);
+      err_container.show();
+    });
+}
 
 
 function update_species(species_id) {
 
-  // Check if value provided
-  if ( !species_id ) {
-    return;
-  }
+  const species_empty = species_id == null || species_id == '';
+
+  // If no species selected, prompt user to select one; otherwise show the IGV browser
+  $('#select-species-prompt').toggle(species_empty);
+  $('#browser-container').toggle(!species_empty);
+
+  // Enable or disable form inputs that depend on species being defined
+  const form_ids = [
+    'strain_1',
+    'strain_2',
+    'chromosome',
+  ];
+  form_ids.forEach((form_id) => toggle_input(form_id, !species_empty));
+
+  // If no species chosen, end the update function here
+  if (species_empty) return;
 
   // Set species object from ID
   species = species_list[species_id];
@@ -236,40 +327,68 @@ function update_species(species_id) {
   // Update the browser species & the strain dropdown lists
   create_or_update_browser(browser_div, browser_options, species).then(({browser}) => {
     Promise.all([
-      update_strain_dropdown("strain_1", strains, species, "{{ default_strains[0] }}"),
-      update_strain_dropdown("strain_2", strains, species, "{{ default_strains[1] }}"),
+      update_strain_dropdown("strain_1", strains, species, ""),
+      update_strain_dropdown("strain_2", strains, species, ""),
     ])
     .then(() => {
 
       // (Re)set the browser position, since it's removed when reference genome changes
+      // TODO: Is this the desired behavior? Or should it reset with species change?
       set_position(browser);
 
       // Make browser responsive
+      // If locus is changed from within the browser, update the form values
+      // and run a new query if (and only if) the chromosome value has changed
+      // Have to be careful here not to create a feedback loop between browser & form
       browser.on('locuschange', function(reference_frame, label) {
-        $("#chromosome").val(reference_frame["chr"]);
-        $("#start").val(reference_frame["start"]);
+        const chrom_old = $("#chromosome").val();
+        const chrom_new = reference_frame["chr"];
+        $("#chromosome").val(chrom_new);
+        $("#start").val(reference_frame["start"][0] === '-' ? 1 : reference_frame["start"]);
         $("#stop").val(reference_frame["end"]);
-        setTimeout(submitForm, 500);
+        if (chrom_old !== chrom_new) {
+          run_query();
+        }
+
+        // Redraw the table if the user is not currently dragging
+        // Prevents this event from spamming redraw requests
+        if (!dragging) {
+          if (table) table.draw();
+        }
       });
+
+      // Keep track of when browser is being dragged
+      browser.on('trackdrag', () => {
+        dragging = true;
+      })
+      browser.on('trackdragend', () => {
+        dragging = false;
+        if (table) table.draw();
+      })
+
+      // Flag the browser as loaded
       loaded = true;
 
+      // Clear all tracks & reload the divergent regions track
       clear_tracks();
+      fetch_json("{{ url_for('pairwise_indel_finder.get_tracks') }}")
+        .then((divergent_track_summary) => {
+          divergent_track_name = divergent_track_summary.name;
 
-      // Load the divergent regions track
-      fetch_trackset().then((divergent_track_summary) => {
-        divergent_track_name = divergent_track_summary.name;
+          // Replace species tokens in URL
+          divergent_track_summary.url = replace_tokens(divergent_track_summary.url);
 
-        // Replace species tokens in URL
-        divergent_track_summary.url = replace_tokens(divergent_track_summary.url);
+          // Set tool-specific display properties
+          divergent_track_summary.height = 40; // Height to view two rows would be 70
+          divergent_track_summary.removable = false;
 
-        // Update display properties
-        // TODO: Should be able to specify these in datastore somehow
-        divergent_track_summary.height = 40;
-        divergent_track_summary.color  = "#CB3466";
-
-        // Add the track to the browser
-        add_track(divergent_track_name, divergent_track_summary);
-      })
+          // Add the track to the browser
+          add_track(divergent_track_name, divergent_track_summary);
+        })
+        .catch((err) => {
+          // TODO: Better error handling
+          console.error("Failed to retrieve divergent regions track.", err);
+        })
 
       // Update browser tracks
       update_browser_tracks(browser, results);
@@ -357,7 +476,7 @@ function create_or_update_data_table(results) {
       data:      results,
       paging:    false,
       ordering:  true,
-      searching: false,
+      dom:       'lrtip', // Hides the default search bar -- see https://legacy.datatables.net/ref#bFilter
       order:     [[1, "asc"]],
       columnDefs: [
         { targets: [0], orderData: [1,2] },
@@ -369,6 +488,13 @@ function create_or_update_data_table(results) {
         { data: "STRAIN", title: "Strain"                },
         { data: "generate_primers", renderer: "html"     },
       ],
+    });
+
+    // Create filter function based on start & stop values
+    $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+      const start = parse_int_input('#start');
+      const stop  = parse_int_input('#stop');
+      return (start <= data[1] && data[1] <= stop) || (start <= data[2] && data[2] <= stop)
     });
   }
   else {
@@ -387,14 +513,14 @@ function generate_primers(e) {
   $(this).text("Submitted")
 
   // Get strain values and sort - consistent ordering of strains for hashing
-  var strains = [$("#strain_1").val(), $("#strain_2").val()].sort()
+  const strains = [$("#strain_1").val(), $("#strain_2").val()].sort()
 
-  var data = {
+  const data = {
     site: $(this).attr("site"),
     strain_1: strains[0],
     strain_2: strains[1],
     size: $(this).attr("size"),
-    species: $('#species').val(),
+    species: $("#{{ form.species.elementId }}").val(),
     svtype: $(this).attr("svtype")
   }
 
@@ -418,24 +544,83 @@ function generate_primers(e) {
 
 /* Helper Functions */
 
+class SearchLocusError extends Error {
+  constructor(position, message = "", ...args) {
+    super(message, ...args);
+    this.position = position;
+  }
+}
 
-// Set browser position based on input
-function set_position(browser) {
-  const MAX_DIFF = 1000000;
+// Create a search locus for the IGV browser
+function create_search_locus(chromosome, start, end) {
 
-  // Extract query information from form
-  let chromosome = $("#chromosome").val().trim();
-  let start = parseInt($("#start").val().trim().replace(/,/g, ''), 10);
-  let end   = parseInt($("#stop").val().trim().replace(/,/g, ''), 10);
-
-  // Check start and end relative to one another, defaulting to maximum diff if invalid
-  let diff = end - start
-  if (diff > MAX_DIFF || diff <= 0) {
-    end = +start + MAX_DIFF;
+  // If no chromosome specified, show all chromosomes
+  if (chromosome === '' || chromosome === 'all') {
+    return 'all';
   }
 
-  // Update the browser to the desired search window
-  browser.search(`${chromosome}:${start}-${end}`);
+  // If no start/stop are desired, search for the whole chromosome
+  if (start === null && end === null) {
+    return chromosome;
+  }
+
+  // Validate start position
+  if (isNaN(start)) {
+    throw new SearchLocusError('start', 'This field is required.');
+  }
+  if (start < 1) {
+    throw new SearchLocusError('start', 'Start position must be 1 or greater.');
+  }
+
+  // Validate stop position
+  if (isNaN(end)) {
+    throw new SearchLocusError('stop', 'This field is required.');
+  }
+  if (end <= start) {
+    throw new SearchLocusError('stop', 'Stop position must be greater than start position.');
+  }
+
+  return `${chromosome}:${start}-${end}`
+}
+
+
+// Parse an integer form input field to an int
+function parse_int_input(selector) {
+  return parseInt($(selector).val().trim().replace(/,/g, ''), 10);
+}
+
+
+// Set browser position based on input
+// If input position is invalid or incomplete, the final position of the browser
+// will be returned by the Promise
+function set_position(browser, ignore_start_stop=false) {
+  return new Promise((resolve, reject) => {
+
+    // Extract query information from form
+    const chromosome = $("#chromosome").val().trim();
+    const start      = ignore_start_stop ? null : parse_int_input("#start");
+    const end        = ignore_start_stop ? null : parse_int_input("#stop");
+
+    // Construct search locus string from form info
+    let search_locus;
+    try {
+      search_locus = create_search_locus(chromosome, start, end);
+    }
+    catch (e) {
+      reject(e);
+      return;
+    }
+
+    // Go to the desired locus, then return it from the Promise
+    browser.search(search_locus).then(([locus]) => {
+      const chromosome = locus.chromosome.name;
+      resolve({
+        chromosome,
+        start: chromosome === 'all' ? null : locus.start,
+        end:   chromosome === 'all' ? null : locus.end,
+      });
+    });
+  })
 }
 
 

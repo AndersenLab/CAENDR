@@ -1,6 +1,6 @@
 {% extends "_layouts/default-nocontainer.html" %}
 {% block content %}
-{% from "_includes/strain-listing.html" import species_selector %}
+{% from "_includes/macros.html" import render_field %}
 
 <div class="container">
   <div class="d-flex justify-content-around flex-wrap mb-5">
@@ -24,13 +24,14 @@
       </div>
       <!-- /Description Card -->
       <!-- Tool -->
-      <div class="col-12 col-sm-10 col-md-8 col-lg-5 mx-auto mb-5">
+      <div class="col-12 col-sm-10 col-md-8 col-lg-6 mx-auto mb-5">
         <div class="card border-0 shadow text-center">
           <!-- Tab Menu -->
           <nav>
             <div class="nav nav-tabs text-bg-light p-1 pb-0" id="nav-tab" role="tablist">
-              <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">New Mapping</button>
+              <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">New</button>
               <button class="nav-link" id="nav-linkOne-tab" data-bs-toggle="tab" data-bs-target="#nav-linkOne" type="button" role="tab" aria-controls="nav-linkOne" aria-selected="false">Sample Report</button>
+              <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false"><a href="{{ url_for('data_releases.data_releases') }}">Release Notes</a></button>
               <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false"><a href="{{ url_for('genetic_mapping.user_reports') }}">My Mapping Results</a></button>
             </div>
           </nav>
@@ -46,22 +47,18 @@
                 <div class="mb-4">
                   {{ form.csrf_token }}
                   <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">
-                  {{ species_selector(species_list) }}
-                  <label for="label" class="form-label">Description:</label>
-                  <input id="label" name="label" type="text" class="form-control input-margin" placeholder="Name your mapping"
-                    style="width:100%" required />
                 </div>
+                <div class='mb-4'>{{ render_field(form.species) }}</div>
+                <div class='mb-4'>{{ render_field(form.label, class_="input-margin", placeholder="Enter a name for your mapping, such as the trait.", style="width:100%") }}</div>
                 <div class="mb-4">
-                  <label for="formFile" class="form-label">Select file:</label>
-                  <div class="hstack gap-2 mb-4">
-                    <input class="form-control" type="file" name="file" id="file" accept=".tsv" required>
+                  {% call render_field(form.file) %}
                     <!-- Info Popover -->
                     <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
                       data-bs-trigger="focus" data-bs-title="More information"
                       data-bs-content="Enter your data using the form shown in the example data file and upload as a TSV here."><i
                         class="bi bi-info lh-1" aria-hidden="true"></i></a>
                     <!-- /Info Popover -->
-                  </div>
+                  {% endcall %}
                 </div>
                 <div class="d-grid mb-4">
                   <button type="submit" id="submit-btn" class="btn btn-secondary text-light" data-bs-toggle="modal"

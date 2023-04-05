@@ -1,12 +1,8 @@
 import json
-import re
 
 from string import Template
 
-from caendr.models.error import InternalError
 from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefault, BrowserTrackTemplate
-from caendr.models.datastore.dataset_release import DatasetRelease
-from caendr.models.datastore.wormbase import WormbaseVersion
 from caendr.models.datastore import SPECIES_LIST
 from flask import (render_template,
                     Blueprint,
@@ -14,6 +10,7 @@ from flask import (render_template,
                     request,
                     url_for)
 from extensions import cache
+from base.forms import SpeciesSelectForm
 
 from caendr.api.isotype import get_isotypes
 from caendr.services.dataset_release import get_dataset_release, get_latest_dataset_release_version
@@ -91,23 +88,7 @@ def get_tracks():
 @genome_browser_bp.route('/genome-browser/<release_version>/<region>')
 @genome_browser_bp.route('/genome-browser/<release_version>/<region>/<query>')
 @cache.memoize(60*60)
-def genome_browser(release_version=None, region="III:11746923-11750250", query=None):
-  dataset_release = get_dataset_release_or_latest(release_version)
-
-  # Allow WB version to be overridden w URL variable
-  wormbase_version_override_str = request.args.get('wormbase_version', None)
-  if WormbaseVersion.validate(wormbase_version_override_str):
-    wormbase_version = WormbaseVersion(wormbase_version_override_str)
-
-  # Default to version 276
-  else:
-    # wormbase_version = wormbase_version_override or dataset_release.wormbase_version
-    wormbase_version = WormbaseVersion('WS276')
-
-  # dataset_release_prefix = '//storage.googleapis.com/elegansvariation.org/releases'
-  # track_url_prefix       = '//storage.googleapis.com/elegansvariation.org/browser_tracks'
-  # bam_bai_url_prefix     = '//storage.googleapis.com/elegansvariation.org/bam'
-
+def genome_browser(region="III:11746923-11750250", query=None):
 
   # Get strain and isotype for all strains of each species
   # Produces a dictionary from species ID to list of strains
@@ -137,6 +118,8 @@ def genome_browser(release_version=None, region="III:11746923-11750250", query=N
     'query':          query,
     'strain_listing': strain_listing,
     'species_list':   SPECIES_LIST,
+
+    'form': SpeciesSelectForm(),
 
     # Tracks
     'default_tracks': sorted(BrowserTrackDefault.query_ds_visible(), key = lambda x: x['order'] ),

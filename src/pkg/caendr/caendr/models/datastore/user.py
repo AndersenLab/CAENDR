@@ -83,8 +83,11 @@ class User(Entity):
   def set_properties(self, password=None, salt=None, **kwargs):
 
     # Set password and salt together
-    if password is not None and salt is not None:
-      self.set_password(password, salt)
+    if password is not None:
+      if salt is not None:
+        self.set_password(password, salt)
+      else:
+        self.password = password
 
     # Forward the rest of the properties to the parent method
     super().set_properties(**kwargs)

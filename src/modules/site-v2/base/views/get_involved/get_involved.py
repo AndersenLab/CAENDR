@@ -55,7 +55,7 @@ def donate():
     order_obj['items'] = u"{}:{}".format("CaeNDR strain and data support", form.data.get('total'))
     order_obj.update(form.data)
     order_obj['invoice_hash'] = get_object_hash(order_obj, length=8)
-    order_obj['url'] = url_for('order.order_confirmation', invoice_hash=order_obj['invoice_hash'], _external=True)
+    order_obj['url'] = url_for('request_strains.order_confirmation', invoice_hash=order_obj['invoice_hash'], _external=True)
     send_email({
       "from": "no-reply@elegansvariation.org",
       "to": [order_obj["email"]],
@@ -64,5 +64,5 @@ def donate():
       "text": DONATION_SUBMISSION_EMAIL_TEMPLATE.format(order_confirmation_link=order_obj.get('url'), donation_amount=order_obj.get('total'))
     })
     add_to_order_ws(order_obj)
-    return redirect(url_for("order.order_confirmation", invoice_hash=order_obj["invoice_hash"]), code=302)
+    return redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj["invoice_hash"]), code=302)
   return render_template('get_involved/donate.html', **locals())

@@ -1,3 +1,9 @@
+<style>
+  .nav-link-active {
+    border-bottom: 5px solid green;
+  }
+</style>
+
 <header>
   <!-- Global Navbar -->
   <nav class="navbar navbar-expand-lg fw-bold mt-3">
@@ -11,10 +17,10 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
-        <div class="navbar-nav">
-          <a class="nav-link" href="{{ url_for('strains.strains_catalog') }}">Request Strains</a>
+        <div class="navbar-nav ">
+          <a class="nav-link {{'nav-link-active' if request.blueprint == 'request_strains'}}" href="{{ url_for('request_strains.strains') }}">Request Strains</a>
           <div class="nav-item dropdown mx-5">
-            <a class="nav-link dropdown-toggle" href="#" id="toolsDropdown" role="button" data-bs-toggle="dropdown"
+            <a class="nav-link dropdown-toggle {{'nav-link-active' if '/tools/' in request.full_path}}" href="#" id="toolsDropdown" role="button" data-bs-toggle="dropdown"
               aria-expanded="false">
               Tools
             </a>
@@ -37,18 +43,18 @@
             </ul>
           </div>
           <div class="nav-item dropdown mx-5">
-            <a class="nav-link dropdown-toggle" href="#" id="dataDropdown" role="button" data-bs-toggle="dropdown"
+            <a class="nav-link dropdown-toggle {{'nav-link-active' if request.blueprint == 'data' or request.blueprint == 'data_releases'}}" href="#" id="dataDropdown" role="button" data-bs-toggle="dropdown"
               aria-expanded="false">
               Data
             </a>
             <ul class="dropdown-menu" aria-labelledby="dataDropdown">
-              <li><a class="dropdown-item" href="{{ url_for('data.download')      }}"> Download Data </a></li>
+              <li><a class="dropdown-item" href="{{ url_for('data_releases.data_releases') }}"> Data Releases </a></li>
               <li><a class="dropdown-item" href="{{ url_for('data.protocols')     }}"> Protocols </a></li>
               <li><a class="dropdown-item" href="{{ url_for('data.submit_strain') }}"> Submit A Strain </a></li>
             </ul>
           </div>
           <div class="nav-item dropdown mx-5">
-            <a class="nav-link dropdown-toggle" href="#" id="aboutDropdown" role="button" data-bs-toggle="dropdown"
+            <a class="nav-link dropdown-toggle {{'nav-link-active' if request.blueprint == 'about'}}" href="#" id="aboutDropdown" role="button" data-bs-toggle="dropdown"
               aria-expanded="false">
               About Us
             </a>
@@ -62,7 +68,7 @@
             </ul>
           </div>
           <div class="nav-item dropdown mx-5">
-            <a class="nav-link dropdown-toggle" href="#" id="getInvolvedDropdown" role="button" data-bs-toggle="dropdown"
+            <a class="nav-link dropdown-toggle {{'nav-link-active' if request.blueprint == 'get_involved'}}" href="#" id="getInvolvedDropdown" role="button" data-bs-toggle="dropdown"
               aria-expanded="false">
               Get Involved
             </a>
@@ -72,7 +78,7 @@
                 </a></li>
             </ul>
           </div>
-          <a class="nav-link mx-5 mb-3" href="{{ url_for('primary.help_item') }}">FAQs</a>
+          <a class="nav-link mx-5 mb-3 {{'nav-link-active' if '/help' in request.full_path}}" href="{{ url_for('primary.help_item') }}">FAQs</a>
           <!-- User Menu -->
           <div class="nav-item dropdown mx-1">
             <a class="dropdown-toggle rounded-circle userMenu" data-bs-toggle="dropdown" id="userMenuDropDown"

@@ -16,21 +16,24 @@ from flask import (flash,
 from caendr.services.logger import logger
 from datetime import datetime
 import bleach
-from werkzeug.utils import secure_filename
 
 from base.forms import HeritabilityForm
 from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user, user_is_admin
+from base.utils.tools import validate_report, upload_file
 
-from caendr.models.error import CachedDataError, DuplicateDataError, DataFormatError
+from caendr.models.error import (
+    CachedDataError,
+    DataFormatError,
+    DuplicateDataError,
+    FileUploadError,
+    ReportLookupError,
+)
 from caendr.models.datastore import SPECIES_LIST
 from caendr.api.strain import get_strains
 from caendr.services.heritability_report import get_all_heritability_results, get_user_heritability_results, create_new_heritability_report, get_heritability_report
 from caendr.utils.data import unique_id, convert_data_table_to_tsv, get_object_hash
 from caendr.services.cloud.storage import get_blob, generate_blob_url
 from caendr.services.persistent_logger import PersistentLogger
-
-uploads_dir = os.path.join('./', 'uploads')
-os.makedirs(uploads_dir, exist_ok=True)
 
 
 
@@ -99,11 +102,13 @@ def submit_h2():
   form = HeritabilityForm(request.form)
   user = get_current_user()
 
-  # TODO: Validate form
+  # Validate form fields
+  # Checks that species is in species list & label is not empty
   if not form.validate_on_submit():
-    pass
-    # flash("You must include a description of your data and a TSV file to upload", "error")
-    # return redirect(url_for('heritability_calculator.submit_h2'))
+    flash("You must include a description of your data and a TSV file to upload.", "danger")
+    return jsonify({
+      'error': True, 'message': "You must include a description of your data and a TSV file to upload.",
+    })
 
   # If user is admin, allow them to bypass cache with URL variable
   no_cache = bool(user_is_admin() and request.args.get("nocache", False))
@@ -112,10 +117,15 @@ def submit_h2():
   label   = bleach.clean(request.form.get('label'))
   species = bleach.clean(request.form.get('species'))
 
-  # Save uploaded file to server temporarily with unique generated name
-  # TODO: Is there a better way to generate this name? E.g. using a Tempfile?
-  local_path = os.path.join(uploads_dir, secure_filename(f'{ unique_id() }.tsv'))
-  request.files['file'].save(local_path)
+  # Save uploaded file to server temporarily, displaying an error message if this fails
+  try:
+    local_path = upload_file(request, 'file')
+  except FileUploadError as ex:
+    flash(ex.description, 'danger')
+    return jsonify({
+      'error':   True,
+      'message': ex.description,
+    })
 
   # Package submission data together into dict
   data = {
@@ -154,9 +164,7 @@ def submit_h2():
     logger.error(f'Data formatting error in Heritability Calculator: {ex.msg} (Line: {ex.line})')
 
     # Construct user-friendly error message with optional line number
-    msg = f'There was an error with your file. { ex.msg }'
-    if ex.line is not None:
-      msg += f' (Line: { ex.line })'
+    msg = ex.msg + (f' (Line: { ex.line })' if ex.line is not None else '')
 
     # Flash the error message & refresh the page
     flash(msg, 'danger')
@@ -232,23 +240,12 @@ def heritability_result(id):
   user = get_current_user()
   hr = get_heritability_report(id)
 
-  # If no such report exists, show an error message
-  if hr is None:
-
-    # Let admins know the report doesn't exist
-    if user_is_admin():
-      flash('This report does not exist', 'danger')
-      abort(404)
-
-    # For all other users, display a default "no access" message
-    else:
-      flash('You do not have access to that report', 'danger')
-      abort(401)
-
-  # If the user doesn't have permission to view this report, show an error message
-  if not (hr.username == user.name or user_is_admin()):
-    flash('You do not have access to that report', 'danger')
-    abort(401)
+  # Ensure the report exists and the user has permission to view it
+  try:
+    validate_report(hr, user)
+  except ReportLookupError as ex:
+    flash(ex.msg, 'danger')
+    abort(ex.code)
 
   ready = False
 
