@@ -1,9 +1,14 @@
 import os
 import sys
 
+# Important: We have to load this file before CaeNDR package imports, so global environment variables
+# are available to the CaeNDR package
+from dotenv import load_dotenv
+dotenv_file = '.env'
+load_dotenv(dotenv_file)
+
 from subprocess import Popen, PIPE, STDOUT
 from caendr.services.logger import logger
-from dotenv import load_dotenv
 
 from caendr.utils import monitor
 from caendr.models.datastore import IndelPrimer
@@ -13,9 +18,6 @@ from caendr.utils.env import get_env_var
 from vcfkit.utils.reference import get_genome_directory
 
 
-
-dotenv_file = '.env'
-load_dotenv(dotenv_file)
 
 monitor.init_sentry("indel_primer")
 
