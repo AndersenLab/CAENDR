@@ -92,12 +92,17 @@ class EnvVarError(InternalError):
     Important: This error might be thrown if trying to access *any* environment variable *before* the .env file is loaded.
       This case should normally be covered by EnvNotLoadedError, however.
   '''
-  def __init__(self, var_name: str):
+  default_msg = 'is not defined. Please ensure the ".env" file defines this variable, and is loaded before trying to access it.'
+
+  def __init__(self, var_name: str, msg: str = None):
     self.var_name = var_name
-    self.description = f'{ self._format_var_name(self.var_name) } is not defined. Please ensure the ".env" file defines this variable, and is loaded before trying to access it.'
+
+    # Construct a description message from the provided variable name and message
+    self.description = f'{ EnvVarError._format_var_name(self.var_name) } {msg if msg is not None else self.default_msg}'
 
     super().__init__()
 
+  @staticmethod
   def _format_var_name(var_name: str):
     if var_name:
       return 'The environment variable ' + var_name
