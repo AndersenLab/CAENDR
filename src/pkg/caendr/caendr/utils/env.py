@@ -16,6 +16,10 @@ def load_env(dotenv_file='.env'):
   global env_loaded
   from caendr.models.error import EnvLoadError
 
+  # Log a warning if the environment has already been loaded
+  if env_loaded:
+    logger.warn(f'Environment has already been loaded. Loading again from {dotenv_file}.')
+
   # Try to load the environment file
   try:
     load_dotenv(dotenv_file)
