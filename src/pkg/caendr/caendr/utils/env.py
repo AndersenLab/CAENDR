@@ -110,3 +110,10 @@ def replace_species_tokens(s, species='$SPECIES', prj='$PRJ', wb='$WB', sva='$SV
 #     return { key: replace_tokens_recursive(val, **kwargs) for key, val in obj.items() }
 #   else:
 #     return obj
+
+
+
+def env_log_string(vars, var_list, separator=' ', formatter=None):
+  if formatter is None:
+    formatter = lambda key, val: f'{ key }="{ val }"'
+  return separator.join([ formatter(x, vars.get(x)) for x in var_list ])

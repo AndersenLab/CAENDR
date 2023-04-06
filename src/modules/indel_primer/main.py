@@ -1,11 +1,12 @@
 import os
 import sys
 
-# Important: We have to load this file before CaeNDR package imports, so global environment variables
-# are available to the CaeNDR package
-from dotenv import load_dotenv
-dotenv_file = '.env'
-load_dotenv(dotenv_file)
+# Important: We have to load the environment before CaeNDR package imports,
+# so global environment variables are available to the CaeNDR package
+# TODO: Now that CaeNDR package automatically loads this on initialization,
+#       this line isn't necessary - is it better to keep it or remove it?
+from caendr.utils.env import load_env
+load_env()
 
 from subprocess import Popen, PIPE, STDOUT
 from caendr.services.logger import logger
@@ -13,7 +14,7 @@ from caendr.services.logger import logger
 from caendr.utils import monitor
 from caendr.models.datastore import IndelPrimer
 from caendr.services.cloud.storage import download_blob_to_file, upload_blob_from_file
-from caendr.utils.env import get_env_var
+from caendr.utils.env import get_env_var, env_log_string
 
 from vcfkit.utils.reference import get_genome_directory
 
@@ -45,8 +46,8 @@ RESULT_BLOB   = get_env_var('RESULT_BLOB')
 INDEL_CACHE_DIR = get_env_var('INDEL_CACHE_DIR', '.download')
 
 
-# Define list of environment variables required for Indel Primer to run properly
-required_env_vars = {
+# Log all environment variables
+_env_vars = {
   'INDEL_TOOL_PATH',
   'INDEL_CACHE_DIR',
   'INDEL_SITE',
@@ -57,12 +58,7 @@ required_env_vars = {
   'RESULT_BUCKET',
   'RESULT_BLOB',
 }
-
-# Log all env vars
-# Have to manually save vars() because it's overwritten in smaller scopes, e.g. list comprehensions
-VARS = vars()
-vars_strings = [ f'{x}="{VARS.get(x)}"' for x in required_env_vars ]
-logger.info( f'Indel Primer: { " ".join(vars_strings) }' )
+logger.info( f'Indel Primer: { env_log_string(vars(), _env_vars) }' )
 
 
 #
