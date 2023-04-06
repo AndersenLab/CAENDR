@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from string import Template
 
 from caendr.services.logger import logger
 
@@ -26,7 +27,7 @@ def load_env(dotenv_file='.env'):
 
 
 
-def get_env_var(key, value=None, can_be_none=False):
+def get_env_var(key, value=None, can_be_none=False, as_template=False):
   '''
     Gets an environment variable with an optional backup value.
     If value is None (env var is undefined), raises an EnvVarError with the name of the missing variable.
@@ -47,6 +48,12 @@ def get_env_var(key, value=None, can_be_none=False):
   v = os.environ.get(key, value)
   if v is None and not can_be_none:
     raise EnvVarError(key)
+
+  # Convert variable to a template string, if desired
+  if as_template:
+    return Template(v.replace('{', '${'))
+
+  # Return the value
   return v
 
 
