@@ -89,7 +89,8 @@ class EnvVarError(InternalError):
   '''
     Thrown if an environment variable is requested, but cannot be found.
 
-    Important: This error will also be thrown if trying to access *any* environment variable *before* the .env file is loaded.
+    Important: This error might be thrown if trying to access *any* environment variable *before* the .env file is loaded.
+      This case should normally be covered by EnvNotLoadedError, however.
   '''
   def __init__(self, var_name: str):
     self.var_name = var_name
