@@ -1,7 +1,7 @@
 import os
 
 from caendr.services.logger import logger
-from caendr.utils.env import get_env_var
+from caendr.utils.env import get_env_var, replace_species_tokens
 
 from caendr.models.datastore import DataJobEntity
 
@@ -45,7 +45,10 @@ class IndelPrimer(DataJobEntity):
       raise ValueError('Please provide a release for Indel Primer source filename.')
 
     # Fill in template with vars
-    return SOURCE_FILENAME.substitute({ 'SPECIES': species, 'RELEASE': release })
+    return replace_species_tokens(SOURCE_FILENAME, **{
+      'species': species,
+      'release': release,
+    })
 
 
   @staticmethod

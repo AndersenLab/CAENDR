@@ -69,3 +69,34 @@ def convert_env_bool(val: str):
   if val and val.lower() == 'true':
     return True
   return False
+
+
+
+def replace_species_tokens(s, species='$SPECIES', prj='$PRJ', wb='$WB', sva='$SVA', release='$RELEASE', strain='$STRAIN'):
+
+  # Get first argument as a string template
+  if isinstance(s, str):
+    t = Template(s)
+  elif isinstance(s, Template):
+    t = s
+  else:
+    raise ValueError(f'Cannot replace tokens in non-string value {s}')
+
+  # Perform substitutions
+  return t.substitute({
+    'SPECIES': species,
+    'RELEASE': release,
+    'WB':      wb,
+    'SVA':     sva,
+    'PRJ':     prj,
+    'STRAIN':  strain,
+  })
+
+
+# def replace_tokens_recursive(obj, **kwargs):
+#   if isinstance(obj, str):
+#     return replace_species_tokens(obj, **kwargs)
+#   elif isinstance(obj, dict):
+#     return { key: replace_tokens_recursive(val, **kwargs) for key, val in obj.items() }
+#   else:
+#     return obj
