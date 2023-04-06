@@ -54,14 +54,15 @@ def get_env_var(key, value=None, can_be_none=False, as_template=False):
   if not env_loaded:
     if (value is not None) or can_be_none:
       logger.warn(f'No environment loaded: setting environment variable {key} to default value.')
-      return value
+      v = value
     else:
       raise EnvNotLoadedError(key)
 
   # Get the value from the environment and return, raising an error if invalid
-  v = os.environ.get(key, value)
-  if v is None and not can_be_none:
-    raise EnvVarError(key)
+  else:
+    v = os.environ.get(key, value)
+    if v is None and not can_be_none:
+      raise EnvVarError(key)
 
   # Convert variable to a template string, if desired
   if as_template:
