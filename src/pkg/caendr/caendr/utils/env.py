@@ -8,6 +8,16 @@ from caendr.services.logger import logger
 # Flag to track whether the environment has been loaded
 env_loaded = False
 
+# # TODO: Validate tokens?
+# VALID_TOKENS = {
+#   'SPECIES',
+#   'PRJ',
+#   'WB',
+#   'SVA',
+#   'RELEASE',
+#   'STRAIN',
+# }
+
 
 def load_env(dotenv_file='.env'):
   '''
