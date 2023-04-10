@@ -1,19 +1,20 @@
 import os
 import sys
 
-# Important: We have to load this file before CaeNDR package imports, so global environment variables
-# are available to the CaeNDR package
-from dotenv import load_dotenv
-dotenv_file = '.env'
-load_dotenv(dotenv_file)
+# Important: We have to load the environment before CaeNDR package imports,
+# so global environment variables are available to the CaeNDR package
+# TODO: Now that CaeNDR package automatically loads this on initialization,
+#       this line isn't necessary - is it better to keep it or remove it?
+from caendr.utils.env import load_env
+load_env()
 
 from subprocess import Popen, PIPE, STDOUT
 from caendr.services.logger import logger
 
 from caendr.utils import monitor
-from caendr.models.error import EnvVarError
 from caendr.models.datastore import IndelPrimer
 from caendr.services.cloud.storage import download_blob_to_file, upload_blob_from_file
+from caendr.utils.env import get_env_var, env_log_string
 
 from vcfkit.utils.reference import get_genome_directory
 
@@ -27,26 +28,26 @@ monitor.init_sentry("indel_primer")
 #
 
 # Source locations in GCP
-MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
-INDEL_TOOL_PATH                 = os.environ.get('INDEL_TOOL_PATH')
+MODULE_SITE_BUCKET_PRIVATE_NAME = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
+INDEL_TOOL_PATH                 = get_env_var('INDEL_TOOL_PATH')
 
 # Indel parameters
-INDEL_SITE     = os.environ.get('INDEL_SITE')
-INDEL_STRAIN_1 = os.environ.get('INDEL_STRAIN_1')
-INDEL_STRAIN_2 = os.environ.get('INDEL_STRAIN_2')
-SPECIES        = os.environ.get('SPECIES')
-RELEASE        = os.environ.get('RELEASE')
+INDEL_SITE     = get_env_var('INDEL_SITE')
+INDEL_STRAIN_1 = get_env_var('INDEL_STRAIN_1')
+INDEL_STRAIN_2 = get_env_var('INDEL_STRAIN_2')
+SPECIES        = get_env_var('SPECIES')
+RELEASE        = get_env_var('RELEASE')
 
 # Result file location
-RESULT_BUCKET = os.environ.get('RESULT_BUCKET')
-RESULT_BLOB   = os.environ.get('RESULT_BLOB')
+RESULT_BUCKET = get_env_var('RESULT_BUCKET')
+RESULT_BLOB   = get_env_var('RESULT_BLOB')
 
 # Name for local cache directory (to download files from GCP)
-INDEL_CACHE_DIR = os.environ.get('INDEL_CACHE_DIR', '.download')
+INDEL_CACHE_DIR = get_env_var('INDEL_CACHE_DIR', '.download')
 
 
-# Define list of environment variables required for Indel Primer to run properly
-required_env_vars = {
+# Log all environment variables
+_env_vars = {
   'INDEL_TOOL_PATH',
   'INDEL_CACHE_DIR',
   'INDEL_SITE',
@@ -57,19 +58,7 @@ required_env_vars = {
   'RESULT_BUCKET',
   'RESULT_BLOB',
 }
-
-# Save current list of vars
-# Have to do this manually because vars() is overwritten in smaller scopes, e.g. list comprehensions
-VARS = vars()
-
-# Ensure all required env vars exist
-for var_name in required_env_vars:
-  if VARS.get(var_name) is None:
-    raise EnvVarError(var_name)
-
-# Log all env vars
-vars_strings = [ f'{x}="{VARS.get(x)}"' for x in required_env_vars ]
-logger.info( f'Indel Primer: { " ".join(vars_strings) }' )
+logger.info( f'Indel Primer: { env_log_string(vars(), _env_vars) }' )
 
 
 #

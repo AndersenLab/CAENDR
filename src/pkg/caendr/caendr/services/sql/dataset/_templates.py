@@ -4,6 +4,7 @@ from string import Template
 from logzero import logger
 
 from caendr.models.error import BadRequestError
+from caendr.utils.env import replace_species_tokens
 
 from ._env import external_db_url_templates, internal_db_blob_templates
 
@@ -63,16 +64,19 @@ def get_url(self, db_url_name: str, species_name: str = None):
       raise BadRequestError()
 
     # Get the desired template an fill in species information, if applicable
-    t = Template(get_url_template(db_url_name))
-    if species_name is not None:
-      species = self.get_species(species_name)
-      return t.substitute({
-        'SPECIES': species_name,
-        'PRJ':     species.project_num,
-        'WB':      species.wb_ver,
-      })
-    else:
-      return t.template
+    t = get_url_template(db_url_name)
+
+    # If no species provided, return URL as-is
+    if species_name is None:
+      return t
+
+    # Get the species and fill out the template with its information
+    species = self.get_species(species_name)
+    return replace_species_tokens(t, **{
+      'species': species_name,
+      'prj':     species.project_num,
+      'wb':      species.wb_ver,
+    })
 
 
 

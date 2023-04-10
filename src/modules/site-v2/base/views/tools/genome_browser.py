@@ -1,7 +1,5 @@
 import json
 
-from string import Template
-
 from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefault, BrowserTrackTemplate
 from caendr.models.datastore import SPECIES_LIST
 from flask import (render_template,
@@ -36,25 +34,6 @@ def get_dataset_release_or_latest(release_version = None):
   if dataset_release is not None:
     dataset_release
   return get_latest_dataset_release_version()
-
-
-def replace_tokens(s, species='$SPECIES', prj='$PRJ', wb='$WB', sva='$SVA', release='$RELEASE', strain='$STRAIN'):
-  return Template(s).substitute({
-    'SPECIES': species,
-    'RELEASE': release,
-    'WB':      wb,
-    'SVA':     sva,
-    'PRJ':     prj,
-    'STRAIN':  strain,
-  })
-
-def replace_tokens_recursive(obj, **kwargs):
-  if isinstance(obj, str):
-    return replace_tokens(obj, **kwargs)
-  elif isinstance(obj, dict):
-    return { key: replace_tokens_recursive(val, **kwargs) for key, val in obj.items() }
-  else:
-    return obj
 
 
 

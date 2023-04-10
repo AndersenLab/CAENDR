@@ -7,7 +7,7 @@ from caendr.services.logger import logger
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.postgresql import get_db_conn_uri, get_db_timeout, health_database_status
 from caendr.utils.json import json_encoder
-from caendr.utils.data import convert_env_bool
+from caendr.utils.env  import convert_env_bool
 
 SECRETS_IDS = [
   'ANDERSEN_LAB_STRAIN_SHEET',

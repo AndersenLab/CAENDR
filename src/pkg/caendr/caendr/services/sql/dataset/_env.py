@@ -1,15 +1,12 @@
 import os
 
-from caendr.utils.data import remove_env_escape_chars
+from caendr.utils.env import get_env_var, remove_env_escape_chars
 
 
 # Get environment variables
-MODULE_DB_OPERATIONS_BUCKET_NAME = os.environ.get('MODULE_DB_OPERATIONS_BUCKET_NAME')
-STRAIN_VARIANT_ANNOTATION_PATH   = os.environ.get('STRAIN_VARIANT_ANNOTATION_PATH')
-
-STRAIN_VARIANT_ANNOTATION_PATH = STRAIN_VARIANT_ANNOTATION_PATH.replace('{', '${')
-
-DB_OPS_FILEPATH = os.environ.get('DB_OPS_FILEPATH')
+MODULE_DB_OPERATIONS_BUCKET_NAME = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
+STRAIN_VARIANT_ANNOTATION_PATH   = get_env_var('STRAIN_VARIANT_ANNOTATION_PATH', as_template=True)
+DB_OPS_FILEPATH                  = get_env_var('DB_OPS_FILEPATH')
 
 
 # Construct URL templates for external DBs (not managed by CaeNDR)
@@ -26,9 +23,9 @@ external_db_url_templates = {
 
 # Construct URL templates for internal DBs (managed by CaeNDR)
 internal_db_blob_templates = {
-    'GENE_GTF': remove_env_escape_chars( DB_OPS_FILEPATH + os.environ.get('GENE_GTF_FILENAME') ),
-    'GENE_GFF': remove_env_escape_chars( DB_OPS_FILEPATH + os.environ.get('GENE_GFF_FILENAME') ),
-    'GENE_IDS': remove_env_escape_chars( DB_OPS_FILEPATH + os.environ.get('GENE_IDS_FILENAME') ),
+    'GENE_GTF': remove_env_escape_chars( DB_OPS_FILEPATH + get_env_var('GENE_GTF_FILENAME') ),
+    'GENE_GFF': remove_env_escape_chars( DB_OPS_FILEPATH + get_env_var('GENE_GFF_FILENAME') ),
+    'GENE_IDS': remove_env_escape_chars( DB_OPS_FILEPATH + get_env_var('GENE_IDS_FILENAME') ),
     'SVA_CSVGZ': f'{STRAIN_VARIANT_ANNOTATION_PATH}/WI.strain-annotation.bcsq.$SVA.csv.gz',
 }
 
