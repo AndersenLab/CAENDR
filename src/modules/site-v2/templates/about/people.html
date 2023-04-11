@@ -1,83 +1,123 @@
-{% extends "_layouts/default.html" %}
+{% extends "_layouts/default-nocontainer.html" %}
+
+{% block custom_head %}
+<style>
+    .card img {
+        width: 150px;
+        height: auto;
+    }
+
+    .detailsLink {
+        font-size: 1.25rem !important;
+        color: #000;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row">
 
-    <!-- Staff -->
-    <h3>Staff</h3>
-    {% for p in profiles['staff'] %}
-        <div class="row">
-            <div class="col-md-12">
-                <img src="{{ p.img_url }}" alt="{{ p.first_name }}" class="thumbnail hidden-xs lab-member-photo" />
-                <img src="{{ p.img_url }}" alt="{{ p.first_name }}" class="thumbnail visible-xs lab-member-photo-small" />
-                <h4 id="{{ p.first_name }} {{ p.last_name }}">{{ p.first_name }} {{ p.last_name }} <small>{{ p.title }}</small></h4>
-                {% if p.cv %}
-                <i class="glyphicon glyphicon-file"></i> <a class="btn btn-primary btn-xs" href="{{ p.cv }}"><em>Curriculum Vitae</em></a><br />
-                {% endif %}
-
-                <!-- email -->
-                {% if p.email %}
-                    <span style="white-space:nowrap;"><i class="glyphicon glyphicon-envelope"></i> <a href="mailto:{{ p.email }}">{{ p.email }}</a></span><br />
-                {% endif %}
-                
-                <!-- website -->
-                {% if p.website %}
-                    <i class="glyphicon glyphicon-home"></i> <a href="{{ p.website }}">{{ p.website }}</a><br />
-                {% endif %}
-
-                <!-- github -->
-                {% if p.github %}
-                    <img src="/static/img/icons/github.png" style="width:16px; "/> <a href="https://github.com/{{ p.github }}">{{ p.github }}</a><br />
-                {% endif %}
-
-                <br />
-                <p>{{ p.description }}</p>
-
-        	</div>
-        </div>
-    {% endfor %}
-    <br />
-
-    <!-- Committee -->
-    <h3>Scientific Advisory Committee</h3>
+<div class="container-fluid px-5 pb-5">
     <div class="row">
-    {% for p in profiles['committee']|sort(attribute='last_name') %}
-        <div class="col-md-12 clearfix">
-            
-            <img src="{{ p.img_url }}" style="width: 150px; " alt="{{ p.first_name }}" class="thumbnail hidden-xs lab-member-photo" />
-            <img src="{{ p.img_url }}" style="width: 150px; " alt="{{ p.first_name }}" class="thumbnail visible-xs lab-member-photo-small" />
-            
-            <br />
-            
-            <h4><a href="{{ p.website }}">{{ p.first_name }} {{ p.last_name }}</a></h4>
-            <h4><small>{{ p.org }}</small></h4>
-            
-            <br />
-
+        <div class="col col-md-3 mt-5">
+            <nav class="nav flex-column mx-auto" style="width:60%;">
+                <a class="nav-link" href="#staff">Staff</a>
+                <a class="nav-link" href="#SAC">Scientific Advisory Committee</a>
+                <a class="nav-link" href="#collaborators">Collaborators</a>
+            </nav>
         </div>
-    {% endfor %}
-    </div>
-    <br />
-
-    <!-- Collaborators -->
-    <h3>Collaborators</h3>
-    <div class="row">
-    {% for p in profiles['collaborators']|sort(attribute='last_name') %}
-        <div class="col-md-12 clearfix">
-            
-            <img src="{{ p.img_url }}" style="width: 150px; " alt="{{ p.first_name }}" class="thumbnail hidden-xs lab-member-photo" />
-            <img src="{{ p.img_url }}" style="width: 150px; " alt="{{ p.first_name }}" class="thumbnail visible-xs lab-member-photo-small" />
-            
-            <br />
-            
-            <h4><a href="{{ p.website }}">{{ p.first_name }} {{ p.last_name }}</a></h4>
-            <h4><small>{{ p.org }}</small></h4>
-            
-            <br />
-
+        <div class="col col-md-9 mt-5">
+            <!-- Staff section -->
+            <div class="row">
+                <h2 id="staff">Staff</h2>
+            </div>
+            <!-- /Row -->
+            <div class="row row-cols-1 row-cols-md-3 g-5 mb-5">
+                <!-- Card Column -->
+                {% for p in profiles['staff'] %}
+                <div class="col mb-3">
+                    <div class="card p-0 pt-3 mt-5 h-100 shadow text-center cardBorderBottom">
+                        <img src="{{ p.img_url }}" class="img-fluid rounded mb-3 mx-auto"
+                            alt="{{ p.first_name }} {{ p.last_name }}">
+                        <div class="card-body">
+                            <h3 class="h5 card-title">{{ p.first_name }} {{ p.last_name }}</h3>
+                            <p class="card-text">
+                                <small>{{ p.title }}</small>
+                                {% if p.email %}
+                            <p><i class="bi bi-envelope-fill detailsLink"></i> <a href="mailto:{{ p.email }}">{{ p.email
+                                    }}</a></p>
+                            {% endif %}
+                            {% if p.website %}
+                            <p><i class="bi bi-box-arrow-up-right"></i> <a href="{{ p.website }}">{{ p.website }}</a>
+                            </p>
+                            {% endif %}
+                            {% if p.github %}
+                            <p><i class="bi bi-github"></i> <a href="https://github.com/{{ p.github }}">{{ p.github
+                                    }}</a></p>
+                            {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                <!-- /Card Column -->
+            </div>
+            <!-- /Row -->
+            <!-- /Staff section -->
+            <!-- Scientific Advisory Committee section -->
+            <div class="row">
+                <h2 class="mt-5" id="SAC">Scientific Advisory Committee</h2>
+            </div>
+            <!-- /Row -->
+            <div class="row row-cols-1 row-cols-md-3 g-5 mb-5">
+                <!-- Card Column -->
+                {% for p in profiles['committee']|sort(attribute='last_name') %}
+                <div class="col mb-3">
+                    <div class="card p-0 pt-3 mt-5 h-100 shadow text-center cardBorderBottom" style="min-height:35vh;">
+                        <img src="{{ p.img_url }}" class="img-fluid rounded mb-3 mx-auto"
+                            alt="{{ p.first_name }} {{ p.last_name }}">
+                        <div class="card-body">
+                            <h3 class="h5 card-title"><a href="{{ p.website }}" target="_blank">{{ p.first_name }} {{
+                                    p.last_name }}</a></h3>
+                            <p class="card-text">
+                                <small>{{ p.org }}</small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                <!-- /Card Column -->
+            </div>
+            <!-- /Row -->
+            <!-- /Staff section -->
+            <!-- Collaborators section -->
+            <div class="row">
+                <h2 class="mt-5" id="collaborators">Collaborators</h2>
+            </div>
+            <!-- /Row -->
+            <div class="row row-cols-1 row-cols-md-3 g-5 mb-5">
+                <!-- Card Column -->
+                {% for p in profiles['collaborators']|sort(attribute='last_name') %}
+                <div class="col mb-3">
+                    <div class="card p-0 pt-3 mt-5 h-100 shadow text-center cardBorderBottom" style="min-height:35vh;">
+                        <img src="{{ p.img_url }}" class="img-fluid rounded mb-3 mx-auto"
+                            alt="{{ p.first_name }} {{ p.last_name }}">
+                        <div class="card-body">
+                            <h3 class="h5 card-title"><a href="{{ p.website }}" target="_blank">{{ p.first_name }} {{
+                                    p.last_name }}</a></h3>
+                            <p class="card-text">
+                                <small>{{ p.org }}</small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                <!-- /Card Column -->
+            </div>
+            <!-- /Row -->
+            <!-- /Collaborators section -->
         </div>
-    {% endfor %}
-    </div>
 
-</div>
+    </div>
+    <!-- /Row -->
+</div> <!-- /Container -->
 {% endblock %}
