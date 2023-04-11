@@ -17,101 +17,113 @@
 
 {% block content %}
 
-<div class="container-fluid">
-  <video src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/3/h264.mov" controls></video>
-</div>
-
-<!-- OLD STUFF -->
-
-<div class="row row-padding-bottom">
-
-  <div class="col-md-6 text-center">
-    <figure class="figure">
-      <img src="{{ ext_asset('img/crawl.gif') }}" class='img-responsive'  style="width:100%;"/>
-      <figcaption class="figure-caption small">Movie of <em>C. elegans</em> taken by the <a href="https://goldsteinlab.weebly.com/">Goldstein Lab</a></figcaption>
-    </figure>
-  </div> {# /col-md-6 #}
-
-  <div class="col-md-6 text-center">
-    <h3> What is <em>C. elegans? </em></h3>
-    <p>
-      <em>Caenorhabditis elegans</em>  is a non-parasitic nematode roundworm that lives in rotting material and eats bacteria and fungi. 
-      Because this species grows easily and quickly in the laboratory, it is a powerful model to learn about human development, complex behaviors, 
-      and evolutionary processes. For more information about <em>C. elegans</em> 
-      see this<a href="https://en.wikipedia.org/wiki/Caenorhabditis_elegans"> Wikipedia </a>page
-    </p>
-  </div> {# /col-md-6 #}
-
-</div> {# /row #}
-
-<div class="row row-padding-bottom">
-
-  <div class="col-md-6 col-md-push-6">
-    <div id="map" style="height: 500px; width:100%">
-      <script>
-        mapboxgl.accessToken = 'pk.eyJ1Ijoic3dhY2hzcHJlc3MiLCJhIjoiY2trZDJyZWtmMHM3OTJvcWlpNmE3cTQ1ZSJ9.UwY-WYd78c7SnO1S_37vtg';
-        var map = new mapboxgl.Map({
-            container: 'map',
-            style: 'mapbox://styles/mapbox/outdoors-v11', // stylesheet location
-            center: [ '0', '0'], // starting position [lng, lat]
-            zoom: -2 // starting zoom
-        });
-      </script>
+<div class="container-fluid px-5">
+  <video class="d-block mx-auto" controls preload="auto" poster="/static/img/video-placeholder.png" aria-hidden="true">
+    <source src="/static/video/test-video.mp4" type="video/mp4">
+  </video>
+  <div class="row mb-5">
+    <div class="d-flex flex-wrap justify-content-end text-end mx-auto my-2 optionsToolbar">
+      <a href="#collapseTranscript" data-bs-toggle="collapse" data-bs-target="#collapseTranscript" aria-expanded="false"
+        aria-control="collapseTranscript"><i class="bi bi-card-text" aria-hidden="true"></i> View Video Transcript</a>
     </div>
-  </div> {# /col-md-6 #}
-
-  <div class="col-md-6 col-md-pull-6 text-center">
-    <h3> Global Distribution of wild isolates </h3>
-    <p>
-      Most research groups that study the <em>C. elegans</em> focus on the laboratory-adapted strain (called N2) isolated in 
-      Bristol, England in the 1950s. We have learned a great deal about basic biological processes from studies of this one strain. The same goes for <em>C. briggsae</em> and <em>C. tropicalis</em>.
-    </p>
-    <p>
-      All wild strains are as different from one another as humans are different from one another. 
-      These strains are isolated from a variety of environments in nature when researchers collect rotting materials, including fruits, 
-      flowers, nuts, berries, stems, leaves, and compost. We can use the natural diversity of these strains to learn about how populations 
-      of individuals are genetically different from another and how those differences might impact disease.
-    </p>
-  </div> {# /col-md-6 #}
-
-</div> {# /row #}
-
-<div class="row row-padding-bottom">
-
-  <div class="col-xs-6 col-md-3 text-center">
-    <img src="/static/img/caeNDRLogo.png" class="img-fluid"></a>
-  </div> {# /col-md-3 #}
-
-  <div class="col-md-6 text-center">
-    <h3>CaeNDR Goals</h3>
-    <p>
-      To facilitate the study of natural diversity by <em>Caenorhabditis</em> research groups, we created the <em>Caenorhabditis</em> 
-      Natural Diversity Resource (CaeNDR). We have three major goals:
-    </p>
-
-    <ol class="text-left">
-      <li>
-        To accept, organize, and distribute wild strains to research groups that want to investigate their favorite trait(s) 
-        across natural <em>Caenorhabditis</em> strains. See <a href="/">strains</a>.
-      </li>
-      <li>
-        To sequence the whole genomes of wild <em>C. elegans</em>, <em>C. briggsae</em>, and <em>C. tropicalis</em> strains, provide the aligned sequence data, and facilitate discovery 
-        of genetic variation across the entire species. See <a class="txt-link" href="{{ url_for('data.data') }}">Data</a>.
-      </li>
-      <li>
-        To perform genome-wide association mappings to correlate genotype with phenotype and identify genetic variation underlying quantitative traits. 
-      </li>
-    </ol>
-
-    <p>
-      Please <a href="{{ url_for('about.contact_us') }}">let us know</a> what we can do to facilitate your discoveries! We are interested in
-      adding new resources and tools.
-    </p>
-
-  </div> {# /col-md-6 #}
-
-</div> {# /row #}
-
+    <div clas="d-flex flex-wrap justify-content-start">
+      <div class="collapse" id="collapseTranscript">
+        <div class="card card-body">
+          A video transcript can go here.
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- /Row -->
+  <div class="row px-2 mb-5">
+    <div class="col-12 col-md-6">
+      <h2>What is <em>C. elegans</em>?</h2>
+      <p>
+        <em>Caenorhabditis elegans</em>  is a non-parasitic nematode roundworm that lives in rotting material and eats bacteria and fungi. 
+        Because this species grows easily and quickly in the laboratory, it is a powerful model to learn about human development, complex behaviors, 
+        and evolutionary processes. For more information about <em>C. elegans</em> 
+        see this<a href="https://en.wikipedia.org/wiki/Caenorhabditis_elegans"> Wikipedia </a>page
+      </p>
+    </div>
+    <div class="col-12 col-md-6 p-0 mb-5">
+      <figure class="text-center">
+        <img class="d-block mx-auto rounded shadow-sm" src="{{ ext_asset('img/crawl.gif') }}" style="max-width:100%;">
+        <figcaption class="small mx-auto">Movie of <em>C. elegans</em> taken by the <a href="https://goldsteinlab.weebly.com/">Goldstein Lab</a></figcaption>
+      </figure>
+    </div>
+  </div>
+  <!-- /Row -->
+  <div class="row px-2 mb-5">
+    <div class="col-12 text-bg-light p-5 mb-5 rounded shadow-sm" style="min-height:30vh">
+      <h2 class="text-center mb-5">What about <em>C. briggsae</em> and <em>C. tropicalis</em>?</h2>
+      <p>
+        These two species are distantly related to <em>C. elegans</em>. For this reason, they can be used for comparative studies. Additionally, the two species are found worldwide and enable studies of population genomics and natural diversity in their own ways.
+      </p>
+    </div>
+  </div>
+  <!-- /Row -->
+  <div class="row px-2 mb-5">
+    <div class="col-12 col-md-6">
+      <h2>Global Distribution of wild isolates</h2>
+      <p>
+        Most research groups that study the <em>C. elegans</em> focus on the laboratory-adapted strain (called N2) isolated in 
+        Bristol, England in the 1950s. We have learned a great deal about basic biological processes from studies of this one strain. The same goes for <em>C. briggsae</em> and <em>C. tropicalis</em>.
+      </p>
+      <p>
+        All wild strains are as different from one another as humans are different from one another. 
+        These strains are isolated from a variety of environments in nature when researchers collect rotting materials, including fruits, 
+        flowers, nuts, berries, stems, leaves, and compost. We can use the natural diversity of these strains to learn about how populations 
+        of individuals are genetically different from another and how those differences might impact disease.
+      </p>
+    </div>
+    <div class="col-12 col-md-6 mb-5">
+      <div id="map" style="height: 500px; width:100%">
+        <script>
+          mapboxgl.accessToken = 'pk.eyJ1Ijoic3dhY2hzcHJlc3MiLCJhIjoiY2trZDJyZWtmMHM3OTJvcWlpNmE3cTQ1ZSJ9.UwY-WYd78c7SnO1S_37vtg';
+          var map = new mapboxgl.Map({
+              container: 'map',
+              style: 'mapbox://styles/mapbox/outdoors-v11', // stylesheet location
+              center: [ '0', '0'], // starting position [lng, lat]
+              zoom: -2 // starting zoom
+          });
+        </script>
+      </div>
+    </div>
+  </div>
+  <!-- /Row -->
+  <div class="row px-2 mb-5">
+    <div class="col-12 col-md-6">
+      <h2>CaeNDR goals</h2>
+      <p>
+        To facilitate the study of natural diversity by <em>Caenorhabditis</em> research groups, we created the <em>Caenorhabditis</em> 
+        Natural Diversity Resource (CaeNDR). We have three major goals:
+      </p>
+  
+      <ol>
+        <li>
+          To accept, organize, and distribute wild strains to research groups that want to investigate their favorite trait(s) 
+          across natural <em>Caenorhabditis</em> strains. See <a href="/">strains</a>.
+        </li>
+        <li>
+          To sequence the whole genomes of wild <em>C. elegans</em>, <em>C. briggsae</em>, and <em>C. tropicalis</em> strains, provide the aligned sequence data, and facilitate discovery 
+          of genetic variation across the entire species. See <a class="txt-link" href="{{ url_for('data.data') }}">Data</a>.
+        </li>
+        <li>
+          To perform genome-wide association mappings to correlate genotype with phenotype and identify genetic variation underlying quantitative traits. 
+        </li>
+      </ol>
+  
+      <p>
+        Please <a href="{{ url_for('about.contact_us') }}">let us know</a> what we can do to facilitate your discoveries! We are interested in
+        adding new resources and tools.
+      </p>
+    </div>
+    <div class="col-12 col-md-6">
+      <img src="/static/img/caeNDRLogo.png" class="d-none d-md-block img-fluid mx-auto" style="width:50%" alt="CaeNDR logo">
+    </div>
+  </div>
+  <!-- /Row -->
+</div>
 {% endblock %}
 
 
