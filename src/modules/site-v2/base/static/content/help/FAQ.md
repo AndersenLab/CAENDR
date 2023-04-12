@@ -11,7 +11,7 @@ Please use the citation below.
     </div>
     <div class="col-md-8 ps-3">
       <div class="card-body">
-        <h3 class="h5 card-title">CaeNDR, the <em> Caenorhabditis</em> natural diversity resource</h3>
+        <h3 class="h5 card-title">CeNDR, the <em> Caenorhabditis</em> natural diversity resource</h3>
         <p class="card-text">
         Cook DE, Zdraljevic S, Roberts JP, Andersen EC
                 <br>                
