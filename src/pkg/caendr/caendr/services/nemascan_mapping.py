@@ -37,10 +37,13 @@ def get_mapping(id):
   logger.debug(f'Getting mapping: {id}')
   m = NemascanMapping(id)
   if not m:
-    return None    
-  if m.status != 'COMPLETE' and m.status != 'ERROR':
+    return None
+
+  # If job didn't error and report path isn't set,
+  # check whether the report exists (i.e. whether the job is complete)
+  if m.status != 'ERROR' and not hasattr(m, 'report_path'):
     report_path = get_report_blob_path(m)
-    logger.debug(report_path)
+    logger.debug(f'Checking report path for {id}: "{report_path}"')
     if report_path:
       m.set_properties(report_path=report_path, status='COMPLETE')
       m.save()
