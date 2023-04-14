@@ -8,7 +8,8 @@ from flask import (render_template,
                    abort,
                    flash,
                    Markup,
-                   stream_with_context)
+                   stream_with_context,
+                   jsonify)
 
 from config import config
 from extensions import cache
@@ -16,6 +17,7 @@ from extensions import cache
 from caendr.api.strain import get_strains, query_strains, get_strain_sets, get_strain_img_url
 from caendr.models.sql import Strain
 from caendr.utils.json import dump_json
+from caendr.models.datastore.cart import Cart
 
 """
 Author: Daniel E. Cook
@@ -145,35 +147,72 @@ def strains_catalog():
     warning = request.args.get('warning')
     strain_listing = get_strains()
     strain_sets = get_strain_sets()
+    form = OrderForm()
     return render_template('strain/catalog.html', **locals())
 
 #
 # Strain Ordering Pages
 #
 
-@strains_bp.route('/checkout', methods=['GET', 'POST'])
+@strains_bp.route('/checkout', methods=['POST'])
 @jwt_required(optional=True)
-def order_page():
-  """ This view handles the order page """
-  form = OrderForm()
+def order_page_post():
+  """ This view handles adding items to the cart """
   user = get_current_user()
-  if user and hasattr(user, 'email') and not form.email.data:
-    form.email.data = user.email
+  added_items = request.get_json()['strains']
+  form = OrderForm()
 
-  # Fetch items
-  items = form.items.data
-  strain_listing = get_strains()
-  title = "Order Summary"
-
-  if (len(items) == 0):
+  if (len(added_items) == 0):
     flash("You must select strains/sets from the catalog", 'error')
     return redirect(url_for("request_strains.strains_catalog"))
+  
+  if user:
+    users_cart = Cart.lookup_by_user(user['email'])
+  else:
+    users_cart = Cart(**{'items': []})
+    print(users_cart.name)
+  for item in added_items:
+    users_cart.add_item(item)
+  users_cart.save()
+  
+  return jsonify({'status': 'OK'}), 200
 
-  # Is the user coming from the catalog?
-  user_from_catalog = request.form.get('from_catalog') == "true"
+@strains_bp.route('/checkout', methods=['PUT'])
+@jwt_required(optional=True)
+def order_page_remove():
+  """ This view handles removing items from the cart """
+  user = get_current_user()
+  item_to_remove = request.get_json()
+  users_cart = Cart.lookup_by_user(user['email'])
+  users_cart.remove_item(item_to_remove)
+  users_cart.save()
 
-  # When the user confirms their order it is processed below.
-  if user_from_catalog is False and form.validate_on_submit():
+  return jsonify({'status': 'OK'}), 200
+
+@strains_bp.route('/checkout',  methods=['GET', 'POST'])
+@jwt_required(optional=True)
+def order_page_index():
+  """ This view handles the order page """
+  form = OrderForm()
+
+  if request.method == 'GET':
+    user = get_current_user()
+
+    users_cart = Cart.lookup_by_user(user['email'])
+    cartItems = users_cart['items']
+    for item in cartItems:
+      item_price = users_cart.get_price(item)
+      item['price'] = item_price
+    totalPrice = sum(item['price'] for item in cartItems)
+
+    if user and hasattr(user, 'email') and not form.email.data:
+      form.email.data = user.email
+
+    title = "Order Summary"
+    return render_template('order/order.html', title=title, cartItems=cartItems, totalPrice=totalPrice, form=form)
+  
+  elif request.method == 'POST' and form.validate_on_submit():
+    # When the user confirms their order it is processed below.
     order_obj = {'total': form.total,
                   'date': datetime.now(timezone.utc).date().isoformat(),
                   'is_donation': False}
@@ -192,7 +231,8 @@ def order_page():
     add_to_order_ws(order_obj)
     flash("Thank you for submitting your order! Please follow the instructions below to complete your order.", 'success')
     return redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302)
-  return render_template('order/order.html', **locals())
+  else:
+    return 'Invalid request'
 
 
 @strains_bp.route("/checkout/confirmation/<invoice_hash>", methods=['GET', 'POST'])
@@ -203,7 +243,8 @@ def order_confirmation(invoice_hash):
                           for x in order_obj['items'].split("\n")}
     if order_obj is None:
       abort(404)
-    title = f"Invoice {order_obj['invoice_hash']}"
+    title = "Order Confirmation"
+    invoice = f"Invoice {order_obj['invoice_hash']}"
     return render_template('order/order_confirm.html', **locals())
   else:
     abort(404)

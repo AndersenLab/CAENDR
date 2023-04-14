@@ -2,11 +2,7 @@
 
 {% block custom_head %}
 <style>
-    #checkout.affix {
-    position: fixed;
-    top: 20px;
-    width: 136px;
-}
+
 .filters {
     display: flex;
     justify-content: space-evenly;
@@ -65,8 +61,8 @@ table {
 {% endblock %}
 
 {% block content %}
-<form method="POST" action="{{ url_for('request_strains.order_page') }}" autocomplete="off">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+<form autocomplete="off">
+    <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}" />
     <div>
         <!--  Navigation Tabs -->
         <ul class="nav nav-tabs" id="strainsTab" role="tablist">
@@ -123,7 +119,7 @@ table {
                                     <input class="form-check-input"  type="checkbox" name="items-10000" id="divergent" value="set_divergent" class="styled-checkbox" />
                                     <label class="form-check-label"  for="divergent">&nbsp;</label>
                                 </td>
-                                <td><label for="divergent">Divergent Set</label></td>
+                                <td id="strainName"><label for="divergent">Divergent Set</label></td>
                                 <td>{{ len(strain_sets["D"]) }}</td>
                                 <td>
                                     <small>{{ strain_sets["D"]|join(' ') }}</small>
@@ -137,7 +133,7 @@ table {
                                     <input class="form-check-input" id="set-{{ i }}" type="checkbox" name="items-{{ i + 1000 }}" value="set_{{ i }}" class="styled-checkbox" {% if i>= 9 %}disabled{% endif %}/>
                                     <label class="form-check-label" for="set-{{ i }}">&nbsp;</label>
                                 </td>
-                                <td><label for="set-{{ i }}">Mapping Set {{ i }}</label></td>
+                                <td id="strainName"><label for="set-{{ i }}">Mapping Set {{ i }}</label></td>
                                 <td>{{ len(strain_sets["{}".format(i)]) }}</td>
                                 <td>
                                     <a class="btn btn-link btn-block view-strain-link" data-bs-toggle="collapse" data-bs-target="#view_set_{{ i }}">View Strains</a>
@@ -233,7 +229,7 @@ table {
                                     <label class="form-check-label" for="items-{{ isotype_loop_index }}">&nbsp;</label>
                                 </td>
                                 <td class="species"><i>{{ strains[0].species }}</i></td>
-                                <td><a href="{{ url_for('request_strains.isotype_page', isotype_name=isotype) }}">{{ isotype }}</a></td>
+                                <td id="strainName"><a href="{{ url_for('request_strains.isotype_page', isotype_name=isotype) }}">{{ isotype }}</a></td>
                                 <td>{{ strains|join(", ") }}</td>
                                 <td>{{ strains[0]['release'] }}</td>
                               {% if strains[0].previous_names %}
@@ -243,7 +239,7 @@ table {
                               {% endif %}
                               </tr>
                             {% endfor %}
-                              <input name="from_catalog" type="hidden" value="true">
+                              <input id="from_catalog" name="from_catalog" type="hidden" value="true">
                         </tbody>
                     </table>
                 </div>
@@ -367,12 +363,38 @@ table {
             highlight_set_buttons();
         })
 
-        $("button[id^='checkout']").click(function() {
-            checkedValues = $('input:checkbox:checked').map(function() {
-                return $(this).next();
-            }).get();
-            console.log(checkedValues);
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+              if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
+              }
+            }
         });
+     
+
+        $("button[id^='checkout']").click(function(e) {
+            e.preventDefault()
+            const data = {csrf_token: $('#csrf_token').val(), user_from_catalog: $("#from_catalog").val(), strains: []}
+            $('input:checkbox:checked').each(function() {
+                data.strains.push({name: $(this).attr('value'), species: $(this).parent().siblings('.species').text() || ''})
+            })
+            console.log(data)
+            $.ajax({
+                type: "POST",
+                url: "{{ url_for('request_strains.order_page_post') }}",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function(response) {
+                    window.location.href = "/request-strains/checkout";
+                },
+                error: function(error){
+                    console.log(error)
+                }
+            })
+
+        });
+
     });
 
     set_alert = function(msg) {
@@ -404,6 +426,7 @@ table {
     $(function() {
         $('[data-bs-toggle="tooltip"]').tooltip()
     })
+
 
 </script>
 {% endblock %}

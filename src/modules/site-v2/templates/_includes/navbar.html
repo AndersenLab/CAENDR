@@ -2,6 +2,7 @@
   .nav-link-active {
     border-bottom: 5px solid green;
   }
+
 </style>
 
 <header>
@@ -108,8 +109,16 @@
             </div>
           </div>
           <!-- /User Menu -->
+          <!-- Cart icon -->
+          <div class="nav-item mx-4 invisible" id="cartIcon">
+            <a href="{{ url_for('request_strains.order_page_index') }}" class="rounded-circle userMenu">
+              <i class="bi bi-cart-fill lh-1"></i>
+            </a>
+          </div>
+          <!-- /Cart icon -->
         </div>
       </div>
   </nav>
   <!-- /Navbar -->
 </header>
+

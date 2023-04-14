@@ -17,7 +17,6 @@
     #info {
         background-color: #d9dbf8;
         max-width: 650px;
-
     }
     #info i {
         color: #0719BC;
@@ -42,6 +41,23 @@
     .form-group {
         margin: 10px
     }
+    #payment-info-icon {
+        color: #198754;
+        background-color: #e9e9e9;
+    }
+    #icon-btn {
+        border: none;
+        background: rgb(186, 186, 186, 0);
+    }
+    #delete-icon {
+        color: rgb(227, 2, 2);
+    }
+    #delete {
+        text-align: center;
+    }
+    #goBack {
+        color: white
+    }
 </style>
 {% endblock %}
 
@@ -54,29 +70,27 @@
                     <th style="width: 40px">#</th>
                     <th style="width: 250px">Species</th>
                     <th style="width: 200px;">Strain/Set</th>
-                    <th class="price">Price</th>
+                    <th style="width: 100px">Price</th>
+                    <th style="width: 100px">Delete</th>
                 </tr>
             </thead>
             <tbody class="searchable">
-                {% for item, price in form.item_price() %}
-                <tr>
+                {% for item in cartItems %}
+                <tr class='cartItem'>
                     <td>{{ loop.index }}</td>
-                    {% if 'set' in item %}
-                    <td></td>
-                    {% else %}
-                        {% for isotype, strain in strain_listing|groupby('isotype') %}
-                            {% if item == isotype %}
-                            <td><i>{{ strain[0].species }}</i></td>
-                            {% endif %}
-                        {% endfor %}
-                    {% endif%}
-                    <td>{{ item }}</td>
-                    <td class="price">${{'%0.2f'| format(price|float)}}</td>
+                    <td>{{ item.species }}</td>
+                    <td>{{ item.name }}</td>
+                    <td>${{ item.price }}</td>
+                    <td id="delete">
+                        <button type="button" id="icon-btn" info={{ item.name }}>
+                            <i class="bi bi-trash-fill" id="delete-icon"></i>
+                        </button>
+                    </td>
                 </tr>
                 {% endfor %}
-                <tr>
+                <tr id="total">
                     <td colspan="3"><strong>Total:</strong></td>
-                    <td class="price"><strong>${{'%0.2f'| format(form.total|float)}}</strong></td>
+                    <td colspan="2" class="totalPrice"><strong>${{ totalPrice }}</strong></td>
                 </tr>
             </tbody>
         </table>
@@ -95,12 +109,13 @@
         <div class="col">
             <h3>Shipping Information</h3>
             <div id="shippingInfo">
-                {# Renders list of strains being ordered #}
-                {% for item in form.items %}
+                <!-- {# Renders list of strains being ordered #}
+                {% for item in cartItems %}
                     {{ item }}
-                {% endfor %}
+                {% endfor %} -->
 
                 {{ form.csrf_token }}
+                
                 {{ render_field(form.name) }}
                 {{ render_field(form.email) }}
                 {{ render_field(form.phone, placeholder="(847)-867-5309") }}
@@ -113,12 +128,15 @@
             <div>
                 <h3>Payment Information</h3>
                 <div id="paymentInfo">
-                    {{ render_field(form.payment) }}
+                    <div class="form-group">
+                        {{ form.payment.label}}
+                        <button type="button" id="icon-btn" data-toggle="modal" data-target="#paymentInfoModal"><i class="bi bi-info-circle-fill" id="payment-info-icon"></i></button>
+                        {{ form.payment(class="form-control") }}
+                    </div>
                     {{ render_field(form.comments) }}
-                    <small>If you choose to pay by credit card, an account will be generated for you in Northwestern's Core Facility, NUcore. If there is a business administration person who will oversee the payment, please include that person's name and email address in the comments field. They will be added to your NUcore account.</small>
                 </div>
             </div>
-            <button value="Checkout" class="btn btn-secondary" id="checkout">
+            <button value="Checkout" class="btn btn-secondary" id="checkout" disabled aria-disabled="true">
                 <i class="bi bi-cart-fill"></i>
                 Order Now
             </button>
@@ -126,22 +144,168 @@
     </div>
 </form>
 
+<div class="modal fade" id="paymentInfoModal" tabindex="-1" role="dialog" aria-labelledby="paymentInfoTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="paymentInfoTitle">Payment Information</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>If you choose to pay by credit card, an account will be generated for you in Northwestern's Core Facility, NUcore. If there is a business administration person who will oversee the payment, please include that person's name and email address in the comments field. They will be added to your NUcore account.</p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalTitle">Are you sure you want to delete this item?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to remove this item from your cart?</p>
+                <div class="d-flex justify-content-around p-2">
+                    <button type="button" class="btn btn-info" id="goBack">
+                        <i class="bi bi-slash-circle-fill"></i>
+                        No, go back.
+                    </button>
+                    <button id="deleteItem" type="button" class="btn btn-primary">
+                        <i class="bi bi-trash3-fill"></i>
+                        Yes, delete it.
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+
 <script>
 
-$("#checkout").on('click', function() {
 
-    $.pause = function( callback, seconds){
-       return window.setTimeout( callback, seconds * 1000 );
+$(document).ready(function() {
+
+    $("#checkout").on('click', function() {
+
+        $.pause = function( callback, seconds){
+        return window.setTimeout( callback, seconds * 1000 );
+        }
+
+        $(this).text("Please wait...")
+            .addClass('disabled')
+            .delay(5000)
+
+        var checkout_btn =  $(this);
+        $.pause(function() {
+            checkout_btn.removeClass('disabled').text("Order")
+        }, 5)
+
+    })
+
+    $(".form-group > button").on('click', function() {
+        $('#paymentInfoModal').modal('show')
+    })
+
+    $('#paymentInfoModal .close').on('click', function() {
+        $('#paymentInfoModal').modal('hide')
+    })
+
+    $('#name, #email, #phone, #address').keyup(function() {
+        if(formFilled()) {
+            $('#checkout').prop('disabled', false)
+        }
+    })
+
+    if(formFilled()) {
+        $('#checkout').prop('disabled', false)
     }
 
-    $(this).text("Please wait...")
-           .addClass('disabled')
-           .delay(5000)
+    $('tr td').each(function(){
+        if($(this).text() == 'Flat Rate Shipping') {
+            $('<td></td>').insertAfter($(this))
+        }
+    })
 
-    var checkout_btn =  $(this);
-    $.pause(function() {
-        checkout_btn.removeClass('disabled').text("Order")
-    }, 5)
+    $(".searchable").on('click', '.cartItem > #delete > button', function() {
+        $('#deleteItem').attr('info', $(this).attr('info'))
+        $('#deleteModal').modal('show')
+    })
+
+    $('#goBack, #deleteModal .close').on('click', function() {
+        $('#deleteModal').modal('hide')
+    })
+
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
+            }
+        }
+    });
+     
+
+    $('#deleteItem').click(function(e){
+        e.preventDefault()
+        const data = $(this).attr('info')
+        console.log(data)
+        $.ajax({
+            type: "PUT",
+            url: "{{ url_for('request_strains.order_page_remove') }}",
+            data: JSON.stringify(data),
+            contentType: "application/json",
+            dataType: "json",
+            success: function(response) {
+                console.log('item is removed');
+                location.reload();
+            },
+            error: function(error){
+                console.log(error)
+            }
+        })
+    })
+
+    $('#payment').on('change', function() {
+        if($(this).val() == 'credit_card' && $('#comments').val() == '') {
+            $('#checkout').prop('disabled', true)
+        } else if (formFilled() && $(this).val() == 'check' && $('#shipping_service').val() == 'Flat Rate Shipping'){
+            $('#checkout').prop('disabled', false)
+        }
+    })
+
+    $('#shipping_service').on('change', function() {
+        
+        if($(this).val() == 'Flat Rate Shipping' && formFilled() && $('#payment').val() == 'check') {
+            $('#checkout').prop('disabled', false)
+        } else {
+            $('#checkout').prop('disabled', true)
+        }
+    })
+
+
 })
+
+function formFilled() {
+    let filled = true;
+    $('#name, #email, #phone, #address, #shipping_account').each(function() {
+        if($('#shipping_service').val() == 'Flat Rate Shipping') {
+            filled = true;
+        } else if ($(this).val() == '') {
+            filled = false
+        }
+    });
+
+    return filled;
+    }
+
+
+
 </script>
 {% endblock %}
