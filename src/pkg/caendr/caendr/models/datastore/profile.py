@@ -1,5 +1,7 @@
 import os
 
+from caendr.services.logger import logger
+
 from caendr.models.datastore import Entity
 from caendr.services.cloud.storage import generate_blob_url
 
@@ -129,6 +131,9 @@ class Profile(Entity):
         Profile.Role.validate(role)
       except TypeError as ex:
         raise TypeError(f'Cannot query profiles for role "{role}": {ex}.')
+
+    # Log query
+    logger.debug(f'Retrieving {[role.code for role in roles]} profiles from datastore')
 
     # Query by role(s)
     # Filtering against a list property returns a result if any value in the list matches

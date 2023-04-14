@@ -60,19 +60,3 @@ def update_profile(p, **kwargs):
   p.set_properties(**kwargs)
   p.save()
   return p
-
-
-
-def get_collaborator_profiles():
-  logger.debug('Retrieving collaborator profiles from datastore')
-  return Profile.query_ds_roles( Profile.COLLAB )
-
-
-def get_committee_profiles():
-  logger.debug('Retrieving committee profiles from datastore')
-  return Profile.query_ds_roles( Profile.SAC )
-
-
-def get_staff_profiles():
-  logger.debug('Retrieving staff profiles from datastore')
-  return Profile.query_ds_roles( Profile.STAFF )

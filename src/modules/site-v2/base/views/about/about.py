@@ -17,7 +17,6 @@ from caendr.api.isotype import get_isotypes
 from caendr.models.datastore.profile import Profile
 from caendr.services.cloud.analytics import get_weekly_visits
 from caendr.services.publication import get_publications_html_df
-from caendr.services.profile import get_committee_profiles, get_staff_profiles, get_collaborator_profiles
 from caendr.utils.data import load_yaml
 
 
@@ -51,9 +50,6 @@ def getting_started():
 @about_bp.route('/people')
 @cache.memoize(60*60)
 def people():
-  '''
-    People
-  '''
 
   # Get all profiles
   profiles = {
