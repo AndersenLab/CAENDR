@@ -20,9 +20,9 @@
     <div class="row">
         <div class="col col-md-3 mt-5">
             <nav class="nav flex-column mx-auto" style="width:60%;">
-                <a class="nav-link" href="#{{ Profile.STAFF.code  }}">{{ Profile.STAFF.display  }}</a>
-                <a class="nav-link" href="#{{ Profile.SAC.code    }}">{{ Profile.SAC.display    }}</a>
-                <a class="nav-link" href="#{{ Profile.COLLAB.code }}">{{ Profile.COLLAB.display }}</a>
+                <a class="nav-link" href="#{{ Profile.STAFF.code    }}">{{ Profile.STAFF.display    }}</a>
+                <a class="nav-link" href="#{{ Profile.COMMITEE.code }}">{{ Profile.COMMITEE.display }}</a>
+                <a class="nav-link" href="#{{ Profile.COLLAB.code   }}">{{ Profile.COLLAB.display   }}</a>
             </nav>
         </div>
         <div class="col col-md-9 mt-5">
@@ -65,12 +65,12 @@
             <!-- /Staff section -->
             <!-- Scientific Advisory Committee section -->
             <div class="row">
-                <h2 class="mt-5" id="{{ Profile.SAC.code }}">{{ Profile.SAC.display }}</h2>
+                <h2 class="mt-5" id="{{ Profile.COMMITEE.code }}">{{ Profile.COMMITEE.display }}</h2>
             </div>
             <!-- /Row -->
             <div class="row row-cols-1 row-cols-md-3 g-5 mb-5">
                 <!-- Card Column -->
-                {% for p in profiles.get(Profile.SAC.code, [])|sort(attribute='last_name') %}
+                {% for p in profiles.get(Profile.COMMITEE.code, [])|sort(attribute='last_name') %}
                 <div class="col mb-3">
                     <div class="card p-0 pt-3 mt-5 h-100 shadow text-center cardBorderBottom" style="min-height:35vh;">
                         <img src="{{ p.img_url }}" class="img-fluid rounded mb-3 mx-auto"

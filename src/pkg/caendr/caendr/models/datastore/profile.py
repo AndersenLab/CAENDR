@@ -46,16 +46,16 @@ class Profile(Entity):
       raise TypeError(f'Could not find role with code "{role_code}"')
 
   # Define profile roles
-  STAFF  = Role('staff',  'Staff')
-  SAC    = Role('sac',    'Scientific Advisory Committee')
-  COLLAB = Role('collab', 'Collaborators')
+  STAFF    = Role('staff',  'Staff')
+  COMMITEE = Role('sac',    'Scientific Advisory Committee')
+  COLLAB   = Role('collab', 'Collaborators')
 
   @staticmethod
   def all_roles():
     """
       Get a list of all Profile roles, in the order they should be displayed.
     """
-    return [ Profile.STAFF, Profile.SAC, Profile.COLLAB ]
+    return [ Profile.STAFF, Profile.COMMITEE, Profile.COLLAB ]
 
 
   ## Props ##
