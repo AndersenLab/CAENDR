@@ -139,7 +139,6 @@ def submit():
 @admin_required()
 def all_reports():
   title = 'All Genetic Mappings'
-  subtitle = 'Report List'
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   user = get_current_user()
   mappings = get_all_mappings()
