@@ -79,26 +79,21 @@
 
 
 {% macro render_dataTable_top_menu(pages=True, filter=True, actions=[]) %}
-
-<div class="row">
-  <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-5 optionsToolbar">
-  {% for action in actions %}
-    {% if not action.get('admin_only', False) or (action.get('admin_only', False) and session['is_admin']) %}
-    <div class="ps-3 pt-0"> 
-    <a 
-        class="{{ action.get('classes', '') }}"
-        style="{{ action.get('style','') }}"
-        href="{{ action.get('url') }}"
-      >
-      <span class="{{ action.get('icon', '') }}" aria-hidden="true"></span> 
-      {{ action.get('label') }}
-      </a>
+<div class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-end text-end mb-5 optionsToolbar">
+      {% for action in actions %}
+      {% if not action.get('admin_only', False) or (action.get('admin_only', False) and session['is_admin']) %}
+      <div class="ps-3 pt-0">
+        <a class="{{ action.get('classes', '') }}" style="{{ action.get('style','') }}" href="{{ action.get('url') }}">
+          <span class="{{ action.get('icon', '') }}" aria-hidden="true"></span>
+          {{ action.get('label') }}
+        </a>
+      </div>
+      {% endif %}
+      {% endfor %}
     </div>
-    {% endif %}
-  {% endfor %}
-  </div>
 </div>
-<!-- /Row -->
+<!-- /Container -->
 
 <div class="row mb-5">
   <div class="d-flex flex-row justify-content-between">
