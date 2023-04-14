@@ -150,7 +150,6 @@ def all_reports():
 @jwt_required()
 def user_reports():
   title = 'My Genetic Mappings'
-  subtitle = 'Report List'
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   user = get_current_user()
   mappings = get_user_mappings(user.name)
