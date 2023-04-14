@@ -91,14 +91,13 @@
     {% include "_includes/isotype-database.html" %}
     <!-- /Table Placeholder -->
     <!-- Cards -->
-    <div class="row">
-      <!-- Cite CaeNDR card -->
-      <div class="col-10 col-md-8 col-lg-4 my-5 mx-auto">
-        <h2>Cite CaeNDR</h2>
-        <div class="card shadow text-center mt-5 cardBorderBottom">
+    <div class="row row-cols-1 row-cols-md-2 g-5 mb-5">
+      <div class="col px-5 mb-5">
+        <h2 class="mt-5">Cite CeNDR</h2>
+        <div class="card h-100 shadow text-center pt-5 mt-5 cardBorderBottom">
           <i class="bi bi-chat-left-quote-fill text-info" aria-hidden="true"></i>
           <div class="card-body">
-            <h3 class="text-dark">The CaeNDR Natural Diversity Resource</h3>
+            <h3 class="text-dark">The CeNDR Natural Diversity Resource</h3>
             <p class="card-text">
             <p>Cook DE, Zdraljevic S, Roberts JP, Andersen EC</p>
             <p>(2016 Oct 3) <em>Nucleic Acids Research</em></p>
@@ -110,10 +109,9 @@
           </div>
         </div>
       </div>
-      <!-- Email Card -->
-      <div class="col-10 col-md-8 col-lg-4 my-5 mx-auto">
-        <h2>Stay in Touch</h2>
-        <div class="card shadow text-center mt-5 cardBorderBottom ">
+      <div class="col px-5 mb-5">
+        <h2 class="mt-5">Stay in Touch</h2>
+        <div class="card h-100 shadow text-center pt-5 my-5 cardBorderBottom">
           <i class="bi bi-envelope-fill text-info" aria-hidden="true"></i>
           <div class="card-body">
             <h3 class="text-dark">Mailing List</h3>
@@ -131,7 +129,6 @@
                     </button>
                   </span>
                 </div>
-            
                 <div id="mce-responses" class="clear">
                   <div class="response" id="mce-error-response" style="display:none"></div>
                   <div class="response" id="mce-success-response" style="display:none"></div>
@@ -140,7 +137,6 @@
                 <div style="position: absolute; left: -5000px;" aria-hidden="true">
                   <input type="text" name="b_57ac68003daa4fada64672c12_5983a0c891" tabindex="-1" value="">
                 </div>
-            
               </div>
             </form>
             <!-- /Signup Form -->
@@ -148,7 +144,9 @@
         </div>
       </div>
     </div>
+    <!-- /Row -->
     <!-- /Cards -->
+    <div class="row clearfix" style="min-height:10vh"></div>
   </div>
   <!-- /container -->
 {% endblock %}

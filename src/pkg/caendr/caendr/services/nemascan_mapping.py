@@ -8,8 +8,9 @@ from caendr.models.task      import TaskStatus
 
 from caendr.services.cloud.storage import get_blob_list
 from caendr.services.tools.submit import submit_job
+from caendr.utils.env import get_env_var
 
-NEMASCAN_NXF_CONTAINER_NAME = os.environ.get('NEMASCAN_NXF_CONTAINER_NAME')
+NEMASCAN_NXF_CONTAINER_NAME = get_env_var('NEMASCAN_NXF_CONTAINER_NAME', can_be_none=True)
 
 
 

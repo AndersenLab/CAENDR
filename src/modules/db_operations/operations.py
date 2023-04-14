@@ -2,7 +2,6 @@ import os
 from caendr.services.cloud.postgresql import health_database_status
 from caendr.services.logger import logger
 
-from caendr.models.error import EnvVarError
 from caendr.models.datastore import SPECIES_LIST
 from caendr.models.sql import WormbaseGene, WormbaseGeneSummary, Strain, StrainAnnotatedVariant
 from caendr.services.sql.db import drop_tables, backup_external_db

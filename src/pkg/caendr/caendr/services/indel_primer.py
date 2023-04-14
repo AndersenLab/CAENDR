@@ -15,12 +15,13 @@ from caendr.services.cloud.storage import get_blob, generate_blob_url
 from caendr.services.tools import submit_job
 
 from caendr.utils.constants import CHROM_NUMERIC
+from caendr.utils.env import get_env_var
 
 
 
-MODULE_SITE_BUCKET_PRIVATE_NAME   = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
-INDEL_PRIMER_CONTAINER_NAME       = os.environ.get('INDEL_PRIMER_CONTAINER_NAME')
-INDEL_PRIMER_TOOL_PATH            = os.environ.get('INDEL_PRIMER_TOOL_PATH')
+MODULE_SITE_BUCKET_PRIVATE_NAME = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
+INDEL_PRIMER_CONTAINER_NAME     = get_env_var('INDEL_PRIMER_CONTAINER_NAME', can_be_none=True)
+INDEL_PRIMER_TOOL_PATH          = get_env_var('INDEL_PRIMER_TOOL_PATH')
 
 
 
@@ -82,7 +83,7 @@ def get_vcf_url(species, release = None, secure = True):
 
 def get_sv_strains(species, release = None):
   release = release or SPECIES_LIST[species].indel_primer_ver
-  return VCF( get_vcf_url( species, release ) ).samples
+  return VCF( get_vcf_url( species, release, secure=False ) ).samples
 
 
 def get_indel_primer_chrom_choices(): 

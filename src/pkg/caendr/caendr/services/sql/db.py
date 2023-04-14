@@ -13,7 +13,6 @@ from caendr.models.sql import Homolog, Strain, StrainAnnotatedVariant, WormbaseG
 from caendr.services.cloud.storage import upload_blob_from_file_as_chunks, generate_blob_url, download_blob_to_file
 from caendr.services.cloud.postgresql import db
 from caendr.utils.file import download_file
-from caendr.utils.data import remove_env_escape_chars
 
 cache = Cache("cachedir")
 

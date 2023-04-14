@@ -9,9 +9,10 @@ from caendr.models.datastore import HeritabilityReport
 
 from caendr.services.cloud.storage import get_blob
 from caendr.services.tools.submit import submit_job
+from caendr.utils.env import get_env_var
 
 
-HERITABILITY_CONTAINER_NAME = os.environ.get('HERITABILITY_CONTAINER_NAME')
+HERITABILITY_CONTAINER_NAME = get_env_var('HERITABILITY_CONTAINER_NAME', can_be_none=True)
 
 
 
