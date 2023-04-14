@@ -46,7 +46,7 @@ class Profile(Entity):
   # Define profile roles
   STAFF  = Role('staff',  'Staff')
   SAC    = Role('sac',    'Scientific Advisory Committee')
-  COLLAB = Role('collab', 'Collaborator')
+  COLLAB = Role('collab', 'Collaborators')
 
   @staticmethod
   def all_roles():
