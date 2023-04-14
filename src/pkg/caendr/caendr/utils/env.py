@@ -1,5 +1,5 @@
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, dotenv_values
 from string import Template
 
 from caendr.services.logger import logger
@@ -40,6 +40,10 @@ def load_env(dotenv_file='.env'):
     raise EnvLoadError(dotenv_file, source=ex)
 
 
+def list_env_vars(env_file='.env'):
+  return dotenv_values(env_file)
+
+
 
 def get_env_var(key, value=None, can_be_none=False, as_template=False):
   '''
@@ -66,7 +70,7 @@ def get_env_var(key, value=None, can_be_none=False, as_template=False):
 
   # Convert variable to a template string, if desired
   if as_template:
-    return Template(v.replace('{', '${'))
+    return convert_env_template(v)
 
   # Return the value
   return v
@@ -80,6 +84,10 @@ def convert_env_bool(val: str):
   if val and val.lower() == 'true':
     return True
   return False
+
+
+def convert_env_template(val):
+  return Template(val.replace('{', '${'))
 
 
 

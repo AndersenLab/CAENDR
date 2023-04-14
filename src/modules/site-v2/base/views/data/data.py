@@ -2,9 +2,10 @@ import yaml
 
 from flask import render_template, Blueprint
 from extensions import cache
+from config import config
 
+from caendr.models.error import EnvVarError
 from caendr.services.cloud.storage import get_blob
-from caendr.utils.env import get_env_var
 
 
 data_bp = Blueprint(
@@ -41,7 +42,9 @@ def download():
 def protocols():
 
     # Get location of YAML file in GCP
-    MODULE_SITE_BUCKET_ASSETS_NAME = get_env_var('MODULE_SITE_BUCKET_ASSETS_NAME')
+    MODULE_SITE_BUCKET_ASSETS_NAME = config.get('MODULE_SITE_BUCKET_ASSETS_NAME')
+    if not MODULE_SITE_BUCKET_ASSETS_NAME:
+      raise EnvVarError('MODULE_SITE_BUCKET_ASSETS_NAME')
 
     # Download the YAML file as a string
     blob = get_blob(MODULE_SITE_BUCKET_ASSETS_NAME, 'protocols/protocols.yaml')
