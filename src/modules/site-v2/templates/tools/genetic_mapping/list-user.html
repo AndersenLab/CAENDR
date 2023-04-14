@@ -27,8 +27,8 @@ table.dataTable thead .sorting {
 {{ 
   render_dataTable_top_menu(
     actions = [
-      {'label':'All Mappings', 'url':url_for('genetic_mapping.all_reports'), 'classes':'btn nu-alt-btn', 'style':'float:right;', 'icon': 'glyphicon glyphicon-list', 'admin_only': True },
-      {'label':'New Mapping', 'url':url_for('genetic_mapping.genetic_mapping'), 'classes':'btn nu-alt-btn', 'style':'float:right; margin-right: .5rem;', 'icon':'glyphicon glyphicon-plus' }
+      {'label':'All User Mappings', 'url':url_for('genetic_mapping.all_reports'), 'icon':'bi bi-list-task', 'admin_only': True },
+      {'label':'New Genetic Mapping', 'url':url_for('genetic_mapping.genetic_mapping'), 'icon':'bi bi-plus-circle' }
     ]
   ) 
 }}
