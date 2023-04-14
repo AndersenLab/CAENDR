@@ -80,41 +80,47 @@
 
 {% macro render_dataTable_top_menu(pages=True, filter=True, actions=[]) %}
 
-<div class="row dataTables-menu-top">
-  <div class="col-md-2">
+<div class="row">
+  <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-5 optionsToolbar">
+  {% for action in actions %}
+    {% if not action.get('admin_only', False) or (action.get('admin_only', False) and session['is_admin']) %}
+    <div class="ps-3 pt-0"> 
+    <a 
+        class="{{ action.get('classes', '') }}"
+        style="{{ action.get('style','') }}"
+        href="{{ action.get('url') }}"
+      >
+      <span class="{{ action.get('icon', '') }}" aria-hidden="true"></span> 
+      {{ action.get('label') }}
+      </a>
+    </div>
+    {% endif %}
+  {% endfor %}
+  </div>
+</div>
+<!-- /Row -->
+
+<div class="row mb-5">
+  <div class="d-flex flex-row justify-content-between">
     {% if pages %}
-    <form class="form-inline">
-      <div class="form-group" style="text-align:center">
+    <div class="col-3">
         <label for="page-length"> Show: </label>
-        <select name="page-length" id="page-length" class="form-control">
+        <select name="page-length" id="page-length" class="form-select">
           <option value="5">5</option>
           <option value="10">10</option>
           <option value="25" selected>25</option>
           <option value="100">100</option>
         </select>
-      </div>
-    </form>
-    {% endif %}
-  </div> {# /col-md-2 #}
-  <div class="col-md-6">
-    {% for action in actions %}
-      {% if not action.get('admin_only', False) or (action.get('admin_only', False) and session['is_admin']) %}
-        <a 
-          class="{{ action.get('classes', '') }}"
-          style="{{ action.get('style','') }}"
-          href="{{ action.get('url') }}"
-        >
-        <span class="{{ action.get('icon', '') }}" aria-hidden="true"></span> 
-        {{ action.get('label') }}
-        </a>
-      {% endif %}
-    {% endfor %}
   </div>
-  <div class="col-md-4">
-    {% if filter %}
-    <input id="filter" type="text" class="form-control pull-right" placeholder="Search">
     {% endif %}
-  </div> {# /col-md-2 #}
+    <div class="col-3">
+    {% if filter %}
+    <label for="searchFilter"> <i class="bi bi-search fs-5"></i> Search: </label>
+    <input id="searchFilterfilter" type="text" class="form-control" placeholder="Search">
+    {% endif %}
+</div>
+</div>
+  <!-- /d-flex -->
 </div> {# /row #}
 
 
