@@ -33,7 +33,7 @@
             <!-- /Row -->
             <div class="row row-cols-1 row-cols-md-3 g-5 mb-5">
                 <!-- Card Column -->
-                {% for p in profiles['staff'] %}
+                {% for p in profiles.get('staff', []) %}
                 <div class="col mb-3">
                     <div class="card p-0 pt-3 mt-5 h-100 shadow text-center cardBorderBottom">
                         <img src="{{ p.img_url }}" class="img-fluid rounded mb-3 mx-auto"
@@ -70,7 +70,7 @@
             <!-- /Row -->
             <div class="row row-cols-1 row-cols-md-3 g-5 mb-5">
                 <!-- Card Column -->
-                {% for p in profiles['committee']|sort(attribute='last_name') %}
+                {% for p in profiles.get('committee', [])|sort(attribute='last_name') %}
                 <div class="col mb-3">
                     <div class="card p-0 pt-3 mt-5 h-100 shadow text-center cardBorderBottom" style="min-height:35vh;">
                         <img src="{{ p.img_url }}" class="img-fluid rounded mb-3 mx-auto"
@@ -96,7 +96,7 @@
             <!-- /Row -->
             <div class="row row-cols-1 row-cols-md-3 g-5 mb-5">
                 <!-- Card Column -->
-                {% for p in profiles['collaborators']|sort(attribute='last_name') %}
+                {% for p in profiles.get('collaborators', [])|sort(attribute='last_name') %}
                 <div class="col mb-3">
                     <div class="card p-0 pt-3 mt-5 h-100 shadow text-center cardBorderBottom" style="min-height:35vh;">
                         <img src="{{ p.img_url }}" class="img-fluid rounded mb-3 mx-auto"
