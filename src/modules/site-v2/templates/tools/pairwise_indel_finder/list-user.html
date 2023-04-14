@@ -15,7 +15,6 @@ table.dataTable thead .sorting_desc {
   background: url("//cdn.datatables.net/1.10.0/images/sort_desc.png") no-repeat center left;
 }
 table.dataTable thead .sorting {
-  background: url("//cdn.datatables.net/1.10.0/images/sort_both.png") no-repeat center left;
 }
 
 </style>
@@ -27,8 +26,8 @@ table.dataTable thead .sorting {
 {{ 
   render_dataTable_top_menu(
     actions = [
-      {'label':'All Results', 'url':url_for('pairwise_indel_finder.all_results'), 'classes':'btn nu-alt-btn', 'style':'float:right;', 'icon': 'glyphicon glyphicon-list', 'admin_only': True },
-      {'label':'Find Indels', 'url':url_for('pairwise_indel_finder.pairwise_indel_finder'), 'classes':'btn nu-alt-btn', 'style':'float:right; margin-right: .5rem;', 'icon': 'glyphicon glyphicon-search' }
+      {'label':'All User Results', 'url':url_for('pairwise_indel_finder.all_results'), 'icon': 'bi bi-list-task', 'admin_only': True },
+      {'label':'New Primer Search', 'url':url_for('pairwise_indel_finder.pairwise_indel_finder'), 'icon': 'bi bi-plus-icon', }
     ]
   ) 
 }}
