@@ -11,6 +11,7 @@ from caendr.models.error import PipelineRunError
 from caendr.services.cloud.datastore import query_ds_entities
 from caendr.services.cloud.service_account import authenticate_google_service
 from caendr.services.cloud.secret import get_secret
+from caendr.services.nemascan_mapping import get_report_blob_path
 from caendr.utils.json import get_json_from_class
 
 GOOGLE_CLOUD_PROJECT_NUMBER = os.environ.get('GOOGLE_CLOUD_PROJECT_NUMBER')
@@ -125,5 +126,8 @@ def update_all_linked_status_records(kind, operation_name):
       logger.warn(f"Unrecognized kind: {kind}")
       continue
 
+    # Set status, and update report path if job is Nemascan Mapping
     status_record.set_properties(status=status)
+    if kind == NemascanMapping.kind:
+      status_record.set_properties(report_path=get_report_blob_path(status_record))
     status_record.save()
