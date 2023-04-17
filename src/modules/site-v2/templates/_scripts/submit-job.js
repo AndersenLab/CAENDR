@@ -1,13 +1,10 @@
 {#
   Tool name must have endpoints '.submit' and '.report' to work properly.
 #}
-{% macro submit_job(tool_name, form_id, modal_id) %}
+{% macro def_submit_job(tool_name, func_name='submit_job') %}
+function {{func_name}}(data, modal_id, new_tab=false) {
 
-  // Get form data
-  var data = new FormData($("{{ form_id }}")[0]);
-
-  // Send request
-  $.ajax({
+  return $.ajax({
     type: "POST",
     processData: false,
     contentType: false,
@@ -19,29 +16,28 @@
       {%- else %}
         "{{ url_for(tool_name + '.submit') }}",
       {%- endif %}
-
-    // Handle results
-    success: function(result) {
-
+  })
+    .done((result) => {
       // TODO: Display message based on cache status?
 
       // Results are ready to be viewed
       // TODO: Redirect modal
       if (result.ready) {
-        window.location.href = `{{ url_for(tool_name + '.report', id='') }}${ result.id }`;
+        if (new_tab) {
+          window.open(`{{ url_for(tool_name + '.report', id='') }}${ result.id }`, '_blank');
+        } else {
+          window.location.href = `{{ url_for(tool_name + '.report', id='') }}${ result.id }`;
+        }
       }
 
       // Results are not yet ready
       else {
-        $("{{ modal_id }}").modal('show');
+        $(modal_id).modal('show');
       }
-
-      // Reset the form after a successful (non-error) submission
-      resetForm();
-    },
+    })
 
     // Error - check for flashed message, and reload to show if found
-    error: function(error) {
+    .fail((error) => {
       if (error.responseJSON) {
         const message = error.responseJSON.message;
         if (message) {
@@ -50,6 +46,6 @@
           console.error(error);
         }
       }
-    }
-  });
+    })
+}
 {% endmacro %}

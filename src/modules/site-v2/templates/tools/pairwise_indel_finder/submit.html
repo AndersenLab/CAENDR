@@ -106,11 +106,15 @@
 
 {% block script %}
 {% from "_includes/strain-listing.html" import unpack_species_list, replace_tokens %}
+{% from "_scripts/submit-job.js" import def_submit_job %}
 <script src="{{ url_for('static', filename='js/strains.js') }}"></script>
 
 <script>
 {% include '_scripts/utils.js' %}       {#/* defines: fetch_json, form_data_to_object, toggle_input */#}
 {% include '_scripts/igv-browser.js' %}
+
+{{ def_submit_job('pairwise_indel_finder') }}
+
 
 /* Species */
 const species_list = {{ unpack_species_list(species_list, species_fields) }};
@@ -511,8 +515,6 @@ function create_or_update_data_table(results) {
 function generate_primers(e) {
   $(this).text("Submitting");
 
-  const self = $(this);
-
   // Get strain values and sort - consistent ordering of strains for hashing
   const strains = [$("#strain_1").val(), $("#strain_2").val()].sort()
 
@@ -525,25 +527,16 @@ function generate_primers(e) {
     svtype: $(this).attr("svtype")
   }
 
-  $.ajax({
-    type: "POST",
-    url:
-      {%- if session["is_admin"] -%}
-        "{{ url_for('pairwise_indel_finder.submit') }}" + ($('#no_cache_checkbox').prop('checked') ? "?nocache=1" : ""),
-      {%- else -%}
-        "{{ url_for('pairwise_indel_finder.submit') }}",
-      {%- endif %}
-    data: JSON.stringify(data),
-    contentType: "application/json; charset=utf-8",
-    dataType: 'json',
-    success: function(result) {
-      self.text("Submitted");
-      window.open(`pairwise-indel-finder/result/${result.id}`, "_blank")
-    },
-    error: function(error) {
-      self.text("Failed");
-    }
-  })
+  // Submit the job, opening results in a new tab if applicable
+  submit_job(data, '#generate-primers-modal', true)
+    .done(() => {
+      $(this).text("Submitted");
+      $(this).prop('onclick', null).off('click');
+    })
+    .fail(() => {
+      $(this).text("Failed");
+      $(this).prop('onclick', null).off('click');
+    })
 }
 
 

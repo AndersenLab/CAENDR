@@ -111,8 +111,12 @@
 
 
 {% block script %}
-{% from "_scripts/submit-job.js" import submit_job %}
+{% from "_scripts/submit-job.js" import def_submit_job %}
+{% from "_includes/macros.html" import update_species_field %}
 <script>
+
+{{ def_submit_job('genetic_mapping') }}
+
 
 function disableButton() {
   const btn = document.getElementById('submit-btn');
@@ -128,6 +132,9 @@ function enableButton() {
 
 function resetForm() {
   document.getElementById('form-submit').reset();
+  const selector = document.getElementById("{{ form.species.elementId }}");
+  selector.value = '';
+  {{ update_species_field('selector') }}
   enableButton();
 }
 
@@ -136,7 +143,14 @@ $("#form-submit").on("submit", function(e) {
   e.preventDefault();
   disableButton();
 
-  {{ submit_job('genetic_mapping', 'form#form-submit', '#infoModal') }}
+  // Get form data
+  const data = new FormData($('form#form-submit')[0]);
+
+  submit_job(data, '#infoModal')
+    .done((result) => {
+      // Reset the form after a successful (non-error) submission
+      resetForm();
+    })
 });
 
 </script>
