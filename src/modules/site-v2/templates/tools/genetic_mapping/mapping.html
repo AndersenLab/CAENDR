@@ -32,7 +32,7 @@
               <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">New</button>
               <button class="nav-link" id="nav-linkOne-tab" data-bs-toggle="tab" data-bs-target="#nav-linkOne" type="button" role="tab" aria-controls="nav-linkOne" aria-selected="false">Sample Report</button>
               <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false"><a href="{{ url_for('data_releases.data_releases') }}">Release Notes</a></button>
-              <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false"><a href="{{ url_for('genetic_mapping.user_reports') }}">My Mapping Results</a></button>
+              <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false"><a href="{{ url_for('genetic_mapping.my_results') }}">My Mapping Results</a></button>
             </div>
           </nav>
           <div class="tab-content m-3" id="nav-tabContent">
@@ -75,7 +75,7 @@
                               <ul>
                                 <li>Your report will be complete in about 2-5 hours</li>
                                 <li>You will receive an email when your report is complete</li>
-                                <li>You may also check <a href="{{ url_for('genetic_mapping.user_reports') }}">My Results</a> for updates.</li>
+                                <li>You may also check <a href="{{ url_for('genetic_mapping.my_results') }}">My Results</a> for updates.</li>
                               </ul>
                             </div>
                         </div>

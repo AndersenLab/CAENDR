@@ -36,6 +36,31 @@ from caendr.utils.constants import CHROM_NUMERIC
 
 
 
+def results_columns():
+  return [
+    {
+      'title': 'Site',
+      'class': 'site',
+      'field': 'site',
+      'width': 0.5,
+      'link_to_data': True,
+    },
+    {
+      'title': 'Strain 1',
+      'class': 's1',
+      'field': 'strain_1',
+      'width': 0.25,
+    },
+    {
+      'title': 'Strain 2',
+      'class': 's2',
+      'field': 'strain_2',
+      'width': 0.25,
+    },
+  ]
+
+
+
 @pairwise_indel_finder_bp.route('/pairwise-indel-finder/tracks', methods=['GET'])
 @jwt_required()
 def get_tracks():
@@ -111,41 +136,30 @@ def pairwise_indel_finder():
 
 
 
-
-@pairwise_indel_finder_bp.route("/pairwise-indel-finder/all-results")
-@admin_required()
-def all_results():
-  return render_template('tools/pairwise_indel_finder/list-all.html', **{
-
-    # Page info
-    'title': "All Indel Primer Results",
-    'alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools') },
-
-    # User info
-    'user':  get_current_user(),
-    'items': get_all_indel_primers(),
-
-    'TaskStatus': TaskStatus,
-  })
-
-
-
-@pairwise_indel_finder_bp.route("/pairwise-indel-finder/my-results")
+@pairwise_indel_finder_bp.route('/pairwise-indel-finder/all-results', methods=['GET'], endpoint='all_results')
+@pairwise_indel_finder_bp.route('/pairwise-indel-finder/my-results',  methods=['GET'], endpoint='my_results')
 @jwt_required()
-def user_results():
-
-  # Get user
+def list_results():
+  show_all = request.path.endswith('all-results')
   user = get_current_user()
-
-  return render_template('tools/pairwise_indel_finder/list-user.html', **{
+  return render_template('tools/report-list.html', **{
 
     # Page info
-    'title': 'My Indel Primer Results',
+    'title': ('All' if show_all else 'My') + ' Indel Primer Results',
     'alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools'), },
 
     # User info
     'user':  user,
-    'items': get_user_indel_primers(user.name),
+
+    # Tool info
+    'tool_name': 'pairwise_indel_finder',
+    'return_text': 'Find Indels',
+    'all_results': show_all,
+
+    # Table info
+    'species_list': SPECIES_LIST,
+    'items': get_all_indel_primers() if show_all else get_user_indel_primers(user.name),
+    'columns': results_columns(),
 
     'TaskStatus': TaskStatus,
   })

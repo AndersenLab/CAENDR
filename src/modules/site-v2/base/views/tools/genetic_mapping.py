@@ -28,6 +28,25 @@ genetic_mapping_bp = Blueprint(
 )
 
 
+
+def results_columns():
+  return [
+    {
+      'title': 'Description',
+      'class': 'label',
+      'field': 'label',
+      'width': 0.6,
+      'link_to_data': True,
+    },
+    {
+      'title': 'Trait',
+      'class': 'trait',
+      'field': 'trait',
+      'width': 0.4,
+    },
+  ]
+
+
 @genetic_mapping_bp.route('/genetic-mapping/', methods=['GET'])
 @jwt_required()
 def genetic_mapping():
@@ -109,27 +128,29 @@ def submit():
       pass
 
 
-@genetic_mapping_bp.route('/genetic-mapping/reports/all', methods=['GET', 'POST'])
-@admin_required()
-def all_reports():
-  return render_template('tools/genetic_mapping/list-all.html', **{
-    'title': 'All Genetic Mappings',
-    'subtitle': 'Report List',
-    'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
-    'mappings': get_all_mappings(),
-    'TaskStatus': TaskStatus,
-  })
-
-
-@genetic_mapping_bp.route('/genetic-mapping/reports', methods=['GET', 'POST'])
+@genetic_mapping_bp.route('/genetic-mapping/all-results', methods=['GET'], endpoint='all_results')
+@genetic_mapping_bp.route('/genetic-mapping/my-results',  methods=['GET'], endpoint='my_results')
 @jwt_required()
-def user_reports():
+def list_results():
+  show_all = request.path.endswith('all-results')
   user = get_current_user()
-  return render_template('tools/genetic_mapping/list-user.html', **{
-    'title': 'My Genetic Mappings',
+  return render_template('tools/report-list.html', **{
+
+    # Page info
+    'title': ('All' if show_all else 'My') + ' Genetic Mappings',
     'subtitle': 'Report List',
     'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
-    'mappings': get_user_mappings(user.name),
+
+    # Tool info
+    'tool_name': 'genetic_mapping',
+    'return_text': 'New Mapping',
+    'all_results': show_all,
+
+    # Table info
+    'species_list': SPECIES_LIST,
+    'items': get_all_mappings() if show_all else get_user_mappings(user.name),
+    'columns': results_columns(),
+
     'TaskStatus': TaskStatus,
   })
 

@@ -49,6 +49,24 @@ heritability_calculator_bp = Blueprint(
 )
 
 
+def results_columns():
+  return [
+    {
+      'title': 'Description',
+      'class': 'label',
+      'field': 'label',
+      'width': 0.6,
+      'link_to_data': True,
+    },
+    {
+      'title': 'Trait',
+      'class': 'trait',
+      'field': 'trait',
+      'width': 0.4,
+    },
+  ]
+
+
 @heritability_calculator_bp.route('/heritability-calculator')
 def heritability_calculator():
   title = "Heritability Calculator"
@@ -78,25 +96,29 @@ def create():
   return render_template('tools/heritability_calculator/submit.html', **locals())
 
 
-@heritability_calculator_bp.route("/heritability-calculator/all-results")
-@admin_required()
-def all_results():
-  return render_template('tools/heritability_calculator/list-all.html', **{
-    'title': "All Heritability Results",
-    'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
-    'items': get_all_heritability_results(),
-    'TaskStatus': TaskStatus,
-  })
-
-
-@heritability_calculator_bp.route("/heritability-calculator/my-results")
+@heritability_calculator_bp.route('/heritability-calculator/all-results', methods=['GET'], endpoint='all_results')
+@heritability_calculator_bp.route('/heritability-calculator/my-results',  methods=['GET'], endpoint='my_results')
 @jwt_required()
-def user_results():
+def list_results():
+  show_all = request.path.endswith('all-results')
   user = get_current_user()
-  return render_template('tools/heritability_calculator/list-user.html', **{
-    'title': "My Heritability Results",
+  return render_template('tools/report-list.html', **{
+
+    # Page info
+    'title': ('All' if show_all else 'My') + ' Heritability Results',
+    'subtitle': 'Report List',
     'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
-    'items': get_user_heritability_results(user.name),
+
+    # Tool info
+    'tool_name': 'heritability_calculator',
+    'return_text': 'New Calculation',
+    'all_results': show_all,
+
+    # Table info
+    'species_list': SPECIES_LIST,
+    'items': get_all_heritability_results() if show_all else get_user_heritability_results(user.name),
+    'columns': results_columns(),
+
     'TaskStatus': TaskStatus,
   })
 

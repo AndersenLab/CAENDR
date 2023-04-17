@@ -1,0 +1,143 @@
+{% extends "_layouts/default.html" %}
+
+{% block custom_head %}
+    <link rel="stylesheet" href="//cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css" />
+    <script type="text/javascript" src="//cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+{% endblock %}
+
+{% block style %}
+<style>
+
+table.dataTable thead .sorting_asc {
+  background: url("//cdn.datatables.net/1.10.0/images/sort_asc.png") no-repeat center left;
+}
+table.dataTable thead .sorting_desc {
+  background: url("//cdn.datatables.net/1.10.0/images/sort_desc.png") no-repeat center left;
+}
+table.dataTable thead .sorting {
+  background: url("//cdn.datatables.net/1.10.0/images/sort_both.png") no-repeat center left;
+}
+
+</style>
+{% endblock %}
+
+
+{% block content %}
+{% from "_includes/macros.html" import render_dataTable_top_menu %}
+
+{{ 
+  render_dataTable_top_menu(
+    actions = [
+      {
+        'label': 'My Results' if all_results else 'All Results',
+        'url': url_for(tool_name + ('.my_results' if all_results else '.all_results')),
+        'classes': 'btn nu-alt-btn',
+        'style': 'float: right;',
+        'icon': 'glyphicon glyphicon-list',
+        'admin_only': True,
+      },
+      {'label':return_text, 'url':url_for(tool_name + '.' + tool_name), 'classes':'btn nu-alt-btn', 'style':'float:right; margin-right: .5rem;', 'icon': 'glyphicon glyphicon-search' }
+    ]
+  ) 
+}}
+
+<div class="row">
+  <div class="col-md-12">
+    <table id='result-table' class='strain-table table-striped table-hover table-compact' style='width:100%;'>
+      <thead>
+        <tr class="header">
+          <th class='data-species ordering'><strong> Species </strong></th>
+          {% for column in columns %}
+            <th class='data-{{column.class}} sorting'><strong>{{column.title}}</strong></th>
+          {% endfor %}
+          <th class='data-status ordering'><strong> Status </strong></th>
+          <th class='data-date ordering'><strong> Date </strong></th>
+          {% if all_results %}
+            <th class='data-owner ordering'><strong> Owner </strong></th>
+          {% endif %}
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for item in items %}
+          <tr>
+            <td class="data-species">
+              {% if item.species %}{{ species_list[item.species].short_name }}{% endif %}
+            </td>
+
+            {% for column in columns %}
+              <td class="data-{{column.class}}">
+                {% if column.get('link_to_data', False) and item.status == TaskStatus.COMPLETE %}
+                  <a href="{{ url_for(tool_name + '.report', id=item.id) }}">
+                    {{ item[column.field] }}
+                  </a>
+                {% else %}
+                  {{ item[column.field] }}
+                {% endif %}
+              </td>
+            {% endfor %}
+
+            <td class="data-status">
+              {% if item.status %} {{ item.status }} {% else %} UNKNOWN {% endif %}
+            </td>
+            <td class="data-date" data-order="{{ item.created_on }}">
+              {% if item.created_on %} {{ item.created_on|date_format }} {% endif %}
+            </td>
+
+            {% if all_results %}
+              <td class="data-owner">
+                {% if item.username %} {{ item.username }} {% endif %}
+              </td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </tbody>
+
+    </table>
+
+  </div> <!-- /col-md-12 -->
+</div> <!-- /row -->
+
+
+{% endblock %}
+
+{% block script %}
+
+<script>
+      
+  $(document).ready(function(){
+
+    dTable = $('#result-table').DataTable( {
+      paging: true,
+      pageLength: 25,
+      autoWidth: true,
+      scrollX: true,
+      aaSorting: [ [{{2 + len(columns)}}, 'desc'] ],
+      aoColumns: [
+        { "sWidth": "10%" },
+      {%- for column in columns %}
+        { "sWidth": ({{column.width}} * 36) + '%' },
+      {%- endfor %}
+        { "sWidth": "10%" },
+        { "sWidth": "22%" },
+      {%- if all_results %}
+        { "sWidth": "22%" },
+      {%- endif %}
+      ],
+      dom:"tipr"
+    });
+
+    $('#filter').keyup(function(){  
+      dTable.search($(this).val()).draw();
+    });
+
+    $('#page-length').change(function(){  
+      dTable.page.len($(this).val()).draw();
+    });
+
+  });
+
+</script>
+
+
+{% endblock %}
