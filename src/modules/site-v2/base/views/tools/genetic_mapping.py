@@ -9,7 +9,7 @@ from base.forms import MappingForm
 from base.utils.auth  import get_jwt, jwt_required, admin_required, get_current_user, user_is_admin
 from base.utils.tools import lookup_report, upload_file, try_submit
 
-from caendr.services.nemascan_mapping import create_new_mapping, get_mapping, get_all_mappings, get_user_mappings
+from caendr.services.nemascan_mapping import create_new_mapping, get_mapping, get_mappings
 from caendr.services.cloud.storage import get_blob, generate_blob_url, get_blob_list, check_blob_exists
 from caendr.models.datastore import SPECIES_LIST, NemascanMapping
 from caendr.models.error import (
@@ -134,6 +134,11 @@ def submit():
 def list_results():
   show_all = request.path.endswith('all-results')
   user = get_current_user()
+
+  # Only show malformed Entities to admin users
+  filter_errs = not user_is_admin()
+
+  # Construct page
   return render_template('tools/report-list.html', **{
 
     # Page info
@@ -148,7 +153,7 @@ def list_results():
 
     # Table info
     'species_list': SPECIES_LIST,
-    'items': get_all_mappings() if show_all else get_user_mappings(user.name),
+    'items': get_mappings(None if show_all else user.name, filter_errs),
     'columns': results_columns(),
 
     'TaskStatus': TaskStatus,

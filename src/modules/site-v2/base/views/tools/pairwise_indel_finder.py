@@ -19,8 +19,7 @@ from caendr.services.indel_primer import (
     query_indels_and_mark_overlaps,
     create_new_indel_primer,
     get_indel_primer,
-    get_all_indel_primers,
-    get_user_indel_primers,
+    get_indel_primers,
     fetch_indel_primer_report,
     modify_indel_primer_result,
 )
@@ -142,6 +141,11 @@ def pairwise_indel_finder():
 def list_results():
   show_all = request.path.endswith('all-results')
   user = get_current_user()
+
+  # Only show malformed Entities to admin users
+  filter_errs = not user_is_admin()
+
+  # Construct page
   return render_template('tools/report-list.html', **{
 
     # Page info
@@ -158,7 +162,7 @@ def list_results():
 
     # Table info
     'species_list': SPECIES_LIST,
-    'items': get_all_indel_primers() if show_all else get_user_indel_primers(user.name),
+    'items': get_indel_primers(None if show_all else user.name, filter_errs),
     'columns': results_columns(),
 
     'TaskStatus': TaskStatus,

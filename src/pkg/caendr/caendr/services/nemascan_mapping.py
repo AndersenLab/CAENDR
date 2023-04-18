@@ -31,16 +31,28 @@ def get_mapping(id):
   return NemascanMapping.get_ds(id)
 
 
-def get_all_mappings():
-  logger.debug(f'Getting all mappings...')
-  mappings = NemascanMapping.query_ds()
-  return NemascanMapping.sort_by_created_date(mappings, reverse=True)
+def get_mappings(username=None, filter_errs=False):
+  '''
+    Get a list of Mappings, sorted by most recent.
 
+    Args:
+      username (str | None):
+        If provided, only return mappings owned by the given user.
+      filter_errs (bool):
+        If True, skips all entities that throw an error when initializing.
+        If False, populates as many fields of those entities as possible.
+  '''
 
-def get_user_mappings(username):
-  logger.debug(f'Getting all mappings for user: username:{username}')
-  filters = [('username', '=', username)]
-  mappings = NemascanMapping.query_ds(filters=filters)
+  # Filter by username if provided, and log event accordingly
+  if username:
+    logger.debug(f'Getting all mappings for user: username:{username}')
+    filters = [('username', '=', username)]
+  else:
+    logger.debug(f'Getting all mappings...')
+    filters = []
+
+  # Get list of mappings and filter by date
+  mappings = NemascanMapping.query_ds(safe=not filter_errs, ignore_errs=filter_errs, filters=filters)
   return NemascanMapping.sort_by_created_date(mappings, reverse=True)
 
 

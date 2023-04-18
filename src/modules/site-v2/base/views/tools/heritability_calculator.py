@@ -32,7 +32,7 @@ from caendr.models.error import (
 from caendr.models.datastore import SPECIES_LIST, HeritabilityReport
 from caendr.models.task import TaskStatus
 from caendr.api.strain import get_strains
-from caendr.services.heritability_report import get_all_heritability_results, get_user_heritability_results, create_new_heritability_report, get_heritability_report, fetch_heritability_report
+from caendr.services.heritability_report import create_new_heritability_report, get_heritability_report, get_heritability_reports, fetch_heritability_report
 from caendr.utils.data import unique_id, convert_data_table_to_tsv, get_object_hash
 from caendr.services.cloud.storage import get_blob, generate_blob_url
 from caendr.services.persistent_logger import PersistentLogger
@@ -102,6 +102,11 @@ def create():
 def list_results():
   show_all = request.path.endswith('all-results')
   user = get_current_user()
+
+  # Only show malformed Entities to admin users
+  filter_errs = not user_is_admin()
+
+  # Construct page
   return render_template('tools/report-list.html', **{
 
     # Page info
@@ -116,7 +121,7 @@ def list_results():
 
     # Table info
     'species_list': SPECIES_LIST,
-    'items': get_all_heritability_results() if show_all else get_user_heritability_results(user.name),
+    'items': get_heritability_reports(None if show_all else user.name, filter_errs),
     'columns': results_columns(),
 
     'TaskStatus': TaskStatus,

@@ -25,17 +25,27 @@ def get_heritability_report(id):
 
 
 
-def get_all_heritability_results():
-  logger.debug(f'Getting all heritability reports...')
-  results = HeritabilityReport.query_ds()
-  return HeritabilityReport.sort_by_created_date(results, reverse=True)
+def get_heritability_reports(username=None, filter_errs=False):
+  '''
+    Get a list of Heritability reports, sorted by most recent.
 
+    Args:
+      username (str | None):
+        If provided, only return reports owned by the given user.
+      filter_errs (bool):
+        If True, skips all entities that throw an error when initializing.
+        If False, populates as many fields of those entities as possible.
+  '''
+  # Filter by username if provided, and log event
+  if username:
+    logger.debug(f'Getting all heritability reports for user: username:{username}')
+    filters = [('username', '=', username)]
+  else:
+    logger.debug(f'Getting all heritability reports...')
+    filters = []
 
-
-def get_user_heritability_results(username):
-  logger.debug(f'Getting all heritability reports for user: username:{username}')
-  filters = [('username', '=', username)]
-  results = HeritabilityReport.query_ds(filters=filters)
+  # Get list of reports and filter by date
+  results = HeritabilityReport.query_ds(safe=not filter_errs, ignore_errs=filter_errs, filters=filters)
   return HeritabilityReport.sort_by_created_date(results, reverse=True)
 
 

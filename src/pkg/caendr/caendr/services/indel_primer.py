@@ -53,16 +53,27 @@ def get_indel_primer(id):
   return IndelPrimer.get_ds(id)
 
 
-def get_all_indel_primers():
-  logger.debug(f'Getting all indel primers...')
-  primers = IndelPrimer.query_ds()
-  return IndelPrimer.sort_by_created_date(primers, reverse=True)
+def get_indel_primers(username=None, filter_errs=False):
+  '''
+    Get a list of Indel Finder reports, sorted by most recent.
 
+    Args:
+      username (str | None):
+        If provided, only return reports owned by the given user.
+      filter_errs (bool):
+        If True, skips all entities that throw an error when initializing.
+        If False, populates as many fields of those entities as possible.
+  '''
+  # Filter by username if provided, and log event accordingly
+  if username:
+    logger.debug(f'Getting all indel primers for user: username:{username}')
+    filters = [('username', '=', username)]
+  else:
+    logger.debug(f'Getting all indel primers...')
+    filters = []
 
-def get_user_indel_primers(username):
-  logger.debug(f'Getting all indel primers for user: username:{username}')
-  filters = [('username', '=', username)]
-  primers = IndelPrimer.query_ds(filters=filters)
+  # Get list of reports and filter by date
+  primers = IndelPrimer.query_ds(safe=not filter_errs, ignore_errs=filter_errs, filters=filters)
   return IndelPrimer.sort_by_created_date(primers, reverse=True)
 
 
