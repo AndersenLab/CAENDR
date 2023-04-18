@@ -23,43 +23,53 @@ table.dataTable thead .sorting {
 
 
 {% block content %}
-{% from "_includes/macros.html" import render_dataTable_top_menu %}
+{% from "_includes/macros.html" import render_dataTable_top_menu, render_dataTable_actions %}
 
-{{ 
+
+{{
   render_dataTable_top_menu(
+    pages = False,
+    filter = False,
     actions = [
+      {
+        'label': return_text,
+        'url': url_for(tool_name + '.' + tool_name),
+        'icon': 'bi bi-plus-circle',
+      },
       {
         'label': 'My Results' if all_results else 'All Results',
         'url': url_for(tool_name + ('.my_results' if all_results else '.all_results')),
-        'classes': 'btn nu-alt-btn',
-        'style': 'float: right;',
-        'icon': 'glyphicon glyphicon-list',
+        'icon': 'bi bi-list-task',
         'admin_only': True,
       },
-      {'label':return_text, 'url':url_for(tool_name + '.' + tool_name), 'classes':'btn nu-alt-btn', 'style':'float:right; margin-right: .5rem;', 'icon': 'glyphicon glyphicon-search' }
     ]
-  ) 
+  )
 }}
 
-<div class="row">
-  <div class="col-md-12">
-    <table id='result-table' class='strain-table table-striped table-hover table-compact' style='width:100%;'>
-      <thead>
-        <tr class="header">
-          <th class='data-species ordering'><strong> Species </strong></th>
-          {% for column in columns %}
-            <th class='data-{{column.class}} sorting'><strong>{{column.title}}</strong></th>
-          {% endfor %}
-          <th class='data-status ordering'><strong> Status </strong></th>
-          <th class='data-date ordering'><strong> Date </strong></th>
-          {% if all_results %}
-            <th class='data-owner ordering'><strong> Owner </strong></th>
-          {% endif %}
-        </tr>
-      </thead>
+<!-- Report Table Container -->
+<div class="table-responsive my-5">
 
-      <tbody>
-        {% for item in items %}
+  <!-- Report Table -->
+  <table id='result-table' class="table table-hover table-bordered row-border">
+    <caption class="visually-hidden">A list of user reports and report status.</caption>
+
+    <thead class="table-secondary align-middle">
+      <tr class="header">
+        <th scope="col" class="data-species ordering">Species</th>
+        {% for column in columns %}
+          <th scope="col" class='data-{{column.class}} sorting'>{{column.title}}</th>
+        {% endfor %}
+        <th scope="col" class='data-status ordering'>Status</th>
+        <th scope="col" class='data-date ordering'>Date</th>
+        {% if all_results %}
+          <th scope="col" class='data-owner ordering'>Owner</th>
+        {% endif %}
+      </tr>
+    </thead>
+
+    <tbody class="table-group-divider align-middle">
+      {% for item in items %}
+        {% if item %}
           <tr>
             <td class="data-species">
               {% if item.species %}{{ species_list[item.species].short_name }}{% endif %}
@@ -90,19 +100,18 @@ table.dataTable thead .sorting {
               </td>
             {% endif %}
           </tr>
-        {% endfor %}
-      </tbody>
+        {% endif %}
+      {% endfor %}
+    </tbody>
 
-    </table>
+  </table>
+  <!-- /Report Table -->
 
-  </div> <!-- /col-md-12 -->
-</div> <!-- /row -->
-
-
+</div>
+<!-- /Report Table Container -->
 {% endblock %}
 
 {% block script %}
-
 <script>
       
   $(document).ready(function(){
@@ -112,6 +121,8 @@ table.dataTable thead .sorting {
       pageLength: 25,
       autoWidth: true,
       scrollX: true,
+      scrollY: '50vh',
+      scrollCollapse: true,
       aaSorting: [ [{{2 + len(columns)}}, 'desc'] ],
       aoColumns: [
         { "sWidth": "10%" },
@@ -124,7 +135,7 @@ table.dataTable thead .sorting {
         { "sWidth": "22%" },
       {%- endif %}
       ],
-      dom:"tipr"
+      dom:"lftipr"
     });
 
     $('#filter').keyup(function(){  
@@ -138,6 +149,4 @@ table.dataTable thead .sorting {
   });
 
 </script>
-
-
 {% endblock %}
