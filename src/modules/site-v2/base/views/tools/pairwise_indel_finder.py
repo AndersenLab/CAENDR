@@ -17,7 +17,6 @@ from caendr.utils.constants import CHROM_NUMERIC
 from caendr.services.indel_primer import (
     get_sv_strains,
     query_indels_and_mark_overlaps,
-    create_new_indel_primer,
     get_indel_primer,
     get_indel_primers,
     fetch_indel_primer_report,

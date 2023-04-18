@@ -20,9 +20,6 @@ from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_u
 from base.utils.tools import lookup_report, upload_file, try_submit
 
 from caendr.models.error import (
-    CachedDataError,
-    DataFormatError,
-    DuplicateDataError,
     EmptyReportDataError,
     EmptyReportResultsError,
     FileUploadError,
@@ -32,7 +29,7 @@ from caendr.models.error import (
 from caendr.models.datastore import SPECIES_LIST, HeritabilityReport
 from caendr.models.task import TaskStatus
 from caendr.api.strain import get_strains
-from caendr.services.heritability_report import create_new_heritability_report, get_heritability_report, get_heritability_reports, fetch_heritability_report
+from caendr.services.heritability_report import get_heritability_report, get_heritability_reports, fetch_heritability_report
 from caendr.utils.data import unique_id, convert_data_table_to_tsv, get_object_hash
 from caendr.services.cloud.storage import get_blob, generate_blob_url
 from caendr.services.persistent_logger import PersistentLogger

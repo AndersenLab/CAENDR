@@ -81,7 +81,6 @@ def try_submit(EntityClass, user, data, no_cache):
 
   # Try submitting the job
   try:
-    # report = create_report_func(user, data, no_cache=no_cache)
     report = submit_job(EntityClass, user, data, no_cache=no_cache)
     return {
       'cached':    False,
@@ -93,7 +92,11 @@ def try_submit(EntityClass, user, data, no_cache):
 
   # Duplicate job submission from this user
   except DuplicateDataError as ex:
-    # flash('Oops! It looks like you submitted that data already - redirecting to your list of Heritability Reports', 'danger')
+
+    # Log the event
+    logger.debug(f'User resubmitted duplicate {EntityClass.kind} data: id = {ex.args[0].id}, data hash = {ex.args[0].data_hash}, status = {ex.args[0]["status"]}')
+
+    # Return the matching entity
     return {
       'cached':    True,
       'same_user': True,
@@ -104,7 +107,11 @@ def try_submit(EntityClass, user, data, no_cache):
 
   # Duplicate job submission from another user
   except CachedDataError as ex:
-    # flash('Oops! It looks like that data has already been submitted - redirecting to the saved results', 'danger')
+
+    # Log the event
+    logger.debug(f'User submitted cached {EntityClass.kind} data: id = {ex.args[0].id}, data hash = {ex.args[0].data_hash}, status = {ex.args[0]["status"]}')
+
+    # Return the matching entity
     return {
       'cached':    True,
       'same_user': False,
@@ -117,7 +124,7 @@ def try_submit(EntityClass, user, data, no_cache):
   except DataFormatError as ex:
 
     # Log the error
-    logger.error(f'Data formatting error in {EntityClass.kind} file upload: {ex.msg} (Line: {ex.line})')
+    logger.error(f'Data formatting error in {EntityClass.kind} file upload: {ex.msg} (Line: {ex.line or "n/a"})')
 
     # Construct user-friendly error message with optional line number
     msg = f'There was an error with your file. { ex.msg }'

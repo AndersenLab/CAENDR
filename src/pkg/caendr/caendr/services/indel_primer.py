@@ -9,7 +9,7 @@ from cyvcf2 import VCF
 from caendr.services.logger import logger
 
 from caendr.models.datastore import IndelPrimer, SPECIES_LIST
-from caendr.models.error     import CachedDataError, DuplicateDataError, NotFoundError, EmptyReportDataError, EmptyReportResultsError, UnfinishedReportError
+from caendr.models.error     import NotFoundError, EmptyReportDataError, EmptyReportResultsError, UnfinishedReportError
 
 from caendr.services.cloud.storage import get_blob, generate_blob_url
 from caendr.services.tools import submit_job
@@ -147,19 +147,6 @@ def query_indels_and_mark_overlaps(species, strain_1, strain_2, chromosome, star
     results = [x for x in results if x['overlap'] is False]
     return sorted(results, key=lambda x: (x["START"], x["END"]))
   return []
-
-
-def create_new_indel_primer(user, data, no_cache=False):
-  try:
-    return submit_job(IndelPrimer, user, data, no_cache=no_cache)
-
-  except DuplicateDataError as ex:
-    print('Duplicate data found!')
-    return ex.args[0]
-
-  except CachedDataError as ex:
-    print('Cached results found!')
-    return ex.args[0]
 
 
 

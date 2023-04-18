@@ -9,13 +9,10 @@ from base.forms import MappingForm
 from base.utils.auth  import get_jwt, jwt_required, admin_required, get_current_user, user_is_admin
 from base.utils.tools import lookup_report, upload_file, try_submit
 
-from caendr.services.nemascan_mapping import create_new_mapping, get_mapping, get_mappings
+from caendr.services.nemascan_mapping import get_mapping, get_mappings
 from caendr.services.cloud.storage import get_blob, generate_blob_url, get_blob_list, check_blob_exists
 from caendr.models.datastore import SPECIES_LIST, NemascanMapping
 from caendr.models.error import (
-    CachedDataError,
-    DataFormatError,
-    DuplicateDataError,
     FileUploadError,
     ReportLookupError,
 )

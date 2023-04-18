@@ -4,7 +4,7 @@ import pandas as pd
 
 from caendr.services.logger import logger
 
-from caendr.models.error import CachedDataError, DuplicateDataError, NotFoundError, EmptyReportDataError, EmptyReportResultsError, UnfinishedReportError
+from caendr.models.error import NotFoundError, EmptyReportDataError, EmptyReportResultsError, UnfinishedReportError
 from caendr.models.datastore import HeritabilityReport
 
 from caendr.services.cloud.storage import get_blob
@@ -47,23 +47,6 @@ def get_heritability_reports(username=None, filter_errs=False):
   # Get list of reports and filter by date
   results = HeritabilityReport.query_ds(safe=not filter_errs, ignore_errs=filter_errs, filters=filters)
   return HeritabilityReport.sort_by_created_date(results, reverse=True)
-
-
-
-def create_new_heritability_report(user, data, no_cache=False):
-
-  try:
-    return submit_job(HeritabilityReport, user, data, no_cache=no_cache)
-
-  # If same job submitted by this user, redirect to that report
-  except DuplicateDataError as ex:
-    logger.debug('User resubmitted identical heritability report data')
-    raise ex
-
-  # If same job submitted by a different user, point new report to cached results
-  except CachedDataError as ex:
-    logger.debug('Heritability Report with identical Data Hash exists. Returning cached report.')
-    raise ex
 
 
 
