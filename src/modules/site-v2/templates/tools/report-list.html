@@ -50,7 +50,8 @@ table.dataTable thead .sorting {
 <div class="table-responsive my-5">
 
   <!-- Report Table -->
-  <table id='result-table' class="table table-hover table-bordered row-border">
+  {# <table id='result-table' class="table table-hover table-bordered row-border col-borderless"> #}
+  <table id='result-table' class="hover row-border">
     <caption class="visually-hidden">A list of user reports and report status.</caption>
 
     <thead class="table-secondary align-middle">
@@ -88,7 +89,7 @@ table.dataTable thead .sorting {
             {% endfor %}
 
             <td class="data-status">
-              {% if item.status %} {{ item.status }} {% else %} UNKNOWN {% endif %}
+              {% if item.status %} {{ item.status|capitalize }} {% else %} UNKNOWN {% endif %}
             </td>
             <td class="data-date" data-order="{{ item.created_on }}">
               {% if item.created_on %} {{ item.created_on|date_format }} {% endif %}
@@ -113,15 +114,22 @@ table.dataTable thead .sorting {
 
 {% block script %}
 <script>
+
+  const status_colors = {
+    "{{ TaskStatus.ERROR }}"     : "danger",
+    "{{ TaskStatus.RUNNING }}"   : "info",
+    "{{ TaskStatus.COMPLETE }}"  : "secondary",
+    // "{{ TaskStatus.SUBMITTED }}" : "",
+  }
       
   $(document).ready(function(){
 
     dTable = $('#result-table').DataTable( {
       paging: true,
       pageLength: 25,
-      autoWidth: true,
-      scrollX: true,
-      scrollY: '50vh',
+      // autoWidth: true,
+      // sScrollX: true,
+      sScrollY: '50vh',
       scrollCollapse: true,
       aaSorting: [ [{{2 + len(columns)}}, 'desc'] ],
       aoColumns: [
@@ -129,13 +137,19 @@ table.dataTable thead .sorting {
       {%- for column in columns %}
         { "sWidth": ({{column.width}} * 36) + '%' },
       {%- endfor %}
-        { "sWidth": "10%" },
+        {
+          "sWidth": "10%",
+          "createdCell": function (td, cellData, rowData, row, col) {
+            console.log(cellData)
+            $(td).addClass( 'bg-' + status_colors[cellData.toUpperCase()] + ' bg-opacity-25' )
+          }
+        },
         { "sWidth": "22%" },
       {%- if all_results %}
         { "sWidth": "22%" },
       {%- endif %}
       ],
-      dom:"lftipr"
+      dom: "lftipr",
     });
 
     $('#filter').keyup(function(){  
