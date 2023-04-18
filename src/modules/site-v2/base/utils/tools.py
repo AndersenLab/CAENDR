@@ -94,30 +94,30 @@ def try_submit(EntityClass, user, data, no_cache):
   except DuplicateDataError as ex:
 
     # Log the event
-    logger.debug(f'User resubmitted duplicate {EntityClass.kind} data: id = {ex.args[0].id}, data hash = {ex.args[0].data_hash}, status = {ex.args[0]["status"]}')
+    logger.debug(f'User resubmitted duplicate {EntityClass.kind} data: id = {ex.report.id}, data hash = {ex.report.data_hash}, status = {ex.report["status"]}')
 
     # Return the matching entity
     return {
       'cached':    True,
       'same_user': True,
-      'ready':     ex.args[0]['status'] == TaskStatus.COMPLETE,
-      'data_hash': ex.args[0].data_hash,
-      'id':        ex.args[0].id,
+      'ready':     ex.report['status'] == TaskStatus.COMPLETE,
+      'data_hash': ex.report.data_hash,
+      'id':        ex.report.id,
     }, 200
 
   # Duplicate job submission from another user
   except CachedDataError as ex:
 
     # Log the event
-    logger.debug(f'User submitted cached {EntityClass.kind} data: id = {ex.args[0].id}, data hash = {ex.args[0].data_hash}, status = {ex.args[0]["status"]}')
+    logger.debug(f'User submitted cached {EntityClass.kind} data: id = {ex.report.id}, data hash = {ex.report.data_hash}, status = {ex.report["status"]}')
 
     # Return the matching entity
     return {
       'cached':    True,
       'same_user': False,
-      'ready':     ex.args[0]['status'] == TaskStatus.COMPLETE,
-      'data_hash': ex.args[0].data_hash,
-      'id':        ex.args[0].id,
+      'ready':     ex.report['status'] == TaskStatus.COMPLETE,
+      'data_hash': ex.report.data_hash,
+      'id':        ex.report.id,
     }, 200
 
   # Formatting error in uploaded data file

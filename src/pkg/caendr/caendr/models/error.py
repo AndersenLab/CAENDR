@@ -56,15 +56,24 @@ class JSONParseError(InternalError):
   
 class UnprocessableEntity(InternalError):
   description = "Unprocessable Entity"
+
+
+
 class CachedDataError(InternalError):
   description = "This data has already been submitted by another user"
+  def __init__(self, report):
+    self.report = report
 
 class DuplicateDataError(InternalError):
   description = "This data has already been submitted by the same user"
+  def __init__(self, report):
+    self.report = report
 
 class DuplicateTaskError(InternalError):
   description = "This task has already been scheduled"
-  
+
+
+
 class DataFormatError(InternalError):
   description = "Error parsing data with expected format"
   def __init__(self, msg, line: int=None):
