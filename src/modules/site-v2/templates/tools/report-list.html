@@ -140,7 +140,6 @@ table.dataTable thead .sorting {
         {
           "sWidth": "10%",
           "createdCell": function (td, cellData, rowData, row, col) {
-            console.log(cellData)
             $(td).addClass( 'bg-' + status_colors[cellData.toUpperCase()] + ' bg-opacity-25' )
           }
         },
