@@ -280,4 +280,6 @@ def report(id):
 
     'data_url': generate_blob_url(hr.get_bucket_name(), hr.get_data_blob_path()),
     'logs_url': url_for('heritability_calculator.view_logs', id = id),
+
+    'TaskStatus': TaskStatus,
   })
