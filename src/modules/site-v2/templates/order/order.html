@@ -58,11 +58,23 @@
     #goBack {
         color: white
     }
+    #empty-cart {
+        background-color: #d9dbf8;
+        display: flex;
+        margin: 5rem
+    }
+    #empty-cart > i {
+        color: #0719BC;
+    }
+    #empty-cart > * {
+        margin: 1rem;
+
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="row">
+    {% if len(cartItems) %}
     <div id="tableContainer">
         <table class="table table-striped m-4" id="orderTable">
             <thead>
@@ -99,7 +111,12 @@
             <p> If you are ordering a ready-made set, the strains will be sent as frozen stocks on dry ice. Please select a shipping carrier from the drop-down menu and enter an account number. If you are ordering a customized set of strains, these strains will be sent on plates. </p>
         </div>
     </div>
-</div>
+    {% else %}
+    <div id="empty-cart">
+        <i class="bi bi-info-circle-fill"></i>
+        <p>Your cart is empty. <a href="{{url_for('request_strains.strains_catalog')}}">Continue browsing.</a></p>
+    </div>
+    {% endif %}
 
 {% from "_includes/macros.html" import render_field %}
 
@@ -109,11 +126,6 @@
         <div class="col">
             <h3>Shipping Information</h3>
             <div id="shippingInfo">
-                <!-- {# Renders list of strains being ordered #}
-                {% for item in cartItems %}
-                    {{ item }}
-                {% endfor %} -->
-
                 {{ form.csrf_token }}
                 
                 {{ render_field(form.name) }}
@@ -218,7 +230,7 @@ $(document).ready(function() {
         $('#paymentInfoModal').modal('hide')
     })
 
-    $('#name, #email, #phone, #address').keyup(function() {
+    $('#name, #email, #phone, #address, #shipping_account').keyup(function() {
         if(formFilled()) {
             $('#checkout').prop('disabled', false)
         }
@@ -261,7 +273,7 @@ $(document).ready(function() {
             data: JSON.stringify(data),
             contentType: "application/json",
             dataType: "json",
-            success: function(response) {
+            success: function(response) {               
                 location.reload();
             },
             error: function(error){
