@@ -4,7 +4,7 @@ import requests
 
 from datetime import datetime
 from caendr.services.logger import logger
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.exceptions import HTTPException
@@ -14,6 +14,10 @@ import pytz
 
 from caendr.services.cloud.postgresql import health_database_status
 from base.utils.markdown import render_markdown, render_ext_markdown
+from base.utils.auth import jwt_required, get_current_user
+from caendr.models.datastore.cart import Cart
+
+
 
 # --------- #
 #  Routing  #
@@ -273,6 +277,25 @@ def configure_jinja(app):
     text = text.replace('C. briggsae', '<i>C. briggsae</i>')
     text = text.replace('C. elegans', '<i>C. elegans</i>')
     return text
+  
+  @app.context_processor
+  @jwt_required(optional=True)
+  def cart_empty():
+    user = get_current_user()
+    cartID = request.cookies.get('cartID')
+    if user:
+      users_cart = Cart.lookup_by_user(user['email'])
+    elif cartID:
+      users_cart = Cart(cartID)
+    else:
+      return dict(cart_empty = True)
+    if len(users_cart['items']):
+      return dict(cart_empty = False)
+    else:
+      return dict(cart_empty = True)
+
+
+
 
 def register_errorhandlers(app):
   def render_error(e="generic"):

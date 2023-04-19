@@ -109,13 +109,16 @@
             </div>
           </div>
           <!-- /User Menu -->
+
+          {% if not cart_empty %}
           <!-- Cart icon -->
-          <div class="nav-item mx-4 invisible" id="cartIcon">
+          <div class="nav-item mx-4 pt-0" id="cartIcon">
             <a href="{{ url_for('request_strains.order_page_index') }}" class="rounded-circle userMenu">
               <i class="bi bi-cart-fill lh-1"></i>
             </a>
           </div>
           <!-- /Cart icon -->
+          {% endif %}
         </div>
       </div>
   </nav>

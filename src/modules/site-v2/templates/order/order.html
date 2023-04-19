@@ -136,7 +136,7 @@
                     {{ render_field(form.comments) }}
                 </div>
             </div>
-            <button value="Checkout" class="btn btn-secondary" id="checkout" disabled aria-disabled="true">
+            <button value="Checkout" type='submit' name="order_form" class="btn btn-secondary" id="checkout" disabled aria-disabled="true">
                 <i class="bi bi-cart-fill"></i>
                 Order Now
             </button>
@@ -205,7 +205,7 @@ $(document).ready(function() {
 
         var checkout_btn =  $(this);
         $.pause(function() {
-            checkout_btn.removeClass('disabled').text("Order")
+            checkout_btn.removeClass('disabled').text("Order Now")
         }, 5)
 
     })
@@ -250,12 +250,11 @@ $(document).ready(function() {
             }
         }
     });
-     
 
     $('#deleteItem').click(function(e){
         e.preventDefault()
-        const data = $(this).attr('info')
-        console.log(data)
+        const data = {csrf_token: $('#csrf_token').val(), itemToRemove: $(this).attr('info')}
+
         $.ajax({
             type: "PUT",
             url: "{{ url_for('request_strains.order_page_remove') }}",
@@ -263,7 +262,6 @@ $(document).ready(function() {
             contentType: "application/json",
             dataType: "json",
             success: function(response) {
-                console.log('item is removed');
                 location.reload();
             },
             error: function(error){

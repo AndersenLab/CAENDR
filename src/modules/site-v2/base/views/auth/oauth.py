@@ -3,13 +3,17 @@ from datetime import datetime, timezone
 from flask import (redirect,
                    url_for,
                    session,
-                   flash)
+                   flash,
+                   request,
+                   make_response,
+                   jsonify,)
 from flask_dance.contrib.google import make_google_blueprint, google as google_fd
 from flask_dance.consumer import oauth_authorized
 
 from base.utils.auth import assign_access_refresh_tokens
 
 from caendr.models.datastore import User
+from caendr.models.datastore.cart import Cart
 from caendr.utils.data import unique_id
 from caendr.services.cloud.secret import get_secret
 
@@ -56,6 +60,29 @@ def authorized(google_bp, token):
   assert user_info.ok
   user_info = {'google': user_info.json()}
   user = create_or_update_google_user(user_info)
-
+  resp = make_response(assign_access_refresh_tokens(user.name, user.roles, session.get("login_referrer")))
+  new_resp = transfer_cart(resp, user)
   flash("Successfully logged in!", 'success')
-  return assign_access_refresh_tokens(user.name, user.roles, session.get("login_referrer"))
+  return new_resp
+
+
+def transfer_cart(resp, user):
+  # checks if a user has a local cart
+  cartID = request.cookies.get('cartID')
+  if cartID:
+    local_cart = Cart(cartID)
+    if len(local_cart['items']):
+
+      # checks if a user has a cart in their account
+      users_cart = Cart.lookup_by_user(user['email'])
+      if users_cart:
+        users_cart.delete_cart()
+        users_cart.save()
+      
+      # assigns local cart to the user
+      local_cart.transfer_to_user(user['email'])
+      local_cart.save()
+    
+    # delete cartID from cookies
+    resp.delete_cookie('cartID')
+    return resp

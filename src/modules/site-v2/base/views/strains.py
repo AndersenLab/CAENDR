@@ -9,7 +9,8 @@ from flask import (render_template,
                    flash,
                    Markup,
                    stream_with_context,
-                   jsonify)
+                   jsonify,
+                   make_response)
 
 from config import config
 from extensions import cache
@@ -157,68 +158,33 @@ def strains_catalog():
 @strains_bp.route('/checkout', methods=['POST'])
 @jwt_required(optional=True)
 def order_page_post():
-  """ This view handles adding items to the cart """
-  user = get_current_user()
-  added_items = request.get_json()['strains']
   form = OrderForm()
-
-  if (len(added_items) == 0):
-    flash("You must select strains/sets from the catalog", 'error')
-    return redirect(url_for("request_strains.strains_catalog"))
-  
+  user = get_current_user()
+  cartID = request.cookies.get('cartID')
   if user:
     users_cart = Cart.lookup_by_user(user['email'])
+  elif cartID:
+    users_cart = Cart(cartID)
   else:
     users_cart = Cart(**{'items': []})
-    print(users_cart.name)
-  for item in added_items:
-    users_cart.add_item(item)
-  users_cart.save()
-  
-  return jsonify({'status': 'OK'}), 200
 
-@strains_bp.route('/checkout', methods=['PUT'])
-@jwt_required(optional=True)
-def order_page_remove():
-  """ This view handles removing items from the cart """
-  user = get_current_user()
-  item_to_remove = request.get_json()
-  users_cart = Cart.lookup_by_user(user['email'])
-  users_cart.remove_item(item_to_remove)
-  users_cart.save()
-
-  return jsonify({'status': 'OK'}), 200
-
-@strains_bp.route('/checkout',  methods=['GET', 'POST'])
-@jwt_required(optional=True)
-def order_page_index():
-  """ This view handles the order page """
-  form = OrderForm()
-
-  if request.method == 'GET':
-    user = get_current_user()
-
-    users_cart = Cart.lookup_by_user(user['email'])
+  if 'order_form' in request.form:
+    """ submitting the order """
     cartItems = users_cart['items']
+    if form.shipping_service.data == 'Flat Rate Shipping':
+      cartItems.append({'name': 'Flat Rate Shipping'})
     for item in cartItems:
       item_price = users_cart.get_price(item)
       item['price'] = item_price
     totalPrice = sum(item['price'] for item in cartItems)
-
-    if user and hasattr(user, 'email') and not form.email.data:
-      form.email.data = user.email
-
-    title = "Order Summary"
-    return render_template('order/order.html', title=title, cartItems=cartItems, totalPrice=totalPrice, form=form)
-  
-  elif request.method == 'POST' and form.validate_on_submit():
+    
     # When the user confirms their order it is processed below.
-    order_obj = {'total': form.total,
+    order_obj = {'total': totalPrice,
                   'date': datetime.now(timezone.utc).date().isoformat(),
                   'is_donation': False}
     order_obj.update(form.data)
     order_obj['phone'] = order_obj['phone'].strip("+")
-    order_obj['items'] = '\n'.join(sorted([u"{}:{}".format(k, v) for k, v in form.item_price()]))
+    order_obj['items'] = '\n'.join(sorted([f"{item['name']}:{item['price']}" for item in cartItems]))
     order_obj['invoice_hash'] = str(uuid.uuid4()).split("-")[0]
     order_obj["order_confirmation_link"] = url_for('request_strains.order_confirmation', invoice_hash=order_obj['invoice_hash'], _external=True)
     send_email({"from": "no-reply@elegansvariation.org",
@@ -229,11 +195,84 @@ def order_page_index():
 
     # Save to google sheet
     add_to_order_ws(order_obj)
-    flash("Thank you for submitting your order! Please follow the instructions below to complete your order.", 'success')
-    return redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302)
-  else:
-    return 'Invalid request'
 
+    # Mark the cart is deleted
+    users_cart.delete_cart()
+    users_cart.save()
+
+    # flash("Thank you for submitting your order! Please follow the instructions below to complete your order.", 'success')
+    flash("Thank you for submitting your order! Please follow the instructions below to complete your order.", 'success')
+
+    # delete cartID from cookies
+    if cartID:
+      resp = make_response(redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302))
+      resp.delete_cookie('cartID')
+      return resp
+    
+    return redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302)
+  
+  else:
+    """ adding items to the cart """
+    added_items = request.get_json()['strains']
+    if (len(added_items) == 0):
+      flash("You must select strains/sets from the catalog", 'error')
+      return redirect(url_for("request_strains.strains_catalog"))
+ 
+    for item in added_items:
+      users_cart.add_item(item)
+    users_cart.save()
+
+    resp = make_response(jsonify({'status': 'OK'}))
+    if not user:
+      resp.set_cookie('cartID', users_cart.name)
+    
+    return resp
+
+@strains_bp.route('/checkout', methods=['PUT'])
+@jwt_required(optional=True)
+def order_page_remove():
+  """ This view handles removing items from the cart """
+  form = OrderForm()
+  user = get_current_user()
+  item_to_remove = request.get_json()['itemToRemove']
+  
+  # get cart
+  if user:
+    users_cart = Cart.lookup_by_user(user['email'])
+  else:
+    cartID = request.cookies.get('cartID')
+    users_cart = Cart(cartID)
+
+  # remove item from the cart
+  users_cart.remove_item(item_to_remove)
+  users_cart.save()
+
+  return jsonify({'status': 'OK'}), 200
+
+@strains_bp.route('/checkout')
+@jwt_required(optional=True)
+def order_page_index():
+  """ This view handles the checkout page """
+  form = OrderForm()
+  user = get_current_user()
+  if user:
+    users_cart = Cart.lookup_by_user(user['email'])  
+  else:
+    cartID = request.cookies.get('cartID')
+    users_cart = Cart(cartID)
+
+  cartItems = users_cart['items'] 
+  for item in cartItems:
+    item_price = users_cart.get_price(item)
+    item['price'] = item_price
+  totalPrice = sum(item['price'] for item in cartItems)
+
+  if user and hasattr(user, 'email') and not form.email.data:
+    form.email.data = user.email
+  
+  title = "Order Summary"
+  return render_template('order/order.html', title=title, cartItems=cartItems, totalPrice=totalPrice, form=form)
+  
 
 @strains_bp.route("/checkout/confirmation/<invoice_hash>", methods=['GET', 'POST'])
 def order_confirmation(invoice_hash):
