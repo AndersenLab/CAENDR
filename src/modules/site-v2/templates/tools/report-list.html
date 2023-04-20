@@ -77,7 +77,7 @@ table.dataTable thead .sorting {
             </td>
 
             {% for column in columns %}
-              <td class="data-{{column.class}}">
+              <td class="data-{{column.class}}" {% if column.get('data_order') %}data-order="{{column.data_order(item)}}"{% endif %}>
                 {% if column.get('link_to_data', False) and item.status == TaskStatus.COMPLETE %}
                   <a href="{{ url_for(tool_name + '.report', id=item.id) }}">
                     {{ item[column.field] }}

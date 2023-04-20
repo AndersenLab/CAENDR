@@ -42,6 +42,7 @@ def results_columns():
       'field': 'site',
       'width': 0.5,
       'link_to_data': True,
+      'data_order': lambda e: e['site'],
     },
     {
       'title': 'Strain 1',
