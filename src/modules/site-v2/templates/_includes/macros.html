@@ -140,3 +140,8 @@
 
 </div> {# /row #}
 {% endmacro %}
+
+
+{% macro render_dataTable_result_list_header(title, data_class=none, extra_classes='') %}
+<th scope="col" class='data-{% if data_class %}{{data_class}}{%else%}{{title|lower}}{%endif%} {{extra_classes}} bg-secondary bg-opacity-25'>{{title}}</th>
+{% endmacro%}

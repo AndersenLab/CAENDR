@@ -23,7 +23,7 @@ table.dataTable thead .sorting {
 
 
 {% block content %}
-{% from "_includes/macros.html" import render_dataTable_top_menu, render_dataTable_actions %}
+{% from "_includes/macros.html" import render_dataTable_top_menu, render_dataTable_actions, render_dataTable_result_list_header %}
 
 
 {{
@@ -56,14 +56,14 @@ table.dataTable thead .sorting {
 
     <thead class="table-secondary align-middle">
       <tr class="header">
-        <th scope="col" class="data-species ordering">Species</th>
+        {{ render_dataTable_result_list_header('Species', extra_classes='ordering') }}
         {% for column in columns %}
-          <th scope="col" class='data-{{column.class}} sorting'>{{column.title}}</th>
+        {{ render_dataTable_result_list_header(column.title, column.class, extra_classes='sorting') }}
         {% endfor %}
-        <th scope="col" class='data-status ordering'>Status</th>
-        <th scope="col" class='data-date ordering'>Date</th>
+        {{ render_dataTable_result_list_header('Status', extra_classes='ordering') }}
+        {{ render_dataTable_result_list_header('Date',   extra_classes='ordering') }}
         {% if all_results %}
-          <th scope="col" class='data-owner ordering'>Owner</th>
+        {{ render_dataTable_result_list_header('Owner',  extra_classes='ordering') }}
         {% endif %}
       </tr>
     </thead>
