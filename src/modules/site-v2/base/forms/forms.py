@@ -229,26 +229,6 @@ class OrderForm(Form):
     elif form.shipping_service.data == "Flat Rate Shipping" and field.data:
       raise ValidationError("No shipping account number is needed if you are using flat-rate shipping.")
 
-  # def item_price(self):
-  #   """ Fetch item and its price """
-  #   for item in self.items:
-  #     if item.data == "set_divergent":
-  #       yield item.data, PRICES.DIVERGENT_SET
-  #     elif item.data.startswith("set"):
-  #       yield item.data, PRICES.STRAIN_SET
-  #     else:
-  #       yield item.data, PRICES.STRAIN
-  #   if self.shipping_service.data == "Flat Rate Shipping":
-  #     yield "Flat Rate Shipping", PRICES.SHIPPING
-
-  # @property
-  # def total(self):
-  #   """ Calculates the total price of the order """
-  #   total_price = 0
-  #   for item, price in self.item_price():
-  #     total_price += price
-  #   return total_price
-
 
 class TraitData(HiddenField):
   """ A subclass of HiddenField is used to do the initial processing of the data

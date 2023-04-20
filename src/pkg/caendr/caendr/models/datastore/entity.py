@@ -355,6 +355,45 @@ class Entity(object):
       raise NonUniqueEntity( cls.kind, key, val, matches )
 
 
+  @classmethod
+  def query_ds_not_deleted(cls, key, val, required=False):
+
+    # Run query with given key and val
+
+    matches = cls.query_ds(filters=[(key, '=', val)])
+
+    # TODO: Filter out any elements in "matches" that are deleted
+
+    matches = [
+
+      el for el in matches if not el['is_deleted']
+
+    ]
+
+    # If no matching entities found, return None
+
+    if len(matches) == 0:
+
+      if required:
+
+        raise NotFoundError(f'Could not find {cls.kind} entity with "{key}" = "{val}".')
+
+      else:
+
+        return None
+
+    # If exactly one entity found, return it
+
+    elif len(matches) == 1:
+
+      return matches[0]
+
+    # If more than one entity found, raise an error
+
+    else:
+
+      raise NonUniqueEntity( cls.kind, key, val, matches )
+
 
   @classmethod
   def get_ds(cls, name):
