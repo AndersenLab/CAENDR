@@ -223,8 +223,8 @@ def submit():
 
 
 # TODO: Move internals of this to a service function
-@pairwise_indel_finder_bp.route("/result/<id>")
-@pairwise_indel_finder_bp.route("/result/<id>/tsv/<filename>")
+@pairwise_indel_finder_bp.route("/report/<id>")
+@pairwise_indel_finder_bp.route("/report/<id>/tsv/<filename>")
 @jwt_required()
 def report(id, filename = None):
 

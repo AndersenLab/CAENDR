@@ -178,7 +178,7 @@ def submit():
       pass
 
 
-@heritability_calculator_bp.route("/h2/<id>/logs")
+@heritability_calculator_bp.route("/report/<id>/logs")
 @jwt_required()
 def view_logs(id):
   hr = get_heritability_report(id)    
@@ -210,7 +210,7 @@ def view_logs(id):
   return render_template("tools/heritability_calculator/logs.html", **locals())
 
 
-@heritability_calculator_bp.route("/h2/<id>")
+@heritability_calculator_bp.route("/report/<id>", methods=['GET'])
 @jwt_required()
 def report(id):
 

@@ -72,7 +72,7 @@ def genetic_mapping():
   })
 
 
-@genetic_mapping_bp.route('/upload', methods=['POST'])
+@genetic_mapping_bp.route('/submit', methods=['POST'])
 @jwt_required()
 def submit():
   form = MappingForm(request.form)
