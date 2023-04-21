@@ -27,8 +27,8 @@ table.dataTable thead .sorting {
 {{ 
   render_dataTable_top_menu(
     actions = [
-      {'label':'My Results', 'url':url_for('pairwise_indel_finder.user_results'), 'classes':'btn nu-alt-btn', 'style':'float:right;', 'icon': 'glyphicon glyphicon-list' },
-      {'label':'Find Indels', 'url':url_for('pairwise_indel_finder.pairwise_indel_finder'), 'classes':'btn nu-alt-btn', 'style':'float:right; margin-right: .5rem;', 'icon': 'glyphicon glyphicon-search' }
+      {'label':'My Primer Reports', 'url':url_for('pairwise_indel_finder.user_results'), 'icon': 'bi bi-list-task' },
+      {'label':'New Primer Search', 'url':url_for('pairwise_indel_finder.pairwise_indel_finder'), 'icon': 'bi bi-plus-circle' }
     ]
   ) 
 }}

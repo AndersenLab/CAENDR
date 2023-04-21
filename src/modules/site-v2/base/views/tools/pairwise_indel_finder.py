@@ -132,7 +132,7 @@ def user_results():
   return render_template('tools/pairwise_indel_finder/list-user.html', **{
 
     # Page info
-    'title': 'My Indel Primer Results',
+    'title': 'My Primer Reports',
     'alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools'), },
 
     # User info
