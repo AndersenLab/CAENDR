@@ -40,7 +40,6 @@ def get_tracks():
 
   # If no track found, log an error message and continue raising with a more descriptive message
   except NotFoundError as ex:
-    ex.description = 'Could not find Divergent Regions track.'
     logger.error(ex.description)
     raise ex
 

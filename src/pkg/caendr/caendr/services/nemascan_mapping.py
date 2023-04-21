@@ -67,7 +67,7 @@ def update_nemascan_mapping_status(id: str, status: str=None, operation_name: st
 
   m = NemascanMapping.get_ds(id)
   if m is None:
-    raise NotFoundError(f'No Nemascan Mapping with ID "{id}" was found.')
+    raise NotFoundError(NemascanMapping, {'id': id})
 
   if status:
     m.set_properties(status=status)

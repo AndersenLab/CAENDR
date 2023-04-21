@@ -52,7 +52,7 @@ def data_releases(release_version=None):
         RELEASE = r
         break
     if not RELEASE:
-      raise NotFoundError(f'Release Version: {release_version} Not Found')
+      raise NotFoundError(DatasetRelease, {'version': release_version})
   else:
     RELEASE = RELEASES[0]
   
@@ -121,7 +121,7 @@ def alignment_data(release_version=''):
         RELEASE = r
         break
     if not RELEASE:
-      raise NotFoundError(f'Release Version: {release_version} Not Found')
+      raise NotFoundError(DatasetRelease, {'version': release_version})
   else:
     RELEASE = RELEASES[0]
 
@@ -161,7 +161,7 @@ def strain_issues(release_version=None):
         RELEASE = r
         break
     if not RELEASE:
-      raise NotFoundError(f'Release Version: {release_version} Not Found')
+      raise NotFoundError(DatasetRelease, {'version': release_version})
   else:
     RELEASE = RELEASES[0]
 
