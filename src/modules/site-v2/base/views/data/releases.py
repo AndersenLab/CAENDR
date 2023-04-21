@@ -22,7 +22,7 @@ from caendr.api.isotype import get_isotypes
 from caendr.models.datastore import DatasetRelease
 from caendr.models.sql import Strain, StrainAnnotatedVariant
 from caendr.services.cloud.storage import generate_blob_url
-from caendr.services.dataset_release import get_all_dataset_releases, get_release_path, get_browser_tracks_path, get_release_bucket
+from caendr.services.dataset_release import get_all_dataset_releases, get_release_path, get_browser_tracks_path, get_release_bucket, find_dataset_release
 from caendr.models.error import NotFoundError
 
 
@@ -42,25 +42,15 @@ def data_releases(release_version=None):
   """ Default data page - lists available releases. """
   title = "Data Releases"
   alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.data')}
+
   RELEASES = get_all_dataset_releases(order='-version')
-  
-  # Get the requested release and throw an error if it doesn't exist
-  RELEASE = None
-  if release_version:
-    for r in RELEASES:
-      if r.version == release_version:
-        RELEASE = r
-        break
-    if not RELEASE:
-      raise NotFoundError(DatasetRelease, {'version': release_version})
-  else:
-    RELEASE = RELEASES[0]
-  
+  RELEASE = find_dataset_release(RELEASES, release_version)
+
   if RELEASE.report_type == 'V2':
     return data_v02(RELEASE, RELEASES)
   elif RELEASE.report_type == 'V1':
     return data_v01(RELEASE, RELEASES)
-  
+
   return render_template('data/releases.html', **locals())
 
 
@@ -112,18 +102,7 @@ def data_v01(RELEASE, RELEASES):
 @cache.memoize(60*60)
 def alignment_data(release_version=''):
   RELEASES = get_all_dataset_releases(order='-version')
-  
-  # Get the requested release and throw an error if it doesn't exist
-  RELEASE = None
-  if release_version:
-    for r in RELEASES:
-      if r.version == release_version:
-        RELEASE = r
-        break
-    if not RELEASE:
-      raise NotFoundError(DatasetRelease, {'version': release_version})
-  else:
-    RELEASE = RELEASES[0]
+  RELEASE = find_dataset_release(RELEASES, release_version)
 
   # Pre-2020 releases don't have data organized the same way
   if RELEASE.report_type == 'V1':
@@ -152,18 +131,7 @@ def strain_issues(release_version=None):
       Strain Issues page
   """
   RELEASES = get_all_dataset_releases(order='-version')
-  
-  # Get the requested release and throw an error if it doesn't exist
-  RELEASE = None
-  if release_version:
-    for r in RELEASES:
-      if r.version == release_version:
-        RELEASE = r
-        break
-    if not RELEASE:
-      raise NotFoundError(DatasetRelease, {'version': release_version})
-  else:
-    RELEASE = RELEASES[0]
+  RELEASE = find_dataset_release(RELEASES, release_version)
 
   # Pre-2020 releases don't have data organized the same way
   if RELEASE.report_type == 'V1':

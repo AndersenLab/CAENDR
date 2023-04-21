@@ -3,7 +3,7 @@ from caendr.services.logger import logger
 from caendr.services.cloud.datastore import query_ds_entities, get_ds_entity, delete_ds_entity_by_ref
 from caendr.models.datastore import DatasetRelease
 from caendr.models.sql import Strain
-from caendr.models.error import UnprocessableEntity, BadRequestError
+from caendr.models.error import UnprocessableEntity, BadRequestError, NotFoundError
 
 
 def get_release_bucket():
@@ -55,11 +55,33 @@ def get_dataset_release(version: str):
   return release
 
 
+def find_dataset_release(release_list, version=None):
+  '''
+    Choose the dataset release with a given version from a list of releases.
+    If no version provided, returns the top element.
+    If more than one matching version, returns the first one found.
+  '''
+
+  # If nothing provided in list, raise an error
+  if not len(release_list):
+    raise NotFoundError(DatasetRelease, {'version': version})
+
+  # If no version specified, return the top element by default
+  if not version:
+    return release_list[0]
+
+  # Look for the requested release
+  for r in release_list:
+    if r.version == version:
+      return r
+
+  # If release couldn't be found, raise an error
+  raise NotFoundError(DatasetRelease, {'version': version})
+
+
 def get_latest_dataset_release_version():
   releases = get_all_dataset_releases(order='-version')
-  if len(releases) > 0:
-    latest_release = releases[0]
-    return latest_release
+  return find_dataset_release(releases)
 
 
 def create_new_dataset_release(version: str, wormbase_version: str, report_type: str, disabled: bool=False, hidden: bool=False):
