@@ -44,7 +44,7 @@ def results_columns():
   ]
 
 
-@genetic_mapping_bp.route('/genetic-mapping/', methods=['GET'])
+@genetic_mapping_bp.route('', methods=['GET'])
 @jwt_required()
 def genetic_mapping():
   """
@@ -72,7 +72,7 @@ def genetic_mapping():
   })
 
 
-@genetic_mapping_bp.route('/genetic-mapping/upload', methods = ['POST'])
+@genetic_mapping_bp.route('/upload', methods=['POST'])
 @jwt_required()
 def submit():
   form = MappingForm(request.form)
@@ -125,8 +125,8 @@ def submit():
       pass
 
 
-@genetic_mapping_bp.route('/genetic-mapping/all-results', methods=['GET'], endpoint='all_results')
-@genetic_mapping_bp.route('/genetic-mapping/my-results',  methods=['GET'], endpoint='my_results')
+@genetic_mapping_bp.route('/all-results', methods=['GET'], endpoint='all_results')
+@genetic_mapping_bp.route('/my-results',  methods=['GET'], endpoint='my_results')
 @jwt_required()
 def list_results():
   show_all = request.path.endswith('all-results')
@@ -157,7 +157,7 @@ def list_results():
   })
 
 
-@genetic_mapping_bp.route('/genetic-mapping/report/<id>', methods=['GET'])
+@genetic_mapping_bp.route('/report/<id>', methods=['GET'])
 @jwt_required()
 def report(id):
 
@@ -207,7 +207,7 @@ def report(id):
   })
 
 
-@genetic_mapping_bp.route('/genetic-mapping/report/<id>/fullscreen', methods=['GET'])
+@genetic_mapping_bp.route('/report/<id>/fullscreen', methods=['GET'])
 @jwt_required()
 def report_fullscreen(id):
 
@@ -232,7 +232,7 @@ def report_fullscreen(id):
   return report_contents
 
 
-@genetic_mapping_bp.route('/genetic-mapping/report/<id>/status', methods=['GET'])
+@genetic_mapping_bp.route('/report/<id>/status', methods=['GET'])
 @jwt_required()
 def report_status(id):
   mapping = get_mapping(id)
@@ -253,7 +253,7 @@ def report_status(id):
   return jsonify(payload)
 
 
-@genetic_mapping_bp.route('/genetic-mapping/report/<id>/results/', methods=['GET'])
+@genetic_mapping_bp.route('/report/<id>/results', methods=['GET'])
 @jwt_required()
 def results(id):
 

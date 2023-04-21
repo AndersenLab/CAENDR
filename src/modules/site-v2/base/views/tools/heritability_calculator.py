@@ -64,7 +64,7 @@ def results_columns():
   ]
 
 
-@heritability_calculator_bp.route('/heritability-calculator')
+@heritability_calculator_bp.route('')
 def heritability_calculator():
   title = "Heritability Calculator"
   alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
@@ -75,7 +75,7 @@ def heritability_calculator():
   return render_template('tools/heritability_calculator/heritability-calculator.html', **locals())
 
 
-@heritability_calculator_bp.route('/heritability-calculator/create', methods=["GET"])
+@heritability_calculator_bp.route('/create', methods=["GET"])
 @jwt_required()
 def create():
   """ This endpoint is used to create a heritability job. """
@@ -93,8 +93,8 @@ def create():
   return render_template('tools/heritability_calculator/submit.html', **locals())
 
 
-@heritability_calculator_bp.route('/heritability-calculator/all-results', methods=['GET'], endpoint='all_results')
-@heritability_calculator_bp.route('/heritability-calculator/my-results',  methods=['GET'], endpoint='my_results')
+@heritability_calculator_bp.route('/all-results', methods=['GET'], endpoint='all_results')
+@heritability_calculator_bp.route('/my-results',  methods=['GET'], endpoint='my_results')
 @jwt_required()
 def list_results():
   show_all = request.path.endswith('all-results')
@@ -125,7 +125,7 @@ def list_results():
   })
 
 
-@heritability_calculator_bp.route('/heritability-calculator/submit', methods=["POST"])
+@heritability_calculator_bp.route('/submit', methods=["POST"])
 @jwt_required()
 def submit():
   form = HeritabilityForm(request.form)
@@ -178,7 +178,7 @@ def submit():
       pass
 
 
-@heritability_calculator_bp.route("/heritability-calculator/h2/<id>/logs")
+@heritability_calculator_bp.route("/h2/<id>/logs")
 @jwt_required()
 def view_logs(id):
   hr = get_heritability_report(id)    
@@ -210,7 +210,7 @@ def view_logs(id):
   return render_template("tools/heritability_calculator/logs.html", **locals())
 
 
-@heritability_calculator_bp.route("/heritability-calculator/h2/<id>")
+@heritability_calculator_bp.route("/h2/<id>")
 @jwt_required()
 def report(id):
 

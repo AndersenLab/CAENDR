@@ -59,8 +59,9 @@ def results_columns():
   ]
 
 
+## Data Endpoints
 
-@pairwise_indel_finder_bp.route('/pairwise-indel-finder/tracks', methods=['GET'])
+@pairwise_indel_finder_bp.route('/tracks', methods=['GET'])
 @jwt_required()
 def get_tracks():
 
@@ -84,7 +85,7 @@ def get_tracks():
   return jsonify(divergent_track['params'])
 
 
-@pairwise_indel_finder_bp.route('/pairwise-indel-finder/strains', methods=['GET'])
+@pairwise_indel_finder_bp.route('/strains', methods=['GET'])
 @jwt_required()
 def get_strains():
   return jsonify({
@@ -92,8 +93,9 @@ def get_strains():
   })
 
 
+## Page Endpoints
 
-@pairwise_indel_finder_bp.route('/pairwise-indel-finder', methods=['GET'])
+@pairwise_indel_finder_bp.route('', methods=['GET'])
 @jwt_required()
 def pairwise_indel_finder():
 
@@ -135,8 +137,8 @@ def pairwise_indel_finder():
 
 
 
-@pairwise_indel_finder_bp.route('/pairwise-indel-finder/all-results', methods=['GET'], endpoint='all_results')
-@pairwise_indel_finder_bp.route('/pairwise-indel-finder/my-results',  methods=['GET'], endpoint='my_results')
+@pairwise_indel_finder_bp.route('/all-results', methods=['GET'], endpoint='all_results')
+@pairwise_indel_finder_bp.route('/my-results',  methods=['GET'], endpoint='my_results')
 @jwt_required()
 def list_results():
   show_all = request.path.endswith('all-results')
@@ -170,7 +172,7 @@ def list_results():
 
 
 
-@pairwise_indel_finder_bp.route("/pairwise-indel-finder/query-indels", methods=["POST"])
+@pairwise_indel_finder_bp.route("/query-indels", methods=["POST"])
 @jwt_required()
 def query():
 
@@ -195,7 +197,7 @@ def query():
 
 
 
-@pairwise_indel_finder_bp.route('/pairwise-indel-finder/submit', methods=["POST"])
+@pairwise_indel_finder_bp.route('/submit', methods=["POST"])
 @jwt_required()
 def submit():
 
@@ -221,8 +223,8 @@ def submit():
 
 
 # TODO: Move internals of this to a service function
-@pairwise_indel_finder_bp.route("/pairwise-indel-finder/result/<id>")
-@pairwise_indel_finder_bp.route("/pairwise-indel-finder/result/<id>/tsv/<filename>")
+@pairwise_indel_finder_bp.route("/result/<id>")
+@pairwise_indel_finder_bp.route("/result/<id>/tsv/<filename>")
 @jwt_required()
 def report(id, filename = None):
 
