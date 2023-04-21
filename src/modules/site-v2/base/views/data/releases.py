@@ -134,25 +134,30 @@ def alignment_data(species, release_version=None):
 
   # Look up the species and release version
   try:
-    species, RELEASES, RELEASE = interpret_url_vars(species, release_version)
+    species, releases, release = interpret_url_vars(species, release_version)
 
   # If either could not be found, return an error page
   except NotFoundError:
     return abort(404)
 
   # Pre-2020 releases don't have data organized the same way
-  if RELEASE.report_type == 'V1':
-    return 
+  # TODO: Error page? Redirect to main release page?
+  if release.report_type == 'V1':
+    return
   
   # Post-2020 releases
-  title = "Alignment Data"
-  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.data')}
-  strain_listing = query_strains(release_version=release_version)
-  '''
-  DATASET_RELEASE, WORMBASE_VERSION = list(filter(lambda x: x[0] == release_version, RELEASES))[0]
-  REPORTS = ["alignment"]
-  '''
-  return render_template('data/alignment.html', **locals())
+  return render_template('data/alignment.html', **{
+    'title': "Alignment Data",
+    'alt_parent_breadcrumb': {"title": "Data", "url": url_for('data.data')},
+
+    'species':  species,
+    'RELEASE':  release,
+    'RELEASES': releases,
+
+    'strain_listing': query_strains(release_version=release_version),
+  })
+  # DATASET_RELEASE, WORMBASE_VERSION = list(filter(lambda x: x[0] == release_version, RELEASES))[0]
+  # REPORTS = ["alignment"]
 
 
 
@@ -164,24 +169,29 @@ def alignment_data(species, release_version=None):
 @cache.memoize(60*60)
 def strain_issues(species, release_version=None):
   """
-      Strain Issues page
+    Strain Issues page
+    Lists all strains with known issues for a given species & release.
   """
 
-  # Look up the species and release version
+  # Look up the species and release version, returning error page if either could not be found
   try:
-    species, RELEASES, RELEASE = interpret_url_vars(species, release_version)
-
-  # If either could not be found, return an error page
+    species, releases, release = interpret_url_vars(species, release_version)
   except NotFoundError:
     return abort(404)
 
   # Pre-2020 releases don't have data organized the same way
-  if RELEASE.report_type == 'V1':
-    return 
-  
-  # Post-2020 releases
-  title = "Strain Issues"
-  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.data')}
-  strain_listing_issues = query_strains(release_version=release_version, issues=True)
+  # TODO: Error page? Redirect to main release page?
+  if release.report_type == 'V1':
+    return
 
-  return render_template('strain/issues.html', **locals())
+  # Post-2020 releases
+  return render_template('strain/issues.html', **{
+    'title': "Strain Issues",
+    'alt_parent_breadcrumb': {"title": "Data", "url": url_for('data.data')},
+
+    'species':  species,
+    'RELEASE':  release,
+    'RELEASES': releases,
+
+    'strain_listing_issues': query_strains(release_version=release_version, issues=True),
+  })
