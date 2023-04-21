@@ -148,13 +148,14 @@ def alignment_data(species, release_version=None):
   # Post-2020 releases
   return render_template('data/alignment.html', **{
     'title': "Alignment Data",
+    'subtitle': species.short_name,
     'alt_parent_breadcrumb': {"title": "Data", "url": url_for('data.data')},
 
     'species':  species,
     'RELEASE':  release,
     'RELEASES': releases,
 
-    'strain_listing': query_strains(release_version=release_version),
+    'strain_listing': query_strains(release_version=release_version, species=species.name),
   })
   # DATASET_RELEASE, WORMBASE_VERSION = list(filter(lambda x: x[0] == release_version, RELEASES))[0]
   # REPORTS = ["alignment"]
@@ -187,11 +188,12 @@ def strain_issues(species, release_version=None):
   # Post-2020 releases
   return render_template('strain/issues.html', **{
     'title': "Strain Issues",
+    'subtitle': species.short_name,
     'alt_parent_breadcrumb': {"title": "Data", "url": url_for('data.data')},
 
     'species':  species,
     'RELEASE':  release,
     'RELEASES': releases,
 
-    'strain_listing_issues': query_strains(release_version=release_version, issues=True),
+    'strain_listing_issues': query_strains(release_version=release_version, species=species.name, issues=True),
   })
