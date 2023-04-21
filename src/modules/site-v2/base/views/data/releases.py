@@ -19,43 +19,73 @@ from base.utils.auth import jwt_required
 
 from caendr.api.strain import query_strains
 from caendr.api.isotype import get_isotypes
-from caendr.models.datastore import DatasetRelease
+from caendr.models.datastore import DatasetRelease, Species
 from caendr.models.sql import Strain, StrainAnnotatedVariant
 from caendr.services.cloud.storage import generate_blob_url
 from caendr.services.dataset_release import get_all_dataset_releases, get_release_path, get_browser_tracks_path, get_release_bucket, find_dataset_release
 from caendr.models.error import NotFoundError
 
 
-releases_bp = Blueprint('data_releases',
-                        __name__,
-                        template_folder='templates')
+releases_bp = Blueprint(
+  'data_releases', __name__, template_folder='templates'
+)
+
+
+def interpret_url_vars(species, release_version):
+  species = Species.get(species.replace('-', '_'))
+
+  releases = get_all_dataset_releases(order='-version')
+  release  = find_dataset_release(releases, release_version)
+
+  return species, releases, release
 
 
 # ============= #
 #   Data Page   #
 # ============= #
 
-@releases_bp.route('/data-release/latest')
-@releases_bp.route('/data-release/<string:release_version>')
+
+@releases_bp.route('/data-release')
 @cache.memoize(60*60)
-def data_releases(release_version=None):
-  """ Default data page - lists available releases. """
+def data_releases():
+  '''
+    Landing page for dataset releases.
+  '''
+  return render_template('data/landing.html', **{
+    'title': "Data Releases",
+    'alt_parent_breadcrumb': {"title": "Data", "url": url_for('data.data')},
+  })
+
+
+@releases_bp.route('/data-release/<string:species>/latest')
+@releases_bp.route('/data-release/<string:species>/<string:release_version>')
+@cache.memoize(60*60)
+def data_release_list(species, release_version=None):
+  """
+    Default data page - lists available releases.
+  """
+
+  # Look up the species and release version
+  try:
+    species, RELEASES, RELEASE = interpret_url_vars(species, release_version)
+
+  # If either could not be found, return an error page
+  except NotFoundError:
+    return abort(404)
+
   title = "Data Releases"
   alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.data')}
 
-  RELEASES = get_all_dataset_releases(order='-version')
-  RELEASE = find_dataset_release(RELEASES, release_version)
-
   if RELEASE.report_type == 'V2':
-    return data_v02(RELEASE, RELEASES)
+    return data_v02(species, RELEASE, RELEASES)
   elif RELEASE.report_type == 'V1':
-    return data_v01(RELEASE, RELEASES)
+    return data_v01(species, RELEASE, RELEASES)
 
   return render_template('data/releases.html', **locals())
 
 
 @cache.memoize(60*60)
-def data_v02(RELEASE, RELEASES):
+def data_v02(species, RELEASE, RELEASES):
   title = "Data Releases"
   alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.data')}
   release_version = RELEASE.version
@@ -71,7 +101,7 @@ def data_v02(RELEASE, RELEASES):
 
 
 @cache.memoize(60*60)
-def data_v01(RELEASE, RELEASES):
+def data_v01(species, RELEASE, RELEASES):
   # Legacy releases (Pre 20200101)
   title = "Data Releases"
   alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.data')}
@@ -97,12 +127,18 @@ def data_v01(RELEASE, RELEASES):
 # ======================= #
 #   Alignment Data Page   #
 # ======================= #
-@releases_bp.route('/release/latest/alignment')
-@releases_bp.route('/release/<string:release_version>/alignment')
+@releases_bp.route('/data-release/<string:species>/latest/alignment')
+@releases_bp.route('/data-release/<string:species>/<string:release_version>/alignment')
 @cache.memoize(60*60)
-def alignment_data(release_version=''):
-  RELEASES = get_all_dataset_releases(order='-version')
-  RELEASE = find_dataset_release(RELEASES, release_version)
+def alignment_data(species, release_version=None):
+
+  # Look up the species and release version
+  try:
+    species, RELEASES, RELEASE = interpret_url_vars(species, release_version)
+
+  # If either could not be found, return an error page
+  except NotFoundError:
+    return abort(404)
 
   # Pre-2020 releases don't have data organized the same way
   if RELEASE.report_type == 'V1':
@@ -123,15 +159,21 @@ def alignment_data(release_version=''):
 # =========================== #
 #   Strain Issues Data Page   #
 # =========================== #
-@releases_bp.route('/release/latest/strain_issues')
-@releases_bp.route('/release/<string:release_version>/strain_issues')
+@releases_bp.route('/data-release/<string:species>/latest/strain_issues')
+@releases_bp.route('/data-release/<string:species>/<string:release_version>/strain_issues')
 @cache.memoize(60*60)
-def strain_issues(release_version=None):
+def strain_issues(species, release_version=None):
   """
       Strain Issues page
   """
-  RELEASES = get_all_dataset_releases(order='-version')
-  RELEASE = find_dataset_release(RELEASES, release_version)
+
+  # Look up the species and release version
+  try:
+    species, RELEASES, RELEASE = interpret_url_vars(species, release_version)
+
+  # If either could not be found, return an error page
+  except NotFoundError:
+    return abort(404)
 
   # Pre-2020 releases don't have data organized the same way
   if RELEASE.report_type == 'V1':
