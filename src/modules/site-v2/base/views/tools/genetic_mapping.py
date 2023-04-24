@@ -140,7 +140,6 @@ def list_results():
 
     # Page info
     'title': ('All' if show_all else 'My') + ' Genetic Mappings',
-    'subtitle': 'Report List',
     'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
 
     # Tool info

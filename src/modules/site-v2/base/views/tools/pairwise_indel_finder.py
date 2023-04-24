@@ -151,7 +151,7 @@ def list_results():
   return render_template('tools/report-list.html', **{
 
     # Page info
-    'title': ('All' if show_all else 'My') + ' Indel Primer Results',
+    'title': ('All' if show_all else 'My') + ' Primer Reports',
     'alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools'), },
 
     # User info
