@@ -67,61 +67,70 @@ def data_release_list(species, release_version=None):
 
   # Look up the species and release version
   try:
-    species, RELEASES, RELEASE = interpret_url_vars(species, release_version)
+    species, releases, release = interpret_url_vars(species, release_version)
 
   # If either could not be found, return an error page
   except NotFoundError:
     return abort(404)
 
-  title = "Data Releases"
-  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.data')}
+  # Package common params into an object
+  params = {
+    'species':  species,
+    'RELEASE':  release,
+    'RELEASES': releases,
+    'release_bucket': get_release_bucket(),
+    'release_path': get_release_path(release.version),
+  }
+  files = release.get_report_data_urls_map()
 
-  if RELEASE.report_type == 'V2':
-    return data_v02(species, RELEASE, RELEASES)
-  elif RELEASE.report_type == 'V1':
-    return data_v01(species, RELEASE, RELEASES)
+  # Update params object with version-specific fields
+  if release.report_type == 'V2':
+    params.update(data_v02(params, files))
+  elif release.report_type == 'V1':
+    params.update(data_v01(params, files))
 
-  return render_template('data/releases.html', **locals())
+  # Render the page
+  return render_template('data/releases.html', **{
+    'title': "Data Releases",
+    'alt_parent_breadcrumb': {"title": "Data", "url": url_for('data.data')},
+
+    'release_version': release.version,
+    'strain_listing': query_strains(release_version=release.version),
+
+    **params,
+    'files': files,
+  })
 
 
 @cache.memoize(60*60)
-def data_v02(species, RELEASE, RELEASES):
-  title = "Data Releases"
-  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.data')}
-  release_version = RELEASE.version
-  strain_listing = query_strains(release_version=release_version)
-
-  release_bucket = get_release_bucket()
-  release_path = get_release_path(release_version)
+def data_v02(params, files):
+  '''
+    Define additional parameters used by V2 releases.
+  '''
   browser_tracks_path = get_browser_tracks_path()
-  browser_tracks_url = generate_blob_url(release_bucket, browser_tracks_path)
-
-  files = RELEASE.get_report_data_urls_map()
-  return render_template('data/releases.html', **locals())
+  return {
+    'browser_tracks_path': browser_tracks_path,
+    'browser_tracks_url': generate_blob_url(params['release_bucket'], browser_tracks_path),
+  }
 
 
 @cache.memoize(60*60)
-def data_v01(species, RELEASE, RELEASES):
-  # Legacy releases (Pre 20200101)
-  title = "Data Releases"
-  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.data')}
-  release_version = RELEASE.version
-  strain_listing = query_strains(release_version=release_version)
-
-  release_bucket = get_release_bucket()
-  release_path = get_release_path(release_version)
-  browser_tracks_path = get_browser_tracks_path()
-  site_bucket_public_name = config.get('MODULE_SITE_BUCKET_PUBLIC_NAME', 'NONE')
-  
-  files = RELEASE.get_report_data_urls_map()
-
+def data_v01(params, files):
+  '''
+    Define additional parameters used by legacy V1 releases (pre 20200101).
+  '''
   try:
     vcf_summary_url = files.get('vcf_summary_url')
     vcf_summary = requests.get(vcf_summary_url).json()
   except json.JSONDecodeError:
     vcf_summary = None
 
-  return render_template('data/releases.html', **locals())
+  return {
+    'site_bucket_public_name': config.get('MODULE_SITE_BUCKET_PUBLIC_NAME', 'NONE'),
+    'browser_tracks_path': get_browser_tracks_path(),
+    'vcf_summary_url': vcf_summary_url,
+    'vcf_summary': vcf_summary,
+  }
 
 
 # ======================= #
