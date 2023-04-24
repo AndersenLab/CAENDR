@@ -2,22 +2,31 @@
 {% block content %}
 {% from "_includes/macros.html" import render_field %}
 
-  <div class="row">
-    <div class="col-md-6 col-md-offset-3">
-      <div class="panel panel-default">
-        <div class="panel-heading">Login</div>
-        <div class="panel-body">
-          <form id='form-submit' method="POST" action="basic">
-            {{ form.csrf_token }}
-            {{ render_field(form.username) }}
-            {{ render_field(form.password) }}
-            {{ form.recaptcha }}
-          <br />
-          <button id='login' type='submit' value="Login" class="btn btn-primary btn-block"><span class="glyphicon glyphicon-log-in" aria-hidden="true"></span> Login </button>
-          </form>
-        </div>
-      </div>
-      <div><a href="{{ url_for('user.user_recover') }}" style="cursor: pointer; padding-left: 1rem;">Forgot Your Password?</a></div>
+<div class="col-12 col-md-6 px-3 mx-auto">
+  <div class="card border-0 shadow-sm">
+    <div class="card-header text-bg-secondary text-light fw-bold">
+      Login
     </div>
+    <div class="card-body p-4">
+      <form id='form-submit' method="POST" action="basic">
+        {{ form.csrf_token }}
+        <div class="mb-3">
+          {{ render_field(form.username) }}
+        </div>
+        <div class="mb-3">
+          {{ render_field(form.password) }}
+        </div>
+        <div class="mb-4">
+          {{ form.recaptcha }}
+        </div>
+        <div class="d-grid gap-2 mb-3">
+          <button id='login' type='submit' value="Login" class="btn btn-primary mt-2"><i
+              class="bi bi-box-arrow-in-right fs-5 fw-bold"></i> Login</button>
+              <a class="btn btn-primary" type="button" href="{{ url_for('user.user_recover') }}"><i
+                class="bi bi-lock-fill fs-5 fw-bold"></i> Forgot Your Password?</a>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 {% endblock %}
