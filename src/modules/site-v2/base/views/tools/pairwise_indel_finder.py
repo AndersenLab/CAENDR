@@ -14,7 +14,6 @@ from base.forms import PairwiseIndelForm
 from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefault
 from caendr.models.datastore import SPECIES_LIST
 from caendr.models.error import NotFoundError, NonUniqueEntity
-from caendr.services.dataset_release import get_browser_tracks_path
 from caendr.utils.constants import CHROM_NUMERIC
 
 from caendr.services.indel_primer import get_sv_strains, query_indels_and_mark_overlaps, create_new_indel_primer, get_indel_primer, fetch_ip_data, fetch_ip_result, get_all_indel_primers, get_user_indel_primers
@@ -82,7 +81,7 @@ def pairwise_indel_finder():
     "species_list": SPECIES_LIST,
 
     # Data locations
-    "fasta_url": BrowserTrack.get_fasta_path_full(),
+    "fasta_url": BrowserTrack.get_fasta_path_full().get_string_safe(),
 
     # List of Species class fields to expose to the template
     # Optional - exposes all attributes if not provided

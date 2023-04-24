@@ -147,3 +147,11 @@ class FileUploadError(InternalError):
 class SpeciesUrlNameError(InternalError):
   def __init__(self, species_name):
     self.species_name = species_name
+
+class InvalidTokenError(InternalError):
+  def __init__(self, token):
+    self.token = token
+    self.description = f'Invalid token name {token}'
+
+class MissingTokenError(InternalError):
+  description = 'Cannot get filled-in template until all tokens are defined'

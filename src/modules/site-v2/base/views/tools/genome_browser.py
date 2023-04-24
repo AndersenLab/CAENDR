@@ -104,7 +104,7 @@ def genome_browser(region="III:11746923-11750250", query=None):
     'default_tracks': sorted(BrowserTrackDefault.query_ds_visible(), key = lambda x: x['order'] ),
 
     # Data locations
-    'fasta_url': BrowserTrack.get_fasta_path_full(),
+    'fasta_url': BrowserTrack.get_fasta_path_full().get_string_safe(),
 
     # String replacement tokens
     # Maps token to the field in Species object it should be replaced with
