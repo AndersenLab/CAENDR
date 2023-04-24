@@ -10,6 +10,41 @@ V1_V2_Cutoff_Date = 20200101
 
 MODULE_SITE_BUCKET_PUBLIC_NAME = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME')
 
+
+
+class ReportType():
+  __all_report_types = {}
+
+  def __init__(self, name, data_map, cutoff_date=None):
+    self.name = name
+    self.data_map = data_map
+    self.cutoff_date = cutoff_date
+
+    ReportType.__all_report_types[name] = self
+
+  @classmethod
+  def lookup(cls, name, fallback=None):
+    return cls.__all_report_types.get(name, fallback)
+
+  def __eq__(self, other):
+    if isinstance(other, str):
+      return self.name == other
+    elif isinstance(other, ReportType):
+      return self.name == other.name
+    else:
+      raise TypeError()
+
+  def get_data_map(self):
+    return self.data_map
+
+  def version_meets_cutoff(self, version):
+    return int(version) >= (self.cutoff_date or 0)
+
+  def __repr__(self):
+    return f"<ReportType:{getattr(self, 'name', 'no-name')}>"
+
+
+
 class DatasetRelease(Entity):
   kind = "dataset_release"
   __bucket_name = MODULE_SITE_BUCKET_PUBLIC_NAME
@@ -43,14 +78,12 @@ class DatasetRelease(Entity):
 
     # If set explicitly in object's dictionary, return that value
     if self.__dict__['report_type']:
-      return self.__dict__['report_type']
+      return ReportType.lookup(self.__dict__['report_type'])
 
     # If not, try to compute from version
-    elif int(self.version) > 0:
-      if int(self.version) < V1_V2_Cutoff_Date:
-        return 'V1'
-      else:
-        return 'V2'
+    for report_type in DatasetRelease.all_report_types:
+      if report_type.version_meets_cutoff(self.version):
+        return report_type
 
     # If all else fails, default to None
     return None
@@ -59,7 +92,11 @@ class DatasetRelease(Entity):
   @report_type.setter
   def report_type(self, val):
     # Save prop in object's local dictionary
-    self.__dict__['report_type'] = val
+    if isinstance(val, ReportType):
+      self.__dict__['report_type'] = val.name
+    else:
+      self.__dict__['report_type'] = val
+
 
 
 
@@ -89,14 +126,12 @@ class DatasetRelease(Entity):
 
     logger.debug(f'get_report_data_urls_map(bucket_name={bucket_name}, blob_prefix={blob_prefix})')
 
-    if self.report_type == 'V0':
-      return {}
-    elif self.report_type == 'V1':
-      release_files = V1_Data_Map()
-    elif self.report_type == 'V2':
-      release_files = V2_Data_Map()
-    else:
+    # Check that the release has a valid report type
+    if self.report_type is None:
       return None
+
+    # Get the set of release files based on the report version
+    release_files = self.report_type.get_data_map()
 
     # for key, val in url_list.items:
     url_map_filtered = {}
@@ -114,15 +149,14 @@ class DatasetRelease(Entity):
     return url_map_filtered
   
 
-def V2_Data_Map():
-  return {
+  V2 = ReportType('V2', {
     'release_notes': '$ver/release_notes.md',
     'summary': '$ver/summary.md',
     'methods': '$ver/methods.md',
     'alignment_report': '$ver/alignment_report.html',
     'gatk_report': '$ver/gatk_report.html',
     'concordance_report': '$ver/concordance_report.html',
-    
+
     'divergent_regions_strain_bed_gz': '$ver/divergent_regions_strain.$ver.bed.gz',
     'divergent_regions_strain_bed': '$ver/divergent_regions_strain.$ver.bed',
 
@@ -136,21 +170,19 @@ def V2_Data_Map():
     'hard_filter_isotype_vcf_gz_tbi': '$ver/variation/WI.$ver.hard-filter.isotype.vcf.gz.tbi',
     'impute_isotype_vcf_gz': '$ver/variation/WI.$ver.impute.isotype.vcf.gz',
     'impute_isotype_vcf_gz_tbi': '$ver/variation/WI.$ver.impute.isotype.vcf.gz.tbi',
-    
+
     'hard_filter_min4_tree': '$ver/tree/WI.$ver.hard-filter.min4.tree',
     'hard_filter_min4_tree_pdf': '$ver/tree/WI.$ver.hard-filter.min4.tree.pdf',
     'hard_filter_isotype_min4_tree': '$ver/tree/WI.$ver.hard-filter.isotype.min4.tree',
     'hard_filter_isotype_min4_tree_pdf': '$ver/tree/WI.$ver.hard-filter.isotype.min4.tree.pdf',
-    
+
     'haplotype_png': '$ver/haplotype/haplotype.png',
     'haplotype_pdf': '$ver/haplotype/haplotype.pdf',
     'sweep_pdf': '$ver/haplotype/sweep.pdf',
     'sweep_summary_tsv': '$ver/haplotype/sweep_summary.tsv'
-  }
+  }, cutoff_date=20200101)
 
-
-def V1_Data_Map():
-  return {
+  V1 = ReportType('V1', {
     'summary': '$ver/summary.md',
     'methods': '$ver/methods.md',
     'haplotype_png_url': '$ver/haplotype/haplotype.png',
@@ -158,18 +190,15 @@ def V1_Data_Map():
     'tajima_d_png_url': '$ver/popgen/tajima_d.png',
     'tajima_d_thumb_png_url': '$ver/popgen/tajima_d.thumb.png',
     'genome_svg_url': '$ver/popgen/trees/genome.svg',
-    
+
     'soft_filter_vcf_gz': '$ver/variation/WI.$ver.soft-filter.vcf.gz',
     'hard_filter_vcf_gz': '$ver/variation/WI.$ver.hard-filter.vcf.gz',
     'impute_vcf_gz': '$ver/variation/WI.$ver.impute.vcf.gz',
 
-    
     'vcf_summary_url': '$ver/multiqc_bcftools_stats.json',
     'phylo_url': '$ver/popgen/trees/genome.pdf'
-    
-  }
+  })
 
+  V0 = ReportType('V0', {})
 
-def V0_Data_Map():
-  return {}
-  
+  all_report_types = [V2, V1, V0]

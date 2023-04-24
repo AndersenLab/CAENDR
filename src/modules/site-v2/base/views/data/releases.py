@@ -87,9 +87,9 @@ def data_release_list(species, release_version=None):
   files = release.get_report_data_urls_map(species.name[2:])
 
   # Update params object with version-specific fields
-  if release.report_type == 'V2':
+  if release.report_type == DatasetRelease.V2:
     params.update(data_v02(params, files))
-  elif release.report_type == 'V1':
+  elif release.report_type == DatasetRelease.V1:
     params.update(data_v01(params, files))
 
   # Render the page
@@ -154,9 +154,9 @@ def alignment_data(species, release_version=None):
 
   # Pre-2020 releases don't have data organized the same way
   # TODO: Error page? Redirect to main release page?
-  if release.report_type == 'V1':
+  if release.report_type == DatasetRelease.V1:
     return
-  
+
   # Post-2020 releases
   return render_template('data/alignment.html', **{
     'title': "Alignment Data",
@@ -194,7 +194,7 @@ def strain_issues(species, release_version=None):
 
   # Pre-2020 releases don't have data organized the same way
   # TODO: Error page? Redirect to main release page?
-  if release.report_type == 'V1':
+  if release.report_type == DatasetRelease.V1:
     return
 
   # Post-2020 releases
