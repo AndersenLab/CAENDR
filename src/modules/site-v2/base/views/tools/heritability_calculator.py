@@ -113,8 +113,12 @@ def list_results():
 
     # Tool info
     'tool_name': 'heritability_calculator',
-    'return_text': 'New Calculation',
     'all_results': show_all,
+    'button_labels': {
+      'tool': 'New Calculation',
+      'all':  'All User Results',
+      'user': 'My Heritability Results',
+    },
 
     # Table info
     'species_list': SPECIES_LIST,

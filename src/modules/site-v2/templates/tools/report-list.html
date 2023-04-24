@@ -32,12 +32,12 @@ table.dataTable thead .sorting {
     filter = False,
     actions = [
       {
-        'label': return_text,
+        'label': button_labels['tool'],
         'url': url_for(tool_name + '.' + tool_name),
         'icon': 'bi bi-plus-circle',
       },
       {
-        'label': 'My Results' if all_results else 'All Results',
+        'label': button_labels['user'] if all_results else button_labels['all'],
         'url': url_for(tool_name + ('.my_results' if all_results else '.all_results')),
         'icon': 'bi bi-list-task',
         'admin_only': True,

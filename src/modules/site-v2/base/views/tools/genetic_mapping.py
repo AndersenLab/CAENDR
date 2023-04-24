@@ -144,8 +144,12 @@ def list_results():
 
     # Tool info
     'tool_name': 'genetic_mapping',
-    'return_text': 'New Mapping',
     'all_results': show_all,
+    'button_labels': {
+      'tool': 'New Genetic Mapping',
+      'all':  'All User Mappings',
+      'user': 'My Genetic Mappings',
+    },
 
     # Table info
     'species_list': SPECIES_LIST,

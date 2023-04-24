@@ -159,8 +159,12 @@ def list_results():
 
     # Tool info
     'tool_name': 'pairwise_indel_finder',
-    'return_text': 'Find Indels',
     'all_results': show_all,
+    'button_labels': {
+      'tool': 'New Primer Search',
+      'all':  'All User Results',
+      'user': 'My Primer Reports',
+    },
 
     # Table info
     'species_list': SPECIES_LIST,
