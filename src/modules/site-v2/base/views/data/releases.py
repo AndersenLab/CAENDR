@@ -22,7 +22,7 @@ from caendr.api.isotype import get_isotypes
 from caendr.models.datastore import DatasetRelease, Species
 from caendr.models.sql import Strain, StrainAnnotatedVariant
 from caendr.services.cloud.storage import generate_blob_url
-from caendr.services.dataset_release import get_all_dataset_releases, get_release_path, get_browser_tracks_path, get_release_bucket, find_dataset_release
+from caendr.services.dataset_release import get_all_dataset_releases, get_browser_tracks_path, get_release_bucket, find_dataset_release
 from caendr.models.error import NotFoundError
 
 
@@ -79,9 +79,12 @@ def data_release_list(species, release_version=None):
     'RELEASE':  release,
     'RELEASES': releases,
     'release_bucket': get_release_bucket(),
-    'release_path': get_release_path(release.version),
+    'release_path': release.get_versioned_path_template().get_string(SPECIES = species.name),
   }
-  files = release.get_report_data_urls_map()
+
+  # Get list of files based on species
+  # TODO: Pass in full species identifier (once DatasetRelease blob prefix is updated)
+  files = release.get_report_data_urls_map(species.name[2:])
 
   # Update params object with version-specific fields
   if release.report_type == 'V2':
@@ -107,7 +110,7 @@ def data_v02(params, files):
   '''
     Define additional parameters used by V2 releases.
   '''
-  browser_tracks_path = get_browser_tracks_path()
+  browser_tracks_path = get_browser_tracks_path().get_string_safe()
   return {
     'browser_tracks_path': browser_tracks_path,
     'browser_tracks_url': generate_blob_url(params['release_bucket'], browser_tracks_path),
@@ -127,7 +130,7 @@ def data_v01(params, files):
 
   return {
     'site_bucket_public_name': config.get('MODULE_SITE_BUCKET_PUBLIC_NAME', 'NONE'),
-    'browser_tracks_path': get_browser_tracks_path(),
+    'browser_tracks_path': get_browser_tracks_path().get_string_safe(),
     'vcf_summary_url': vcf_summary_url,
     'vcf_summary': vcf_summary,
   }

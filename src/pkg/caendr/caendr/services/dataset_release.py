@@ -2,6 +2,7 @@ from caendr.services.logger import logger
 
 from caendr.services.cloud.datastore import query_ds_entities, get_ds_entity, delete_ds_entity_by_ref
 from caendr.models.datastore import DatasetRelease
+from caendr.models.datastore.browser_track import BrowserTrack
 from caendr.models.sql import Strain
 from caendr.models.error import UnprocessableEntity, BadRequestError, NotFoundError
 
@@ -10,17 +11,10 @@ def get_release_bucket():
   return DatasetRelease.get_bucket_name()
 
 
-def get_release_path(release_version: str=None):
-  if not release_version:
-    release_version = get_latest_dataset_release_version()
-  
-  blob_prefix = DatasetRelease.get_blob_prefix()
-  return f'{blob_prefix}/{release_version}'
-
-
 def get_browser_tracks_path(release_version=None):
-  release_path = get_release_path()
-  return f'{release_path}/browser_tracks'
+  # TODO: Move this logic to BrowserTrack class (once all track files are in browser_tracks folder)
+  _, release_path = BrowserTrack.release_path()
+  return release_path + '/browser_tracks'
 
 
 # TODO: Does keys_only make sense as a parameter? Seems like it was originally used to limit the ds query

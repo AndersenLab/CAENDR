@@ -4,6 +4,7 @@ from caendr.services.logger import logger
 
 from caendr.models.datastore import Entity
 from caendr.services.cloud.storage import generate_blob_url, get_blob, check_blob_exists
+from caendr.utils.tokens import TokenizedString
 
 V1_V2_Cutoff_Date = 20200101
 
@@ -12,7 +13,7 @@ MODULE_SITE_BUCKET_PUBLIC_NAME = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME'
 class DatasetRelease(Entity):
   kind = "dataset_release"
   __bucket_name = MODULE_SITE_BUCKET_PUBLIC_NAME
-  __blob_prefix = f'{kind}/c_elegans'
+  __blob_prefix = kind + '/c_${SPECIES}'
 
 
   def __repr__(self):
@@ -70,14 +71,24 @@ class DatasetRelease(Entity):
   def get_blob_prefix(cls):
     return cls.__blob_prefix
 
+  @classmethod
+  def get_path_template(cls):
+    return TokenizedString(cls.get_blob_prefix() + '/${RELEASE}')
 
-  def get_report_data_urls_map(self):
-    ''' Returns a dictionary of variable names for report data files mapped to their public urls in google storage '''
-    bucket_name=self.__bucket_name
-    blob_prefix=self.__blob_prefix
-    
+  def get_versioned_path_template(self):
+    return self.get_path_template().set_tokens(RELEASE = self['version'])
+
+
+
+  def get_report_data_urls_map(self, species_name):
+    '''
+      Returns a dictionary of variable names for report data files mapped to their public urls in google storage
+    '''
+    bucket_name = self.__bucket_name
+    blob_prefix = self.__blob_prefix
+
     logger.debug(f'get_report_data_urls_map(bucket_name={bucket_name}, blob_prefix={blob_prefix})')
-    
+
     if self.report_type == 'V0':
       return {}
     elif self.report_type == 'V1':
@@ -89,10 +100,12 @@ class DatasetRelease(Entity):
 
     # for key, val in url_list.items:
     url_map_filtered = {}
-    for key, val in release_files.items():
-      t = Template(val)
-      blob_name = t.substitute(ver=self.version)
-      blob_path = f'{blob_prefix}/{blob_name}'
+    for key, blob_name in release_files.items():
+      blob_path = TokenizedString(f'{blob_prefix}/{blob_name}').get_string(**{
+        'ver': self['version'],
+        'SPECIES': species_name,
+      })
+
       if check_blob_exists(bucket_name, blob_path):
         url_map_filtered[key] = generate_blob_url(bucket_name, blob_path)
       else:

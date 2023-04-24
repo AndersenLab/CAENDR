@@ -26,7 +26,7 @@ internal_db_blob_templates = {
     'GENE_GTF': remove_env_escape_chars( DB_OPS_FILEPATH + get_env_var('GENE_GTF_FILENAME') ),
     'GENE_GFF': remove_env_escape_chars( DB_OPS_FILEPATH + get_env_var('GENE_GFF_FILENAME') ),
     'GENE_IDS': remove_env_escape_chars( DB_OPS_FILEPATH + get_env_var('GENE_IDS_FILENAME') ),
-    'SVA_CSVGZ': f'{STRAIN_VARIANT_ANNOTATION_PATH}/WI.strain-annotation.bcsq.$SVA.csv.gz',
+    'SVA_CSVGZ': f'{STRAIN_VARIANT_ANNOTATION_PATH.raw_string}/WI.strain-annotation.bcsq.$SVA.csv.gz',
 }
 
 
