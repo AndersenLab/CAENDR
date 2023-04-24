@@ -2,7 +2,59 @@
 
 
 {% block content %}
-<div class="row">
+
+<div class="container">
+  <div class="d-flex flex-wrap justify-content-around mb-5">
+    <div class="col-8 col-md-3 mx-3 mb-3">
+          <div class="card mb-3 border-0 shadow-sm h-100">
+            <div class="card-header text-bg-secondary text-light fw-bold">
+              Email
+            </div>
+            <div class="mx-auto mt-4" style="width:10%"><i class="bi bi-envelope-at-fill text-info fs-1"></i></div>
+            <div class="card-body text-center">
+              <p class="card-text"><strong>Professor Erik Andersen</strong></p>
+              <p class="card-text"><a href="mailto:erik@caendr.org">erik@caendr.org</a></p>
+            </div>
+          </div>
+    </div>
+    <div class="col-8 col-md-3 mx-3 mb-3">
+      <div class="card mb-3 border-0 shadow-sm h-100">
+        <div class="card-header text-bg-secondary text-light fw-bold">
+          Administrative Address
+        </div>
+        <div class="mx-auto mt-4" style="width:10%"><i class="bi bi-postcard-fill text-info fs-1"></i></div>
+        <div class="card-body text-center">
+          <p class="card-text fw-bold">Northwestern University <br>Department of Molecular Biosciences</p>
+          <p class="card-text">2205 Tech Drive, Hogan 2-100 <br>Evanston, IL 60208-3500</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-8 col-md-3 mx-3 mb-3">
+      <div class="card mb-3 border-0 shadow-sm h-100">
+        <div class="card-header text-bg-secondary text-light fw-bold">
+          Shipping Address
+        </div>
+        <div class="mx-auto mt-4" style="width:10%"><i class="bi bi-box-seam-fill text-info fs-1"></i></div>
+        <div class="card-body text-center">
+          <p class="card-text fw-bold">Erik Andersen <br>Northwestern University <br>Department of Molecular Biosciences</p>
+          <p class="card-text">2205 Tech Drive, Hogan 1-500 <br>Evanston, IL 60208-3500</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- /flex-wrap -->
+  <div class="row">
+    <div class="col-12 col-md-8 mx-auto">
+      <iframe src="https://goo.gl/forms/FHBp2n0pOF"
+      width="100%" style="min-height:1200px" frameborder="0" marginheight="0" marginwidth="0" title="Google Form: Contact Us">Loading...</iframe>
+    </div>
+  </div>
+  <!-- /row -->
+</div>
+<!-- /container -->
+
+
+<!-- <div class="row">
 
     <div class="col-lg-4 col-md-4 col-sm-6">
       <div class="row">
@@ -74,14 +126,6 @@
 	  </div>
   </div>{#/ col-xs-12 #}
 
-</div> {# /row #}
-
-
-<div class='row'>
-  <div class="col-md-12">
-    <iframe src="https://goo.gl/forms/FHBp2n0pOF"
-    width="100%" style="min-height:1200px" frameborder="0" marginheight="0" marginwidth="0" title="Google Form: Contact Us">Loading...</iframe>
-  </div>
-</div> {# /row #}
+</div> {# /row #} -->
 
 {% endblock %}
