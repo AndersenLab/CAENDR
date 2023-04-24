@@ -82,7 +82,7 @@ class TokenizedString():
 
   VALID_TOKENS = {
     'SPECIES',
-    'RELEASE', 'ver',
+    'RELEASE',
     'PRJ',
     'WB',
     'SVA',

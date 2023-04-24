@@ -99,7 +99,6 @@ class DatasetRelease(Entity):
 
 
 
-
   @classmethod
   def get_bucket_name(cls):
     return cls.__bucket_name
@@ -137,7 +136,7 @@ class DatasetRelease(Entity):
     url_map_filtered = {}
     for key, blob_name in release_files.items():
       blob_path = TokenizedString(f'{blob_prefix}/{blob_name}').get_string(**{
-        'ver': self['version'],
+        'RELEASE': self['version'],
         'SPECIES': species_name,
       })
 
@@ -150,53 +149,54 @@ class DatasetRelease(Entity):
   
 
   V2 = ReportType('V2', {
-    'release_notes': '$ver/release_notes.md',
-    'summary': '$ver/summary.md',
-    'methods': '$ver/methods.md',
-    'alignment_report': '$ver/alignment_report.html',
-    'gatk_report': '$ver/gatk_report.html',
-    'concordance_report': '$ver/concordance_report.html',
+    'release_notes':                     '$RELEASE/release_notes.md',
+    'summary':                           '$RELEASE/summary.md',
+    'methods':                           '$RELEASE/methods.md',
+    'alignment_report':                  '$RELEASE/alignment_report.html',
+    'gatk_report':                       '$RELEASE/gatk_report.html',
+    'concordance_report':                '$RELEASE/concordance_report.html',
 
-    'divergent_regions_strain_bed_gz': '$ver/divergent_regions_strain.$ver.bed.gz',
-    'divergent_regions_strain_bed': '$ver/divergent_regions_strain.$ver.bed',
+    'divergent_regions_strain_bed_gz':   '$RELEASE/divergent_regions_strain.$RELEASE.bed.gz',
+    'divergent_regions_strain_bed':      '$RELEASE/divergent_regions_strain.$RELEASE.bed',
 
-    'soft_filter_vcf_gz': '$ver/variation/WI.$ver.soft-filter.vcf.gz',
-    'soft_filter_vcf_gz_tbi': '$ver/variation/WI.$ver.soft-filter.vcf.gz.tbi',
-    'soft_filter_isotype_vcf_gz': '$ver/variation/WI.$ver.soft-filter.isotype.vcf.gz',
-    'soft_filter_isotype_vcf_gz_tbi': '$ver/variation/WI.$ver.soft-filter.isotype.vcf.gz.tbi',
-    'hard_filter_vcf_gz': '$ver/variation/WI.$ver.hard-filter.vcf.gz',
-    'hard_filter_vcf_gz_tbi': '$ver/variation/WI.$ver.hard-filter.vcf.gz.tbi',
-    'hard_filter_isotype_vcf_gz': '$ver/variation/WI.$ver.hard-filter.isotype.vcf.gz',
-    'hard_filter_isotype_vcf_gz_tbi': '$ver/variation/WI.$ver.hard-filter.isotype.vcf.gz.tbi',
-    'impute_isotype_vcf_gz': '$ver/variation/WI.$ver.impute.isotype.vcf.gz',
-    'impute_isotype_vcf_gz_tbi': '$ver/variation/WI.$ver.impute.isotype.vcf.gz.tbi',
+    'soft_filter_vcf_gz':                '$RELEASE/variation/WI.$RELEASE.soft-filter.vcf.gz',
+    'soft_filter_vcf_gz_tbi':            '$RELEASE/variation/WI.$RELEASE.soft-filter.vcf.gz.tbi',
+    'soft_filter_isotype_vcf_gz':        '$RELEASE/variation/WI.$RELEASE.soft-filter.isotype.vcf.gz',
+    'soft_filter_isotype_vcf_gz_tbi':    '$RELEASE/variation/WI.$RELEASE.soft-filter.isotype.vcf.gz.tbi',
+    'hard_filter_vcf_gz':                '$RELEASE/variation/WI.$RELEASE.hard-filter.vcf.gz',
+    'hard_filter_vcf_gz_tbi':            '$RELEASE/variation/WI.$RELEASE.hard-filter.vcf.gz.tbi',
+    'hard_filter_isotype_vcf_gz':        '$RELEASE/variation/WI.$RELEASE.hard-filter.isotype.vcf.gz',
+    'hard_filter_isotype_vcf_gz_tbi':    '$RELEASE/variation/WI.$RELEASE.hard-filter.isotype.vcf.gz.tbi',
+    'impute_isotype_vcf_gz':             '$RELEASE/variation/WI.$RELEASE.impute.isotype.vcf.gz',
+    'impute_isotype_vcf_gz_tbi':         '$RELEASE/variation/WI.$RELEASE.impute.isotype.vcf.gz.tbi',
 
-    'hard_filter_min4_tree': '$ver/tree/WI.$ver.hard-filter.min4.tree',
-    'hard_filter_min4_tree_pdf': '$ver/tree/WI.$ver.hard-filter.min4.tree.pdf',
-    'hard_filter_isotype_min4_tree': '$ver/tree/WI.$ver.hard-filter.isotype.min4.tree',
-    'hard_filter_isotype_min4_tree_pdf': '$ver/tree/WI.$ver.hard-filter.isotype.min4.tree.pdf',
+    'hard_filter_min4_tree':             '$RELEASE/tree/WI.$RELEASE.hard-filter.min4.tree',
+    'hard_filter_min4_tree_pdf':         '$RELEASE/tree/WI.$RELEASE.hard-filter.min4.tree.pdf',
+    'hard_filter_isotype_min4_tree':     '$RELEASE/tree/WI.$RELEASE.hard-filter.isotype.min4.tree',
+    'hard_filter_isotype_min4_tree_pdf': '$RELEASE/tree/WI.$RELEASE.hard-filter.isotype.min4.tree.pdf',
 
-    'haplotype_png': '$ver/haplotype/haplotype.png',
-    'haplotype_pdf': '$ver/haplotype/haplotype.pdf',
-    'sweep_pdf': '$ver/haplotype/sweep.pdf',
-    'sweep_summary_tsv': '$ver/haplotype/sweep_summary.tsv'
+    'haplotype_png':                     '$RELEASE/haplotype/haplotype.png',
+    'haplotype_pdf':                     '$RELEASE/haplotype/haplotype.pdf',
+    'sweep_pdf':                         '$RELEASE/haplotype/sweep.pdf',
+    'sweep_summary_tsv':                 '$RELEASE/haplotype/sweep_summary.tsv'
   }, cutoff_date=20200101)
 
   V1 = ReportType('V1', {
-    'summary': '$ver/summary.md',
-    'methods': '$ver/methods.md',
-    'haplotype_png_url': '$ver/haplotype/haplotype.png',
-    'haplotype_thumb_png_url': '$ver/haplotype/haplotype.thumb.png',
-    'tajima_d_png_url': '$ver/popgen/tajima_d.png',
-    'tajima_d_thumb_png_url': '$ver/popgen/tajima_d.thumb.png',
-    'genome_svg_url': '$ver/popgen/trees/genome.svg',
+    'summary':                 '$RELEASE/summary.md',
+    'methods':                 '$RELEASE/methods.md',
 
-    'soft_filter_vcf_gz': '$ver/variation/WI.$ver.soft-filter.vcf.gz',
-    'hard_filter_vcf_gz': '$ver/variation/WI.$ver.hard-filter.vcf.gz',
-    'impute_vcf_gz': '$ver/variation/WI.$ver.impute.vcf.gz',
+    'haplotype_png_url':       '$RELEASE/haplotype/haplotype.png',
+    'haplotype_thumb_png_url': '$RELEASE/haplotype/haplotype.thumb.png',
+    'tajima_d_png_url':        '$RELEASE/popgen/tajima_d.png',
+    'tajima_d_thumb_png_url':  '$RELEASE/popgen/tajima_d.thumb.png',
+    'genome_svg_url':          '$RELEASE/popgen/trees/genome.svg',
 
-    'vcf_summary_url': '$ver/multiqc_bcftools_stats.json',
-    'phylo_url': '$ver/popgen/trees/genome.pdf'
+    'soft_filter_vcf_gz':      '$RELEASE/variation/WI.$RELEASE.soft-filter.vcf.gz',
+    'hard_filter_vcf_gz':      '$RELEASE/variation/WI.$RELEASE.hard-filter.vcf.gz',
+    'impute_vcf_gz':           '$RELEASE/variation/WI.$RELEASE.impute.vcf.gz',
+
+    'vcf_summary_url':         '$RELEASE/multiqc_bcftools_stats.json',
+    'phylo_url':               '$RELEASE/popgen/trees/genome.pdf'
   })
 
   V0 = ReportType('V0', {})
