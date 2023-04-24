@@ -6,6 +6,7 @@ from flask import (request,
                     jsonify,
                     make_response,
                     render_template,
+                    redirect,
                     Blueprint,
                     send_file,
                     url_for,
@@ -23,7 +24,7 @@ from caendr.models.datastore import DatasetRelease, Species
 from caendr.models.sql import Strain, StrainAnnotatedVariant
 from caendr.services.cloud.storage import generate_blob_url
 from caendr.services.dataset_release import get_all_dataset_releases, get_release_path, get_browser_tracks_path, get_release_bucket, find_dataset_release
-from caendr.models.error import NotFoundError
+from caendr.models.error import NotFoundError, SpeciesUrlNameError
 
 
 releases_bp = Blueprint(
@@ -31,8 +32,11 @@ releases_bp = Blueprint(
 )
 
 
-def interpret_url_vars(species, release_version):
-  species = Species.get(species.replace('-', '_'))
+def interpret_url_vars(species_name, release_version):
+  species = Species.get(species_name.replace('-', '_'))
+
+  if species.get_url_name() != species_name:
+    raise SpeciesUrlNameError(species.get_url_name())
 
   releases = get_all_dataset_releases(order='-version')
   release  = find_dataset_release(releases, release_version)
@@ -68,6 +72,10 @@ def data_release_list(species, release_version=None):
   # Look up the species and release version
   try:
     species, releases, release = interpret_url_vars(species, release_version)
+
+  # If species name provided with underscore instead of dash, redirect to dashed version of URL
+  except SpeciesUrlNameError as ex:
+    return redirect(url_for('data_releases.data_release_list', species=ex.species_name, release_version=release_version))
 
   # If either could not be found, return an error page
   except NotFoundError:
@@ -145,6 +153,10 @@ def alignment_data(species, release_version=None):
   try:
     species, releases, release = interpret_url_vars(species, release_version)
 
+  # If species name provided with underscore instead of dash, redirect to dashed version of URL
+  except SpeciesUrlNameError as ex:
+    return redirect(url_for('data_releases.alignment_data', species=ex.species_name, release_version=release_version))
+
   # If either could not be found, return an error page
   except NotFoundError:
     return abort(404)
@@ -183,9 +195,15 @@ def strain_issues(species, release_version=None):
     Lists all strains with known issues for a given species & release.
   """
 
-  # Look up the species and release version, returning error page if either could not be found
+  # Look up the species and release version
   try:
     species, releases, release = interpret_url_vars(species, release_version)
+
+  # If species name provided with underscore instead of dash, redirect to dashed version of URL
+  except SpeciesUrlNameError as ex:
+    return redirect(url_for('data_releases.strain_issues', species=ex.species_name, release_version=release_version))
+
+  # If either could not be found, return an error page
   except NotFoundError:
     return abort(404)
 

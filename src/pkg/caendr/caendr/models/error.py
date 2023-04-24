@@ -143,3 +143,7 @@ class FileUploadError(InternalError):
   def __init__(self, description=None):
     if description is not None:
       self.description = description
+
+class SpeciesUrlNameError(InternalError):
+  def __init__(self, species_name):
+    self.species_name = species_name
