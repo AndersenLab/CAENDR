@@ -28,8 +28,6 @@ table.dataTable thead .sorting {
 
 {{
   render_dataTable_top_menu(
-    pages = False,
-    filter = False,
     actions = [
       {
         'label': button_labels['tool'],
@@ -148,7 +146,7 @@ table.dataTable thead .sorting {
         { "sWidth": "22%" },
       {%- endif %}
       ],
-      dom: "lftipr",
+      dom: "tipr",
     });
 
     $('#filter').keyup(function(){  
