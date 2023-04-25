@@ -9,6 +9,9 @@
   .badge {
     color: black
   }
+  thead {
+    background-color: #e1eae4;
+  }
 
 </style>
 
@@ -39,7 +42,7 @@
       {% for strain in strain_listing %}
       <tr>
         <th scope="row">{{ loop.index }}</th>
-        <td><em>{{ strain.species }}</em></td>
+        <td><em>{{ strain.species_name|capitalize|replace('_', '. ') }}</em></td>
         <td>{{ strain.strain }}</td>
         <td>{{ strain.isotype }}</td>
         <td>{{ strain.previous_names }}</td>
