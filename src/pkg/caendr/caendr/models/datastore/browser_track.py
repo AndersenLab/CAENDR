@@ -1,7 +1,8 @@
 import os
 
-from caendr.models.datastore import Entity
+from caendr.models.datastore import Entity, DatasetRelease
 from caendr.services.cloud.storage import generate_blob_url
+from caendr.utils.tokens import TokenizedString
 
 
 MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
@@ -24,11 +25,12 @@ class BrowserTrack(Entity):
 
   @staticmethod
   def release_path():
-    return (MODULE_SITE_BUCKET_PUBLIC_NAME, 'dataset_release/c_${SPECIES}/${RELEASE}')
+    # TODO: add /browser_tracks to end of path, once all track files are in this folder
+    return (DatasetRelease.get_bucket_name(), DatasetRelease.get_path_template())
 
   @staticmethod
   def bam_bai_path():
-    return (MODULE_SITE_BUCKET_PRIVATE_NAME, 'bam')
+    return (MODULE_SITE_BUCKET_PRIVATE_NAME, TokenizedString('bam'))
 
   def get_path(self):
     '''
@@ -38,19 +40,20 @@ class BrowserTrack(Entity):
 
   def get_url_template(self):
     bucket, path = self.get_path()
-    return generate_blob_url(bucket, f'{path}/{self["filename"]}')
+    return path.update_template_string( generate_blob_url(bucket, f'{ path.raw_string }/{ self["filename"] }') )
 
 
   ## FASTA ##
 
   @staticmethod
   def get_fasta_filename():
-    return "browser_tracks/c_${SPECIES}.${PRJ}.${WB}.genome.fa"
+    return TokenizedString('browser_tracks/c_${SPECIES}.${PRJ}.${WB}.genome.fa')
 
   @staticmethod
   def get_fasta_path_full():
-    bucket, path = BrowserTrack.release_path()
-    return generate_blob_url(bucket, f'{ path }/{ BrowserTrack.get_fasta_filename() }')
+    bucket, path   = BrowserTrack.release_path()
+    fasta_filename = BrowserTrack.get_fasta_filename()
+    return path.update_template_string( generate_blob_url(bucket, f'{ path.raw_string }/{ fasta_filename.raw_string }') )
 
 
   ## Props ##
@@ -79,7 +82,7 @@ class BrowserTrack(Entity):
       **self.__dict__.get('params', {}),
       'name':  self['name'],
       'order': self['order'],
-      'url':   self.get_url_template(),
+      'url':   self.get_url_template().raw_string,
     }
 
     # Add indexURL if defined

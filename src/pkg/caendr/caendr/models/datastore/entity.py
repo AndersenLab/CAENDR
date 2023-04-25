@@ -342,7 +342,7 @@ class Entity(object):
     # If no matching entities found, return None
     if len(matches) == 0:
       if required:
-        raise NotFoundError(f'Could not find {cls.kind} entity with "{key}" = "{val}".')
+        raise NotFoundError( cls.kind, {key: val} )
       else:
         return None
 

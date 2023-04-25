@@ -59,7 +59,7 @@ def update_heritability_report_status(id: str, status: str=None, operation_name:
 
   h = HeritabilityReport.get_ds(id)
   if h is None:
-    raise NotFoundError(f'No Heritability Report with ID "{id}" was found.')
+    raise NotFoundError(HeritabilityReport, {'id': id})
 
   if status:
     h.set_properties(status=status)
