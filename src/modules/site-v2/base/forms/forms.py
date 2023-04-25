@@ -29,14 +29,14 @@ from wtforms.validators import (Required,
 from wtforms.fields.html5 import EmailField
 
 
-from constants import PRICES, SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS, REPORT_TYPES
+from constants import PRICES, SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS
 
 from caendr.services.profile import get_profile_role_form_options
 from caendr.services.user import get_user_role_form_options, get_local_user_by_email
 from caendr.services.database_operation import get_db_op_form_options
 from caendr.services.indel_primer import get_indel_primer_chrom_choices
 from caendr.services.markdown import get_content_type_form_options
-from caendr.models.datastore import User, SPECIES_LIST
+from caendr.models.datastore import User, SPECIES_LIST, DatasetRelease
 from caendr.api.strain import query_strains
 from base.forms.validators import (validate_duplicate_strain, 
                                    validate_duplicate_isotype, 
@@ -196,6 +196,7 @@ class AdminEditToolContainerVersion(FlaskForm):
   
 class DatasetReleaseForm(FlaskForm):
   """ A form for creating a data release """
+  REPORT_TYPES = [(report_type.name, report_type.name) for report_type in DatasetRelease.all_report_types]
   version = IntegerField('Dataset Release Version', validators=[Required(message="Dataset release version (as an integer) is required (ex: 20210121)")])
   wormbase_version = IntegerField('Wormbase Version WS:', validators=[Required(message="Wormbase version (as an integer) is required (ex: WS276 -> 276)")])
   report_type = SelectField('Report Type', choices=REPORT_TYPES, validators=[Required()])

@@ -63,13 +63,13 @@
 
                   <tr>
                       <td><strong>Strain Issues</strong></td>
-                      <td>This <a href="{{ url_for('data_releases.strain_issues', release_version = release_version) }}">link</a> contains all strain issues for this release</td>
+                      <td>This <a href="{{ url_for('data_releases.strain_issues', species = species.get_url_name(), release_version = release_version) }}">link</a> contains all strain issues for this release</td>
                       <td></td>
                   </tr>
 
                   <tr>
                       <td><strong>Alignment Data</strong></td>
-                      <td>This <a href="{{ url_for('data_releases.alignment_data', release_version = release_version) }}">link</a> contains all alignment data as BAM or BAI files.</td>
+                      <td>This <a href="{{ url_for('data_releases.alignment_data', species = species.get_url_name(), release_version = release_version) }}">link</a> contains all alignment data as BAM or BAI files.</td>
                       <td></td>
                   </tr>
 
