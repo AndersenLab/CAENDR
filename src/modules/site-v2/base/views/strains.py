@@ -303,6 +303,18 @@ def order_confirmation(invoice_hash):
   if order_obj:
     order_obj["items"] = {x.split(":")[0]: float(x.split(":")[1])
                           for x in order_obj['items'].split("\n")}
+    items = [{'strain': k, 'price': v} for k, v in order_obj["items"].items()]
+    strains = get_strains()
+    
+    # get species
+    for item in items:
+      for strain in strains:
+        if item['strain'] == strain.isotype:
+          item['species'] = strain.species_name
+          break
+        else:
+          item['species'] = ''
+
     if order_obj is None:
       abort(404)
     title = "Order Confirmation"

@@ -45,14 +45,14 @@
         color: #198754;
         background-color: #e9e9e9;
     }
-    #icon-btn {
+    .icon-btn {
         border: none;
         background: rgb(186, 186, 186, 0);
     }
-    #delete-icon {
+    .delete i {
         color: rgb(227, 2, 2);
     }
-    #delete {
+    .delete {
         text-align: center;
     }
     #goBack {
@@ -90,12 +90,13 @@
                 {% for item in cartItems %}
                 <tr class='cartItem'>
                     <td>{{ loop.index }}</td>
-                    <td>{{ item.species }}</td>
+                    <td><em>{{ item.species }}</em></td>
                     <td>{{ item.name }}</td>
                     <td>${{ item.price }}</td>
-                    <td id="delete">
-                        <button type="button" id="icon-btn" info={{ item.name }}>
-                            <i class="bi bi-trash-fill" id="delete-icon"></i>
+                    <td class="delete">
+                        <button type="button" class="icon-btn" info={{ item.name }}>
+                            <i class="bi bi-trash-fill" class="delete-icon" aria-hidden="true"></i>
+                            Delete
                         </button>
                     </td>
                 </tr>
@@ -124,7 +125,7 @@
 <form id='form-submit' method="POST">
     <div class="row">
         <div class="col">
-            <h3>Shipping Information</h3>
+            <h2>Shipping Information</h2>
             <div id="shippingInfo">
                 {{ form.csrf_token }}
                 <input id='version' name="version" type="hidden" value='{{ form.version.data }}'>
@@ -139,11 +140,11 @@
         </div>
         <div class="col">
             <div>
-                <h3>Payment Information</h3>
+                <h2>Payment Information</h2>
                 <div id="paymentInfo">
                     <div class="form-group">
                         {{ form.payment.label}}
-                        <button type="button" id="icon-btn" data-toggle="modal" data-target="#paymentInfoModal"><i class="bi bi-info-circle-fill" id="payment-info-icon"></i></button>
+                        <button type="button" class="icon-btn" data-toggle="modal" data-target="#paymentInfoModal" aria-label="Payment information"><i class="bi bi-info-circle-fill" id="payment-info-icon" aria-hidden="true"></i></button>
                         {{ form.payment(class="form-control") }}
                     </div>
                     {{ render_field(form.comments) }}
@@ -247,7 +248,7 @@ $(document).ready(function() {
         }
     })
 
-    $(".searchable").on('click', '.cartItem > #delete > button', function() {
+    $(".searchable").on('click', '.cartItem > .delete > button', function() {
         $('#deleteItem').attr('info', $(this).attr('info'))
         $('#deleteModal').modal('show')
     })

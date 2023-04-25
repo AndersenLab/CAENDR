@@ -28,7 +28,7 @@
 
   <div class="panel panel-default">
       <div class="d-flex justify-content-between mb-4 panel-heading">
-        <h3 class="panel-title">{{ invoice }}</h3>
+        <h2 class="panel-title">{{ invoice }}</h2>
         <form>
           <button type="button" class='btn btn-primary btn-block hidden-print' onClick="window.print()">
             <i class="bi bi-printer-fill"></i>
@@ -39,7 +39,7 @@
 
       <div id="container">
         <div class="d-flex justify-content-between">
-          <h4>Shipping Information</h4>
+          <h3>Shipping Information</h3>
           <p><strong>Order Date: {{ order_obj['date'] }}</strong></p>
         </div>
         
@@ -48,35 +48,28 @@
         <p><strong>Shipping Service: </strong>{{ order_obj["shipping_service"] }}</p>
         <br/>
         <div>
-          <h4>Order Information</h4>
+          <h3>Order Information</h3>
           <table class="table table-hover table-striped" style="table-layout: fixed">
             <thead>
                 <tr>
                     <th style="width: 40px">#</th>
+                    <th style="width: 200px;">Species</th>
                     <th style="width: 200px;">Item</th>
                     <th class="price text-right">Price</th>
                 </tr>
             </thead>
             <tbody class="searchable"> 
-                {% for k, v in order_obj["items"].items() %}
+                {% for item in items %}
                 <tr>
                     <td>{{ loop.index }}</td>
-                    <td>{{ k }}</td>
-                    <td class="price text-right">${{'%0.2f'| format(v)}}</td>
+                    <td>{{ item['strain'] }}</td>
+                    <td><em>{{ item['species']|capitalize|replace('_', '. ') }}</em></td>
+                    <td class="price text-right">${{'%0.2f'| format(item['price'])}}</td>
                 </tr>
                 {% endfor %}
   
-                {% if order_obj['shipping_service'] == "$65 Flat Fee"%}
-                <tr> 
-                  <td> - </td>
-                  <td> $65 Shipping Flat Fee</td>
-                  <td class="price text-right">$65</td>
-                </tr>
-                {% endif %}
-  
                 <tr>
-                <td><strong>Total</strong></td>
-                <td></td>
+                <td colspan="3"><strong>Total</strong></td>
                 <td class="price text-right"><strong>${{ order_obj["total"] }}</strong></td>
                 </tr>
             </tbody>
@@ -85,7 +78,7 @@
       </div>
     </div>{# /panel #}
     <div class="m-4">
-      <h3>To complete your order</h3>
+      <h4>To complete your order</h4>
   
       {% if order_obj['payment'] == 'credit_card' %}
       <p>We will follow-up with you directly via email/phone to complete your order.</p>

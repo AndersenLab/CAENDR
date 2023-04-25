@@ -6,7 +6,6 @@
 .filters {
     display: flex;
     justify-content: space-evenly;
-    margin-bottom: 20px
 }
 .paste-list .btn, #downloadData {
     color: white;
@@ -52,7 +51,7 @@ table {
 #search-results > li:nth-child(odd) {
     background-color: rgb(241, 241, 241);
 }
-#alert {
+#notFoundAlert {
     display: none;
     text-align:center
 }
@@ -77,13 +76,12 @@ table {
         <div class="tab-content" id="strainsTabContent">
             <!-- Strain Sets Content -->
             <div class="tab-pane fade show active" id="strain-sets-tab-pane" role="tabpanel" aria-labelledby="strain-sets-tab">
-                <h5>Home</h5>  
                 <p>Pre-defined sets of strains can be ordered below.</p>
                 <div class="accordion" id="aboutStrainSets">
                     <div class="accordion-item">
-                        <h3 class="accordion-header" id="divergentSets">
+                        <h2 class="accordion-header" id="divergentSets">
                             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#divergentSets-collapse" aria-expanded="true" aria-controls="divergentSets">About Divergent Sets</button>
-                        </h3>
+                        </h2>
                         <div id="divergentSets-collapse" class="accordion-collapse collapse show" aria-labelledby="divergentSets">
                             <div class="accordion-body">
                                 The <strong>divergent set</strong> includes 12 genotypically different strains and can be used to determine broad-sense heritability after repeated independent measures of your favorite phenotype. <strong>We recommend starting with the divergent set.</strong>
@@ -91,9 +89,9 @@ table {
                         </div>
                     </div>
                     <div class="accordion-item">
-                        <h3 class="accordion-header" id="mappingSets">
+                        <h2 class="accordion-header" id="mappingSets">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#mappingSets-collapse" aria-expanded="false" aria-controls="mappingSets">About Mapping Sets</button>
-                        </h3>
+                        </h2>
                         <div id="mappingSets-collapse" class="accordion-collapse collapse" aria-labelledby="mappingSets">
                             <div class="accordion-body">
                                 Sets <strong>1-8</strong> each contain 46-48 strains that should be assayed for genetic mapping experiments. We recommend using a single set of 48 strains. After you have scored and optimized your quantitative trait, additional sets can be assayed to increase statistical power for association mapping.
@@ -117,13 +115,11 @@ table {
                                 <td>1</td>
                                 <td>
                                     <input class="form-check-input"  type="checkbox" name="items-10000" id="divergent" value="set_divergent" class="styled-checkbox" />
-                                    <label class="form-check-label"  for="divergent">&nbsp;</label>
+                                    <label class="form-check-label visually-hidden"  for="divergent">Select row</label>
                                 </td>
-                                <td id="strainName"><label for="divergent">Divergent Set</label></td>
+                                <td class="strainName"><label for="divergent">Divergent Set</label></td>
                                 <td>{{ len(strain_sets["D"]) }}</td>
-                                <td>
-                                    <small>{{ strain_sets["D"]|join(' ') }}</small>
-                                </td>
+                                <td>{{ strain_sets["D"]|join(' ') }}</td>
                             </tr>
                             {% for i in range(1,11) %}
                             <tr>
@@ -131,9 +127,9 @@ table {
                                 <td>
                                     {# REVERT - enable mapping set 7 and 8 #}
                                     <input class="form-check-input" id="set-{{ i }}" type="checkbox" name="items-{{ i + 1000 }}" value="set_{{ i }}" class="styled-checkbox" {% if i>= 9 %}disabled{% endif %}/>
-                                    <label class="form-check-label" for="set-{{ i }}">&nbsp;</label>
+                                    <label class="form-check-label visually-hidden" for="set-{{ i }}">Select row</label>
                                 </td>
-                                <td id="strainName"><label for="set-{{ i }}">Mapping Set {{ i }}</label></td>
+                                <td class="strainName"><label for="set-{{ i }}">Mapping Set {{ i }}</label></td>
                                 <td>{{ len(strain_sets["{}".format(i)]) }}</td>
                                 <td>
                                     <a class="btn btn-link btn-block view-strain-link" data-bs-toggle="collapse" data-bs-target="#view_set_{{ i }}">View Strains</a>
@@ -153,31 +149,30 @@ table {
             </div>
             <!-- Individual Strains Content -->
             <div class="tab-pane fade" id="individual-strains-tab-pane" role="tabpanel" aria-labelledby="individual-strains-tab">
-                <h5>Individual Strains</h5>
                 <p>Individual strains can be ordered below.</p>
                 <!-- Filter Facets -->
                 <div class="filters">
                     <div class="species">
-                        <p>Species:</p>
+                        <label for="species">Species</label>
                         <select id='species' class="form-select">
                             <option value="">Choose</option>
                             <option value="c_elegans">C. elegans</option>
                             <option value="c_briggsae">C. briggsae</option>
                             <option value="c_tropicalis">C. tropicalis</option>
-                          </select>
+                        </select>
                     </div>
                     <div class="dropdown">
-                        <p>Search by Strains:</p>
+                        <label for="search">Search by Strains:</label>
                         <input id="search" type="text" class="form-control" data-bs-toggle="dropdown" placeholder="For example, AB1 ..." action="#" autocomplete="off">
                         <ul class="dropdown-menu" role="menu" id="search-results"></ul>
                     </div>
                     <div class="paste-list">
-                        <p>Paste List:</p>
+                        <label for="pasteStrains">Paste List:</label>
                         <div class="dropdown">
                             <button type='button' id='pasteStrains' class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Paste Strains</button>
                             <div class="dropdown-menu">
                                 <form>
-                                    <p>Paste List:</p>
+                                    <label for="copyPasteStrains">Paste List:</label>
                                     <textarea id="copyPasteStrains" class="form-control" placeholder="Paste a tab, comma, or newline delimited list of strains here"></textarea>
                                     <button type="button" class="btn btn-secondary" id="submitPaste">Submit</button>
                                 </form>
@@ -185,11 +180,14 @@ table {
                         </div>
                     </div>
                     <div>
-                        <p>Strain Data:</p>
-                        <button type="button" class="btn btn-secondary" id="downloadData">Download Data</button>
+                        <label for="downloadData">Strain Data:</label>
+                        <div>
+                            <button type="button" class="btn btn-secondary" id="downloadData">Download Data</button>
+                        </div>
+                        
                     </div>
                 </div>
-                <div id="alert" class="alert alert-danger" role="alert">
+                <div id="notFoundAlert" class="alert alert-danger" role="alert">
                     <i class="bi bi-exclamation-triangle-fill d-inline"></i>
                     <p class="d-inline m-2"></p>
                 </div>
@@ -226,10 +224,10 @@ table {
                                 <td>
                                     {% set isotype_loop_index = loop.index %}
                                     <input class="form-check-input" type="checkbox" name="items-{{ loop.index }}" id="items-{{ loop.index }}" value="{{ isotype }}" info="{{ isotype + " " + strains|join(" ") }}" />
-                                    <label class="form-check-label" for="items-{{ isotype_loop_index }}">&nbsp;</label>
+                                    <label class="form-check-label visually-hidden" for="items-{{ loop.index }}">Select row</label>
                                 </td>
                                 <td class="species" data-value="{{ strains[0].species_name }}"><i>{{ strains[0].species_name|capitalize|replace('_', '. ') }}</i></td>
-                                <td id="strainName"><a href="{{ url_for('request_strains.isotype_page', isotype_name=isotype) }}">{{ isotype }}</a></td>
+                                <td class="strainName"><a href="{{ url_for('request_strains.isotype_page', isotype_name=isotype) }}">{{ isotype }}</a></td>
                                 <td>{{ strains|join(", ") }}</td>
                                 <td>{{ strains[0]['release'] }}</td>
                               {% if strains[0].previous_names %}
@@ -325,7 +323,7 @@ table {
         })
 
         $("#submitPaste").click(function() {
-            $('#alert').hide()
+            $('#notFoundAlert').hide()
             pastedStrains = $("#copyPasteStrains").val().split(/[\s,\n,\t]+/);
             lost_strains = [];
             for (i in pastedStrains) {
@@ -406,8 +404,8 @@ table {
     });
 
     set_alert = function(msg) {
-            $('#alert > p').html(msg)
-            $('#alert').show()
+            $('#notFoundAlert > p').html(msg)
+            $('#notFoundAlert').show()
     }
 
     highlight_set_buttons = function() {

@@ -3,7 +3,7 @@
 {% block content %}
 
 <style>
-    h4, h5 {
+    h2, h3 {
         text-align: center;
         color: black;
         font-weight: bold;
@@ -32,14 +32,14 @@
 </style>
 
 <div class="container-fluid">
-    <h2>Request Strains</h2>
-    <h4>Please choose your affiliation:</h4>
+    <h1>Request Strains</h1>
+    <h2>Please choose your affiliation:</h2>
     <div class="container">
         <div class="card shadow cardBorderBottom">
             <a href="{{ url_for('request_strains.strains_catalog')}}">
                 <i class="bi bi-book-fill text-info" aria-hidden="true"></i>
                 <div class="card-body">
-                    <h5 class="card-title">Academia</h5>
+                    <h3 class="card-title">Academia</h3>
                     <p class="card-text">I am a researcher, post-doc, graduate student, undergraduate student, staff member, or other affiliate of a post-secondary educational institution.</p>
                 </div>
             </a>
@@ -48,7 +48,7 @@
             <a href="https://nulive.technologypublisher.com/tech/The_Caenorhabditis_Natural_Diversity_Resource">
                 <i class="bi bi-briefcase-fill text-info" aria-hidden="true"></i>
                 <div class="card-body">
-                    <h5 class="card-title">Industry</h5>
+                    <h3 class="card-title">Industry</h3>
                     <p class="card-text">I work at a for-profit company or other organization that is not affiliated with post-secondary education.</p>
                 </div>
             </a>
