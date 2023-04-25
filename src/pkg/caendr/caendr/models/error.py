@@ -69,15 +69,24 @@ class JSONParseError(InternalError):
   
 class UnprocessableEntity(InternalError):
   description = "Unprocessable Entity"
+
+
+
 class CachedDataError(InternalError):
   description = "This data has already been submitted by another user"
+  def __init__(self, report):
+    self.report = report
 
 class DuplicateDataError(InternalError):
   description = "This data has already been submitted by the same user"
+  def __init__(self, report):
+    self.report = report
 
 class DuplicateTaskError(InternalError):
   description = "This task has already been scheduled"
-  
+
+
+
 class DataFormatError(InternalError):
   description = "Error parsing data with expected format"
   def __init__(self, msg, line: int=None):
@@ -132,26 +141,33 @@ class NonUniqueEntity(InternalError):
     self.description = f'Found multiple {kind} entities with field "{key}" = "{val}".'
     super().__init__()
 
+
 class ReportLookupError(InternalError):
   def __init__(self, msg, code):
     self.msg = msg
     self.code = code
 
+class EmptyReportDataError(InternalError):
+  def __init__(self, report_id):
+    self.id = report_id
+    self.description = 'Empty report'
+
+class EmptyReportResultsError(InternalError):
+  def __init__(self, report_id):
+    self.id = report_id
+    self.description = 'Empty report'
+
+class UnfinishedReportError(InternalError):
+  def __init__(self, report_id, data=None):
+    self.id = report_id
+    self.data = data
+    self.description = 'Report is not finished'
+
+
 class FileUploadError(InternalError):
   description = "Could not upload file"
 
-  def __init__(self, description=None):
+  def __init__(self, description=None, code=500):
     if description is not None:
       self.description = description
-
-class SpeciesUrlNameError(InternalError):
-  def __init__(self, species_name):
-    self.species_name = species_name
-
-class InvalidTokenError(InternalError):
-  def __init__(self, token):
-    self.token = token
-    self.description = f'Invalid token name {token}'
-
-class MissingTokenError(InternalError):
-  description = 'Cannot get filled-in template until all tokens are defined'
+    self.code = code

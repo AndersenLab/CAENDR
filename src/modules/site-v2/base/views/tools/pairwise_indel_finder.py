@@ -1,22 +1,27 @@
-import json
 import re
-import pandas as pd
-import numpy as np
-
-import io
 
 from caendr.services.logger import logger
 from flask import Response, Blueprint, render_template, request, url_for, jsonify, redirect, flash, abort
 
-from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
 from base.forms import PairwiseIndelForm
+from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
+from base.utils.tools import lookup_report, try_submit
 
 from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefault
-from caendr.models.datastore import SPECIES_LIST
-from caendr.models.error import NotFoundError, NonUniqueEntity
+from caendr.models.datastore import SPECIES_LIST, IndelPrimer
+from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupError, EmptyReportDataError, EmptyReportResultsError, UnfinishedReportError
+from caendr.models.task import TaskStatus
+from caendr.services.dataset_release import get_browser_tracks_path
 from caendr.utils.constants import CHROM_NUMERIC
 
-from caendr.services.indel_primer import get_sv_strains, query_indels_and_mark_overlaps, create_new_indel_primer, get_indel_primer, fetch_ip_data, fetch_ip_result, get_all_indel_primers, get_user_indel_primers
+from caendr.services.indel_primer import (
+    get_sv_strains,
+    query_indels_and_mark_overlaps,
+    get_indel_primer,
+    get_indel_primers,
+    fetch_indel_primer_report,
+    modify_indel_primer_result,
+)
 
 
 
@@ -29,7 +34,34 @@ from caendr.utils.constants import CHROM_NUMERIC
 
 
 
-@pairwise_indel_finder_bp.route('/pairwise-indel-finder/tracks', methods=['GET'])
+def results_columns():
+  return [
+    {
+      'title': 'Site',
+      'class': 'site',
+      'field': 'site',
+      'width': 0.5,
+      'link_to_data': True,
+      'data_order': lambda e: e['site'],
+    },
+    {
+      'title': 'Strain 1',
+      'class': 's1',
+      'field': 'strain_1',
+      'width': 0.25,
+    },
+    {
+      'title': 'Strain 2',
+      'class': 's2',
+      'field': 'strain_2',
+      'width': 0.25,
+    },
+  ]
+
+
+## Data Endpoints
+
+@pairwise_indel_finder_bp.route('/tracks', methods=['GET'])
 @jwt_required()
 def get_tracks():
 
@@ -52,7 +84,7 @@ def get_tracks():
   return jsonify(divergent_track['params'])
 
 
-@pairwise_indel_finder_bp.route('/pairwise-indel-finder/strains', methods=['GET'])
+@pairwise_indel_finder_bp.route('/strains', methods=['GET'])
 @jwt_required()
 def get_strains():
   return jsonify({
@@ -60,8 +92,9 @@ def get_strains():
   })
 
 
+## Page Endpoints
 
-@pairwise_indel_finder_bp.route('/pairwise-indel-finder', methods=['GET'])
+@pairwise_indel_finder_bp.route('', methods=['GET'])
 @jwt_required()
 def pairwise_indel_finder():
 
@@ -103,44 +136,46 @@ def pairwise_indel_finder():
 
 
 
-
-@pairwise_indel_finder_bp.route("/pairwise-indel-finder/all-results")
-@admin_required()
-def all_results():
-  return render_template('tools/pairwise_indel_finder/list-all.html', **{
-
-    # Page info
-    'title': "All Indel Primer Results",
-    'alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools') },
-
-    # User info
-    'user':  get_current_user(),
-    'items': get_all_indel_primers(),
-  })
-
-
-
-@pairwise_indel_finder_bp.route("/pairwise-indel-finder/my-results")
+@pairwise_indel_finder_bp.route('/all-results', methods=['GET'], endpoint='all_results')
+@pairwise_indel_finder_bp.route('/my-results',  methods=['GET'], endpoint='my_results')
 @jwt_required()
-def user_results():
-
-  # Get user
+def list_results():
+  show_all = request.path.endswith('all-results')
   user = get_current_user()
 
-  return render_template('tools/pairwise_indel_finder/list-user.html', **{
+  # Only show malformed Entities to admin users
+  filter_errs = not user_is_admin()
+
+  # Construct page
+  return render_template('tools/report-list.html', **{
 
     # Page info
-    'title': 'My Primer Reports',
+    'title': ('All' if show_all else 'My') + ' Primer Reports',
     'alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools'), },
 
     # User info
     'user':  user,
-    'items': get_user_indel_primers(user.name),
+
+    # Tool info
+    'tool_name': 'pairwise_indel_finder',
+    'all_results': show_all,
+    'button_labels': {
+      'tool': 'New Primer Search',
+      'all':  'All User Results',
+      'user': 'My Primer Reports',
+    },
+
+    # Table info
+    'species_list': SPECIES_LIST,
+    'items': get_indel_primers(None if show_all else user.name, filter_errs),
+    'columns': results_columns(),
+
+    'TaskStatus': TaskStatus,
   })
 
 
 
-@pairwise_indel_finder_bp.route("/pairwise-indel-finder/query-indels", methods=["POST"])
+@pairwise_indel_finder_bp.route("/query-indels", methods=["POST"])
 @jwt_required()
 def query():
 
@@ -165,7 +200,7 @@ def query():
 
 
 
-@pairwise_indel_finder_bp.route('/pairwise-indel-finder/submit', methods=["POST"])
+@pairwise_indel_finder_bp.route('/submit', methods=["POST"])
 @jwt_required()
 def submit():
 
@@ -178,139 +213,79 @@ def submit():
   # If user is admin, allow them to bypass cache with URL variable
   no_cache = bool(user_is_admin() and request.args.get("nocache", False))
 
-  # Create new Indel Primer
-  p = create_new_indel_primer( user, data, no_cache=no_cache )
+  # Try submitting the job & getting a JSON status message
+  response, code = try_submit(IndelPrimer, user, data, no_cache)
 
-  # Notify user that task has been started
-  return jsonify({
-    'started':   True,
-    'data_hash': p.data_hash,
-    'id':        p.id,
-  })
+  # If there was an error, flash it
+  if not code == 200:
+    flash(response['message'], 'danger')
+
+  # Return the response
+  return jsonify( response ), code
+
 
 
 # TODO: Move internals of this to a service function
-@pairwise_indel_finder_bp.route("/pairwise-indel-finder/result/<id>")
-@pairwise_indel_finder_bp.route("/pairwise-indel-finder/result/<id>/tsv/<filename>")
+@pairwise_indel_finder_bp.route("/report/<id>")
+@pairwise_indel_finder_bp.route("/report/<id>/tsv/<filename>")
 @jwt_required()
-def query_results(id, filename = None):
+def report(id, filename = None):
 
-    # Get user and primer result
-    user = get_current_user()
-    ip = get_indel_primer(id)
+    # Fetch requested primer report
+    # Ensures the report exists and the user has permission to view it
+    try:
+      report = lookup_report(IndelPrimer, id)
 
-    # Check that user can view this report
-    # TODO: Should admin users be able to view reports with different filenames?
-    if (ip is None) or (ip.username != user.name):
-      flash('You do not have access to that report', 'danger')
-      abort(401)
+    # If the report lookup request is invalid, show an error message
+    except ReportLookupError as ex:
+      flash(ex.msg, 'danger')
+      abort(ex.code)
 
-    # Fetch job data (parameters of original query) and results
-    data   = fetch_ip_data(ip)
-    result = fetch_ip_result(ip)
-    ready  = False
+    # Try getting the report data file and results
+    try:
+      data, result = fetch_indel_primer_report(report)
+      ready = True
 
-    # If no indel primer submission exists, return 404
-    if data is None:
+    # If report hasn't finished computing yet, display a waiting page
+    except UnfinishedReportError as ex:
+      data, result = ex.data, None
+      ready = False
+
+    # Error reading data JSON file
+    # TODO: Should we mark report status as ERROR here too?
+    except EmptyReportDataError:
+      return abort(404, description="Pairwise indel finder data file not found")
+
+    # Results file exists, but is empty - error
+    except EmptyReportResultsError:
+      report.status = TaskStatus.ERROR
+      report.save()
       return abort(404, description="Pairwise indel finder report not found")
 
-    # Parse submission data into JSON object
-    data = json.loads(data.download_as_string().decode('utf-8'))
-    logger.debug(data)
+    # General error
+    except Exception:
+      return abort(404, description="Something went wrong")
 
-    # Set indel information
+    # Get indel information
     chrom, indel_start, indel_stop = re.split(":|-", data['site'])
     indel_start, indel_stop = int(indel_start), int(indel_stop)
 
-    # Initialize vars with default values
-    format_table = None
-    empty        = False
+    # Update the result object with computed fields and generate a format table
+    # If result is None or empty, does nothing
+    result, format_table = modify_indel_primer_result(result)
 
-    # If result file exists, display
-    if result:
-        ready = True
-
-        # Download results file as string
-        result = result.download_as_string().decode('utf-8')
-
-        # Check for empty results file
-        if len(result) == 0:
-          empty = True
-          # ip.status = 'ERROR'
-
-        # Separate results by tabs, and check for empty data frame (headers exist but no data)
-        else:
-          result = pd.read_csv(io.StringIO(result), sep="\t")
-          empty  = result.empty
-
-        # Update indel primer entity
-        if ip['status'] != 'ERROR':
-          ip['status'] = 'COMPLETE'
-        ip.empty  = empty
-        ip.save()
-
-        # If results file has data, parse
-        if not empty:
-
-            # Left primer
-            result['left_primer_start'] = result.amplicon_region.apply(lambda x: x.split(":")[1].split("-")[0]).astype(int)
-            result['left_primer_stop']  = result.apply(lambda x: len(x['primer_left']) + x['left_primer_start'], axis=1)
-
-            # Right primer
-            result['right_primer_stop']  = result.amplicon_region.apply(lambda x: x.split(":")[1].split("-")[1]).astype(int)
-            result['right_primer_start'] = result.apply(lambda x:  x['right_primer_stop'] - len(x['primer_right']), axis=1)
-
-            # Output left and right melting temperatures.
-            result[["left_melting_temp", "right_melting_temp"]] = result["melting_temperature"].str.split(",", expand = True)
-
-            # REF Strain and ALT Strain
-            ref_strain = result['0/0'].unique()[0]
-            alt_strain = result['1/1'].unique()[0]
-
-            # Extract chromosome and amplicon start/stop
-            result[[None, "amp_start", "amp_stop"]] = result.amplicon_region.str.split(pat=":|-", expand=True)
-
-            # Convert types
-            result.amp_start = result.amp_start.astype(int)
-            result.amp_stop  = result.amp_stop.astype(int)
-
-            result["N"] = np.arange(len(result)) + 1
-
-            # Associate table column names with the corresponding fields in the result objects
-            columns = [
-
-              # Basic Info
-              ("Primer Set", "N"),
-              ("Chrom", "CHROM"),
-
-              # Left Primer
-              ("Left Primer (LP)", "primer_left"),
-              ("LP Start",         "left_primer_start"),
-              ("LP Stop",          "left_primer_stop"),
-              ("LP Melting Temp",  "left_melting_temp"),
-
-              # Right Primer
-              ("Right Primer (RP)", "primer_right"),
-              ("RP Start",          "right_primer_start"),
-              ("RP Stop",           "right_primer_stop"),
-              ("RP Melting Temp",   "right_melting_temp"),
-
-              # Amplicon
-              (f"{ref_strain} (REF) amplicon size", "REF_product_size"),
-              (f"{alt_strain} (ALT) amplicon size", "ALT_product_size"),
-            ]
-
-            # Convert list of (name, field) tuples to list of names and list of fields
-            column_names, column_fields = zip(*columns)
-
-            # Create table from results & columns
-            format_table = result[list(column_fields)]
-            format_table.columns = column_names
-
+    # Update indel primer entity
+    # TODO: Is this the right time/place for this?
+    if ready:
+      if report['status'] != TaskStatus.ERROR:
+        report['status'] = TaskStatus.COMPLETE
+      report.empty = result is None
+      report.save()
 
     # Return downloadable TSV of results
+    # TODO: Shouldn't we check for filename? What if the ID ends in the characters "tsv"?
     if request.path.endswith("tsv"):
-        return Response(format_table.to_csv(sep="\t"), mimetype="text/tab-separated-values")
+      return Response(format_table.to_csv(sep="\t"), mimetype="text/tab-separated-values")
 
     # Otherwise, return view page
     return render_template("tools/pairwise_indel_finder/view.html", **{
@@ -321,13 +296,15 @@ def query_results(id, filename = None):
       'alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools') },
 
       # GCP data info
-      'data_hash': ip.data_hash,
+      'data_hash': report.data_hash,
       'id': id,
+
+      # Job status
+      'empty': result is None,
+      'ready': ready,
 
       # Data
       'data':  data,
-      'empty': empty,
-      'ready': ready,
       'indel_start': indel_start,
       'indel_stop':  indel_stop,
       # 'size': data['size'],

@@ -26,7 +26,7 @@ variant_annotation_bp = Blueprint(
 
 
 
-@variant_annotation_bp.route('/variant-annotation')
+@variant_annotation_bp.route('')
 @cache.memoize(60*60)
 def variant_annotation():
 
@@ -74,7 +74,7 @@ def variant_annotation():
 
 
 
-@variant_annotation_bp.route('/variant-annotation/query/interval', methods=['POST'])
+@variant_annotation_bp.route('/query/interval', methods=['POST'])
 @cache.memoize(60*60)
 def query_interval():
 
@@ -93,7 +93,7 @@ def query_interval():
 
 
 
-@variant_annotation_bp.route('/variant-annotation/query/position', methods=['POST'])
+@variant_annotation_bp.route('/query/position', methods=['POST'])
 @cache.memoize(60*60)
 def query_position():
 
@@ -112,7 +112,7 @@ def query_position():
 
 
 
-@variant_annotation_bp.route('/variant-annotation/download/csv', methods=['POST'])
+@variant_annotation_bp.route('/download/csv', methods=['POST'])
 def download_csv():
   try:
     data = request.data
