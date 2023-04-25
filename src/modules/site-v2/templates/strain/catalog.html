@@ -46,7 +46,7 @@ table {
 #search-results {
     height: auto;
     max-height: 200px;
-    width: 180px;
+    width: 200px;
     overflow-x: hidden;
 }
 #search-results > li:nth-child(odd) {
@@ -161,9 +161,9 @@ table {
                         <p>Species:</p>
                         <select id='species' class="form-select">
                             <option value="">Choose</option>
-                            <option value="Caenorhabditis elegans">C. elegans</option>
-                            <option value="Caenorhabditis briggsae">C. briggsae</option>
-                            <option value="Caenorhabditis tropicalis">C. tropicalis</option>
+                            <option value="c_elegans">C. elegans</option>
+                            <option value="c_briggsae">C. briggsae</option>
+                            <option value="c_tropicalis">C. tropicalis</option>
                           </select>
                     </div>
                     <div class="dropdown">
@@ -186,7 +186,7 @@ table {
                     </div>
                     <div>
                         <p>Strain Data:</p>
-                        <a href="{{ url_for('request_strains.strains_data_tsv') }}" type="button" class="btn btn-secondary" id="downloadData">Download Data</a>
+                        <button type="button" class="btn btn-secondary" id="downloadData">Download Data</button>
                     </div>
                 </div>
                 <div id="alert" class="alert alert-danger" role="alert">
@@ -228,7 +228,7 @@ table {
                                     <input class="form-check-input" type="checkbox" name="items-{{ loop.index }}" id="items-{{ loop.index }}" value="{{ isotype }}" info="{{ isotype + " " + strains|join(" ") }}" />
                                     <label class="form-check-label" for="items-{{ isotype_loop_index }}">&nbsp;</label>
                                 </td>
-                                <td class="species"><i>{{ strains[0].species }}</i></td>
+                                <td class="species" data-value="{{ strains[0].species_name }}"><i>{{ strains[0].species_name|capitalize|replace('_', '. ') }}</i></td>
                                 <td id="strainName"><a href="{{ url_for('request_strains.isotype_page', isotype_name=isotype) }}">{{ isotype }}</a></td>
                                 <td>{{ strains|join(", ") }}</td>
                                 <td>{{ strains[0]['release'] }}</td>
@@ -239,7 +239,6 @@ table {
                               {% endif %}
                               </tr>
                             {% endfor %}
-                              <input id="from_catalog" name="from_catalog" type="hidden" value="true">
                         </tbody>
                     </table>
                 </div>
@@ -289,10 +288,11 @@ table {
         }
 
         $("#species").change(function() {
-            var selectedVal = $(this).val()
+            const selectedVal = $(this).val()
             if (selectedVal) {
-                $('.searchable tr').hide()
-                $('.searchable tr td:nth-child(3):contains("' + selectedVal + '")').parent('tr').show()
+                $('.searchable tr').hide().filter(function() {
+                    return $(this).find('td:nth-child(3)').attr('data-value') == selectedVal
+                }).show()
                 $('#search').prop('disabled', false)
                 $('#pasteStrains').prop('disabled', false)
                 $('#downloadData').removeClass('disabled')
@@ -301,7 +301,7 @@ table {
                 $('#search').prop('disabled', true)
                 $('#pasteStrains').prop('disabled', true)
                 $('#downloadData').addClass('disabled')
-            }
+            }                
         })
 
         
@@ -352,6 +352,15 @@ table {
             $('#checkoutBox').prop('disabled', !$("input:checkbox").is(":checked"));
         })
 
+        $('#downloadData').click(function() {
+            const selectedVal = $('#species').val();
+            let url = '{{ url_for("request_strains.strains_data_tsv", species=selectedVal) }}';
+            if (selectedVal) {
+            url += selectedVal;
+            }
+            window.location.href = url;
+        });
+
         $("button[id^='set']").click(function() {
             set_name = $(this).attr("id");
             if ($("." + set_name).first().prop("checked") == false) {
@@ -378,7 +387,6 @@ table {
             $('input:checkbox:checked').each(function() {
                 data.strains.push({name: $(this).attr('value'), species: $(this).parent().siblings('.species').text() || ''})
             })
-            console.log(data)
             $.ajax({
                 type: "POST",
                 url: "{{ url_for('request_strains.order_page_post') }}",

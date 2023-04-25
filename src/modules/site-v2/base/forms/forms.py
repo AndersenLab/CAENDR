@@ -220,6 +220,8 @@ class OrderForm(Form):
   shipping_account = StringField('Account Number')
   payment = SelectField("Payment", choices=PAYMENT_OPTIONS)
   comments = TextAreaField("Comments", [Length(min=0, max=300)])
+  version = StringField(HiddenField('version', [DataRequired()]))
+
   #recaptcha = RecaptchaField()
 
   def validate_shipping_account(form, field):

@@ -127,6 +127,7 @@
             <h3>Shipping Information</h3>
             <div id="shippingInfo">
                 {{ form.csrf_token }}
+                <input id='version' name="version" type="hidden" value='{{ form.version.data }}'>
                 
                 {{ render_field(form.name) }}
                 {{ render_field(form.email) }}

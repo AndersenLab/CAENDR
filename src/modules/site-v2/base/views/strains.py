@@ -88,20 +88,21 @@ def external_links():
 #
 # Strain Data
 #
-@strains_bp.route('/CelegansStrainData.tsv')
+@strains_bp.route('/StrainData.tsv/<species>')
 @cache.memoize(60*60)
-def strains_data_tsv():
+def strains_data_tsv(species):
   """
       Dumps strain dataset; Normalizes lat/lon on the way out.
   """
-
+  
   def generate():
+    strains_by_species = query_strains(species=species, issues=False)
     col_list = list(Strain.__mapper__.columns)
     col_order = [1, 0, 3, 4, 5, 7, 8, 9, 10, 28, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 2, 6]
     col_list[:] = [col_list[i] for i in col_order]
     header = [x.name for x in col_list]
     yield '\t'.join(header) + "\n"
-    for row in query_strains(issues=False):
+    for row in strains_by_species:
       row = [getattr(row, column.name) for column in col_list]
       yield '\t'.join(map(str, row)) + "\n"
 
@@ -168,49 +169,54 @@ def order_page_post():
   else:
     users_cart = Cart(**{'items': []})
 
+
   if 'order_form' in request.form:
     if form.validate_on_submit():
-      """ submitting the order """
-      cartItems = users_cart['items']
-      if form.shipping_service.data == 'Flat Rate Shipping':
-        cartItems.append({'name': 'Flat Rate Shipping'})
-      for item in cartItems:
-        item_price = users_cart.get_price(item)
-        item['price'] = item_price
-      totalPrice = sum(item['price'] for item in cartItems)
-      
-      # When the user confirms their order it is processed below.
-      order_obj = {'total': totalPrice,
-                    'date': datetime.now(timezone.utc).date().isoformat(),
-                    'is_donation': False}
-      order_obj.update(form.data)
-      order_obj['phone'] = order_obj['phone'].strip("+")
-      order_obj['items'] = '\n'.join(sorted([f"{item['name']}:{item['price']}" for item in cartItems]))
-      order_obj['invoice_hash'] = str(uuid.uuid4()).split("-")[0]
-      order_obj["order_confirmation_link"] = url_for('request_strains.order_confirmation', invoice_hash=order_obj['invoice_hash'], _external=True)
-      send_email({"from": "no-reply@elegansvariation.org",
-                  "to": [order_obj["email"]],
-                  "cc": config.get("CC_EMAILS"),
-                  "subject": "CeNDR Order #" + str(order_obj["invoice_hash"]),
-                  "text": ORDER_SUBMISSION_EMAIL_TEMPLATE.format(**order_obj)})
+      # check the version
+      if int(users_cart['version']) != int(form.version.data):
+        flash("There was a problem with your order, please try again.", 'warning')
+        return redirect(url_for('request_strains.order_page_index'))
+      else:
+        """ submitting the order """
+        cartItems = users_cart['items']
+        if form.shipping_service.data == 'Flat Rate Shipping':
+          cartItems.append({'name': 'Flat Rate Shipping'})
+        for item in cartItems:
+          item_price = users_cart.get_price(item)
+          item['price'] = item_price
+        totalPrice = sum(item['price'] for item in cartItems)
 
-      # Save to google sheet
-      add_to_order_ws(order_obj)
+        # When the user confirms their order it is processed below.
+        order_obj = {'total': totalPrice,
+                      'date': datetime.now(timezone.utc).date().isoformat(),
+                      'is_donation': False}
+        order_obj.update(form.data)
+        order_obj['phone'] = order_obj['phone'].strip("+")
+        order_obj['items'] = '\n'.join(sorted([f"{item['name']}:{item['price']}" for item in cartItems]))
+        order_obj['invoice_hash'] = str(uuid.uuid4()).split("-")[0]
+        order_obj["order_confirmation_link"] = url_for('request_strains.order_confirmation', invoice_hash=order_obj['invoice_hash'], _external=True)
+        send_email({"from": "no-reply@elegansvariation.org",
+                    "to": [order_obj["email"]],
+                    "cc": config.get("CC_EMAILS"),
+                    "subject": "CeNDR Order #" + str(order_obj["invoice_hash"]),
+                    "text": ORDER_SUBMISSION_EMAIL_TEMPLATE.format(**order_obj)})
 
-      # Mark the cart is deleted
-      users_cart.delete_cart()
-      users_cart.save()
+        # Save to google sheet
+        add_to_order_ws(order_obj)
 
-      # flash("Thank you for submitting your order! Please follow the instructions below to complete your order.", 'success')
-      flash("Thank you for submitting your order! Please follow the instructions below to complete your order.", 'success')
+        # Mark the cart is deleted
+        users_cart.delete_cart()
+        users_cart.save()
 
-      # delete cartID from cookies
-      if cartID:
-        resp = make_response(redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302))
-        resp.delete_cookie('cartID')
-        return resp
-      
-      return redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302)
+        flash("Thank you for submitting your order! Please follow the instructions below to complete your order.", 'success')
+
+        # delete cartID from cookies
+        if cartID:
+          resp = make_response(redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302))
+          resp.delete_cookie('cartID')
+          return resp
+        
+        return redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302)
     else:
       # handle form validation errors
       title = "Order Summary"
@@ -231,6 +237,8 @@ def order_page_post():
  
     for item in added_items:
       users_cart.add_item(item)
+    
+    users_cart.update_version()
     users_cart.save()
 
     resp = make_response(jsonify({'status': 'OK'}))
@@ -256,6 +264,8 @@ def order_page_remove():
 
   # remove item from the cart
   users_cart.remove_item(item_to_remove)
+  users_cart.update_version()
+
   users_cart.save()
 
   return jsonify({'status': 'OK'}), 200
@@ -277,6 +287,8 @@ def order_page_index():
     item_price = users_cart.get_price(item)
     item['price'] = item_price
   totalPrice = sum(item['price'] for item in cartItems)
+  
+  form.version.data = users_cart['version']
 
   if user and hasattr(user, 'email') and not form.email.data:
     form.email.data = user.email
