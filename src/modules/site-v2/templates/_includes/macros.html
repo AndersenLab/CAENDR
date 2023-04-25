@@ -1,12 +1,12 @@
-{%- macro species_onchange(onchange=None) -%}
-  this.classList.toggle('fst-italic', this.value);
-  if (this.value && !this.options[0].value) this.options[0].disabled = true;
-  {% if onchange %}{{ onchange }}(this.value);{% endif %}
+{%- macro update_species_field(el, onchange=None) -%}
+  {{el}}.classList.toggle('fst-italic', {{el}}.value);
+  if ({{el}}.value && !{{el}}.options[0].value) {{el}}.options[0].disabled = true;
+  {% if onchange %}{{ onchange }}({{el}}.value);{% endif %}
 {%- endmacro -%}
 
 {% macro render_species_field(field, onchange=None) %}
   {% set _ = kwargs.update({'aria-label': 'Choose species'})  %}
-  {{ field(class="form-control", onchange=species_onchange(onchange), required=true, **kwargs) }}
+  {{ field(class="form-control", onchange=update_species_field('this', onchange), required=true, **kwargs) }}
   <script>
     // Reset the selector every time the page is shown
     // This includes from browser back/forward, and is necessary to reset species
@@ -117,6 +117,9 @@
 </div>
   <!-- /d-flex -->
 </div> {# /row #}
-
-
 {% endmacro %}
+
+
+{% macro render_dataTable_result_list_header(title, data_class=none, extra_classes='') %}
+<th scope="col" class='data-{% if data_class %}{{data_class}}{%else%}{{title|lower}}{%endif%} {{extra_classes}} bg-secondary bg-opacity-25'>{{title}}</th>
+{% endmacro%}

@@ -12,7 +12,7 @@
 <script type="text/javascript"
   src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.2/FileSaver.min.js"></script>
 
-{% if not (result or hr.status in ['ERROR','COMPLETE']) %}
+{% if not (result or hr.status in [TaskStatus.ERROR, TaskStatus.COMPLETE]) %}
 <meta http-equiv="refresh" content="10; url={{ request.path }}">
 {% endif %}
 
@@ -38,9 +38,9 @@
       <strong>Created:</strong> {{ hr.created_on | date_format }}
    </p>
    <p>
-      <strong>Status:</strong>  {{ hr.status}}
+      <strong>Status:</strong>  {{ hr.status }}
     
-    {% if hr.status == 'ERROR' %}
+    {% if hr.status == TaskStatus.ERROR %}
       <strong>Error:</strong> <span class="text-danger">{{ operation.error }}</span>
     {% endif %}
    </p>
@@ -60,14 +60,14 @@
       <!-- Options Toolbar -->
       <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar">
       <div class="ps-3 pt-0"><a href="{{ url_for('heritability_calculator.heritability_calculator') }}"><i class="bi bi-plus-circle" aria-hidden="true"></i> New Calculation</a></div>
-      <div class="ps-3 pt-0"><a href="{{ url_for('heritability_calculator.user_results') }}"><i class="bi bi-journal" aria-hidden="true"></i>View All My Heritability Results</a></div>
+      <div class="ps-3 pt-0"><a href="{{ url_for('heritability_calculator.my_results') }}"><i class="bi bi-journal" aria-hidden="true"></i>View All My Heritability Results</a></div>
       <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i> Fullscreen</a></div>
       </div>
       <!-- /Options Toolbar -->
       <!-- Heritability Results -->
       <div class="col">
         {% if data and not result %}
-        {% if not hr.status in ['COMPLETE','ERROR'] %}
+        {% if not hr.status in [TaskStatus.COMPLETE, TaskStatus.ERROR] %}
         <p class='text-info text-center'>
           <strong>
             The heritability calculation is currently being run. Please check back in a few minutes for results.
