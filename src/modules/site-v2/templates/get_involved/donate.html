@@ -14,7 +14,7 @@
       <div class="panel panel-default">
         <div class="panel-heading">Donate</div>
         <div class="panel-body">
-          <form id='form-submit' method="POST" action=".">
+          <form id='form-submit' method="POST">
             {{ form.csrf_token }}
             {{ render_field(form.name) }}
             {{ render_field(form.address, placeholder="123 Sheridan Rd. \nChicago, IL. 60657") }}
