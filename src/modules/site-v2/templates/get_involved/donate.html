@@ -17,19 +17,12 @@
     </div> {# /col-md-6 #}
 
     <div class="col-md-6">
-<<<<<<< HEAD
-      <div class="panel panel-default">
-        <div class="panel-heading">Donate</div>
-        <div class="panel-body">
-          <form id='form-submit' method="POST">
-=======
       <div class="card">
         <div class="card-header text-bg-secondary text-light fw-bold">
           Donate
         </div>
         <div class="card-body">
-          <form id='form-submit' method="POST" action=".">
->>>>>>> development
+          <form id='form-submit' method="POST">
             {{ form.csrf_token }}
             {{ render_field(form.name) }}
             {{ render_field(form.address, placeholder="123 Sheridan Rd. \nChicago, IL. 60657") }}
