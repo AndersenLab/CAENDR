@@ -3,12 +3,14 @@ import os
 from caendr.services.logger import logger
 
 from caendr.models.datastore import NemascanMapping
-from caendr.models.error     import DuplicateDataError, CachedDataError, NotFoundError
+from caendr.models.error     import NotFoundError
+from caendr.models.task      import TaskStatus
 
 from caendr.services.cloud.storage import get_blob_list
 from caendr.services.tools.submit import submit_job
+from caendr.utils.env import get_env_var
 
-NEMASCAN_NXF_CONTAINER_NAME = os.environ.get('NEMASCAN_NXF_CONTAINER_NAME')
+NEMASCAN_NXF_CONTAINER_NAME = get_env_var('NEMASCAN_NXF_CONTAINER_NAME', can_be_none=True)
 
 
 
@@ -29,35 +31,29 @@ def get_mapping(id):
   return NemascanMapping.get_ds(id)
 
 
-def get_all_mappings():
-  logger.debug(f'Getting all mappings...')
-  mappings = NemascanMapping.query_ds()
+def get_mappings(username=None, filter_errs=False):
+  '''
+    Get a list of Mappings, sorted by most recent.
+
+    Args:
+      username (str | None):
+        If provided, only return mappings owned by the given user.
+      filter_errs (bool):
+        If True, skips all entities that throw an error when initializing.
+        If False, populates as many fields of those entities as possible.
+  '''
+
+  # Filter by username if provided, and log event accordingly
+  if username:
+    logger.debug(f'Getting all mappings for user: username:{username}')
+    filters = [('username', '=', username)]
+  else:
+    logger.debug(f'Getting all mappings...')
+    filters = []
+
+  # Get list of mappings and filter by date
+  mappings = NemascanMapping.query_ds(safe=not filter_errs, ignore_errs=filter_errs, filters=filters)
   return NemascanMapping.sort_by_created_date(mappings, reverse=True)
-
-
-def get_user_mappings(username):
-  logger.debug(f'Getting all mappings for user: username:{username}')
-  filters = [('username', '=', username)]
-  mappings = NemascanMapping.query_ds(filters=filters)
-  return NemascanMapping.sort_by_created_date(mappings, reverse=True)
-
-
-
-def create_new_mapping(user, data, no_cache=False):
-
-  # Try to submit a new job
-  try:
-    return submit_job(NemascanMapping, user, data, no_cache=no_cache)
-
-  # If same job submitted by this user, redirect to their prior submission
-  except DuplicateDataError:
-    logger.debug('User resubmitted identical nemascan mapping data')
-    raise
-
-  # If same job submitted by a different user, associate new job with the cached data
-  except CachedDataError:
-    logger.debug('Nemascan Mapping with identical Data Hash exists. Returning cached report.')
-    raise
 
 
 
@@ -66,7 +62,7 @@ def update_nemascan_mapping_status(id: str, status: str=None, operation_name: st
 
   m = NemascanMapping.get_ds(id)
   if m is None:
-    raise NotFoundError(f'No Nemascan Mapping with ID "{id}" was found.')
+    raise NotFoundError(NemascanMapping, {'id': id})
 
   if status:
     m.set_properties(status=status)
@@ -75,7 +71,7 @@ def update_nemascan_mapping_status(id: str, status: str=None, operation_name: st
 
   # Mark job as complete if report output file exists
   if m.report_path is not None:
-    m['status'] = 'COMPLETE'
+    m['status'] = TaskStatus.COMPLETE
 
   m.save()
   return m

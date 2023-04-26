@@ -6,9 +6,10 @@ from caendr.models.datastore import Entity, DatabaseOperation, GeneBrowserTracks
 
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.task   import add_task
+from caendr.utils.env             import get_env_var
 
 
-MODULE_API_PIPELINE_TASK_URL_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_URL_NAME')
+MODULE_API_PIPELINE_TASK_URL_NAME = get_env_var('MODULE_API_PIPELINE_TASK_URL_NAME')
 API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 
 
@@ -17,10 +18,19 @@ API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 
 # Define the Status values
 class TaskStatus:
-  ERROR = "ERROR"
-  RUNNING = "RUNNING"
-  COMPLETE = "COMPLETE"
-  PENDING ="PENDING"
+  ERROR     = "ERROR"
+  RUNNING   = "RUNNING"
+  COMPLETE  = "COMPLETE"
+  SUBMITTED = "SUBMITTED"
+
+  @staticmethod
+  def isValid(value):
+    return value in [
+      TaskStatus.ERROR,
+      TaskStatus.RUNNING,
+      TaskStatus.COMPLETE,
+      TaskStatus.SUBMITTED,
+    ]
 
 class Task(object):
 

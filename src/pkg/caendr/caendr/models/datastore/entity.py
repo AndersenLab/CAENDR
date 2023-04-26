@@ -60,7 +60,7 @@ class Entity(object):
 
   ## Initialization ##
 
-  def __init__(self, name_or_obj = None, **kwargs):
+  def __init__(self, name_or_obj = None, safe = False, **kwargs):
     """
       Args:
         name_or_obj - A name for a new datastore item or an existing one to retrieve from the datastore               
@@ -70,20 +70,20 @@ class Entity(object):
 
     # If a datastore entity was passed, copy its fields
     if type(name_or_obj) == datastore.entity.Entity:
-      self._init_from_entity(name_or_obj)
+      self._init_from_entity(name_or_obj, safe=safe)
 
     # If a name was passed, check if the name already exists in the datastore
     elif name_or_obj:
       self.name = name_or_obj
       item = get_ds_entity(self.kind, name_or_obj)
       if item:
-        self._init_from_datastore(item)
+        self._init_from_datastore(item, safe=safe)
 
     # Catch any remaining keyword arguments and use them to initialize the object
     self.set_properties(**kwargs)
 
 
-  def _init_from_entity(self, obj):
+  def _init_from_entity(self, obj, safe=False):
     '''
       Copy constructor helper function.
 
@@ -99,17 +99,23 @@ class Entity(object):
     result_out = Entity._parse_entity_to_dict(obj)
 
     # Update properties
-    self.set_properties(**result_out)
+    if safe:
+      self.set_properties_safe(**result_out)
+    else:
+      self.set_properties(**result_out)
     self.set_properties_meta(**result_out)
 
 
-  def _init_from_datastore(self, obj):
+  def _init_from_datastore(self, obj, safe=False):
     '''
       Initialize by copying fields from an object downloaded from the datastore.
       Can be overwritten by subclasses if special functionality is needed.
     '''
     self._exists = True
-    self.set_properties(**obj)
+    if safe:
+      self.set_properties_safe(**obj)
+    else:
+      self.set_properties(**obj)
     self.set_properties_meta(**obj)
 
 
@@ -261,6 +267,15 @@ class Entity(object):
       if k in props:
         self[k] = v
 
+  def set_properties_safe(self, **kwargs):
+    props = self.get_props_set()
+    for k, v in kwargs.items():
+      if k in props:
+        try:
+          self[k] = v
+        except Exception as ex:
+          logger.warning(f"Error setting {self.__class__.__name__}['{k}'] = {v}")
+
 
 
   # Meta Properties ##
@@ -300,7 +315,7 @@ class Entity(object):
       Sort a list of Entities by their creation date, with special handling for Entities that have no recorded creation date.
       By default, sorts oldest to newest.
     '''
-    return sorted( arr, key = lambda e: _datetime_sort_key(e.created_on, set_none_max=set_none_max), reverse=reverse )
+    return sorted( arr, key = lambda e: _datetime_sort_key(e.created_on if e else None, set_none_max=set_none_max), reverse=reverse )
 
   @classmethod
   def sort_by_modified_date(cls, arr, reverse = False, set_none_max = False):
@@ -309,40 +324,58 @@ class Entity(object):
       recorded modified date.
       By default, sorts oldest to newest.
     '''
-    return sorted( arr, key = lambda e: _datetime_sort_key(e.modified_on, set_none_max=set_none_max), reverse=reverse )
+    return sorted( arr, key = lambda e: _datetime_sort_key(e.modified_on if e else None, set_none_max=set_none_max), reverse=reverse )
 
 
 
   ## Querying ##
 
   @classmethod
-  def query_ds(cls, *args, **kwargs):
+  def query_ds(cls, safe=False, ignore_errs=False, *args, **kwargs):
     '''
       Query all datastore entities with this class's kind, and return as objects
       of this Entity subclass type.
 
+      If `safe` is set to True, uses the safe version of the Entity class constructor. See __init__ for details.
+      Overrides `ignore_errs`.
+
+      If `ignore_errs` is set to True, filters out any matching Entities that threw an error while constructing.
+
       Should be called from subclasses, e.g. 'IndelPrimer.query_all( ... )'
       instead of 'Entity.query_all( ... )'.
     '''
-    return [ cls(e) for e in query_ds_entities(cls.kind, *args, **kwargs) ]
+    def construct_safe(e):
+      try:
+        return cls(e, safe=safe)
+      except:
+        return None
+
+    if ignore_errs:
+      matches = [ construct_safe(e) for e in query_ds_entities(cls.kind, *args, **kwargs) ]
+      return [ e for e in matches if e is not None ]
+
+    else:
+      return [ cls(e, safe=safe) for e in query_ds_entities(cls.kind, *args, **kwargs) ]
 
 
   @classmethod
-  def query_ds_unique(cls, key, val, required=False):
+  def query_ds_unique(cls, key, val, required=False, safe=False):
     '''
       Query the datastore for a single unique entity where the `key` property is set to `val`.
 
       If `required` is set to True, will raise an error if no such entity is found; otherwise returns None.
       If multiple entities match the query, raises a NonUniqueEntity error with all matches in the `matches` field.
+
+      If `safe` is set to True, uses the safe version of the Entity class constructor. See __init__ for details.
     '''
 
     # Run query with given key and val
-    matches = cls.query_ds(filters=[(key, '=', val)])
+    matches = cls.query_ds(safe=safe, filters=[(key, '=', val)])
 
     # If no matching entities found, return None
     if len(matches) == 0:
       if required:
-        raise NotFoundError(f'Could not find {cls.kind} entity with "{key}" = "{val}".')
+        raise NotFoundError( cls.kind, {key: val} )
       else:
         return None
 
@@ -396,7 +429,7 @@ class Entity(object):
 
 
   @classmethod
-  def get_ds(cls, name):
+  def get_ds(cls, name, safe=False):
     '''
       Get the Entity from datastore with the matching name.
     '''
@@ -410,4 +443,4 @@ class Entity(object):
 
     # If a match was found, initialize an Entity object from it
     if match is not None:
-      return cls(name)
+      return cls(name, safe=safe)

@@ -8,15 +8,9 @@ from caendr.models.datastore.profile import Profile
 from caendr.utils.data import unique_id
 
 
-# TODO: Move to Profile class
-PROFILE_ROLES = {
-  'staff': 'Staff',
-  'sac': 'Scientific Advisory Committee',
-  'collab': 'Collaborator'
-}
 
 def get_profile_role_form_options(): 
-  return [(key, val) for key, val in PROFILE_ROLES.items()]
+  return [(role.code, role.display) for role in Profile.all_roles()]
   
 
 def get_all_profiles():
@@ -66,25 +60,3 @@ def update_profile(p, **kwargs):
   p.set_properties(**kwargs)
   p.save()
   return p
-
-
-
-def get_collaborator_profiles():
-  logger.debug('Retrieving collaborator profiles from datastore')
-
-  # Filtering against a list property returns a result if any value in the list matches
-  return Profile.query_ds( filters = [('prof_roles', '=', 'collab')] )
-
-
-def get_committee_profiles():
-  logger.debug('Retrieving committee profiles from datastore')
-
-  # Filtering against a list property returns a result if any value in the list matches
-  return Profile.query_ds( filters = [('prof_roles', '=', 'sac')] )
-
-
-def get_staff_profiles():
-  logger.debug('Retrieving staff profiles from datastore')
-
-  # Filtering against a list property returns a result if any value in the list matches
-  return Profile.query_ds( filters = [('prof_roles', '=', 'staff')] )

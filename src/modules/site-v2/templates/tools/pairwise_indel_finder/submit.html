@@ -10,7 +10,6 @@
 
 {% block content %}
 {% from "_includes/macros.html" import render_field %}
-{% from "_includes/strain-listing.html" import species_selector %}
 
 <div class="container-fluid px-5">
   <div class="d-flex justify-content-around flex-wrap mt-2 pb-5">
@@ -32,23 +31,18 @@
             <!-- Input Form -->
             <form id='form-submit' method="POST" onchange="form_change()">
               {{ form.csrf_token }}
-              <!-- Species -->
-              {{ species_selector(species_list, "update_species") }}
-              <!-- /Species -->
-              <!-- <div class='mb-4'>{{ render_field(form.species) }}</div> -->
+              <div class='mb-4'>{{ render_field(form.species,                 onchange="update_species") }}</div>
               <div class="mb-4">{{ render_field(form.strain_1,   disabled='', onchange="update_browser_tracks()") }}</div>
               <div class="mb-4">{{ render_field(form.strain_2,   disabled='', onchange="update_browser_tracks()") }}</div>
               <div class="mb-4">{{ render_field(form.chromosome, disabled='') }}</div>
-              <div class="mb-4">{{ render_field(form.start,      disabled='', placeholder="2,028,824") }}</div>
-              <div class="mb-4">{{ render_field(form.stop,       disabled='', placeholder="2,029,217") }}</div>
-              <div class="d-grid gap-3 mb-4">
-                <button id='find_indels' type='submit' value="submit" class="btn btn-secondary text-light" disabled>Find Indels</button>
-              </div>
-              </form>
-              <!-- /Input Form -->
-              {% include "_includes/ignore-cache-checkbox.html" %}
-              </div>
-              <!-- /Input Card -->
+              <div class="mb-4">{{ render_field(form.start,      disabled='', placeholder="2,028,824", make_err_container=true) }}</div>
+              <div class="mb-4">{{ render_field(form.stop,       disabled='', placeholder="2,029,217", make_err_container=true) }}</div>
+              <input type="submit" hidden />
+            </form>
+            <!-- /Input Form -->
+            {% include "_includes/ignore-cache-checkbox.html" %}
+          </div>
+          <!-- /Input Card -->
         </div>
 
         <div class="tab-pane fade" id="nav-about" role="tabpanel" aria-labelledby="nav-about-tab" tabindex="0">
@@ -64,7 +58,7 @@
   <div class="d-flex flex-wrap flex-column col-md-12 col-xl-8">
       <!-- Options Toolbar -->
       <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar">
-      <div class="ps-3 pt-0"><a href='{{ url_for("pairwise_indel_finder.user_results") }}'><i class="bi bi-journal" aria-hidden="true"></i> My Primer Reports</a></div>
+      <div class="ps-3 pt-0"><a href='{{ url_for("pairwise_indel_finder.my_results") }}'><i class="bi bi-journal" aria-hidden="true"></i> My Primer Reports</a></div>
       <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i> Fullscreen</a></div>
       </div>
       <!-- /Options Toolbar -->
@@ -93,7 +87,7 @@
                                 <p><i class="bi bi-envelope-fill me-1 text-secondary fs-3"></i>You will receive an email when your
                                   report is complete.</p>
                                 <p><i class="bi bi-journal me-1 text-secondary fs-3"></i>You may also check <a
-                                    href='{{ url_for("pairwise_indel_finder.user_results") }}'>My
+                                    href='{{ url_for("pairwise_indel_finder.my_results") }}'>My
                                     Primer Results</a> for updates.</p>
                               </div>
                             </div>
@@ -112,91 +106,94 @@
 
 {% block script %}
 {% from "_includes/strain-listing.html" import unpack_species_list, replace_tokens %}
+{% from "_scripts/submit-job.js" import ajax_setup, def_submit_job %}
 <script src="{{ url_for('static', filename='js/strains.js') }}"></script>
 
 <script>
+{% include '_scripts/utils.js' %}       {#/* defines: fetch_json, form_data_to_object, toggle_input */#}
 {% include '_scripts/igv-browser.js' %}
+
+{{ def_submit_job('pairwise_indel_finder', false) }}
+
 
 /* Species */
 const species_list = {{ unpack_species_list(species_list, species_fields) }};
-var species;
+let species;
 
 /* Strains */
-var strains;
+let strains;
 
 /* IGV Browser */
 const browser_div = $("#browser");
 const browser_options = {}
-var divergent_track_name;
+let divergent_track_name;
 const COLORS = {
   INS: 'blue',
   DEL: 'red'
 }
 
 /* Form */
-var current_form_data = {
+let current_form_data = {
   chromosome: '',
   strain_1:   '',
   strain_2:   '',
-}
+};
+let current_chrom_size = null;
 
 /* Data Table */
-var table;
+let table;
 
 /* Status */
-var query_running = false
-var loaded = false
+let query_running = false
+let loaded = false
+let dragging = false
 
-
-
-function fetch_trackset() {
-  return fetch( "{{ url_for('pairwise_indel_finder.get_tracks') }}" )
-    .then( (response) => { return response.text();  } )
-    .then( (text)     => { return JSON.parse(text); } );
-}
-
-function fetch_strains() {
-  return fetch( "{{ url_for('pairwise_indel_finder.get_strains') }}" )
-    .then( (response) => { return response.text();  } )
-    .then( (text)     => { return JSON.parse(text); } );
-}
 
 
 $(document).ready(function(){
 
-  var form = document.getElementById('form-submit');
-
-  species = species_list[$("#species").val()];
+  // Get initial species value & update page to match
+  species = species_list[$("#{{ form.species.elementId }}").val()];
   update_species();
 
+  // Set headers for AJAX requests
+  {{ ajax_setup(form.csrf_token._value()) }}
+
   // Prevent form submission from reloading page, then redirect to form change logic
-  $('form').submit(function (e) {
+  $('#form-submit').submit(function (e) {
     e.preventDefault();
     form_change();
   });
 
-	$.ajaxSetup({
-		beforeSend: function(xhr, settings) {
-			if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
-				xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
-			}
-		}
-	});
-
-  fetch_strains().then((data) => {
-    strains = data;
-  });
+  fetch_json("{{ url_for('pairwise_indel_finder.get_strains') }}")
+    .then((data) => {
+      strains = data;
+    })
+    .catch((err) => {
+      // TODO: Better error handling?
+      console.error("Failed to retrieve strain values.", err);
+    });
 });
 
 
 // Query the database for indel data based on the currently selected species, strains, & chromosome
 // TODO: Do we have to worry about multiple queries running at once? Will we need to invalidate an older one?
 function run_query() {
+
+  // Get form data as an object
+  let data = form_data_to_object('form-submit');
+
+  // Update start and stop to be full chromosome size
+  data['start'] = 1;
+  data['stop']  = current_chrom_size;
+
+  // Run query
   query_running = true;
   $.ajax({
     type: "POST",
     url:  "{{ url_for('pairwise_indel_finder.query') }}",
-    data: $('form').serialize(),
+    data: data,
+    dataType: 'json',
     success: function(data) {
       results = data["results"]
 
@@ -232,19 +229,20 @@ function form_change() {
   const browser = igv.getBrowser()
 
   // Get the new values from the form elements
-  const species_id = $("#speciesSelect");
+  const species_id = $("#{{ form.species.elementId }}").val().trim();
   const chromosome = $("#chromosome").val().trim();
   const strain_1 = $("#strain_1").val();
   const strain_2 = $("#strain_2").val();
 
   // Variable to track whether a new query is needed
   // Will be true if chromosome, strain_1, or strain_2 has changed
-  var needs_update = false;
+  let needs_update = false;
+  let chrom_change = false;
 
   // Enable / disable the start & stop input fields based on whether a species
   // and chromosome have been chosen
-  document.getElementById('start').disabled = !species_id || !chromosome;
-  document.getElementById('stop').disabled  = !species_id || !chromosome;
+  toggle_input('start', species_id && chromosome);
+  toggle_input('stop',  species_id && chromosome);
 
   // Update strain values
   if (current_form_data.strain_1 !== strain_1) {
@@ -260,20 +258,46 @@ function form_change() {
   if (current_form_data.chromosome != chromosome) {
     current_form_data.chromosome = chromosome;
     needs_update = true;
+    chrom_change = true;
     $('#start').val(null);
     $('#stop').val(null);
   }
 
   // Update position and wait until new locus values are computed
   // Need browser to compute start & end, in case e.g. range is invalid or the whole chromosome is selected
-  set_position(browser).then(({chromosome, start, end}) => {
+  set_position(browser, chrom_change)
+    .then(({chromosome, start, end}) => {
 
-    // If a new query is needed (chromosome or strain change), run now that position updated
-    // Run query if one chromosome and at least one strain are chosen
-    if (needs_update && (chromosome !== 'all' && (strain_1 || strain_2))) {
-      run_query();
-    }
-  });
+      // Clear & hide front-end error containers
+      $(".err-container").text('');
+      $(".err-container").hide();
+
+      // If the chromosome changed, save its size so we can reuse it in later queries
+      // (in case the browser is zoomed in & one of the strains changes)
+      if (chrom_change) {
+        current_chrom_size = end;
+      }
+
+      // If a new query is needed (chromosome or strain change), run it now that the position is updated
+      // Run query if one chromosome and at least one strain are chosen
+      if (needs_update && (chromosome !== 'all' && (strain_1 || strain_2))) {
+        run_query();
+      }
+
+      // Otherwise, redraw the table to match the new search region
+      else {
+        if (table) table.draw();
+      }
+    })
+    .catch((e) => {
+      // Find the error container associated with the invalid field
+      const field_el = $(`#${e.position}`);
+      const err_container = field_el.closest('.form-group').find('.err-container');
+
+      // Display the error message
+      err_container.text(e.message);
+      err_container.show();
+    });
 }
 
 
@@ -290,11 +314,8 @@ function update_species(species_id) {
     'strain_1',
     'strain_2',
     'chromosome',
-    'find_indels',
-  ]
-  form_ids.forEach((form_id) => {
-    document.getElementById(form_id).disabled = species_empty;
-  })
+  ];
+  form_ids.forEach((form_id) => toggle_input(form_id, !species_empty));
 
   // If no species chosen, end the update function here
   if (species_empty) return;
@@ -327,26 +348,46 @@ function update_species(species_id) {
         if (chrom_old !== chrom_new) {
           run_query();
         }
+
+        // Redraw the table if the user is not currently dragging
+        // Prevents this event from spamming redraw requests
+        if (!dragging) {
+          if (table) table.draw();
+        }
       });
+
+      // Keep track of when browser is being dragged
+      browser.on('trackdrag', () => {
+        dragging = true;
+      })
+      browser.on('trackdragend', () => {
+        dragging = false;
+        if (table) table.draw();
+      })
 
       // Flag the browser as loaded
       loaded = true;
 
       // Clear all tracks & reload the divergent regions track
       clear_tracks();
-      fetch_trackset().then((divergent_track_summary) => {
-        divergent_track_name = divergent_track_summary.name;
+      fetch_json("{{ url_for('pairwise_indel_finder.get_tracks') }}")
+        .then((divergent_track_summary) => {
+          divergent_track_name = divergent_track_summary.name;
 
-        // Replace species tokens in URL
-        divergent_track_summary.url = replace_tokens(divergent_track_summary.url);
+          // Replace species tokens in URL
+          divergent_track_summary.url = replace_tokens(divergent_track_summary.url);
 
-        // Set tool-specific display properties
-        divergent_track_summary.height = 40; // Height to view two rows would be 70
-        divergent_track_summary.removable = false;
+          // Set tool-specific display properties
+          divergent_track_summary.height = 40; // Height to view two rows would be 70
+          divergent_track_summary.removable = false;
 
-        // Add the track to the browser
-        add_track(divergent_track_name, divergent_track_summary);
-      })
+          // Add the track to the browser
+          add_track(divergent_track_name, divergent_track_summary);
+        })
+        .catch((err) => {
+          // TODO: Better error handling
+          console.error("Failed to retrieve divergent regions track.", err);
+        })
 
       // Update browser tracks
       update_browser_tracks(browser, results);
@@ -434,7 +475,7 @@ function create_or_update_data_table(results) {
       data:      results,
       paging:    false,
       ordering:  true,
-      searching: false,
+      dom:       'lrtip', // Hides the default search bar -- see https://legacy.datatables.net/ref#bFilter
       order:     [[1, "asc"]],
       columnDefs: [
         { targets: [0], orderData: [1,2] },
@@ -446,6 +487,13 @@ function create_or_update_data_table(results) {
         { data: "STRAIN", title: "Strain"                },
         { data: "generate_primers", renderer: "html"     },
       ],
+    });
+
+    // Create filter function based on start & stop values
+    $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+      const start = parse_int_input('#start');
+      const stop  = parse_int_input('#stop');
+      return (start <= data[1] && data[1] <= stop) || (start <= data[2] && data[2] <= stop)
     });
   }
   else {
@@ -460,65 +508,69 @@ function create_or_update_data_table(results) {
 
 
 function generate_primers(e) {
-  console.log("Submitted")
-  $(this).text("Submitted")
+  $(this).text("Submitting");
 
   // Get strain values and sort - consistent ordering of strains for hashing
-  var strains = [$("#strain_1").val(), $("#strain_2").val()].sort()
+  const strains = [$("#strain_1").val(), $("#strain_2").val()].sort()
 
-  var data = {
+  const data = {
     site: $(this).attr("site"),
     strain_1: strains[0],
     strain_2: strains[1],
     size: $(this).attr("size"),
-    species: $('#species').val(),
+    species: $("#{{ form.species.elementId }}").val(),
     svtype: $(this).attr("svtype")
   }
 
-  $.ajax({
-    type: "POST",
-    url:
-      {%- if session["is_admin"] -%}
-        "{{ url_for('pairwise_indel_finder.submit') }}" + ($('#no_cache_checkbox').prop('checked') ? "?nocache=1" : ""),
-      {%- else -%}
-        "{{ url_for('pairwise_indel_finder.submit') }}",
-      {%- endif %}
-    data: JSON.stringify(data),
-    contentType: "application/json; charset=utf-8",
-    dataType: 'json',
-    success: function(result) {
-        window.open(`pairwise-indel-finder/result/${result.id}`, "_blank")
-    }
-  })
+  // Submit the job, opening results in a new tab if applicable
+  submit_job(data, '#generate-primers-modal', true)
+    .done(() => {
+      $(this).text("Submitted");
+      $(this).prop('onclick', null).off('click');
+    })
+    .fail(() => {
+      $(this).text("Failed");
+      $(this).prop('onclick', null).off('click');
+    })
 }
 
 
 /* Helper Functions */
 
+class SearchLocusError extends Error {
+  constructor(position, message = "", ...args) {
+    super(message, ...args);
+    this.position = position;
+  }
+}
 
 // Create a search locus for the IGV browser
 function create_search_locus(chromosome, start, end) {
-  const DEFAULT_SIZE = 1000000;
 
   // If no chromosome specified, show all chromosomes
   if (chromosome === '' || chromosome === 'all') {
     return 'all';
   }
 
-  // If no end coordinate specified, show entire chromosome
-  // TODO: Might want to tweak this behavior a bit
-  if (isNaN(end)) {
+  // If no start/stop are desired, search for the whole chromosome
+  if (start === null && end === null) {
     return chromosome;
   }
 
-  // If start is invalid, default to 1
-  if (isNaN(start) || start < 1) {
-    start = 1;
+  // Validate start position
+  if (isNaN(start)) {
+    throw new SearchLocusError('start', 'This field is required.');
+  }
+  if (start < 1) {
+    throw new SearchLocusError('start', 'Start position must be 1 or greater.');
   }
 
-  // If end is invalid, set to default size
+  // Validate stop position
+  if (isNaN(end)) {
+    throw new SearchLocusError('stop', 'This field is required.');
+  }
   if (end <= start) {
-    end = start + DEFAULT_SIZE;
+    throw new SearchLocusError('stop', 'Stop position must be greater than start position.');
   }
 
   return `${chromosome}:${start}-${end}`
@@ -534,16 +586,23 @@ function parse_int_input(selector) {
 // Set browser position based on input
 // If input position is invalid or incomplete, the final position of the browser
 // will be returned by the Promise
-function set_position(browser) {
-  return new Promise((resolve) => {
+function set_position(browser, ignore_start_stop=false) {
+  return new Promise((resolve, reject) => {
 
     // Extract query information from form
     const chromosome = $("#chromosome").val().trim();
-    const start      = parse_int_input("#start");
-    const end        = parse_int_input("#stop");
+    const start      = ignore_start_stop ? null : parse_int_input("#start");
+    const end        = ignore_start_stop ? null : parse_int_input("#stop");
 
     // Construct search locus string from form info
-    const search_locus = create_search_locus(chromosome, start, end)
+    let search_locus;
+    try {
+      search_locus = create_search_locus(chromosome, start, end);
+    }
+    catch (e) {
+      reject(e);
+      return;
+    }
 
     // Go to the desired locus, then return it from the Promise
     browser.search(search_locus).then(([locus]) => {

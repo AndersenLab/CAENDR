@@ -211,11 +211,11 @@ def register_blueprints(app):
   
   # Tools
   app.register_blueprint(tools_bp, url_prefix='/tools')
-  app.register_blueprint(genome_browser_bp,          url_prefix='/tools')
-  app.register_blueprint(variant_annotation_bp,      url_prefix='/tools')
-  app.register_blueprint(genetic_mapping_bp,         url_prefix='/tools')
-  app.register_blueprint(pairwise_indel_finder_bp,   url_prefix='/tools')
-  app.register_blueprint(heritability_calculator_bp, url_prefix='/tools')
+  app.register_blueprint(genome_browser_bp,          url_prefix='/tools/genome-browser')
+  app.register_blueprint(variant_annotation_bp,      url_prefix='/tools/variant-annotation')
+  app.register_blueprint(genetic_mapping_bp,         url_prefix='/tools/genetic-mapping')
+  app.register_blueprint(pairwise_indel_finder_bp,   url_prefix='/tools/pairwise-indel-finder')
+  app.register_blueprint(heritability_calculator_bp, url_prefix='/tools/heritability-calculator')
 
   '''
   app.register_blueprint(gene_bp, url_prefix='/gene')
