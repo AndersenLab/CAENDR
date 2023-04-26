@@ -24,6 +24,8 @@ class Cart(Entity):
       self['is_deleted'] = False
     if not self['items']:
       self['items'] = []
+    if not self['version']:
+      self['version'] = 0
   
   ## Properties List ##
 
@@ -33,7 +35,8 @@ class Cart(Entity):
       *super().get_props_set(),
       'user',
       'items',
-      'is_deleted'
+      'is_deleted',
+      'version'
     }
   
   
@@ -48,7 +51,7 @@ class Cart(Entity):
 
     # User doesn't have a cart
     except NotFoundError:
-      return Cart(**{'user': email, 'items': []})
+      return Cart(**{'user': email, 'items': [], 'version': 0})
 
     # Multiple carts found for user
     # TODO: get all carts that match the user, sort by date created on and return the latest one?
@@ -90,5 +93,9 @@ class Cart(Entity):
       return PRICES.STRAIN_SET
     else:
       return PRICES.STRAIN
+    
+
+  def update_version(self):
+    self['version'] += 1
 
 
