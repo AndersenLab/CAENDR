@@ -71,13 +71,12 @@ class Cart(Entity):
     for cartItem in self['items']:
       if cartItem['name'] == item:
         self['items'].remove(cartItem)
-        print(cartItem, 'is deleted')
         return
       else:
         continue  
 
 
-  def delete_cart(self):
+  def soft_delete(self):
     self['is_deleted'] = True
 
 
