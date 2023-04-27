@@ -37,7 +37,7 @@ def get_dataset_release_or_latest(release_version = None):
 
 
 
-@genome_browser_bp.route('/gbrowser/tracks', methods=['GET'])
+@genome_browser_bp.route('/tracks', methods=['GET'])
 def get_tracks():
   '''
   Get the list of browser tracks.
@@ -61,11 +61,11 @@ def get_tracks():
 
 
 
-@genome_browser_bp.route('/genome-browser')
-@genome_browser_bp.route('/genome-browser/')
-@genome_browser_bp.route('/genome-browser/<release_version>')
-@genome_browser_bp.route('/genome-browser/<release_version>/<region>')
-@genome_browser_bp.route('/genome-browser/<release_version>/<region>/<query>')
+@genome_browser_bp.route('')
+@genome_browser_bp.route('/')
+@genome_browser_bp.route('/<release_version>')
+@genome_browser_bp.route('/<release_version>/<region>')
+@genome_browser_bp.route('/<release_version>/<region>/<query>')
 @cache.memoize(60*60)
 def genome_browser(region="III:11746923-11750250", query=None):
 
@@ -104,7 +104,7 @@ def genome_browser(region="III:11746923-11750250", query=None):
     'default_tracks': sorted(BrowserTrackDefault.query_ds_visible(), key = lambda x: x['order'] ),
 
     # Data locations
-    'fasta_url': BrowserTrack.get_fasta_path_full(),
+    'fasta_url': BrowserTrack.get_fasta_path_full().get_string_safe(),
 
     # String replacement tokens
     # Maps token to the field in Species object it should be replaced with

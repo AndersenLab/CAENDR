@@ -7,18 +7,16 @@ from flask import jsonify
 
 from base.forms import MappingForm
 from base.utils.auth  import get_jwt, jwt_required, admin_required, get_current_user, user_is_admin
-from base.utils.tools import validate_report, upload_file
+from base.utils.tools import lookup_report, upload_file, try_submit
 
-from caendr.services.nemascan_mapping import create_new_mapping, get_mapping, get_all_mappings, get_user_mappings
+from caendr.services.nemascan_mapping import get_mapping, get_mappings
 from caendr.services.cloud.storage import get_blob, generate_blob_url, get_blob_list, check_blob_exists
-from caendr.models.datastore import SPECIES_LIST
+from caendr.models.datastore import SPECIES_LIST, NemascanMapping
 from caendr.models.error import (
-    CachedDataError,
-    DataFormatError,
-    DuplicateDataError,
     FileUploadError,
     ReportLookupError,
 )
+from caendr.models.task import TaskStatus
 
 
 
@@ -27,7 +25,26 @@ genetic_mapping_bp = Blueprint(
 )
 
 
-@genetic_mapping_bp.route('/genetic-mapping/', methods=['GET'])
+
+def results_columns():
+  return [
+    {
+      'title': 'Description',
+      'class': 'label',
+      'field': 'label',
+      'width': 0.6,
+      'link_to_data': True,
+    },
+    {
+      'title': 'Trait',
+      'class': 'trait',
+      'field': 'trait',
+      'width': 0.4,
+    },
+  ]
+
+
+@genetic_mapping_bp.route('', methods=['GET'])
 @jwt_required()
 def genetic_mapping():
   """
@@ -55,7 +72,7 @@ def genetic_mapping():
   })
 
 
-@genetic_mapping_bp.route('/genetic-mapping/upload', methods = ['POST'])
+@genetic_mapping_bp.route('/submit', methods=['POST'])
 @jwt_required()
 def submit():
   form = MappingForm(request.form)
@@ -67,8 +84,9 @@ def submit():
   # Validate form fields
   # Checks that species is in species list & label is not empty
   if not form.validate_on_submit():
-    flash("You must include a description of your data and a TSV file to upload.", "danger")
-    return redirect(url_for('genetic_mapping.genetic_mapping'))
+    msg = "You must include a description of your data and a TSV file to upload."
+    flash(msg, "danger")
+    return jsonify({ 'message': msg }), 400
 
   # Read fields from form
   label   = bleach.clean(request.form.get('label'))
@@ -79,7 +97,7 @@ def submit():
     local_path = upload_file(request, 'file')
   except FileUploadError as ex:
     flash(ex.description, 'danger')
-    return redirect(url_for('genetic_mapping.genetic_mapping'))
+    return jsonify({ 'message': ex.description }), ex.code
 
   # Package submission data together into dict
   data = {
@@ -88,46 +106,18 @@ def submit():
     'filepath': local_path,
   }
 
+  # Try submitting the job & returning a JSON status message
   try:
-    # logger.warn("Check Duplicates is DISABLED !!!")
-    m = create_new_mapping(user, data, no_cache=no_cache)
-    return redirect(url_for('genetic_mapping.report', id=m.id))
+    response, code = try_submit(NemascanMapping, user, data, no_cache)
 
-  except DuplicateDataError as ex:
-    flash('It looks like you submitted that data already - redirecting to your list of Mapping Reports', 'danger')
-    return redirect(url_for('genetic_mapping.user_reports'))
+    # If there was an error, flash it
+    if not code == 200:
+      flash(response['message'], 'danger')
 
-  except CachedDataError as ex:
-    flash('It looks like that data has already been submitted - redirecting to the saved results', 'danger')
-    return redirect(url_for('genetic_mapping.report', id = ex.args[0].id))
+    # Return the response
+    return jsonify( response ), code
 
-  except DataFormatError as ex:
-
-    # Log the error
-    logger.error(f'Data formatting error in Genetic Mapping: {ex.msg} (Line: {ex.line})')
-
-    # Construct user-friendly error message with optional line number
-    msg = ex.msg + (f' (Line: { ex.line })' if ex.line is not None else '')
-
-    # Flash the error message & refresh the page
-    flash(msg, 'danger')
-    return redirect(url_for('genetic_mapping.genetic_mapping'))
-
-  except Exception as ex:
-
-    # Get message and description, if they exist
-    msg  = getattr(ex, 'message',     '')
-    desc = getattr(ex, 'description', '')
-
-    # Log the full error
-    logger.error(f'Error submitting Genetic Mapping. Message = "{msg}", Description = "{desc}". Full Error: {ex}')
-
-    # Flash an error message for the user
-    # TODO: Update this wording
-    flash(f"Unable to submit your request.", 'danger')
-    return redirect(url_for('genetic_mapping.genetic_mapping'))
-
-  # Ensure the local file is removed
+  # Ensure the local file is removed, even if an error is uncaught in the submission process
   finally:
     try:
       os.remove(local_path)
@@ -135,36 +125,51 @@ def submit():
       pass
 
 
-@genetic_mapping_bp.route('/genetic-mapping/reports/all', methods=['GET', 'POST'])
-@admin_required()
-def all_reports():
-  title = 'All Genetic Mappings'
-  alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
-  user = get_current_user()
-  mappings = get_all_mappings()
-  return render_template('tools/genetic_mapping/list-all.html', **locals())
-
-
-@genetic_mapping_bp.route('/genetic-mapping/reports', methods=['GET', 'POST'])
+@genetic_mapping_bp.route('/all-results', methods=['GET'], endpoint='all_results')
+@genetic_mapping_bp.route('/my-results',  methods=['GET'], endpoint='my_results')
 @jwt_required()
-def user_reports():
-  title = 'My Genetic Mappings'
-  alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
+def list_results():
+  show_all = request.path.endswith('all-results')
   user = get_current_user()
-  mappings = get_user_mappings(user.name)
-  return render_template('tools/genetic_mapping/list-user.html', **locals())
+
+  # Only show malformed Entities to admin users
+  filter_errs = not user_is_admin()
+
+  # Construct page
+  return render_template('tools/report-list.html', **{
+
+    # Page info
+    'title': ('All' if show_all else 'My') + ' Genetic Mappings',
+    'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+
+    # Tool info
+    'tool_name': 'genetic_mapping',
+    'all_results': show_all,
+    'button_labels': {
+      'tool': 'New Genetic Mapping',
+      'all':  'All User Mappings',
+      'user': 'My Genetic Mappings',
+    },
+
+    # Table info
+    'species_list': SPECIES_LIST,
+    'items': get_mappings(None if show_all else user.name, filter_errs),
+    'columns': results_columns(),
+
+    'TaskStatus': TaskStatus,
+  })
 
 
-@genetic_mapping_bp.route('/genetic-mapping/report/<id>', methods=['GET'])
+@genetic_mapping_bp.route('/report/<id>', methods=['GET'])
 @jwt_required()
 def report(id):
 
-  # Get user and requested mapping
-  mapping = get_mapping(id)
-
-  # Ensure the report exists and the user has permission to view it
+  # Fetch requested mapping report
+  # Ensures the report exists and the user has permission to view it
   try:
-    validate_report(mapping)
+    mapping = lookup_report(NemascanMapping, id)
+
+  # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:
     flash(ex.msg, 'danger')
     abort(ex.code)
@@ -181,15 +186,20 @@ def report(id):
   else:
     report_url = None
 
+  # Get the trait name, if it exists
+  trait = mapping['trait']
+
   return render_template('tools/genetic_mapping/report.html', **{
 
     # Page info
     'title': 'Genetic Mapping Report',
-    'subtitle': f'{mapping.label}: {mapping.trait}',
+    'subtitle': mapping['label'] + (f': {trait}' if trait is not None else ''),
     'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
 
     # Job status
     'mapping_status': mapping['status'],
+
+    'id': id,
 
     # URLs
     'report_url': report_url,
@@ -200,26 +210,32 @@ def report(id):
   })
 
 
-@genetic_mapping_bp.route('/genetic-mapping/report/<id>/fullscreen', methods=['GET'])
+@genetic_mapping_bp.route('/report/<id>/fullscreen', methods=['GET'])
 @jwt_required()
 def report_fullscreen(id):
-  title = 'Genetic Mapping Report'
-  alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
-  user = get_current_user()
-  mapping = get_mapping(id)
-  subtitle = mapping.label +': ' + mapping.trait
-  fluid_container = True
-  data_url = generate_blob_url(mapping.get_bucket_name(), mapping.get_data_blob_path())
-  # if hasattr(mapping, 'mapping_report_url'):
+
+  # Fetch requested mapping report
+  # Ensures the report exists and the user has permission to view it
+  try:
+    mapping = lookup_report(NemascanMapping, id)
+
+  # If the report lookup request is invalid, show an error message
+  except ReportLookupError as ex:
+    flash(ex.msg, 'danger')
+    abort(ex.code)
+
+  # Download the report files, if they exist
   if mapping.report_path is not None:
     blob = get_blob(mapping.get_bucket_name(), mapping.report_path)
     report_contents = blob.download_as_text()
   else:
     report_contents = None
 
+  # Return the report
   return report_contents
 
-@genetic_mapping_bp.route('/genetic-mapping/report/<id>/status', methods=['GET'])
+
+@genetic_mapping_bp.route('/report/<id>/status', methods=['GET'])
 @jwt_required()
 def report_status(id):
   mapping = get_mapping(id)
@@ -240,34 +256,40 @@ def report_status(id):
   return jsonify(payload)
 
 
-@genetic_mapping_bp.route('/genetic-mapping/report/<id>/results/', methods=['GET'])
+@genetic_mapping_bp.route('/report/<id>/results', methods=['GET'])
 @jwt_required()
 def results(id):
-  title = 'Genetic Mapping Result Files'
-  alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
-  user = get_current_user()
-  mapping = get_mapping(id)
-  subtitle = mapping.label + ': ' + mapping.trait
-  blobs = get_blob_list(mapping.get_bucket_name(), mapping.get_result_path())
-  file_list = []
-  for blob in blobs:
-    file_list.append({
-      "name": blob.name.rsplit('/', 2)[1] + '/' + blob.name.rsplit('/', 2)[2],
-      "url": blob.public_url
-    })
-    
-  return render_template('tools/genetic_mapping/result_files.html', **locals())
 
+  # Fetch requested mapping report
+  # Ensures the report exists and the user has permission to view it
+  try:
+    mapping = lookup_report(NemascanMapping, id)
 
+  # If the report lookup request is invalid, show an error message
+  except ReportLookupError as ex:
+    flash(ex.msg, 'danger')
+    abort(ex.code)
 
+  # Get the trait, if it exists
+  trait = mapping['trait']
 
-  data_blob = RESULT_BLOB_PATH.format(data_hash=ns.data_hash)
-  blobs = list_files(data_blob)
-  file_list = []
-  for blob in blobs:
-    file_list.append({
-      "name": blob.name.rsplit('/', 2)[1] + '/' + blob.name.rsplit('/', 2)[2],
-      "url": blob.public_url
-    })
-    
-  return render_template('mapping_result_files.html', **locals())
+  # # Old way to compute list of blobs, that was hidden beneath 'return'
+  # # Can this be deleted?
+  # data_blob = RESULT_BLOB_PATH.format(data_hash=ns.data_hash)
+  # blobs = list_files(data_blob)
+
+  # Get the list of files in this report, truncating all names to everything after second-to-last '/'
+  file_list = [
+    {
+      "name": '/'.join( blob.name.rsplit('/', 2)[1:] ),
+      "url":  blob.public_url,
+    }
+    for blob in get_blob_list(mapping.get_bucket_name(), mapping.get_result_path())
+  ]
+
+  return render_template('tools/genetic_mapping/result_files.html', **{
+    'title': 'Genetic Mapping Result Files',
+    'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+    'subtitle': mapping.label + (f': {trait}' if trait else ''),
+    'file_list': file_list,
+  })

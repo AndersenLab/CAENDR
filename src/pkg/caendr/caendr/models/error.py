@@ -44,6 +44,19 @@ class BadRequestError(InternalError):
 
 class NotFoundError(InternalError):
   description = 'Not Found'
+  def __init__(self, lookup_class, params):
+    self.params = params
+
+    if lookup_class:
+      try:
+        self.kind = lookup_class.kind
+      except:
+        self.kind = lookup_class
+    else:
+      self.kind = 'object'
+
+    param_str = ', '.join([ f'"{key}" = "{val}"' for key, val in self.params.items() ])
+    self.description = f'Could not find {self.kind} where [{param_str}].'
 
 class CloudStorageUploadError(InternalError):
   description = "Error uploading a blob to cloud storage"
@@ -56,15 +69,24 @@ class JSONParseError(InternalError):
   
 class UnprocessableEntity(InternalError):
   description = "Unprocessable Entity"
+
+
+
 class CachedDataError(InternalError):
   description = "This data has already been submitted by another user"
+  def __init__(self, report):
+    self.report = report
 
 class DuplicateDataError(InternalError):
   description = "This data has already been submitted by the same user"
+  def __init__(self, report):
+    self.report = report
 
 class DuplicateTaskError(InternalError):
   description = "This task has already been scheduled"
-  
+
+
+
 class DataFormatError(InternalError):
   description = "Error parsing data with expected format"
   def __init__(self, msg, line: int=None):
@@ -119,17 +141,36 @@ class NonUniqueEntity(InternalError):
     self.description = f'Found multiple {kind} entities with field "{key}" = "{val}".'
     super().__init__()
 
+
 class ReportLookupError(InternalError):
   def __init__(self, msg, code):
     self.msg = msg
     self.code = code
 
+class EmptyReportDataError(InternalError):
+  def __init__(self, report_id):
+    self.id = report_id
+    self.description = 'Empty report'
+
+class EmptyReportResultsError(InternalError):
+  def __init__(self, report_id):
+    self.id = report_id
+    self.description = 'Empty report'
+
+class UnfinishedReportError(InternalError):
+  def __init__(self, report_id, data=None):
+    self.id = report_id
+    self.data = data
+    self.description = 'Report is not finished'
+
+
 class FileUploadError(InternalError):
   description = "Could not upload file"
 
-  def __init__(self, description=None):
+  def __init__(self, description=None, code=500):
     if description is not None:
       self.description = description
+      self.code = code
 
 
 class SpeciesUrlNameError(InternalError):

@@ -32,7 +32,7 @@
               <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">New</button>
               <button class="nav-link" id="nav-linkOne-tab" data-bs-toggle="tab" data-bs-target="#nav-linkOne" type="button" role="tab" aria-controls="nav-linkOne" aria-selected="false">Sample Report</button>
               <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false"><a href="{{ url_for('data_releases.data_releases') }}">Release Notes</a></button>
-              <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false"><a href="{{ url_for('genetic_mapping.user_reports') }}">My Mapping Results</a></button>
+              <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false"><a href="{{ url_for('genetic_mapping.my_results') }}">My Mapping Results</a></button>
             </div>
           </nav>
           <div class="tab-content m-3" id="nav-tabContent">
@@ -42,8 +42,7 @@
               <p class="card-text">
               <h2 class="mb-4 text-center">New Mapping</h2>
               <!-- UPLOAD FORM -->
-              <form id="form-submit" action="{{ url_for('genetic_mapping.submit') }}" method="post" onsubmit="disableButton()"
-                class="form form-inline" enctype="multipart/form-data">
+              <form id="form-submit" class="form form-inline" enctype="multipart/form-data">
                 <div class="mb-4">
                   {{ form.csrf_token }}
                   <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">
@@ -61,8 +60,7 @@
                   {% endcall %}
                 </div>
                 <div class="d-grid mb-4">
-                  <button type="submit" id="submit-btn" class="btn btn-secondary text-light" data-bs-toggle="modal"
-                  data-bs-target="#infoModal">
+                  <button type="submit" id="submit-btn" class="btn btn-secondary text-light">
                     Submit
                   </button>
                   <!-- Modal - display on submit instead of going to new page -->
@@ -77,7 +75,7 @@
                               <ul>
                                 <li>Your report will be complete in about 2-5 hours</li>
                                 <li>You will receive an email when your report is complete</li>
-                                <li>You may also check <a href="{{ url_for('genetic_mapping.user_reports') }}">My Results</a> for updates.</li>
+                                <li>You may also check <a href="{{ url_for('genetic_mapping.my_results') }}">My Results</a> for updates.</li>
                               </ul>
                             </div>
                         </div>
@@ -113,24 +111,47 @@
 
 
 {% block script %}
-
+{% from "_scripts/submit-job.js" import def_submit_job %}
+{% from "_includes/macros.html" import update_species_field %}
 <script>
 
-{%- if session["is_admin"] %}
+{{ def_submit_job('genetic_mapping', true) }}
 
-$("#no_cache_checkbox").change(() => {
-  const url = "{{ url_for('genetic_mapping.submit') }}" + ($('#no_cache_checkbox').prop('checked') ? "?nocache=1" : "")
-  console.log(url)
-  $('#form-submit').attr('action', url)
-})
-
-{%- endif %}
 
 function disableButton() {
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
   btn.innerText = 'Submitting...'
 }
+
+function enableButton() {
+  const btn = document.getElementById('submit-btn');
+  btn.disabled  = false;
+  btn.innerText = 'Submit';
+}
+
+function resetForm() {
+  document.getElementById('form-submit').reset();
+  const selector = document.getElementById("{{ form.species.elementId }}");
+  selector.value = '';
+  {{ update_species_field('selector') }}
+  enableButton();
+}
+
+// Submit result
+$("#form-submit").on("submit", function(e) {
+  e.preventDefault();
+  disableButton();
+
+  // Get form data
+  const data = new FormData($('form#form-submit')[0]);
+
+  submit_job(data, '#infoModal')
+    .done((result) => {
+      // Reset the form after a successful (non-error) submission
+      resetForm();
+    })
+});
 
 </script>
 

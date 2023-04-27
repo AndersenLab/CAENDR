@@ -56,10 +56,10 @@ class Container(Entity):
     else:
       if version is None:
         logger.error(f'Unable to find container "{name}".')
-        raise NotFoundError(f'Unable to find container "{name}".')
+        raise NotFoundError(Container, {'container_name': name})
       else:
         logger.error(f'Unable to find container "{name}" with version "{version}".')
-        raise NotFoundError(f'Unable to find container "{name}" with version "{version}".')
+        raise NotFoundError(Container, {'container_name': name, 'container_version': version})
 
 
   @classmethod
