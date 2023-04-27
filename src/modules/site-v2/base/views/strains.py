@@ -37,6 +37,9 @@ from base.utils.auth import jwt_required, get_current_user
 from caendr.services.email import send_email, ORDER_SUBMISSION_EMAIL_TEMPLATE
 from caendr.services.cloud.sheets import add_to_order_ws, lookup_order
 
+import os
+MODULE_SITE_CART_COOKIE_NAME = os.getenv('MODULE_SITE_CART_COOKIE_NAME')
+
 
 strains_bp = Blueprint('request_strains',
                         __name__,
@@ -161,11 +164,11 @@ def strains_catalog():
 def order_page_post():
   form = OrderForm()
   user = get_current_user()
-  cartID = request.cookies.get('cartID')
+  cart_id = request.cookies.get(MODULE_SITE_CART_COOKIE_NAME)
   if user:
     users_cart = Cart.lookup_by_user(user['email'])
-  elif cartID:
-    users_cart = Cart(cartID)
+  elif cart_id:
+    users_cart = Cart(cart_id)
   else:
     users_cart = Cart(**{'items': []})
 
@@ -211,9 +214,9 @@ def order_page_post():
         flash("Thank you for submitting your order! Please follow the instructions below to complete your order.", 'success')
 
         # delete cartID from cookies
-        if cartID:
+        if cart_id:
           resp = make_response(redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302))
-          resp.delete_cookie('cartID')
+          resp.delete_cookie(MODULE_SITE_CART_COOKIE_NAME)
           return resp
         
         return redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302)
@@ -243,7 +246,7 @@ def order_page_post():
 
     resp = make_response(jsonify({'status': 'OK'}))
     if not user:
-      resp.set_cookie('cartID', users_cart.name)
+      resp.set_cookie(MODULE_SITE_CART_COOKIE_NAME, users_cart.name, max_age=60*60*24*14)
     
     return resp
 
@@ -259,8 +262,8 @@ def order_page_remove():
   if user:
     users_cart = Cart.lookup_by_user(user['email'])
   else:
-    cartID = request.cookies.get('cartID')
-    users_cart = Cart(cartID)
+    cart_id = request.cookies.get(MODULE_SITE_CART_COOKIE_NAME)
+    users_cart = Cart(cart_id)
 
   # remove item from the cart
   users_cart.remove_item(item_to_remove)
@@ -279,8 +282,8 @@ def order_page_index():
   if user:
     users_cart = Cart.lookup_by_user(user['email'])  
   else:
-    cartID = request.cookies.get('cartID')
-    users_cart = Cart(cartID)
+    cart_id = request.cookies.get(MODULE_SITE_CART_COOKIE_NAME)
+    users_cart = Cart(cart_id)
 
   cartItems = users_cart['items'] 
   for item in cartItems:
