@@ -1,7 +1,5 @@
 import json
 
-from string import Template
-
 from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefault, BrowserTrackTemplate
 from caendr.models.datastore import SPECIES_LIST
 from flask import (render_template,
@@ -10,6 +8,7 @@ from flask import (render_template,
                     request,
                     url_for)
 from extensions import cache
+from base.forms import SpeciesSelectForm
 
 from caendr.api.isotype import get_isotypes
 from caendr.services.dataset_release import get_dataset_release, get_latest_dataset_release_version
@@ -37,27 +36,8 @@ def get_dataset_release_or_latest(release_version = None):
   return get_latest_dataset_release_version()
 
 
-def replace_tokens(s, species='$SPECIES', prj='$PRJ', wb='$WB', sva='$SVA', release='$RELEASE', strain='$STRAIN'):
-  return Template(s).substitute({
-    'SPECIES': species,
-    'RELEASE': release,
-    'WB':      wb,
-    'SVA':     sva,
-    'PRJ':     prj,
-    'STRAIN':  strain,
-  })
 
-def replace_tokens_recursive(obj, **kwargs):
-  if isinstance(obj, str):
-    return replace_tokens(obj, **kwargs)
-  elif isinstance(obj, dict):
-    return { key: replace_tokens_recursive(val, **kwargs) for key, val in obj.items() }
-  else:
-    return obj
-
-
-
-@genome_browser_bp.route('/gbrowser/tracks', methods=['GET'])
+@genome_browser_bp.route('/tracks', methods=['GET'])
 def get_tracks():
   '''
   Get the list of browser tracks.
@@ -81,11 +61,11 @@ def get_tracks():
 
 
 
-@genome_browser_bp.route('/genome-browser')
-@genome_browser_bp.route('/genome-browser/')
-@genome_browser_bp.route('/genome-browser/<release_version>')
-@genome_browser_bp.route('/genome-browser/<release_version>/<region>')
-@genome_browser_bp.route('/genome-browser/<release_version>/<region>/<query>')
+@genome_browser_bp.route('')
+@genome_browser_bp.route('/')
+@genome_browser_bp.route('/<release_version>')
+@genome_browser_bp.route('/<release_version>/<region>')
+@genome_browser_bp.route('/<release_version>/<region>/<query>')
 @cache.memoize(60*60)
 def genome_browser(region="III:11746923-11750250", query=None):
 
@@ -118,11 +98,13 @@ def genome_browser(region="III:11746923-11750250", query=None):
     'strain_listing': strain_listing,
     'species_list':   SPECIES_LIST,
 
+    'form': SpeciesSelectForm(),
+
     # Tracks
     'default_tracks': sorted(BrowserTrackDefault.query_ds_visible(), key = lambda x: x['order'] ),
 
     # Data locations
-    'fasta_url': BrowserTrack.get_fasta_path_full(),
+    'fasta_url': BrowserTrack.get_fasta_path_full().get_string_safe(),
 
     # String replacement tokens
     # Maps token to the field in Species object it should be replaced with

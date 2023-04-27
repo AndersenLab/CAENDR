@@ -3,7 +3,7 @@ from caendr.services.logger import logger
 from sqlalchemy import func 
 
 from caendr.models.datastore import DatabaseOperation
-from caendr.models.task import DatabaseOperationTask
+from caendr.models.task import DatabaseOperationTask, TaskStatus
 from caendr.models.sql import Homolog, StrainAnnotatedVariant, Strain, WormbaseGene, WormbaseGeneSummary
 from caendr.services.tool_versions import GCR_REPO_NAME
 from caendr.services.cloud.datastore import get_ds_entity, query_ds_entities
@@ -117,7 +117,7 @@ def create_new_db_op(op, username, email, args=None, note=None):
   result = task.submit()
 
   # Update entity status to reflect whether task was submitted successfully
-  db_op.status = 'SUBMITTED' if result else 'ERROR'
+  db_op.status = TaskStatus.SUBMITTED if result else TaskStatus.ERROR
   db_op.save()
 
   # Return resulting Database Operation entity

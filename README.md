@@ -125,7 +125,7 @@ make venv
 code ../../..
 ```
 
-The last command will open Visual Studio Code at the root of the project. Form the DEBUG->List of options, select "Run Site-v2 (requires a local Postgres instance or cloud-sql-proxy)" and click "Play'.
+The last command will open Visual Studio Code at the root of the project. From the DEBUG->List of options, select "Run Site-v2 (requires a local Postgres instance or cloud-sql-proxy)" and click "Play'.
 
 ## Stopping the Database Proxy
 

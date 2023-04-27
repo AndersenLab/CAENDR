@@ -2,86 +2,55 @@
 
 
 {% block content %}
-<div class="row">
 
-    <div class="col-lg-4 col-md-4 col-sm-6">
-      <div class="row">
-
-        <div class="col-md-12">
-
-        <div class="panel panel-default">
-            <div class="panel-heading">Associate Professor Erik Andersen</div>
-            <div class="panel-body" style="min-height:4.0rem;">
-              <span style="white-space:nowrap;">
-                <i class="glyphicon glyphicon-envelope"></i>
-                <a href="mailto:Erik.Andersen@northwestern.edu">Erik.Andersen@northwestern.edu</a>
-              </span>
-              <br>
-              <abbr title="Phone"><img src="{{ ext_asset('img/icons/phone.png') }}" class="pull-left" alt="phone"></abbr> 
-                <div class="visible-xs"> <a href="tel:+1-847.467.4382">(847) 467-4382</a></div>
-                <div class="hidden-xs"> <span itemprop="telephone">(847) 467-4382</span></div>
+<div class="container">
+  <div class="d-flex flex-wrap justify-content-around mb-5">
+    <div class="col-8 col-md-3 mx-3 mb-3">
+          <div class="card mb-3 border-0 shadow-sm h-100">
+            <div class="card-header text-bg-secondary text-light fw-bold">
+              Email
             </div>
+            <div class="mx-auto mt-4" style="width:10%"><i class="bi bi-envelope-at-fill text-info fs-1"></i></div>
+            <div class="card-body text-center">
+              <p class="card-text"><strong>Professor Erik Andersen</strong></p>
+              <p class="card-text"><a href="mailto:erik@caendr.org">erik@caendr.org</a></p>
+            </div>
+          </div>
+    </div>
+    <div class="col-8 col-md-3 mx-3 mb-3">
+      <div class="card mb-3 border-0 shadow-sm h-100">
+        <div class="card-header text-bg-secondary text-light fw-bold">
+          Administrative Address
         </div>
-      </div> {# /col-md-12#}
-
-
-  <div class="col-md-12">
-
-    <div class="panel panel-default">
-      <div class="panel-heading">Lab Phone</div>
-      <div class="panel-body" style="min-height:3.0rem;">
-        <abbr title="Phone"><img src="{{ ext_asset('img/icons/phone.png') }}" class="pull-left" alt="phone"></abbr> 
-          <div class="visible-xs"> <a href="tel:+1-847.467.4382">(847) 467-4264</a></div>
-          <div class="hidden-xs"> <span itemprop="telephone">(847) 467-4264</span></div>
+        <div class="mx-auto mt-4" style="width:10%"><i class="bi bi-postcard-fill text-info fs-1"></i></div>
+        <div class="card-body text-center">
+          <p class="card-text fw-bold">Northwestern University <br>Department of Molecular Biosciences</p>
+          <p class="card-text">2205 Tech Drive, Hogan 2-100 <br>Evanston, IL 60208-3500</p>
+        </div>
       </div>
     </div>
-  </div>{#/ col-xs-12 #}
-
-
-
-
-   
-
-  </div> {# /row #}
-</div> {# /col-lg-4 #}
-
-<div class="col-lg-4 col-md-4 col-sm-6">
-
-  <div class="panel panel-default">
-    <div class="panel-heading">Administrative Address</div>
-    <div class="panel-body" style="min-height:11.0rem;">
-      <address>
-        <strong>Northwestern University<br>Department of Molecular Biosciences</strong><br>
-        2205 Tech Drive, Hogan 2-100<br>
-        Evanston, IL. 60208-3500<br>
-    </address>
+    <div class="col-8 col-md-3 mx-3 mb-3">
+      <div class="card mb-3 border-0 shadow-sm h-100">
+        <div class="card-header text-bg-secondary text-light fw-bold">
+          Shipping Address
+        </div>
+        <div class="mx-auto mt-4" style="width:10%"><i class="bi bi-box-seam-fill text-info fs-1"></i></div>
+        <div class="card-body text-center">
+          <p class="card-text fw-bold">Erik Andersen <br>Northwestern University <br>Department of Molecular Biosciences</p>
+          <p class="card-text">2205 Tech Drive, Hogan 1-500 <br>Evanston, IL 60208-3500</p>
+        </div>
+      </div>
     </div>
   </div>
-</div>{#/ col-md-12 #}
-
-
-	<div class="col-lg-4 col-md-4 col-md-offset-0 col-sm-6 col-sm-offset-6" style="height:100%;">
-
-    <div class="panel panel-default">
-      <div class="panel-heading">Shipping Address</div>
-      <div class="panel-body" style="min-height:11.0rem;">
-        <address>
-          <strong>Erik Andersen<br />Northwestern University<br />Department of Molecular Biosciences</strong><br>
-          2205 Tech Dr, Hogan 1-500<br>
-          Evanston, IL. 60208-3500<br>
-      </address>
-      </div>
-	  </div>
-  </div>{#/ col-xs-12 #}
-
-</div> {# /row #}
-
-
-<div class='row'>
-  <div class="col-md-12">
-    <iframe src="https://goo.gl/forms/FHBp2n0pOF"
-    width="100%" style="min-height:1200px" frameborder="0" marginheight="0" marginwidth="0" title="Google Form: Contact Us">Loading...</iframe>
+  <!-- /flex-wrap -->
+  <div class="row">
+    <div class="col-12 col-md-8 mx-auto">
+      <iframe src="https://goo.gl/forms/FHBp2n0pOF"
+      width="100%" style="min-height:1200px" frameborder="0" marginheight="0" marginwidth="0" title="Google Form: Contact Us">Loading...</iframe>
+    </div>
   </div>
-</div> {# /row #}
+  <!-- /row -->
+</div>
+<!-- /container -->
 
 {% endblock %}

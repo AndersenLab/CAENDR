@@ -60,7 +60,7 @@
               About Us
             </a>
             <ul class="dropdown-menu" aria-labelledby="aboutDropdown">
-              <li><a class="dropdown-item" href="{{ url_for('about.about')      }}"> About CeNDR </a></li>
+              <li><a class="dropdown-item" href="{{ url_for('about.about')      }}"> About CaeNDR </a></li>
               <li><a class="dropdown-item" href="{{ url_for('about.people')     }}"> People </a></li>
               <li><a class="dropdown-item" href="{{ url_for('about.cited_by')   }}"> Cited By </a></li>
               <li><a class="dropdown-item" href="{{ url_for('about.funding')    }}"> Funding </a></li>
@@ -103,7 +103,7 @@
                 <div class="d-grid mb-3">
                   <a class="btn btn-secondary text-light" href="{{ url_for('auth.choose_login') }}">Login</a>
                 </div>
-                <p class="text-center"><a href="#">Sign Up</a></p>
+                <p class="text-center"><a href="{{ url_for('auth.choose_login') }}">Sign Up</a></p>
                 {% endif %}
               </div>
             </div>

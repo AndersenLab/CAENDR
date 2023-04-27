@@ -6,19 +6,20 @@ from caendr.services.logger import logger
 
 from caendr.models.datastore import Container, IndelPrimer, HeritabilityReport, NemascanMapping, SPECIES_LIST
 from caendr.models.error     import CachedDataError, DuplicateDataError, DataFormatError
-from caendr.models.task      import IndelPrimerTask, HeritabilityTask, NemaScanTask
+from caendr.models.task      import TaskStatus, IndelPrimerTask, HeritabilityTask, NemaScanTask
 
 from caendr.api.strain             import query_strains
 from caendr.services.cloud.storage import upload_blob_from_string, upload_blob_from_file
 
 from caendr.utils.data import get_object_hash
+from caendr.utils.env  import get_env_var
 from caendr.utils.file import get_file_hash
 
 
 
-INDEL_PRIMER_CONTAINER_NAME = os.environ.get('INDEL_PRIMER_CONTAINER_NAME')
-HERITABILITY_CONTAINER_NAME = os.environ.get('HERITABILITY_CONTAINER_NAME')
-NEMASCAN_NXF_CONTAINER_NAME = os.environ.get('NEMASCAN_NXF_CONTAINER_NAME')
+INDEL_PRIMER_CONTAINER_NAME = get_env_var('INDEL_PRIMER_CONTAINER_NAME')
+HERITABILITY_CONTAINER_NAME = get_env_var('HERITABILITY_CONTAINER_NAME')
+NEMASCAN_NXF_CONTAINER_NAME = get_env_var('NEMASCAN_NXF_CONTAINER_NAME')
 
 
 
@@ -186,7 +187,7 @@ class SubmissionManager():
     entity.set_user(user)
 
     # Upload the new entity to datastore
-    entity['status'] = 'SUBMITTED' # TODO: Is this an OK initial value? What if there's an error before the task is submitted?
+    entity['status'] = TaskStatus.SUBMITTED # TODO: Is this an OK initial value? What if there's an error before the task is submitted?
     entity.save()
 
     # Check if there is already a cached result, and skip creating a job if so
@@ -195,7 +196,7 @@ class SubmissionManager():
       if cached_result:
 
         # If cache check returned a status, use it; otherwise, default to "COMPLETE"
-        entity['status'] = cached_result if isinstance(cached_result, str) else 'COMPLETE'
+        entity['status'] = cached_result if isinstance(cached_result, str) else TaskStatus.COMPLETE
         entity.save()
 
         # Save the entity and "return" in a cached data error
@@ -209,7 +210,7 @@ class SubmissionManager():
     result = task.submit()
 
     # Update entity status to reflect whether task was submitted successfully
-    entity['status'] = 'SUBMITTED' if result else 'ERROR'
+    entity['status'] = TaskStatus.SUBMITTED if result else TaskStatus.ERROR
     entity.save()
 
     # Return resulting Job entity
