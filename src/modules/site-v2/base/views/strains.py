@@ -27,6 +27,7 @@ These views handle strain orders
 
 """
 import uuid
+import os
 from datetime import datetime, timezone
 from flask import render_template, request, url_for, redirect, Blueprint, abort, flash
 
@@ -36,6 +37,8 @@ from base.utils.auth import jwt_required, get_current_user
 
 from caendr.services.email import send_email, ORDER_SUBMISSION_EMAIL_TEMPLATE
 from caendr.services.cloud.sheets import add_to_order_ws, lookup_order
+
+MODULE_SITE_CART_COOKIE_NAME = os.getenv('MODULE_SITE_CART_COOKIE_NAME')
 
 
 strains_bp = Blueprint('request_strains',
@@ -160,11 +163,11 @@ def strains_catalog():
 def order_page_post():
   form = OrderForm()
   user = get_current_user()
-  cartID = request.cookies.get('cartID')
+  cart_id = request.cookies.get(MODULE_SITE_CART_COOKIE_NAME)
   if user:
     users_cart = Cart.lookup_by_user(user['email'])
-  elif cartID:
-    users_cart = Cart(cartID)
+  elif cart_id:
+    users_cart = Cart(cart_id)
   else:
     users_cart = Cart(**{'items': []})
 
@@ -198,19 +201,21 @@ def order_page_post():
       add_to_order_ws(order_obj)
 
       # Mark the cart is deleted
-      users_cart.delete_cart()
+      users_cart.soft_delete()
       users_cart.save()
 
       # flash("Thank you for submitting your order! Please follow the instructions below to complete your order.", 'success')
       flash("Thank you for submitting your order! Please follow the instructions below to complete your order.", 'success')
 
       # delete cartID from cookies
-      if cartID:
-        resp = make_response(redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302))
-        resp.delete_cookie('cartID')
-        return resp
+      if cart_id is None:
+        return redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302)
       
-      return redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302)
+      resp = make_response(redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302))
+      resp.delete_cookie(MODULE_SITE_CART_COOKIE_NAME)
+      return resp
+      
+      
     else:
       # handle form validation errors
       title = "Order Summary"
@@ -235,7 +240,7 @@ def order_page_post():
 
     resp = make_response(jsonify({'status': 'OK'}))
     if not user:
-      resp.set_cookie('cartID', users_cart.name)
+      resp.set_cookie(MODULE_SITE_CART_COOKIE_NAME, users_cart.name, max_age=60*60*24*14)
     
     return resp
 
@@ -246,13 +251,13 @@ def order_page_remove():
   form = OrderForm()
   user = get_current_user()
   item_to_remove = request.get_json()['itemToRemove']
-  
+
   # get cart
   if user:
     users_cart = Cart.lookup_by_user(user['email'])
   else:
-    cartID = request.cookies.get('cartID')
-    users_cart = Cart(cartID)
+    cart_id = request.cookies.get(MODULE_SITE_CART_COOKIE_NAME)
+    users_cart = Cart(cart_id)
 
   # remove item from the cart
   users_cart.remove_item(item_to_remove)
@@ -269,8 +274,8 @@ def order_page_index():
   if user:
     users_cart = Cart.lookup_by_user(user['email'])  
   else:
-    cartID = request.cookies.get('cartID')
-    users_cart = Cart(cartID)
+    cart_id = request.cookies.get(MODULE_SITE_CART_COOKIE_NAME)
+    users_cart = Cart(cart_id)
 
   cartItems = users_cart['items'] 
   for item in cartItems:

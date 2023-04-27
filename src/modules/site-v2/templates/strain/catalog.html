@@ -239,7 +239,6 @@ table {
                               {% endif %}
                               </tr>
                             {% endfor %}
-                              <input id="from_catalog" name="from_catalog" type="hidden" value="true">
                         </tbody>
                     </table>
                 </div>
@@ -374,7 +373,7 @@ table {
 
         $("button[id^='checkout']").click(function(e) {
             e.preventDefault()
-            const data = {csrf_token: $('#csrf_token').val(), user_from_catalog: $("#from_catalog").val(), strains: []}
+            const data = {csrf_token: $('#csrf_token').val(), strains: []}
             $('input:checkbox:checked').each(function() {
                 data.strains.push({name: $(this).attr('value'), species: $(this).parent().siblings('.species').text() || ''})
             })

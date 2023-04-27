@@ -8,7 +8,6 @@ from flask import (abort,
                   render_template,
                   session,
                   request,
-                  make_response,
                   flash,
                   Blueprint)
 from slugify import slugify
@@ -21,7 +20,6 @@ from base.utils.auth import (get_jwt_identity,
 
 from caendr.models.datastore import User
 from caendr.services.cloud.secret import get_secret
-from base.views.auth.oauth import transfer_cart
 
 
 PASSWORD_PEPPER = get_secret('PASSWORD_PEPPER')
@@ -78,9 +76,7 @@ def basic_login():
         if '/login/' in referrer:
           referrer = '/'
         flash('Logged In', 'success')
-        resp = make_response(assign_access_refresh_tokens(username, user.roles, referrer))
-        new_resp = transfer_cart(resp, user)
-        return new_resp
+        return assign_access_refresh_tokens(username, user.roles, referrer)
     flash('Wrong username or password', 'error')
     return redirect(request.referrer)
   return render_template('auth/basic_login.html', **locals())
