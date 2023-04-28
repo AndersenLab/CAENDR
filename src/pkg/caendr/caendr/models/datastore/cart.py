@@ -74,7 +74,6 @@ class Cart(Entity):
     for cartItem in self['items']:
       if cartItem['name'] == item:
         self['items'].remove(cartItem)
-        print(cartItem, 'is deleted')
         return
       else:
         continue  

@@ -409,7 +409,7 @@ class Entity(object):
 
       if required:
 
-        raise NotFoundError(f'Could not find {cls.kind} entity with "{key}" = "{val}".')
+        raise NotFoundError(cls.kind, {key: val})
 
       else:
 
