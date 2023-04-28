@@ -78,7 +78,7 @@ def transfer_cart(resp, user):
     if len(local_cart['items']) == 0:
       # delete cartID from cookies
       resp.delete_cookie(MODULE_SITE_CART_COOKIE_NAME)
-      return resp
+      return
     
     # checks if a user has a cart in their account
     users_cart = Cart.lookup_by_user(user['email'])
@@ -90,4 +90,6 @@ def transfer_cart(resp, user):
     local_cart.transfer_to_user(user['email'])
     local_cart.save()
 
+    resp.delete_cookie(MODULE_SITE_CART_COOKIE_NAME)
+  return resp
     
