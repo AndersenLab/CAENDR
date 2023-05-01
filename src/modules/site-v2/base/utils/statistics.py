@@ -9,10 +9,16 @@ from caendr.models.sql import Strain
 from caendr.services.cloud.postgresql import db
 from caendr.services.cloud.datastore import query_ds_entities
 from caendr.services.user import get_num_registered_users
-from caendr.utils.plots import time_series_plot
+from caendr.utils.plots import time_series_plot, COLORS
 
+
+
+def make_col_name(n, col):
+  species_name, type_name = col.rsplit('_', 1)
+  return f'<i>{SPECIES_LIST[species_name].short_name}</i> {type_name}s'
 
 def get_strain_collection_plot(df):
+  DASHES = [None, 'dot']
   return time_series_plot(
     df,
     x_title='Year',
@@ -20,7 +26,15 @@ def get_strain_collection_plot(df):
     range=[
       datetime(1995, 10, 17), 
       datetime.today()
-    ]
+    ],
+    line_styles = [
+      {
+        'color': COLORS[i],
+        'dash':  DASHES[j],
+      }
+        for i in range(0, len(SPECIES_LIST)) for j in range(0, len(DASHES))
+    ],
+    make_col_name=make_col_name
   )
 
 

@@ -69,7 +69,7 @@ def plotly_distplot(df, column):
     return plot
 
 
-def time_series_plot(df, x_title=None, y_title=None, range=None, colors=COLORS):
+def time_series_plot(df, x_title=None, y_title=None, range=None, colors=COLORS, line_styles=None, make_col_name=None):
   """
       Pass in a dataframe (df) with:
           First column - dates (x-axis)
@@ -81,13 +81,14 @@ def time_series_plot(df, x_title=None, y_title=None, range=None, colors=COLORS):
   try:
     trace_set = []
     for n, column in enumerate(df.columns[1:][::-1]):
-        trace_set.append(go.Scatter(x=df[df.columns[0]],
-                                    y=df[column],
-                                    name=column,
-                                    opacity=0.8,
-                                    line=dict(color=(COLORS[n]))
-                                    )
-                          )
+        trace_set.append(go.Scatter(
+            x=df[df.columns[0]],
+            y=df[column],
+            name=column if make_col_name is None else make_col_name(n, column),
+            opacity=0.8,
+            line = {'color': colors[n]} if line_styles is None else line_styles[n],
+            connectgaps=True,
+        ))
 
     layout = go.Layout(margin={'t': 0, 'r': 0, 'l': 80, 'b': 60},
                         xaxis={})
