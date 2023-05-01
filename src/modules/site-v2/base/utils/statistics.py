@@ -4,6 +4,7 @@ import arrow
 
 from datetime import datetime
 
+from caendr.models.datastore.species import SPECIES_LIST
 from caendr.models.sql import Strain
 from caendr.services.cloud.postgresql import db
 from caendr.services.cloud.datastore import query_ds_entities
@@ -21,7 +22,38 @@ def get_strain_collection_plot(df):
       datetime.today()
     ]
   )
-  
+
+
+# TODO: Handle gaps
+def cum_vals(df, column, dropna=False, sampling_date_as_index=False):
+
+  # Get column of interest, sort by date, and drop duplicates
+  result = df[[column, 'sampling_date']]       \
+      .sort_values(['sampling_date'], axis=0)  \
+      .drop_duplicates([column])
+
+  # Drop null values, if applicable
+  if (dropna):
+    result = result.dropna(how='any')
+
+  # Not sure why you can't just pass the boolean as an argument, but it breaks if you do
+  if (sampling_date_as_index):
+    result = result.groupby(['sampling_date'], as_index=sampling_date_as_index)
+  else:
+    result = result.groupby(['sampling_date'])
+
+  # Count the number of items and convert to a cumulative sum
+  result = result.count().cumsum().reset_index()
+
+  # Add data point for current date
+  result = result.append({
+    'sampling_date': np.datetime64(datetime.today().strftime("%Y-%m-%d")),
+    column: len(df[column].unique())
+  }, ignore_index=True)
+
+  return result
+
+
 
 def cum_sum_strain_isotype():
   """
@@ -31,29 +63,36 @@ def cum_sum_strain_isotype():
           df - the strain dataset
   """
   df = pd.read_sql_table(Strain.__tablename__, db.engine)
+
   # Remove strains with issues
   df = df[df["issues"] == False]
-  cumulative_isotype = df[['isotype', 'sampling_date']].sort_values(['sampling_date'], axis=0) \
-                                                        .drop_duplicates(['isotype']) \
-                                                        .groupby(['sampling_date'], as_index=True) \
-                                                        .count() \
-                                                        .cumsum() \
-                                                        .reset_index()
-  cumulative_isotype = cumulative_isotype.append({'sampling_date': np.datetime64(datetime.today().strftime("%Y-%m-%d")),
-                                                  'isotype': len(df['isotype'].unique())}, ignore_index=True)
-  cumulative_strain = df[['strain', 'sampling_date']].sort_values(['sampling_date'], axis=0) \
-                                                      .drop_duplicates(['strain']) \
-                                                      .dropna(how='any') \
-                                                      .groupby(['sampling_date']) \
-                                                      .count() \
-                                                      .cumsum() \
-                                                      .reset_index()
-  cumulative_strain = cumulative_strain.append({'sampling_date': np.datetime64(datetime.today().strftime("%Y-%m-%d")),
-                                                'strain': len(df['strain'].unique())}, ignore_index=True)
-  df = cumulative_isotype.set_index('sampling_date') \
-                          .join(cumulative_strain.set_index('sampling_date')) \
-                          .reset_index()
-  return df
+
+  # Loop through all species, adding to result frame
+  result = None
+  for species_name in SPECIES_LIST:
+
+    # Filter data frame by current species
+    species_frame = df[df["species_name"] == species_name]
+
+    # Get cumulative sums for isotypes and strain
+    cum_isotypes = cum_vals(species_frame, 'isotype', dropna=False, sampling_date_as_index=True ).set_index('sampling_date')
+    cum_strains  = cum_vals(species_frame, 'strain',  dropna=True,  sampling_date_as_index=False).set_index('sampling_date')
+
+    # Add cumulative isotype & strain counts to result
+    if result is None:
+      result = cum_isotypes.join(cum_strains)
+    else:
+      result = result.join(cum_isotypes).join(cum_strains)
+
+    result = result.rename(columns={
+      'isotype': f'{species_name}_isotype',
+      'strain':  f'{species_name}_strain',
+    })
+
+  # Reset the index
+  result = result.reset_index()
+
+  return result
   
   
 def get_report_sumary_plot_legacy(df):
