@@ -109,6 +109,10 @@ def cum_sum_strain_isotype():
   result.iloc[0,:] = result.iloc[0,:].fillna(0)
   result = result.fillna(method='ffill', axis=0)
 
+  # Convert back to integers now that NaN values are dealt with
+  cols = [i for i in result.columns if i != 'sampling_date']
+  result[cols] = result[cols].astype(int)
+
   return result
   
   
