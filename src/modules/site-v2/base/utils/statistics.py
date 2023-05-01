@@ -38,7 +38,6 @@ def get_strain_collection_plot(df):
   )
 
 
-# TODO: Handle gaps
 def cum_vals(df, column, dropna=False, sampling_date_as_index=False):
 
   # Get column of interest, sort by date, and drop duplicates
@@ -105,6 +104,10 @@ def cum_sum_strain_isotype():
 
   # Reset the index
   result = result.reset_index()
+
+  # Fill NaN values created by joining frames with different x-axis values
+  result.iloc[0,:] = result.iloc[0,:].fillna(0)
+  result = result.fillna(method='ffill', axis=0)
 
   return result
   
