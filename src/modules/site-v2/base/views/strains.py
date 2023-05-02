@@ -40,8 +40,7 @@ from caendr.services.cloud.sheets import add_to_order_ws, lookup_order
 from caendr.services.cloud.secret import get_secret
 
 MODULE_SITE_CART_COOKIE_NAME = get_env_var('MODULE_SITE_CART_COOKIE_NAME')
-# SUBMISSION_STRAIN_URL = get_env_var('MODULE_SITE_STRAIN_SUBMISSION_URL')
-
+STRAIN_SUBMISSION_URL = get_env_var('MODULE_SITE_STRAIN_SUBMISSION_URL')
 
 strains_bp = Blueprint('request_strains',
                         __name__,
@@ -341,5 +340,5 @@ def strains_submission_page():
   # TODO: Move this to configurable location
   #STRAIN_SUBMISSION_FORM = '1w0VjB3jvAZmQlDbxoTx_SKkRo2uJ6TcjjX-emaQnHlQ'
   #strain_submission_url = f'https://docs.google.com/forms/d/{STRAIN_SUBMISSION_FORM}/viewform?embedded=true'
-  strain_submission_url = 'https://docs.google.com/forms/d/1w0VjB3jvAZmQlDbxoTx_SKkRo2uJ6TcjjX-emaQnHlQ/viewform?embedded=true'
+  strain_submission_url = STRAIN_SUBMISSION_URL
   return render_template('strain/submission.html', **locals())

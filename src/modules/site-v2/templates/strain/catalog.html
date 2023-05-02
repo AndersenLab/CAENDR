@@ -366,7 +366,6 @@ label {
                 set_alert(`The following strain(s) were not found ${lost_strains.join(", ")}`)
             }
             var rows = $('.searchable tr')
-            // console.log('filtered', filtered_by_species)
 
             rows.sort(function(a, b) {
                 var value1 = $(a).find('td > input:checkbox').is(":checked")
@@ -412,7 +411,7 @@ label {
             e.preventDefault()
             const data = {csrf_token: $('#csrf_token').val(), user_from_catalog: $("#from_catalog").val(), strains: []}
             $('input:checkbox:checked').each(function() {
-                data.strains.push({name: $(this).attr('value'), species: $(this).parent().siblings('.species').text() || ''})
+                data.strains.push({name: $(this).attr('value'), species: $(this).parent().siblings('.species').text()})
             })
             $.ajax({
                 type: "POST",
