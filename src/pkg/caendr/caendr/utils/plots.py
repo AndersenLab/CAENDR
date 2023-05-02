@@ -69,7 +69,7 @@ def plotly_distplot(df, column):
     return plot
 
 
-def time_series_plot(df, x_title=None, y_title=None, range=None, colors=COLORS, line_styles=None, make_col_name=None):
+def time_series_plot(df, x_title=None, y_title=None, range=None, colors=COLORS, make_line_style=None):
   """
       Pass in a dataframe (df) with:
           First column - dates (x-axis)
@@ -77,17 +77,33 @@ def time_series_plot(df, x_title=None, y_title=None, range=None, colors=COLORS, 
 
       Args:
           df - the strain dataset
+          make_line_style (function):
+            Args:
+              n      - The index of the current column
+              column - The name of the current column
+              colors - The set of colors
+            Returns:
+              A dictionary specifying line styles for the current column
   """
   try:
     trace_set = []
     for n, column in enumerate(df.columns[1:][::-1]):
+
+        # Create default line style options
+        style = {
+            'name': column,
+            'opacity': 0.8,
+            'line': {'color': colors[n]},
+
+            # If style function provided, use it to generate line styles,
+            # overwriting defaults where applicable
+            **({} if make_line_style is None else make_line_style(n, column, colors)),
+        }
+
         trace_set.append(go.Scatter(
             x=df[df.columns[0]],
             y=df[column],
-            name=column if make_col_name is None else make_col_name(n, column),
-            opacity=0.8,
-            line = {'color': colors[n]} if line_styles is None else line_styles[n],
-            connectgaps=True,
+            **style,
         ))
 
     layout = go.Layout(margin={'t': 0, 'r': 0, 'l': 80, 'b': 60},

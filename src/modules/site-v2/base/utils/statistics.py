@@ -9,16 +9,25 @@ from caendr.models.sql import Strain
 from caendr.services.cloud.postgresql import db
 from caendr.services.cloud.datastore import query_ds_entities
 from caendr.services.user import get_num_registered_users
-from caendr.utils.plots import time_series_plot, COLORS
+from caendr.utils.plots import time_series_plot
 
 
 
-def make_col_name(n, col):
-  species_name, type_name = col.rsplit('_', 1)
-  return f'<i>{SPECIES_LIST[species_name].short_name}</i> {type_name}s'
+species_sorted = sorted(SPECIES_LIST.keys())
+
+def make_line_style(n, column, colors):
+  species_name, type_name = column.rsplit('_', 1)
+  return {
+    'name': f'<i>{SPECIES_LIST[species_name].short_name}</i> {type_name}s',
+    'line': {
+      'color': colors[ species_sorted.index(species_name) ],
+      'dash': 'dot' if type_name == 'isotype' else None,
+    },
+    'connectgaps': True,
+    'hoverlabel': {'namelength': -1},
+  }
 
 def get_strain_collection_plot(df):
-  DASHES = [None, 'dot']
   return time_series_plot(
     df,
     x_title='Year',
@@ -27,14 +36,7 @@ def get_strain_collection_plot(df):
       datetime(1995, 10, 17), 
       datetime.today()
     ],
-    line_styles = [
-      {
-        'color': COLORS[i],
-        'dash':  DASHES[j],
-      }
-        for i in range(0, len(SPECIES_LIST)) for j in range(0, len(DASHES))
-    ],
-    make_col_name=make_col_name
+    make_line_style=make_line_style
   )
 
 
