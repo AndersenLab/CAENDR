@@ -18,6 +18,7 @@ from extensions import cache
 from caendr.api.strain import get_strains, query_strains, get_strain_sets, get_strain_img_url
 from caendr.models.sql import Strain
 from caendr.utils.json import dump_json
+from caendr.utils.env import get_env_var
 from caendr.models.datastore.cart import Cart
 
 """
@@ -31,14 +32,15 @@ from datetime import datetime, timezone
 from flask import render_template, request, url_for, redirect, Blueprint, abort, flash
 
 from config import config
-from base.forms import OrderForm
+from base.forms import OrderForm, StrainListForm
 from base.utils.auth import jwt_required, get_current_user
 
 from caendr.services.email import send_email, ORDER_SUBMISSION_EMAIL_TEMPLATE
 from caendr.services.cloud.sheets import add_to_order_ws, lookup_order
+from caendr.services.cloud.secret import get_secret
 
-import os
-MODULE_SITE_CART_COOKIE_NAME = os.getenv('MODULE_SITE_CART_COOKIE_NAME')
+MODULE_SITE_CART_COOKIE_NAME = get_env_var('MODULE_SITE_CART_COOKIE_NAME')
+# SUBMISSION_STRAIN_URL = get_env_var('MODULE_SITE_STRAIN_SUBMISSION_URL')
 
 
 strains_bp = Blueprint('request_strains',
@@ -152,7 +154,7 @@ def strains_catalog():
     warning = request.args.get('warning')
     strain_listing = get_strains()
     strain_sets = get_strain_sets()
-    form = OrderForm()
+    form = StrainListForm(request.form)
     return render_template('strain/catalog.html', **locals())
 
 #
@@ -322,6 +324,7 @@ def order_confirmation(invoice_hash):
       abort(404)
     title = "Order Confirmation"
     invoice = f"Invoice {order_obj['invoice_hash']}"
+    SUPPORT_EMAIL = get_secret('SUPPORT_EMAIL')
     return render_template('order/order_confirm.html', **locals())
   else:
     abort(404)
@@ -338,5 +341,5 @@ def strains_submission_page():
   # TODO: Move this to configurable location
   #STRAIN_SUBMISSION_FORM = '1w0VjB3jvAZmQlDbxoTx_SKkRo2uJ6TcjjX-emaQnHlQ'
   #strain_submission_url = f'https://docs.google.com/forms/d/{STRAIN_SUBMISSION_FORM}/viewform?embedded=true'
-  strain_submission_url = "https://docs.google.com/forms/d/1w0VjB3jvAZmQlDbxoTx_SKkRo2uJ6TcjjX-emaQnHlQ/viewform?embedded=true"
+  strain_submission_url = 'https://docs.google.com/forms/d/1w0VjB3jvAZmQlDbxoTx_SKkRo2uJ6TcjjX-emaQnHlQ/viewform?embedded=true'
   return render_template('strain/submission.html', **locals())

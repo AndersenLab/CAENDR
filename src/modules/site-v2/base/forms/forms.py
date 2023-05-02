@@ -319,5 +319,9 @@ class MappingSubmissionForm(Form):
                                       validate_missing_isotype,
                                       validate_strain_w_no_data,
                                       validate_data_exists])
+  
+
+class StrainListForm(Form):
+  species = SpeciesSelectField(validators=[Required()])
 
 

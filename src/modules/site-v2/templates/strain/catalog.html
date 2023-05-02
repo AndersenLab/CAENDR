@@ -55,11 +55,21 @@ table {
     display: none;
     text-align:center
 }
+label {
+    color: grey;
+    margin-bottom: 0.5rem
+}
+#strains_sets_filter {
+    max-width: 10rem;
+    margin-bottom: 1rem
+}
 
 </style>
 {% endblock %}
 
 {% block content %}
+{% from "_includes/macros.html" import render_field %}
+
 <form autocomplete="off">
     <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}" />
     <div>
@@ -99,49 +109,56 @@ table {
                         </div>
                     </div>
                 </div>
+                <div class="species" id="strains_sets_filter">
+                    {{ render_field(form.species, onchange="filter_species_sets") }}
+                </div>
                 <div class="table-responsive mb-5 strainSets">
                     <table class="table table-hover table-bordered strain-table">
                         <thead class="table-secondary">
                             <tr>
-                                <th style="width:7%;">#</th>
                                 <th style="width:7%;">Select</th>
+                                <th style="width:20%;">Species</th>
                                 <th style="width:20%;">Set Name</th>
                                 <th style="width:20%;">Number of Strains</th>
-                                <th style="width:46%;">Strains</th>
+                                <th style="width:33%;">Strains</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="strainSetsTable">
+                            {% for k, v in strain_sets.items() %}
+                            {% set species = k[1] %}
+                            {% if k[0] == 'D' %}
                             <tr>
-                                <td>1</td>
                                 <td>
                                     <input class="form-check-input"  type="checkbox" name="items-10000" id="divergent" value="set_divergent" class="styled-checkbox" />
                                     <label class="form-check-label visually-hidden"  for="divergent">Select row</label>
                                 </td>
+                                <td class="species" data-value="{{ species }}"><em>{{ species|capitalize|replace('_', '. ')  }}</em></td>
                                 <td class="strainName"><label for="divergent">Divergent Set</label></td>
-                                <td>{{ len(strain_sets["D"]) }}</td>
-                                <td>{{ strain_sets["D"]|join(' ') }}</td>
+                                <td>{{ len(v) }}</td>
+                                <td>{{ v|join(' ') }}</td>
                             </tr>
-                            {% for i in range(1,11) %}
+                            {% else %}
+                                {% set set = k[0]|int %}
                             <tr>
-                                <td>{{ 1 + i }}</td>
                                 <td>
-                                    {# REVERT - enable mapping set 7 and 8 #}
-                                    <input class="form-check-input" id="set-{{ i }}" type="checkbox" name="items-{{ i + 1000 }}" value="set_{{ i }}" class="styled-checkbox" {% if i>= 9 %}disabled{% endif %}/>
-                                    <label class="form-check-label visually-hidden" for="set-{{ i }}">Select row</label>
+                                    <input class="form-check-input" id="set-{{ set }}" type="checkbox" name="items-{{ set + 1000 }}" value="set_{{ set }}" class="styled-checkbox" {% if set>= 9 %}disabled{% endif %}/>
+                                    <label class="form-check-label visually-hidden" for="set-{{ set }}">Select row</label>
                                 </td>
-                                <td class="strainName"><label for="set-{{ i }}">Mapping Set {{ i }}</label></td>
-                                <td>{{ len(strain_sets["{}".format(i)]) }}</td>
+                                <td class="species" data-value="{{ species }}"><em>{{ species|capitalize|replace('_', '. ') }}</em></td>
+                                <td class="strainName"><label for="set-{{ set }}">Mapping Set {{ set }}</label></td>
+                                <td>{{ len(v) }}</td>
                                 <td>
-                                    <a class="btn btn-link btn-block view-strain-link" data-bs-toggle="collapse" data-bs-target="#view_set_{{ i }}">View Strains</a>
-                                    <div class="collapse" id="view_set_{{ i }}">
+                                    <a class="btn btn-link btn-block view-strain-link" data-bs-toggle="collapse" data-bs-target="#view_set_{{ set }}">View Strains</a>
+                                    <div class="collapse" id="view_set_{{ set }}">
                                         <ul class="view-strain-list">
-                                            {% for strain in strain_sets["{}".format(i)] %}
+                                            {% for strain in v %}
                                             <li class="col-list">{{ strain }}</li>
                                             {% endfor %}
                                         </ul>
                                     </div>
                                 </td>
                             </tr>
+                            {% endif %}
                             {% endfor %}
                         </tbody>
                     </table>
@@ -152,14 +169,8 @@ table {
                 <p>Individual strains can be ordered below.</p>
                 <!-- Filter Facets -->
                 <div class="filters">
-                    <div class="species">
-                        <label for="species">Species</label>
-                        <select id='species' class="form-select">
-                            <option value="">Choose</option>
-                            <option value="c_elegans">C. elegans</option>
-                            <option value="c_briggsae">C. briggsae</option>
-                            <option value="c_tropicalis">C. tropicalis</option>
-                        </select>
+                    <div class="species" id="ind_strains_filter">
+                        {{ render_field(form.species, onchange="filter_species") }}
                     </div>
                     <div class="dropdown">
                         <label for="search">Search by Strains:</label>
@@ -196,7 +207,6 @@ table {
                     <table class="table table-hover table-bordered" id="indStrainsTable">
                         <thead class="table-secondary">
                             <tr>
-                              <th>#</th>
                               <th style="width:7%;">Select</th>
                               <th style="width:18%;">
                                 <span class="tooltip-item" data-bs-toggle="tooltip" data-bs-placement="bottom">
@@ -220,7 +230,6 @@ table {
                         <tbody class="searchable">
                             {% for isotype, strains in strain_listing|groupby('isotype') %}
                               <tr>
-                                <td>{{ loop.index }}</td>
                                 <td>
                                     {% set isotype_loop_index = loop.index %}
                                     <input class="form-check-input" type="checkbox" name="items-{{ loop.index }}" id="items-{{ loop.index }}" value="{{ isotype }}" info="{{ isotype + " " + strains|join(" ") }}" />
@@ -269,7 +278,7 @@ table {
 
                     $('#search-results').empty()
                     foundStrains.each(function() {
-                        var foundStrain = $(this).find('td:nth-child(5)').text()
+                        var foundStrain = $(this).find('td:nth-child(4)').text()
                         $('#search-results').append(`<li class='dropdown-item'>${foundStrain}</li>`)
                     })
                 })
@@ -279,28 +288,46 @@ table {
         }(jQuery));
 
         $(document).ready(function() {
-        if($("#species").val() === '') {
+        
+        let filtered_by_species;
+        
+        if($("#speciesSelect").val() === '') {
             $('#search').prop('disabled', true)
             $('#pasteStrains').prop('disabled', true)
             $('#downloadData').addClass('disabled')
         }
 
-        $("#species").change(function() {
-            const selectedVal = $(this).val()
-            if (selectedVal) {
-                $('.searchable tr').hide().filter(function() {
-                    return $(this).find('td:nth-child(3)').attr('data-value') == selectedVal
-                }).show()
-                $('#search').prop('disabled', false)
-                $('#pasteStrains').prop('disabled', false)
-                $('#downloadData').removeClass('disabled')
-            } else {
-                $('.searchable tr').show()
-                $('#search').prop('disabled', true)
-                $('#pasteStrains').prop('disabled', true)
-                $('#downloadData').addClass('disabled')
-            }                
-        })
+        filter_species = function() {
+            $(document).on('change', '#ind_strains_filter #speciesSelect', function(e) {
+                e.preventDefault()
+                const selectedVal = $(this).val()
+                if (selectedVal) {
+                    filtered_by_species =  $('.searchable tr').hide().filter(function() {
+                        return $(this).find('td:nth-child(2)').attr('data-value') == selectedVal
+                    })
+                    filtered_by_species.show()
+                    $('#search').prop('disabled', false)
+                    $('#pasteStrains').prop('disabled', false)
+                    $('#downloadData').removeClass('disabled')
+                } else {
+                    $('.searchable tr').show()
+                    $('#search').prop('disabled', true)
+                    $('#pasteStrains').prop('disabled', true)
+                    $('#downloadData').addClass('disabled')
+                }                
+            })
+        }
+
+
+        filter_species_sets = function() {
+            $(document).on('change', '#strains_sets_filter #speciesSelect', function(e) {
+                e.preventDefault()
+                const selectedVal = $(this).val()
+                $('.strainSetsTable tr').hide().filter(function() {
+                        return $(this).find('td:nth-child(2)').attr('data-value') == selectedVal
+                    }).show()
+            })
+        }
 
         
         $('#checkoutBox').prop('disabled', !$("input:checkbox").is(":checked"));
@@ -339,6 +366,8 @@ table {
                 set_alert(`The following strain(s) were not found ${lost_strains.join(", ")}`)
             }
             var rows = $('.searchable tr')
+            // console.log('filtered', filtered_by_species)
+
             rows.sort(function(a, b) {
                 var value1 = $(a).find('td > input:checkbox').is(":checked")
                 var value2 = $(b).find('td > input:checkbox').is(":checked")
@@ -351,7 +380,7 @@ table {
         })
 
         $('#downloadData').click(function() {
-            const selectedVal = $('#species').val();
+            const selectedVal = $('#speciesSelect').val();
             let url = '{{ url_for("request_strains.strains_data_tsv", species=selectedVal) }}';
             if (selectedVal) {
             url += selectedVal;
@@ -379,7 +408,7 @@ table {
         });
      
 
-        $("button[id^='checkout']").click(function(e) {
+        $(document).on('click', "button[id^='checkout']", function(e) {
             e.preventDefault()
             const data = {csrf_token: $('#csrf_token').val(), user_from_catalog: $("#from_catalog").val(), strains: []}
             $('input:checkbox:checked').each(function() {
@@ -395,11 +424,13 @@ table {
                     window.location.href = "/request-strains/checkout";
                 },
                 error: function(error){
-                    console.log(error)
+                    console.log('something went wrong', error)
                 }
             })
 
         });
+
+    
 
     });
 
@@ -428,10 +459,6 @@ table {
             }
         });
     });
-
-    $(function() {
-        $('[data-bs-toggle="tooltip"]').tooltip()
-    })
 
 
 </script>
