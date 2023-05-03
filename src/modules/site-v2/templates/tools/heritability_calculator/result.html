@@ -25,25 +25,25 @@
   <div class="d-flex justify-content-around flex-wrap mt-2">
   <!-- Results Card -->
   <div class="col col-md-6 col-xl-3 text-bg-light mb-5 p-5 rounded-2 shadow-sm overflow-auto" style="max-height:500px">
-   <p>
-      <strong>Trait:</strong> {{ hr.trait}}
-   </p>
-   <p>
-      <strong>Description:</strong> {{ hr.label}}
-   </p>
-   <p>
+    <p>
+      <strong>Trait:</strong> {{ hr.trait }}
+    </p>
+    <p>
+      <strong>Description:</strong> {{ hr.label }}
+    </p>
+    <p>
       <strong>Report ID:</strong> {{ hr.id }}
-   </p>
-   <p>
+    </p>
+    <p>
       <strong>Created:</strong> {{ hr.created_on | date_format }}
-   </p>
-   <p>
+    </p>
+    <p>
       <strong>Status:</strong>  {{ hr.status }}
     
-    {% if hr.status == TaskStatus.ERROR %}
+      {% if hr.status == TaskStatus.ERROR %}
       <strong>Error:</strong> <span class="text-danger">{{ operation.error }}</span>
-    {% endif %}
-   </p>
+      {% endif %}
+    </p>
     {%- if result %}
     <p>
       <strong>Broad-Sense Heritability (H<sup>2</sup>):</strong> {{ (result['H2']*100)|round(2) }}% <small>(range {{ (result['ci_l']*100)|round(2) }}% to {{ (result['ci_r']*100)|round(2) }}%)</small>
