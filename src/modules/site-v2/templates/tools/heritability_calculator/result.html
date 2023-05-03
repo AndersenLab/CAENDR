@@ -44,9 +44,11 @@
       <strong>Error:</strong> <span class="text-danger">{{ operation.error }}</span>
     {% endif %}
    </p>
-   <p>
-    <strong>Broad-Sense Heritability (H<sup>2</sup>):</strong> {{ (result['H2']*100)|round(2) }}% <small>(range {{ (result['ci_l']*100)|round(2) }}% to {{ (result['ci_r']*100)|round(2) }}%)</small>
-   </p>
+    {%- if result %}
+    <p>
+      <strong>Broad-Sense Heritability (H<sup>2</sup>):</strong> {{ (result['H2']*100)|round(2) }}% <small>(range {{ (result['ci_l']*100)|round(2) }}% to {{ (result['ci_r']*100)|round(2) }}%)</small>
+    </p>
+    {%- endif %}
   <div class="mt-5">
     <div class="d-grid gap-3">
       <a class="btn btn-secondary text-light" role="button" onClick="getPDF()">Download PDF</a>
@@ -243,7 +245,9 @@
         doc.setFontSize(4);
         doc.fromHTML('<i>2</i>', 225, 15)
         doc.setFontSize(10);
-        doc.fromHTML(') = {{ (result['H2']*100)|round(2) }}% (range {{ (result['ci_l']*100)|round(2) }}% to {{ (result['ci_r']*100)|round(2) }}%)', 230, 20)
+        {% if result %}
+        doc.fromHTML(') = {{ (result['H2']*100)|round(2) }}% (range {{ (result['ci_l']*100)|round(2) }}% to {{ (result['ci_r']*100)|round(2) }}%)', 230, 20);
+        {% endif %}
 
         doc.addImage(document.getElementById('img1').src, 'PNG', margins.left, margins.top,
                     page_width - (margins.left + margins.right),
