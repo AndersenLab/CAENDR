@@ -176,13 +176,13 @@ def order_page_post():
 
   if 'order_form' in request.form:
     if form.validate_on_submit():
+      cartItems = users_cart['items']
       # check the version
-      if int(users_cart['version']) != int(form.version.data):
+      if int(users_cart['version']) != int(form.version.data) or len(cartItems) == 0:
         flash("There was a problem with your order, please try again.", 'warning')
         return redirect(url_for('request_strains.order_page_index'))
       else:
         """ submitting the order """
-        cartItems = users_cart['items']
         if form.shipping_service.data == 'Flat Rate Shipping':
           cartItems.append({'name': 'Flat Rate Shipping'})
         for item in cartItems:
