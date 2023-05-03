@@ -1,6 +1,6 @@
 import json
 import os
-from attr import has
+# from attr import has
 from caendr.services.cloud.postgresql import health_database_status
 from caendr.services.logger import logger
 from flask import Blueprint, render_template, url_for, request, redirect

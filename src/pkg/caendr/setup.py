@@ -22,7 +22,7 @@ setup(
     'oauth2client',
     'numpy',
     'pandas',
-    'plotly==2.2.3',
+    'plotly==5.3.0',
     'psycopg2-binary>=2.9.1',
     'pg8000',
     'python-dotenv==0.19.1',
