@@ -44,6 +44,19 @@ class BadRequestError(InternalError):
 
 class NotFoundError(InternalError):
   description = 'Not Found'
+  def __init__(self, lookup_class, params):
+    self.params = params
+
+    if lookup_class:
+      try:
+        self.kind = lookup_class.kind
+      except:
+        self.kind = lookup_class
+    else:
+      self.kind = 'object'
+
+    param_str = ', '.join([ f'"{key}" = "{val}"' for key, val in self.params.items() ])
+    self.description = f'Could not find {self.kind} where [{param_str}].'
 
 class CloudStorageUploadError(InternalError):
   description = "Error uploading a blob to cloud storage"
@@ -157,4 +170,17 @@ class FileUploadError(InternalError):
   def __init__(self, description=None, code=500):
     if description is not None:
       self.description = description
-    self.code = code
+      self.code = code
+
+
+class SpeciesUrlNameError(InternalError):
+  def __init__(self, species_name):
+    self.species_name = species_name
+
+class InvalidTokenError(InternalError):
+  def __init__(self, token):
+    self.token = token
+    self.description = f'Invalid token name {token}'
+
+class MissingTokenError(InternalError):
+  description = 'Cannot get filled-in template until all tokens are defined'

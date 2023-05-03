@@ -102,7 +102,7 @@
                 <div class="d-grid mb-3">
                   <a class="btn btn-secondary text-light" href="{{ url_for('auth.choose_login') }}">Login</a>
                 </div>
-                <p class="text-center"><a href="#">Sign Up</a></p>
+                <p class="text-center"><a href="{{ url_for('auth.choose_login') }}">Sign Up</a></p>
                 {% endif %}
               </div>
             </div>

@@ -17,6 +17,7 @@ tf_plan
 
 .env
 secret.env
+**/secret*
 
 venv
 

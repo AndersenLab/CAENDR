@@ -155,7 +155,7 @@ def update_indel_primer_status(id: str, status: str=None, operation_name: str=No
 
   m = IndelPrimer.get_ds(id)
   if m is None:
-    raise NotFoundError(f'No Indel Primer with ID "{id}" was found.')
+    raise NotFoundError(IndelPrimer, {'id': id})
 
   if status:
     m.set_properties(status=status)

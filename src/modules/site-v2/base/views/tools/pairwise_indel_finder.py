@@ -71,7 +71,6 @@ def get_tracks():
 
   # If no track found, log an error message and continue raising with a more descriptive message
   except NotFoundError as ex:
-    ex.description = 'Could not find Divergent Regions track.'
     logger.error(ex.description)
     raise ex
 
@@ -115,7 +114,7 @@ def pairwise_indel_finder():
     "species_list": SPECIES_LIST,
 
     # Data locations
-    "fasta_url": BrowserTrack.get_fasta_path_full(),
+    "fasta_url": BrowserTrack.get_fasta_path_full().get_string_safe(),
 
     # List of Species class fields to expose to the template
     # Optional - exposes all attributes if not provided
