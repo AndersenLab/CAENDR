@@ -16,15 +16,22 @@ from caendr.utils.plots import time_series_plot
 species_sorted = sorted(SPECIES_LIST.keys())
 
 def make_line_style(n, column, colors):
-  species_name, type_name = column.rsplit('_', 1)
+  species_code, type_code = column.rsplit('_', 1)
+  species_name = SPECIES_LIST[species_code].short_name
+  type_name = type_code.capitalize()
   return {
-    'name': f'<i>{SPECIES_LIST[species_name].short_name}</i> {type_name}s',
+    'name': f'{type_name}s',
     'line': {
-      'color': colors[ species_sorted.index(species_name) ],
-      'dash': 'dot' if type_name == 'isotype' else None,
+      'color': colors[ species_sorted.index(species_code) ],
+      'dash': 'dot' if type_code == 'isotype' else None,
     },
     'connectgaps': True,
-    'hoverlabel': {'namelength': -1},
+    'legendgroup': species_code,
+    'legendgrouptitle': {
+      'text': f'<i>{species_name}</i>',
+    },
+    'hoverlabel': {'namelength': 0},
+    'hovertemplate': '%{y} <i>' + species_name + "</i> " + type_code + 's',
   }
 
 def get_strain_collection_plot(df):
@@ -36,7 +43,15 @@ def get_strain_collection_plot(df):
       datetime(1995, 10, 17), 
       datetime.today()
     ],
-    make_line_style=make_line_style
+    make_line_style=make_line_style,
+    plot_style={
+      'legend': {
+        'groupclick': 'toggleitem',
+      },
+      'hovermode': 'x',
+      'paper_bgcolor': 'rgba(0,0,0,0)',
+      'plot_bgcolor':  'rgba(0,0,0,0)',
+    },
   )
 
 

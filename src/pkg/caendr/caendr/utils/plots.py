@@ -69,7 +69,7 @@ def plotly_distplot(df, column):
     return plot
 
 
-def time_series_plot(df, x_title=None, y_title=None, range=None, colors=COLORS, make_line_style=None):
+def time_series_plot(df, x_title=None, y_title=None, range=None, colors=COLORS, gridcolor=None, make_line_style=None, plot_style={}):
   """
       Pass in a dataframe (df) with:
           First column - dates (x-axis)
@@ -106,8 +106,18 @@ def time_series_plot(df, x_title=None, y_title=None, range=None, colors=COLORS, 
             **style,
         ))
 
-    layout = go.Layout(margin={'t': 0, 'r': 0, 'l': 80, 'b': 60},
-                        xaxis={})
+    layout = go.Layout(
+        margin={'t': 0, 'r': 0, 'l': 80, 'b': 60},
+        xaxis={
+            'gridcolor':     gridcolor if gridcolor else 'rgb(238, 238, 238)',
+            'zerolinecolor': gridcolor if gridcolor else 'rgb(238, 238, 238)',
+        },
+        yaxis={
+            'gridcolor':     gridcolor if gridcolor else 'rgb(238, 238, 238)',
+            'zerolinecolor': gridcolor if gridcolor else 'rgb(238, 238, 238)',
+        },
+        **plot_style,
+    )
     if range:
         layout['xaxis']['range'] = range
     if x_title:
