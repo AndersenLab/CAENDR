@@ -239,7 +239,7 @@ def report(id):
     ready = True
 
   # If report hasn't finished computing yet, display a waiting page
-  except UnfinishedReportError:
+  except UnfinishedReportError as ex:
     data, result = ex.data, None
     ready = False
 
