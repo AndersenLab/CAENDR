@@ -377,7 +377,6 @@ table {
             $('input:checkbox:checked').each(function() {
                 data.strains.push({name: $(this).attr('value'), species: $(this).parent().siblings('.species').text() || ''})
             })
-            console.log(data)
             $.ajax({
                 type: "POST",
                 url: "{{ url_for('request_strains.order_page_post') }}",

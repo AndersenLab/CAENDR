@@ -17,9 +17,10 @@ from base.utils.auth import assign_access_refresh_tokens
 from caendr.models.datastore import User
 from caendr.models.datastore.cart import Cart
 from caendr.utils.data import unique_id
+from caendr.utils.env import get_env_var
 from caendr.services.cloud.secret import get_secret
 
-MODULE_SITE_CART_COOKIE_NAME = os.getenv('MODULE_SITE_CART_COOKIE_NAME')
+MODULE_SITE_CART_COOKIE_NAME = get_env_var('MODULE_SITE_CART_COOKIE_NAME')
 
 
 GOOGLE_CLIENT_ID = get_secret('GOOGLE_CLIENT_ID')
@@ -83,7 +84,7 @@ def transfer_cart(resp, user):
     # checks if a user has a cart in their account
     users_cart = Cart.lookup_by_user(user['email'])
     if users_cart:
-      users_cart.delete_cart()
+      users_cart.soft_delete()
       users_cart.save()
 
     # assigns local cart to the user

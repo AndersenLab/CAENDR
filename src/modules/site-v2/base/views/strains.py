@@ -34,12 +34,13 @@ from flask import render_template, request, url_for, redirect, Blueprint, abort,
 from config import config
 from base.forms import OrderForm
 from base.utils.auth import jwt_required, get_current_user
+from caendr.utils.env import get_env_var
 
 from caendr.services.email import send_email, ORDER_SUBMISSION_EMAIL_TEMPLATE
 from caendr.services.cloud.sheets import add_to_order_ws, lookup_order
 
-MODULE_SITE_CART_COOKIE_NAME = os.getenv('MODULE_SITE_CART_COOKIE_NAME')
-
+MODULE_SITE_CART_COOKIE_NAME = get_env_var('MODULE_SITE_CART_COOKIE_NAME')
+MODULE_SITE_CART_COOKIE_AGE = get_env_var('MODULE_SITE_CART_COOKIE_AGE', var_type=int)
 
 strains_bp = Blueprint('request_strains',
                         __name__,
@@ -171,14 +172,41 @@ def order_page_post():
   else:
     users_cart = Cart(**{'items': []})
 
-  if 'order_form' in request.form:
-    if form.validate_on_submit():
+  if 'order_form' not in request.form:
+    """ adding items to the cart """
+    req = request.get_json()
+    added_items = req.get('strains')
+    if (len(added_items) == 0):
+      flash("You must select strains/sets from the catalog", 'error')
+      return redirect(url_for("request_strains.strains_catalog"))
+ 
+    for item in added_items:
+      users_cart.add_item(item)
+    users_cart.save()
+
+    resp = make_response(jsonify({'status': 'OK'}))
+    if not user:
+      resp.set_cookie(MODULE_SITE_CART_COOKIE_NAME, users_cart.name, max_age=MODULE_SITE_CART_COOKIE_AGE)
+    
+    return resp
+    
+  else:
+    if not form.validate_on_submit():
+      # handle form validation errors
+      title = "Order Summary"
+      cartItems = users_cart['items'] 
+      for item in cartItems:
+        item_price = Cart.get_price(item)
+        item['price'] = item_price
+      totalPrice = sum(item['price'] for item in cartItems)
+      return render_template('order/order.html', **locals())
+    else:
       """ submitting the order """
       cartItems = users_cart['items']
       if form.shipping_service.data == 'Flat Rate Shipping':
         cartItems.append({'name': 'Flat Rate Shipping'})
       for item in cartItems:
-        item_price = users_cart.get_price(item)
+        item_price = Cart.get_price(item)
         item['price'] = item_price
       totalPrice = sum(item['price'] for item in cartItems)
       
@@ -206,43 +234,14 @@ def order_page_post():
 
       # flash("Thank you for submitting your order! Please follow the instructions below to complete your order.", 'success')
       flash("Thank you for submitting your order! Please follow the instructions below to complete your order.", 'success')
+      resp = make_response(redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302))
 
       # delete cartID from cookies
-      if cart_id is None:
-        return redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302)
-      
-      resp = make_response(redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302))
-      resp.delete_cookie(MODULE_SITE_CART_COOKIE_NAME)
+      if cart_id is not None:
+        resp.delete_cookie(MODULE_SITE_CART_COOKIE_NAME)          
       return resp
       
-      
-    else:
-      # handle form validation errors
-      title = "Order Summary"
-      cartItems = users_cart['items'] 
-      for item in cartItems:
-        item_price = users_cart.get_price(item)
-        item['price'] = item_price
-      totalPrice = sum(item['price'] for item in cartItems)
-      return render_template('order/order.html', **locals())
 
-  
-  else:
-    """ adding items to the cart """
-    added_items = request.get_json()['strains']
-    if (len(added_items) == 0):
-      flash("You must select strains/sets from the catalog", 'error')
-      return redirect(url_for("request_strains.strains_catalog"))
- 
-    for item in added_items:
-      users_cart.add_item(item)
-    users_cart.save()
-
-    resp = make_response(jsonify({'status': 'OK'}))
-    if not user:
-      resp.set_cookie(MODULE_SITE_CART_COOKIE_NAME, users_cart.name, max_age=60*60*24*14)
-    
-    return resp
 
 @strains_bp.route('/checkout', methods=['PUT'])
 @jwt_required(optional=True)
@@ -250,13 +249,15 @@ def order_page_remove():
   """ This view handles removing items from the cart """
   form = OrderForm()
   user = get_current_user()
-  item_to_remove = request.get_json()['itemToRemove']
+  cart_id = request.cookies.get(MODULE_SITE_CART_COOKIE_NAME)
+  req = request.get_json()
+  item_to_remove = req.get('itemToRemove')
 
-  # get cart
-  if user:
+  if not user and not cart_id:
+    return jsonify({'error': 'Cart is not found'}), 400
+  elif user:
     users_cart = Cart.lookup_by_user(user['email'])
   else:
-    cart_id = request.cookies.get(MODULE_SITE_CART_COOKIE_NAME)
     users_cart = Cart(cart_id)
 
   # remove item from the cart
@@ -271,41 +272,45 @@ def order_page_index():
   """ This view handles the checkout page """
   form = OrderForm()
   user = get_current_user()
-  if user:
-    users_cart = Cart.lookup_by_user(user['email'])  
-  else:
-    cart_id = request.cookies.get(MODULE_SITE_CART_COOKIE_NAME)
-    users_cart = Cart(cart_id)
-
-  cartItems = users_cart['items'] 
-  for item in cartItems:
-    item_price = users_cart.get_price(item)
-    item['price'] = item_price
-  totalPrice = sum(item['price'] for item in cartItems)
+  cart_id = request.cookies.get(MODULE_SITE_CART_COOKIE_NAME)
 
   if user and hasattr(user, 'email') and not form.email.data:
     form.email.data = user.email
   
   title = "Order Summary"
-  return render_template('order/order.html', title=title, cartItems=cartItems, totalPrice=totalPrice, form=form)
+
+  if not user and not cart_id:
+    cartItems = []
+  elif user:
+    users_cart = Cart.lookup_by_user(user['email'])
+    cartItems = users_cart['items']  
+  else:
+    users_cart = Cart(cart_id)
+    cartItems = users_cart['items']
+
+  if len(cartItems) == 0:
+    return render_template('order/order.html', title=title, form=form)
+
+  else:
+    for item in cartItems:
+      item['price'] = Cart.get_price(item)
+    totalPrice = sum(item['price'] for item in cartItems)
+    return render_template('order/order.html', title=title, cartItems=cartItems, totalPrice=totalPrice, form=form)
   
 
 @strains_bp.route("/checkout/confirmation/<invoice_hash>", methods=['GET', 'POST'])
 def order_confirmation(invoice_hash):
   order_obj = lookup_order(invoice_hash)
-  if order_obj:
+  if order_obj is None:
+    abort(404)
+  else:
     order_obj["items"] = {x.split(":")[0]: float(x.split(":")[1])
                           for x in order_obj['items'].split("\n")}
-    if order_obj is None:
-      abort(404)
     title = "Order Confirmation"
     invoice = f"Invoice {order_obj['invoice_hash']}"
     return render_template('order/order_confirm.html', **locals())
-  else:
-    abort(404)
+  
     
-
-
 @strains_bp.route('/submit')
 @cache.memoize(60*60)
 def strains_submission_page():

@@ -31,7 +31,7 @@ def load_env(dotenv_file='.env'):
 
 
 
-def get_env_var(key, value=None, can_be_none=False, as_template=False):
+def get_env_var(key, value=None, can_be_none=False, as_template=False, var_type=str):
   '''
     Gets an environment variable with an optional backup value.
     If value is None (env var is undefined), raises an EnvVarError with the name of the missing variable.
@@ -57,6 +57,9 @@ def get_env_var(key, value=None, can_be_none=False, as_template=False):
   # Convert variable to a template string, if desired
   if as_template:
     return TokenizedString(v.replace('{', '${'))
+  
+  if var_type == int:
+    v = int(v)
 
   # Return the value
   return v
