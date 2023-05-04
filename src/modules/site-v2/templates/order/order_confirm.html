@@ -2,20 +2,9 @@
 
 {% block custom_head %}
 <style>
-    #container {
-      background-color: #e9e9e9;
-      padding: 20px;
-    }
-    #mailInfo {
-      background-color: #d9dbf8;
-      padding: 10px;
-      margin-left: 50px;
-      border-left: 6px solid #0719BC;
-    }
-    #container table {
-      width: 80%;
-      margin: auto;
-    }
+  #mailInfo {
+    background-color: var(--bs-footerBg);
+  }
     th {
       border-bottom: 2px solid black;
     }
@@ -24,13 +13,12 @@
 
 {% block content %}
 
-<div class='col lg-9 col-md-9 col-sm-9 col-xs-9'>
+<div class="col col-md-9 mx-auto">
 
-  <div class="panel panel-default">
-      <div class="d-flex justify-content-between mb-4 panel-heading">
-        <h2 class="panel-title">{{ invoice }}</h2>
+      <div class="d-flex justify-content-between mb-4">
+        <h2>{{ invoice }}</h2>
         <form>
-          <button type="button" class='btn btn-primary btn-block hidden-print' onClick="window.print()">
+          <button type="button" class='btn btn-primary btn-block d-print-none' onClick="window.print()">
             <i class="bi bi-printer-fill"></i>
             Print
           </button>
@@ -38,7 +26,7 @@
       </div>
 
       {% if order_obj['is_donation'] == 'FALSE' %}
-      <div id="container">
+      <div  class="text-bg-light rounded shadow-sm p-5 mb-5">
         <div class="d-flex justify-content-between">
           <h3>Shipping Information</h3>
           <p><strong>Order Date: {{ order_obj['date'] }}</strong></p>
@@ -48,9 +36,10 @@
         <br />
         <p><strong>Shipping Service: </strong>{{ order_obj["shipping_service"] }}</p>
         <br/>
-        <div>
+        <div class="table-responsive px-5">
           <h3>Order Information</h3>
-          <table class="table table-hover table-striped" style="table-layout: fixed">
+          <table class="table table-hover table-striped">
+            <caption class="visually-hidden">A list of items ordered</caption>
             <thead>
                 <tr>
                     <th style="width: 40px">#</th>
@@ -78,10 +67,9 @@
         </div>
       </div>
       {% endif %}
-    </div>{# /panel #}
 
     <div class="m-4">
-      <h4>To complete your order</h4>
+      <h2>To complete your order</h2>
   
       {% if order_obj['payment'] == 'credit_card' %}
       <p>We will follow-up with you directly via email/phone to complete your order.</p>
@@ -90,21 +78,23 @@
 
       <ol>
           <li>Print this page out and please include it with your check.</li>
-          <li>Make a check payable to Northwestern University and write 'CeNDR' and your invoice number in the memo field.</li>
+          <li>Make a check payable to Northwestern University and write 'CaeNDR' and your invoice number in the memo field.</li>
           <li>Mail the check and this printed page to the address below.</li>
       </ol>
       <br />
-      <div id="mailInfo">
-        <p class='visible-print'>Mail a check payable to Northwestern University and a copy of your invoice to the address below. Please include your invoice number on the check.</p>
-        <address>
-        <strong>Erik C. Andersen, Ph.D.</strong><br />
-        c/o Life Sciences Financial Services<br />
-        Hogan Hall<br />
-        2205 Tech Dr, Suite 2-150<br />
-        Evanston IL, 60208
-        </address>
-        <p class='hidden-print'>Please contact us if you have any questions (<a href='mailto:{{ SUPPORT_EMAIL }}'>{{ SUPPORT_EMAIL }}</a>; 847-467-4382).</p>
-      </div>
+      <div class="ps-5">
+        <div class="border-start border-primary border-2 p-3" id="mailInfo">
+          <p class='visible-print'>Mail a check payable to Northwestern University and a copy of your invoice to the address below. Please include your invoice number on the check.</p>
+          <address>
+          <strong>Erik C. Andersen, Ph.D.</strong><br />
+          c/o Life Sciences Financial Services<br />
+          Hogan Hall<br />
+          2205 Tech Dr, Suite 2-150<br />
+          Evanston IL, 60208
+          </address>
+          <p class='d-print-none'>Please contact us if you have any questions (<a href='mailto:{{ SUPPORT_EMAIL }}'>{{ SUPPORT_EMAIL }}</a>; 847-467-4382).</p>  
+        </div>
+       </div>
       
       {% endif %}
     </div>

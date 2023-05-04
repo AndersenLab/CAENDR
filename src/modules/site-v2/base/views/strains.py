@@ -52,6 +52,7 @@ strains_bp = Blueprint('request_strains',
 @cache.memoize(60*60)
 def request_strains():
   """ Load landing page """
+  title = "Request Strains"
   disable_parent_breadcrumb = True
   return render_template('strain/landing_page.html', **locals())
 
@@ -342,3 +343,5 @@ def strains_submission_page():
   #strain_submission_url = f'https://docs.google.com/forms/d/{STRAIN_SUBMISSION_FORM}/viewform?embedded=true'
   strain_submission_url = STRAIN_SUBMISSION_URL
   return render_template('strain/submission.html', **locals())
+
+
