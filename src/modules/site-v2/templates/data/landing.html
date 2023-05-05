@@ -1,25 +1,32 @@
 {% extends "_layouts/default.html" %}
 
 {% block content %}
-
-
-<div class="row row-margin">
- 
-  <div class="text-center col-lg-4 col-md-6 col-sm-6">
-    <a href="{{ url_for('data_releases.data_releases') }}" style="text-decoration: none;">
-      <div class="menu-card">
-        <img class="card-img-top" src="{{ ext_asset('img/icons/genome_data.png') }}" alt="Genomic Data">
+<div class="container px-5 pb-5">
+  <div class="row row-cols-1 row-cols-md-3 g-5">
+    <!-- Card Column -->
+    <div class="col mb-3">
+      <div class="card h-100 shadow text-center pt-5 mt-5 mx-auto cardBorderBottom" style="min-height:20rem;">
+        <i class="bi bi-clipboard2-data-fill text-info"></i>
         <div class="card-body">
-          <h4 class="card-title">Genomic Data</h4>
-          <p class="card-text text-center">Genotypes from whole-genome sequences and reduced representation (RAD) sequencing</p>
+          <h2 class="h4 text-dark"><a class="stretched-link" href="data-release/c-elegans/latest"><em>C.
+                elegans</em></a></h2>
         </div>
-      </div> {# /card #}
-    </a>
-  </div> {#/col #}
-
-</div> {# /row #}
-
-
-
+      </div>
+    </div>
+    <!-- /Card Column -->
+    <!-- Card Column -->
+    <div class="col mb-3">
+      <div class="card h-100 shadow text-center pt-5 mt-5 cardBorderBottom" style="min-height:20rem;">
+        <i class="bi bi-clipboard2-data-fill text-info"></i>
+        <div class="card-body">
+          <h2 class="h4 text-dark"><a class="stretched-link" href="data-release/c-briggsae/latest"><em>C.
+                briggsae</em></a></h2>
+        </div>
+      </div>
+    </div>
+    <!-- /Card Column -->
+  </div>
+  <!-- /Row -->
+</div> <!-- /Container -->
 {% endblock %}
 
