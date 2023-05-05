@@ -16,24 +16,23 @@ body, html{
 
 {% endblock %}
 
-
 {% block content %}
 
 <div class="row">
-  <div class="col-md-12">
-    <ul class="nav nav-pills">
-      <h3>Releases</h3>
-      {% for RELEASE in RELEASES %}
-        <li {% if RELEASE.version == release_version %} class="active btn-nu" {% endif %}>
-          <a {% if RELEASE.disabled %} href="#" {% else %} href="{{ url_for('data_releases.data_release_list', species = species.get_url_name(), release_version = RELEASE.version) }}" {% endif %}>{{ RELEASE.version }}</a>
-        </li>
-      {% endfor %}
+  <div class="col my-5">
+    <h2>Releases</h2>
+    {% for RELEASE in RELEASES %}
+    <ul class="nav nav-pills p-3 mt-4 rounded shadow-sm text-bg-light">
+      <li {% if RELEASE.version==release_version %} class="nav-item" {% endif %}>
+        <a class="nav-link active" {% if RELEASE.disabled %} href="#" {% else %}
+          href="{{ url_for('data_releases.data_release_list', species = species.get_url_name(), release_version = RELEASE.version) }}"
+          {% endif %}>{{ RELEASE.version }}</a>
+      </li>
     </ul>
+    {% endfor %}
   </div>
 </div>
-<hr />
-<div>
-
+<!-- /Row -->
 
 {% if RELEASE.report_type == 'V0' %}
   {% include 'data/v0.html' %}
