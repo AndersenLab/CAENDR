@@ -2,213 +2,415 @@
 
 {% block custom_head %}
 <style>
-    #checkout.affix {
-    position: fixed;
-    top: 20px;
-    width: 136px;
+.view-strain-list {
+    list-style-type: none;
+    column-count: 3
 }
+#notFoundAlert {
+    display: none;
+    text-align:center
+}
+
 </style>
 {% endblock %}
 
 {% block content %}
-<form method="POST" action="{{ url_for('request_strains.order_page') }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+{% from "_includes/macros.html" import render_field %}
+
+<div class="container">
     <div class="row">
-        <div class="col-md-10">
-            <h3>Strain Sets</h3>
-        </div>
-        <div class="col-md-2">
-            <div id="checkout" style="z-index:1000000" data-offset-top="170" data-spy="affix">
-                <button type="submit" value="Checkout" class="btn nu-alt-btn btn-block" id="checkoutBox">
-                    <span class="glyphicon glyphicon-shopping-cart" aria-hidden="true"></span> Order
-                </button>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-8">
-            <p>Pre-defined sets of strains can be ordered below.</p>
-            <p>The <strong>divergent set</strong> includes 12 genotypically different strains and can be used to determine broad-sense heritability after repeated independent measures of your favorite phenotype. <strong>We recommend starting with the divergent set.</strong></p>
-            <p>Sets <strong>1-8</strong> each contain 46-48 strains that should be assayed for genetic mapping experiments. We recommend using a single set of 48 strains. After you have scored and optimized your quantitative trait, additional sets can be assayed to increase statistical power for association mapping.</p>
-        </div>
-        <div class="col-md-4 strain-data-container">
-            <div class="panel panel-default">
-                <div class="panel-heading">Strain Data</div>
-                <div class="panel-body">
-                    Strain Data including isolation location, isotype information, and more is available for download.<br /><br />
-                    <a href="{{ url_for('request_strains.strains_data_tsv') }}" type="button" class="btn btn-default btn-block btn-success">Download Strain Data</a>
+        <form class="col mt-5" autocomplete="off">
+            <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}" />
+            <div>
+                <!--  Navigation Tabs -->
+                <ul class="nav nav-tabs" id="strainsTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="strain-sets-tab" data-bs-toggle="tab" data-bs-target="#strain-sets-tab-pane" type="button" role="tab" aria-controls="strain-sets-tab-pane" aria-selected="false">Home</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="individual-strains-tab" data-bs-toggle="tab" data-bs-target="#individual-strains-tab-pane" type="button" role="tab" aria-controls="individual-strains-tab-pane" aria-selected="true">Individual Strains</button>
+                    </li>
+                </ul>
+                <!-- Tabs Content -->
+                <div class="tab-content" id="strainsTabContent">
+                    <!-- Strain Sets Content -->
+                    <div class="tab-pane fade show active" id="strain-sets-tab-pane" role="tabpanel" aria-labelledby="strain-sets-tab">
+                        <div class="p-5 mb-5 rounded shadow-sm text-bg-light">
+                            <div class="row">
+                                <div class="col-6 col-md-3 mb-3 mx-auto species" id="strains_sets_filter">
+                                    {{ render_field(form.species, onchange="filter_species_sets") }}
+                                </div>
+                                <div class="col-9 mx-auto">
+                                    <p>Pre-defined sets of strains can be ordered below.</p>
+                                    <div class="accordion accordion-flush" id="strainSetInfoAccordion">
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="divergentSets">
+                                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#divergentSets-collapse" aria-expanded="true" aria-controls="divergentSets">About Divergent Sets</button>
+                                            </h2>
+                                            <div id="divergentSets-collapse" class="accordion-collapse collapse show" aria-labelledby="divergentSets">
+                                                <div class="accordion-body">
+                                                    <p>The <strong>divergent set</strong> includes 12 genotypically different strains and can be used to determine broad-sense heritability after repeated independent measures of your favorite phenotype. <strong>We recommend starting with the divergent set.</strong></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="mappingSets">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#mappingSets-collapse" aria-expanded="false" aria-controls="mappingSets">About Mapping Sets</button>
+                                            </h2>
+                                            <div id="mappingSets-collapse" class="accordion-collapse collapse" aria-labelledby="mappingSets">
+                                                <div class="accordion-body">
+                                                    <p>Sets <strong>1-8</strong> each contain 46-48 strains that should be assayed for genetic mapping experiments. We recommend using a single set of 48 strains. After you have scored and optimized your quantitative trait, additional sets can be assayed to increase statistical power for association mapping.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-responsive mb-5 strainSets">
+                            <table class="table table-hover table-bordered text-center strain-table">
+                                <caption class="visually-hidden">A list of strain sets available for purchase.</caption>
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th style="width:7%;">Select</th>
+                                        <th style="width:20%;">Species</th>
+                                        <th style="width:20%;">Set Name</th>
+                                        <th style="width:20%;">Number of Strains</th>
+                                        <th style="width:33%;">Strains</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="table-group-divider strainSetsTable">
+                                    {% for k, v in strain_sets.items() %}
+                                    {% set species = k[1] %}
+                                    {% if k[0] == 'D' %}
+                                    <tr>
+                                        <td>
+                                            <input class="form-check-input"  type="checkbox" name="items-10000" id="divergent" value="set_divergent" class="styled-checkbox" />
+                                            <label class="form-check-label visually-hidden"  for="divergent">Select row</label>
+                                        </td>
+                                        <td class="species" data-value="{{ species }}"><em>{{ species|capitalize|replace('_', '. ')  }}</em></td>
+                                        <td class="strainName"><label for="divergent">Divergent Set</label></td>
+                                        <td>{{ len(v) }}</td>
+                                        <td>{{ v|join(' ') }}</td>
+                                    </tr>
+                                    {% else %}
+                                        {% set set = k[0]|int %}
+                                    <tr>
+                                        <td>
+                                            <input class="form-check-input" id="set-{{ set }}" type="checkbox" name="items-{{ set + 1000 }}" value="set_{{ set }}" class="styled-checkbox" {% if set>= 9 %}disabled{% endif %}/>
+                                            <label class="form-check-label visually-hidden" for="set-{{ set }}">Select row</label>
+                                        </td>
+                                        <td class="species" data-value="{{ species }}"><em>{{ species|capitalize|replace('_', '. ') }}</em></td>
+                                        <td class="strainName"><label for="set-{{ set }}">Mapping Set {{ set }}</label></td>
+                                        <td>{{ len(v) }}</td>
+                                        <td>
+                                            <a class="btn btn-link btn-block view-strain-link" data-bs-toggle="collapse" data-bs-target="#view_set_{{ set }}">View Strains</a>
+                                            <div class="collapse" id="view_set_{{ set }}">
+                                                <ul class="view-strain-list">
+                                                    {% for strain in v %}
+                                                    <li class="col-list">{{ strain }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- Individual Strains Content -->
+                    <div class="tab-pane fade" id="individual-strains-tab-pane" role="tabpanel" aria-labelledby="individual-strains-tab">
+                        <p>Individual strains can be ordered below.</p>
+                        <!-- Filter Facets -->
+                        <div class="filters p-5 mb-5 rounded shadow-sm text-bg-light">
+                            <div class="d-flex flex-wrap justify-content-around">
+
+                                <div class="col-12 col-md-2 mx-1 mb-3 species" id="ind_strains_filter">
+                                    {{ render_field(form.species, onchange="filter_species_ind") }}
+                                </div>
+                                <div class="col-12 col-md-2 mx-1 mb-3">
+                                    <label for="search" class="form-label">Search by Strains:</label>
+                                    <div class="dropdown">
+                                        <input id="search" type="text" class="form-control dropdown-toggle" data-bs-toggle="dropdown" placeholder="For example, AB1 ..." action="#" autocomplete="off">
+                                        <div class="dropdown-menu table-responsive p-1 dropdownSelect" role="menu">
+                                            <table class="table table-hover table-striped">
+                                                <caption class="visually-hidden">A list of strains.</caption>
+                                                <thead class="align-middle">
+                                                    <tr>
+                                                        <th scope="col"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="align-middle" id="search-results"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-2 mx-1 mb-3"> 
+                                    <label for="pasteStrainsDropdown" class="form-label">Paste List:</label> 
+                                    <div class="dropdown-center d-grid" id="pasteStrainsDropdown"> 
+                                        <button type='button' class="btn btn-secondary dropdown-toggle text-light" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="false">Paste Strains</button> 
+                                        <div class="dropdown-menu p-3">
+                                             <form> 
+                                                <label for="copyPasteStrains" class="form-label">Paste List:</label> 
+                                                <textarea id="copyPasteStrains" class="form-control" placeholder="Paste a tab, comma, or newline delimited list of strains here"></textarea> 
+                                                <div class="my-3 text-end"> 
+                                                    <button type="button" class="btn btn-secondary text-light" id="submitPaste" data-bs-toggle="dropdown" aria-expanded="false">Submit</button> 
+                                                </div> 
+                                            </form> 
+                                        </div> 
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-2 mx-1 mb-3">
+                                    <label for="downloadData" class="form-label">Strain Data:</label>
+                                    <button type="button" class="btn btn-secondary text-light text-center" id="downloadData" style="width:100%;">Download Data</button>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                        <div id="notFoundAlert" class="alert alert-danger" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill d-inline"></i>
+                            <p class="d-inline m-2"></p>
+                        </div>
+                        <!-- Individual Strains Table -->
+                        <div class="table-responsive my-5 strainSets">
+                            <table class="table table-hover table-bordered text-center" id="indStrainsTable">
+                                <thead class="table-secondary">
+                                    <tr>
+                                      <th style="width:7%;">Select</th>
+                                      <th style="width:18%;">
+                                        <span class="tooltip-item" data-bs-toggle="tooltip" data-bs-placement="bottom">
+                                            Species
+                                        </span>
+                                      </th>
+                                      <th style="width:18%;">
+                                        <span class="tooltip-item" data-bs-toggle="tooltip" data-placement="bottom" title="Name assigned to a group of strains that share the same genome-wide haplotype.">
+                                          Isotype
+                                        </span>
+                                      </th>
+                                      <th style="width:18%;">
+                                        <span class="tooltip-item" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Individually isolated strains; If strains are assigned to the same isotype they are > 99.93% genetically identical">
+                                          Strains
+                                        </span>
+                                      </th>
+                                      <th style="width:18%;"><span class="tooltip-item" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Date of original release">Release</span></th>
+                                      <th style="width:21%;"><span class="tooltip-item" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Previous names assigned to a strain or alternative names">Alternative Names</span>
+                                    </tr>
+                                </thead>
+                                <tbody class="searchable">
+                                    {% for isotype, strains in strain_listing|groupby('isotype') %}
+                                      <tr>
+                                        <td>
+                                            {% set isotype_loop_index = loop.index %}
+                                            <input class="form-check-input" type="checkbox" name="items-{{ loop.index }}" id="items-{{ loop.index }}" value="{{ isotype }}" info="{{ isotype + " " + strains|join(" ") }}" />
+                                            <label class="form-check-label visually-hidden" for="items-{{ loop.index }}">Select row</label>
+                                        </td>
+                                        <td class="species" data-value="{{ strains[0].species_name }}"><i>{{ strains[0].species_name|capitalize|replace('_', '. ') }}</i></td>
+                                        <td class="strainName"><a href="{{ url_for('request_strains.isotype_page', isotype_name=isotype) }}">{{ isotype }}</a></td>
+                                        <td>{{ strains|join(", ") }}</td>
+                                        <td>{{ strains[0]['release'] }}</td>
+                                      {% if strains[0].previous_names %}
+                                        <td>{{ strains[0].previous_names.replace(',', '|').split('|') | join(', ') }}</td>
+                                      {% else %}
+                                        <td> </td>
+                                      {% endif %}
+                                      </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                </div>
+                <div class="d-grid d-flex justify-content-end" id="checkout">
+                    <button type="submit" value="Checkout" name="add_to_cart" class="btn btn-secondary text-light" id="checkoutBox">
+                        <i class="me-2 bi bi-cart-fill"></i>
+                        Order
+                    </button>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-12">
-
-            <div class="table-responsive mb-5" style="height:45vh;">
-            <table class="table table-hover table-striped strain-table">
-                <thead>
-                    <tr>
-                        <th style="width:7%;"> </th>
-                        <th style="width:20%;">Set Name</th>
-                        <th style="width:30%;">Number of Strains</th>
-                        <th style="width:43%;">Strains</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>
-                            <input type="checkbox" name="items-10000" id="divergent" value="set_divergent" class="styled-checkbox" />
-                            <label for="divergent">&nbsp;</label>
-                        </td>
-                        <td><strong><label for="divergent">Divergent Set</label></strong></td>
-                        <td>{{ len(strain_sets["D"]) }}</td>
-                        <td>
-                            <small>
-                                {% for strain in strain_sets["D"] %}
-                                {{ strain }}
-                                {% endfor %}
-                            </small>
-                        </td>
-                    </tr>
-                    {% for i in range(1,11) %}
-                    <tr>
-                        <td>
-                            {# REVERT - enable mapping set 7 and 8 #}
-                            <input id="set-{{ i }}" type="checkbox" name="items-{{ i + 1000 }}" value="set_{{ i }}" class="styled-checkbox" {% if i>= 9 %}disabled{% endif %}/>
-                            <label for="set-{{ i }}">&nbsp;</label>
-                        </td>
-                        <td><strong><label for="set-{{ i }}">Mapping Set {{ i }}</label></strong></td>
-                        <td>{{ len(strain_sets["{}".format(i)]) }}</td>
-                        <td>
-                            <a class="btn btn-link btn-block view-strain-link" data-bs-toggle="collapse" data-bs-target="#view_set_{{ i }}">View Strains</a>
-                            <div class="collapse" id="view_set_{{ i }}">
-                                <ul class="view-strain-list">
-                                    {% for strain in strain_sets["{}".format(i)] %}
-                                    <li class="col-list">{{ strain }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            </div>
-        </div>
-    </div>
-
-
-    <div class="row">
-        <div class="col-md-6">
-            <h3>Individual Strains</h3>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-6">
-          Individual strains can be ordered below.
-        </div>
-        <div class="col-md-2">
-            <button style="margin-left: auto;" type="button" class="btn btn-nu btn-block" data-bs-toggle="modal" tooltip data-bs-target="#myModal" data-bs-placement="top" title="Paste a list of strains to select">Paste List</button>
-        </div>
-        <div class="col-md-4">
-            <input id="filter" type="text" class="form-control" placeholder="Enter Strain Name" action="#" autocomplete="off">
-        </div>
-    </div>
-    <br />
-    <div class="row">
-      <div class="col-md-12">
-        <div class="table-responsive" style="height:70vh;">
-        <table class="table table-hover table-striped strain-table">
-          <thead>
-            <tr>
-              <th style="width:7%;"></th>
-              <th style="width:18%;">
-                <span class="tooltip-item" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Name of strain we distribute as a representative of an isotype.">
-                  Reference Strain
-                </span>
-              </th>
-              <th style="width:18%;">
-                <span class="tooltip-item" data-bs-toggle="tooltip" data-placement="bottom" title="Name assigned to a group of strains that share the same genome-wide haplotype.">
-                  Isotype
-                </span>
-              </th>
-              <th style="width:18%;">
-                <span class="tooltip-item" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Individually isolated strains; If strains are assigned to the same isotype they are > 99.93% genetically identical">
-                  Strains
-                </span>
-              </th>
-              <th style="width:18%;"><span class="tooltip-item" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Date of original release">Release</span></th>
-              <th style="width:21%;"><span class="tooltip-item" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Previous names assigned to a strain or alternative names">Alternative Names</span>
-                <!--<div class="pull-right"><a href="https://docs.google.com/spreadsheets/d/1V6YHzblaDph01sFDI8YK_fP0H7sVebHQTXypGdiQIjI/pub?output=tsv">Download Strain Information (.tsv)</a></div>-->
-              </th>
-            </tr>
-          </thead>
-          <tbody class="searchable">
-          {% for isotype, strains in strain_listing|groupby('isotype') %}
-            <tr>
-              <td>
-              {% set isotype_loop_index = loop.index %}
-                <input type="checkbox" name="items-{{ loop.index }}" id="items-{{ loop.index }}" value="{{ isotype }}" info="{{ isotype + " " + strains|join(" ") }}" class="ind_strain styled-checkbox" />
-                <label for="items-{{ isotype_loop_index }}">&nbsp;</label>
-              </td>
-              <td>
-                <label for="items-{{ isotype_loop_index }}">{{ strains[0].reference_strain }}</label>
-              </td>
-              <td><a href="{{ url_for('request_strains.isotype_page', isotype_name=isotype) }}">{{ isotype }}</a></td>
-              <td>{{ strains|join(", ") }}</td>
-              <td>{{ strains[0]['release'] }}</td>
-            {% if strains[0].previous_names %}
-              <td>{{ strains[0].previous_names.replace(',', '|').split('|') | join(', ') }}</td>
-            {% else %}
-              <td> </td>
-            {% endif %}
-            </tr>
-          {% endfor %}
-            <input name="from_catalog" type="hidden" value="true">
-          </tbody>
-        </table>
-        </div>
-      </div> {# /col-md-12 #}
-    </div> {# /row #}
-    
-</form>
-<div class="modal fade" id="myModal" tabindex="-1" style="z-index:1000000" role="dialog" aria-labelledby="myModalLabel">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-body">
-                <textarea style="width: 500px; height: 150px;" id="copyPasteStrains" class="form-control" placeholder="Paste a tab, comma, or newline delimited list of strains here"></textarea>
-            </div>
-            <div id='alert-modal'></div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-nu" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-nu" id="submitPaste">Submit</button>
-            </div>
-        </div>
+        </form>
     </div>
 </div>
+
+
 {% endblock %}
 {% block script %}
 <script>
-    $(document).ready(function() {
 
-        (function($) {
+
+    $(document).ready(function() {
             var patterns = [];
-            $('#filter').keyup(function() {
+            $('#search').keyup(function() {
                 $('.searchable tr').hide();
-                console.log($(this).val());
                 $(this).val().split(',').forEach(function(r) {
                     var rex = new RegExp(r, "i");
-                    $('.searchable tr').filter(function() {
+                    var foundStrains = $('.searchable tr').filter(function() {
                         return rex.test($(this).text());
                     }).show();
+
+                    $('#search-results').empty()
+                    foundStrains.each(function() {
+                        var foundStrain = $(this).find('td:nth-child(4)').text()
+                        $('#search-results').append(`<tr><td>${foundStrain}</td></tr>`)
+                    })
                 })
+
             })
 
         }(jQuery));
 
+        $(document).ready(function() {
+        
+        let filtered_by_species;
+        
+        if($("#speciesSelect").val() === '') {
+            $('#search').prop('disabled', true)
+            $('#pasteStrainsDropdown>button').prop('disabled', true)
+            $('#downloadData').addClass('disabled')
+        }
+
+        filter_species_ind = function() {
+            $(document).on('change', '#ind_strains_filter #speciesSelect', function(e) {
+                e.preventDefault()
+                const selectedVal = $(this).val()
+                if (selectedVal) {
+                    filtered_by_species =  $('.searchable tr').hide().filter(function() {
+                        return $(this).find('td:nth-child(2)').attr('data-value') == selectedVal
+                    })
+                    filtered_by_species.show()
+                    $('#search').prop('disabled', false)
+                    $('#pasteStrainsDropdown>button').prop('disabled', false)
+                    $('#downloadData').removeClass('disabled')
+                } else {
+                    $('.searchable tr').show()
+                    $('#search').prop('disabled', true)
+                    $('#pasteStrainsDropdown>button').prop('disabled', true)
+                    $('#downloadData').addClass('disabled')
+                }                
+            })
+        }
+
+
+        filter_species_sets = function() {
+            $(document).on('change', '#strains_sets_filter #speciesSelect', function(e) {
+                e.preventDefault()
+                const selectedVal = $(this).val()
+                $('.strainSetsTable tr').hide().filter(function() {
+                        return $(this).find('td:nth-child(2)').attr('data-value') == selectedVal
+                    }).show()
+            })
+        }
+
+        
+        $('#checkoutBox').prop('disabled', !$("input:checkbox").is(":checked"));
+
+        $("input:checkbox").click(function(x) {
+            highlight_set_buttons();
+            $('#checkoutBox').prop('disabled', !$("input:checkbox").is(":checked"));
+        });
+
+        if($("#copyPasteStrains").val() === '') {
+            $('#submitPaste').prop('disabled', true)
+        }
+
+        $("#copyPasteStrains").keyup(function() {
+            if($(this).val() !== '') {
+                $('#submitPaste').prop('disabled', false)
+            } else {
+                $('#submitPaste').prop('disabled', true)
+            }
+        })
+
+        $("#submitPaste").click(function() {
+            $('#notFoundAlert').hide()
+            pastedStrains = $("#copyPasteStrains").val().split(/[\s,\n,\t]+/);
+            lost_strains = [];
+            for (i in pastedStrains) {
+                upperCaseStrain = pastedStrains[i].toUpperCase(); // Just in case users submit lower case
+                found_strain = $("[info~='" + upperCaseStrain + "']");
+                if (found_strain.length > 0) {
+                    pasted = found_strain.prop("checked", true); // Use the word selector (~=)
+                } else {
+                    lost_strains.push(pastedStrains[i])
+                }
+            }
+            if (lost_strains.length > 0) {
+                set_alert(`The following strain(s) were not found ${lost_strains.join(", ")}`)
+            }
+            var rows = $('.searchable tr')
+
+            rows.sort(function(a, b) {
+                var value1 = $(a).find('td > input:checkbox').is(":checked")
+                var value2 = $(b).find('td > input:checkbox').is(":checked")
+                return (value1 > value2) ? -1 : 1
+            })
+            $.each(rows, function (idx, row) {
+                $('#indStrainsTable > tbody').append(row)
+            })
+            $('#checkoutBox').prop('disabled', !$("input:checkbox").is(":checked"));
+        })
+
+        $('#downloadData').click(function() {
+            const selectedVal = $('#ind_strains_filter #speciesSelect').val();
+            let url = '{{ url_for("request_strains.strains_data_tsv", species=selectedVal) }}';
+            if (selectedVal) {
+            url += selectedVal;
+            }
+            window.location.href = url;
+        });
+
+        $("button[id^='set']").click(function() {
+            set_name = $(this).attr("id");
+            if ($("." + set_name).first().prop("checked") == false) {
+                $("." + set_name).prop("checked", true);
+            } else {
+                $("." + set_name).prop("checked", false);
+            }
+            $('#checkoutBox').prop('disabled', !$("input:checkbox").is(":checked"));
+            highlight_set_buttons();
+        })
+
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+              if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
+              }
+            }
+        });
+     
+
+        $(document).on('click', "button[id^='checkout']", function(e) {
+            e.preventDefault()
+            const data = {csrf_token: $('#csrf_token').val(), user_from_catalog: $("#from_catalog").val(), strains: []}
+            $('input:checkbox:checked').each(function() {
+                data.strains.push({name: $(this).attr('value'), species: $(this).parent().siblings('.species').text()})
+            })
+            $.ajax({
+                type: "POST",
+                url: "{{ url_for('request_strains.order_page_post') }}",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function(response) {
+                    window.location.href = "/request-strains/checkout";
+                },
+                error: function(error){
+                    console.log('something went wrong', error)
+                }
+            })
+
+        });
+
+    
+
     });
+
+    set_alert = function(msg) {
+            $('#notFoundAlert > p').html(msg)
+            $('#notFoundAlert').show()
+    }
 
     highlight_set_buttons = function() {
         set_names = ["set_divergent", "set_1", "set_2", "set_3", "set_4"];
@@ -222,59 +424,8 @@
     }
 
 
-    $('#checkoutBox').prop('disabled', !$("input:checkbox").is(":checked"));
-
-    $("#checkAll").click(function() {
-        $('input:checkbox:visible.ind_strain').not(this).prop('checked', this.checked);
-    });
-
-    $("input:checkbox").click(function(x) {
-        highlight_set_buttons();
-        $('#checkoutBox').prop('disabled', !$("input:checkbox").is(":checked"));
-    });
-
-    $("#submitPaste").click(function() {
-        pastedStrains = $("#copyPasteStrains").val().split(/[\s,\n,\t]+/);
-        lost_strains = [];
-        for (i in pastedStrains) {
-            upperCaseStrain = pastedStrains[i].toUpperCase(); // Just in case users submit lower case
-            found_strain = $("[info~='" + upperCaseStrain + "']");
-
-            if (found_strain.length > 0) {
-                pasted = found_strain.prop("checked", true); // Use the word selector (~=)
-            } else {
-                lost_strains.push(pastedStrains[i])
-            }
-        }
-        if (lost_strains.length > 0) {
-            set_alert("warning", "The following strain(s) were not found", lost_strains.join(", "));
-        }
-        $('#checkoutBox').prop('disabled', !$("input:checkbox").is(":checked"));
-        $('#myModal').modal('hide');
-    })
-
-    $("button[id^='set']").click(function() {
-        set_name = $(this).attr("id");
-        if ($("." + set_name).first().prop("checked") == false) {
-            $("." + set_name).prop("checked", true);
-        } else {
-            $("." + set_name).prop("checked", false);
-        }
-        $('#checkoutBox').prop('disabled', !$("input:checkbox").is(":checked"));
-        highlight_set_buttons();
-    })
-
-    $("button[id^='checkout']").click(function() {
-        checkedValues = $('input:checkbox:checked').map(function() {
-            return $(this).next();
-        }).get();
-        console.log(checkedValues);
-    });
-
-
-
     $(document).ready(function() {
-        $('#filter').keydown(function(event) {
+        $('#search').keydown(function(event) {
             if (event.keyCode == 13) {
                 event.preventDefault();
                 return false;
@@ -282,9 +433,9 @@
         });
     });
 
-    $(function() {
-        $('[data-bs-toggle="tooltip"]').tooltip()
-    })
 
 </script>
 {% endblock %}
+
+
+

@@ -1,17 +1,26 @@
 from datetime import datetime, timezone
 
+import os
+
 from flask import (redirect,
                    url_for,
                    session,
-                   flash)
+                   flash,
+                   request,
+                   make_response,
+                   jsonify)
 from flask_dance.contrib.google import make_google_blueprint, google as google_fd
 from flask_dance.consumer import oauth_authorized
 
 from base.utils.auth import assign_access_refresh_tokens
 
 from caendr.models.datastore import User
+from caendr.models.datastore.cart import Cart
 from caendr.utils.data import unique_id
+from caendr.utils.env import get_env_var
 from caendr.services.cloud.secret import get_secret
+
+MODULE_SITE_CART_COOKIE_NAME = get_env_var('MODULE_SITE_CART_COOKIE_NAME')
 
 
 GOOGLE_CLIENT_ID = get_secret('GOOGLE_CLIENT_ID')
@@ -56,6 +65,34 @@ def authorized(google_bp, token):
   assert user_info.ok
   user_info = {'google': user_info.json()}
   user = create_or_update_google_user(user_info)
-
+  resp = make_response(assign_access_refresh_tokens(user.name, user.roles, session.get("login_referrer")))
+  new_resp = transfer_cart(resp, user)
   flash("Successfully logged in!", 'success')
-  return assign_access_refresh_tokens(user.name, user.roles, session.get("login_referrer"))
+  return new_resp
+
+
+def transfer_cart(resp, user):
+  # checks if a user has a local cart
+  cart_id = request.cookies.get(MODULE_SITE_CART_COOKIE_NAME)
+  if cart_id:
+    local_cart = Cart(cart_id)
+    if len(local_cart['items']) == 0:
+      # delete cartID from cookies
+      resp.delete_cookie(MODULE_SITE_CART_COOKIE_NAME)
+      return
+    
+    # checks if a user has a cart in their account
+    users_cart = Cart.lookup_by_user(user['email'])
+    if users_cart:
+      users_cart.delete_cart()
+      users_cart.save()
+
+    # assigns local cart to the user
+    local_cart.transfer_to_user(user['email'])
+    local_cart.save()
+
+    resp.delete_cookie(MODULE_SITE_CART_COOKIE_NAME)
+  return resp
+  
+
+    

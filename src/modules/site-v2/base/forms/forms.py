@@ -245,9 +245,10 @@ class OrderForm(Form):
   phone = StringField('Phone', [Length(min=3, max=35)])
   shipping_service = SelectField('Shipping', choices=SHIPPING_OPTIONS)
   shipping_account = StringField('Account Number')
-  items = FieldList(HiddenField('item', [DataRequired()]))
   payment = SelectField("Payment", choices=PAYMENT_OPTIONS)
   comments = TextAreaField("Comments", [Length(min=0, max=300)])
+  version = StringField(HiddenField('version', [DataRequired()]))
+
   #recaptcha = RecaptchaField()
 
   def validate_shipping_account(form, field):
@@ -256,26 +257,6 @@ class OrderForm(Form):
       raise ValidationError("Please supply a shipping account number.")
     elif form.shipping_service.data == "Flat Rate Shipping" and field.data:
       raise ValidationError("No shipping account number is needed if you are using flat-rate shipping.")
-
-  def item_price(self):
-    """ Fetch item and its price """
-    for item in self.items:
-      if item.data == "set_divergent":
-        yield item.data, PRICES.DIVERGENT_SET
-      elif item.data.startswith("set"):
-        yield item.data, PRICES.STRAIN_SET
-      else:
-        yield item.data, PRICES.STRAIN
-    if self.shipping_service.data == "Flat Rate Shipping":
-      yield "Flat Rate Shipping", PRICES.SHIPPING
-
-  @property
-  def total(self):
-    """ Calculates the total price of the order """
-    total_price = 0
-    for item, price in self.item_price():
-      total_price += price
-    return total_price
 
 
 class TraitData(HiddenField):
@@ -338,5 +319,9 @@ class MappingSubmissionForm(Form):
                                       validate_missing_isotype,
                                       validate_strain_w_no_data,
                                       validate_data_exists])
+  
+
+class StrainListForm(Form):
+  species = SpeciesSelectField(validators=[Required()])
 
 
