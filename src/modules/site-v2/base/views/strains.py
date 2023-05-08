@@ -42,7 +42,7 @@ from caendr.services.cloud.sheets import add_to_order_ws, lookup_order
 from caendr.services.cloud.secret import get_secret
 
 MODULE_SITE_CART_COOKIE_NAME = get_env_var('MODULE_SITE_CART_COOKIE_NAME')
-MODULE_SITE_CART_COOKIE_AGE = get_env_var('MODULE_SITE_CART_COOKIE_AGE', var_type=int)
+MODULE_SITE_CART_COOKIE_AGE_SECONDS = get_env_var('MODULE_SITE_CART_COOKIE_AGE_SECONDS', var_type=int)
 STRAIN_SUBMISSION_URL = get_env_var('MODULE_SITE_STRAIN_SUBMISSION_URL')
 
 strains_bp = Blueprint('request_strains',
@@ -191,7 +191,7 @@ def order_page_post():
 
     resp = make_response(jsonify({'status': 'OK'}))
     if not user:
-      resp.set_cookie(MODULE_SITE_CART_COOKIE_NAME, users_cart.name, max_age=MODULE_SITE_CART_COOKIE_AGE)
+      resp.set_cookie(MODULE_SITE_CART_COOKIE_NAME, users_cart.name, max_age=MODULE_SITE_CART_COOKIE_AGE_SECONDS)
     
     return resp
     
