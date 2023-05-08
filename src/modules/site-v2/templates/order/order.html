@@ -2,61 +2,27 @@
 
 {% block custom_head %}
 <style>
-    #tableContainer {
-        background-color: #e9e9e9;
-        padding: 2rem;
-        margin: auto;
-        max-width: 800px;
-    }
-    #orderTable {
-        max-width: 650px;
-    }
     #orderTable th {
         border-bottom: 1px solid black
     }
     #info {
-        background-color: #d9dbf8;
+        background-color: var(--bs-footerBg);
         max-width: 650px;
     }
     #info i {
         color: #0719BC;
         font-size: 1.5rem
     }
-    #form-submit {
-        margin: 50px
-    }
     #checkout {
         color: white;
         width: 80%;
         margin-left: 50px;
     }
-    #shippingInfo, #paymentInfo {
-        background-color: #e9e9e9;
-        padding: 40px;
-        margin: 30px
-    }
-    h3 {
-        text-align: center;
-    }
     .form-group {
         margin: 10px
     }
-    #payment-info-icon {
-        color: #198754;
-        background-color: #e9e9e9;
-    }
-    #icon-btn {
-        border: none;
-        background: rgb(186, 186, 186, 0);
-    }
-    #delete-icon {
-        color: rgb(227, 2, 2);
-    }
-    #delete {
+    .delete {
         text-align: center;
-    }
-    #goBack {
-        color: white
     }
     #empty-cart {
         background-color: #d9dbf8;
@@ -75,27 +41,29 @@
 
 {% block content %}
     {% if len(cartItems) %}
-    <div id="tableContainer">
-        <table class="table table-striped m-4" id="orderTable">
+    <div class="table-responsive col-12 col-md-9 p-5 mb-5 mx-auto  rounded shadow-sm text-bg-light">
+        <table class="table table-striped" id="orderTable">
+            <caption class="visually-hidden">A list of items included in your shopping cart.</caption>
             <thead>
                 <tr>
-                    <th style="width: 40px">#</th>
-                    <th style="width: 250px">Species</th>
-                    <th style="width: 200px;">Strain/Set</th>
-                    <th style="width: 100px">Price</th>
-                    <th style="width: 100px">Delete</th>
+                    <th>#</th>
+                    <th>Species</th>
+                    <th>Strain/Set</th>
+                    <th>Price</th>
+                    <th>Delete</th>
                 </tr>
             </thead>
             <tbody class="searchable">
                 {% for item in cartItems %}
                 <tr class='cartItem'>
                     <td>{{ loop.index }}</td>
-                    <td>{{ item.species }}</td>
+                    <td><em>{{ item.species }}</em></td>
                     <td>{{ item.name }}</td>
                     <td>${{ item.price }}</td>
-                    <td id="delete">
-                        <button type="button" id="icon-btn" info={{ item.name }}>
-                            <i class="bi bi-trash-fill" id="delete-icon"></i>
+                    <td class="delete">
+                        <button type="button" class="btn" info={{ item.name }}>
+                            <i class="bi bi-trash-fill text-danger" class="delete-icon" aria-hidden="true"></i>
+                            Delete
                         </button>
                     </td>
                 </tr>
@@ -123,10 +91,11 @@
 
 <form id='form-submit' method="POST">
     <div class="row">
-        <div class="col">
-            <h3>Shipping Information</h3>
+        <div class="col text-bg-light shadow-sm rounded p-5 m-3" >
+            <h2>Shipping Information</h2>
             <div id="shippingInfo">
                 {{ form.csrf_token }}
+                <input id='version' name="version" type="hidden" value='{{ form.version.data }}'>
                 
                 {{ render_field(form.name) }}
                 {{ render_field(form.email) }}
@@ -136,13 +105,13 @@
                 {{ render_field(form.shipping_account) }}
             </div>
         </div>
-        <div class="col">
+        <div class="col text-bg-light shadow-sm rounded p-5 m-3">
             <div>
-                <h3>Payment Information</h3>
+                <h2>Payment Information</h2>
                 <div id="paymentInfo">
                     <div class="form-group">
                         {{ form.payment.label}}
-                        <button type="button" id="icon-btn" data-toggle="modal" data-target="#paymentInfoModal"><i class="bi bi-info-circle-fill" id="payment-info-icon"></i></button>
+                        <button type="button" class="btn" data-toggle="modal" data-target="#paymentInfoModal" aria-label="Payment information"><i class="bi bi-info-circle-fill text-secondary" aria-hidden="true"></i></button>
                         {{ form.payment(class="form-control") }}
                     </div>
                     {{ render_field(form.comments) }}
@@ -176,9 +145,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="deleteModalTitle">Are you sure you want to delete this item?</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="close btn-close" data-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <p>Are you sure you want to remove this item from your cart?</p>
@@ -246,7 +213,7 @@ $(document).ready(function() {
         }
     })
 
-    $(".searchable").on('click', '.cartItem > #delete > button', function() {
+    $(".searchable").on('click', '.cartItem > .delete > button', function() {
         $('#deleteItem').attr('info', $(this).attr('info'))
         $('#deleteModal').modal('show')
     })

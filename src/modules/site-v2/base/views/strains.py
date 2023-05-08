@@ -18,6 +18,7 @@ from extensions import cache
 from caendr.api.strain import get_strains, query_strains, get_strain_sets, get_strain_img_url
 from caendr.models.sql import Strain
 from caendr.utils.json import dump_json
+from caendr.utils.env import get_env_var
 from caendr.models.datastore.cart import Cart
 
 """
@@ -32,15 +33,17 @@ from datetime import datetime, timezone
 from flask import render_template, request, url_for, redirect, Blueprint, abort, flash
 
 from config import config
-from base.forms import OrderForm
+from base.forms import OrderForm, StrainListForm
 from base.utils.auth import jwt_required, get_current_user
 from caendr.utils.env import get_env_var
 
 from caendr.services.email import send_email, ORDER_SUBMISSION_EMAIL_TEMPLATE
 from caendr.services.cloud.sheets import add_to_order_ws, lookup_order
+from caendr.services.cloud.secret import get_secret
 
 MODULE_SITE_CART_COOKIE_NAME = get_env_var('MODULE_SITE_CART_COOKIE_NAME')
 MODULE_SITE_CART_COOKIE_AGE = get_env_var('MODULE_SITE_CART_COOKIE_AGE', var_type=int)
+STRAIN_SUBMISSION_URL = get_env_var('MODULE_SITE_STRAIN_SUBMISSION_URL')
 
 strains_bp = Blueprint('request_strains',
                         __name__,
@@ -52,6 +55,7 @@ strains_bp = Blueprint('request_strains',
 @cache.memoize(60*60)
 def request_strains():
   """ Load landing page """
+  title = "Request Strains"
   disable_parent_breadcrumb = True
   return render_template('strain/landing_page.html', **locals())
 
@@ -92,20 +96,21 @@ def external_links():
 #
 # Strain Data
 #
-@strains_bp.route('/CelegansStrainData.tsv')
+@strains_bp.route('/StrainData.tsv/<species>')
 @cache.memoize(60*60)
-def strains_data_tsv():
+def strains_data_tsv(species):
   """
       Dumps strain dataset; Normalizes lat/lon on the way out.
   """
-
+  
   def generate():
+    strains_by_species = query_strains(species=species, issues=False)
     col_list = list(Strain.__mapper__.columns)
     col_order = [1, 0, 3, 4, 5, 7, 8, 9, 10, 28, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 2, 6]
     col_list[:] = [col_list[i] for i in col_order]
     header = [x.name for x in col_list]
     yield '\t'.join(header) + "\n"
-    for row in query_strains(issues=False):
+    for row in strains_by_species:
       row = [getattr(row, column.name) for column in col_list]
       yield '\t'.join(map(str, row)) + "\n"
 
@@ -152,7 +157,7 @@ def strains_catalog():
     warning = request.args.get('warning')
     strain_listing = get_strains()
     strain_sets = get_strain_sets()
-    form = OrderForm()
+    form = StrainListForm(request.form)
     return render_template('strain/catalog.html', **locals())
 
 #
@@ -239,8 +244,7 @@ def order_page_post():
       # delete cartID from cookies
       if cart_id is not None:
         resp.delete_cookie(MODULE_SITE_CART_COOKIE_NAME)          
-      return resp
-      
+      return resp      
 
 
 @strains_bp.route('/checkout', methods=['PUT'])
@@ -262,6 +266,8 @@ def order_page_remove():
 
   # remove item from the cart
   users_cart.remove_item(item_to_remove)
+  users_cart.update_version()
+
   users_cart.save()
 
   return jsonify({'status': 'OK'}), 200
@@ -306,8 +312,21 @@ def order_confirmation(invoice_hash):
   else:
     order_obj["items"] = {x.split(":")[0]: float(x.split(":")[1])
                           for x in order_obj['items'].split("\n")}
+    items = [{'strain': k, 'price': v} for k, v in order_obj["items"].items()]
+    strains = get_strains()
+    
+    # get species
+    for item in items:
+      for strain in strains:
+        if item['strain'] == strain.isotype:
+          item['species'] = strain.species_name
+          break
+        else:
+          item['species'] = ''
+
     title = "Order Confirmation"
     invoice = f"Invoice {order_obj['invoice_hash']}"
+    SUPPORT_EMAIL = get_secret('SUPPORT_EMAIL')
     return render_template('order/order_confirm.html', **locals())
   
     
@@ -321,5 +340,7 @@ def strains_submission_page():
   # TODO: Move this to configurable location
   #STRAIN_SUBMISSION_FORM = '1w0VjB3jvAZmQlDbxoTx_SKkRo2uJ6TcjjX-emaQnHlQ'
   #strain_submission_url = f'https://docs.google.com/forms/d/{STRAIN_SUBMISSION_FORM}/viewform?embedded=true'
-  strain_submission_url = "https://docs.google.com/forms/d/1w0VjB3jvAZmQlDbxoTx_SKkRo2uJ6TcjjX-emaQnHlQ/viewform?embedded=true"
+  strain_submission_url = STRAIN_SUBMISSION_URL
   return render_template('strain/submission.html', **locals())
+
+

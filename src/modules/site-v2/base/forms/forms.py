@@ -247,6 +247,8 @@ class OrderForm(Form):
   shipping_account = StringField('Account Number')
   payment = SelectField("Payment", choices=PAYMENT_OPTIONS)
   comments = TextAreaField("Comments", [Length(min=0, max=300)])
+  version = StringField(HiddenField('version', [DataRequired()]))
+
   #recaptcha = RecaptchaField()
 
   def validate_shipping_account(form, field):
@@ -317,5 +319,9 @@ class MappingSubmissionForm(Form):
                                       validate_missing_isotype,
                                       validate_strain_w_no_data,
                                       validate_data_exists])
+  
+
+class StrainListForm(Form):
+  species = SpeciesSelectField(validators=[Required()])
 
 

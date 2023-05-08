@@ -10,7 +10,7 @@
   <nav class="navbar navbar-expand-lg fw-bold mt-3">
     <div class="container-fluid">
       <div class="col-3 col-md-1 navbar-brand ms-5">
-        <a href="/"><img src="/static/img/caeNDRLogo.png" class="img-fluid"></a>
+        <a href="/"><img src="/static/img/caeNDRLogo.png" class="img-fluid" alt="Home"></a>
       </div>
       <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
         data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
@@ -111,8 +111,8 @@
           <!-- /User Menu -->
           <!-- Cart icon -->
           <div class="nav-item mx-4 mb-3" id="cartIcon">
-            <a href="{{ url_for('request_strains.order_page_index') }}" class="rounded-circle userMenu">
-              <i class="bi bi-cart-fill lh-1"></i>
+            <a href="{{ url_for('request_strains.order_page_index') }}" class="rounded-circle userMenu" aria-label="Cart">
+              <i class="bi bi-cart-fill lh-1" aria-hidden="true"></i>
             </a>
           </div>
           <!-- /Cart icon -->
