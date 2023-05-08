@@ -17,8 +17,7 @@ class HeritabilityReport(DataJobEntity):
   def get_props_set(cls):
     return {
       *super().get_props_set(),
-
-      # Query
+      'species',
       'label',
       'trait',
     }
