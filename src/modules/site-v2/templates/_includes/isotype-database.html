@@ -17,48 +17,49 @@
 
 {% endblock %}
 
-<div class="table-responsive my-5 isotypeDatabase">
-  <table class="table table-hover table-bordered table-striped" id="isotype-db">
-    <caption class="visually-hidden">A list of strains sortable by species that includes various data about each
-      individual strain.</caption>
-    <thead class="table-secondary align-middle">
-      <tr>
-        <th scope="col">#</th>
-        <th scope="col">Species</th>
-        <th scope="col">Strain</th>
-        <th scope="col">Isotype</th>
-        <th scope="col">Previous Names</th>
-        <th scope="col">Release</th>
-        <th scope="col">Latitude</th>
-        <th scope="col">Longitude</th>
-        <th scope="col">Substrate</th>
-        <th scope="col">Sampled by</th>
-        <th scope="col">Isolated by</th>
-        <th scope="col">Issue Notes</th>
-        <th scope="col">More Info</th>
-      </tr>
-    </thead>
-    <tbody class="table-group-divider align-middle">
-      {% for strain in strain_listing %}
-      <tr>
-        <th scope="row">{{ loop.index }}</th>
-        <td><em>{{ strain.species_name|capitalize|replace('_', '. ') }}</em></td>
-        <td>{{ strain.strain }}</td>
-        <td>{{ strain.isotype }}</td>
-        <td>{{ strain.previous_names }}</td>
-        <td>{{ strain.release }}</td>
-        <td>{{ strain.latitude }}</td>
-        <td>{{ strain.longitude }}</td>
-        <td>{{ strain.substrate }}</td>
-        <td>{{ strain.sampled_by }}</td>
-        <td>{{ strain.isolated_by }}</td>
-        <td>{{ strain.issue_notes }}</td>
-        <td><a href="{{ url_for('request_strains.isotype_page', isotype_name=strain.isotype) }}">Read More</a></td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+
+<table class="table table-hover table-bordered table-striped" id="isotype-db">
+  <caption class="visually-hidden">A list of strains sortable by species that includes various data about each
+    individual strain.</caption>
+  <thead class="table-secondary align-middle">
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Species</th>
+      <th scope="col">Strain</th>
+      <th scope="col">Isotype</th>
+      <th scope="col">Previous Names</th>
+      <th scope="col">Source Lab</th>
+      <th scope="col">Release</th>
+      <th scope="col">Latitude</th>
+      <th scope="col">Longitude</th>
+      <th scope="col">Substrate</th>
+      <th scope="col">Sampled by</th>
+      <th scope="col">Isolated by</th>
+      <th scope="col">Issue Notes</th>
+      <th scope="col">More Info</th>
+    </tr>
+  </thead>
+  <tbody class="table-group-divider align-middle">
+    {% for strain in strain_listing %}
+    <tr>
+      <th scope="row">{{ loop.index }}</th>
+      <td><em>{{ strain.species_name|capitalize|replace('_', '. ') }}</em></td>
+      <td>{{ strain.strain }}</td>
+      <td>{{ strain.isotype }}</td>
+      <td>{{ strain.previous_names }}</td>
+      <td>{{ strain.source_lab }}</td>
+      <td>{{ strain.release }}</td>
+      <td>{{ strain.latitude }}</td>
+      <td>{{ strain.longitude }}</td>
+      <td>{{ strain.substrate }}</td>
+      <td>{{ strain.sampled_by }}</td>
+      <td>{{ strain.isolated_by }}</td>
+      <td>{{ strain.issue_notes }}</td>
+      <td><a href="{{ url_for('request_strains.isotype_page', isotype_name=strain.isotype) }}">Read More</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 
 {% block script %}
 <script>
