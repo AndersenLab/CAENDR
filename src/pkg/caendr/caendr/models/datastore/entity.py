@@ -395,13 +395,7 @@ class Entity(object):
 
     matches = cls.query_ds(filters=[(key, '=', val)])
 
-    # TODO: Filter out any elements in "matches" that are deleted
-
-    matches = [
-
-      el for el in matches if not el['is_deleted']
-
-    ]
+    matches = [ el for el in matches if not el['is_deleted'] ]
 
     # If no matching entities found, return None
 

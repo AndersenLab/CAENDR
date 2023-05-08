@@ -28,18 +28,21 @@ These views handle strain orders
 
 """
 import uuid
+import os
 from datetime import datetime, timezone
 from flask import render_template, request, url_for, redirect, Blueprint, abort, flash
 
 from config import config
 from base.forms import OrderForm, StrainListForm
 from base.utils.auth import jwt_required, get_current_user
+from caendr.utils.env import get_env_var
 
 from caendr.services.email import send_email, ORDER_SUBMISSION_EMAIL_TEMPLATE
 from caendr.services.cloud.sheets import add_to_order_ws, lookup_order
 from caendr.services.cloud.secret import get_secret
 
 MODULE_SITE_CART_COOKIE_NAME = get_env_var('MODULE_SITE_CART_COOKIE_NAME')
+MODULE_SITE_CART_COOKIE_AGE_SECONDS = get_env_var('MODULE_SITE_CART_COOKIE_AGE_SECONDS', var_type=int)
 STRAIN_SUBMISSION_URL = get_env_var('MODULE_SITE_STRAIN_SUBMISSION_URL')
 
 strains_bp = Blueprint('request_strains',
@@ -174,83 +177,75 @@ def order_page_post():
   else:
     users_cart = Cart(**{'items': []})
 
-
-  if 'order_form' in request.form:
-    if form.validate_on_submit():
-      cartItems = users_cart['items']
-      # check the version
-      if int(users_cart['version']) != int(form.version.data) or len(cartItems) == 0:
-        flash("There was a problem with your order, please try again.", 'warning')
-        return redirect(url_for('request_strains.order_page_index'))
-      else:
-        """ submitting the order """
-        if form.shipping_service.data == 'Flat Rate Shipping':
-          cartItems.append({'name': 'Flat Rate Shipping'})
-        for item in cartItems:
-          item_price = users_cart.get_price(item)
-          item['price'] = item_price
-        totalPrice = sum(item['price'] for item in cartItems)
-
-        # When the user confirms their order it is processed below.
-        order_obj = {'total': totalPrice,
-                      'date': datetime.now(timezone.utc).date().isoformat(),
-                      'is_donation': False}
-        order_obj.update(form.data)
-        order_obj['phone'] = order_obj['phone'].strip("+")
-        order_obj['items'] = '\n'.join(sorted([f"{item['name']}:{item['price']}" for item in cartItems]))
-        order_obj['invoice_hash'] = str(uuid.uuid4()).split("-")[0]
-        order_obj["order_confirmation_link"] = url_for('request_strains.order_confirmation', invoice_hash=order_obj['invoice_hash'], _external=True)
-        send_email({"from": "no-reply@elegansvariation.org",
-                    "to": [order_obj["email"]],
-                    "cc": config.get("CC_EMAILS"),
-                    "subject": "CeNDR Order #" + str(order_obj["invoice_hash"]),
-                    "text": ORDER_SUBMISSION_EMAIL_TEMPLATE.format(**order_obj)})
-
-        # Save to google sheet
-        add_to_order_ws(order_obj)
-
-        # Mark the cart is deleted
-        users_cart.delete_cart()
-        users_cart.save()
-
-        flash("Thank you for submitting your order! Please follow the instructions below to complete your order.", 'success')
-
-        # delete cartID from cookies
-        if cart_id:
-          resp = make_response(redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302))
-          resp.delete_cookie(MODULE_SITE_CART_COOKIE_NAME)
-          return resp
-        
-        return redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302)
-    else:
-      # handle form validation errors
-      title = "Order Summary"
-      cartItems = users_cart['items'] 
-      for item in cartItems:
-        item_price = users_cart.get_price(item)
-        item['price'] = item_price
-      totalPrice = sum(item['price'] for item in cartItems)
-      return render_template('order/order.html', **locals())
-
-  
-  else:
+  if 'order_form' not in request.form:
     """ adding items to the cart """
-    added_items = request.get_json()['strains']
+    req = request.get_json()
+    added_items = req.get('strains')
     if (len(added_items) == 0):
       flash("You must select strains/sets from the catalog", 'error')
       return redirect(url_for("request_strains.strains_catalog"))
  
     for item in added_items:
       users_cart.add_item(item)
-    
-    users_cart.update_version()
     users_cart.save()
 
     resp = make_response(jsonify({'status': 'OK'}))
     if not user:
-      resp.set_cookie(MODULE_SITE_CART_COOKIE_NAME, users_cart.name, max_age=60*60*24*14)
+      resp.set_cookie(MODULE_SITE_CART_COOKIE_NAME, users_cart.name, max_age=MODULE_SITE_CART_COOKIE_AGE_SECONDS)
     
     return resp
+    
+  else:
+    if not form.validate_on_submit():
+      # handle form validation errors
+      title = "Order Summary"
+      cartItems = users_cart['items'] 
+      for item in cartItems:
+        item_price = Cart.get_price(item)
+        item['price'] = item_price
+      totalPrice = sum(item['price'] for item in cartItems)
+      return render_template('order/order.html', **locals())
+    else:
+      """ submitting the order """
+      cartItems = users_cart['items']
+      if form.shipping_service.data == 'Flat Rate Shipping':
+        cartItems.append({'name': 'Flat Rate Shipping'})
+      for item in cartItems:
+        item_price = Cart.get_price(item)
+        item['price'] = item_price
+      totalPrice = sum(item['price'] for item in cartItems)
+      
+      # When the user confirms their order it is processed below.
+      order_obj = {'total': totalPrice,
+                    'date': datetime.now(timezone.utc).date().isoformat(),
+                    'is_donation': False}
+      order_obj.update(form.data)
+      order_obj['phone'] = order_obj['phone'].strip("+")
+      order_obj['items'] = '\n'.join(sorted([f"{item['name']}:{item['price']}" for item in cartItems]))
+      order_obj['invoice_hash'] = str(uuid.uuid4()).split("-")[0]
+      order_obj["order_confirmation_link"] = url_for('request_strains.order_confirmation', invoice_hash=order_obj['invoice_hash'], _external=True)
+      send_email({"from": "no-reply@elegansvariation.org",
+                  "to": [order_obj["email"]],
+                  "cc": config.get("CC_EMAILS"),
+                  "subject": "CeNDR Order #" + str(order_obj["invoice_hash"]),
+                  "text": ORDER_SUBMISSION_EMAIL_TEMPLATE.format(**order_obj)})
+
+      # Save to google sheet
+      add_to_order_ws(order_obj)
+
+      # Mark the cart is deleted
+      users_cart.soft_delete()
+      users_cart.save()
+
+      # flash("Thank you for submitting your order! Please follow the instructions below to complete your order.", 'success')
+      flash("Thank you for submitting your order! Please follow the instructions below to complete your order.", 'success')
+      resp = make_response(redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302))
+
+      # delete cartID from cookies
+      if cart_id is not None:
+        resp.delete_cookie(MODULE_SITE_CART_COOKIE_NAME)          
+      return resp      
+
 
 @strains_bp.route('/checkout', methods=['PUT'])
 @jwt_required(optional=True)
@@ -258,13 +253,15 @@ def order_page_remove():
   """ This view handles removing items from the cart """
   form = OrderForm()
   user = get_current_user()
-  item_to_remove = request.get_json()['itemToRemove']
-  
-  # get cart
-  if user:
+  cart_id = request.cookies.get(MODULE_SITE_CART_COOKIE_NAME)
+  req = request.get_json()
+  item_to_remove = req.get('itemToRemove')
+
+  if not user and not cart_id:
+    return jsonify({'error': 'Cart is not found'}), 400
+  elif user:
     users_cart = Cart.lookup_by_user(user['email'])
   else:
-    cart_id = request.cookies.get(MODULE_SITE_CART_COOKIE_NAME)
     users_cart = Cart(cart_id)
 
   # remove item from the cart
@@ -281,31 +278,38 @@ def order_page_index():
   """ This view handles the checkout page """
   form = OrderForm()
   user = get_current_user()
-  if user:
-    users_cart = Cart.lookup_by_user(user['email'])  
-  else:
-    cart_id = request.cookies.get(MODULE_SITE_CART_COOKIE_NAME)
-    users_cart = Cart(cart_id)
-
-  cartItems = users_cart['items'] 
-  for item in cartItems:
-    item_price = users_cart.get_price(item)
-    item['price'] = item_price
-  totalPrice = sum(item['price'] for item in cartItems)
-  
-  form.version.data = users_cart['version']
+  cart_id = request.cookies.get(MODULE_SITE_CART_COOKIE_NAME)
 
   if user and hasattr(user, 'email') and not form.email.data:
     form.email.data = user.email
   
   title = "Order Summary"
-  return render_template('order/order.html', title=title, cartItems=cartItems, totalPrice=totalPrice, form=form)
+
+  if not user and not cart_id:
+    cartItems = []
+  elif user:
+    users_cart = Cart.lookup_by_user(user['email'])
+    cartItems = users_cart['items']  
+  else:
+    users_cart = Cart(cart_id)
+    cartItems = users_cart['items']
+
+  if len(cartItems) == 0:
+    return render_template('order/order.html', title=title, form=form)
+
+  else:
+    for item in cartItems:
+      item['price'] = Cart.get_price(item)
+    totalPrice = sum(item['price'] for item in cartItems)
+    return render_template('order/order.html', title=title, cartItems=cartItems, totalPrice=totalPrice, form=form)
   
 
 @strains_bp.route("/checkout/confirmation/<invoice_hash>", methods=['GET', 'POST'])
 def order_confirmation(invoice_hash):
   order_obj = lookup_order(invoice_hash)
-  if order_obj:
+  if order_obj is None:
+    abort(404)
+  else:
     order_obj["items"] = {x.split(":")[0]: float(x.split(":")[1])
                           for x in order_obj['items'].split("\n")}
     items = [{'strain': k, 'price': v} for k, v in order_obj["items"].items()]
@@ -320,17 +324,12 @@ def order_confirmation(invoice_hash):
         else:
           item['species'] = ''
 
-    if order_obj is None:
-      abort(404)
     title = "Order Confirmation"
     invoice = f"Invoice {order_obj['invoice_hash']}"
     SUPPORT_EMAIL = get_secret('SUPPORT_EMAIL')
     return render_template('order/order_confirm.html', **locals())
-  else:
-    abort(404)
+  
     
-
-
 @strains_bp.route('/submit')
 @cache.memoize(60*60)
 def strains_submission_page():

@@ -383,7 +383,7 @@
 
         $(document).on('click', "button[id^='checkout']", function(e) {
             e.preventDefault()
-            const data = {csrf_token: $('#csrf_token').val(), user_from_catalog: $("#from_catalog").val(), strains: []}
+            const data = {csrf_token: $('#csrf_token').val(), strains: []}
             $('input:checkbox:checked').each(function() {
                 data.strains.push({name: $(this).attr('value'), species: $(this).parent().siblings('.species').text()})
             })

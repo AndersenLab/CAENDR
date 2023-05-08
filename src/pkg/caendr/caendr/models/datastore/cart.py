@@ -55,8 +55,20 @@ class Cart(Entity):
 
     # Multiple carts found for user
     # TODO: get all carts that match the user, sort by date created on and return the latest one?
-    except NonUniqueEntity:
-      return 'multiple carts found'
+    except NonUniqueEntity as ex:
+      return Cart.sort_by_modified_date(ex.matches, reverse=True)[0]
+
+
+  @classmethod
+  def get_price(self, item):
+    if item['name'] == 'Flat Rate Shipping':
+      return PRICES.SHIPPING
+    elif item['name'] == "set_divergent":
+      return PRICES.DIVERGENT_SET
+    elif item['name'].startswith("set"):
+      return PRICES.STRAIN_SET
+    else:
+      return PRICES.STRAIN
 
 
   def transfer_to_user(self, email):
@@ -74,12 +86,9 @@ class Cart(Entity):
     for cartItem in self['items']:
       if cartItem['name'] == item:
         self['items'].remove(cartItem)
-        return
-      else:
-        continue  
 
 
-  def delete_cart(self):
+  def soft_delete(self):
     self['is_deleted'] = True
 
 
