@@ -98,9 +98,7 @@ span.bi {
             </td>
 
             {% if all_results %}
-              <td class="data-owner">
-                {% if item.username %} {{ item.username }} {% endif %}
-              </td>
+              <td class="data-owner">{{ item.get_display_name() }}</td>
             {% endif %}
           </tr>
         {% endif %}

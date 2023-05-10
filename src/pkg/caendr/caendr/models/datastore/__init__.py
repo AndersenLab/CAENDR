@@ -2,6 +2,7 @@ from .entity import Entity
 from .container import Container
 from .user import User
 from .job_entity import JobEntity
+from .user_owned_entity import UserOwnedEntity
 from .data_job_entity import DataJobEntity
 from .dataset_release import DatasetRelease
 from .profile import Profile
