@@ -118,7 +118,6 @@
         }
 
     var trait = "{{ trait }}"
-    var Fnam = "{{ fnam }}"
     var imag
     var chartJson = {{ data|tojson|safe }};
     var traits =[];
@@ -263,7 +262,7 @@
         var a = document.createElement('a');
             var pdfblob = new Blob([ doc.output('blob') ], { type : 'application/pdf'});
             a.href = window.URL.createObjectURL(pdfblob);
-            a.download = "{{ fnam }}.pdf";
+            a.download = "{{ fname }}.pdf";
             a.click();
         })
         image.src = url;
