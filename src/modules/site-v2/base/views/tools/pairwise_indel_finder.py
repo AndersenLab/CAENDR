@@ -62,6 +62,7 @@ def try_get_sv_strains(species):
   try:
     return get_sv_strains(species)
   except:
+    logger.error(f"Couldn't find strain variant annotations for {species}. Make sure the appropriate VCF file exists.")
     return []
 
 
