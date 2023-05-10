@@ -71,7 +71,7 @@ table.dataTable thead .sorting {
         {% if item %}
           <tr>
             <td class="data-species">
-              {% if item.species %}{{ species_list[item.species].short_name }}{% endif %}
+              {% if item.species %}<i>{{ species_list[item.species].short_name }}</i>{% endif %}
             </td>
 
             {% for column in columns %}

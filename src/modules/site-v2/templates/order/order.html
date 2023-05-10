@@ -1,122 +1,288 @@
 {% extends "_layouts/default.html" %}
 
-{% block content %}
-<div class="row">
-    <div class="col-md-12">
+{% block custom_head %}
+<style>
+    #orderTable th {
+        border-bottom: 1px solid black
+    }
+    #info {
+        background-color: var(--bs-footerBg);
+        max-width: 650px;
+    }
+    #info i {
+        color: #0719BC;
+        font-size: 1.5rem
+    }
+    #checkout {
+        color: white;
+        width: 80%;
+        margin-left: 50px;
+    }
+    .form-group {
+        margin: 10px
+    }
+    .delete {
+        text-align: center;
+    }
+    #empty-cart {
+        background-color: #d9dbf8;
+        display: flex;
+        margin: 5rem
+    }
+    #empty-cart > i {
+        color: #0719BC;
+    }
+    #empty-cart > * {
+        margin: 1rem;
 
-        <table class="table table-hover table-striped" style="table-layout: fixed">
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    {% if len(cartItems) %}
+    <div class="table-responsive col-12 col-md-9 p-5 mb-5 mx-auto  rounded shadow-sm text-bg-light">
+        <table class="table table-striped" id="orderTable">
+            <caption class="visually-hidden">A list of items included in your shopping cart.</caption>
             <thead>
                 <tr>
-                    <th style="width: 40px">#</th>
-                    <th style="width: 200px;">Strain/Set</th>
-                    <th class="price">Price</th>
+                    <th>#</th>
+                    <th>Species</th>
+                    <th>Strain/Set</th>
+                    <th>Price</th>
+                    <th>Delete</th>
                 </tr>
             </thead>
             <tbody class="searchable">
-                {% for item, price in form.item_price() %}
-                <tr>
+                {% for item in cartItems %}
+                <tr class='cartItem'>
                     <td>{{ loop.index }}</td>
-                    <td>{{ item }}</td>
-                    <td class="price">${{'%0.2f'| format(price|float)}}</td>
+                    <td><em>{{ item.species }}</em></td>
+                    <td>{{ item.name }}</td>
+                    <td>${{ item.price }}</td>
+                    <td class="delete">
+                        <button type="button" class="btn" info={{ item.name }}>
+                            <i class="bi bi-trash-fill text-danger" class="delete-icon" aria-hidden="true"></i>
+                            Delete
+                        </button>
+                    </td>
                 </tr>
                 {% endfor %}
-                <tr>
-                <td><strong>Total</strong></td>
-                <td></td>
-                <td class="price"><strong>${{'%0.2f'| format(form.total|float)}}</strong></td>
+                <tr id="total">
+                    <td colspan="3"><strong>Total:</strong></td>
+                    <td colspan="2" class="totalPrice"><strong>${{ totalPrice }}</strong></td>
                 </tr>
             </tbody>
         </table>
-        <div class ="well well-sm">
-          <p> If you are ordering a ready-made set, the strains will be sent as frozen stocks on dry ice. Please select a shipping carrier from the drop-down menu and enter an account number. If you are ordering a customized set of strains, these strains will be sent on plates. </p>
+        <div id="info" class="d-flex flex-row p-2 m-4">
+            <i class="bi bi-info-circle-fill p-3"></i>
+            <p> If you are ordering a ready-made set, the strains will be sent as frozen stocks on dry ice. Please select a shipping carrier from the drop-down menu and enter an account number. If you are ordering a customized set of strains, these strains will be sent on plates. </p>
         </div>
     </div>
-</div>
+    {% else %}
+    <div id="empty-cart">
+        <i class="bi bi-info-circle-fill"></i>
+        <p>Your cart is empty. <a href="{{url_for('request_strains.strains_catalog')}}">Continue browsing.</a></p>
+    </div>
+    {% endif %}
 
 {% from "_includes/macros.html" import render_field %}
 
-<div class="row">
-    <div class="col-lg-6">
-        {{ render_field(form.sector) }}
-    </div>
-</div>  
 
-
-<div class="row">
-    <form id='form-submit' method="POST">
-
-        <div class="col-lg-6">
-            {# Renders list of strains being ordered #}
-            {% for item in form.items %}
-                {{ item }}
-            {% endfor %}
-
-            {{ form.csrf_token }}
-            {{ render_field(form.name) }}
-            {{ render_field(form.phone, placeholder="(847)-867-5309") }}
-            {{ render_field(form.address, placeholder="123 Sheridan Rd.\nChicago IL. 60657") }}
-            {{ render_field(form.email) }}
+<form id='form-submit' method="POST">
+    <div class="row">
+        <div class="col text-bg-light shadow-sm rounded p-5 m-3" >
+            <h2>Shipping Information</h2>
+            <div id="shippingInfo">
+                {{ form.csrf_token }}
+                <input id='version' name="version" type="hidden" value='{{ form.version.data }}'>
+                
+                {{ render_field(form.name) }}
+                {{ render_field(form.email) }}
+                {{ render_field(form.phone, placeholder="(847)-867-5309") }}
+                {{ render_field(form.address, placeholder="123 Sheridan Rd.\nChicago IL. 60657") }}
+                {{ render_field(form.shipping_service) }}
+                {{ render_field(form.shipping_account) }}
+            </div>
         </div>
-
-        <div class="col-lg-6">
-            {{ render_field(form.shipping_service) }}
-            {{ render_field(form.shipping_account) }}
-            {{ render_field(form.payment) }}
-            {{ render_field(form.comments) }}
-            <small>If you choose to pay by credit card, an account will be generated for you in Northwestern's Core Facility, NUcore. If there is a business administration person who will oversee the payment, please include that person's name and email address in the comments field. They will be added to your NUcore account.</small>
-        </div>
-
-        <div class='row'>
-            <div class="form-group">
-            <div class="col-sm-4 col-sm-offset-4">
-            <br />
-                {# render_field(form.recaptcha) #}
-                <button value="Checkout" class="btn btn-nu btn-block" id="checkout" ><span class="glyphicon glyphicon-shopping-cart" aria-hidden="true"></span> Order</button>
-                <br />
-            </div>{# /col-sm-4 #}
-            </div>{# /form-group #}
-        </div>
-    </form>
-
-    <div id="invo-link-row" class="row" style="display: none;">
-        <div class="col-sm-4 col-md-offset-4">
-            <button
-                id="invo-link"
-                class="btn btn-nu btn-block"
-                onClick="window.open('https://nulive.technologypublisher.com/tech/The_Caenorhabditis_Natural_Diversity_Resource')"
-                target="_blank"
-            >
-                Industry Order <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span>
+        <div class="col text-bg-light shadow-sm rounded p-5 m-3">
+            <div>
+                <h2>Payment Information</h2>
+                <div id="paymentInfo">
+                    <div class="form-group">
+                        {{ form.payment.label}}
+                        <button type="button" class="btn" data-toggle="modal" data-target="#paymentInfoModal" aria-label="Payment information"><i class="bi bi-info-circle-fill text-secondary" aria-hidden="true"></i></button>
+                        {{ form.payment(class="form-control") }}
+                    </div>
+                    {{ render_field(form.comments) }}
+                </div>
+            </div>
+            <button value="Checkout" type='submit' name="order_form" class="btn btn-secondary" id="checkout" disabled aria-disabled="true">
+                <i class="bi bi-cart-fill"></i>
+                Order Now
             </button>
         </div>
     </div>
+</form>
+
+<div class="modal fade" id="paymentInfoModal" tabindex="-1" role="dialog" aria-labelledby="paymentInfoTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="paymentInfoTitle">Payment Information</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>If you choose to pay by credit card, an account will be generated for you in Northwestern's Core Facility, NUcore. If there is a business administration person who will oversee the payment, please include that person's name and email address in the comments field. They will be added to your NUcore account.</p>
+            </div>
+        </div>
+    </div>
 </div>
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalTitle">Are you sure you want to delete this item?</h5>
+                <button type="button" class="close btn-close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to remove this item from your cart?</p>
+                <div class="d-flex justify-content-around p-2">
+                    <button type="button" class="btn btn-info" id="goBack">
+                        <i class="bi bi-slash-circle-fill"></i>
+                        No, go back.
+                    </button>
+                    <button id="deleteItem" type="button" class="btn btn-primary">
+                        <i class="bi bi-trash3-fill"></i>
+                        Yes, delete it.
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
 
 <script>
-$("#sector").on('input', function(event) {
-    event.preventDefault();
-    if (event.target.value !== 'academia') {
-        $("#form-submit").slideUp().fadeOut();
-        $("#invo-link-row").fadeIn();
-    } else {
-        $("#invo-link-row").fadeOut();
-        $("#form-submit").slideDown().fadeIn();
+
+
+$(document).ready(function() {
+
+    $("#checkout").on('click', function() {
+
+        $.pause = function( callback, seconds){
+        return window.setTimeout( callback, seconds * 1000 );
+        }
+
+        $(this).text("Please wait...")
+            .addClass('disabled')
+            .delay(5000)
+
+        var checkout_btn =  $(this);
+        $.pause(function() {
+            checkout_btn.removeClass('disabled').text("Order Now")
+        }, 5)
+
+    })
+
+    $(".form-group > button").on('click', function() {
+        $('#paymentInfoModal').modal('show')
+    })
+
+    $('#paymentInfoModal .close').on('click', function() {
+        $('#paymentInfoModal').modal('hide')
+    })
+
+    $('#name, #email, #phone, #address, #shipping_account').keyup(function() {
+        if(formFilled()) {
+            $('#checkout').prop('disabled', false)
+        }
+    })
+
+    if(formFilled()) {
+        $('#checkout').prop('disabled', false)
     }
-})
-$("#checkout").on('click', function() {
 
-    $.pause = function( callback, seconds){
-       return window.setTimeout( callback, seconds * 1000 );
+    $('tr td').each(function(){
+        if($(this).text() == 'Flat Rate Shipping') {
+            $('<td></td>').insertAfter($(this))
+        }
+    })
+
+    $(".searchable").on('click', '.cartItem > .delete > button', function() {
+        $('#deleteItem').attr('info', $(this).attr('info'))
+        $('#deleteModal').modal('show')
+    })
+
+    $('#goBack, #deleteModal .close').on('click', function() {
+        $('#deleteModal').modal('hide')
+    })
+
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
+            }
+        }
+    });
+
+    $('#deleteItem').click(function(e){
+        e.preventDefault()
+        const data = {csrf_token: $('#csrf_token').val(), itemToRemove: $(this).attr('info')}
+
+        $.ajax({
+            type: "PUT",
+            url: "{{ url_for('request_strains.order_page_remove') }}",
+            data: JSON.stringify(data),
+            contentType: "application/json",
+            dataType: "json",
+            success: function(response) {               
+                location.reload();
+            },
+            error: function(error){
+                console.log(error)
+            }
+        })
+    })
+
+    $('#payment').on('change', function() {
+        if($(this).val() == 'credit_card' && $('#comments').val() == '') {
+            $('#checkout').prop('disabled', true)
+        } else if (formFilled() && $(this).val() == 'check' && $('#shipping_service').val() == 'Flat Rate Shipping'){
+            $('#checkout').prop('disabled', false)
+        }
+    })
+
+    $('#shipping_service').on('change', function() {
+        
+        if($(this).val() == 'Flat Rate Shipping' && formFilled() && $('#payment').val() == 'check') {
+            $('#checkout').prop('disabled', false)
+        } else {
+            $('#checkout').prop('disabled', true)
+        }
+    })
+
+
+})
+
+function formFilled() {
+    let filled = true;
+    $('#name, #email, #phone, #address, #shipping_account').each(function() {
+        if($('#shipping_service').val() == 'Flat Rate Shipping') {
+            filled = true;
+        } else if ($(this).val() == '') {
+            filled = false
+        }
+    });
+
+    return filled;
     }
 
-    $(this).text("Please wait...")
-           .addClass('disabled')
-           .delay(5000)
 
-    var checkout_btn =  $(this);
-    $.pause(function() {
-        checkout_btn.removeClass('disabled').text("Order")
-    }, 5)
-})
+
 </script>
 {% endblock %}

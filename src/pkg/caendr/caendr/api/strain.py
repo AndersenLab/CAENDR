@@ -126,11 +126,11 @@ def get_strains(known_origin=False, issues=False):
 def get_strain_sets():
   # TODO: change this to a sqlalchemy query instead
   df = pd.read_sql_table(Strain.__tablename__, db.engine)
-  result = df[['strain', 'isotype', 'strain_set']].dropna(how='any') \
-                                        .groupby('strain_set') \
-                                        .agg(list) \
-                                        .to_dict()
-  return result['strain']
+  result = df[['strain_set', 'species_name', 'strain', 'isotype' ]].dropna(how='any') \
+                                        .groupby(['strain_set', 'species_name'])['strain'] \
+                                        .apply(list) \
+                                        .to_dict()  
+  return result
 
 
 def get_strain_img_url(strain_name, thumbnail=True):
