@@ -93,7 +93,7 @@ def time_series_plot(df, x_title=None, y_title=None, range=None, colors=COLORS, 
         style = {
             'name': column,
             'opacity': 0.8,
-            'line': {'color': colors[n]},
+            'line': {'color': colors[n % len(colors)]},
 
             # If style function provided, use it to generate line styles,
             # overwriting defaults where applicable
