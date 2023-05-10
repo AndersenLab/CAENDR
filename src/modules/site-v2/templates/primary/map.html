@@ -59,12 +59,12 @@
   }
 </style>
 
-    <div class="position-relative" id="map">
-      <form id="strains">
-        <p><strong>Species:</strong></p>
-        <div><input type='checkbox' name='filters' value='elegans_layer' checked><i> C. elegans</i></div>
-        <div><input type='checkbox' name='filters' value='briggsae_layer'><i> C. briggsae</i></div>
-        <div><input type='checkbox' name='filters' value='tropicalis_layer'><i> C. tropicalis</i></div>
+    <div class="position-relative" id="map" aria-hidden="true">
+      <form id="strains" aria-hidden="true">
+        <p tabindex="-1"><strong>Species:</strong></p>
+        <div><input type='checkbox' name='filters' value='elegans_layer' checked tabindex="-1"><i> C. elegans</i></div>
+        <div><input type='checkbox' name='filters' value='briggsae_layer' tabindex="-1"><i> C. briggsae</i></div>
+        <div><input type='checkbox' name='filters' value='tropicalis_layer' tabindex="-1"><i> C. tropicalis</i></div>
       </form>
     </div>
     <div class="text-center my-2">
@@ -72,7 +72,6 @@
     </div>
 
 {% block script %}
-
 <script type="module">
 
 // Icons
@@ -183,7 +182,7 @@ strain_info.forEach(function(d) {
       </ul>
     </div>`
 
-    const marker = L.marker([d.latitude, d.longitude], { icon: set_marker_color(d.species),
+    const marker = L.marker([d.latitude, d.longitude], { keyboard: false, alt: "a marker showing the geographic location of a strain", icon: set_marker_color(d.species),
                                                     species: d.species})
                                                     .on('mouseover', function(){
                                                       marker.setIcon(icon_hover)
