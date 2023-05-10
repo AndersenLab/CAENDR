@@ -4,12 +4,15 @@ from caendr.services.logger import logger
 from caendr.services.elevation import get_elevation
 from caendr.services.cloud.sheets import get_google_sheet
 from caendr.services.cloud.secret import get_secret
+from caendr.models.datastore import SPECIES_LIST
 from caendr.models.sql import Strain
 
+# Get list of Google Sheet IDs for each species
+# Expects secret names with prefix "ANDERSEN_LAB_STRAIN_SHEET_"
+# and species ID in all caps
 ANDERSEN_LAB_STRAIN_SHEETS = [
-  get_secret('ANDERSEN_LAB_STRAIN_SHEET'),              # elegans
-  get_secret('ANDERSEN_LAB_STRAIN_SHEET_C_BRIGGSAE'),   # briggsae
-  get_secret('ANDERSEN_LAB_STRAIN_SHEET_C_TROPICALIS'), # tropicalis
+  get_secret(f'ANDERSEN_LAB_STRAIN_SHEET_{species_name.upper()}')
+    for species_name in SPECIES_LIST
 ]
 
 elevation_cache = {}
