@@ -157,12 +157,6 @@ class EmptyReportResultsError(InternalError):
     self.id = report_id
     self.description = 'Empty report'
 
-class UnfinishedReportError(InternalError):
-  def __init__(self, report_id, data=None):
-    self.id = report_id
-    self.data = data
-    self.description = 'Report is not finished'
-
 
 class FileUploadError(InternalError):
   description = "Could not upload file"
