@@ -4,7 +4,7 @@ import requests
 
 from datetime import datetime
 from caendr.services.logger import logger
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.exceptions import HTTPException
@@ -15,13 +15,14 @@ import pytz
 from caendr.services.cloud.postgresql import health_database_status
 from base.utils.markdown import render_markdown, render_ext_markdown
 
+
+
 # --------- #
 #  Routing  #
 # --------- #
 from base.views import primary_bp
 from base.views import strains_bp
 from base.views import user_bp
-from base.views import order_bp
 
 # Data
 from base.views.data import data_bp
@@ -173,7 +174,6 @@ def register_blueprints(app):
   app.register_blueprint(primary_bp, url_prefix='')
   app.register_blueprint(about_bp, url_prefix='/about')
   app.register_blueprint(strains_bp, url_prefix='/request-strains')
-  app.register_blueprint(order_bp, url_prefix='/order')
   app.register_blueprint(get_involved_bp, url_prefix='/get-involved')
 
   # Data
@@ -273,6 +273,7 @@ def configure_jinja(app):
     text = text.replace('C. briggsae', '<i>C. briggsae</i>')
     text = text.replace('C. elegans', '<i>C. elegans</i>')
     return text
+
 
 def register_errorhandlers(app):
   def render_error(e="generic"):

@@ -58,6 +58,12 @@ def results_columns():
     },
   ]
 
+def try_get_sv_strains(species):
+  try:
+    return get_sv_strains(species)
+  except:
+    return []
+
 
 ## Data Endpoints
 
@@ -88,7 +94,7 @@ def get_tracks():
 @jwt_required()
 def get_strains():
   return jsonify({
-    species: get_sv_strains( species ) for species in SPECIES_LIST.keys()
+    species: try_get_sv_strains( species ) for species in SPECIES_LIST.keys()
   })
 
 

@@ -18,6 +18,10 @@ table.dataTable thead .sorting {
   background: url("//cdn.datatables.net/1.10.0/images/sort_both.png") no-repeat center left;
 }
 
+span.bi {
+  color: var(--bs-secondary);
+}
+
 </style>
 {% endblock %}
 
@@ -71,7 +75,7 @@ table.dataTable thead .sorting {
         {% if item %}
           <tr>
             <td class="data-species">
-              {% if item.species %}{{ species_list[item.species].short_name }}{% endif %}
+              {% if item.species %}<i>{{ species_list[item.species].short_name }}</i>{% endif %}
             </td>
 
             {% for column in columns %}
@@ -94,9 +98,7 @@ table.dataTable thead .sorting {
             </td>
 
             {% if all_results %}
-              <td class="data-owner">
-                {% if item.username %} {{ item.username }} {% endif %}
-              </td>
+              <td class="data-owner">{{ item.get_display_name() }}</td>
             {% endif %}
           </tr>
         {% endif %}
