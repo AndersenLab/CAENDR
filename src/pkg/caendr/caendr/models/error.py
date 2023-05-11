@@ -34,7 +34,12 @@ class APIInternalError(APIError):
   description = "Internal Server Error"
 
 class InternalError(Exception):
-  """ General Error exception handler base class """
+  """
+    General Error exception handler base class
+  """
+  def __init__(self):
+    super().__init__(self.description)
+
   def default_handler(self):
     logger.error(f'ERROR: {self.description}')
     return self.get('description', 'NO DESCRIPTION', self.code)
@@ -57,6 +62,7 @@ class NotFoundError(InternalError):
 
     param_str = ', '.join([ f'"{key}" = "{val}"' for key, val in self.params.items() ])
     self.description = f'Could not find {self.kind} where [{param_str}].'
+    super().__init__()
 
 class CloudStorageUploadError(InternalError):
   description = "Error uploading a blob to cloud storage"
@@ -76,11 +82,17 @@ class CachedDataError(InternalError):
   description = "This data has already been submitted by another user"
   def __init__(self, report):
     self.report = report
+    if report is not None and hasattr(report, 'data_hash'):
+      self.description = f'This data (hash {getattr(report, "data_hash")}) has already been submitted by another user'
+    super().__init__()
 
 class DuplicateDataError(InternalError):
   description = "This data has already been submitted by the same user"
   def __init__(self, report):
     self.report = report
+    if report is not None and hasattr(report, 'data_hash'):
+      self.description = f'This data (hash {getattr(report, "data_hash")}) has already been submitted by the same user'
+    super().__init__()
 
 class DuplicateTaskError(InternalError):
   description = "This task has already been scheduled"
@@ -92,6 +104,7 @@ class DataFormatError(InternalError):
   def __init__(self, msg, line: int=None):
     self.msg  = msg.strip()
     self.line = line
+    super().__init__()
 
 class GoogleSheetsParseError(InternalError):
   description = "Unable to parse Google Sheets document"
@@ -102,10 +115,12 @@ class EnvLoadError(InternalError):
     self.filename = filename
     self.source = source
     self.description = f'Error loading environment variables from file {filename}: {self.source}'
+    super().__init__()
 
 class EnvNotLoadedError(InternalError):
   def __init__(self, var_name):
     self.description = f"Must load a .env file before trying to access environment variable {var_name}"
+    super().__init__()
 
 class EnvVarError(InternalError):
   '''
@@ -146,16 +161,19 @@ class ReportLookupError(InternalError):
   def __init__(self, msg, code):
     self.msg = msg
     self.code = code
+    super().__init__()
 
 class EmptyReportDataError(InternalError):
   def __init__(self, report_id):
     self.id = report_id
     self.description = 'Empty report'
+    super().__init__()
 
 class EmptyReportResultsError(InternalError):
   def __init__(self, report_id):
     self.id = report_id
     self.description = 'Empty report'
+    super().__init__()
 
 
 class FileUploadError(InternalError):
@@ -165,16 +183,19 @@ class FileUploadError(InternalError):
     if description is not None:
       self.description = description
       self.code = code
+    super().__init__()
 
 
 class SpeciesUrlNameError(InternalError):
   def __init__(self, species_name):
     self.species_name = species_name
+    super().__init__()
 
 class InvalidTokenError(InternalError):
   def __init__(self, token):
     self.token = token
     self.description = f'Invalid token name {token}'
+    super().__init__()
 
 class MissingTokenError(InternalError):
   description = 'Cannot get filled-in template until all tokens are defined'
