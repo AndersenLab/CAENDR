@@ -1,144 +1,102 @@
 {% extends "_layouts/default.html" %}
 
+{% block custom_head %}
+<style>
+  #mailInfo {
+    background-color: var(--bs-footerBg);
+  }
+    th {
+      border-bottom: 2px solid black;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row">
-    
-  <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
-    <div class="panel panel-default">
-      <div class="panel-body text-center">
-        <img src="{{ext_asset('img/logo.png')}}" alt="Andersen Lab Logo" style="margin-right:0px; width: 135px; margin-bottom:6px;"/>
-      </div>
-    </div>
 
+<div class="col col-md-9 mx-auto">
 
-    <div class='text-left'>
-      <small>
-        <address class='text-left'>
-        <strong>Erik C. Andersen, Ph.D.</strong><br />
-        c/o Life Sciences Financial Services
-        Hogan Hall
-        2205 Tech Dr, Suite 2-150<br />
-        Evanston IL, 60208
-        </address>
-      </small>
-    </div>
-
-  <form>
-    <input type="button" class='btn btn-primary btn-block hidden-print' value="Print Invoice" onClick="window.print()">
-  </form>
-    
-</div>
-
-
-
-<div class='col lg-9 col-md-9 col-sm-9 col-xs-9'>
-
-  <div class="panel panel-default">
-      <div class="panel-heading">
-          <h3 class="panel-title text-center">{{ title }}</h3>
+      <div class="d-flex justify-content-between mb-4">
+        <h2>{{ invoice }}</h2>
+        <form>
+          <button type="button" class='btn btn-primary btn-block d-print-none' onClick="window.print()">
+            <i class="bi bi-printer-fill"></i>
+            Print
+          </button>
+        </form>
       </div>
 
-      <table class='table table-bordered'>
-          <tr>
-              {% if order_obj['is_donation'] == "FALSE" %}
-              <th>Shipping Service</th> 
-              <th>Tracking</th>
-              {% endif %}
-              <th>Order Date</th>
-          </tr>
-          <tr>
-              {% if order_obj['is_donation'] == "FALSE" %} 
-              <td>{{ order_obj["shipping_service"] }}</td>
-              <td>
-              {% if order_obj['tracking'] and order_obj['shipping_service'] == "UPS" %}
-                <a href="https://wwwapps.ups.com/WebTracking/track?track=yes&trackNums={{ order_obj['tracking'] }}">{{ order_obj['tracking'] }}</a>
-              {% elif order_obj['tracking'] and order_obj['shipping_service'] == "FEDEX" %}
-                <a href="https://www.fedex.com/Tracking?action=track&tracknumbers={{ order_obj['tracking'] }}">{{ order_obj['tracking'] }}</a>
-              {% else %}
-                Not yet assigned
-              {% endif %}
-              </td>
-              {% endif %}
-              <td>{{ order_obj['date'] }}</td>
-          </tr>
-      </table>
-
-
-      <ul class="list-group">
-          <li class="list-group-item">
-              <h4 class="list-group-item-heading">Address</h4>
-              <p class="list-group-item-text">{{ order_obj['name'] }}<br />{{ order_obj['address'].replace("\n", "<br />")|safe }}</p>
-              <br />
-          </li>
-      </ul>
-
-  </div>{# /panel #}
-
-
-
-
-<div class="row">
-    <div class="col-md-12">
-   <table class="table table-hover table-striped" style="table-layout: fixed">
+      {% if order_obj['is_donation'] == 'FALSE' %}
+      <div  class="text-bg-light rounded shadow-sm p-5 mb-5">
+        <div class="d-flex justify-content-between">
+          <h3>Shipping Information</h3>
+          <p><strong>Order Date: {{ order_obj['date'] }}</strong></p>
+        </div>
+        
+        <p>{{ order_obj['name'] }}<br />{{ order_obj['address'].replace("\n", "<br />")|safe }}</p>
+        <br />
+        <p><strong>Shipping Service: </strong>{{ order_obj["shipping_service"] }}</p>
+        <br/>
+        <div class="table-responsive px-5">
+          <h3>Order Information</h3>
+          <table class="table table-hover table-striped">
+            <caption class="visually-hidden">A list of items ordered</caption>
             <thead>
                 <tr>
                     <th style="width: 40px">#</th>
-                    <th style="width 200px;">Item</th>
+                    <th style="width: 200px;">Strain/Set</th>
+                    <th style="width: 200px;">Species</th>
                     <th class="price text-right">Price</th>
                 </tr>
             </thead>
             <tbody class="searchable"> 
-                {% for k, v in order_obj["items"].items() %}
+                {% for item in items %}
                 <tr>
                     <td>{{ loop.index }}</td>
-                    <td>{{ k }}</td>
-                    <td class="price text-right">${{'%0.2f'| format(v)}}</td>
+                    <td>{{ item['strain'] }}</td>
+                    <td><em>{{ item['species']|capitalize|replace('_', '. ') }}</em></td>
+                    <td class="price text-right">${{'%0.2f'| format(item['price'])}}</td>
                 </tr>
                 {% endfor %}
-
-                {% if order_obj['shipping_service'] == "$65 Flat Fee"%}
-                <tr> 
-                  <td> - </td>
-                  <td> $65 Shipping Flat Fee</td>
-                  <td class="price text-right">$65</td>
-                </tr>
-                {% endif %}
-
+  
                 <tr>
-                <td><strong>Total</strong></td>
-                <td></td>
-                <td class="price text-right"><strong>{{ order_obj["total"] }}</strong></td>
+                <td colspan="3"><strong>Total</strong></td>
+                <td class="price text-right"><strong>${{ order_obj["total"] }}</strong></td>
                 </tr>
             </tbody>
-        </table>
-        <div class='hidden-print'>
-            <h3>To complete your order</h3>
-        
-        {% if order_obj['payment'] == 'credit_card' %}
-            <p>We will follow-up with you directly via email/phone to complete your order.</p>
+          </table>
+        </div>
+      </div>
+      {% endif %}
 
-        {% else %}
+    <div class="m-4">
+      <h2>To complete your order</h2>
+  
+      {% if order_obj['payment'] == 'credit_card' %}
+      <p>We will follow-up with you directly via email/phone to complete your order.</p>
 
-            <ol>
-                <li>Print this page out and please include it with your check.</li>
-                <li>Make a check payable to Northwestern University and write 'CeNDR' and your invoice number in the memo field.</li>
-                <li>Mail the check and this printed page to the address below.</li>
-            </ol>
-            </div>
-            <br />
-            <p class='visible-print'>Mail a check payable to Northwestern University and a copy of your invoice to the address below. Please include your invoice number on the check.</p>
-            <address>
-            <strong>Erik C. Andersen, Ph.D.</strong><br />
-            c/o Life Sciences Financial Services<br />
-            Hogan Hall<br />
-            2205 Tech Dr, Suite 2-150<br />
-            Evanston IL, 60208
-            </address>
-            <p class='hidden-print'>Please contact us if you have any questions (<a href='mailto:cendr@northwestern.edu'>cendr@northwestern.edu</a>; 847-467-4382).</p>
-        {% endif %}
+      {% else %}
 
-      </div>{# /col-md-12 #}
-  </div>{# /row #}
+      <ol>
+          <li>Print this page out and please include it with your check.</li>
+          <li>Make a check payable to Northwestern University and write 'CaeNDR' and your invoice number in the memo field.</li>
+          <li>Mail the check and this printed page to the address below.</li>
+      </ol>
+      <br />
+      <div class="ps-5">
+        <div class="border-start border-primary border-2 p-3" id="mailInfo">
+          <p class='visible-print'>Mail a check payable to Northwestern University and a copy of your invoice to the address below. Please include your invoice number on the check.</p>
+          <address>
+          <strong>Erik C. Andersen, Ph.D.</strong><br />
+          c/o Life Sciences Financial Services<br />
+          Hogan Hall<br />
+          2205 Tech Dr, Suite 2-150<br />
+          Evanston IL, 60208
+          </address>
+          <p class='d-print-none'>Please contact us if you have any questions (<a href='mailto:{{ SUPPORT_EMAIL }}'>{{ SUPPORT_EMAIL }}</a>; 847-467-4382).</p>  
+        </div>
+       </div>
+      
+      {% endif %}
+    </div>
 </div>
 {% endblock %}

@@ -1,7 +1,7 @@
 {% extends "_layouts/default.html" %}
 
 {% block custom_head %}
-<script type="text/javascript" src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script type="text/javascript" src="https://cdn.plot.ly/plotly-2.22.0.min.js" charset="utf-8"></script>
 {% endblock %}
 
 {% block content %}
@@ -29,14 +29,14 @@
             <td><strong>Unique Mapping Pipeline Users</strong></td>
             <td>{{ n_users }}</td>
           </tr>
-          <tr>
+          {#<!-- <tr>
             <td><strong>Reports</strong></td>
             <td>{{ n_reports }}</td>
           </tr>
           <tr>
             <td><strong>Traits</strong></td>
             <td>{{ n_traits }}</td>
-          </tr>
+          </tr> -->#}
         </tbody>
       </table>
     </div>
@@ -45,14 +45,14 @@
 </div>  {# /row #}
 
 <div class='row'>
-    <div class='col-md-6'>
+    {#<!-- <div class='col-md-6'>
         <h4>Report summary plot</h4>
         {% if report_summary_plot is not none %}
           {{ report_summary_plot|safe }}
         {% else %}
           <div class='error'>(not available)</div>
         {% endif %}
-    </div>
+    </div> -->#}
     <div class='col-md-6'>
         <h4>Cumulative visits</h4>
         {% if weekly_visits_plot is not none %}

@@ -1,4 +1,4 @@
-{% extends "_layouts/default.html" %}
+{% extends "_layouts/default-nocontainer.html" %}
 
 {% block custom_head %}
     <script src="http://www.protobi.com/javascripts/d3.v3.min.js"></script>
@@ -41,11 +41,6 @@
             cursor: crosshair;
         }
 
-        #svgchartarea {
-            text-align: center;
-            margin-top: 50px;
-        }
-
 	</style>
 
     {% if not ready %}
@@ -58,8 +53,8 @@
 {% block content %}
 
 {% if not ready %}
-<div class='row'>
-    <div class='col-md-12'>
+<div class="row">
+    <div class="col-12 p-5">
         <p>
             Indel Primer Analysis is currently running. Please wait a few minutes. This page will automatically reload.
         </p>
@@ -70,62 +65,81 @@
 {% if data and ready %}
     {% if empty %}
         <div class="row text-center">
-            <div class="col-md-12">
+            <div class="col-12">
                 <h3>No Results</h3>
                 <strong>Unfortunately, no primers could be found for this site.</strong>
             </div>{# /col-md-4 #}
         </div>{# /row #}
     {% else %}
-    <div class="row">
+    <!-- <div class="row">
         <div class='pull-left col-md-4'>
             <a role="button" id="pdd" class="btn btn-default btn-primary" onClick='getPDF("containerfluid")'>PDF</a>
             <a role="button" class="btn btn-default btn-primary" href="{{ url_for('pairwise_indel_finder.report', id=id, filename=data['site'] + '.tsv') }}" class="col-sm-4" >TSV</a>
         </div>
-    </div>{# /row #}
+    </div>{# /row #} -->
 
 <div id="report">
-    <div class="row">
-        <div class="col-md-12">
-        <h3>
-            Indel Primer Details
-        </h3>
-        <table class="table table-condensed info-table">
-            <thead>
-                <tr>
-                    <th>Indel&nbsp;Site</th>
-                    <th>Indel&nbsp;Size</th>
-                    <th>Variant&nbsp;Type</th>
-                    <th>Primer&nbsp;Lengths</th>
-                    <th>Annealing&nbsp;Temp</th>
-                    <th>Strain&nbsp;1</th>
-                    <th>Strain&nbsp;2</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>{{ data['site'] }}</td>
-                    <td>{{ data['size'] }}</td>
-                    <td>{{ data['svtype'] }}</td>
-                    <td>18-22 bp</td>
-                    <td>55-65 °C</td>
-                    <td>{{ data['strain_1'] }}</td>
-                    <td>{{ data['strain_2'] }}</td>
-                </tr>
-            </tbody>
-        </table>
-        </div>{# /col-md-12 #}
-    </div>{# /row #}
+    <div class="d-flex justify-content-around flex-wrap px-3 mt-5">
+        <div class="col-12 col-md-2 text-bg-light mb-5 py-5 px-3 rounded-2 shadow-sm overflow-auto d-print-none"
+            style="max-height:500px">
+            <h2 class="text-dark">Download Results</h2>
+            <div class="d-grid gap-2 mt-5">
+                <a role="button" id="pdd" class="btn btn-secondary text-light"
+                    onClick='getPDF("containerfluid")'>PDF</a>
+                <a role="button" class="btn btn-secondary text-light"
+                    href="{{ url_for('pairwise_indel_finder.report', id=id, filename=data['site'] + '.tsv') }}"
+                    class="col-sm-4">TSV</a>
+            </div>
+        </div>
+        <div class="col-12 col-md-9 overflow-auto">
+            <!-- Options Toolbar -->
+            <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar">
+                <div class="ps-3 pt-0">
+                    <a href='{{ url_for("pairwise_indel_finder.my_results") }}'><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to My Primer Reports</a>
+                </div>
+            </div>
+            <!-- /Options Toolbar -->
+            <h2 class="mb-4">
+                Indel Primer Details
+            </h2>
+            <div class="table-responsive mb-3">
+                <table class="table info-table">
+                    <caption class="visually-hidden">Primer details including site, size, type, lengths, temp, and strains</caption>
+                    <thead>
+                        <tr>
+                            <th>Indel&nbsp;Site</th>
+                            <th>Indel&nbsp;Size</th>
+                            <th>Variant&nbsp;Type</th>
+                            <th>Primer&nbsp;Lengths</th>
+                            <th>Annealing&nbsp;Temp</th>
+                            <th>Strain&nbsp;1</th>
+                            <th>Strain&nbsp;2</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ data['site'] }}</td>
+                            <td>{{ data['size'] }}</td>
+                            <td>{{ data['svtype'] }}</td>
+                            <td>18-22 bp</td>
+                            <td>55-65 °C</td>
+                            <td>{{ data['strain_1'] }}</td>
+                            <td>{{ data['strain_2'] }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <h3 class="mb-4">Primers</h3>
+            <div class="table-responsive">
+                {{ format_table.to_html(index=False, classes='table table-hover primer-table') | safe }}
+            </div>
 
-    <div class='row'>
-        <div class='col-md-12'>
-            <strong>Primers</strong>
-            {{ format_table.to_html(index=False, classes='table table-condensed table-hover primer-table') | safe }}
-        </div>{# /col-md-12 #}
-    </div>{# /row #}
-
-    <div id="svgchartarea"></div>
-    <small>The red line indicates the location of the indel. Arrows indicate the locations of primer sets.</small>
-
+            <div class="col-10 overflow-auto mx-auto" id="svgchartarea"></div>
+            <small class="d-block mx-auto">The red line indicates the location of the indel. Arrows indicate the
+                locations of primer sets.</small>
+        </div>
+    </div>
+    <!-- /flex -->
 </div>{# /report #}
 {% endif %}
 {% endif %}
