@@ -91,18 +91,6 @@ class Cart(Entity):
   def soft_delete(self):
     self['is_deleted'] = True
 
-
-  def get_price(self, item):
-    if item['name'] == 'Flat Rate Shipping':
-      return PRICES.SHIPPING
-    elif item['name'] == "set_divergent":
-      return PRICES.DIVERGENT_SET
-    elif item['name'].startswith("set"):
-      return PRICES.STRAIN_SET
-    else:
-      return PRICES.STRAIN
-    
-
   def update_version(self):
     self['version'] += 1
 
