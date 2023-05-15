@@ -239,8 +239,15 @@ class SubmissionManager():
 
       # Check first line for column headers
       for col in range(num_cols):
-        if csv_headings[col] != columns[col]['header']:
+        target_header = columns[col].get('header')
+        if target_header is None:
+          continue
+        # if isinstance(target_header, str):
+        if csv_headings[col] != target_header:
           raise DataFormatError(f'The file contains an incorrect column header. Column #{ col + 1 } should be { columns[col]["header"] }.', 1)
+        # else:
+        #   if not target_header['validator'](csv_headings[col]):
+        #     raise DataFormatError(f'The file contains an incorrect column header. { target_header["make_err_msg"]( col + 1, csv_headings[col] ) }', 1)
 
       # Loop through all remaining lines in the file
       has_data = False
@@ -265,7 +272,7 @@ class SubmissionManager():
 
         # Check that all columns have valid data
         for column, value in zip(columns, csv_row):
-          header    = column['header']
+          header    = column.get('header')
           validator = column['validator']
           validator( header, value.strip(), line )
 
@@ -428,7 +435,9 @@ class MappingSubmissionManager(SubmissionManager):
         'validator': validate_strain(SPECIES_LIST[data['species']], force_unique=True, force_unique_msg=duplicate_strain_formatter)
       },
       {
-        'header': 'trait',
+        # 'header': {
+        #   'validator': lambda x: x
+        # },
         'validator': validate_num(accept_float=True, accept_na=True),
       },
     ]
