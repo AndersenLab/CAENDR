@@ -4,6 +4,9 @@ import google.auth
 import google.auth.transport.requests as tr_requests
 import datetime
 
+import json
+import pandas as pd
+
 from google.oauth2 import service_account
 from google.resumable_media.requests import ResumableUpload
 from google.cloud import storage
@@ -160,3 +163,39 @@ def generate_download_signed_url_v4(bucket_name, blob_name, credentials=None, ex
     logger.error(inst.args)
     logger.error(inst)
     return None
+
+
+def download_blob_as_json(blob, enc='utf-8'):
+  '''
+    Return the contents of a blob JSON file as a JSON object.
+
+    Arguments:
+      blob: The blob to read
+      enc (string): The encoding of the file
+  '''
+  return json.loads(blob.download_as_string().decode(enc))
+
+
+def download_blob_as_dataframe(blob, sep='\t', enc='utf-8', empty_as_none=True):
+  '''
+    Return the contents of a blob CSV file as a Pandas DataFrame.
+
+    Arguments:
+      blob: The blob to read
+      sep (string): The separator character to use when parsing
+      enc (string): The encoding of the file
+      empty_as_none (bool): If True, return an empty file as None instead of an empty DataFrame
+  '''
+
+  # Download the blob (safely)
+  try:
+    result = blob.download_as_string().decode(enc)
+  except Exception as ex:
+    raise TypeError() from ex
+
+  # Check for empty file
+  if empty_as_none and len(result) == 0:
+    return None
+
+  # Convert to dataframe using desired separator
+  return pd.read_csv(io.StringIO(result), sep=sep)

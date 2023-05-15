@@ -24,7 +24,6 @@ from caendr.models.error import (
     EmptyReportResultsError,
     FileUploadError,
     ReportLookupError,
-    UnfinishedReportError,
 )
 from caendr.models.datastore import SPECIES_LIST, HeritabilityReport
 from caendr.models.task import TaskStatus
@@ -234,14 +233,10 @@ def report(id):
   data_hash = hr.data_hash
 
   # Try getting & parsing the report data file and results
+  # If result is None, job hasn't finished computing yet
   try:
     data, result = fetch_heritability_report(hr)
-    ready = True
-
-  # If report hasn't finished computing yet, display a waiting page
-  except UnfinishedReportError:
-    data, result = ex.data, None
-    ready = False
+    ready = result is not None
 
   # If no submission exists, return 404
   except EmptyReportDataError:

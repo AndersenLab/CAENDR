@@ -26,27 +26,29 @@
   <!-- Results Card -->
   <div class="col col-md-6 col-xl-3 text-bg-light mb-5 p-5 rounded-2 shadow-sm overflow-auto" style="max-height:525px">
    <p>
-      <strong>Trait:</strong> {{ hr.trait}}
+      <strong>Trait:</strong> {{ hr.trait }}
    </p>
    <p>
-      <strong>Description:</strong> {{ hr.label}}
+      <strong>Description:</strong> {{ hr.label }}
    </p>
    <p>
       <strong>Report ID:</strong> {{ hr.id }}
-   </p>
-   <p>
+    </p>
+    <p>
       <strong>Created:</strong> {{ hr.created_on | date_format }}
-   </p>
-   <p>
+    </p>
+    <p>
       <strong>Status:</strong>  {{ hr.status }}
     
-    {% if hr.status == TaskStatus.ERROR %}
+      {% if hr.status == TaskStatus.ERROR %}
       <strong>Error:</strong> <span class="text-danger">{{ operation.error }}</span>
-    {% endif %}
-   </p>
-   <p>
-    <strong>Broad-Sense Heritability (H<sup>2</sup>):</strong> {{ (result['H2']*100)|round(2) }}% <small>(range {{ (result['ci_l']*100)|round(2) }}% to {{ (result['ci_r']*100)|round(2) }}%)</small>
-   </p>
+      {% endif %}
+    </p>
+    {%- if result %}
+    <p>
+      <strong>Broad-Sense Heritability (H<sup>2</sup>):</strong> {{ (result['H2']*100)|round(2) }}% <small>(range {{ (result['ci_l']*100)|round(2) }}% to {{ (result['ci_r']*100)|round(2) }}%)</small>
+    </p>
+    {%- endif %}
   <div class="mt-5">
     <div class="d-grid gap-3">
       <a class="btn btn-secondary text-light" role="button" onClick="getPDF()">Download PDF</a>
@@ -116,7 +118,6 @@
         }
 
     var trait = "{{ trait }}"
-    var Fnam = "{{ fnam }}"
     var imag
     var chartJson = {{ data|tojson|safe }};
     var traits =[];
@@ -243,7 +244,9 @@
         doc.setFontSize(4);
         doc.fromHTML('<i>2</i>', 225, 15)
         doc.setFontSize(10);
-        doc.fromHTML(') = {{ (result['H2']*100)|round(2) }}% (range {{ (result['ci_l']*100)|round(2) }}% to {{ (result['ci_r']*100)|round(2) }}%)', 230, 20)
+        {% if result %}
+        doc.fromHTML(') = {{ (result['H2']*100)|round(2) }}% (range {{ (result['ci_l']*100)|round(2) }}% to {{ (result['ci_r']*100)|round(2) }}%)', 230, 20);
+        {% endif %}
 
         doc.addImage(document.getElementById('img1').src, 'PNG', margins.left, margins.top,
                     page_width - (margins.left + margins.right),
@@ -259,7 +262,7 @@
         var a = document.createElement('a');
             var pdfblob = new Blob([ doc.output('blob') ], { type : 'application/pdf'});
             a.href = window.URL.createObjectURL(pdfblob);
-            a.download = "{{ fnam }}.pdf";
+            a.download = "{{ fname }}.pdf";
             a.click();
         })
         image.src = url;
