@@ -27,15 +27,15 @@ def parse_strain_variant_annotation_data(species, sva_fname: str):
           ["I",3782,"G","A",NA,NA,NA,NA,NA,NA,NA,"",NA,NA,NA,NA,NA,NA,NA,NA]
 
   """
-  logger.info('Parsing extracted strain variant annotation .csv file')
+  logger.info('Parsing extracted strain variant annotation TSV file')
 
   # Loop through each line in the CSV file, indexed
   with open(sva_fname) as csv_file:
-    for idx, row in enumerate( csv.reader(csv_file, delimiter=',') ):
+    for idx, row in enumerate( csv.reader(csv_file, delimiter='\t') ):
 
       # First line is column names - don't interpret as data
       if idx == 0:
-        print(f'Column names are {", ".join(row)}')
+        logger.info(f'Column names in file "{sva_fname}" are: {", ".join(row)}')
         continue
 
       # If testing, finish early
