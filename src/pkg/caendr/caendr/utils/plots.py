@@ -87,7 +87,7 @@ def time_series_plot(df, x_title=None, y_title=None, range=None, colors=COLORS, 
   """
   try:
     trace_set = []
-    for n, column in enumerate(df.columns[1:][::-1]):
+    for n, column in enumerate(df.columns[1:]):
 
         # Create default line style options
         style = {

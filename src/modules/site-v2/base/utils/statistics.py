@@ -13,7 +13,7 @@ from caendr.utils.plots import time_series_plot
 
 
 
-species_sorted = sorted(SPECIES_LIST.keys())
+species_sorted = list(SPECIES_LIST.keys())
 
 def make_line_style(n, column, colors):
   species_code, type_code = column.rsplit('_', 1)
