@@ -78,6 +78,7 @@ module "site" {
   api_pipeline_task_url = module.api_pipeline_task.url
 
   depends_on = [
+    module.db_operations,
     module.gene_browser_tracks,
     module.ext_assets,
     module.img_thumb_gen,
