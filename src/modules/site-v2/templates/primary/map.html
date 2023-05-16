@@ -4,41 +4,50 @@
     height: 48vh;
     z-index: 0;
   }
+  
+  .zoomContainer {
+    position: relative;
+    z-index: 1000;
+  }
+
+  #zoomIn {
+    border-bottom: 2px solid var(--bs-white);
+  }
   .leaflet-control-zoom.leaflet-bar {
     border: 0;
   }
   .leaflet-bar a {
-    background-color: #0719BC;
-    color: #fff;
+    background-color: var(--bs-primary);
+    color: var(--bs-white);
   }
 
   .leaflet-bar a:hover {
-    background-color: #5D9878;
-    color: #fff;
+    background-color: var(--bs-secondary);
+    color: var(--bs-white);
   }
 
   .leaflet-bar a.leaflet-disabled {
     background-color: #6F85D9;
-    color: #fff;
+    color: var(--bs-white);
   }
 
   .leaflet-popup-content-wrapper {
-    background-color: #FEFCFB;
-    color: #000;
-    font-size: 16px;
+    background-color: var(--bs-white);
+    color: var(--bs-black);
+    font-size: 1rem;
     padding: .5em;
   }
 
   .leaflet-popup-tip {
-    background-color: #FEFCFB;
+    background-color: var(--bs-white);
   }
 
   #strains {
     position:absolute;
-    top: 30px;
-    right: 30px;
+    top: 1rem;
+    right: 1rem;
     z-index: 1000;
-    background-color: #0719BC;
+    background-color: var(--bs-primary);
     color: white;
     padding: 15px;
   }
@@ -59,12 +68,16 @@
   }
 </style>
 
-    <div class="position-relative" id="map">
-      <form id="strains">
-        <p><strong>Species:</strong></p>
-        <div><input type='checkbox' name='filters' value='elegans_layer' checked><i> C. elegans</i></div>
-        <div><input type='checkbox' name='filters' value='briggsae_layer'><i> C. briggsae</i></div>
-        <div><input type='checkbox' name='filters' value='tropicalis_layer'><i> C. tropicalis</i></div>
+    <div class="position-relative" id="map" aria-hidden="true">
+      <div class="btn-group-vertical m-3 zoomContainer" role="group" aria-hidden="true">
+      <button class="btn btn-primary" id="zoomIn" tabindex="-1"><i class="bi bi-plus-circle"></i></button>
+      <button class="btn btn-primary" id="zoomOut" tabindex="-1"><i class="bi bi-dash-circle"></i></button>
+    </div>
+      <form id="strains" aria-hidden="true">
+        <p tabindex="-1"><strong>Species:</strong></p>
+        <div><input type='checkbox' name='filters' value='elegans_layer' checked tabindex="-1"><i> C. elegans</i></div>
+        <div><input type='checkbox' name='filters' value='briggsae_layer' tabindex="-1"><i> C. briggsae</i></div>
+        <div><input type='checkbox' name='filters' value='tropicalis_layer' tabindex="-1"><i> C. tropicalis</i></div>
       </form>
     </div>
     <div class="text-center my-2">
@@ -72,7 +85,6 @@
     </div>
 
 {% block script %}
-
 <script type="module">
 
 // Icons
@@ -115,7 +127,7 @@ const southWest = L.latLng(-90, -180);
 const northEast = L.latLng(90, 180);
 const bounds = L.latLngBounds(southWest, northEast);
 
-const map = L.map('map', {minZoom:2, maxBounds: bounds, scrollWheelZoom: false}).setView([20, -100], 2);
+const map = L.map('map', {minZoom:2, maxBounds: bounds, scrollWheelZoom: false, zoomControl: false, attributionControl: false,}).setView([20, -100], 2);
 L.tileLayer(MB_URL, {attribution: MB_ATTR, id: 'mapbox.streets', continuousWorld: false, worldCopyJump: true}).addTo(map);
 const strain_names = [];
 const elegans = [];
@@ -183,7 +195,7 @@ strain_info.forEach(function(d) {
       </ul>
     </div>`
 
-    const marker = L.marker([d.latitude, d.longitude], { icon: set_marker_color(d.species),
+    const marker = L.marker([d.latitude, d.longitude], { keyboard: false, alt: "a marker showing the geographic location of a strain", icon: set_marker_color(d.species),
                                                     species: d.species})
                                                     .on('mouseover', function(){
                                                       marker.setIcon(icon_hover)
@@ -260,6 +272,16 @@ $(document).ready(function() {
 
     }(jQuery));
 });
+
+  // zoom in function
+  $('#zoomIn').click(function () {
+    map.setZoom(map.getZoom() + 1)
+  });
+
+  // zoom out function
+  $('#zoomOut').click(function () {
+    map.setZoom(map.getZoom() - 1)
+  });
 
 </script>
 
