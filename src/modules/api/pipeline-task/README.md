@@ -97,7 +97,6 @@ Where `task_route` is one of the following values:
 * `nscalc` - NemaScanTask(payload)
 * `ipcalc` - IndelPrimerTask(payload)
 * `h2calc` - HeritabilityTask(payload)
-* `gene-browser-tracks` - GeneBrowserTracks(payload)
 
 ### Heritability
 
