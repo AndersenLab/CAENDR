@@ -150,7 +150,7 @@
                                 <div class="col-12 col-md-2 mx-1 mb-3"> 
                                     <label for="pasteStrainsDropdown" class="form-label">Paste List:</label> 
                                     <div class="dropdown-center d-grid" id="pasteStrainsDropdown"> 
-                                        <button type='button' class="btn btn-secondary dropdown-toggle text-light" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="false">Paste Strains</button> 
+                                        <button type='button' class="btn btn-secondary dropdown-toggle text-light" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="true">Paste Strains</button> 
                                         <div class="dropdown-menu p-3">
                                              <form> 
                                                 <label for="copyPasteStrains" class="form-label">Paste List:</label> 
@@ -239,29 +239,7 @@
 {% block script %}
 <script>
 
-
     $(document).ready(function() {
-            var patterns = [];
-            $('#search').keyup(function() {
-                $('.searchable tr').hide();
-                $(this).val().split(',').forEach(function(r) {
-                    var rex = new RegExp(r, "i");
-                    var foundStrains = $('.searchable tr').filter(function() {
-                        return rex.test($(this).text());
-                    }).show();
-
-                    $('#search-results').empty()
-                    foundStrains.each(function() {
-                        var foundStrain = $(this).find('td:nth-child(4)').text()
-                        $('#search-results').append(`<tr><td>${foundStrain}</td></tr>`)
-                    })
-                })
-
-            })
-
-        }(jQuery));
-
-        $(document).ready(function() {
         
         let filtered_by_species;
         
@@ -280,6 +258,7 @@
                         return $(this).find('td:nth-child(2)').attr('data-value') == selectedVal
                     })
                     filtered_by_species.show()
+                    reset_values()
                     $('#search').prop('disabled', false)
                     $('#pasteStrainsDropdown>button').prop('disabled', false)
                     $('#downloadData').removeClass('disabled')
@@ -296,6 +275,7 @@
         filter_species_sets = function() {
             $(document).on('change', '#strains_sets_filter #speciesSelect', function(e) {
                 e.preventDefault()
+                reset_values()
                 const selectedVal = $(this).val()
                 $('.strainSetsTable tr').hide().filter(function() {
                         return $(this).find('td:nth-child(2)').attr('data-value') == selectedVal
@@ -303,6 +283,26 @@
             })
         }
 
+        $('#search').keyup(function() {
+            $('#notFoundAlert').hide()
+            filtered_by_species.hide();
+            $(this).val().split(',').forEach(function(r) {
+                var rex = new RegExp(r, "i");
+                var foundStrains = filtered_by_species.filter(function() {
+                    return rex.test($(this).text());
+                }).show();
+
+                $('#search-results').empty()
+                if (!foundStrains.length) {
+                    $('#search-results').append(`<tr><td>Strain not found</td></tr>`)
+                } else {
+                    foundStrains.each(function() {
+                    var foundStrain = $(this).find('td:nth-child(4)').text()
+                    $('#search-results').append(`<tr><td>${foundStrain}</td></tr>`)
+                })
+                }
+            })
+        })
         
         $('#checkoutBox').prop('disabled', !$("input:checkbox").is(":checked"));
 
@@ -311,16 +311,10 @@
             $('#checkoutBox').prop('disabled', !$("input:checkbox").is(":checked"));
         });
 
-        if($("#copyPasteStrains").val() === '') {
-            $('#submitPaste').prop('disabled', true)
-        }
+        $('#submitPaste').prop('disabled', ($("#copyPasteStrains").val() === ''))
 
         $("#copyPasteStrains").keyup(function() {
-            if($(this).val() !== '') {
-                $('#submitPaste').prop('disabled', false)
-            } else {
-                $('#submitPaste').prop('disabled', true)
-            }
+            $('#submitPaste').prop('disabled', ($(this).val() === ''))
         })
 
         $("#submitPaste").click(function() {
@@ -329,24 +323,24 @@
             lost_strains = [];
             for (i in pastedStrains) {
                 upperCaseStrain = pastedStrains[i].toUpperCase(); // Just in case users submit lower case
-                found_strain = $("[info~='" + upperCaseStrain + "']");
+                found_strain = filtered_by_species.find("[info~='" + upperCaseStrain + "']");
                 if (found_strain.length > 0) {
                     pasted = found_strain.prop("checked", true); // Use the word selector (~=)
                 } else {
                     lost_strains.push(pastedStrains[i])
                 }
             }
+            $("#copyPasteStrains").val('')
             if (lost_strains.length > 0) {
                 set_alert(`The following strain(s) were not found ${lost_strains.join(", ")}`)
             }
-            var rows = $('.searchable tr')
 
-            rows.sort(function(a, b) {
+            filtered_by_species.sort(function(a, b) {
                 var value1 = $(a).find('td > input:checkbox').is(":checked")
                 var value2 = $(b).find('td > input:checkbox').is(":checked")
                 return (value1 > value2) ? -1 : 1
             })
-            $.each(rows, function (idx, row) {
+            $.each(filtered_by_species, function (idx, row) {
                 $('#indStrainsTable > tbody').append(row)
             })
             $('#checkoutBox').prop('disabled', !$("input:checkbox").is(":checked"));
@@ -403,8 +397,6 @@
 
         });
 
-    
-
     });
 
     set_alert = function(msg) {
@@ -423,6 +415,12 @@
         }
     }
 
+    reset_values = function() {
+        $('#notFoundAlert').hide()
+        $("input:checkbox").prop("checked", false)
+        $('#search').val('')
+        $("#copyPasteStrains").val('')
+    }
 
     $(document).ready(function() {
         $('#search').keydown(function(event) {
