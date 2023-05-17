@@ -134,7 +134,7 @@ def update_task():
       op = update_pipeline_operation_record(operation)
 
       logger.debug(f"updating all linked status records for operation: {op}")
-      update_all_linked_status_records(op.operation_kind, operation)
+      update_all_linked_status_records(op['operation_kind'], operation)
       logger.debug(operation)
     except Exception as e:
       logger.error(f"Unable to update pipeline record[s]: {e}")
