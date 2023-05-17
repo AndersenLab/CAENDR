@@ -291,7 +291,6 @@ Targeted deployment is under construction until isolated TF states can be establ
 * [Site](src/modules/api/pipeline-task/README.md)
 * [API Pipeline Tasks](src/modules/api/pipeline-task/README.md)
 * [Database Operations](src/modules/db_operations/README.md)
-* [Gene Browser Tracks](src/modules/gene_browser_tracks/README.md)
 * [Heritability](src/modules/heritability/README.md)
 * [Image Thumbnail Generator](src/modules/img_thumb_gen/README.md)
 * [Indel Primer](src/modules/indel_primer/README.md) -->

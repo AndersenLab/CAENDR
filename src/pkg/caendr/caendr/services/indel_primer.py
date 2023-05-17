@@ -1,17 +1,15 @@
 import tabix
 import os
 import io
-import json
 import numpy as np
-import pandas as pd
 
 from cyvcf2 import VCF
 from caendr.services.logger import logger
 
 from caendr.models.datastore import IndelPrimer, SPECIES_LIST
-from caendr.models.error     import NotFoundError, EmptyReportDataError, EmptyReportResultsError, UnfinishedReportError
+from caendr.models.error     import NotFoundError, EmptyReportDataError, EmptyReportResultsError
 
-from caendr.services.cloud.storage import get_blob, generate_blob_url
+from caendr.services.cloud.storage import get_blob, generate_blob_url, download_blob_as_dataframe, download_blob_as_json
 from caendr.services.tools import submit_job
 
 from caendr.utils.constants import CHROM_NUMERIC
@@ -178,23 +176,17 @@ def fetch_indel_primer_report(report):
     raise EmptyReportDataError(report.id)
 
   # Parse submission data into JSON object
-  data = json.loads(data.download_as_string().decode('utf-8'))
-  # logger.debug(data)
+  data = download_blob_as_json(data)
 
-  # If no result file exists yet, just expose the parsed data file
-  if result is None:
-    raise UnfinishedReportError(report.id, data=data)
+  # If result file exists, download & parse it into a dataframe
+  if result is not None:
+    result = download_blob_as_dataframe(result)
 
-  # Download results file as string
-  result = result.download_as_string().decode('utf-8')
+    # Check for empty results file
+    if result is None:
+      raise EmptyReportResultsError(report.id)
 
-  # Check for empty results file
-  if len(result) == 0:
-    raise EmptyReportResultsError(report.id)
-
-  # Separate results by tabs, and check for empty data frame (headers exist but no data)
-  result = pd.read_csv(io.StringIO(result), sep="\t")
-
+  # Return the data & results as Python objects
   return data, result
 
 

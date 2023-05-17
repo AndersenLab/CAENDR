@@ -9,7 +9,7 @@ from base.utils.tools import lookup_report, try_submit
 
 from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefault
 from caendr.models.datastore import SPECIES_LIST, IndelPrimer
-from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupError, EmptyReportDataError, EmptyReportResultsError, UnfinishedReportError
+from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupError, EmptyReportDataError, EmptyReportResultsError
 from caendr.models.task import TaskStatus
 from caendr.services.dataset_release import get_browser_tracks_path
 from caendr.utils.constants import CHROM_NUMERIC
@@ -249,14 +249,10 @@ def report(id, filename = None):
       abort(ex.code)
 
     # Try getting the report data file and results
+    # If result is None, job hasn't finished computing yet
     try:
       data, result = fetch_indel_primer_report(report)
-      ready = True
-
-    # If report hasn't finished computing yet, display a waiting page
-    except UnfinishedReportError as ex:
-      data, result = ex.data, None
-      ready = False
+      ready = result is not None
 
     # Error reading data JSON file
     # TODO: Should we mark report status as ERROR here too?
@@ -286,7 +282,7 @@ def report(id, filename = None):
     if ready:
       if report['status'] != TaskStatus.ERROR:
         report['status'] = TaskStatus.COMPLETE
-      report.empty = result is None
+      report.empty = result is None  # TODO: Is this correct? I think empty should actually check if any rows exist in the df
       report.save()
 
     # Return downloadable TSV of results
