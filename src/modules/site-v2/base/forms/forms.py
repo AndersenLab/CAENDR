@@ -69,8 +69,9 @@ class SpeciesSelectField(SelectField):
   # Automatically validates that species choice is in this list
   CHOICES = [(name, value.short_name) for name, value in SPECIES_LIST.items()]
 
-  def __init__(self, **kwargs):
-    return super().__init__('Species:', id=SpeciesSelectField.elementId, choices=[ ('', "Choose"), *SpeciesSelectField.CHOICES ], **kwargs)
+  def __init__(self, exclude_species=[], **kwargs):
+    species_choices = [ x for x in SpeciesSelectField.CHOICES if x[0] not in exclude_species ]
+    return super().__init__('Species:', id=SpeciesSelectField.elementId, choices=[ ('', "Choose"), *species_choices ], **kwargs)
 
 
 class EmptyForm(FlaskForm):
@@ -87,8 +88,11 @@ class FileUploadForm(FlaskForm):
   label = StringField('Description:', validators=[Required(message='You must include a description of your data.')])
   file = FileField('Select file:', render_kw={'accept': '.tsv'})
 
-class HeritabilityForm(FileUploadForm):
-  pass
+# class HeritabilityForm(FileUploadForm):
+class HeritabilityForm(FlaskForm):
+  species = SpeciesSelectField(exclude_species=['c_briggsae', 'c_tropicalis'])
+  label = StringField('Description:', validators=[Required(message='You must include a description of your data.')])
+  file = FileField('Select file:', render_kw={'accept': '.tsv'})
 
 class MappingForm(FileUploadForm):
   pass
