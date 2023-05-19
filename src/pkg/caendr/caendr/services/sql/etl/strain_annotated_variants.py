@@ -7,7 +7,7 @@ from sqlalchemy.sql.expression import null
 
 
 
-def parse_strain_variant_annotation_data(species, sva_fname: str):
+def parse_strain_variant_annotation_data(species, sva_fname: str, start_idx = 0):
   """
       Load strain variant annotation table data:
 
@@ -65,7 +65,7 @@ def parse_strain_variant_annotation_data(species, sva_fname: str):
 
       # Yield the row as a dict
       yield {
-        'id':                 f'{species.name}.{idx}',
+        'id':                 start_idx + idx,
         'species_name':       species.name,
         'chrom':              row['CHROM'],
         'pos':                get_row(row, 'POS', map=int),

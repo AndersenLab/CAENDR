@@ -42,7 +42,7 @@ def get_gene_ids(species, gene_ids_fname: str):
 
 ## File Parsing Generator Functions ##
 
-def parse_gene_gtf(species, gtf_fname: str, gene_ids_fname: str):
+def parse_gene_gtf(species, gtf_fname: str, gene_ids_fname: str, start_idx = 0):
   """
       LOADS wormbase_gene
       This function fetches and parses the canonical geneset GTF
@@ -89,7 +89,7 @@ def parse_gene_gtf(species, gtf_fname: str, gene_ids_fname: str):
     yield row
 
 
-def parse_gene_gff_summary(species, gff_fname: str):
+def parse_gene_gff_summary(species, gff_fname: str, start_idx = 0):
   """
       LOADS wormbase_gene_summary
       This function fetches data for wormbase_gene_summary;
