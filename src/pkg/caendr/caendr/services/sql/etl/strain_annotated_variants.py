@@ -93,7 +93,7 @@ def parse_strain_variant_annotation_data(species, sva_fname: str, start_idx = 0)
       }
 
   # In Python, loop vars maintain their final value after the loop ends
-  print(f'Processed {idx} lines.')
+  print(f'Processed {idx} lines total for {species.name}')
 
 
 def get_row(row, key, nullable=False, map=None):

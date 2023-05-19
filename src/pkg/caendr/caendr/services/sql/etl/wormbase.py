@@ -88,6 +88,8 @@ def parse_gene_gtf(species, gtf_fname: str, gene_ids_fname: str, start_idx = 0):
     # Yield the row
     yield row
 
+  logger.debug(f"Processed {idx} lines total for {species.name}")
+
 
 def parse_gene_gff_summary(species, gff_fname: str, start_idx = 0):
   """
@@ -156,6 +158,8 @@ def parse_gene_gff_summary(species, gff_fname: str, start_idx = 0):
 
           # Yield the gene
           yield gene
+
+    logger.debug(f"Processed {idx} lines; {gene_count} genes total for {species.name}")
 
 
 def parse_orthologs(species, orthologs_fname: str):
