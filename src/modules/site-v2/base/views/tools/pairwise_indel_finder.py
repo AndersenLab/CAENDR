@@ -8,9 +8,10 @@ from base.utils.auth import jwt_required, admin_required, get_current_user, user
 from base.utils.tools import lookup_report, try_submit
 
 from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefault
-from caendr.models.datastore import SPECIES_LIST, IndelPrimer
+from caendr.models.datastore import Species, SPECIES_LIST, IndelPrimer
 from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupError, EmptyReportDataError, EmptyReportResultsError
 from caendr.models.task import TaskStatus
+from caendr.services.cloud.storage import check_blob_exists
 from caendr.services.dataset_release import get_browser_tracks_path
 from caendr.utils.constants import CHROM_NUMERIC
 
@@ -86,6 +87,20 @@ def get_tracks():
   except NonUniqueEntity as ex:
     logger.error('Could not uniquely identify Divergent Regions track.')
     divergent_track = ex.matches[0]
+
+  # If a species was passed, check that the referenced track file exists for this species
+  # If not, return a 404 error
+  species = request.args.get('species')
+  if species:
+    if species not in SPECIES_LIST:
+      raise NotFoundError(Species, {'name': species})
+
+    # Get the bucket and filepath
+    bucket, tkn_path = divergent_track.get_path()
+    tkn_path += '/' + divergent_track["filename"]
+    blob_name = tkn_path.set_tokens_from_species(SPECIES_LIST[species]).get_string()
+    if not check_blob_exists(bucket, blob_name):
+      abort(404)
 
   # Return the track parameters
   return jsonify(divergent_track['params'])
