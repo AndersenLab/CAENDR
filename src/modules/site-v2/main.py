@@ -1,10 +1,12 @@
-from dotenv import load_dotenv
 from application import create_app
-from caendr.utils import monitor
+
 from caendr.services.logger import logger
+from caendr.utils import monitor
+from caendr.utils.env import load_env
+
 
 dotenv_file = '.env'
-load_dotenv(dotenv_file)
+load_env(dotenv_file)
 
 monitor.init_sentry("site")
 
