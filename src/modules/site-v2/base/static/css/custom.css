@@ -125,3 +125,8 @@
     --bs-table-accent-bg: var(--bs-table-striped-bg);
     color: var(--bs-table-striped-color);
   }
+
+  /* Cards */
+  .card-header {
+    font-size: calc(var(--bs-body-font-size) * 1.125);
+  }

@@ -1,27 +1,20 @@
-<style>
-  .nav-link-active {
-    border-bottom: 5px solid green;
-  }
-</style>
-
 <header>
-  <!-- Global Navbar -->
   <nav class="navbar navbar-expand-lg fw-bold mt-3">
-    <div class="container-fluid">
+    <div class="container-fluid pe-0">
       <div class="col-3 col-md-1 navbar-brand ms-5">
-        <a href="/"><img src="/static/img/caeNDRLogo.png" class="img-fluid"></a>
+        <a href="/" aria-label="CaeNDR home"><img src="/static/img/caeNDRLogo.png" class="img-fluid"></a>
       </div>
-      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
-        data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-        aria-label="Toggle navigation">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup"
+        aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
-        <div class="navbar-nav ">
-          <a class="nav-link {{'nav-link-active' if request.blueprint == 'request_strains'}}" href="{{ url_for('request_strains.strains') }}">Request Strains</a>
-          <div class="nav-item dropdown mx-5">
-            <a class="nav-link dropdown-toggle {{'nav-link-active' if '/tools/' in request.full_path}}" href="#" id="toolsDropdown" role="button" data-bs-toggle="dropdown"
-              aria-expanded="false">
+      <div class="collapse navbar-collapse justify-content-center" id="navbarNavAltMarkup">
+        <div class="navbar-nav">
+          <a class="nav-link {{'active' if request.blueprint == 'request_strains'}} mx-3"
+            href="{{ url_for('request_strains.request_strains') }}">Request Strains</a>
+          <div class="nav-item dropdown mx-4">
+            <a class="nav-link dropdown-toggle {{'active' if '/tools/' in request.full_path}}" href="#"
+              id="toolsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               Tools
             </a>
             <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
@@ -42,9 +35,9 @@
                   Calculator </a></li>
             </ul>
           </div>
-          <div class="nav-item dropdown mx-5">
-            <a class="nav-link dropdown-toggle {{'nav-link-active' if request.blueprint == 'data' or request.blueprint == 'data_releases'}}" href="#" id="dataDropdown" role="button" data-bs-toggle="dropdown"
-              aria-expanded="false">
+          <div class="nav-item dropdown mx-3">
+            <a class="nav-link dropdown-toggle {{'active' if request.blueprint == 'data' or request.blueprint == 'data_releases'}}"
+              href="#" id="dataDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               Data
             </a>
             <ul class="dropdown-menu" aria-labelledby="dataDropdown">
@@ -53,13 +46,13 @@
               <li><a class="dropdown-item" href="{{ url_for('data.submit_strain') }}"> Submit A Strain </a></li>
             </ul>
           </div>
-          <div class="nav-item dropdown mx-5">
-            <a class="nav-link dropdown-toggle {{'nav-link-active' if request.blueprint == 'about'}}" href="#" id="aboutDropdown" role="button" data-bs-toggle="dropdown"
-              aria-expanded="false">
+          <div class="nav-item dropdown mx-3">
+            <a class="nav-link dropdown-toggle {{'active' if request.blueprint == 'about'}}" href="#" id="aboutDropdown"
+              role="button" data-bs-toggle="dropdown" aria-expanded="false">
               About Us
             </a>
             <ul class="dropdown-menu" aria-labelledby="aboutDropdown">
-              <li><a class="dropdown-item" href="{{ url_for('about.about')      }}"> About CeNDR </a></li>
+              <li><a class="dropdown-item" href="{{ url_for('about.about')      }}"> About CaeNDR </a></li>
               <li><a class="dropdown-item" href="{{ url_for('about.people')     }}"> People </a></li>
               <li><a class="dropdown-item" href="{{ url_for('about.cited_by')   }}"> Cited By </a></li>
               <li><a class="dropdown-item" href="{{ url_for('about.funding')    }}"> Funding </a></li>
@@ -67,9 +60,9 @@
               <li><a class="dropdown-item" href="{{ url_for('about.contact_us') }}"> Contact Us </a></li>
             </ul>
           </div>
-          <div class="nav-item dropdown mx-5">
-            <a class="nav-link dropdown-toggle {{'nav-link-active' if request.blueprint == 'get_involved'}}" href="#" id="getInvolvedDropdown" role="button" data-bs-toggle="dropdown"
-              aria-expanded="false">
+          <div class="nav-item dropdown mx-3">
+            <a class="nav-link dropdown-toggle {{'active' if request.blueprint == 'get_involved'}}" href="#"
+              id="getInvolvedDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               Get Involved
             </a>
             <ul class="dropdown-menu" aria-labelledby="getInvolvedDropdown">
@@ -78,9 +71,10 @@
                 </a></li>
             </ul>
           </div>
-          <a class="nav-link mx-5 mb-3 {{'nav-link-active' if '/help' in request.full_path}}" href="{{ url_for('primary.help_item') }}">FAQs</a>
+          <a class="nav-link mx-3 {{'active' if '/help' in request.full_path}}"
+            href="{{ url_for('primary.help_item') }}">FAQs</a>
           <!-- User Menu -->
-          <div class="nav-item dropdown mx-1">
+          <div class="nav-item dropdown mx-3">
             <a class="dropdown-toggle rounded-circle userMenu" data-bs-toggle="dropdown" id="userMenuDropDown"
               data-bs-auto-close="false" aria-expanded="false" aria-label="User Menu"><i class="bi bi-person-fill lh-1"
                 aria-hidden="true"></i></a>
@@ -88,28 +82,39 @@
               {% if session["is_logged_in"] %}
               <div class="vstack gap-3 px-1 py-2">
                 <a href="{{ url_for('user.user_account') }}"><i class="bi bi-person-fill userMenuIcon"
-                    aria-hidden="true"></i>My Account</a>
+                    aria-hidden="true"></i>My
+                  Account</a>
                 <a href="{{ url_for('user.user_results') }}"><i class="bi bi-journal userMenuIcon"
-                    aria-hidden="true"></i>My Results</a>
+                    aria-hidden="true"></i>My
+                  Results</a>
                 <a href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right userMenuIcon"
-                    aria-hidden="true"></i> Sign Out</a>
+                    aria-hidden="true"></i> Sign
+                  Out</a>
                 {% if session["is_admin"] %}
                 <hr class="dropdown-divider">
                 <a href="{{ url_for('admin.admin') }}"><i class="bi bi-gear-fill userMenuIcon"
                     aria-hidden="true"></i>Admin</a>
                 {% endif %}
-                {% else %}
-                <div class="d-grid mb-3">
-                  <a class="btn btn-secondary text-light" href="{{ url_for('auth.choose_login') }}">Login</a>
-                </div>
-                <p class="text-center"><a href="#">Sign Up</a></p>
-                {% endif %}
               </div>
+              {% else %}
+              <div class="d-grid mb-3">
+                <a class="btn btn-secondary text-light mb-3" href="{{ url_for('auth.choose_login') }}">Login</a>
+                <p class="text-center"><a href="{{ url_for('auth.choose_login') }}">Sign Up</a></p>
+              </div>
+              {% endif %}
             </div>
           </div>
           <!-- /User Menu -->
+          <!-- Cart -->
+          <div class="nav-item">
+            <a href="{{ url_for('request_strains.order_page_index') }}" class="rounded-circle userMenu"
+              aria-label="Cart">
+              <i class="bi bi-cart-fill lh-1" aria-hidden="true"></i>
+            </a>
+          </div>
+          <!-- /Cart -->
         </div>
       </div>
+    </div>
   </nav>
-  <!-- /Navbar -->
 </header>

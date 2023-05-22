@@ -1,0 +1,165 @@
+{% extends "_layouts/default.html" %}
+
+{% block custom_head %}
+    <link rel="stylesheet" href="//cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css" />
+    <script type="text/javascript" src="//cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+{% endblock %}
+
+{% block style %}
+<style>
+
+table.dataTable thead .sorting_asc {
+  background: url("//cdn.datatables.net/1.10.0/images/sort_asc.png") no-repeat center left;
+}
+table.dataTable thead .sorting_desc {
+  background: url("//cdn.datatables.net/1.10.0/images/sort_desc.png") no-repeat center left;
+}
+table.dataTable thead .sorting {
+  background: url("//cdn.datatables.net/1.10.0/images/sort_both.png") no-repeat center left;
+}
+
+span.bi {
+  color: var(--bs-secondary);
+}
+
+</style>
+{% endblock %}
+
+
+{% block content %}
+{% from "_includes/macros.html" import render_dataTable_top_menu, render_dataTable_actions, render_dataTable_result_list_header %}
+
+
+{{
+  render_dataTable_top_menu(
+    actions = [
+      {
+        'label': button_labels['tool'],
+        'url': url_for(tool_name + '.' + tool_name),
+        'icon': 'bi bi-plus-circle',
+      },
+      {
+        'label': button_labels['user'] if all_results else button_labels['all'],
+        'url': url_for(tool_name + ('.my_results' if all_results else '.all_results')),
+        'icon': 'bi bi-list-task',
+        'admin_only': True,
+      },
+    ]
+  )
+}}
+
+<!-- Report Table Container -->
+<div class="table-responsive my-5">
+
+  <!-- Report Table -->
+  {# <table id='result-table' class="table table-hover table-bordered row-border col-borderless"> #}
+  <table id='result-table' class="hover row-border">
+    <caption class="visually-hidden">A list of user reports and report status.</caption>
+
+    <thead class="table-secondary align-middle">
+      <tr class="header">
+        {{ render_dataTable_result_list_header('Species', extra_classes='ordering') }}
+        {% for column in columns %}
+        {{ render_dataTable_result_list_header(column.title, column.class, extra_classes='sorting') }}
+        {% endfor %}
+        {{ render_dataTable_result_list_header('Status', extra_classes='ordering') }}
+        {{ render_dataTable_result_list_header('Date',   extra_classes='ordering') }}
+        {% if all_results %}
+        {{ render_dataTable_result_list_header('Owner',  extra_classes='ordering') }}
+        {% endif %}
+      </tr>
+    </thead>
+
+    <tbody class="table-group-divider align-middle">
+      {% for item in items %}
+        {% if item %}
+          <tr>
+            <td class="data-species">
+              {% if item.species %}<i>{{ species_list[item.species].short_name }}</i>{% endif %}
+            </td>
+
+            {% for column in columns %}
+              <td class="data-{{column.class}}" {% if column.get('data_order') %}data-order="{{column.data_order(item)}}"{% endif %}>
+                {% if column.get('link_to_data', False) and (item.status == TaskStatus.COMPLETE or item.status == TaskStatus.ERROR) %}
+                  <a href="{{ url_for(tool_name + '.report', id=item.id) }}">
+                    {{ item[column.field] }}
+                  </a>
+                {% else %}
+                  {{ item[column.field] }}
+                {% endif %}
+              </td>
+            {% endfor %}
+
+            <td class="data-status">
+              {% if item.status %} {{ item.status|capitalize }} {% else %} UNKNOWN {% endif %}
+            </td>
+            <td class="data-date" data-order="{{ item.created_on }}">
+              {% if item.created_on %} {{ item.created_on|date_format }} {% endif %}
+            </td>
+
+            {% if all_results %}
+              <td class="data-owner">{{ item.get_display_name() }}</td>
+            {% endif %}
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+
+  </table>
+  <!-- /Report Table -->
+
+</div>
+<!-- /Report Table Container -->
+{% endblock %}
+
+{% block script %}
+<script>
+
+  const status_colors = {
+    "{{ TaskStatus.ERROR }}"     : "danger",
+    "{{ TaskStatus.RUNNING }}"   : "primary",
+    "{{ TaskStatus.COMPLETE }}"  : "secondary",
+    "{{ TaskStatus.SUBMITTED }}" : "info",
+  }
+      
+  $(document).ready(function(){
+
+    dTable = $('#result-table').DataTable( {
+      paging: true,
+      pageLength: 25,
+      // autoWidth: true,
+      // sScrollX: true,
+      sScrollY: '50vh',
+      scrollCollapse: true,
+      aaSorting: [ [{{2 + len(columns)}}, 'desc'] ],
+      aoColumns: [
+        { "sWidth": "10%" },
+      {%- for column in columns %}
+        { "sWidth": ({{column.width}} * 36) + '%' },
+      {%- endfor %}
+        {
+          "sWidth": "10%",
+          "createdCell": function (td, cellData, rowData, row, col) {
+            $(td).addClass( 'bg-' + status_colors[cellData.toUpperCase()] + ' bg-opacity-25' )
+          }
+        },
+        { "sWidth": "22%" },
+      {%- if all_results %}
+        { "sWidth": "22%" },
+      {%- endif %}
+      ],
+      dom: "tipr",
+    });
+
+    $('#searchFilterfilter').keyup(function(){  
+      dTable.search($(this).val()).draw();
+    });
+
+    $('#page-length').change(function(){  
+      dTable.page.len($(this).val()).draw();
+    });
+
+  });
+
+</script>
+{% endblock %}

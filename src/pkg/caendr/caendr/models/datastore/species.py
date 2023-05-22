@@ -2,12 +2,19 @@ from logzero import logger
 
 from caendr.models.datastore import Entity
 from caendr.models.datastore import WormbaseVersion, WormbaseProjectNumber
-from caendr.models.error import BadRequestError
+from caendr.models.error import BadRequestError, NotFoundError
 
 
 
 class Species(Entity):
     kind = 'species'
+
+    @staticmethod
+    def get(species_name):
+        if species_name in SPECIES_LIST:
+            return SPECIES_LIST[species_name]
+        raise NotFoundError(Species, {'name': species_name})
+
 
     @classmethod
     def get_props_set(cls):
@@ -94,6 +101,10 @@ class Species(Entity):
     def sva_ver(self, new_sva_ver: str):
         # TODO: validate -- looks like this should be the 8 digit date string
         self._sva_ver = new_sva_ver
+
+
+    def get_url_name(self):
+        return self.name.replace('_', '-')
 
 
 

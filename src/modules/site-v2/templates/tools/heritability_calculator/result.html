@@ -12,7 +12,7 @@
 <script type="text/javascript"
   src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.2/FileSaver.min.js"></script>
 
-{% if not (result or hr.status in ['ERROR','COMPLETE']) %}
+{% if not (result or hr.status in [TaskStatus.ERROR, TaskStatus.COMPLETE]) %}
 <meta http-equiv="refresh" content="10; url={{ request.path }}">
 {% endif %}
 
@@ -24,29 +24,31 @@
 <div class="container-fluid px-5 pb-5">
   <div class="d-flex justify-content-around flex-wrap mt-2">
   <!-- Results Card -->
-  <div class="col col-md-6 col-xl-3 text-bg-light mb-5 p-5 rounded-2 shadow-sm overflow-auto" style="max-height:500px">
+  <div class="col col-md-6 col-xl-3 text-bg-light mb-5 p-5 rounded-2 shadow-sm overflow-auto" style="max-height:525px">
    <p>
-      <strong>Trait:</strong> {{ hr.trait}}
+      <strong>Trait:</strong> {{ hr.trait }}
    </p>
    <p>
-      <strong>Description:</strong> {{ hr.label}}
+      <strong>Description:</strong> {{ hr.label }}
    </p>
    <p>
       <strong>Report ID:</strong> {{ hr.id }}
-   </p>
-   <p>
+    </p>
+    <p>
       <strong>Created:</strong> {{ hr.created_on | date_format }}
-   </p>
-   <p>
-      <strong>Status:</strong>  {{ hr.status}}
+    </p>
+    <p>
+      <strong>Status:</strong>  {{ hr.status }}
     
-    {% if hr.status == 'ERROR' %}
+      {% if hr.status == TaskStatus.ERROR %}
       <strong>Error:</strong> <span class="text-danger">{{ operation.error }}</span>
-    {% endif %}
-   </p>
-   <p>
-    <strong>Broad-Sense Heritability (H<sup>2</sup>):</strong> {{ (result['H2']*100)|round(2) }}% <small>(range {{ (result['ci_l']*100)|round(2) }}% to {{ (result['ci_r']*100)|round(2) }}%)</small>
-   </p>
+      {% endif %}
+    </p>
+    {%- if result %}
+    <p>
+      <strong>Broad-Sense Heritability (H<sup>2</sup>):</strong> {{ (result['H2']*100)|round(2) }}% <small>(range {{ (result['ci_l']*100)|round(2) }}% to {{ (result['ci_r']*100)|round(2) }}%)</small>
+    </p>
+    {%- endif %}
   <div class="mt-5">
     <div class="d-grid gap-3">
       <a class="btn btn-secondary text-light" role="button" onClick="getPDF()">Download PDF</a>
@@ -60,14 +62,16 @@
       <!-- Options Toolbar -->
       <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar">
       <div class="ps-3 pt-0"><a href="{{ url_for('heritability_calculator.heritability_calculator') }}"><i class="bi bi-plus-circle" aria-hidden="true"></i> New Calculation</a></div>
-      <div class="ps-3 pt-0"><a href="{{ url_for('heritability_calculator.user_results') }}"><i class="bi bi-journal" aria-hidden="true"></i>View All My Heritability Results</a></div>
-      <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i> Fullscreen</a></div>
+      <div class="ps-3 pt-0"><a href="{{ url_for('heritability_calculator.my_results') }}"><i class="bi bi-journal" aria-hidden="true"></i>View All My Heritability Results</a></div>
+      {% if data %}
+      <div class="ps-3 pt-0"><button class="btn border-0" onclick="openFullscreen();" id="fullscreenButton"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>View Fullscreen</button></div>
+      {% endif %}
       </div>
       <!-- /Options Toolbar -->
       <!-- Heritability Results -->
       <div class="col">
         {% if data and not result %}
-        {% if not hr.status in ['COMPLETE','ERROR'] %}
+        {% if not hr.status in [TaskStatus.COMPLETE, TaskStatus.ERROR] %}
         <p class='text-info text-center'>
           <strong>
             The heritability calculation is currently being run. Please check back in a few minutes for results.
@@ -82,7 +86,15 @@
         </div>
       
         {% if data %}
-        <div id="svgchartarea"></div>
+        <div id="chartContainer">
+          <div class="d-flex flex-wrap justify-content-center col-12 text-end optionsToolbar">
+            <div class="me-5">
+              <button class="d-none btn btn-danger text-light p-2 my-5" onclick="closeFullscreen();" id="closeButton"><i
+                  class="bi bi-fullscreen-exit text-light" aria-hidden="true"></i> Close Fullscreen</button>
+            </div>
+          </div>
+          <div id="svgchartarea"></div>
+        </div>
         {% endif %}
       
         {% if result %}
@@ -116,7 +128,6 @@
         }
 
     var trait = "{{ trait }}"
-    var Fnam = "{{ fnam }}"
     var imag
     var chartJson = {{ data|tojson|safe }};
     var traits =[];
@@ -243,7 +254,9 @@
         doc.setFontSize(4);
         doc.fromHTML('<i>2</i>', 225, 15)
         doc.setFontSize(10);
-        doc.fromHTML(') = {{ (result['H2']*100)|round(2) }}% (range {{ (result['ci_l']*100)|round(2) }}% to {{ (result['ci_r']*100)|round(2) }}%)', 230, 20)
+        {% if result %}
+        doc.fromHTML(') = {{ (result['H2']*100)|round(2) }}% (range {{ (result['ci_l']*100)|round(2) }}% to {{ (result['ci_r']*100)|round(2) }}%)', 230, 20);
+        {% endif %}
 
         doc.addImage(document.getElementById('img1').src, 'PNG', margins.left, margins.top,
                     page_width - (margins.left + margins.right),
@@ -259,7 +272,7 @@
         var a = document.createElement('a');
             var pdfblob = new Blob([ doc.output('blob') ], { type : 'application/pdf'});
             a.href = window.URL.createObjectURL(pdfblob);
-            a.download = "{{ fnam }}.pdf";
+            a.download = "{{ fname }}.pdf";
             a.click();
         })
         image.src = url;
@@ -303,6 +316,33 @@
       $("a[href^='http://'], a[href^='https://'], a[href$='pdf']").attr("target","_blank");
 
     })
+
+// Open and Close Fullscreen Buttons
+var fullscreenBrowser = document.getElementById("chartContainer");
+var closeButton = document.getElementById("closeButton");
+  function openFullscreen() {
+    if (fullscreenBrowser.requestFullscreen) {
+      fullscreenBrowser.requestFullscreen();
+    } else if (fullscreenBrowser.webkitRequestFullscreen) { /* Safari */
+      fullscreenBrowser.webkitRequestFullscreen();
+    } else if (fullscreenBrowser.msRequestFullscreen) { /* IE11 */
+      fullscreenBrowser.msRequestFullscreen();
+    }
+    closeButton.classList.remove("d-none");
+    closeButton.classList.add("d-block");
+  }
+  
+  function closeFullscreen() {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) { /* Safari */
+      document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { /* IE11 */
+      document.msExitFullscreen();
+    }
+    closeButton.classList.remove("d-block");
+    closeButton.classList.add("d-none");
+  }
     </script>
 {% endif %}
 

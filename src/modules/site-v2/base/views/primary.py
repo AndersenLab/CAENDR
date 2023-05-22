@@ -44,16 +44,15 @@ def news_item(filename=""):
   return render_template('news/news_item.html', **locals())
 
 
-@primary_bp.route("/help")
-@primary_bp.route("/help/<filename>/")
+@primary_bp.route("/faq")
+@primary_bp.route("/faq/<filename>/")
 @cache.memoize(60*60)
 def help_item(filename=""):
   ''' Help '''
   # TODO: make files dynamic
-  files = ["FAQ", "Genome-Browser", "Change-Log"]
+  files = ["FAQ"]
   if not filename:
     filename = "FAQ"
-  title = "Help"
-  subtitle = filename.replace("-", " ")
-  return render_template('primary/help.html', **locals())
+  title = "FAQ"
+  return render_template('faq/faq.html', **locals())
 

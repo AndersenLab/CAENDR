@@ -6,7 +6,7 @@ from caendr.services.logger import logger
 
 from caendr.models.datastore import Container, IndelPrimer, HeritabilityReport, NemascanMapping, SPECIES_LIST
 from caendr.models.error     import CachedDataError, DuplicateDataError, DataFormatError
-from caendr.models.task      import IndelPrimerTask, HeritabilityTask, NemaScanTask
+from caendr.models.task      import TaskStatus, IndelPrimerTask, HeritabilityTask, NemaScanTask
 
 from caendr.api.strain             import query_strains
 from caendr.services.cloud.storage import upload_blob_from_string, upload_blob_from_file
@@ -187,7 +187,7 @@ class SubmissionManager():
     entity.set_user(user)
 
     # Upload the new entity to datastore
-    entity['status'] = 'SUBMITTED' # TODO: Is this an OK initial value? What if there's an error before the task is submitted?
+    entity['status'] = TaskStatus.SUBMITTED # TODO: Is this an OK initial value? What if there's an error before the task is submitted?
     entity.save()
 
     # Check if there is already a cached result, and skip creating a job if so
@@ -196,7 +196,7 @@ class SubmissionManager():
       if cached_result:
 
         # If cache check returned a status, use it; otherwise, default to "COMPLETE"
-        entity['status'] = cached_result if isinstance(cached_result, str) else 'COMPLETE'
+        entity['status'] = cached_result if isinstance(cached_result, str) else TaskStatus.COMPLETE
         entity.save()
 
         # Save the entity and "return" in a cached data error
@@ -210,7 +210,7 @@ class SubmissionManager():
     result = task.submit()
 
     # Update entity status to reflect whether task was submitted successfully
-    entity['status'] = 'SUBMITTED' if result else 'ERROR'
+    entity['status'] = TaskStatus.SUBMITTED if result else TaskStatus.ERROR
     entity.save()
 
     # Return resulting Job entity
@@ -239,8 +239,15 @@ class SubmissionManager():
 
       # Check first line for column headers
       for col in range(num_cols):
-        if csv_headings[col] != columns[col]['header']:
+        target_header = columns[col].get('header')
+        if target_header is None:
+          continue
+        # if isinstance(target_header, str):
+        if csv_headings[col] != target_header:
           raise DataFormatError(f'The file contains an incorrect column header. Column #{ col + 1 } should be { columns[col]["header"] }.', 1)
+        # else:
+        #   if not target_header['validator'](csv_headings[col]):
+        #     raise DataFormatError(f'The file contains an incorrect column header. { target_header["make_err_msg"]( col + 1, csv_headings[col] ) }', 1)
 
       # Loop through all remaining lines in the file
       has_data = False
@@ -265,7 +272,7 @@ class SubmissionManager():
 
         # Check that all columns have valid data
         for column, value in zip(columns, csv_row):
-          header    = column['header']
+          header    = column.get('header')
           validator = column['validator']
           validator( header, value.strip(), line )
 
@@ -428,7 +435,9 @@ class MappingSubmissionManager(SubmissionManager):
         'validator': validate_strain(SPECIES_LIST[data['species']], force_unique=True, force_unique_msg=duplicate_strain_formatter)
       },
       {
-        'header': 'trait',
+        # 'header': {
+        #   'validator': lambda x: x
+        # },
         'validator': validate_num(accept_float=True, accept_na=True),
       },
     ]

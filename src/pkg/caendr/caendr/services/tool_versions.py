@@ -12,8 +12,6 @@ NEMASCAN_NXF_CONTAINER_NAME = os.environ.get('NEMASCAN_NXF_CONTAINER_NAME')
 INDEL_PRIMER_CONTAINER_NAME = os.environ.get('INDEL_PRIMER_CONTAINER_NAME')
 HERITABILITY_CONTAINER_NAME = os.environ.get('HERITABILITY_CONTAINER_NAME')
 
-MODULE_GENE_BROWSER_TRACKS_CONTAINER_NAME = os.environ.get('MODULE_GENE_BROWSER_TRACKS_CONTAINER_NAME')
-MODULE_GENE_BROWSER_TRACKS_CONTAINER_VERSION = os.environ.get('MODULE_GENE_BROWSER_TRACKS_CONTAINER_VERSION')
 MODULE_DB_OPERATIONS_CONTAINER_NAME = os.environ.get('MODULE_DB_OPERATIONS_CONTAINER_NAME')
 MODULE_DB_OPERATIONS_CONTAINER_VERSION = os.environ.get('MODULE_DB_OPERATIONS_CONTAINER_VERSION')
 DOCKER_HUB_REPO_NAME = os.environ.get('DOCKER_HUB_REPO_NAME')
@@ -84,10 +82,8 @@ def get_all_containers():
     heritability.save()
   
   db_operations = create_default_container_version(MODULE_DB_OPERATIONS_CONTAINER_NAME, repo=GCR_REPO_NAME, tag=MODULE_DB_OPERATIONS_CONTAINER_VERSION)
-  
-  gene_browser_tracks = create_default_container_version(MODULE_GENE_BROWSER_TRACKS_CONTAINER_NAME, repo=GCR_REPO_NAME, tag=MODULE_GENE_BROWSER_TRACKS_CONTAINER_VERSION)
 
-  return [nemascan_nxf, indel_primer, heritability, db_operations, gene_browser_tracks]
+  return [nemascan_nxf, indel_primer, heritability, db_operations]
 
 
 def get_current_container_version(container_name: str):

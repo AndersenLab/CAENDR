@@ -2,7 +2,7 @@ import os
 
 from caendr.services.logger import logger
 
-from caendr.models.datastore import Entity, DatabaseOperation, GeneBrowserTracks, HeritabilityReport, IndelPrimer, NemascanMapping
+from caendr.models.datastore import Entity, DatabaseOperation, HeritabilityReport, IndelPrimer, NemascanMapping
 
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.task   import add_task
@@ -18,10 +18,19 @@ API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 
 # Define the Status values
 class TaskStatus:
-  ERROR = "ERROR"
-  RUNNING = "RUNNING"
-  COMPLETE = "COMPLETE"
-  PENDING ="PENDING"
+  ERROR     = "ERROR"
+  RUNNING   = "RUNNING"
+  COMPLETE  = "COMPLETE"
+  SUBMITTED = "SUBMITTED"
+
+  @staticmethod
+  def isValid(value):
+    return value in [
+      TaskStatus.ERROR,
+      TaskStatus.RUNNING,
+      TaskStatus.COMPLETE,
+      TaskStatus.SUBMITTED,
+    ]
 
 class Task(object):
 
@@ -172,19 +181,6 @@ class DatabaseOperationTask(Task):
       'email',
       'db_operation',
       'args',
-    }
-
-
-class GeneBrowserTracksTask(Task):
-  name  = 'gene_browser_tracks_task'
-  queue = os.environ.get('MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME')
-  kind  = GeneBrowserTracks.kind
-
-  @classmethod
-  def get_props_set(cls):
-    return {
-      *super().get_props_set(),
-      'wormbase_version',
     }
 
 

@@ -29,8 +29,6 @@ TABLE_COLORS = {
   "HIGH": 'danger'
 }
 
-REPORT_TYPES = [('V2', 'V2'), ('V1', 'V1'), ('V0', 'V0')]
-
 # TODO: REMOVE THESE
 REPORT_V1_FILE_LIST = ['methods.md']
 REPORT_V2_FILE_LIST = ['alignment_report.html', 'concordance_report.html', 'gatk_report.html', 'methods.md', 'reads_mapped_by_strain.tsv', 'release_notes.md']

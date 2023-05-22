@@ -69,7 +69,7 @@ def plotly_distplot(df, column):
     return plot
 
 
-def time_series_plot(df, x_title=None, y_title=None, range=None, colors=COLORS):
+def time_series_plot(df, x_title=None, y_title=None, range=None, colors=COLORS, gridcolor=None, make_line_style=None, plot_style={}):
   """
       Pass in a dataframe (df) with:
           First column - dates (x-axis)
@@ -77,20 +77,47 @@ def time_series_plot(df, x_title=None, y_title=None, range=None, colors=COLORS):
 
       Args:
           df - the strain dataset
+          make_line_style (function):
+            Args:
+              n      - The index of the current column
+              column - The name of the current column
+              colors - The set of colors
+            Returns:
+              A dictionary specifying line styles for the current column
   """
   try:
     trace_set = []
-    for n, column in enumerate(df.columns[1:][::-1]):
-        trace_set.append(go.Scatter(x=df[df.columns[0]],
-                                    y=df[column],
-                                    name=column,
-                                    opacity=0.8,
-                                    line=dict(color=(COLORS[n]))
-                                    )
-                          )
+    for n, column in enumerate(df.columns[1:]):
 
-    layout = go.Layout(margin={'t': 0, 'r': 0, 'l': 80, 'b': 60},
-                        xaxis={})
+        # Create default line style options
+        style = {
+            'name': column,
+            'opacity': 0.8,
+            'line': {'color': colors[n % len(colors)]},
+
+            # If style function provided, use it to generate line styles,
+            # overwriting defaults where applicable
+            **({} if make_line_style is None else make_line_style(n, column, colors)),
+        }
+
+        trace_set.append(go.Scatter(
+            x=df[df.columns[0]],
+            y=df[column],
+            **style,
+        ))
+
+    layout = go.Layout(
+        margin={'t': 0, 'r': 0, 'l': 80, 'b': 60},
+        xaxis={
+            'gridcolor':     gridcolor if gridcolor else 'rgb(238, 238, 238)',
+            'zerolinecolor': gridcolor if gridcolor else 'rgb(238, 238, 238)',
+        },
+        yaxis={
+            'gridcolor':     gridcolor if gridcolor else 'rgb(238, 238, 238)',
+            'zerolinecolor': gridcolor if gridcolor else 'rgb(238, 238, 238)',
+        },
+        **plot_style,
+    )
     if range:
         layout['xaxis']['range'] = range
     if x_title:

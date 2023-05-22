@@ -3,20 +3,11 @@ from dotenv import load_dotenv, dotenv_values
 from string import Template
 
 from caendr.services.logger import logger
+from caendr.utils.tokens import TokenizedString
 
 
 # Flag to track whether the environment has been loaded
 env_loaded = False
-
-# # TODO: Validate tokens?
-# VALID_TOKENS = {
-#   'SPECIES',
-#   'PRJ',
-#   'WB',
-#   'SVA',
-#   'RELEASE',
-#   'STRAIN',
-# }
 
 
 def load_env(dotenv_file='.env'):
@@ -45,7 +36,7 @@ def list_env_vars(env_file='.env'):
 
 
 
-def get_env_var(key, value=None, can_be_none=False, as_template=False):
+def get_env_var(key, value=None, can_be_none=False, as_template=False, var_type=str):
   '''
     Gets an environment variable with an optional backup value.
     If value is None (env var is undefined), raises an EnvVarError with the name of the missing variable.
@@ -70,7 +61,10 @@ def get_env_var(key, value=None, can_be_none=False, as_template=False):
 
   # Convert variable to a template string, if desired
   if as_template:
-    return convert_env_template(v)
+    return TokenizedString(v.replace('{', '${'))
+  
+  if var_type == int:
+    v = int(v)
 
   # Return the value
   return v
@@ -88,37 +82,6 @@ def convert_env_bool(val: str):
 
 def convert_env_template(val):
   return Template(val.replace('{', '${'))
-
-
-
-def replace_species_tokens(s, species='$SPECIES', prj='$PRJ', wb='$WB', sva='$SVA', release='$RELEASE', strain='$STRAIN'):
-
-  # Get first argument as a string template
-  if isinstance(s, str):
-    t = Template(s)
-  elif isinstance(s, Template):
-    t = s
-  else:
-    raise ValueError(f'Cannot replace tokens in non-string value {s}')
-
-  # Perform substitutions
-  return t.substitute({
-    'SPECIES': species,
-    'RELEASE': release,
-    'WB':      wb,
-    'SVA':     sva,
-    'PRJ':     prj,
-    'STRAIN':  strain,
-  })
-
-
-# def replace_tokens_recursive(obj, **kwargs):
-#   if isinstance(obj, str):
-#     return replace_species_tokens(obj, **kwargs)
-#   elif isinstance(obj, dict):
-#     return { key: replace_tokens_recursive(val, **kwargs) for key, val in obj.items() }
-#   else:
-#     return obj
 
 
 

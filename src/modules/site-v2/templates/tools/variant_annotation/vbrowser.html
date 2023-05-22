@@ -181,7 +181,7 @@
           <button class="btn btn-link" disabled id="download-result-btn" onClick="onDownload();"><i
               class="bi bi-file-earmark-arrow-down-fill" aria-hidden="true"></i> Download My Results</button>
         </div>
-        <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i> Fullscreen</a>
+        <div class="ps-3 pt-0"><button class="btn border-0" onclick="openFullscreen();" id="fullscreenButton" disabled><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>View Fullscreen</button>
         </div>
       </div>
       <!-- /Options Toolbar -->
@@ -196,6 +196,11 @@
           </div>
         </div>
         <div class="table-responsive" id="result-table">
+          <div class="d-flex flex-wrap justify-content-center col-12 text-end optionsToolbar">
+            <div class="me-5">
+              <button class="d-none btn btn-danger text-light p-2 my-5" id="closeButton" onclick="closeFullscreen();"><i class="bi bi-fullscreen-exit text-light" aria-hidden="true"></i> Close Fullscreen</button>
+            </div>
+          </div>
           <table id="variant-table" class="table-striped table-hover" style="width:100%;">
             <caption class="visually-hidden">List of variant annotations</caption>
             <thead>
@@ -279,6 +284,7 @@ function update_species(species_id) {
     'interval',
     'search-interval-btn',
     'strain-filter',
+    'fullscreenButton',
   ];
   form_ids.forEach((form_id) => toggle_input(form_id, !species_empty));
 
@@ -825,6 +831,32 @@ $(document).ready(function() {
   }(jQuery));
 });
 
+// Open and Close Fullscreen Buttons
+var fullscreenBrowser = document.getElementById("result-table");
+var closeButton = document.getElementById("closeButton");
+  function openFullscreen() {
+    if (fullscreenBrowser.requestFullscreen) {
+      fullscreenBrowser.requestFullscreen();
+    } else if (fullscreenBrowser.webkitRequestFullscreen) { /* Safari */
+      fullscreenBrowser.webkitRequestFullscreen();
+    } else if (fullscreenBrowser.msRequestFullscreen) { /* IE11 */
+      fullscreenBrowser.msRequestFullscreen();
+    }
+    closeButton.classList.remove("d-none");
+    closeButton.classList.add("d-block");
+  }
+  
+  function closeFullscreen() {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) { /* Safari */
+      document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { /* IE11 */
+      document.msExitFullscreen();
+    }
+    closeButton.classList.remove("d-block");
+    closeButton.classList.add("d-none");
+  }
 
 </script>
 {% endblock %}

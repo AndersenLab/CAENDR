@@ -8,16 +8,14 @@ from pipelines.nemascan import start_nemascan_pipeline
 from pipelines.db_op import start_db_op_pipeline
 from pipelines.indel_primer import start_indel_primer_pipeline
 from pipelines.heritability import start_heritability_pipeline
-from pipelines.gene_browser_tracks import start_gene_browser_tracks_pipeline
 
 from caendr.models.datastore.nemascan_mapping import NemascanMapping
 from caendr.models.datastore.database_operation import DatabaseOperation
 from caendr.models.datastore.indel_primer import IndelPrimer
 from caendr.models.datastore.heritability_report import HeritabilityReport
-from caendr.models.datastore.gene_browser_tracks import GeneBrowserTracks
 
 from caendr.models.error import APIBadRequestError, APIInternalError
-from caendr.models.task import TaskStatus, NemaScanTask, DatabaseOperationTask, IndelPrimerTask, HeritabilityTask, GeneBrowserTracksTask
+from caendr.models.task import TaskStatus, NemaScanTask, DatabaseOperationTask, IndelPrimerTask, HeritabilityTask
 from caendr.models.pub_sub import PubSubAttributes, PubSubMessage, PubSubStatus
 
 from caendr.services.cloud.task import update_task_status, verify_task_headers
@@ -28,7 +26,6 @@ from caendr.services.nemascan_mapping import update_nemascan_mapping_status
 from caendr.services.database_operation import update_db_op_status
 from caendr.services.indel_primer import update_indel_primer_status
 from caendr.services.heritability_report import update_heritability_report_status
-from caendr.services.gene_browser_tracks import update_gene_browser_track_status
 from caendr.services.persistent_logger import PersistentLogger
 
 from caendr.utils import monitor
@@ -39,7 +36,6 @@ INDEL_PRIMER_TASK_QUEUE_NAME = os.environ.get('INDEL_PRIMER_TASK_QUEUE_NAME')
 NEMASCAN_TASK_QUEUE_NAME = os.environ.get('NEMASCAN_TASK_QUEUE_NAME')
 HERITABILITY_TASK_QUEUE_NAME = os.environ.get('HERITABILITY_TASK_QUEUE_NAME')
 MODULE_DB_OPERATIONS_TASK_QUEUE_NAME = os.environ.get('MODULE_DB_OPERATIONS_TASK_QUEUE_NAME')
-MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME = os.environ.get('MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME')
 
 task_handler_bp = Blueprint('task_bp', __name__)
 
@@ -84,11 +80,6 @@ def _get_task_metadata(queue_name):
       'class': DatabaseOperationTask,
       'start_pipeline': start_db_op_pipeline,
       'update_status': update_db_op_status
-    },
-    MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME: {
-      'class': GeneBrowserTracksTask,
-      'start_pipeline': start_gene_browser_tracks_pipeline,
-      'update_status': update_gene_browser_track_status
     }
   }
   return mapping.get(queue_name, None)

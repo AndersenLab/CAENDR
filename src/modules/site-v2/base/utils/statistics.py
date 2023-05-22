@@ -4,12 +4,35 @@ import arrow
 
 from datetime import datetime
 
+from caendr.models.datastore.species import SPECIES_LIST
 from caendr.models.sql import Strain
 from caendr.services.cloud.postgresql import db
 from caendr.services.cloud.datastore import query_ds_entities
 from caendr.services.user import get_num_registered_users
 from caendr.utils.plots import time_series_plot
 
+
+
+species_sorted = list(SPECIES_LIST.keys())
+
+def make_line_style(n, column, colors):
+  species_code, type_code = column.rsplit('_', 1)
+  species_name = SPECIES_LIST[species_code].short_name
+  type_name = type_code.capitalize()
+  return {
+    'name': f'{type_name}s',
+    'line': {
+      'color': colors[ species_sorted.index(species_code) ],
+      'dash': 'dot' if type_code == 'isotype' else None,
+    },
+    'connectgaps': True,
+    'legendgroup': species_code,
+    'legendgrouptitle': {
+      'text': f'<i>{species_name}</i>',
+    },
+    'hoverlabel': {'namelength': 0},
+    'hovertemplate': '%{y} <i>' + species_name + "</i> " + type_code + 's',
+  }
 
 def get_strain_collection_plot(df):
   return time_series_plot(
@@ -19,9 +42,48 @@ def get_strain_collection_plot(df):
     range=[
       datetime(1995, 10, 17), 
       datetime.today()
-    ]
+    ],
+    make_line_style=make_line_style,
+    plot_style={
+      'legend': {
+        'groupclick': 'toggleitem',
+      },
+      'hovermode': 'x',
+      'paper_bgcolor': 'rgba(0,0,0,0)',
+      'plot_bgcolor':  'rgba(0,0,0,0)',
+    },
   )
-  
+
+
+def cum_vals(df, column, dropna=False, sampling_date_as_index=False):
+
+  # Get column of interest, sort by date, and drop duplicates
+  result = df[[column, 'sampling_date']]       \
+      .sort_values(['sampling_date'], axis=0)  \
+      .drop_duplicates([column])
+
+  # Drop null values, if applicable
+  if (dropna):
+    result = result.dropna(how='any')
+
+  # Not sure why you can't just pass the boolean as an argument, but it breaks if you do
+  if (sampling_date_as_index):
+    result = result.groupby(['sampling_date'], as_index=sampling_date_as_index)
+  else:
+    result = result.groupby(['sampling_date'])
+
+  # Count the number of items and convert to a cumulative sum
+  result = result.count().cumsum().reset_index()
+
+  # Add data point for current date
+  result = result.append({
+    'sampling_date': np.datetime64(datetime.today().strftime("%Y-%m-%d")),
+    column: len(df[column].unique())
+  }, ignore_index=True)
+
+  return result
+
+
 
 def cum_sum_strain_isotype():
   """
@@ -31,29 +93,44 @@ def cum_sum_strain_isotype():
           df - the strain dataset
   """
   df = pd.read_sql_table(Strain.__tablename__, db.engine)
+
   # Remove strains with issues
   df = df[df["issues"] == False]
-  cumulative_isotype = df[['isotype', 'sampling_date']].sort_values(['sampling_date'], axis=0) \
-                                                        .drop_duplicates(['isotype']) \
-                                                        .groupby(['sampling_date'], as_index=True) \
-                                                        .count() \
-                                                        .cumsum() \
-                                                        .reset_index()
-  cumulative_isotype = cumulative_isotype.append({'sampling_date': np.datetime64(datetime.today().strftime("%Y-%m-%d")),
-                                                  'isotype': len(df['isotype'].unique())}, ignore_index=True)
-  cumulative_strain = df[['strain', 'sampling_date']].sort_values(['sampling_date'], axis=0) \
-                                                      .drop_duplicates(['strain']) \
-                                                      .dropna(how='any') \
-                                                      .groupby(['sampling_date']) \
-                                                      .count() \
-                                                      .cumsum() \
-                                                      .reset_index()
-  cumulative_strain = cumulative_strain.append({'sampling_date': np.datetime64(datetime.today().strftime("%Y-%m-%d")),
-                                                'strain': len(df['strain'].unique())}, ignore_index=True)
-  df = cumulative_isotype.set_index('sampling_date') \
-                          .join(cumulative_strain.set_index('sampling_date')) \
-                          .reset_index()
-  return df
+
+  # Loop through all species, adding to result frame
+  result = None
+  for species_name in SPECIES_LIST:
+
+    # Filter data frame by current species
+    species_frame = df[df["species_name"] == species_name]
+
+    # Get cumulative sums for isotypes and strain
+    cum_isotypes = cum_vals(species_frame, 'isotype', dropna=False, sampling_date_as_index=True ).set_index('sampling_date')
+    cum_strains  = cum_vals(species_frame, 'strain',  dropna=True,  sampling_date_as_index=False).set_index('sampling_date')
+
+    # Add cumulative isotype & strain counts to result
+    if result is None:
+      result = cum_isotypes.join(cum_strains)
+    else:
+      result = result.join(cum_isotypes).join(cum_strains)
+
+    result = result.rename(columns={
+      'isotype': f'{species_name}_isotype',
+      'strain':  f'{species_name}_strain',
+    })
+
+  # Reset the index
+  result = result.reset_index()
+
+  # Fill NaN values created by joining frames with different x-axis values
+  result.iloc[0,:] = result.iloc[0,:].fillna(0)
+  result = result.fillna(method='ffill', axis=0)
+
+  # Convert back to integers now that NaN values are dealt with
+  cols = [i for i in result.columns if i != 'sampling_date']
+  result[cols] = result[cols].astype(int)
+
+  return result
   
   
 def get_report_sumary_plot_legacy(df):

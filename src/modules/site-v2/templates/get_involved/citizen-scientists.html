@@ -3,49 +3,78 @@
 
 {% block content %}
 <div class="row">
-      <div class="col-md-8">
+  <div class="col-12 col-md-8 px-5">
+    <h2 class="mb-3">Collect Nematodes as a Citizen Scientist!</h2>
 
-{% filter markdown %}
-## Collect Nematodes as a Citizen Scientist! ##
-The <em>Caenorhabditis</em> research community is looking for new wild strains from throughout the world! **If you would like to help us**, please feel free to [contact us]({{ url_for('about.contact_us')}}).
+    <p>The <em>Caenorhabditis</em> research community is looking for new wild strains from throughout the world!
+      <strong>If you would like to help us,</strong> please feel free to <a
+        href="{{ url_for('about.contact_us')}}">contact us</a></p>
 
-We will send you everything you need to isolate your own nematodes. After you mail the samples back to us, we will tell you (as much as we can) about what species you found.
+    <p>We will send you everything you need to isolate your own nematodes. After you mail the samples back to us, we
+      will tell you (as much as we can) about what species you found.</p>
 
-### The procedure is very easy ###
+    <div class="text-bg-light rounded shadow-sm px-5 py-4 my-5">
+      <h3 class="mb-4">The procedure is very easy</h3>
+      <ol>
+        <li>Find rotting stuff.</li>
+        <li>Put small amount of rotting stuff in sealable bag.</li>
+        <li>Mail back at my expense.</li>
+      </ol>
+      <p><a href="http://andersenlab.org/files/WormCollecting.pdf" target="_blank"
+          class="btn btn-secondary text-light mt-3">Download The Full
+          Instructions</a></p>
+      <p><small><em>If you would like materials to collect your own nematodes, please fill out the <a
+              href="{{nematode_isolation_kit_form_url}}" target="_blank">nematode isolation form</a>.</em></small></p>
+    </div>
 
-1. Find rotting stuff.
-2. Put small amount of rotting stuff in sealable bag.
-3. Mail back at my expense.
+    <p>The Andersen laboratory uses a Biosafety level 3 facility for the isolation of nematodes from foreign soil and
+      rotting plant debris. We have received APHIS permits (both international and interstate) which allow us to have
+      foreign samples shipped to Northwestern for processing. Please see our <a
+        href="http://andersenlab.org/files/USDA_SOP.pdf" target="_blank">standard operating procedure</a> for additional
+      information.</p>
 
-Download the full instructions [here](http://andersenlab.org/files/WormCollecting.pdf)
+    <div class="border-start border-secondary border-2 p-4 mt-5">
+      <h3 class="mb-3">Additional Protocols</h3>
+      <ul>
+        <li><a href="{{protocol_url}}">Sampling and Isolation of <em>C. elegans</em> from the Natural Habitat</a></li>
+      </ul>
+    </div>
 
-If you would like materials to collect your own nematodes, please fill out this [form]({{nematode_isolation_kit_form_url}}).
-
-
-The Andersen laboratory uses a Biosafety level 3 facility for the isolation of nematodes from foreign soil and rotting plant debris. We have received APHIS permits (both international and interstate) which allow us to have foreign samples shipped to Northwestern for processing. Please see our [standard operating procedure](http://andersenlab.org/files/USDA_SOP.pdf) for additional information.
-
-### Additional Protocols  ###
-* [Sampling and Isolation of _C. elegans_ from the Natural Habitat]({{protocol_url}})
-{% endfilter %}
-
-      <br></br>
-      </div>
-
-      <div class="col-md-4">
-        <br>
-        <a class="btn btn-nu btn-block" href="{{ url_for("request_strains.strains_submission_page") }}" role="button">Submit Strains</a>
-        </p>
-        <div class="thumbnail img-responsive">
-          <img src="{{ ext_asset('img/outreach/HappyPicking.jpg') }}" />
-        </div>
-
-        <div class="thumbnail img-responsive">
-          <img src="{{ ext_asset('img/outreach/SoManyApples.jpg') }}"  />
-         </div>
-
-        <div class="thumbnail img-responsive">
-          <img src="{{ ext_asset('img/outreach/Teamwork.jpg') }}"   />
-         </div>
-      </div>
+    <br></br>
   </div>
+
+  <div class="col-12 col-md-4 px-5">
+    <div id="carousel" class="carousel slide" data-bs-ride="true">
+      <div class="carousel-indicators">
+        <button type="button" data-bs-target="#carousel" data-bs-slide-to="0" class="active" aria-current="true"
+          aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#carousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+        <button type="button" data-bs-target="#carousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+      </div>
+      <div class="carousel-inner">
+        <div class="carousel-item active">
+          <img src="{{ ext_asset('img/outreach/SoManyApples.jpg') }}"
+            class="d-block w-100" alt="">
+        </div>
+        <div class="carousel-item">
+          <img src="{{ ext_asset('img/outreach/Teamwork.jpg') }}"
+            class="d-block w-100" alt="">
+        </div>
+        <div class="carousel-item">
+          <img src="{{ ext_asset('img/outreach/HappyPicking.jpg') }}"
+            class="d-block w-100" alt="">
+        </div>
+      </div>
+      <button class="carousel-control-prev" type="button" data-bs-target="#carousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#carousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+      </button>
+    </div>
+  </div>
+</div>
+<!-- /row -->
 {% endblock %}

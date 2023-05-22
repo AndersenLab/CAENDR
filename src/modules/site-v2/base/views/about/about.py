@@ -3,6 +3,7 @@
   and additional miscellaneous extra pages (e.g. getting started)
 """
 
+from math import isnan
 from flask import Blueprint, render_template
 from caendr.services.logger import logger
 
@@ -14,9 +15,10 @@ from extensions import cache
 from base.utils.statistics import cum_sum_strain_isotype, get_strain_collection_plot, get_mappings_summary_legacy, get_report_sumary_plot_legacy, get_weekly_visits_plot, get_num_registered_users
 
 from caendr.api.isotype import get_isotypes
+from caendr.models.datastore.species import SPECIES_LIST
+from caendr.models.datastore.profile import Profile
 from caendr.services.cloud.analytics import get_weekly_visits
 from caendr.services.publication import get_publications_html_df
-from caendr.services.profile import get_committee_profiles, get_staff_profiles, get_collaborator_profiles
 from caendr.utils.data import load_yaml
 
 
@@ -50,26 +52,26 @@ def getting_started():
 @about_bp.route('/people')
 @cache.memoize(60*60)
 def people():
-  '''
-    People
-  '''
-  title = "People"
-  disable_parent_breadcrumb = True
 
+  # Get all profiles
   profiles = {
-    'committee':     get_committee_profiles(),
-    'collaborators': get_collaborator_profiles(),
-    'staff':         get_staff_profiles(),
+    role.code: Profile.query_ds_roles( role ) for role in Profile.all_roles()
   }
 
   # Move director to top of staff list
-  for i, item in enumerate(profiles['staff']):
+  for i, item in enumerate(profiles[Profile.STAFF.code]):
     if hasattr(item, 'title') and item.title.lower() == 'director':
-      p = profiles['staff'].pop(i)
-      profiles['staff'].insert(0, p)
+      p = profiles[Profile.STAFF.code].pop(i)
+      profiles[Profile.STAFF.code].insert(0, p)
       break
 
-  return render_template('about/people.html', **locals())
+  return render_template('about/people.html', **{
+    'title': "People",
+    'disable_parent_breadcrumb': True,
+
+    'Profile': Profile,
+    'profiles': profiles,
+  })
 
 
 @about_bp.route('/funding')
@@ -90,8 +92,14 @@ def statistics():
   ##########################
   df = cum_sum_strain_isotype()
   try:
-    n_strains = max(df.strain)
-    n_isotypes = max(df.isotype)
+    n_strains = {
+      species_name: max(df[f'{species_name}_strain']) for species_name in SPECIES_LIST
+    }
+    n_strains = sum([ n for _, n in n_strains.items() if not isnan(n) ])
+    n_isotypes = {
+      species_name: max(df[f'{species_name}_isotype']) for species_name in SPECIES_LIST
+    }
+    n_isotypes = sum([ n for _, n in n_isotypes.items() if not isnan(n) ])
     strain_collection_plot = get_strain_collection_plot(df)
   except AttributeError:
     n_strains = 0

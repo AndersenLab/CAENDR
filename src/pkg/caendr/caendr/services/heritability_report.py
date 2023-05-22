@@ -1,10 +1,13 @@
 import os
+import io
+import pandas as pd
 
 from caendr.services.logger import logger
 
-from caendr.models.error import CachedDataError, DuplicateDataError, NotFoundError
+from caendr.models.error import NotFoundError, EmptyReportDataError, EmptyReportResultsError
 from caendr.models.datastore import HeritabilityReport
 
+from caendr.services.cloud.storage import get_blob, download_blob_as_dataframe
 from caendr.services.tools.submit import submit_job
 from caendr.utils.env import get_env_var
 
@@ -22,35 +25,28 @@ def get_heritability_report(id):
 
 
 
-def get_all_heritability_results():
-  logger.debug(f'Getting all heritability reports...')
-  results = HeritabilityReport.query_ds()
+def get_heritability_reports(username=None, filter_errs=False):
+  '''
+    Get a list of Heritability reports, sorted by most recent.
+
+    Args:
+      username (str | None):
+        If provided, only return reports owned by the given user.
+      filter_errs (bool):
+        If True, skips all entities that throw an error when initializing.
+        If False, populates as many fields of those entities as possible.
+  '''
+  # Filter by username if provided, and log event
+  if username:
+    logger.debug(f'Getting all heritability reports for user: username:{username}')
+    filters = [('username', '=', username)]
+  else:
+    logger.debug(f'Getting all heritability reports...')
+    filters = []
+
+  # Get list of reports and filter by date
+  results = HeritabilityReport.query_ds(safe=not filter_errs, ignore_errs=filter_errs, filters=filters)
   return HeritabilityReport.sort_by_created_date(results, reverse=True)
-
-
-
-def get_user_heritability_results(username):
-  logger.debug(f'Getting all heritability reports for user: username:{username}')
-  filters = [('username', '=', username)]
-  results = HeritabilityReport.query_ds(filters=filters)
-  return HeritabilityReport.sort_by_created_date(results, reverse=True)
-
-
-
-def create_new_heritability_report(user, data, no_cache=False):
-
-  try:
-    return submit_job(HeritabilityReport, user, data, no_cache=no_cache)
-
-  # If same job submitted by this user, redirect to that report
-  except DuplicateDataError as ex:
-    logger.debug('User resubmitted identical heritability report data')
-    raise ex
-
-  # If same job submitted by a different user, point new report to cached results
-  except CachedDataError as ex:
-    logger.debug('Heritability Report with identical Data Hash exists. Returning cached report.')
-    raise ex
 
 
 
@@ -59,7 +55,7 @@ def update_heritability_report_status(id: str, status: str=None, operation_name:
 
   h = HeritabilityReport.get_ds(id)
   if h is None:
-    raise NotFoundError(f'No Heritability Report with ID "{id}" was found.')
+    raise NotFoundError(HeritabilityReport, {'id': id})
 
   if status:
     h.set_properties(status=status)
@@ -68,3 +64,34 @@ def update_heritability_report_status(id: str, status: str=None, operation_name:
     
   h.save()
   return h
+
+
+
+def fetch_heritability_report(report):
+
+  data   = get_blob(report.get_bucket_name(), report.get_data_blob_path())
+  result = get_blob(report.get_bucket_name(), report.get_result_blob_path())
+
+  # If no submission file exists, return error
+  if data is None:
+    raise EmptyReportDataError(report.id)
+
+  # Parse data file
+  data = download_blob_as_dataframe(data)
+  data['AssayNumber'] = data['AssayNumber'].astype(str)
+  data['label'] = data.apply(lambda x: f"{x['AssayNumber']}: {x['Value']}", 1)
+  data = data.to_dict('records')
+
+  # Parse results file, if it exists
+  # If results file doesn't exist (yet), report is unfinished
+  # TODO: will get_blob always return None if empty?
+  if result:
+    result = download_blob_as_dataframe(result)
+
+    if result is None:
+      raise EmptyReportResultsError(report.id)
+
+    result = result.to_dict('records')[0]
+
+  # Return parsed data & result
+  return data, result

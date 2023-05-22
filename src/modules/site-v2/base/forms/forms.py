@@ -29,14 +29,14 @@ from wtforms.validators import (Required,
 from wtforms.fields.html5 import EmailField
 
 
-from constants import PRICES, SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS, REPORT_TYPES
+from constants import PRICES, SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS
 
 from caendr.services.profile import get_profile_role_form_options
 from caendr.services.user import get_user_role_form_options, get_local_user_by_email
 from caendr.services.database_operation import get_db_op_form_options
 from caendr.services.indel_primer import get_indel_primer_chrom_choices
 from caendr.services.markdown import get_content_type_form_options
-from caendr.models.datastore import User, SPECIES_LIST
+from caendr.models.datastore import User, SPECIES_LIST, DatasetRelease
 from caendr.api.strain import query_strains
 from base.forms.validators import (validate_duplicate_strain, 
                                    validate_duplicate_isotype, 
@@ -69,8 +69,9 @@ class SpeciesSelectField(SelectField):
   # Automatically validates that species choice is in this list
   CHOICES = [(name, value.short_name) for name, value in SPECIES_LIST.items()]
 
-  def __init__(self, **kwargs):
-    return super().__init__('Species:', id=SpeciesSelectField.elementId, choices=[ ('', "Choose"), *SpeciesSelectField.CHOICES ], **kwargs)
+  def __init__(self, exclude_species=[], **kwargs):
+    species_choices = [ x for x in SpeciesSelectField.CHOICES if x[0] not in exclude_species ]
+    return super().__init__('Species:', id=SpeciesSelectField.elementId, choices=[ ('', "Choose"), *species_choices ], **kwargs)
 
 
 class EmptyForm(FlaskForm):
@@ -87,8 +88,11 @@ class FileUploadForm(FlaskForm):
   label = StringField('Description:', validators=[Required(message='You must include a description of your data.')])
   file = FileField('Select file:', render_kw={'accept': '.tsv'})
 
-class HeritabilityForm(FileUploadForm):
-  pass
+# class HeritabilityForm(FileUploadForm):
+class HeritabilityForm(FlaskForm):
+  species = SpeciesSelectField(exclude_species=['c_briggsae', 'c_tropicalis'])
+  label = StringField('Description:', validators=[Required(message='You must include a description of your data.')])
+  file = FileField('Select file:', render_kw={'accept': '.tsv'})
 
 class MappingForm(FileUploadForm):
   pass
@@ -196,6 +200,7 @@ class AdminEditToolContainerVersion(FlaskForm):
   
 class DatasetReleaseForm(FlaskForm):
   """ A form for creating a data release """
+  REPORT_TYPES = [(report_type.name, report_type.name) for report_type in DatasetRelease.all_report_types]
   version = IntegerField('Dataset Release Version', validators=[Required(message="Dataset release version (as an integer) is required (ex: 20210121)")])
   wormbase_version = IntegerField('Wormbase Version WS:', validators=[Required(message="Wormbase version (as an integer) is required (ex: WS276 -> 276)")])
   report_type = SelectField('Report Type', choices=REPORT_TYPES, validators=[Required()])
@@ -244,9 +249,10 @@ class OrderForm(Form):
   phone = StringField('Phone', [Length(min=3, max=35)])
   shipping_service = SelectField('Shipping', choices=SHIPPING_OPTIONS)
   shipping_account = StringField('Account Number')
-  items = FieldList(HiddenField('item', [DataRequired()]))
   payment = SelectField("Payment", choices=PAYMENT_OPTIONS)
   comments = TextAreaField("Comments", [Length(min=0, max=300)])
+  version = StringField(HiddenField('version', [DataRequired()]))
+
   #recaptcha = RecaptchaField()
 
   def validate_shipping_account(form, field):
@@ -255,26 +261,6 @@ class OrderForm(Form):
       raise ValidationError("Please supply a shipping account number.")
     elif form.shipping_service.data == "Flat Rate Shipping" and field.data:
       raise ValidationError("No shipping account number is needed if you are using flat-rate shipping.")
-
-  def item_price(self):
-    """ Fetch item and its price """
-    for item in self.items:
-      if item.data == "set_divergent":
-        yield item.data, PRICES.DIVERGENT_SET
-      elif item.data.startswith("set"):
-        yield item.data, PRICES.STRAIN_SET
-      else:
-        yield item.data, PRICES.STRAIN
-    if self.shipping_service.data == "Flat Rate Shipping":
-      yield "Flat Rate Shipping", PRICES.SHIPPING
-
-  @property
-  def total(self):
-    """ Calculates the total price of the order """
-    total_price = 0
-    for item, price in self.item_price():
-      total_price += price
-    return total_price
 
 
 class TraitData(HiddenField):
@@ -337,5 +323,9 @@ class MappingSubmissionForm(Form):
                                       validate_missing_isotype,
                                       validate_strain_w_no_data,
                                       validate_data_exists])
+  
+
+class StrainListForm(Form):
+  species = SpeciesSelectField(validators=[Required()])
 
 

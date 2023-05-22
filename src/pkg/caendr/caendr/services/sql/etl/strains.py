@@ -4,18 +4,23 @@ from caendr.services.logger import logger
 from caendr.services.elevation import get_elevation
 from caendr.services.cloud.sheets import get_google_sheet
 from caendr.services.cloud.secret import get_secret
+from caendr.models.datastore import SPECIES_LIST
 from caendr.models.sql import Strain
 
-ANDERSEN_LAB_STRAIN_SHEET = [
-  get_secret('ANDERSEN_LAB_STRAIN_SHEET'),
+# Get list of Google Sheet IDs for each species
+# Expects secret names with prefix "ANDERSEN_LAB_STRAIN_SHEET_"
+# and species ID in all caps
+ANDERSEN_LAB_STRAIN_SHEETS = [
+  get_secret(f'ANDERSEN_LAB_STRAIN_SHEET_{species_name.upper()}')
+    for species_name in SPECIES_LIST
 ]
 
 elevation_cache = {}
 NULL_VALS = ["None", "", "NA", None]
 
-def load_strains(db): 
+def load_strains(db):
   logger.info('Loading strains...')
-  for sheet_id in ANDERSEN_LAB_STRAIN_SHEET:
+  for sheet_id in ANDERSEN_LAB_STRAIN_SHEETS:
     andersen_strains = fetch_andersen_strains(sheet_id)
     db.session.bulk_insert_mappings(Strain, andersen_strains)
     db.session.commit()

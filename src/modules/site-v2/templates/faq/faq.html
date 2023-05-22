@@ -1,0 +1,24 @@
+{% extends "_layouts/default.html" %}
+
+
+{% block content %}
+<div class="row">
+  <!-- Sidebar navigation that can be used if there are multiple pages added in this section on the future -->
+  <!-- <div class="col-12 col-md-3 mb-5">
+    <ul class="list-group mx-auto" style="width:75%;">
+      {% for f in files %}
+      <li class="list-group-item">
+        <a class="{% if f == filename %}active{% endif %}" href="{{ url_for('primary.help_item', filename = f) }}">
+          <strong>{{ f.replace("-", " ") }}</strong>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div> -->
+  <!-- /Sidebar navigation -->
+  <div class="col-12 col-md-9 px-5 mx-auto">
+    {{ render_markdown(filename + ".md", directory = "base/static/content/help/") }}
+  </div>
+</div>
+<!-- /Row -->
+{% endblock %}
