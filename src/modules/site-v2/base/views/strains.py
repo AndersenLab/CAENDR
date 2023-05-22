@@ -284,6 +284,7 @@ def order_page_index():
   if user and hasattr(user, 'email') and not form.email.data:
     form.email.data = user.email
   
+  flash(Markup("<strong>Please note:</strong> while the site is currently able to accept orders, orders will <u>not ship</u> until Fall 2023."), category="danger")
   title = "Order Summary"
 
   if not user and not cart_id:
