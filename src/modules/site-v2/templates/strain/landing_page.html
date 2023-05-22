@@ -2,54 +2,39 @@
 
 {% block content %}
 
-<style>
-    .card a {
-        text-decoration: none;
-        color: black
-    }
-    .container {
-        display: flex;
-        justify-content: center;
-    }
-    .card {
-        text-align: center;
-        width: 25rem;
-        margin: 2rem
-    }
-    @media only screen and (max-width: 770px) {
-        .container {
-            flex-direction: column;
-        }
-        .card {
-            width:auto
-        }
-    }
-</style>
-
-<div class="container-fluid">
+<div class="container px-5 pb-5">
     <h2 class="text-dark text-center">Please choose your affiliation:</h2>
-    <div class="container">
-        <div class="card py-5 shadow cardBorderBottom">
-            <a href="{{ url_for('request_strains.strains_catalog')}}">
+    <div class="row row-cols-1 row-cols-md-2 g-5">
+        <!-- Card Column -->
+        <div class="col mb-3">
+            <div class="card col-12 col-md-9 h-100 shadow text-center pt-5 mt-5 mx-auto cardBorderBottom" style="min-height:20rem;">
                 <i class="bi bi-book-fill text-info" aria-hidden="true"></i>
                 <div class="card-body">
-                    <h3 class="card-title text-dark text-center">Academia</h3>
-                    <p class="card-text">I am a researcher, post-doc, graduate student, undergraduate student, staff member, or other affiliate of a post-secondary educational institution.</p>
+                    <a class="stretched-link" href="{{ url_for('request_strains.strains_catalog')}}">
+                        <h3 class="card-title text-center">Academia</h3>
+                    </a>
+                    <p class="card-text">I am a researcher, post-doc, graduate student, undergraduate student, staff member, or
+                        other affiliate of a post-secondary educational institution.</p>
                 </div>
-            </a>
+            </div>
         </div>
-        <div class="card py-5 shadow cardBorderBottom">
-            <a href="https://nulive.technologypublisher.com/tech/The_Caenorhabditis_Natural_Diversity_Resource">
+        <!-- /Card Column -->
+        <!-- Card Column -->
+        <div class="col mb-3">
+            <div class="card col-12 col-md-9 h-100 shadow text-center pt-5 mt-5 mx-auto cardBorderBottom" style="min-height:20rem;">
                 <i class="bi bi-briefcase-fill text-info" aria-hidden="true"></i>
                 <div class="card-body">
-                    <h3 class="card-title text-dark text-center">Industry</h3>
+                    <a class="stretched-link" href="https://nulive.technologypublisher.com/tech/The_Caenorhabditis_Natural_Diversity_Resource" target="_blank">
+                        <h3 class="card-title text-center">Industry</h3>
+                    </a>
                     <p class="card-text">I work at a for-profit company or other organization that is not affiliated with post-secondary education.</p>
                 </div>
-            </a>
+            </div>
         </div>
-    </div>
-</div>
-
+        <!-- /Card Column -->
+        </div>
+        <!-- /Row -->
+</div> <!-- /Container -->  
 
 {% endblock %}
 
