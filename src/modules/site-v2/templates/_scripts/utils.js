@@ -26,10 +26,10 @@ function toggle_input(idOrEl, val) {
 function fetch_json(url) {
   return new Promise((resolve, reject) => {
     fetch(url).then(res => {
-      if (res.status == 404) {
-        reject(res);
-      } else {
+      if (res.status == 200) {
         resolve(res.json());
+      } else {
+        reject(res);
       }
     })
   })
