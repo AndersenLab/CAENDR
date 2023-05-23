@@ -376,7 +376,7 @@ function update_species(species_id) {
 
       // Clear all tracks & reload the divergent regions track
       clear_tracks();
-      fetch_json("{{ url_for('pairwise_indel_finder.get_tracks') }}")
+      fetch_json(`{{ url_for('pairwise_indel_finder.get_tracks') }}?species=${species.name}`)
         .then((divergent_track_summary) => {
           divergent_track_name = divergent_track_summary.name;
 
@@ -392,11 +392,14 @@ function update_species(species_id) {
         })
         .catch((err) => {
           // TODO: Better error handling
-          console.error("Failed to retrieve divergent regions track.", err);
+          console.error(`Failed to retrieve divergent regions track: ${err.status} (${err.statusText})`);
         })
 
       // Update browser tracks
-      update_browser_tracks(browser, results);
+      update_browser_tracks(browser, []);
+    })
+    .catch((err) => {
+      console.log('Failed to update strains: ', err);
     });
   });
 }

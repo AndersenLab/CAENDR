@@ -114,6 +114,15 @@ class TokenizedString():
         raise InvalidTokenError(key)
     return self
 
+  def set_tokens_from_species(self, species):
+    return self.set_tokens(**{
+      'SPECIES': species.name[2:],
+      'RELEASE': species['latest_release'],
+      'PRJ':     species['project_num'],
+      'WB':      species['wb_ver'],
+      'SVA':     species['sva_ver'],
+    })
+
 
 
   #

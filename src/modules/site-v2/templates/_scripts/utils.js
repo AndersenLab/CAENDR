@@ -24,7 +24,15 @@ function toggle_input(idOrEl, val) {
 
 
 function fetch_json(url) {
-  return fetch(url).then(res => res.json())
+  return new Promise((resolve, reject) => {
+    fetch(url).then(res => {
+      if (res.status == 404) {
+        reject(res);
+      } else {
+        resolve(res.json());
+      }
+    })
+  })
 }
 
 

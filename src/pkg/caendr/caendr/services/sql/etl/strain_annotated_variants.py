@@ -7,7 +7,7 @@ from sqlalchemy.sql.expression import null
 
 
 
-def parse_strain_variant_annotation_data(species, sva_fname: str):
+def parse_strain_variant_annotation_data(species, sva_fname: str, start_idx = 0):
   """
       Load strain variant annotation table data:
 
@@ -27,15 +27,19 @@ def parse_strain_variant_annotation_data(species, sva_fname: str):
           ["I",3782,"G","A",NA,NA,NA,NA,NA,NA,NA,"",NA,NA,NA,NA,NA,NA,NA,NA]
 
   """
-  logger.info('Parsing extracted strain variant annotation .csv file')
+  logger.info('Parsing extracted strain variant annotation TSV file')
+
+  column_header_map = {}
 
   # Loop through each line in the CSV file, indexed
   with open(sva_fname) as csv_file:
-    for idx, row in enumerate( csv.reader(csv_file, delimiter=',') ):
+    for idx, row in enumerate( csv.reader(csv_file, delimiter='\t') ):
 
       # First line is column names - don't interpret as data
+      # Create dict from header column names to row indices
       if idx == 0:
-        print(f'Column names are {", ".join(row)}')
+        logger.info(f'Column names in file "{sva_fname}" are: {", ".join(row)}')
+        column_header_map = { name: idx for idx, name in enumerate(row) }
         continue
 
       # If testing, finish early
@@ -47,8 +51,13 @@ def parse_strain_variant_annotation_data(species, sva_fname: str):
       if idx % 1000000 == 0:
         logger.debug(f"Processed {idx} lines")
 
+      # Map row to dict, using file headers as keys
+      row = {
+        header: row[column_header_map[header]] for header in column_header_map
+      }
+
       target_consequence = None
-      consequence = row[4] if row[4] else None
+      consequence = row.get('CONSEQUENCE')
       alt_target = re.match('^@[0-9]*$', consequence)
       if alt_target:
         target_consequence = int(consequence[1:])
@@ -56,32 +65,56 @@ def parse_strain_variant_annotation_data(species, sva_fname: str):
 
       # Yield the row as a dict
       yield {
-        'id': idx,
-        'chrom': row[0],
-        'pos': int(row[1]) if row[1] else None,
-        'ref_seq': row[2] if row[2] else None,
-        'alt_seq': row[3] if row[3] else None,
-        'consequence': consequence,
+        'id':                 start_idx + idx,
+        'species_name':       species.name,
+        'chrom':              row['CHROM'],
+        'pos':                get_row(row, 'POS', map=int),
+        'ref_seq':            row.get('REF'),
+        'alt_seq':            row.get('ALT'),
+        'consequence':        consequence,
         'target_consequence': target_consequence,
-        'gene_id': row[5] if (row[5] and row[5] != "NA") else None,
-        'transcript': row[6] if row[6] else None,
-        'biotype': row[7] if row[7] else None,
+        'gene_id':            get_row(row, 'WORMBASE_ID', nullable=True),
+        'transcript':         row.get('TRANSCRIPT'),
+        'biotype':            row.get('BIOTYPE'),
 
         # strand takes a single character in the SQL schema, and can be nullable. Convert R's NA to NULL
-        'strand': row[8] if (row[8] and row[8] != "NA") else None,
+        'strand':             get_row(row, 'STRAND', nullable=True),
 
-        'amino_acid_change': row[9] if row[9] else None,
-        'dna_change': row[10] if row[10] else None,
-        'strains': row[11] if row[11] else None,
-        'blosum': int(row[12]) if (row[12] and row[12] != "NA") else None,
-        'grantham': int(row[13]) if (row[13] and row[13] != "NA") else None,
-        'percent_protein': float(row[14]) if (row[14] and row[14] != "NA") else None,
-        'gene': row[15] if row[15] else None,
-        'variant_impact': row[16] if row[16] else None,
-        'snpeff_impact': row[17] if row[17] else None,
-        'divergent': True if row[18] == 'D' else False,
-        'release': row[19] if row[19] else None
+        'amino_acid_change':  row.get('AMINO_ACID_CHANGE'),
+        'dna_change':         row.get('DNA_CHANGE'),
+        'strains':            row.get('Strains'),
+        'blosum':             get_row(row, 'BLOSUM',          nullable=True, map=int),
+        'grantham':           get_row(row, 'Grantham',        nullable=True, map=int),
+        'percent_protein':    get_row(row, 'Percent_Protein', nullable=True, map=float),
+        'gene':               row.get('GENE'),
+        'variant_impact':     row.get('VARIANT_IMPACT'),
+        'divergent':          row.get('DIVERGENT') == 'D',
+        'release':            row.get('RELEASE'),
       }
 
   # In Python, loop vars maintain their final value after the loop ends
-  print(f'Processed {idx} lines.')
+  print(f'Processed {idx} lines total for {species.name}')
+
+
+def get_row(row, key, nullable=False, map=None):
+  '''
+    Get a column value from a row.
+
+    Arguments:
+      row (dict): The row as a dict.
+      key: The key to lookup in the row.
+      nullable (bool): Whether values in this row can be null ('NA'). Converts null values to None.
+      map (func): A mapping function to apply to all non-null values.
+  '''
+  val = row.get(key)
+
+  # Return early if value is null
+  # Maps R's 'NA' value to None, if applicable
+  if val is None or (nullable and val == 'NA'):
+    return None
+
+  # If mapping function provided and val exists, apply it
+  if map is not None:
+    return map(val)
+
+  return val

@@ -43,7 +43,7 @@ def load_table(self, db, table, generator, fetch_funcs):
         filenames = [ fetch(name) for fetch in fetch_funcs ]
 
         # Load gene table data
-        db.session.bulk_insert_mappings(table, generator(species, *filenames))
+        db.session.bulk_insert_mappings(table, generator(species, *filenames, start_idx=table.query.count()))
         db.session.commit()
 
     # Print how many entries were added
