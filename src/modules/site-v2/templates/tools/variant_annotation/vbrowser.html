@@ -133,7 +133,7 @@
                     checked />
                   <strong><label id="toggle_all_strains_label" for="toggle_all_strains"> Select All </label></strong>
                 </div>
-                <table class="table table-striped table-hover">
+                <table id="vbrowser-strain-list-table" class="table table-striped table-hover">
                   <caption class="visually-hidden">A list of strains.</caption>
                   <tbody>
                     {% call(species, strain) list_strains(species_list, strain_listing) %}
@@ -302,7 +302,7 @@ function update_species(species_id) {
   clear_interval_search();
 
   // Show only strains matching current species
-  filter_strains(species_id)
+  filter_strains('#vbrowser-strain-list-table', species_id)
 
   // Update selected strains set to match selections for current species
   update_selected_strains();
@@ -712,7 +712,7 @@ $(document).ready(function() {
 
     /* Strain search */
     $('#strain-filter').keyup(function() {
-        filter_strains(species['name'], $(this).val().split(','))
+        filter_strains('#vbrowser-strain-list-table', species['name'], $(this).val().split(','))
     });
 
     /* Filter by impact */
