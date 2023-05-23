@@ -46,13 +46,6 @@ locals {
     "pub_sub_subscription_name" = var.MODULE_API_PIPELINE_TASK_PUB_SUB_SUBSCRIPTION_NAME
   })
 
-  module_gene_browser_tracks_vars = tomap({
-    "container_name" = var.MODULE_GENE_BROWSER_TRACKS_CONTAINER_NAME,
-    "container_version" = var.MODULE_GENE_BROWSER_TRACKS_CONTAINER_VERSION,
-    "task_queue_name" = var.MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME
-  })
-
-
   cloud_secret_vars = tomap({
     "ANDERSEN_LAB_STRAIN_SHEET" = sensitive(var.ANDERSEN_LAB_STRAIN_SHEET), 
     "ANDERSEN_LAB_ORDER_SHEET" = sensitive(var.ANDERSEN_LAB_ORDER_SHEET), 
