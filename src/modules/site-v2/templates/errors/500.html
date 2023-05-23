@@ -1,28 +1,9 @@
-{% extends "_layouts/clean.html" %}
+{% extends "_layouts/default.html" %}
 
-{% block title %}Site Unavailable{% endblock %}
+{% block title %}Internal Server Error{% endblock %}
 
 {% block content %}
-
-<div id="snackbar">
-  <div id="messages">
-  {% for category, msg in get_flashed_messages(with_categories=true) %}
-    <div class="flash-{{ category }} alert alert-dismissable alert-{{ category }} flash-banner">
-      <p class="snackbar-msg-txt snackbar-msg-txt-{{ category }}">{{ msg }}</p>
-    </div>
-  {% endfor %}
-  </div>
-</div>
-
-<div class="row justify-content-center">
-    <div class="col-md-9">
-      <br />
-      <p class="text-center"><img src="/static/img/caeNDRLogo.png" alt="CaeNDR Logo" class="img-responsive mb-5"
-          style="max-width:175px; height: auto;" /></p>
-      <div class="d-grid gap-3">
-        <h1 class="display-1 fw-normal mb-5">Sorry, CaeNDR is currently unavailable.</h1>
-        <p class="lead">We apologize for the inconvenience. Please try again later.</p>
-      </div>
-    </div>
-  </div>
+  <h1 class="display-1 fw-normal mb-5">Internal Server Error 😔</h1>
+  <p class="lead">Sorry, we're having some problems.</p>
+  <p class="lead">Instead, look at all these <a href="/">worms</a>!</p>
 {% endblock %}
