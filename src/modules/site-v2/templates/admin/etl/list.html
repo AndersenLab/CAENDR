@@ -86,7 +86,7 @@
               </a>
             </td>
             <td class='text-center'>
-              {% if ops['id'] %}
+              {% if ops.get('id') %}
               <a href="{{ url_for('admin_etl_op.view_op', id=ops['id']) }}">View</a>
               {% else %}
               -
