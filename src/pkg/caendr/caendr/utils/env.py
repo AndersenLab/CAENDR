@@ -1,5 +1,6 @@
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, dotenv_values
+from string import Template
 
 from caendr.services.logger import logger
 from caendr.utils.tokens import TokenizedString
@@ -28,6 +29,10 @@ def load_env(dotenv_file='.env'):
   # If load fails, propagate the original error wrapped in an EnvLoadError
   except Exception as ex:
     raise EnvLoadError(dotenv_file, source=ex)
+
+
+def list_env_vars(env_file='.env'):
+  return dotenv_values(env_file)
 
 
 
@@ -73,6 +78,10 @@ def convert_env_bool(val: str):
   if val and val.lower() == 'true':
     return True
   return False
+
+
+def convert_env_template(val):
+  return Template(val.replace('{', '${'))
 
 
 

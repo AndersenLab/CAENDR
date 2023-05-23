@@ -1,13 +1,12 @@
 # Application Configuration
 import os
 from re import U
-from dotenv import dotenv_values
 from caendr.services.logger import logger
 
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.postgresql import get_db_conn_uri, get_db_timeout, health_database_status
 from caendr.utils.json import json_encoder
-from caendr.utils.env  import convert_env_bool
+from caendr.utils.env  import list_env_vars, convert_env_bool, convert_env_template
 
 SECRETS_IDS = [
   'ANDERSEN_LAB_STRAIN_SHEET',
@@ -41,18 +40,24 @@ BOOL_PROPS = [
   'JWT_CSRF_CHECK_FORM'
 ]
 
+TEMPLATE_PROPS = []
+
 def get_config():
   ''' Load configuration data from environment variables and the cloud secret store '''
   config = dict()
 
   # Load environment config values
-  config.update(dotenv_values('.env'))
-  
+  config.update(list_env_vars('.env'))
+
   config['PERMANENT_SESSION_LIFETIME'] = int(config.get('PERMANENT_SESSION_LIFETIME', '86400'))
-  
+
   for prop in BOOL_PROPS:
     config[prop] = convert_env_bool(config.get(prop))
-  
+
+  for prop in TEMPLATE_PROPS:
+    if config.get(prop):
+      config[prop] = convert_env_template(config.get(prop))
+
   config['CAENDR_VERSION'] = f"{config['MODULE_NAME']}-{config['MODULE_VERSION']}"
   config['JWT_TOKEN_LOCATION'] = ['cookies', 'json', 'headers']
 
