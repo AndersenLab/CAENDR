@@ -66,7 +66,11 @@ def get_config():
 
   config['SQLALCHEMY_DATABASE_URI'] = get_db_conn_uri()
   if not os.getenv("MODULE_DB_OPERATIONS_CONNECTION_TYPE") == 'file':
-    config['SQLALCHEMY_ENGINE_OPTIONS'] = { "pool_pre_ping": True, "pool_recycle": 300 }
+    config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+      "pool_pre_ping": True,
+      "pool_recycle": 300,
+      "pool_reset_on_return": 'commit',
+    }
     config['SQLALCHEMY_POOL_TIMEOUT'] = get_db_timeout()
 
   # Load secret config values

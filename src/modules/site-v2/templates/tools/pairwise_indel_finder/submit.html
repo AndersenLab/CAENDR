@@ -399,7 +399,7 @@ function update_species(species_id) {
       update_browser_tracks(browser, []);
     })
     .catch((err) => {
-      console.log('Failed to update strains: ', err);
+      console.error('Failed to update strains: ', err);
     });
   });
 }

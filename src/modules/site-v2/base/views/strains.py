@@ -154,12 +154,24 @@ def isotype_page(isotype_name, release=None):
 @cache.memoize(60*60)
 def strains_catalog():
     flash(Markup("<strong>Please note:</strong> while the site is currently accepting orders, orders will <u>not ship</u> until Fall 2023."), category="danger")
-    title = "Strain Catalog"
-    warning = request.args.get('warning')
-    strain_listing = get_strains()
-    strain_sets = get_strain_sets()
-    form = StrainListForm(request.form)
-    return render_template('strain/catalog.html', **locals())
+
+    try:
+      strain_listing = get_strains()
+    except Exception:
+      strain_listing = []
+    try:
+      strain_sets = get_strain_sets()
+    except Exception:
+      strain_sets = {}
+
+    return render_template('strain/catalog.html', **{
+      'title': "Strain Catalog",
+      'warning': request.args.get('warning'),
+      'form': StrainListForm(request.form),
+
+      'strain_listing': strain_listing,
+      'strain_sets':    strain_sets,
+    })
 
 #
 # Strain Ordering Pages

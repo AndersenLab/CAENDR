@@ -12,17 +12,21 @@ primary_bp = Blueprint('primary', __name__)
 @cache.memoize(60*60)
 def primary():
   ''' Site home page '''
-  page_title = "Caenorhabditis elegans Natural Diversity Resource"
-  strains = get_strains()
+
+  try:
+    strain_listing = [ strain.to_json() for strain in get_strains() ]
+  except Exception:
+    strain_listing = []
+
   # TODO: make news dynamic
   #files = sorted_files("base/static/content/news/")
-  VARS = {
-    'page_title': page_title,
+
+  return render_template('primary/home.html', **{
+    'page_title': 'Caenorhabditis elegans Natural Diversity Resource',
     #'files': files,
     'fluid_container': True,
-    'strain_listing': [strain.to_json() for strain in strains]
-  }
-  return render_template('primary/home.html', **VARS)
+    'strain_listing': strain_listing,
+  })
 
 
 @primary_bp.route("/Software")
