@@ -80,8 +80,10 @@ def get_all_containers():
   if not heritability._exists:
     heritability = create_default_container_version(HERITABILITY_CONTAINER_NAME)
     heritability.save()
-  
-  db_operations = create_default_container_version(MODULE_DB_OPERATIONS_CONTAINER_NAME, repo=GCR_REPO_NAME, tag=MODULE_DB_OPERATIONS_CONTAINER_VERSION)
+
+  db_operations = Container(MODULE_DB_OPERATIONS_CONTAINER_NAME)
+  if not db_operations._exists:
+    db_operations = create_default_container_version(MODULE_DB_OPERATIONS_CONTAINER_NAME, repo=GCR_REPO_NAME, tag=MODULE_DB_OPERATIONS_CONTAINER_VERSION)
 
   return [nemascan_nxf, indel_primer, heritability, db_operations]
 
