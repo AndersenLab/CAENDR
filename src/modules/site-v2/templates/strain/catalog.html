@@ -337,7 +337,6 @@
                 set_alert(`The following strain(s) were not found ${lost_strains.join(", ")}`)
             }
             
-            filtered_by_species.show()
             filtered_by_species.sort(function(a, b) {
                 var value1 = $(a).find('td > input:checkbox').is(":checked")
                 var value2 = $(b).find('td > input:checkbox').is(":checked")
@@ -347,6 +346,7 @@
                 $('#indStrainsTable > tbody').append(row)
             })
             $('#checkoutBox').prop('disabled', !$("input:checkbox").is(":checked"));
+            filtered_by_species.show()
         })
 
         $('#downloadData').click(function() {
