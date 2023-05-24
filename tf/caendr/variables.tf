@@ -26,6 +26,7 @@ variable "MODULE_API_PIPELINE_TASK_PUB_SUB_SUBSCRIPTION_NAME" { }
 
 # Site Module Variables
 variable "MODULE_SITE_CONTAINER_NAME" { type = string }
+variable "MODULE_SITE_CLOUDRUN_SA_NAME" { type = string }
 variable "MODULE_SITE_CONTAINER_VERSION" { type = string}
 variable "MODULE_SITE_SERVING_STATUS" { type = bool }
 variable "MODULE_SITE_BUCKET_ASSETS_NAME" { type = string }

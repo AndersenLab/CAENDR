@@ -14,6 +14,7 @@ locals {
 
   module_site_vars = tomap({
     "container_name" = var.MODULE_SITE_CONTAINER_NAME,
+    "cloudrun_site_sa_name" = var.MODULE_SITE_CLOUDRUN_SA_NAME,
     "container_version" = var.MODULE_SITE_CONTAINER_VERSION,
     "serving_status" = var.MODULE_SITE_SERVING_STATUS,
     "bucket_public_name" = var.MODULE_SITE_BUCKET_PUBLIC_NAME,

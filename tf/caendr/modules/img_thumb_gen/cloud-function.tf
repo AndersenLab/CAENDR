@@ -32,5 +32,5 @@ resource "google_cloudfunctions_function" "generate_thumbnails" {
 }
 
 resource "time_sleep" "wait_30_seconds" {
-  create_duration = "30s"
+  create_duration = "15s"
 }

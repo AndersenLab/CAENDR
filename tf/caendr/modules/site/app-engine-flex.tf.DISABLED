@@ -110,7 +110,7 @@ resource "google_app_engine_service_split_traffic" "site_traffic" {
 }
 
 resource "time_sleep" "wait_app_engine_start" {
-  create_duration = "300s"
+  create_duration = "30s"
 
   depends_on = [
     google_app_engine_flexible_app_version.site
