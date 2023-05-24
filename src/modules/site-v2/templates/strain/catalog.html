@@ -330,11 +330,14 @@
                     lost_strains.push(pastedStrains[i])
                 }
             }
-            $("#copyPasteStrains").val('')
+            $("#copyPasteStrains, #search").val('')
+
+
             if (lost_strains.length > 0) {
                 set_alert(`The following strain(s) were not found ${lost_strains.join(", ")}`)
             }
-
+            
+            filtered_by_species.show()
             filtered_by_species.sort(function(a, b) {
                 var value1 = $(a).find('td > input:checkbox').is(":checked")
                 var value2 = $(b).find('td > input:checkbox').is(":checked")
