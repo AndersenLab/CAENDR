@@ -49,7 +49,7 @@ def drop_and_populate_wormbase_genes(app, db, species_list):
   logger.info(f'Dropping and populating wormbase genes. Species list: [ {", ".join(spec_strings)} ]')
 
   # Initialize ETL Manager
-  etl_manager = ETLManager(species_list)
+  etl_manager = ETLManager(species_list, reload_files=True)
 
   # Drop relevant tables
   logger.info(f"Dropping tables...")
@@ -74,7 +74,7 @@ def drop_and_populate_strain_annotated_variants(app, db, species_list):
   logger.info(f'Dropping and populating strain annotated variants. Species list: [ {", ".join(spec_strings)} ]')
 
   # Initialize ETL Manager
-  etl_manager = ETLManager(species_list)
+  etl_manager = ETLManager(species_list, reload_files=True)
 
   # Drop relevant table
   logger.info(f"Dropping table...")
@@ -93,7 +93,7 @@ def drop_and_populate_all_tables(app, db, species_list):
   logger.info(f'Dropping and populating all tables. Species list: [ {", ".join(spec_strings)} ]')
 
   logger.info("[1/6] Downloading databases...eta ~0:15")
-  etl_manager = ETLManager(species_list)
+  etl_manager = ETLManager(species_list, reload_files=True)
 
   logger.info("[2/6] Dropping tables...eta ~0:01")
   drop_tables(app, db)

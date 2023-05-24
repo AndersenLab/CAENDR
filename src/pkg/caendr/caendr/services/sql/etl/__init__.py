@@ -6,7 +6,7 @@ from caendr.services.sql.dataset import DatasetManager
 
 class ETLManager:
 
-    def __init__(self, species_list, reload_files: bool = False,):
+    def __init__(self, species_list, reload_files: bool = False):
         self.dataset_manager = DatasetManager(species_list=species_list, reload_files=reload_files)
 
     def prefetch_all_dbs(self, use_cache: bool = True):
