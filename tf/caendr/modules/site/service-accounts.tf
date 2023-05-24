@@ -44,7 +44,10 @@ locals {
     "roles/secretmanager.secretAccessor",
     "roles/storage.admin",
     "roles/cloudsql.client",
-    "roles/datastore.user"
+    "roles/datastore.user",
+    "roles/cloudtasks.admin",
+    "roles/compute.viewer",
+    "roles/artifactregistry.admin"
   ] )
 }
 
