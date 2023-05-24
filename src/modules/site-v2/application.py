@@ -6,13 +6,14 @@ from datetime import datetime
 from caendr.services.logger import logger
 from flask import Flask, render_template, request
 from flask_wtf.csrf import CSRFProtect
+from sqlalchemy import exc
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.exceptions import HTTPException
 
 from config import config
 import pytz
 
-from caendr.services.cloud.postgresql import health_database_status
+from caendr.services.cloud.postgresql import db, health_database_status
 from base.utils.markdown import render_markdown, render_ext_markdown
 
 
@@ -277,7 +278,13 @@ def configure_jinja(app):
 
 def register_errorhandlers(app):
   def render_error(e="generic"):
-    return render_template("errors/%s.html" % e.code), e.code
+    try:
+      return render_template("errors/%s.html" % e.code), e.code
+    except:
+      try:
+        return render_template("errors/%s.html" % e), e
+      except:
+        return render_template(f"errors/{requests.codes.INTERNAL_SERVER_ERROR}.html"), requests.codes.INTERNAL_SERVER_ERROR
 
   for e in [
     requests.codes.INTERNAL_SERVER_ERROR,
@@ -287,3 +294,19 @@ def register_errorhandlers(app):
     app.errorhandler(e)(render_error)
 
   app.register_error_handler(HTTPException, render_error)
+
+  def handle_db_exceptions(err):
+    logger.error(f'Caught SQLAlchemy Error: {err}')
+    try:
+      logger.error('Rolling back session...')
+      db.session.rollback()
+    except Exception as rollback_err:
+      logger.error(f'Exception rolling back session: {rollback_err}')
+    try:
+      logger.error('Closing session...')
+      db.session.close()
+    except Exception as close_err:
+      logger.error(f'Exception closing session: {close_err}')
+    return render_error(requests.codes.INTERNAL_SERVER_ERROR)
+
+  app.register_error_handler(exc.SQLAlchemyError, handle_db_exceptions)
