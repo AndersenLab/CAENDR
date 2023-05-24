@@ -116,6 +116,8 @@ def create_app(config=config):
   configure_jinja(app)
   configure_ssl(app)
 
+  # app.teardown_request(close_active_connections)
+
   db_connection_status, db_test_output = health_database_status()
   logger.info(f"Database Connection: { 'OK' if db_connection_status else 'Error' }. {db_test_output}")
 
@@ -310,3 +312,21 @@ def register_errorhandlers(app):
     return render_error(requests.codes.INTERNAL_SERVER_ERROR)
 
   app.register_error_handler(exc.SQLAlchemyError, handle_db_exceptions)
+
+
+# def close_active_connections(err):
+#   # from sqlalchemy.orm import close_all_sessions
+
+#   # # If the request threw an error, roll back the session
+#   # if err is not None:
+#   #   logger.error(f'Teardown Request Exception: {err}')
+#   #   try:
+#   #     db.session.rollback()
+#   #   except Exception as rollback_err:
+#   #     logger.error(f'Exception rolling back session: {rollback_err}')
+
+#   try:
+#     # close_all_sessions()
+#     db.session.remove()
+#   except Exception as db_err:
+#     logger.error(f'Exception closing sessions: {db_err}')
