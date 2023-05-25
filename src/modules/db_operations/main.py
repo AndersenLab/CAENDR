@@ -1,10 +1,7 @@
-import os
 from re import T
 import traceback
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask
-from caendr.services.logger import logger
-from dotenv import load_dotenv
 from caendr.services.logger import logger
 import time
 import json
@@ -13,26 +10,26 @@ from caendr.models.datastore.database_operation import DatabaseOperation
 from caendr.utils import monitor
 from google.cloud import storage
 
-dotenv_file = '.env'
-load_dotenv(dotenv_file)
+from caendr.utils.env import load_env, get_env_var
+load_env('.env')
 
 monitor.init_sentry("db_operations")
 
 from caendr.services.cloud.postgresql import get_db_conn_uri, get_db_timeout, db, health_database_status
-from caendr.models.error import EnvVarError
 from operations import execute_operation
 
-MODULE_DB_OPERATIONS_BUCKET_NAME = os.environ.get('MODULE_DB_OPERATIONS_BUCKET_NAME')
-ETL_LOGS_BUCKET_NAME = os.environ.get('ETL_LOGS_BUCKET_NAME')
-EXTERNAL_DB_BACKUP_PATH = os.environ.get('EXTERNAL_DB_BACKUP_PATH')
-DB_OP = os.environ.get('DATABASE_OPERATION')
-EMAIL = os.environ.get('EMAIL', None)
-OPERATION_ID = os.environ.get('OPERATION_ID', None)
+
+# Load environment variables
+MODULE_DB_OPERATIONS_BUCKET_NAME = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
+ETL_LOGS_BUCKET_NAME             = get_env_var('ETL_LOGS_BUCKET_NAME')
+EXTERNAL_DB_BACKUP_PATH          = get_env_var('EXTERNAL_DB_BACKUP_PATH')
+DB_OP                            = get_env_var('DATABASE_OPERATION')
+EMAIL                            = get_env_var('EMAIL',        can_be_none=True)
+OPERATION_ID                     = get_env_var('OPERATION_ID', can_be_none=True)
 
 client = storage.Client()
 
-if not DB_OP or not MODULE_DB_OPERATIONS_BUCKET_NAME or not EXTERNAL_DB_BACKUP_PATH:
-  raise EnvVarError()
+
 
 def etl_operation_append_log(message = ""):
   if OPERATION_ID is None:
@@ -65,9 +62,9 @@ logger.info('Initializing Flask App')
 app = Flask(__name__)
 app.app_context().push()
 app.config['SQLALCHEMY_DATABASE_URI'] = get_db_conn_uri()
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = os.environ.get('SQLALCHEMY_TRACK_MODIFICATIONS', 'False').lower() == 'true'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = get_env_var('SQLALCHEMY_TRACK_MODIFICATIONS', False, var_type=bool)
 
-if not os.getenv("MODULE_DB_OPERATIONS_CONNECTION_TYPE"):
+if not get_env_var("MODULE_DB_OPERATIONS_CONNECTION_TYPE", can_be_none=True):
   app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     "pool_pre_ping": True,
     "pool_recycle": 300,
@@ -81,7 +78,7 @@ db.init_app(app)
 
 def run():
   start = time.perf_counter()
-  use_mock_data = os.getenv('USE_MOCK_DATA', False)
+  use_mock_data = get_env_var('USE_MOCK_DATA', False, var_type=bool)
   text = ""
 
   try:
@@ -89,12 +86,12 @@ def run():
     text = text + f"\n\nStatus: OK"
     text = text + f"\nOperation: {DB_OP}"
     text = text + f"\nOperation ID: {OPERATION_ID}"
-    text = text + f"\nEnvironment: { os.getenv('ENV', 'n/a') }"
+    text = text + f"\nEnvironment: { get_env_var('ENV', 'n/a') }"
   except Exception as e:
     text = text + f"\nStatus: ERROR"
     text = text + f"\nOperation: {DB_OP}"
     text = text + f"\nOperation ID: {OPERATION_ID}"
-    text = text + f"\nEnvironment: { os.getenv('ENV', 'n/a') }"
+    text = text + f"\nEnvironment: { get_env_var('ENV', 'n/a') }"
     text = text + f"\n\nError: {e}\n{traceback.format_exc()}"
     logger.error(text)
 

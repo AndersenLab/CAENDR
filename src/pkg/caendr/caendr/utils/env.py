@@ -65,6 +65,8 @@ def get_env_var(key, value=None, can_be_none=False, as_template=False, var_type=
   
   if var_type == int:
     v = int(v)
+  elif var_type == bool and not isinstance(v, bool):
+    v = convert_env_bool(v)
 
   # Return the value
   return v
