@@ -45,7 +45,7 @@ def start_db_op_pipeline(task: DatabaseOperationTask):
 def _generate_db_op_pipeline(task: DatabaseOperationTask):
   d = DatabaseOperation(task.id)
   image_uri = f"{task.container_repo}/{task.container_name}:{task.container_version}"
-  
+
   container_name = f"db-op-{d.id}"
   environment = task.args
   environment['DATABASE_OPERATION'] = task.db_operation
@@ -53,7 +53,12 @@ def _generate_db_op_pipeline(task: DatabaseOperationTask):
   environment['EMAIL'] = task.email if task.email else None
   environment['OPERATION_ID'] = d.id
   environment['TASK_ID'] = task.id
-  
+
+  if task.args.get('SPECIES_LIST'):
+    environment['SPECIES_LIST'] = ';'.join(task.args['SPECIES_LIST'])
+  else:
+    environment['SPECIES_LIST'] = None
+
 
   service_account = ServiceAccount(email=sa_email, scopes=SCOPES)
   virtual_machine = VirtualMachine(machine_type=MACHINE_TYPE, preemptible=PREEMPTIBLE, boot_disk_size_gb=BOOT_DISK_SIZE_GB, 

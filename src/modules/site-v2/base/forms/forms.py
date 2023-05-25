@@ -184,8 +184,7 @@ class AdminCreateDatabaseOperationForm(FlaskForm):
   _ops = get_db_op_form_options()
   
   db_op = SelectField('Database Operation', choices=_ops, validators=[Required()])
-  wormbase_version = IntegerField('Wormbase Version WS (ex: 276 -> WS276):', validators=[Optional()])
-  sva_version = IntegerField('Strain Variant Annotation Version (ex: 20210401 -> gs://caendr-db-bucket/strain_variant_annotation/c_elegans/WI.strain-annotation.bcsq.20210401.csv.gz)', validators=[Optional()])
+  species = MultiCheckboxField('Species', choices=[(key, val.short_name) for key, val in SPECIES_LIST.items()])
   note = StringField('Notes', [Optional(), Length(min=3, max=200)])
 
 
