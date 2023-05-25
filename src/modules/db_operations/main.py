@@ -80,7 +80,7 @@ def run():
   start = time.perf_counter()
   use_mock_data = get_env_var('USE_MOCK_DATA', False, var_type=bool)
 
-  species = get_env_var('MODULE_DB_OPERATIONS_SPECIES_LIST', can_be_none=True)
+  species = get_env_var('SPECIES_LIST', can_be_none=True)
   if species is not None:
     species = [ s.strip() for s in species.split(';') if len(s.strip()) > 0 ]
   species_string = f"[{', '.join(species)}]" if species is not None else 'all'
