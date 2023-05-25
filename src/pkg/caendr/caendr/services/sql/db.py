@@ -73,6 +73,7 @@ def drop_tables(app, db, species=None, tables=None):
     else:
       logger.info(f'Dropping species [{", ".join(species)}] from tables: {tables}')
 
+    db.metadata.create_all(bind=db.engine, tables=tables)
     for table in tables:
       for species_name in species:
         del_statement = table.delete().where(table.c.species_name == species_name)
