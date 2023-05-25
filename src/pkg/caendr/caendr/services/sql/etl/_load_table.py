@@ -13,7 +13,7 @@ from .strain_annotated_variants import parse_strain_variant_annotation_data
 
 ## Generic Table ##
 
-def load_table(self, db, table, generator, fetch_funcs):
+def load_table(self, db, table, generator, fetch_funcs, species=None):
     '''
       Generalized function to extract information from one or more downloaded files and load them into
       the CaeNDR database.  Specifically, calls 'fetch_funcs' to generate a list of local filenames,
@@ -31,19 +31,26 @@ def load_table(self, db, table, generator, fetch_funcs):
         fetch_funcs (list): [
             A list of functions that each take a species name and return the name of a local file.
         ]
+        species (list, optional): [
+            List of species to parse data for. If not provided, loads all species.
+        ]
     '''
 
     # Initialize a count for the number of entries added
     initial_count = table.query.count()
 
     # Loop through the name & Species object for each species
-    for name, species in self.species_list.items():
+    for species_name, species_obj in self.species_list.items():
+
+        # Skip any species not in the list
+        if species and species_name not in species:
+            continue
 
         # Fetch relevant dataset(s) and append '.gz' to the names
-        filenames = [ fetch(name) for fetch in fetch_funcs ]
+        filenames = [ fetch(species_name) for fetch in fetch_funcs ]
 
         # Load gene table data
-        db.session.bulk_insert_mappings(table, generator(species, *filenames, start_idx=table.query.count()))
+        db.session.bulk_insert_mappings(table, generator(species_obj, *filenames, start_idx=table.query.count()))
         db.session.commit()
 
     # Print how many entries were added
@@ -66,7 +73,8 @@ def load_genes_summary(self, db, species=None):
         db,
         table       = WormbaseGeneSummary,
         generator   = parse_gene_gff_summary,
-        fetch_funcs = [ self.dataset_manager.fetch_gene_gff_db ]
+        fetch_funcs = [ self.dataset_manager.fetch_gene_gff_db ],
+        species     = species
     )
 
 
@@ -82,7 +90,8 @@ def load_genes(self, db, species=None):
         db,
         table       = WormbaseGene,
         generator   = parse_gene_gtf,
-        fetch_funcs = [ self.dataset_manager.fetch_gene_gtf_db, self.dataset_manager.fetch_gene_ids_db ]
+        fetch_funcs = [ self.dataset_manager.fetch_gene_gtf_db, self.dataset_manager.fetch_gene_ids_db ],
+        species     = species
     )
     # Print a summary of the new table
     results = db.session.query(WormbaseGene.feature, db.func.count(WormbaseGene.feature)) \
@@ -136,5 +145,6 @@ def load_strain_annotated_variants(self, db, species=None):
         db,
         table       = StrainAnnotatedVariant,
         generator   = parse_strain_variant_annotation_data,
-        fetch_funcs = [ self.dataset_manager.fetch_sva_db ]
+        fetch_funcs = [ self.dataset_manager.fetch_sva_db ],
+        species     = species
     )
