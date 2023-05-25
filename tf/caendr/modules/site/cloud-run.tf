@@ -31,8 +31,9 @@ resource "google_cloud_run_service" "site" {
     metadata {
       annotations = {
         "autoscaling.knative.dev/maxScale" = 3,
-        "autoscaling.knative.dev/min" = 1,
+        "autoscaling.knative.dev/minScale" = 1,
         "run.googleapis.com/cpu-throttling" = false,
+        "run.googleapis.com/startup-cpu-boost" = true,
         "run.googleapis.com/cloudsql-instances" = var.cloud_sql_connection_uri
         "run.googleapis.com/client-name" = "terraform"
       }
