@@ -45,7 +45,7 @@ def backup_external_db(downloaded_files, bucket_name: str, path_prefix: str):
   return results
 
 
-def drop_tables(app, db, tables=None):
+def drop_tables(app, db, species=None, tables=None):
   '''
     drop_tables [Drops tables from the SQL db. Drops all tables if non are provided. ]
       Args:

@@ -18,7 +18,7 @@ ANDERSEN_LAB_STRAIN_SHEETS = [
 elevation_cache = {}
 NULL_VALS = ["None", "", "NA", None]
 
-def load_strains(db):
+def load_strains(db, species=None):
   logger.info('Loading strains...')
   for sheet_id in ANDERSEN_LAB_STRAIN_SHEETS:
     andersen_strains = fetch_andersen_strains(sheet_id)

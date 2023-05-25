@@ -54,7 +54,7 @@ def load_table(self, db, table, generator, fetch_funcs):
 
 ## Specific Tables ##
 
-def load_genes_summary(self, db):
+def load_genes_summary(self, db, species=None):
     '''
       Extracts gene summary from WormBase GFF file and loads it into the CaeNDR database.
 
@@ -70,7 +70,7 @@ def load_genes_summary(self, db):
     )
 
 
-def load_genes(self, db):
+def load_genes(self, db, species=None):
     '''
       Extracts gene information from WormBase GTF and gene ID files, and loads it into the CaeNDR database.
 
@@ -124,7 +124,7 @@ def load_genes(self, db):
 #     )
 
 
-def load_strain_annotated_variants(self, db):
+def load_strain_annotated_variants(self, db, species=None):
     '''
       Extracts strain variant annotation information from GCP file and loads it into the CaeNDR database.
 
