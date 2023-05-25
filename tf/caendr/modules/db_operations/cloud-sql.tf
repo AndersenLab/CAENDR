@@ -67,13 +67,14 @@ resource "google_sql_database_instance" "postgres_instance" {
     }
 
     maintenance_window {
-      day  = "6"
+      day  = "3"
       hour = "5"
     }
 
     pricing_plan     = "PER_USE"
     # tier             = "db-g1-small"
-    tier             = "db-custom-1-3840"
+    # tier             = "db-custom-1-3840"
+    tier             = "db-custom-2-7680"
   }
 }
 
