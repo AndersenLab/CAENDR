@@ -52,16 +52,31 @@ def drop_tables(app, db, species=None, tables=None):
         app : Flask app instance
         db : SQLAlchemy db registered with the Flask App
         tables (optional): List of tables to be dropped. Defaults to None (ie: all tables)
-  '''  
-  if tables is None:
-    logger.info('Dropping all tables...')
-    db.drop_all(app=app)
-    logger.info('Creating all tables...')
-    db.create_all(app=app)
+  '''
+
+  if species is None:
+    if tables is None:
+      logger.info('Dropping all tables...')
+      db.drop_all(app=app)
+      logger.info('Creating all tables...')
+      db.create_all(app=app)
+    else:
+      logger.info(f'Dropping tables: ${tables}')
+      db.metadata.drop_all(bind=db.engine, checkfirst=True, tables=tables)
+      logger.info(f'Creating tables: ${tables}')
+      db.metadata.create_all(bind=db.engine, tables=tables)
+
   else:
-    logger.info(f'Dropping tables: ${tables}')
-    db.metadata.drop_all(bind=db.engine, checkfirst=True, tables=tables)
-    logger.info(f'Creating tables: ${tables}')
-    db.metadata.create_all(bind=db.engine, tables=tables)
+    if tables is None:
+      logger.info(f'Dropping species [{", ".join(species)}] from all tables...')
+      tables = list(db.metadata.tables.values())
+    else:
+      logger.info(f'Dropping species [{", ".join(species)}] from tables: {tables}')
+
+    for table in tables:
+      for species_name in species:
+        del_statement = table.delete().where(table.c.species_name == species_name)
+        db.engine.execute(del_statement)
+
   db.session.commit()
 
