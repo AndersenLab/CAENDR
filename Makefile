@@ -174,6 +174,34 @@ cloud-resource-deploy: cloud-resource-init docker-daemon
 	@echo -e "$(COLOR_Y)GAE -- Login to GCP and delete all the older versions of GAE no longer in use!$(COLOR_N)\n"
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
+container-site-v2:
+	cd src/modules/site-v2 && make clean && (echo | make container)
+
+container-db-operations:
+	cd src/modules/site-v2 && make clean && (echo | make container) 
+
+container-api-pipeline:
+	cd src/modules/site-v2 && make clean && (echo | make container)
+
+#~
+containers: #~
+#~ Builds containers for the site-v2, db-operations, and api-pipeline
+containers: container-site-v2 container-db-operations container-api-pipeline
+
+
+publish-container-site-v2:
+	cd src/modules/site-v2 && make clean && (echo | make publish)
+
+publish-container-db-operations:
+	cd src/modules/site-v2 && make clean && (echo | make publish) 
+
+publish-container-api-pipeline:
+	cd src/modules/site-v2 && make clean && (echo | make publish)
+
+#~
+publish-containers: #~
+#~ Publishes the containers for the site-v2, db-operations, and api-pipeline
+publish-containers: publish-container-site-v2 publish-container-db-operations publish-container-api-pipeline
 
 #~
 cloud-resource-destroy: #~
