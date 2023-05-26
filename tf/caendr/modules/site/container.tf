@@ -1,5 +1,5 @@
 locals {
-  dockerfile_path = abspath("${path.module}/../../../../src/modules/site")
+  dockerfile_path = abspath("${path.module}/../../../../src/modules/site-v2")
 }
 
 data "google_container_registry_image" "module_site" {
