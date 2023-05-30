@@ -6,7 +6,7 @@ data "google_iam_policy" "cloudrun_noauth" {
 }
 
 resource "google_cloud_run_service" "maintenance" {
-  name     = var.module_site_vars.container_name
+  name     = var.module_maintenance_vars.container_name
   location = var.google_cloud_vars.region
 
   autogenerate_revision_name = true
@@ -25,7 +25,7 @@ resource "google_cloud_run_service" "maintenance" {
         }
       }
       
-      service_account_name = google_service_account.site.email
+      # service_account_name = google_service_account.site.email
     }
 
     metadata {
