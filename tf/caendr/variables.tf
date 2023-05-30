@@ -38,6 +38,9 @@ variable "INDEL_PRIMER_TASK_QUEUE_NAME" { type = string }
 variable "HERITABILITY_TASK_QUEUE_NAME" { type = string } 
 variable "MODULE_API_PIPELINE_TASK_URL_NAME" { type = string }
 
+# Maintenance Module Variables
+variable "MODULE_MAINTENANCE_CONTAINER_NAME" { type = string }
+variable "MODULE_MAINTENANCE_CONTAINER_VERSION" { type = string }
 
 # DB-Operations Module Variables
 variable "MODULE_DB_OPERATIONS_CONTAINER_NAME" { type = string }

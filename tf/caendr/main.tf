@@ -72,3 +72,12 @@ module "site" {
   ]
 }
 
+
+module "maintenance" {
+  source = "./modules/maintenance"
+  ENVIRONMENT = var.ENVIRONMENT
+  
+  google_cloud_vars = local.google_cloud_vars
+  module_maintenance_vars = local.module_maintenance_vars
+}
+
