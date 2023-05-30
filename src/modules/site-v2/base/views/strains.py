@@ -121,6 +121,7 @@ def strains_data_tsv(species):
 #
 # Isotype View
 #
+
 @strains_bp.route('/isotype/<isotype_name>/')
 @strains_bp.route('/isotype/<isotype_name>/<release>')
 @cache.memoize(60*60)
@@ -133,17 +134,20 @@ def isotype_page(isotype_name, release=None):
   # Fetch isotype images
   image_urls = {}
   for s in isotype_strains:
-    image_urls[s.strain] = {'url': get_strain_img_url(s.strain),
-                            'thumb': get_strain_img_url(s.strain, thumbnail=True)}
+    image_urls[s.strain] = {
+      'url':   get_strain_img_url(s.strain),
+      'thumb': get_strain_img_url(s.strain, thumbnail=True)
+    }
 
   logger.debug(image_urls)
-  VARS = {"title": f"Isotype {isotype_name}",
-          "isotype": isotype_strains,
-          "isotype_name": isotype_name,
-          "isotype_ref_strain": [x for x in isotype_strains if x.isotype_ref_strain][0],
-          "strain_json_output": dump_json(isotype_strains),
-          "image_urls": image_urls}
-  return render_template('strain/isotype.html', **VARS)
+  return render_template('strain/isotype.html', **{
+    "title": f"Isotype {isotype_name}",
+    "isotype": isotype_strains,
+    "isotype_name": isotype_name,
+    "isotype_ref_strain": [x for x in isotype_strains if x.isotype_ref_strain][0],
+    "strain_json_output": dump_json(isotype_strains),
+    "image_urls": image_urls,
+  })
 
 
 #
