@@ -135,8 +135,8 @@ def isotype_page(isotype_name, release=None):
   image_urls = {}
   for s in isotype_strains:
     image_urls[s.strain] = {
-      'url':   get_strain_img_url(s.strain),
-      'thumb': get_strain_img_url(s.strain, thumbnail=True)
+      'url':   get_strain_img_url(s.strain, species=s.species_name, thumbnail=False),
+      'thumb': get_strain_img_url(s.strain, species=s.species_name, thumbnail=True),
     }
 
   logger.debug(image_urls)
