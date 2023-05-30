@@ -5,3 +5,4 @@ bleach==4.1.0
 Jinja2==3.0.3
 itsdangerous==2.0.1
 pyOpenSSL==22.1.0
+gunicorn
