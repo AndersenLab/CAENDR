@@ -5,6 +5,7 @@ import os
 from gtfparse import read_gtf_as_dataframe
 from caendr.services.logger import logger
 
+from caendr.api.gene import remove_prefix
 from caendr.models.sql import WormbaseGeneSummary
 from caendr.utils.bio import arm_or_center
 from caendr.utils.constants import CHROM_NUMERIC
@@ -12,16 +13,6 @@ from caendr.utils.constants import CHROM_NUMERIC
 
 
 ## Helper Functions ##
-
-def remove_prefix(val: str, prefix: str):
-  '''
-      Remove a prefix from a string, if it exists.
-  '''
-  if val and val.startswith(prefix):
-    return val[ len(prefix): ]
-  else:
-    return val
-
 
 def get_gene_ids(species, gene_ids_fname: str):
   """
