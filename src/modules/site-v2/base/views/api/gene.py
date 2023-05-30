@@ -34,7 +34,7 @@ def api_search_genes(query=""):
     species_object = SPECIES_LIST[species]
     query = remove_prefix(query, species_object['gene_prefix'].lower())
 
-  return search_genes(query, species=species)
+  return sorted(search_genes(query, species=species), key=lambda x: x['gene_symbol'])
 
 
 # @api_gene_bp.route('/search/<string:query>')
