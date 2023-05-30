@@ -10,6 +10,11 @@
     display: none;
     text-align:center
 }
+thead {
+    position: sticky;
+    top: 0;
+    z-index: 1
+}
 
 </style>
 {% endblock %}
@@ -59,7 +64,7 @@
                                             </h2>
                                             <div id="mappingSets-collapse" class="accordion-collapse collapse" aria-labelledby="mappingSets">
                                                 <div class="accordion-body">
-                                                    <p>Sets <strong>1-8</strong> each contain 46-48 strains that should be assayed for genetic mapping experiments. We recommend using a single set of 48 strains. After you have scored and optimized your quantitative trait, additional sets can be assayed to increase statistical power for association mapping.</p>
+                                                    <p>Mapping sets comprise 48 strains that can be used to collect phenotype data for broad diversity or genome-wide association studies. Multiple sets of strains can be measured for quantitative traits to increase statistical power in genome-wide association studies.</p>
                                                 </div>
                                             </div>
                                         </div>
