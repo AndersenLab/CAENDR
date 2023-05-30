@@ -1,3 +1,5 @@
+import re
+from distutils.version import StrictVersion
 from flask import Blueprint, render_template, url_for, request, redirect
 from caendr.services.logger import logger
 
@@ -34,9 +36,6 @@ def edit_tool(id):
   
   tool = get_container(id)
   versions = get_available_version_tags(tool)
-  versions.append(tool.container_tag)
-  versions = [*set(versions)]
-  versions.reverse()
 
   form = AdminEditToolContainerVersion(version=get_version(tool))
   form.version.choices = [(ver, ver) for ver in versions] 

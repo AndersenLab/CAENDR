@@ -7,7 +7,11 @@ from caendr.services.logger import logger
 
 from caendr.utils.data import AltTemplate
 
-GCR_REPO_NAME = os.environ.get('GCR_REPO_NAME')
+GOOGLE_CLOUD_PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID')
+
+GCR_REPO_NAME = f'gcr.io/{GOOGLE_CLOUD_PROJECT_ID}'
+
+# from caendr.services.tool_versions import GCR_REPO_NAME
 
 VALID_REPOS = [
   "caendr-db-operations",
@@ -37,7 +41,7 @@ def get_container_versions(container_name: str):
         
   ## download gcloud for linux
   gcloud_bin_path = get_gcloud()
-  cmd = f"{gcloud_bin_path} container images list-tags gcr.io/{GCR_REPO_NAME}/{container_name} --format=json"
+  cmd = f"{gcloud_bin_path} container images list-tags {GCR_REPO_NAME}/{container_name} --format=json"
   result, versions_json = subprocess.getstatusoutput(cmd)
   assert(result == 0)
   versions = json.loads(versions_json)

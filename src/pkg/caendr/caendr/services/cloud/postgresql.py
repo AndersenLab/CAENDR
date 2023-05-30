@@ -6,7 +6,7 @@ import pg8000
 from caendr.services.logger import logger
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, exc
 
 from dotenv import load_dotenv
 
@@ -85,3 +85,31 @@ def health_database_status():
         is_database_working = False
 
     return is_database_working, output
+
+
+def rollback_on_error(func):
+    '''
+        Decorator for functions which access the SQLAlchemy database.
+        Intercepts SQLAlchemyErrors, rolls back the session, then continues propagation.
+    '''
+    def inner(*args, **kwargs):
+
+        # Try running & returning from the decorated function
+        try:
+            return func(*args, **kwargs)
+
+        # Catch & log SQLAlchemy errors
+        except exc.SQLAlchemyError as e:
+            logger.error(f'Caught SQLAlchemy Error: {e}')
+            logger.error('Rolling back session...')
+
+            # Try to rollback the session
+            try:
+                db.session.rollback()
+            except Exception as rollback_err:
+                logger.error(f'Exception rolling back session: {rollback_err}')
+                raise
+
+            # Re-raise the original error
+            raise
+    return inner

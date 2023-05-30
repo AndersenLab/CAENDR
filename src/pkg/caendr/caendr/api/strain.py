@@ -9,7 +9,7 @@ from datetime import timedelta
 from caendr.models.datastore import SPECIES_LIST
 from caendr.models.error import BadRequestError
 from caendr.models.sql import Strain
-from caendr.services.cloud.postgresql import db
+from caendr.services.cloud.postgresql import db, rollback_on_error
 from caendr.services.cloud.storage import get_blob, generate_download_signed_url_v4, download_blob_to_file, upload_blob_from_file, get_google_storage_credentials
 
 MODULE_IMG_THUMB_GEN_SOURCE_PATH = os.environ.get('MODULE_IMG_THUMB_GEN_SOURCE_PATH')
@@ -22,6 +22,7 @@ bam_prefix = 'bam/c_elegans'
 
 #def query_strains(strain_name=None, isotype_name=None, release=None, all_strain_names=False, resolve_isotype=False, issues=False, is_sequenced=False):
 
+@rollback_on_error
 def query_strains(
     strain_name:      str  = None,
     isotype_name:     str  = None,
@@ -96,6 +97,7 @@ def query_strains(
   return query
 
 
+@rollback_on_error
 def get_strains(known_origin=False, issues=False):
   """
     Returns a list of strains;
@@ -123,6 +125,7 @@ def get_strains(known_origin=False, issues=False):
   return result
 
 
+@rollback_on_error
 def get_strain_sets():
   # TODO: change this to a sqlalchemy query instead
   df = pd.read_sql_table(Strain.__tablename__, db.engine)

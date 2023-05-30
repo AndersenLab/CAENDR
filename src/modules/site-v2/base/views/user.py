@@ -43,7 +43,7 @@ def user_register():
   user = User(id)
   user.set_properties(username=username, password=password, salt=PASSWORD_PEPPER, full_name=full_name, email=email, roles=roles, last_login=datetime.now(timezone.utc), user_type='LOCAL')
   user.save()
-  return assign_access_refresh_tokens(username, user.roles, url_for("user.user_profile"))
+  return assign_access_refresh_tokens(username, user.roles, url_for("user.user_account"))
   
 
 

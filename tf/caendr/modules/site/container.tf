@@ -1,5 +1,5 @@
 locals {
-  dockerfile_path = abspath("${path.module}/../../../../src/modules/site")
+  dockerfile_path = abspath("${path.module}/../../../../src/modules/site-v2")
 }
 
 data "google_container_registry_image" "module_site" {
@@ -33,7 +33,7 @@ resource "null_resource" "publish_container_module_site" {
 }
 
 resource "time_sleep" "wait_publish_container_module_site" {
-  create_duration = "120s"
+  create_duration = "30s"
 
   depends_on = [
     null_resource.publish_container_module_site

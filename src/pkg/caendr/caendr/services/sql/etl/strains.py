@@ -10,17 +10,23 @@ from caendr.models.sql import Strain
 # Get list of Google Sheet IDs for each species
 # Expects secret names with prefix "ANDERSEN_LAB_STRAIN_SHEET_"
 # and species ID in all caps
-ANDERSEN_LAB_STRAIN_SHEETS = [
-  get_secret(f'ANDERSEN_LAB_STRAIN_SHEET_{species_name.upper()}')
+ANDERSEN_LAB_STRAIN_SHEETS = {
+  species_name: get_secret(f'ANDERSEN_LAB_STRAIN_SHEET_{species_name.upper()}')
     for species_name in SPECIES_LIST
-]
+}
 
 elevation_cache = {}
 NULL_VALS = ["None", "", "NA", None]
 
-def load_strains(db):
+def load_strains(db, species=None):
   logger.info('Loading strains...')
-  for sheet_id in ANDERSEN_LAB_STRAIN_SHEETS:
+
+  # Filter sheets to match species list, or use all if no list provided
+  sheet_list = [
+    val for key, val in ANDERSEN_LAB_STRAIN_SHEETS.items() if (species is None or key in species)
+  ]
+
+  for sheet_id in sheet_list:
     andersen_strains = fetch_andersen_strains(sheet_id)
     db.session.bulk_insert_mappings(Strain, andersen_strains)
     db.session.commit()

@@ -26,6 +26,7 @@ variable "MODULE_API_PIPELINE_TASK_PUB_SUB_SUBSCRIPTION_NAME" { }
 
 # Site Module Variables
 variable "MODULE_SITE_CONTAINER_NAME" { type = string }
+variable "MODULE_SITE_CLOUDRUN_SA_NAME" { type = string }
 variable "MODULE_SITE_CONTAINER_VERSION" { type = string}
 variable "MODULE_SITE_SERVING_STATUS" { type = bool }
 variable "MODULE_SITE_BUCKET_ASSETS_NAME" { type = string }
@@ -37,6 +38,9 @@ variable "INDEL_PRIMER_TASK_QUEUE_NAME" { type = string }
 variable "HERITABILITY_TASK_QUEUE_NAME" { type = string } 
 variable "MODULE_API_PIPELINE_TASK_URL_NAME" { type = string }
 
+# Maintenance Module Variables
+variable "MODULE_MAINTENANCE_CONTAINER_NAME" { type = string }
+variable "MODULE_MAINTENANCE_CONTAINER_VERSION" { type = string }
 
 # DB-Operations Module Variables
 variable "MODULE_DB_OPERATIONS_CONTAINER_NAME" { type = string }
