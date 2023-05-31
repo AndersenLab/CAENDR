@@ -48,17 +48,7 @@ STRAIN_SUBMISSION_URL = get_env_var('MODULE_SITE_STRAIN_SUBMISSION_URL')
 strains_bp = Blueprint('request_strains',
                         __name__,
                         template_folder='templates')
-#
-# Strain List Page
-#
-@strains_bp.route('/')
-@cache.memoize(60*60)
-def request_strains():
-  """ Load landing page """
-  flash(Markup("<strong>Please note:</strong> although the site is currently able to accept orders, orders will <u>not ship</u> until Fall 2023."), category="danger")
-  title = "Request Strains"
-  disable_parent_breadcrumb = True
-  return render_template('strain/landing_page.html', **locals())
+
 
 @strains_bp.route('/map')
 @cache.memoize(60*60)
@@ -150,9 +140,9 @@ def isotype_page(isotype_name, release=None):
 # Strain Catalog
 #
 
-@strains_bp.route('/catalog', methods=['GET', 'POST'])
+@strains_bp.route('/', methods=['GET', 'POST'])
 @cache.memoize(60*60)
-def strains_catalog():
+def request_strains():
     flash(Markup("<strong>Please note:</strong> although the site is currently accepting orders, orders will <u>not ship</u> until Fall 2023."), category="danger")
 
     try:
