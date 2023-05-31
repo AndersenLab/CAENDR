@@ -18,6 +18,7 @@ from extensions import cache
 from caendr.api.strain import get_strains, query_strains, get_strain_sets, get_strain_img_url
 from caendr.models.sql import Strain
 from caendr.utils.json import dump_json
+from caendr.utils.data import get_file_format
 from caendr.utils.env import get_env_var
 from caendr.models.datastore import SPECIES_LIST
 from caendr.models.datastore.cart import Cart
@@ -121,13 +122,8 @@ def strains_data_csv(release_name, species_name, file_ext):
     abort(404)
 
   # Get file settings from the extension, rejecting bad extensions
-  if file_ext == 'csv':
-    sep = ','
-    mimetype = 'text/csv'
-  elif file_ext == 'tsv':
-    sep = '\t'
-    mimetype = 'text/tab-separated-values'
-  else:
+  file_format = get_file_format(file_ext, valid_formats=['csv', 'tsv'])
+  if file_format is None:
     abort(404)
 
   # Generator function to produce the file line-by-line
@@ -137,13 +133,13 @@ def strains_data_csv(release_name, species_name, file_ext):
     col_order = [1, 0, 3, 4, 5, 7, 8, 9, 10, 28, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 2, 6]
     col_list[:] = [col_list[i] for i in col_order]
     header = [x.name for x in col_list]
-    yield sep.join(header) + "\n"
+    yield file_format['sep'].join(header) + "\n"
     for row in strains_by_species:
       row = [getattr(row, column.name) for column in col_list]
-      yield sep.join(map(str, row)) + "\n"
+      yield file_format['sep'].join(map(str, row)) + "\n"
 
   # Stream the response as a file with the correct filename
-  resp = Response(stream_with_context(generate()), mimetype=mimetype)
+  resp = Response(stream_with_context(generate()), mimetype=file_format['mimetype'])
   resp.headers['Content-Disposition'] = f'filename={release["version"]}_{species_name}_strain_data.{file_ext}'
   return resp
 
