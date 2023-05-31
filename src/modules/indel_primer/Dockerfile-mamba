@@ -32,7 +32,9 @@ RUN git clone https://www.github.com/andersenlab/vcf-kit && \
 
 
 RUN python -m pip install --no-cache-dir -e ./vcf-kit
-RUN vk genome wormbase --ref=WS276
+# The image no longer needs to fetch the wormbase at this level.
+# The python code will deal handle this.
+# RUN vk genome wormbase --ref=WS276a
 
 COPY . ./
 

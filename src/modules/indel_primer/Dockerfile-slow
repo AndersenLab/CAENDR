@@ -17,13 +17,10 @@ WORKDIR /indel_primer
 COPY env.yaml ./
 
 # Create Conda environment
-RUN conda install mamba -n base -c conda-forge
-RUN mamba env create -f ./env.yaml
-RUN mamba clean -a
+RUN conda env create -f ./env.yaml && conda clean -a
 RUN echo "conda activate indel-primer" >> ~/.bashrc
 ENV PATH /opt/conda/envs/indel-primer/bin:$PATH
 ENV CONDA_DEFAULT_ENV indel-primer
-ENV MAMBA_DEFAULT_ENV indel-primer
 
 # Now install VCF-Kit 0.2.8
 RUN git clone https://www.github.com/andersenlab/vcf-kit && \
