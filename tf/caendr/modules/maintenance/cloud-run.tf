@@ -19,8 +19,8 @@ resource "google_cloud_run_service" "maintenance" {
 
         resources {
           limits = {
-            cpu = "2"
-            memory = "2Gi"
+            cpu = "1"
+            memory = "512Mi"
           }
         }
       }
