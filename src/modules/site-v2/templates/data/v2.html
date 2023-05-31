@@ -76,8 +76,13 @@
                                         <tr>
                                             <th scope="row">Strain Data</th>
                                             <td>Includes strain, isotype, location information, and more.</td>
-                                            <td class="text-center"><a class="btn btn-primary text-light"
-                                                    href="{{ url_for('request_strains.strains_data_tsv', species = species.name) }}">StrainData.tsv</a>
+                                            <td class="text-center">
+                                                <a class="btn btn-primary text-light" href="{{ url_for('request_strains.strains_data_csv', release_name = release_version, species_name = species.name, file_ext='csv') }}">
+                                                    CSV
+                                                </a>
+                                                <a class="btn btn-primary text-light" href="{{ url_for('request_strains.strains_data_csv', release_name = release_version, species_name = species.name, file_ext='tsv') }}">
+                                                    TSV
+                                                </a>
                                             </td>
                                         </tr>
                                         <tr>

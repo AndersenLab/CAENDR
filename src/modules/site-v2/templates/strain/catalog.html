@@ -356,9 +356,11 @@ thead {
 
         $('#downloadData').click(function() {
             const selectedVal = $('#ind_strains_filter #speciesSelect').val();
-            let url = '{{ url_for("request_strains.strains_data_tsv", species=selectedVal) }}';
+            let url = '{{ url_for("request_strains.strains_data_csv", release_name="latest", species_name="SPECIES", file_ext="csv") }}';
             if (selectedVal) {
-            url += selectedVal;
+                url = url.replace("SPECIES", selectedVal);
+            } else {
+                throw Error('No species selected.');
             }
             window.location.href = url;
         });
