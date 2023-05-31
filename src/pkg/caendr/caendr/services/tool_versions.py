@@ -32,9 +32,7 @@ def get_available_version_tags(container):
 
 
 def get_available_version_tags_gcr(container):
-  container_name = container.name
-  versions = gcr_container_registry.get_container_versions(container_name)
-  return versions
+  return  gcr_container_registry.get_container_versions(container.name)
 
 
 def get_available_version_tags_dockerhub(container):
