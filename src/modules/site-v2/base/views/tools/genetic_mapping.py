@@ -17,6 +17,10 @@ from caendr.models.error import (
     ReportLookupError,
 )
 from caendr.models.task import TaskStatus
+from caendr.utils.env import get_env_var
+
+
+MODULE_SITE_BUCKET_ASSETS_NAME = get_env_var('MODULE_SITE_BUCKET_ASSETS_NAME')
 
 
 
@@ -69,6 +73,9 @@ def genetic_mapping():
     'species_fields': [
       'name', 'short_name', 'project_num', 'wb_ver', 'latest_release',
     ],
+
+    # Sample data
+    'sample_data_url': generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/nemascan_sample_data.tsv'),
   })
 
 

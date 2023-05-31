@@ -30,8 +30,12 @@ from caendr.models.task import TaskStatus
 from caendr.api.strain import get_strains
 from caendr.services.heritability_report import get_heritability_report, get_heritability_reports, fetch_heritability_report
 from caendr.utils.data import unique_id, convert_data_table_to_tsv, get_object_hash
+from caendr.utils.env import get_env_var
 from caendr.services.cloud.storage import get_blob, generate_blob_url
 from caendr.services.persistent_logger import PersistentLogger
+
+
+MODULE_SITE_BUCKET_ASSETS_NAME = get_env_var('MODULE_SITE_BUCKET_ASSETS_NAME')
 
 
 
@@ -71,6 +75,7 @@ def heritability_calculator():
   hide_form = True
   strain_list = []
   species_list = SPECIES_LIST
+  sample_data_url = generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/heritability_example.tsv')
   return render_template('tools/heritability_calculator/heritability-calculator.html', **locals())
 
 
