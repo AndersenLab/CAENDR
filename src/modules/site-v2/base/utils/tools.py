@@ -52,20 +52,38 @@ def lookup_report(EntityClass, reportId, user=None):
   return report
 
 
-def upload_file(request, filename):
+def upload_file(request, filename, valid_file_extensions=None):
   '''
     Save uploaded file to server temporarily with unique generated name.
-  '''
+    Copies the file extension of the provided file
 
-  # Create a unique local filename for the file
-  # TODO: Is there a better way to generate this name?
-  #       Using a Tempfile, using the user's ID and the time, etc.?
-  local_path = os.path.join(uploads_dir, secure_filename(f'{ unique_id() }.tsv'))
+    Arguments:
+      request: The Flask request object.
+      filename (str): The name of the uploaded file in the request.
+      valid_file_extensions(list(str), optional):
+        A list of allowed file extensions. If filename does not have a valid extension, raises an error. If not provided, accepts any file extension.
+  '''
 
   # Get the FileStorage object from the request
   file = request.files.get(filename)
   if not file:
-    raise FileUploadError('You must include a TSV file with your data to upload. If this message persists, try refreshing the page and re-uploading your file.', 400)
+    raise FileUploadError('You must include a CSV file with your data to upload. If this message persists, try refreshing the page and re-uploading your file.', 400)
+
+  # Match the file extension by splitting on right-most '.' character
+  try:
+    file_ext = file.filename.rsplit('.', 2)[1]
+  except:
+    file_ext = None
+
+  # Validate file extension, if file_ext and valid_file_extensions are defined
+  if file_ext and valid_file_extensions and (file_ext not in valid_file_extensions):
+    raise FileUploadError('You must include a CSV file with your data to upload. If this message persists, try refreshing the page and re-uploading your file.', 400)
+
+  # Create a unique local filename for the file
+  # TODO: Is there a better way to generate this name?
+  #       Using a Tempfile, using the user's ID and the time, etc.?
+  target_filename = unique_id() + (f'.{file_ext}' if file_ext else '')
+  local_path = os.path.join(uploads_dir, secure_filename(target_filename))
 
   # Save the file, alerting the user if this fails
   try:

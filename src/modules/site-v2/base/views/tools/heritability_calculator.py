@@ -18,6 +18,7 @@ import bleach
 from base.forms import HeritabilityForm
 from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user, user_is_admin
 from base.utils.tools import lookup_report, upload_file, try_submit
+from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 from caendr.models.error import (
     EmptyReportDataError,
@@ -142,7 +143,7 @@ def submit():
   # Validate form fields
   # Checks that species is in species list & label is not empty
   if not form.validate_on_submit():
-    msg = "You must include a description of your data and a TSV file to upload."
+    msg = "You must include a description of your data and a CSV file to upload."
     flash(msg, "danger")
     return jsonify({ 'message': msg }), 400
 
@@ -155,7 +156,7 @@ def submit():
 
   # Save uploaded file to server temporarily, displaying an error message if this fails
   try:
-    local_path = upload_file(request, 'file')
+    local_path = upload_file(request, 'file', valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS)
   except FileUploadError as ex:
     flash(ex.description, 'danger')
     return jsonify({ 'message': ex.description }), ex.code

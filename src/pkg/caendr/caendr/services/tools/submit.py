@@ -11,7 +11,7 @@ from caendr.models.task      import TaskStatus, IndelPrimerTask, HeritabilityTas
 from caendr.api.strain             import query_strains
 from caendr.services.cloud.storage import upload_blob_from_string, upload_blob_from_file
 
-from caendr.utils.data import get_object_hash
+from caendr.utils.data import get_object_hash, get_file_format
 from caendr.utils.env  import get_env_var
 from caendr.utils.file import get_file_hash
 
@@ -20,6 +20,14 @@ from caendr.utils.file import get_file_hash
 INDEL_PRIMER_CONTAINER_NAME = get_env_var('INDEL_PRIMER_CONTAINER_NAME')
 HERITABILITY_CONTAINER_NAME = get_env_var('HERITABILITY_CONTAINER_NAME')
 NEMASCAN_NXF_CONTAINER_NAME = get_env_var('NEMASCAN_NXF_CONTAINER_NAME')
+
+
+
+def get_delimiter_from_filepath(filepath=None):
+  if filepath:
+    file_format = get_file_format(filepath[-3:], valid_formats=['csv'])
+    if file_format:
+      return file_format['sep']
 
 
 
@@ -119,7 +127,7 @@ class SubmissionManager():
       raise NotImplementedError(f'Class "{cls.__name__}" should override the definition of "upload_data_file".')
 
   @classmethod
-  def parse_data(cls, data):
+  def parse_data(cls, data, delimiter='\t'):
     '''
       Parse a data object representing the raw form input into a set of props for the Entity subclass.
       Should be overridden by subclasses.
@@ -170,7 +178,8 @@ class SubmissionManager():
       logger.warn(f'Container version {container_version} was specified manually - this may not be the most recent version.')
 
     # Parse the input data
-    data_file, data_hash, data_vals = cls.parse_data(data)
+    delimiter = get_delimiter_from_filepath(data.get('filepath'))
+    data_file, data_hash, data_vals = cls.parse_data(data, delimiter=delimiter)
 
     # Check if user has already submitted this job, and "return" it in a duplicate data error if so
     if not no_cache:
@@ -218,14 +227,14 @@ class SubmissionManager():
 
 
   @staticmethod
-  def validate_file(local_path, columns, unique_rows=False):
+  def validate_file(local_path, columns, delimiter='\t', unique_rows=False):
 
     num_cols = len(columns)
     rows = {}
 
     # Read first line from tsv
     with open(local_path, 'r') as f:
-      csv_reader = csv.reader(f, delimiter='\t')
+      csv_reader = csv.reader(f, delimiter=delimiter)
 
       # Get the header line, throwing an empty file error if not found
       try:
@@ -300,7 +309,7 @@ class IndelPrimerSubmissionManager(SubmissionManager):
     upload_blob_from_string(bucket, data_file, blob)
 
   @classmethod
-  def parse_data(cls, data):
+  def parse_data(cls, data, delimiter='\t'):
     data_file = json.dumps(data)
     data_hash = get_object_hash(data, length=32)
 
@@ -334,7 +343,7 @@ class HeritabilitySubmissionManager(SubmissionManager):
     upload_blob_from_file(bucket, data_file, blob)
 
   @classmethod
-  def parse_data(cls, data):
+  def parse_data(cls, data, delimiter='\t'):
 
     # Extract local filepath from the data object
     # Note that we don't change the underlying object itself, as this would
@@ -368,14 +377,14 @@ class HeritabilitySubmissionManager(SubmissionManager):
 
     # Validate each line in the file
     # Will raise an error if any problems are found, otherwise silently passes
-    SubmissionManager.validate_file(local_path, columns, unique_rows=True)
+    SubmissionManager.validate_file(local_path, columns, delimiter=delimiter, unique_rows=True)
 
     # Extra validation - check that five or more unique strains are provided
     unique_strains = set()
 
     # Open the file, skipping the header line
     with open(local_path, 'r') as f:
-      csv_reader = csv.reader(f, delimiter='\t')
+      csv_reader = csv.reader(f, delimiter=delimiter)
       next(csv_reader)
 
       # Track all unique strain vals in a set
@@ -413,7 +422,7 @@ class MappingSubmissionManager(SubmissionManager):
     upload_blob_from_file(bucket, data_file, blob)
 
   @classmethod
-  def parse_data(cls, data):
+  def parse_data(cls, data, delimiter='\t'):
 
     # Extract local filepath from the data object
     # Note that we don't change the underlying object itself, as this would
@@ -443,7 +452,7 @@ class MappingSubmissionManager(SubmissionManager):
     ]
 
     # Validate file
-    SubmissionManager.validate_file(local_path, columns, unique_rows=True)
+    SubmissionManager.validate_file(local_path, columns, delimiter=delimiter, unique_rows=True)
 
     # Compute data hash using entire file
     data_hash = get_file_hash(local_path, length=32)

@@ -29,7 +29,7 @@ from wtforms.validators import (Required,
 from wtforms.fields.html5 import EmailField
 
 
-from constants import PRICES, SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS
+from constants import PRICES, SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS, TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 from caendr.services.profile import get_profile_role_form_options
 from caendr.services.user import get_user_role_form_options, get_local_user_by_email
@@ -86,13 +86,13 @@ class SpeciesSelectForm(FlaskForm):
 class FileUploadForm(FlaskForm):
   species = SpeciesSelectField()
   label = StringField('Description:', validators=[Required(message='You must include a description of your data.')])
-  file = FileField('Select file:', render_kw={'accept': '.tsv'})
+  file = FileField('Select file:', render_kw={'accept': ','.join({ f'.{ext}' for ext in TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS})})
 
 # class HeritabilityForm(FileUploadForm):
 class HeritabilityForm(FlaskForm):
   species = SpeciesSelectField(exclude_species=['c_briggsae', 'c_tropicalis'])
   label = StringField('Description:', validators=[Required(message='You must include a description of your data.')])
-  file = FileField('Select file:', render_kw={'accept': '.tsv'})
+  file = FileField('Select file:', render_kw={'accept': ','.join({ f'.{ext}' for ext in TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS})})
 
 class MappingForm(FileUploadForm):
   pass
