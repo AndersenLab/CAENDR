@@ -5,6 +5,20 @@ data "google_iam_policy" "cloudrun_noauth" {
   }
 }
 
+data "local_file" "env_file" {
+  filename = "${path.module}/../../../../env/${var.ENVIRONMENT}/global.env"
+}
+
+locals {
+  # Read the .env file contents from the local_file data source
+  envs = [for line in split("\n", data.local_file.env_file.content): {
+    name  = split("=", line)[0]
+    value = split("=", line)[1]
+    } if length(split("=", line)) == 2 && length(regexall("^#", line)) == 0
+  ]
+}
+
+
 resource "google_cloud_run_service" "maintenance" {
   name     = var.module_maintenance_vars.container_name
   location = var.google_cloud_vars.region
@@ -17,10 +31,18 @@ resource "google_cloud_run_service" "maintenance" {
       containers {
         image = data.google_container_registry_image.module_maintenance.image_url
 
+        dynamic "env" {
+          for_each = local.envs
+          content {
+            name = env.value["name"]
+            value = env.value["value"]
+          }
+        }
+
         resources {
           limits = {
-            cpu = "2"
-            memory = "2Gi"
+            cpu = "1"
+            memory = "512Mi"
           }
         }
       }
