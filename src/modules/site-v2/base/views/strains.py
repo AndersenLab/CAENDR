@@ -186,10 +186,12 @@ def order_page_post():
     added_items = req.get('strains')
     if (len(added_items) == 0):
       flash("You must select strains/sets from the catalog", 'error')
-      return redirect(url_for("request_strains.strains_catalog"))
+      return redirect(url_for("request_strains.request_strains"))
  
     for item in added_items:
       users_cart.add_item(item)
+
+    users_cart.update_version()
     users_cart.save()
 
     resp = make_response(jsonify({'status': 'OK'}))
@@ -209,45 +211,49 @@ def order_page_post():
       totalPrice = sum(item['price'] for item in cartItems)
       return render_template('order/order.html', **locals())
     else:
-      """ submitting the order """
-      cartItems = users_cart['items']
-      if form.shipping_service.data == 'Flat Rate Shipping':
-        cartItems.append({'name': 'Flat Rate Shipping'})
-      for item in cartItems:
-        item_price = Cart.get_price(item)
-        item['price'] = item_price
-      totalPrice = sum(item['price'] for item in cartItems)
-      
-      # When the user confirms their order it is processed below.
-      order_obj = {'total': totalPrice,
-                    'date': datetime.now(timezone.utc).date().isoformat(),
-                    'is_donation': False}
-      order_obj.update(form.data)
-      order_obj['phone'] = order_obj['phone'].strip("+")
-      order_obj['items'] = '\n'.join(sorted([f"{item['name']}:{item['price']}" for item in cartItems]))
-      order_obj['invoice_hash'] = str(uuid.uuid4()).split("-")[0]
-      order_obj["order_confirmation_link"] = url_for('request_strains.order_confirmation', invoice_hash=order_obj['invoice_hash'], _external=True)
-      send_email({"from": "no-reply@elegansvariation.org",
-                  "to": [order_obj["email"]],
-                  "cc": config.get("CC_EMAILS"),
-                  "subject": "CeNDR Order #" + str(order_obj["invoice_hash"]),
-                  "text": ORDER_SUBMISSION_EMAIL_TEMPLATE.format(**order_obj)})
+        """ submitting the order """
+        cartItems = users_cart['items']
+        if form.shipping_service.data == 'Flat Rate Shipping':
+          cartItems.append({'name': 'Flat Rate Shipping'})
+        for item in cartItems:
+          item_price = Cart.get_price(item)
+          item['price'] = item_price
+        totalPrice = sum(item['price'] for item in cartItems)
 
-      # Save to google sheet
-      add_to_order_ws(order_obj)
+        # check the version
+        if int(users_cart['version']) != int(form.version.data) or len(cartItems) == 0:
+          flash("There was a problem with your order, please try again.", 'warning')
+          return redirect(url_for('request_strains.order_page_index'))
+        
+        # When the user confirms their order it is processed below.
+        order_obj = {'total': totalPrice,
+                      'date': datetime.now(timezone.utc).date().isoformat(),
+                      'is_donation': False}
+        order_obj.update(form.data)
+        order_obj['phone'] = order_obj['phone'].strip("+")
+        order_obj['items'] = '\n'.join(sorted([f"{item['name']}:{item['price']}" for item in cartItems]))
+        order_obj['invoice_hash'] = str(uuid.uuid4()).split("-")[0]
+        order_obj["order_confirmation_link"] = url_for('request_strains.order_confirmation', invoice_hash=order_obj['invoice_hash'], _external=True)
+        send_email({"from": "no-reply@elegansvariation.org",
+                    "to": [order_obj["email"]],
+                    "cc": config.get("CC_EMAILS"),
+                    "subject": "CeNDR Order #" + str(order_obj["invoice_hash"]),
+                    "text": ORDER_SUBMISSION_EMAIL_TEMPLATE.format(**order_obj)})
 
-      # Mark the cart is deleted
-      users_cart.soft_delete()
-      users_cart.save()
+        # Save to google sheet
+        add_to_order_ws(order_obj)
 
-      # flash("Thank you for submitting your order! Please follow the instructions below to complete your order.", 'success')
-      flash("Thank you for submitting your order! Please follow the instructions below to complete your order.", 'success')
-      resp = make_response(redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302))
+        # Mark the cart is deleted
+        users_cart.soft_delete()
+        users_cart.save()
 
-      # delete cartID from cookies
-      if cart_id is not None:
-        resp.delete_cookie(MODULE_SITE_CART_COOKIE_NAME)          
-      return resp      
+        flash("Thank you for submitting your order! Please follow the instructions below to complete your order.", 'success')
+        resp = make_response(redirect(url_for("request_strains.order_confirmation", invoice_hash=order_obj['invoice_hash']), code=302))
+
+        # delete cartID from cookies
+        if cart_id is not None:
+          resp.delete_cookie(MODULE_SITE_CART_COOKIE_NAME)          
+        return resp      
 
 
 @strains_bp.route('/checkout', methods=['PUT'])
@@ -305,6 +311,9 @@ def order_page_index():
     for item in cartItems:
       item['price'] = Cart.get_price(item)
     totalPrice = sum(item['price'] for item in cartItems)
+
+    form.version.data = users_cart['version']
+    
     return render_template('order/order.html', title=title, cartItems=cartItems, totalPrice=totalPrice, form=form)
   
 
