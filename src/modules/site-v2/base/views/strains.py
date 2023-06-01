@@ -213,6 +213,11 @@ def order_page_post():
     else:
         """ submitting the order """
         cartItems = users_cart['items']
+         # check the version
+        if int(users_cart['version']) != int(form.version.data) or len(cartItems) == 0:
+          flash("There was a problem with your order, please try again.", 'warning')
+          return redirect(url_for('request_strains.order_page_index'))
+        
         if form.shipping_service.data == 'Flat Rate Shipping':
           cartItems.append({'name': 'Flat Rate Shipping'})
         for item in cartItems:
@@ -220,11 +225,6 @@ def order_page_post():
           item['price'] = item_price
         totalPrice = sum(item['price'] for item in cartItems)
 
-        # check the version
-        if int(users_cart['version']) != int(form.version.data) or len(cartItems) == 0:
-          flash("There was a problem with your order, please try again.", 'warning')
-          return redirect(url_for('request_strains.order_page_index'))
-        
         # When the user confirms their order it is processed below.
         order_obj = {'total': totalPrice,
                       'date': datetime.now(timezone.utc).date().isoformat(),
@@ -303,6 +303,8 @@ def order_page_index():
   else:
     users_cart = Cart(cart_id)
     cartItems = users_cart['items']
+  
+  form.version.data = users_cart['version']
 
   if len(cartItems) == 0:
     return render_template('order/order.html', title=title, form=form)
@@ -312,7 +314,6 @@ def order_page_index():
       item['price'] = Cart.get_price(item)
     totalPrice = sum(item['price'] for item in cartItems)
 
-    form.version.data = users_cart['version']
     
     return render_template('order/order.html', title=title, cartItems=cartItems, totalPrice=totalPrice, form=form)
   
