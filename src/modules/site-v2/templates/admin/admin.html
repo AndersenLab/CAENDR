@@ -11,7 +11,23 @@
                 <div class="card-body">
                     <h2 class="h4 text-dark mb-4">User Administration</h2>
                     <ul class="text-start">
-                        <li><a href="{{ url_for('admin_profile.admin_profile') }}">Manage Users</a></li>
+                        <li><a href="{{ url_for('admin_users.admin_users') }}">Manage Users</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- /Card Column -->
+        <!-- Card Column -->
+        <div class="col mb-3">
+            <div class="card h-100 shadow text-center pt-5 mt-5 mx-auto cardBorderBottom" style="min-height:20rem;">
+                <i class="bi bi-journal-text text-info" aria-hidden="true"></i>
+                <div class="card-body">
+                    <h2 class="h4 text-dark mb-4">User Reports</h2>
+                    <ul class="text-start">
+                        <li><a href="/tools/genetic-mapping/all-results">All Genetic Mapping Reports</a></li>
+                        <li><a href="/tools/pairwise-indel-finder/all-results">All Pairwise Indel Finder Reports</a>
+                        </li>
+                        <li><a href="/tools/heritability-calculator/all-results">All Heritability Reports</a></li>
                     </ul>
                 </div>
             </div>
@@ -24,8 +40,10 @@
                 <div class="card-body">
                     <h2 class="h4 text-dark mb-4">Content Updates</h2>
                     <ul class="text-start">
-                        <li><a href="{{ url_for('admin.admin_publications_sheet') }}">Update "Cited By" Publications</a></li>
-                        <li><a href="{{ url_for('admin_dataset.admin_dataset') }}">Update "Download Data" Releases</a></li>
+                        <li><a href="{{ url_for('admin.admin_publications_sheet') }}">Update "Cited By" Publications</a>
+                        </li>
+                        <li><a href="{{ url_for('admin_dataset.admin_dataset') }}">Update "Download Data" Releases</a>
+                        </li>
                         <li><a href="{{ url_for('admin_profile.admin_profile') }}">Update "People" Pages</a></li>
                         <li><a href="{{ url_for('admin.admin_strain_sheet') }}">Update Strain Sheet</a></li>
                     </ul>
@@ -40,7 +58,8 @@
                 <div class="card-body">
                     <h2 class="h4 text-dark mb-4">Tool & Database Administration</h2>
                     <ul class="text-start">
-                        <li><a href="{{ url_for('admin_gene_browser_tracks.admin_gene_browser_tracks') }}">Manage Genome Browser Tracks</a></li>
+                        <li><a href="{{ url_for('admin_gene_browser_tracks.admin_gene_browser_tracks') }}">Manage Genome
+                                Browser Tracks</a></li>
                         <li><a href="{{ url_for('admin_tools.admin_tools') }}">Manage Tool Containers</a></li>
                         <li><a href="{{ url_for('admin_etl_op.admin_etl_op') }}">Perform Database Operations</a></li>
                     </ul>
@@ -61,8 +80,8 @@
             </div>
         </div>
         <!-- /Card Column -->
-        </div>
-        <!-- /Row -->
+    </div>
+    <!-- /Row -->
 </div> <!-- /Container -->
 
 {% endblock %}
