@@ -102,8 +102,8 @@
                                 title="Dataset in which isotype was originally released."><strong>Release:</strong></span>
                             {{ isotype_ref_strain['release']|format_release }}
                         </li>
-                        <li class="list-group-item"><strong>Isolation Date:</strong>
-                            {{ isotype_ref_strain["isolation_date"] }}
+                        <li class="list-group-item"><strong>Sampling Date:</strong>
+                            {{ isotype_ref_strain["sampling_date"] }}
                         </li>
                         <li class="list-group-item"><strong>Latitude, Longitude:</strong>
                             {% if isotype_ref_strain['latitude'] %}
@@ -135,9 +135,6 @@
                         </li>
                         <li class="list-group-item"><strong>Substrate Temperature (C):</strong>
                             {{ isotype_ref_strain['substrate_temp'] or "" }}
-                        </li>
-                        <li class="list-group-item"><strong>Substrate Moisture (%):</strong>
-                            {{ isotype_ref_strain['substrate_moisture'] or "" }}
                         </li>
                         <li class="list-group-item"><strong>Ambient Temperature (C):</strong>
                             {{ isotype_ref_strain['ambient_temp'] or "" }}

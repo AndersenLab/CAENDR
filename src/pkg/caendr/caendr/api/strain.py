@@ -11,10 +11,12 @@ from caendr.models.error import BadRequestError
 from caendr.models.sql import Strain
 from caendr.services.cloud.postgresql import db, rollback_on_error
 from caendr.services.cloud.storage import get_blob, generate_download_signed_url_v4, download_blob_to_file, upload_blob_from_file, get_google_storage_credentials
+from caendr.utils.env import get_env_var
+from caendr.utils.tokens import TokenizedString
 
-MODULE_IMG_THUMB_GEN_SOURCE_PATH = os.environ.get('MODULE_IMG_THUMB_GEN_SOURCE_PATH')
-MODULE_SITE_BUCKET_PHOTOS_NAME = os.environ.get('MODULE_SITE_BUCKET_PHOTOS_NAME')
-MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
+MODULE_IMG_THUMB_GEN_SOURCE_PATH = get_env_var('MODULE_IMG_THUMB_GEN_SOURCE_PATH', as_template=True)
+MODULE_SITE_BUCKET_PHOTOS_NAME   = get_env_var('MODULE_SITE_BUCKET_PHOTOS_NAME')
+MODULE_SITE_BUCKET_PRIVATE_NAME  = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
 
 BAM_BAI_DOWNLOAD_SCRIPT_NAME = "bam_bai_signed_download_script.sh"
 bam_prefix = 'bam/c_elegans'
@@ -136,11 +138,16 @@ def get_strain_sets():
   return result
 
 
-def get_strain_img_url(strain_name, thumbnail=True):
+def get_strain_img_url(strain_name, species, thumbnail=True):
   ''' Returns a list of public urls for images of the isotype in cloud storage '''
-  blob = get_blob(MODULE_SITE_BUCKET_PHOTOS_NAME, f"{MODULE_IMG_THUMB_GEN_SOURCE_PATH}/{strain_name}.jpg")
+
+  path = MODULE_IMG_THUMB_GEN_SOURCE_PATH.get_string(**{
+    'SPECIES': species,
+  })
+
+  blob = get_blob(MODULE_SITE_BUCKET_PHOTOS_NAME, f"{path}/{strain_name}.jpg")
   if blob and thumbnail:
-    blob = get_blob(MODULE_SITE_BUCKET_PHOTOS_NAME, f"{MODULE_IMG_THUMB_GEN_SOURCE_PATH}/{strain_name}.thumb.jpg")
+    blob = get_blob(MODULE_SITE_BUCKET_PHOTOS_NAME, f"{path}/{strain_name}.thumb.jpg")
 
   try:
     return blob.public_url
