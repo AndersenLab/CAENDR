@@ -75,3 +75,25 @@ def convert_data_table_to_tsv(data, columns):
   data = pd.DataFrame(data, columns=columns)
   data = data.to_csv(index=False, sep="\t")
   return data
+
+
+def get_file_format(file_ext, valid_formats=None):
+
+  # Screen out invalid formats
+  if valid_formats is not None and file_ext not in valid_formats:
+    return None
+
+  # Check possible file extensions
+  if file_ext == 'csv':
+    return {
+      'sep':      ',',
+      'mimetype': 'text/csv',
+    }
+  if file_ext == 'tsv':
+    return {
+      'sep':      '\t',
+      'mimetype': 'text/tab-separated-values',
+    }
+
+  # If none matched, return None
+  return None

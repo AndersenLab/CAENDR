@@ -32,3 +32,7 @@ TABLE_COLORS = {
 # TODO: REMOVE THESE
 REPORT_V1_FILE_LIST = ['methods.md']
 REPORT_V2_FILE_LIST = ['alignment_report.html', 'concordance_report.html', 'gatk_report.html', 'methods.md', 'reads_mapped_by_strain.tsv', 'release_notes.md']
+
+
+# TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS = { 'csv', 'tsv' }
+TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS = { 'csv' }

@@ -14,6 +14,7 @@ from caendr.models.task import TaskStatus
 from caendr.services.cloud.storage import check_blob_exists
 from caendr.services.dataset_release import get_browser_tracks_path
 from caendr.utils.constants import CHROM_NUMERIC
+from caendr.utils.data import get_file_format
 
 from caendr.services.indel_primer import (
     get_sv_strains,
@@ -249,9 +250,17 @@ def submit():
 
 # TODO: Move internals of this to a service function
 @pairwise_indel_finder_bp.route("/report/<id>")
-@pairwise_indel_finder_bp.route("/report/<id>/tsv/<filename>")
+@pairwise_indel_finder_bp.route("/report/<id>/download/<file_ext>")
 @jwt_required()
-def report(id, filename = None):
+def report(id, file_ext=None):
+
+    # Validate file extension, if provided
+    if file_ext:
+      file_format = get_file_format(file_ext, valid_formats={'csv'})
+      if file_format is None:
+        abort(404)
+    else:
+      file_format = None
 
     # Fetch requested primer report
     # Ensures the report exists and the user has permission to view it
@@ -300,10 +309,15 @@ def report(id, filename = None):
       report.empty = result is None  # TODO: Is this correct? I think empty should actually check if any rows exist in the df
       report.save()
 
-    # Return downloadable TSV of results
-    # TODO: Shouldn't we check for filename? What if the ID ends in the characters "tsv"?
-    if request.path.endswith("tsv"):
-      return Response(format_table.to_csv(sep="\t"), mimetype="text/tab-separated-values")
+    # If a file format was specified, return a downloadable file with the results
+    # TODO: Set a better filename?
+    if file_format is not None:
+      resp = Response(format_table.to_csv(sep=file_format['sep']), mimetype=file_format['mimetype'])
+      try:
+        resp.headers['Content-Disposition'] = f'filename={report["species"]}_{report["strain_1"]}_{report["strain_2"]}_{data["site"]}.{file_ext}'
+      except:
+        resp.headers['Content-Disposition'] = f'filename={report["id"]}.{file_ext}'
+      return resp
 
     # Otherwise, return view page
     return render_template("tools/pairwise_indel_finder/view.html", **{
