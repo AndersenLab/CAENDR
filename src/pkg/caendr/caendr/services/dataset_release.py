@@ -20,7 +20,7 @@ def get_browser_tracks_path(release_version=None):
 # TODO: Does keys_only make sense as a parameter? Seems like it was originally used to limit the ds query
 #       to keys, which would then be mapped to DatasetRelease objects, but since Entity.query_ds handles
 #       that mapping, passing keys_only in creates DatasetRelease objects missing almost all of their fields.
-def get_all_dataset_releases(keys_only=False, order=None, placeholder=True):
+def get_all_dataset_releases(keys_only=False, order=None, placeholder=True, species=None):
   ''' Returns a list of all Dataset Release entities in datastore as DatasetRelease objects '''
   logger.debug(f'get_all_dataset_releases(keys_only={keys_only}, order={order})')
 
@@ -31,6 +31,9 @@ def get_all_dataset_releases(keys_only=False, order=None, placeholder=True):
   # If none were found and a placeholder was provided, return the placeholder
   if len(list(releases)) == 0 and placeholder:
     return [ _get_placeholder_dataset_release() ]
+
+  if species is not None:
+    releases = [ r for r in releases if r['species'] == species]
 
   # Otherwise, return the retrieved releases
   return releases

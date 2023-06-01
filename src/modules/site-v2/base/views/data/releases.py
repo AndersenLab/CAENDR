@@ -39,7 +39,7 @@ def interpret_url_vars(species_name, release_version):
   if species.get_url_name() != species_name:
     raise SpeciesUrlNameError(species.get_url_name())
 
-  releases = get_all_dataset_releases(order='-version')
+  releases = get_all_dataset_releases(order='-version', species=species.name)
   release  = find_dataset_release(releases, release_version)
 
   return species, releases, release
