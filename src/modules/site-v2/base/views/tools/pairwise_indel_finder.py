@@ -313,7 +313,10 @@ def report(id, file_ext=None):
     # TODO: Set a better filename?
     if file_format is not None:
       resp = Response(format_table.to_csv(sep=file_format['sep']), mimetype=file_format['mimetype'])
-      resp.headers['Content-Disposition'] = f'filename={data["site"]}.{file_ext}'
+      try:
+        resp.headers['Content-Disposition'] = f'filename={report["species"]}_{report["strain_1"]}_{report["strain_2"]}_{data["site"]}.{file_ext}'
+      except:
+        resp.headers['Content-Disposition'] = f'filename={report["id"]}.{file_ext}'
       return resp
 
     # Otherwise, return view page
