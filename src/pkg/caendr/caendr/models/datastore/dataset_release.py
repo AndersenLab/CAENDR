@@ -65,6 +65,7 @@ class DatasetRelease(Entity):
       'report_type',
       'disabled',
       'hidden',
+      'species',
     }
 
 
