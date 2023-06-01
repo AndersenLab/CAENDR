@@ -178,5 +178,10 @@ def get_weekly_visits_plot(df):
       datetime(2016, 3, 1),
       datetime.today()
     ],
-    colors=['rgb(255, 204, 102)']
+    colors=['rgb(255, 204, 102)'],
+    plot_style={
+      'hovermode': 'x',
+      'paper_bgcolor': 'rgba(0,0,0,0)',
+      'plot_bgcolor':  'rgba(0,0,0,0)',
+    },
   )
