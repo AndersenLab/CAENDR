@@ -150,3 +150,16 @@ def search_interval(gene: str):
     }
   else:
     return {'error': 'not found'}
+
+
+
+def remove_prefix(val: str, prefix: str):
+  '''
+    Remove a prefix from a string, if it exists.
+
+    Primarily used to remove predictable, species-specific prefixes from gene names.
+  '''
+  if val and val.startswith(prefix):
+    return val[ len(prefix): ]
+  else:
+    return val

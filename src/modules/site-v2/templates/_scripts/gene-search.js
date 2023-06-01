@@ -7,15 +7,22 @@
  */
 function prep_gene_search(gene, table_id, loading_id) {
 
+  const no_results_div = $(`${table_id}-no-results`)
+
   // If gene is empty, hide all search elements
   if (gene.trim().length == 0) {
     $(table_id).fadeOut();
     $(loading_id).fadeOut();
+    if (no_results_div) no_results_div.fadeOut();
   }
 
   // If gene not empty, replace the table with the loading icon
   else {
-    $(table_id).fadeOut().promise().done(() => { $(loading_id).fadeIn(); });
+    $(table_id).fadeOut().promise().done(() => {
+      no_results_div.fadeOut().promise().done(() => {
+        $(loading_id).fadeIn();
+      })
+    })
   }
 }
 
@@ -40,6 +47,8 @@ function run_gene_search(gene, species, table_id, loading_id, callback) {
   // Get the body of the table to fill out
   const tbody = $(`${table_id} > tbody`);
 
+  const no_results_div = $(`${table_id}-no-results`)
+
   // If no search term provided, hide both dropdown elements
   if (gene.length == 0) {
     $(table_id).fadeOut();
@@ -55,17 +64,26 @@ function run_gene_search(gene, species, table_id, loading_id, callback) {
     contentType: 'application/xml',
   })
   .done(function(results) {
+    if (results.length > 0) {
 
-    // Map each gene to a set of cell values, and add to the table as <td> elements (if applicable)
-    $.each(results, (i, row) => {
-      const cell_values = callback(i, row);
-      if (cell_values !== null) {
-        tbody.append("<tr><td>" + cell_values.join("</td><td>") + "</td></tr>");
-      }
-    });
+      // Map each gene to a set of cell values, and add to the table as <td> elements (if applicable)
+      $.each(results, (i, row) => {
+        const cell_values = callback(i, row);
+        if (cell_values !== null) {
+          tbody.append("<tr><td>" + cell_values.join("</td><td>") + "</td></tr>");
+        }
+      });
 
-    // Hide the loading symbol & show the table
-    $(loading_id).fadeOut().promise().done(() => { $(table_id).fadeIn(); });
+      // Hide the loading symbol & show the table
+      $(loading_id).fadeOut().promise().done(() => { $(table_id).fadeIn(); });
+    }
+
+    // If no results found, inform the user
+    else {
+      $(loading_id).fadeOut().promise().done(() => {
+        if (no_results_div) no_results_div.fadeIn();
+      });
+    }
   })
   .fail(function() {
     console.error('Gene query failed.');
