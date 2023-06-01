@@ -109,6 +109,13 @@ class DataFormatError(InternalError):
 class GoogleSheetsParseError(InternalError):
   description = "Unable to parse Google Sheets document"
 
+class ExternalMarkdownRenderError(InternalError):
+  def __init__(self, url, src):
+    self.url = url
+    self.src = src
+    self.description = f'Unable to render markdown file from {url}: {src}'
+    super().__init__()
+
 
 class EnvLoadError(InternalError):
   def __init__(self, filename, source):
