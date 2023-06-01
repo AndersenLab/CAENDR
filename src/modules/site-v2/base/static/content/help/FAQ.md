@@ -51,7 +51,7 @@ Optimal filter thresholds would faithfully separate real variant sites from non-
 
 ### How are strains grouped by isotype?
 
-In 2012, we [published](http://dx.doi.org/10.1038/ng.1050) genome-wide variant data from reduced representation sequencing of approximately 10% of the *C. elegans* genome (RAD-seq). Using these data, we grouped strains into isotypes. We also found many strains that were mislabeled as wild isolates but were instead N2 derivatives, recombinants from laboratory experiments, and mutagenesis screen isolates (detailed in [Strain Issues](/)). These strains were not characterized further. For the isotypes, we chose one strain to be the isotype reference strain. This strain can be ordered through CaeNDR [here]({{ url_for('request_strains.strains_catalog') }}).
+In 2012, we [published](http://dx.doi.org/10.1038/ng.1050) genome-wide variant data from reduced representation sequencing of approximately 10% of the *C. elegans* genome (RAD-seq). Using these data, we grouped strains into isotypes. We also found many strains that were mislabeled as wild isolates but were instead N2 derivatives, recombinants from laboratory experiments, and mutagenesis screen isolates (detailed in [Strain Issues](/)). These strains were not characterized further. For the isotypes, we chose one strain to be the isotype reference strain. This strain can be ordered through CaeNDR [here]({{ url_for('request_strains.request_strains') }}).
 
 After 2012, with advances in genome sequencing, we transitioned our sequencing to whole-genome short-read sequencing.
 All isotype reference strains were resequenced whole-genome.  The other strains within an isotype were not,
