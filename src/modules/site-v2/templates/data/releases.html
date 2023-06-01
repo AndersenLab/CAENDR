@@ -5,14 +5,15 @@
 <div class="row">
   <div class="col my-5">
     <h2>Releases</h2>
-    {% for RELEASE in RELEASES %}
     <ul class="nav nav-pills p-4 mt-4 rounded shadow-sm text-bg-light">
+    {% for RELEASE in RELEASES %}
       <li class="nav-item">
         <a class="nav-link" {% if RELEASE.disabled %} href="#" {% else %}
           href="{{ url_for('data_releases.data_release_list', species = species.get_url_name(), release_version = RELEASE.version) }}"
           {% endif %}>{{ RELEASE.version }}</a>
       </li>
     {% endfor %}
+    </ul>
   </div>
 </div>
 <!-- /Row -->
