@@ -4,6 +4,7 @@ from flask import render_template, Blueprint
 from extensions import cache
 from config import config
 
+from caendr.models.datastore import SPECIES_LIST
 from caendr.models.error import EnvVarError
 from caendr.services.cloud.storage import get_blob
 
@@ -19,8 +20,10 @@ data_bp = Blueprint(
 @data_bp.route('/')
 @cache.memoize(60*60)
 def data():
-  disable_parent_breadcrumb = True
-  return render_template('data/landing.html', **locals())
+  return render_template('data/landing.html', **{
+    'disable_parent_breadcrumb': True,
+    'species_list': SPECIES_LIST,
+  })
 
 
 #
