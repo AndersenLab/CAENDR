@@ -66,3 +66,31 @@ To continue with your password reset, click the link below and follow the prompt
 
 {password_reset_magic_link}
 """
+
+GENETIC_MAPPING_SUCCESS_EMAIL_TEMPLATE = """
+Your Genetic Mapping report is now complete.
+You may access your report here:
+
+{report_url}
+"""
+
+GENETIC_MAPPING_ERROR_EMAIL_TEMPLATE = """
+We're sorry, but there was an error processing your Genetic Mapping report.
+You may find more information here:
+
+{my_genetic_mappings_link}
+"""
+
+HERITABILITY_SUCCESS_EMAIL_TEMPLATE = """
+Your Heritability report is now complete.
+You may access your report here:
+
+{report_url}
+"""
+
+HERITABILITY_ERROR_EMAIL_TEMPLATE = """
+We're sorry, but there was an error processing your Genetic Mapping report.
+You may find more information here:
+
+{my_heritability_results_link}
+"""
