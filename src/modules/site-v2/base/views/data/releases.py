@@ -103,8 +103,7 @@ def data_release_list(species, release_version=None):
   }
 
   # Get list of files based on species
-  # TODO: Pass in full species identifier (once DatasetRelease blob prefix is updated)
-  files = release.get_report_data_urls_map(species.name[2:])
+  files = release.get_report_data_urls_map(species.name)
 
   # Update params object with version-specific fields
   if release.report_type == DatasetRelease.V2:
