@@ -303,10 +303,20 @@ thead {
                 } else {
                     foundStrains.each(function() {
                     var foundStrain = $(this).find('td:nth-child(4)').text()
-                    $('#search-results').append(`<tr><td>${foundStrain}</td></tr>`)
+                    $('#search-results').append(`<tr><td><button type="button" class="btn btn-link text-start found-strain" data-value="${foundStrain}">${foundStrain}</button></td></tr>`)
                 })
                 }
             })
+        })
+
+        $(document).on('click', '.found-strain', function(){
+            var strain = $(this).attr('data-value')
+            filtered_by_species.hide().filter(function() {
+                return $(this).find('td:nth-child(4)').text() == strain
+            }).show()
+            $('#search').val('')
+            $('#search-results').empty()
+
         })
         
         $('#checkoutBox').prop('disabled', !$("input:checkbox").is(":checked"));
@@ -337,9 +347,10 @@ thead {
             }
             $("#copyPasteStrains, #search").val('')
 
+            var species = filtered_by_species[0].cells[1].innerText
 
             if (lost_strains.length > 0) {
-                set_alert(`The following strain(s) were not found ${lost_strains.join(", ")}`)
+                set_alert(`The following strain(s) were not found ${lost_strains.join(", ")} for ${species.italics()} species`)
             }
             
             filtered_by_species.sort(function(a, b) {
@@ -429,6 +440,7 @@ thead {
         $('#notFoundAlert').hide()
         $("input:checkbox").prop("checked", false)
         $('#search').val('')
+        $('#search-results').empty()
         $("#copyPasteStrains").val('')
     }
 
