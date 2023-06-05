@@ -48,7 +48,7 @@ class ReportType():
 class DatasetRelease(Entity):
   kind = "dataset_release"
   __bucket_name = MODULE_SITE_BUCKET_PUBLIC_NAME
-  __blob_prefix = kind + '/c_${SPECIES}'
+  __blob_prefix = kind + '/${SPECIES}'
 
 
   def __repr__(self):
