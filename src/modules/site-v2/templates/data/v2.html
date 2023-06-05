@@ -42,7 +42,7 @@
                     <div class="row">
                         <div class="col-6">
                             <h2>Release Notes</h2>
-                            <p>{{ render_ext_markdown(files.get('release_notes')) }}</p>
+                            <p>{{ render_ext_markdown(files.get('release_notes'), ignore_err=true, backup_text="*Release notes are not available at this time.*") }}</p>
                         </div>
                         <div class="col-6">
                             <div class="card">
