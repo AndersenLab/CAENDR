@@ -127,15 +127,20 @@ thead {
                     </div>
                     <!-- Individual Strains Content -->
                     <div class="tab-pane fade" id="individual-strains-tab-pane" role="tabpanel" aria-labelledby="individual-strains-tab">
-                        <p>Individual strains can be ordered below.</p>
                         <!-- Filter Facets -->
-                        <div class="filters p-5 mb-5 rounded shadow-sm text-bg-light">
-                            <div class="d-flex flex-wrap justify-content-around">
-
-                                <div class="col-12 col-md-2 mx-1 mb-3 species" id="ind_strains_filter">
+                        <div class="filters px-2 py-2 mb-5 rounded shadow-sm text-bg-light">
+                            <!-- Download Data section -->
+                            <div class="d-flex flex-wrap justify-content-end mb-3">
+                                <button type="button" class="btn border-0 fw-bold" id="downloadData"><i
+                                        class="bi bi-box-arrow-down text-secondary fs-4" aria-hidden="true"></i> Download Species-wide Strain
+                                    Data</button>
+                            </div>
+                            <!-- /Download Data section -->
+                            <div class="d-flex flex-wrap justify-content-around p-3">
+                                <div class="col-12 col-md-3 mx-1 mb-3 species" id="ind_strains_filter">
                                     {{ render_field(form.species, onchange="filter_species_ind") }}
                                 </div>
-                                <div class="col-12 col-md-2 mx-1 mb-3">
+                                <div class="col-12 col-md-3 mx-1 mb-3">
                                     <label for="search" class="form-label">Search by Strains:</label>
                                     <div class="dropdown">
                                         <input id="search" type="text" class="form-control dropdown-toggle" data-bs-toggle="dropdown" placeholder="For example, AB1 ..." action="#" autocomplete="off">
@@ -152,7 +157,7 @@ thead {
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-12 col-md-2 mx-1 mb-3"> 
+                                <div class="col-12 col-md-3 mx-1 mb-3"> 
                                     <label for="pasteStrainsDropdown" class="form-label">Paste List:</label> 
                                     <div class="dropdown-center d-grid" id="pasteStrainsDropdown"> 
                                         <button type='button' class="btn btn-secondary dropdown-toggle text-light" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="true">Paste Strains</button> 
@@ -166,11 +171,6 @@ thead {
                                             </form> 
                                         </div> 
                                     </div>
-                                </div>
-                                <div class="col-12 col-md-2 mx-1 mb-3">
-                                    <label for="downloadData" class="form-label">Strain Data:</label>
-                                    <button type="button" class="btn btn-secondary text-light text-center" id="downloadData" style="width:100%;">Download Data</button>
-                                    
                                 </div>
                             </div>
                         </div>
