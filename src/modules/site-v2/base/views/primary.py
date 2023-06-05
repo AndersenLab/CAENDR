@@ -1,5 +1,5 @@
 
-from flask import render_template, url_for, redirect, Blueprint
+from flask import render_template, url_for, redirect, Blueprint, jsonify
 from extensions import cache
 
 from caendr.utils.file import get_dir_list_sorted
@@ -27,6 +27,12 @@ def primary():
     'fluid_container': True,
     'strain_listing': strain_listing,
   })
+
+@primary_bp.route('/strains-json')
+@cache.memoize(60*60)
+def get_strains_json():
+  strain_listing = [ strain.to_json() for strain in get_strains() ]
+  return jsonify(strain_listing)
 
 
 @primary_bp.route("/Software")
