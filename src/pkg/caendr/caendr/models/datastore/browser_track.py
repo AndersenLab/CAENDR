@@ -65,7 +65,6 @@ class BrowserTrack(Entity):
       'filename',
       'name',
       'order',
-      'hidden',
       'params',
     }
 
@@ -98,18 +97,6 @@ class BrowserTrack(Entity):
     self.__dict__['params'] = {
       k: v for k, v in val.items() if k not in ['name', 'order', 'url', 'indexURL']
     }
-
-
-  ## Querying ##
-
-  @classmethod
-  def query_ds_visible(cls, *args, **kwargs):
-    '''
-      Query only Browser Tracks that are not hidden.
-      Equivalent to adding filter 'hidden = False' to the regular Entity.query_ds() method.
-    '''
-    kwargs['filters'] = [ *kwargs.get('filters', {}), ('hidden', '=', False) ]
-    return cls.query_ds(*args, **kwargs)
 
 
   
