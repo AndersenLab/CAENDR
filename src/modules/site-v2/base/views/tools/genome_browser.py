@@ -51,11 +51,11 @@ def get_tracks():
   return jsonify({
     'default': {
       track['name']: json.dumps( dict(track) )
-        for track in BrowserTrackDefault.query_ds_visible()
+        for track in BrowserTrackDefault.query_ds()
     },
     'templates': {
       track['template_name']: json.dumps( dict(track) )
-        for track in BrowserTrackTemplate.query_ds_visible()
+        for track in BrowserTrackTemplate.query_ds()
     },
   })
 
@@ -101,7 +101,7 @@ def genome_browser(region="III:11746923-11750250", query=None):
     'form': SpeciesSelectForm(),
 
     # Tracks
-    'default_tracks': sorted(BrowserTrackDefault.query_ds_visible(), key = lambda x: x['order'] ),
+    'default_tracks': sorted(BrowserTrackDefault.query_ds(), key = lambda x: x['order'] ),
 
     # Data locations
     'fasta_url': BrowserTrack.get_fasta_path_full().get_string_safe(),

@@ -26,7 +26,7 @@ class BrowserTrack(Entity):
   @staticmethod
   def release_path():
     # TODO: add /browser_tracks to end of path, once all track files are in this folder
-    return (DatasetRelease.get_bucket_name(), DatasetRelease.get_path_template())
+    return (DatasetRelease.get_bucket_name(), DatasetRelease.get_path_template() + '/browser_tracks')
 
   @staticmethod
   def bam_bai_path():
@@ -47,7 +47,7 @@ class BrowserTrack(Entity):
 
   @staticmethod
   def get_fasta_filename():
-    return TokenizedString('browser_tracks/c_${SPECIES}.${PRJ}.${WB}.genome.fa')
+    return TokenizedString('${RELEASE}_${SPECIES}.${WB}.genome.fa')
 
   @staticmethod
   def get_fasta_path_full():
@@ -65,7 +65,6 @@ class BrowserTrack(Entity):
       'filename',
       'name',
       'order',
-      'hidden',
       'params',
     }
 
@@ -98,18 +97,6 @@ class BrowserTrack(Entity):
     self.__dict__['params'] = {
       k: v for k, v in val.items() if k not in ['name', 'order', 'url', 'indexURL']
     }
-
-
-  ## Querying ##
-
-  @classmethod
-  def query_ds_visible(cls, *args, **kwargs):
-    '''
-      Query only Browser Tracks that are not hidden.
-      Equivalent to adding filter 'hidden = False' to the regular Entity.query_ds() method.
-    '''
-    kwargs['filters'] = [ *kwargs.get('filters', {}), ('hidden', '=', False) ]
-    return cls.query_ds(*args, **kwargs)
 
 
   
