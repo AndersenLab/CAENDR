@@ -348,9 +348,16 @@ function update_species(species_id) {
       browser.on('locuschange', function(reference_frame, label) {
         const chrom_old = $("#chromosome").val();
         const chrom_new = reference_frame["chr"];
+
+        // Update location fields in form
+        // TODO: This event is not triggered when the browser locus is set to 'all'
         $("#chromosome").val(chrom_new);
         $("#start").val(reference_frame["start"][0] === '-' ? 1 : reference_frame["start"]);
         $("#stop").val(reference_frame["end"]);
+        toggle_input('start', reference_frame['chr'] !== 'all');
+        toggle_input('stop',  reference_frame['chr'] !== 'all');
+
+        // If the chromosome has changed, run a new query
         if (chrom_old !== chrom_new) {
           run_query();
         }
