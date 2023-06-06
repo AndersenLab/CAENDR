@@ -174,104 +174,88 @@ function formatDate(date) {
   return String(date).replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3")
 }
 
-const strain_info = {{ strain_listing|tojson|safe }};
-strain_info.sort(naturalCompare)
-strain_info.forEach(function(d) {
-  if (d.latitude) {
-    strain_names.push(d.strain);
-    const popup_content = `
-    <div class="popup">
-      <ul>
-        ${d.species ? `<li><strong>Species:</strong> <i>${d.species}</i></li>` : ''}
-        ${d.isotype ? `<li><strong>Isotype:</strong> ${d.isotype}</li>` : ''}
-        ${d.isotype_ref_strain ? `<li><strong>Reference Strain:</strong> ${d.isotype_ref_strain}</li>` : ''}
-        ${d.strain ? `<li><strong>Strains:</strong> ${d.strain}</li>` : ''}
-        ${d.previous_names ? `<li><strong>Alternative Names:</strong> ${d.previous_names}</li>` : ''}
-        ${d.release ? `<li><strong>Release Date:</strong> ${formatDate(d.release)}</li>` : ''}
-        ${d.substrate ? `<li><strong>Substrate:</strong> ${d.substrate}</li>` : ''}
-        ${d.substrate_temp ? `<li><strong>Substrate Temp (C):</strong> ${d.substrate_temp}</li>` : ''}
-        ${d.ambient_humidity ? `<li><strong>Ambient Humidity:</strong> ${d.ambient_humidity} </li>` : ''}
-        ${d.sampled_by ? `<li><strong>Sampled by:</strong> ${d.sampled_by}</li>` : ''}
-      </ul>
-    </div>`
+// const strain_info = {{ strain_listing|tojson|safe }};
+$.getJSON('/strains-json', function(strain_info) {
+  strain_info.sort(naturalCompare)
+  strain_info.forEach(function(d) {
+    if (d.latitude) {
+      strain_names.push(d.strain);
+      const popup_content = `
+      <div class="popup">
+        <ul>
+          ${d.species ? `<li><strong>Species:</strong> <i>${d.species}</i></li>` : ''}
+          ${d.isotype ? `<li><strong>Isotype:</strong> ${d.isotype}</li>` : ''}
+          ${d.isotype_ref_strain ? `<li><strong>Reference Strain:</strong> ${d.isotype_ref_strain}</li>` : ''}
+          ${d.strain ? `<li><strong>Strains:</strong> ${d.strain}</li>` : ''}
+          ${d.previous_names ? `<li><strong>Alternative Names:</strong> ${d.previous_names}</li>` : ''}
+          ${d.release ? `<li><strong>Release Date:</strong> ${formatDate(d.release)}</li>` : ''}
+          ${d.substrate ? `<li><strong>Substrate:</strong> ${d.substrate}</li>` : ''}
+          ${d.substrate_temp ? `<li><strong>Substrate Temp (C):</strong> ${d.substrate_temp}</li>` : ''}
+          ${d.ambient_humidity ? `<li><strong>Ambient Humidity:</strong> ${d.ambient_humidity} </li>` : ''}
+          ${d.sampled_by ? `<li><strong>Sampled by:</strong> ${d.sampled_by}</li>` : ''}
+        </ul>
+      </div>`
 
-    const marker = L.marker([d.latitude, d.longitude], { keyboard: false, alt: "a marker showing the geographic location of a strain", icon: set_marker_color(d.species),
-                                                    species: d.species})
-                                                    .on('mouseover', function(){
-                                                      marker.setIcon(icon_hover)
-                                                    })
-                                                    .on('mouseout', function(){
-                                                      const original_icon = set_marker_color(d.species)
-                                                      marker.setIcon(original_icon)
-                                                    })
-                            
-    marker.bindPopup(popup_content)
+      const marker = L.marker([d.latitude, d.longitude], { keyboard: false, alt: "a marker showing the geographic location of a strain", icon: set_marker_color(d.species),
+                                                      species: d.species})
+                                                      .on('mouseover', function(){
+                                                        marker.setIcon(icon_hover)
+                                                      })
+                                                      .on('mouseout', function(){
+                                                        const original_icon = set_marker_color(d.species)
+                                                        marker.setIcon(original_icon)
+                                                      })
+                              
+      marker.bindPopup(popup_content)
 
-    if (marker.options.species === Species.ELEGANS) {
-      elegans.push(marker)
+      if (marker.options.species === Species.ELEGANS) {
+        elegans.push(marker)
+      }
+      if (marker.options.species === Species.BRIGGSAE) {
+        briggsae.push(marker)
+      }
+      if (marker.options.species === Species.TROPICALIS) {
+        tropicalis.push(marker)
+      }
     }
-    if (marker.options.species === Species.BRIGGSAE) {
-      briggsae.push(marker)
+  });
+
+  const elegans_layer = L.layerGroup(elegans)
+  const briggsae_layer = L.layerGroup(briggsae)
+  const tropicalis_layer = L.layerGroup(tropicalis)
+
+  let overlays = L.layerGroup().addLayer(elegans_layer).addTo(map)
+
+  function showStrains() {
+    const filters = document.getElementById('strains').filters
+
+    const checked_species = []
+    for (let i = 0; i < filters.length; i++) {
+      if(filters[i].checked) checked_species.push(filters[i].value)
     }
-    if (marker.options.species === Species.TROPICALIS) {
-      tropicalis.push(marker)
+    overlays.clearLayers()
+
+    if(checked_species.includes('elegans_layer')) {
+    overlays.addLayer(elegans_layer)
+    }
+    if(checked_species.includes('briggsae_layer')) {
+    overlays.addLayer(briggsae_layer)
+    }
+    if(checked_species.includes('tropicalis_layer')) {
+    overlays.addLayer(tropicalis_layer)
     }
   }
-});
 
-const elegans_layer = L.layerGroup(elegans)
-const briggsae_layer = L.layerGroup(briggsae)
-const tropicalis_layer = L.layerGroup(tropicalis)
+  document.querySelector('#strains').addEventListener('click', e => {
+    if (e.target.tagName !== 'INPUT') return;
 
-let overlays = L.layerGroup().addLayer(elegans_layer).addTo(map)
-
-function showStrains() {
-  const filters = document.getElementById('strains').filters
-
-  const checked_species = []
-  for (let i = 0; i < filters.length; i++) {
-    if(filters[i].checked) checked_species.push(filters[i].value)
-  }
-  overlays.clearLayers()
-
-  if(checked_species.includes('elegans_layer')) {
-  overlays.addLayer(elegans_layer)
-  }
-  if(checked_species.includes('briggsae_layer')) {
-  overlays.addLayer(briggsae_layer)
-  }
-  if(checked_species.includes('tropicalis_layer')) {
-  overlays.addLayer(tropicalis_layer)
-  }
-}
-
-document.querySelector('#strains').addEventListener('click', e => {
-  if (e.target.tagName !== 'INPUT') return;
-
-  const input = e.target
-  const value = input.value;
-  showStrains(value)
+    const input = e.target
+    const value = input.value;
+    showStrains(value)
+  })
 })
 
-$(document).ready(function() {
 
-    (function($) {
-        $('[data-toggle="tooltip"]').tooltip()
-
-        const patterns = [];
-        $('#filter').keyup(function() {
-            $('.searchable tr').hide();
-            console.log($(this).val());
-            $(this).val().split(',').forEach(function(r) {
-                const rex = new RegExp(r, "i");
-                $('.searchable tr').filter(function() {
-                    return rex.test($(this).text());
-                }).show();
-            })  
-        })
-
-    }(jQuery));
-});
 
   // zoom in function
   $('#zoomIn').click(function () {
