@@ -29,7 +29,7 @@ def primary():
   })
 
 @primary_bp.route('/strains-json')
-@cache.memoize(60*60)
+@cache.memoize(60*60*24)
 def get_strains_json():
   strain_listing = [ strain.to_json() for strain in get_strains() ]
   return jsonify(strain_listing)
