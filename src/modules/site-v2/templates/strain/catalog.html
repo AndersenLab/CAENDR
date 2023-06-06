@@ -98,11 +98,12 @@ thead {
                                         <td>{{ len(v) }}</td>
                                         <td>{{ v|join(' ') }}</td>
                                     </tr>
+
                                     {% else %}
                                         {% set set = k[0]|int %}
-                                    <tr>
+                                    <tr class="{% if set>= 9 %}d-none{% endif %}">
                                         <td>
-                                            <input class="form-check-input" id="set-{{ set }}" type="checkbox" name="items-{{ set + 1000 }}" value="set_{{ set }}" class="styled-checkbox" {% if set>= 9 %}disabled{% endif %}/>
+                                            <input class="form-check-input" id="set-{{ set }}" type="checkbox" name="items-{{ set + 1000 }}" value="set_{{ set }}" class="styled-checkbox" />
                                             <label class="form-check-label visually-hidden" for="set-{{ set }}">Select row</label>
                                         </td>
                                         <td class="species" data-value="{{ species }}"><em>{{ species|capitalize|replace('_', '. ') }}</em></td>
