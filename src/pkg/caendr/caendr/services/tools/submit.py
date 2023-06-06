@@ -9,6 +9,7 @@ from caendr.models.error     import CachedDataError, DuplicateDataError, DataFor
 from caendr.models.task      import TaskStatus, IndelPrimerTask, HeritabilityTask, NemaScanTask
 
 from caendr.api.strain             import query_strains
+from caendr.api.isotype            import get_distinct_isotypes
 from caendr.services.cloud.storage import upload_blob_from_string, upload_blob_from_file
 
 from caendr.utils.data import get_object_hash, get_file_format
@@ -495,9 +496,19 @@ def validate_num(accept_float = False, accept_na = False):
 # Check that column is a valid strain name for the desired species
 def validate_strain(species, force_unique=False, force_unique_msg=None):
 
-  # Get the list of all valid strain names for this species and for any species
-  valid_strain_names_species = query_strains(all_strain_names=True, species=species.name)
-  valid_strain_names_all     = query_strains(all_strain_names=True)
+  # Get the list of all valid strain names for this species
+  # Pull from strain names & isotype names, to allow for isotypes with no strain of the same name
+  valid_names_species = {
+    *query_strains(all_strain_names=True, species=species.name),
+    *get_distinct_isotypes(species=species.name),
+  }
+
+  # Get the list of all valid strain names for all species
+  # Used to provide more informative error messages
+  valid_names_all = {
+    *query_strains(all_strain_names=True),
+    *get_distinct_isotypes(),
+  }
 
   # Dict to track the first line each strain occurs on
   # Used to ensure strains are unique, if applicable
@@ -512,15 +523,15 @@ def validate_strain(species, force_unique=False, force_unique_msg=None):
   # Define the validator function
   def func(header, value, line):
     nonlocal force_unique, force_unique_msg
-    nonlocal strain_line_numbers, valid_strain_names_species, valid_strain_names_all
+    nonlocal strain_line_numbers, valid_names_species, valid_names_all
 
     # Check for blank strain
     if value == '':
       raise DataFormatError(f'Strain values cannot be blank. Please check line { line } to ensure a valid strain has been entered.', line)
 
     # Check if strain is valid for the desired species
-    if value not in valid_strain_names_species:
-      if value in valid_strain_names_all:
+    if value not in valid_names_species:
+      if value in valid_names_all:
         raise DataFormatError(f'The strain { value } is not a valid strain for { species.short_name }. Please enter a valid { species.short_name } strain.', line)
       else:
         raise DataFormatError(f'The strain { value } is not a valid strain name. Please ensure that { value } is valid.', line)
