@@ -71,7 +71,7 @@ def upload_file(request, filename, valid_file_extensions=None):
 
   # Match the file extension by splitting on right-most '.' character
   try:
-    file_ext = file.filename.rsplit('.', 2)[1]
+    file_ext = file.filename.rsplit('.', 1)[1]
   except:
     file_ext = None
 
