@@ -234,7 +234,7 @@ class SubmissionManager():
     rows = {}
 
     # Read first line from tsv
-    with open(local_path, 'r') as f:
+    with open(local_path, 'r', encoding='utf-8-sig') as f:
       csv_reader = csv.reader(f, delimiter=delimiter)
 
       # Get the header line, throwing an empty file error if not found
