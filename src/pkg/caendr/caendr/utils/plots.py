@@ -85,6 +85,11 @@ def time_series_plot(df, x_title=None, y_title=None, range=None, colors=COLORS, 
             Returns:
               A dictionary specifying line styles for the current column
   """
+  colors = [
+      "#DB6333",
+      "#53886C",
+      "#0719BC",
+  ]
   try:
     trace_set = []
     for n, column in enumerate(df.columns[1:]):
