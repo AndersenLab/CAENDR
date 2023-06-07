@@ -94,7 +94,8 @@ from extensions import (
   debug_toolbar,
   sslify,
   sqlalchemy,
-  jwt
+  jwt,
+  compress
 )
 
 
@@ -122,6 +123,7 @@ def create_app(config=config):
   logger.info(f"Database Connection: { 'OK' if db_connection_status else 'Error' }. {db_test_output}")
 
   return app
+
 
 
 def configure_ssl(app):
@@ -170,6 +172,7 @@ def register_extensions(app):
   csrf.exempt(maintenance_bp)
   app.config['csrf'] = csrf
   jwt.init_app(app)
+  compress.init_app(app)
 
 
 def register_blueprints(app):
