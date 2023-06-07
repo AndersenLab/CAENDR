@@ -170,7 +170,7 @@ class Entity(object):
     props = { **dict(self), **meta_props }
 
     # Save the entity in datastore
-    save_ds_entity(self.kind, self.name, **props)
+    save_ds_entity(self.kind, self.name, exclude_from_indexes=self.exclude_from_indexes, **props)
 
 
 
