@@ -1,6 +1,6 @@
 
 from flask import render_template, url_for, redirect, Blueprint, jsonify
-from extensions import cache
+from extensions import cache, compress
 
 from caendr.utils.file import get_dir_list_sorted
 from caendr.api.strain import get_strains
@@ -13,11 +13,6 @@ primary_bp = Blueprint('primary', __name__)
 def primary():
   ''' Site home page '''
 
-  try:
-    strain_listing = [ strain.to_json() for strain in get_strains() ]
-  except Exception:
-    strain_listing = []
-
   # TODO: make news dynamic
   #files = sorted_files("base/static/content/news/")
 
@@ -25,13 +20,16 @@ def primary():
     'page_title': 'Caenorhabditis elegans Natural Diversity Resource',
     #'files': files,
     'fluid_container': True,
-    'strain_listing': strain_listing,
   })
 
-@primary_bp.route('/strains-json')
+@primary_bp.route('/strains')
 @cache.memoize(60*60*24)
+@compress.compressed()
 def get_strains_json():
-  strain_listing = [ strain.to_json() for strain in get_strains() ]
+  try:
+    strain_listing = [ strain.to_json() for strain in get_strains() ]
+  except Exception:
+    strain_listing = []
   return jsonify(strain_listing)
 
 
