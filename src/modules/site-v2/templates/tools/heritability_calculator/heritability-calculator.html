@@ -26,7 +26,7 @@
                     <div class="nav nav-tabs text-bg-light p-1 pb-0" id="nav-tab" role="tablist">
                       <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">New</button>
                       <button class="nav-link" id="nav-linkOne-tab" data-bs-toggle="tab" data-bs-target="#nav-linkOne" type="button" role="tab" aria-controls="nav-linkOne" aria-selected="false">Example Data</button>
-                      <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false"><a href="{{ url_for('data_releases.data_releases') }}">Release Notes</a></button>
+                      <button class="nav-link disabled" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false">Release Notes</button>
                       <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-" aria-selected="false"><a href="{{ url_for('heritability_calculator.my_results') }}">My Heritability Results</a></button>
                     </div>
                   </nav>
@@ -167,6 +167,24 @@ $("#form-submit").on("submit", function(e) {
       resetForm();
     })
 });
+
+$("#speciesSelect").on('change', function(){
+  if ($("#speciesSelect").val() !== '') {
+    $('#nav-linkTwo-tab').removeClass('disabled')
+  }
+})
+
+// Setting up Release Notes link
+$('#nav-linkTwo-tab').click(function() {
+    const species = $('#speciesSelect').val()
+    let url = "{{ url_for('data_releases.data_release_list', species='SPECIES') }}";
+    if (species) {
+        url = url.replace("SPECIES", species);
+    } else {
+        throw Error('No species selected.');
+    }
+    window.location.href = url;
+  });
 
 </script>
 {% endblock %}

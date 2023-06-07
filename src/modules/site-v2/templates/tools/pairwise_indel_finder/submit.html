@@ -20,7 +20,7 @@
             type="button" role="tab" aria-controls="nav-home" aria-selected="true">New</button>
           <button class="nav-link" id="nav-about-tab" data-bs-toggle="tab" data-bs-target="#nav-about" type="button"
             role="tab" aria-controls="nav-about" aria-selected="false">About</button>
-            <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false"><a href="{{ url_for('data_releases.data_releases') }}">Release Notes</a></button>
+          <button class="nav-link disabled" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false">Release Notes</button>
         </div>
       </nav>
       <div class="tab-content" id="nav-tabContent">
@@ -322,6 +322,9 @@ function update_species(species_id) {
     'fullscreenButton',
   ];
   form_ids.forEach((form_id) => toggle_input(form_id, !species_empty));
+  if(!species_empty) {
+    $('#nav-linkTwo-tab').removeClass('disabled')
+  }
 
   // If no species chosen, end the update function here
   if (species_empty) return;
@@ -666,6 +669,18 @@ var closeButton = document.getElementById("closeButton");
     closeButton.classList.remove("d-block");
     closeButton.classList.add("d-none");
   }
+
+  // Setting up Release Notes link
+  $('#nav-linkTwo-tab').click(function() {
+    const species = $('#speciesSelect').val()
+    let url = "{{ url_for('data_releases.data_release_list', species='SPECIES') }}";
+    if (species) {
+        url = url.replace("SPECIES", species);
+    } else {
+        throw Error('No species selected.');
+    }
+    window.location.href = url;
+  });
 
 </script>
 
