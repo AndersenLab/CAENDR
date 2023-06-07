@@ -4,6 +4,7 @@ from caendr.models.datastore import Entity
 
 class PipelineOperation(Entity):
   kind = 'pipeline_operation'
+  exclude_from_indexes = ('metadata')
   
   @classmethod
   def get_props_set(cls):

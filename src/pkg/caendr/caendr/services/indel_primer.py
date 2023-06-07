@@ -9,7 +9,13 @@ from caendr.services.logger import logger
 from caendr.models.datastore import IndelPrimer, SPECIES_LIST
 from caendr.models.error     import NotFoundError, EmptyReportDataError, EmptyReportResultsError
 
-from caendr.services.cloud.storage import get_blob, generate_blob_url, download_blob_as_dataframe, download_blob_as_json
+from caendr.services.cloud.storage import (
+    download_blob_as_dataframe,
+    download_blob_as_json,
+    download_blob_to_file,
+    generate_blob_url,
+    get_blob,
+)
 from caendr.services.tools import submit_job
 
 from caendr.utils.constants import CHROM_NUMERIC
@@ -90,11 +96,26 @@ def get_vcf_url(species, release = None, secure = True):
   )
 
 
+def download_vcf_index_file(species, release = None):
+  filename = IndelPrimer.get_source_filename(species, release) + '.vcf.gz.csi'
+  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, f"{INDEL_PRIMER_TOOL_PATH}/{filename}", filename)
+
+
 def get_sv_strains(species, release = None):
   logger.debug('get_sv_strains')
+
+  # Use the given release if provided, otherwise default to species value
   release = release or SPECIES_LIST[species].indel_primer_ver
+
+  # Compute and log the URL of the VCF file on GCP
   vcf_url = get_vcf_url( species, release, secure=False )
   logger.debug(f'get_sv_strains: reading strains from {vcf_url}')
+
+  # Explicitly download the index file
+  # IMPORTANT: This solves a memory allocation error in the cyvcf library
+  download_vcf_index_file(species, release)
+
+  # Read the list of strains from the vcf file
   try:
     return VCF( vcf_url ).samples
   except Exception as ex:
