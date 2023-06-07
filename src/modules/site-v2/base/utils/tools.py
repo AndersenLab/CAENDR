@@ -5,6 +5,8 @@ from caendr.services.logger import logger
 from base.utils.auth import get_current_user, user_is_admin
 from werkzeug.utils import secure_filename
 
+from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
+
 from caendr.models.error import (
     CachedDataError,
     DataFormatError,
@@ -99,7 +101,7 @@ def try_submit(EntityClass, user, data, no_cache):
 
   # Try submitting the job
   try:
-    report = submit_job(EntityClass, user, data, no_cache=no_cache)
+    report = submit_job(EntityClass, user, data, no_cache=no_cache, valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS)
     return {
       'cached':    False,
       'same_user': None,

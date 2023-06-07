@@ -24,15 +24,16 @@ NEMASCAN_NXF_CONTAINER_NAME = get_env_var('NEMASCAN_NXF_CONTAINER_NAME')
 
 
 
-def get_delimiter_from_filepath(filepath=None):
+def get_delimiter_from_filepath(filepath=None, valid_file_extensions=None):
+  valid_file_extensions = valid_file_extensions or {'csv'}
   if filepath:
-    file_format = get_file_format(filepath[-3:], valid_formats=['csv'])
+    file_format = get_file_format(filepath[-3:], valid_formats=valid_file_extensions)
     if file_format:
       return file_format['sep']
 
 
 
-def submit_job(entity_class, user, data, container_version=None, no_cache=False):
+def submit_job(entity_class, user, data, container_version=None, no_cache=False, valid_file_extensions=None):
   '''
       Submit a job with the given data for the given user.
       Checks for cached submissions and cached results as defined in _Entity_Class.
@@ -70,7 +71,7 @@ def submit_job(entity_class, user, data, container_version=None, no_cache=False)
     raise ValueError(f'No submission manager defined for class "{entity_class.__name__}"')
 
   # Forward args to proper SubmissionManager subclass
-  return entity_manager_mapping[entity_class.kind].submit(user, data, container_version=container_version, no_cache=no_cache)
+  return entity_manager_mapping[entity_class.kind].submit(user, data, container_version=container_version, no_cache=no_cache, valid_file_extensions=valid_file_extensions)
 
 
 
@@ -140,7 +141,7 @@ class SubmissionManager():
 
 
   @classmethod
-  def submit(cls, user, data, container_version=None, no_cache=False):
+  def submit(cls, user, data, container_version=None, no_cache=False, valid_file_extensions=None):
     '''
       Submit a job with the given data for the given user.
       Checks for cached submissions and cached results as defined in _Entity_Class.
@@ -178,8 +179,10 @@ class SubmissionManager():
     if container_version is not None:
       logger.warn(f'Container version {container_version} was specified manually - this may not be the most recent version.')
 
+    # Get the file format & delimiter
+    delimiter = get_delimiter_from_filepath(data.get('filepath'), valid_file_extensions=valid_file_extensions)
+
     # Parse the input data
-    delimiter = get_delimiter_from_filepath(data.get('filepath'))
     data_file, data_hash, data_vals = cls.parse_data(data, delimiter=delimiter)
 
     # Check if user has already submitted this job, and "return" it in a duplicate data error if so
