@@ -123,7 +123,7 @@
 {% block script %}
 <script>
 
-  $.getJSON('/strains-json', function(data) {
+  $.getJSON('/strains', function(data) {
     const table = $('#isotype-db').DataTable({
         dom: 'Plfrtip',
         data: get_table_data(data),
