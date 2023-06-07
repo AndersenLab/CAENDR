@@ -15,6 +15,15 @@ thead {
     top: 0;
     z-index: 1
 }
+.input-wrapper {
+    position: relative;
+}
+.input-wrapper i {
+  position: absolute;
+  top: 20%;
+  right: 5px;
+  color: grey
+}
 
 </style>
 {% endblock %}
@@ -138,7 +147,10 @@ thead {
                                 <div class="col-12 col-md-2 mx-1 mb-3">
                                     <label for="search" class="form-label">Search by Strains:</label>
                                     <div class="dropdown">
-                                        <input id="search" type="text" class="form-control dropdown-toggle" data-bs-toggle="dropdown" placeholder="For example, AB1 ..." action="#" autocomplete="off">
+                                        <div class="input-wrapper" data-bs-toggle="dropdown">
+                                            <input id="search" type="text" class="form-control dropdown-toggle" placeholder="For example, AB1" action="#" autocomplete="off">
+                                            <i class="bi bi-x-circle-fill" id="clear"></i>
+                                        </div>
                                         <div class="dropdown-menu table-responsive p-1 dropdownSelect" role="menu">
                                             <table class="table table-hover table-striped">
                                                 <caption class="visually-hidden">A list of strains.</caption>
@@ -309,14 +321,18 @@ thead {
             })
         })
 
+        $('#clear').on('click', function() {
+            filtered_by_species.show()
+            $('#search').val('')
+        })
+
         $(document).on('click', '.found-strain', function(){
             var strain = $(this).attr('data-value')
+            $('#search').val(strain)
             filtered_by_species.hide().filter(function() {
                 return $(this).find('td:nth-child(4)').text() == strain
             }).show()
-            $('#search').val('')
             $('#search-results').empty()
-
         })
         
         $('#checkoutBox').prop('disabled', !$("input:checkbox").is(":checked"));

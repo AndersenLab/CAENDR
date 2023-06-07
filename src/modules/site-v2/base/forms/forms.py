@@ -247,7 +247,7 @@ class OrderForm(Form):
   address = TextAreaField('Address', [Length(min=10, max=200)])
   phone = StringField('Phone', [Length(min=3, max=35)])
   shipping_service = SelectField('Shipping', choices=SHIPPING_OPTIONS)
-  shipping_account = StringField('Account Number')
+  shipping_account = StringField('UPS/FEDEX Account Number')
   payment = SelectField("Payment", choices=PAYMENT_OPTIONS)
   comments = TextAreaField("Comments", [Length(min=0, max=300)])
   version = StringField(HiddenField('version', [DataRequired()]))
