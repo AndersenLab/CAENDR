@@ -77,7 +77,7 @@
  #}
 {% macro replace_tokens(target_var, species_var, tokens) %}
   // TODO: Uses of species name ID in filenames not yet standardized, so we drop the 'c_' prefix for now
-  {{target_var}} = {{target_var}}.replaceAll('${SPECIES}', {{species_var}}['name'].substring(2));
+  {{target_var}} = {{target_var}}.replaceAll('${SPECIES}', {{species_var}}['name']);
   {% for token, field in tokens.items() -%}
   {{target_var}} = {{target_var}}.replaceAll('${' + '{{ token }}' + '}', {{species_var}}['{{ field }}']);
   {% endfor -%}

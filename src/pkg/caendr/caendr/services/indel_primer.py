@@ -91,8 +91,15 @@ def get_vcf_url(species, release = None, secure = True):
 
 
 def get_sv_strains(species, release = None):
+  logger.debug('get_sv_strains')
   release = release or SPECIES_LIST[species].indel_primer_ver
-  return VCF( get_vcf_url( species, release, secure=False ) ).samples
+  vcf_url = get_vcf_url( species, release, secure=False )
+  logger.debug(f'get_sv_strains: reading strains from {vcf_url}')
+  try:
+    return VCF( vcf_url ).samples
+  except Exception as ex:
+    logger.error(f'Error reading VCF file "{vcf_url}": {ex}')
+    raise
 
 
 def get_indel_primer_chrom_choices(): 

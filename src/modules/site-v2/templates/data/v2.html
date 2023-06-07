@@ -42,7 +42,7 @@
                     <div class="row">
                         <div class="col-6">
                             <h2>Release Notes</h2>
-                            <p>{{ render_ext_markdown(files.get('release_notes')) }}</p>
+                            <p>{{ render_ext_markdown(files.get('release_notes'), ignore_err=true, backup_text="*Release notes are not available at this time.*") }}</p>
                         </div>
                         <div class="col-6">
                             <div class="card">
@@ -221,9 +221,9 @@
                                             <th scope="row">Reference Genome FASTA ({{ RELEASE.wormbase_version }})</th>
                                             <td>The reference genome build from Wormbase used for alignment and
                                                 annotation.</td>
-                                            <td class="text-center"><a class="btn btn-primary text-light"
-                                                    href="ftp://ftp.wormbase.org/pub/wormbase/releases/{{ RELEASE.wormbase_version }}/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.{{ RELEASE.wormbase_version }}.genomic.fa.gz">c_elegans.PRJNA13758.{{
-                                                    RELEASE.wormbase_version }}.genomic.fa.gz</a></td>
+                                            <td class="text-center">
+                                                <a class="btn btn-primary text-light" href="{{ fasta_path }}">{{ fasta_name }}</a>
+                                            </td>
                                         </tr>
                                         <tr>
                                             <th scope="row">Transposon Calls</th>
