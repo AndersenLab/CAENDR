@@ -40,7 +40,8 @@ ENABLE_STACKDRIVER_MONITORING = True
 def _get_container_commands(version):
   default_command = ['python', '/h2/main.py']
   version_mapping = {
-    "v0.3": ["./heritability-nxf.sh"]
+    "v0.3": ["./heritability-nxf.sh"],
+    "v0.02-debug": ["./heritability-nxf.sh"]
   }
   return version_mapping.get(version, default_command)
 
