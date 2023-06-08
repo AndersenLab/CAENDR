@@ -57,5 +57,8 @@ RUN python -m pip install --no-cache-dir -e ./caendr
 # Copy source code
 COPY ./src/modules/site-v2 ./
 
+# this is necessary since CloudRun loads env variables attached to the service instead of baked .env in the image
+RUN touch .env
+
 CMD export $(cat .env | sed -e '/^\s*$/d' | sed -e '/^\#/d' | xargs) && \
   gunicorn -b :$PORT main:app
