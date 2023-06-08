@@ -9,6 +9,7 @@ from caendr.models.error     import CachedDataError, DuplicateDataError, DataFor
 from caendr.models.task      import TaskStatus, IndelPrimerTask, HeritabilityTask, NemaScanTask
 
 from caendr.api.strain             import query_strains
+from caendr.api.isotype            import get_distinct_isotypes
 from caendr.services.cloud.storage import upload_blob_from_string, upload_blob_from_file
 
 from caendr.utils.data import get_object_hash, get_file_format
@@ -23,15 +24,16 @@ NEMASCAN_NXF_CONTAINER_NAME = get_env_var('NEMASCAN_NXF_CONTAINER_NAME')
 
 
 
-def get_delimiter_from_filepath(filepath=None):
+def get_delimiter_from_filepath(filepath=None, valid_file_extensions=None):
+  valid_file_extensions = valid_file_extensions or {'csv'}
   if filepath:
-    file_format = get_file_format(filepath[-3:], valid_formats=['csv'])
+    file_format = get_file_format(filepath[-3:], valid_formats=valid_file_extensions)
     if file_format:
       return file_format['sep']
 
 
 
-def submit_job(entity_class, user, data, container_version=None, no_cache=False):
+def submit_job(entity_class, user, data, container_version=None, no_cache=False, valid_file_extensions=None):
   '''
       Submit a job with the given data for the given user.
       Checks for cached submissions and cached results as defined in _Entity_Class.
@@ -69,7 +71,7 @@ def submit_job(entity_class, user, data, container_version=None, no_cache=False)
     raise ValueError(f'No submission manager defined for class "{entity_class.__name__}"')
 
   # Forward args to proper SubmissionManager subclass
-  return entity_manager_mapping[entity_class.kind].submit(user, data, container_version=container_version, no_cache=no_cache)
+  return entity_manager_mapping[entity_class.kind].submit(user, data, container_version=container_version, no_cache=no_cache, valid_file_extensions=valid_file_extensions)
 
 
 
@@ -139,7 +141,7 @@ class SubmissionManager():
 
 
   @classmethod
-  def submit(cls, user, data, container_version=None, no_cache=False):
+  def submit(cls, user, data, container_version=None, no_cache=False, valid_file_extensions=None):
     '''
       Submit a job with the given data for the given user.
       Checks for cached submissions and cached results as defined in _Entity_Class.
@@ -177,8 +179,10 @@ class SubmissionManager():
     if container_version is not None:
       logger.warn(f'Container version {container_version} was specified manually - this may not be the most recent version.')
 
+    # Get the file format & delimiter
+    delimiter = get_delimiter_from_filepath(data.get('filepath'), valid_file_extensions=valid_file_extensions)
+
     # Parse the input data
-    delimiter = get_delimiter_from_filepath(data.get('filepath'))
     data_file, data_hash, data_vals = cls.parse_data(data, delimiter=delimiter)
 
     # Check if user has already submitted this job, and "return" it in a duplicate data error if so
@@ -233,7 +237,7 @@ class SubmissionManager():
     rows = {}
 
     # Read first line from tsv
-    with open(local_path, 'r') as f:
+    with open(local_path, 'r', encoding='utf-8-sig') as f:
       csv_reader = csv.reader(f, delimiter=delimiter)
 
       # Get the header line, throwing an empty file error if not found
@@ -495,9 +499,19 @@ def validate_num(accept_float = False, accept_na = False):
 # Check that column is a valid strain name for the desired species
 def validate_strain(species, force_unique=False, force_unique_msg=None):
 
-  # Get the list of all valid strain names for this species and for any species
-  valid_strain_names_species = query_strains(all_strain_names=True, species=species.name)
-  valid_strain_names_all     = query_strains(all_strain_names=True)
+  # Get the list of all valid strain names for this species
+  # Pull from strain names & isotype names, to allow for isotypes with no strain of the same name
+  valid_names_species = {
+    *query_strains(all_strain_names=True, species=species.name),
+    *get_distinct_isotypes(species=species.name),
+  }
+
+  # Get the list of all valid strain names for all species
+  # Used to provide more informative error messages
+  valid_names_all = {
+    *query_strains(all_strain_names=True),
+    *get_distinct_isotypes(),
+  }
 
   # Dict to track the first line each strain occurs on
   # Used to ensure strains are unique, if applicable
@@ -512,15 +526,15 @@ def validate_strain(species, force_unique=False, force_unique_msg=None):
   # Define the validator function
   def func(header, value, line):
     nonlocal force_unique, force_unique_msg
-    nonlocal strain_line_numbers, valid_strain_names_species, valid_strain_names_all
+    nonlocal strain_line_numbers, valid_names_species, valid_names_all
 
     # Check for blank strain
     if value == '':
       raise DataFormatError(f'Strain values cannot be blank. Please check line { line } to ensure a valid strain has been entered.', line)
 
     # Check if strain is valid for the desired species
-    if value not in valid_strain_names_species:
-      if value in valid_strain_names_all:
+    if value not in valid_names_species:
+      if value in valid_names_all:
         raise DataFormatError(f'The strain { value } is not a valid strain for { species.short_name }. Please enter a valid { species.short_name } strain.', line)
       else:
         raise DataFormatError(f'The strain { value } is not a valid strain name. Please ensure that { value } is valid.', line)

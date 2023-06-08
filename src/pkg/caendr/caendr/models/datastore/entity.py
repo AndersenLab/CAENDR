@@ -57,6 +57,10 @@ class Entity(object):
   # This should be overwritten by subclasses
   kind = "Entity"
 
+  # Properties to exclude from indexing
+  # Should be overwritten by subclasses, where applicable
+  exclude_from_indexes = ()
+
 
   ## Initialization ##
 
@@ -65,7 +69,6 @@ class Entity(object):
       Args:
         name_or_obj - A name for a new datastore item or an existing one to retrieve from the datastore               
     """
-    self.exclude_from_indexes = None
     self._exists = False
 
     # If a datastore entity was passed, copy its fields
@@ -167,7 +170,7 @@ class Entity(object):
     props = { **dict(self), **meta_props }
 
     # Save the entity in datastore
-    save_ds_entity(self.kind, self.name, **props)
+    save_ds_entity(self.kind, self.name, exclude_from_indexes=self.exclude_from_indexes, **props)
 
 
 
