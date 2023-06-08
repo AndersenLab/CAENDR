@@ -19,6 +19,6 @@
    - '--image'
    - 'gcr.io/$PROJECT_ID/caendr-site-v2:latest'
    - '--region'
-   - 'REGION'
+   - 'us-central1'
  images:
  - 'gcr.io/$PROJECT_ID/caendr-site-v2:latest'
