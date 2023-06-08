@@ -1,4 +1,8 @@
  steps:
+ # pull down the latest version of the image to speed up building
+ - name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args: ['-c', 'docker pull gcr.io/$PROJECT_ID/caendr-site-v2:latest || exit 0']
  # Build the container image
  - name: 'gcr.io/cloud-builders/docker'
    args: ['build', '-t', 'gcr.io/$PROJECT_ID/caendr-site-v2:$COMMIT_SHA', '-f', './src/modules/site-v2/Dockerfile.cloudrun','.']
