@@ -5,6 +5,7 @@ from caendr.services.logger import logger
 from base.utils.auth import get_current_user, user_is_admin
 from werkzeug.utils import secure_filename
 
+from caendr.models.datastore import IndelPrimer, NemascanMapping, HeritabilityReport
 from caendr.models.error import (
     CachedDataError,
     DataFormatError,
@@ -24,11 +25,25 @@ os.makedirs(uploads_dir, exist_ok=True)
 SUPPORT_EMAIL = get_secret('SUPPORT_EMAIL')
 
 
-def lookup_report(EntityClass, reportId, user=None):
+def get_class_from_kind(kind):
+  for c in [ IndelPrimer, NemascanMapping, HeritabilityReport ]:
+    if kind == c.kind:
+      return c
+
+
+def lookup_report(kind, reportId, user=None):
 
   # If no user explicitly provided, default to current user
   if user is None:
     user = get_current_user()
+
+  # Get & validate the entity class from the provided kind
+  EntityClass = get_class_from_kind(kind)
+  if EntityClass is None:
+    if user_is_admin():
+      raise ReportLookupError('Invalid report type.', 400)
+    else:
+      raise ReportLookupError('You do not have access to that report.', 401)
 
   # Retrieve the report entity from datastore, or None if no entity with that ID exists
   report = EntityClass.get_ds(reportId)
