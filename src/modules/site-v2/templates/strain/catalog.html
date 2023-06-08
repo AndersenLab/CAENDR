@@ -15,6 +15,15 @@ thead {
     top: 0;
     z-index: 1
 }
+.input-wrapper {
+    position: relative;
+}
+.input-wrapper i {
+  position: absolute;
+  top: 20%;
+  right: 5px;
+  color: grey
+}
 
 </style>
 {% endblock %}
@@ -65,6 +74,7 @@ thead {
                                             <div id="mappingSets-collapse" class="accordion-collapse collapse" aria-labelledby="mappingSets">
                                                 <div class="accordion-body">
                                                     <p>Mapping sets comprise 48 strains that can be used to collect phenotype data for broad diversity or genome-wide association studies. Multiple sets of strains can be measured for quantitative traits to increase statistical power in genome-wide association studies.</p>
+                                                    <p><strong>Please note: </strong>We are actively creating mapping sets for all strains in the most current release of CaeNDR. We hope to release these new sets in the first quarter of 2024 once CaeNDR's move to Johns Hopkins University is complete.</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -98,11 +108,12 @@ thead {
                                         <td>{{ len(v) }}</td>
                                         <td>{{ v|join(' ') }}</td>
                                     </tr>
+
                                     {% else %}
                                         {% set set = k[0]|int %}
-                                    <tr>
+                                    <tr class="{% if set>= 9 %}d-none{% endif %}">
                                         <td>
-                                            <input class="form-check-input" id="set-{{ set }}" type="checkbox" name="items-{{ set + 1000 }}" value="set_{{ set }}" class="styled-checkbox" {% if set>= 9 %}disabled{% endif %}/>
+                                            <input class="form-check-input" id="set-{{ set }}" type="checkbox" name="items-{{ set + 1000 }}" value="set_{{ set }}" class="styled-checkbox" />
                                             <label class="form-check-label visually-hidden" for="set-{{ set }}">Select row</label>
                                         </td>
                                         <td class="species" data-value="{{ species }}"><em>{{ species|capitalize|replace('_', '. ') }}</em></td>
@@ -127,18 +138,26 @@ thead {
                     </div>
                     <!-- Individual Strains Content -->
                     <div class="tab-pane fade" id="individual-strains-tab-pane" role="tabpanel" aria-labelledby="individual-strains-tab">
-                        <p>Individual strains can be ordered below.</p>
                         <!-- Filter Facets -->
-                        <div class="filters p-5 mb-5 rounded shadow-sm text-bg-light">
-                            <div class="d-flex flex-wrap justify-content-around">
-
-                                <div class="col-12 col-md-2 mx-1 mb-3 species" id="ind_strains_filter">
+                        <div class="filters px-2 py-2 mb-5 rounded shadow-sm text-bg-light">
+                            <!-- Download Data section -->
+                            <div class="d-flex flex-wrap justify-content-end mb-3">
+                                <button type="button" class="btn border-0 fw-bold fs-6" id="downloadData"><i
+                                        class="bi bi-box-arrow-down text-secondary fs-5" aria-hidden="true"></i> Download Species-wide Strain
+                                    Data</button>
+                            </div>
+                            <!-- /Download Data section -->
+                            <div class="d-flex flex-wrap justify-content-around p-3">
+                                <div class="col-12 col-md-3 mx-1 mb-3 species" id="ind_strains_filter">
                                     {{ render_field(form.species, onchange="filter_species_ind") }}
                                 </div>
-                                <div class="col-12 col-md-2 mx-1 mb-3">
+                                <div class="col-12 col-md-3 mx-1 mb-3">
                                     <label for="search" class="form-label">Search by Strains:</label>
                                     <div class="dropdown">
-                                        <input id="search" type="text" class="form-control dropdown-toggle" data-bs-toggle="dropdown" placeholder="For example, AB1 ..." action="#" autocomplete="off">
+                                        <div class="input-wrapper" data-bs-toggle="dropdown">
+                                            <input id="search" type="text" class="form-control dropdown-toggle" placeholder="For example, AB1" action="#" autocomplete="off">
+                                            <i class="bi bi-x-circle-fill" id="clear"></i>
+                                        </div>
                                         <div class="dropdown-menu table-responsive p-1 dropdownSelect" role="menu">
                                             <table class="table table-hover table-striped">
                                                 <caption class="visually-hidden">A list of strains.</caption>
@@ -152,7 +171,7 @@ thead {
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-12 col-md-2 mx-1 mb-3"> 
+                                <div class="col-12 col-md-3 mx-1 mb-3"> 
                                     <label for="pasteStrainsDropdown" class="form-label">Paste List:</label> 
                                     <div class="dropdown-center d-grid" id="pasteStrainsDropdown"> 
                                         <button type='button' class="btn btn-secondary dropdown-toggle text-light" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="true">Paste Strains</button> 
@@ -166,11 +185,6 @@ thead {
                                             </form> 
                                         </div> 
                                     </div>
-                                </div>
-                                <div class="col-12 col-md-2 mx-1 mb-3">
-                                    <label for="downloadData" class="form-label">Strain Data:</label>
-                                    <button type="button" class="btn btn-secondary text-light text-center" id="downloadData" style="width:100%;">Download Data</button>
-                                    
                                 </div>
                             </div>
                         </div>
@@ -303,10 +317,24 @@ thead {
                 } else {
                     foundStrains.each(function() {
                     var foundStrain = $(this).find('td:nth-child(4)').text()
-                    $('#search-results').append(`<tr><td>${foundStrain}</td></tr>`)
+                    $('#search-results').append(`<tr><td><button type="button" class="btn btn-link text-start found-strain" data-value="${foundStrain}">${foundStrain}</button></td></tr>`)
                 })
                 }
             })
+        })
+
+        $('#clear').on('click', function() {
+            filtered_by_species.show()
+            $('#search').val('')
+        })
+
+        $(document).on('click', '.found-strain', function(){
+            var strain = $(this).attr('data-value')
+            $('#search').val(strain)
+            filtered_by_species.hide().filter(function() {
+                return $(this).find('td:nth-child(4)').text() == strain
+            }).show()
+            $('#search-results').empty()
         })
         
         $('#checkoutBox').prop('disabled', !$("input:checkbox").is(":checked"));
@@ -337,9 +365,10 @@ thead {
             }
             $("#copyPasteStrains, #search").val('')
 
+            var species = filtered_by_species[0].cells[1].innerText
 
             if (lost_strains.length > 0) {
-                set_alert(`The following strain(s) were not found ${lost_strains.join(", ")}`)
+                set_alert(`The following strain(s) were not found ${lost_strains.join(", ")} for ${species.italics()} species`)
             }
             
             filtered_by_species.sort(function(a, b) {
@@ -429,6 +458,7 @@ thead {
         $('#notFoundAlert').hide()
         $("input:checkbox").prop("checked", false)
         $('#search').val('')
+        $('#search-results').empty()
         $("#copyPasteStrains").val('')
     }
 

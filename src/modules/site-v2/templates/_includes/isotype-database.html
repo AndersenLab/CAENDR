@@ -12,70 +12,154 @@
   thead {
     background-color: #e1eae4;
   }
+  .placeholder, .spinner-border {
+    color: rgb(173, 171, 171)
+  }
+  .sorting_1 {
+    white-space: nowrap
+  }
 
 </style>
 
 {% endblock %}
+<div>
+  <div class="spinner-border m-5" role="status">
+    <span class="sr-only">Loading...</span>
+  </div>
+  <table class="table table-hover table-bordered table-striped" id="isotype-db">
+    <caption class="visually-hidden">A list of strains sortable by species that includes various data about each
+      individual strain.</caption>
+    <thead class="table-secondary align-middle">
+      <tr>
+        <th scope="col">Species</th>
+        <th scope="col">Strain</th>
+        <th scope="col">Isotype</th>
+        <th scope="col">Source Lab</th>
+        <th scope="col">Latitude</th>
+        <th scope="col">Longitude</th>
+        <th scope="col">Substrate</th>
+        <th scope="col">Sampled by</th>
+        <th scope="col">Isolated by</th>
+        <th scope="col">More Info</th>
+      </tr>
+    </thead>
+    <tbody class="table-group-divider align-middle">
+      <tr class="placeholder-glow" aria-hidden="true">
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+      </tr>
+      <tr class="placeholder-glow" aria-hidden="true">
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+      </tr>
+      <tr class="placeholder-glow" aria-hidden="true">
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+      </tr>
+      <tr class="placeholder-glow" aria-hidden="true">
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+      </tr>
+      <tr class="placeholder-glow" aria-hidden="true">
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+      </tr>
+      <tr class="placeholder-glow" aria-hidden="true">
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+      </tr>
+      <tr class="placeholder-glow" aria-hidden="true">
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+      </tr>
+      <tr class="placeholder-glow" aria-hidden="true">
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+      </tr>
+      <tr class="placeholder-glow" aria-hidden="true">
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+      </tr>
+      <tr class="placeholder-glow" aria-hidden="true">
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+        <td colspan="2"><span class="placeholder col-8"></span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
 
-<table class="table table-hover table-bordered table-striped" id="isotype-db">
-  <caption class="visually-hidden">A list of strains sortable by species that includes various data about each
-    individual strain.</caption>
-  <thead class="table-secondary align-middle">
-    <tr>
-      <th scope="col">#</th>
-      <th scope="col">Species</th>
-      <th scope="col">Strain</th>
-      <th scope="col">Isotype</th>
-      <th scope="col">Previous Names</th>
-      <th scope="col">Source Lab</th>
-      <th scope="col">Release</th>
-      <th scope="col">Latitude</th>
-      <th scope="col">Longitude</th>
-      <th scope="col">Substrate</th>
-      <th scope="col">Sampled by</th>
-      <th scope="col">Isolated by</th>
-      <th scope="col">Issue Notes</th>
-      <th scope="col">More Info</th>
-    </tr>
-  </thead>
-  <tbody class="table-group-divider align-middle">
-    {% for strain in strain_listing %}
-    <tr>
-      <th scope="row">{{ loop.index }}</th>
-      <td><em>{{ strain.species_name|capitalize|replace('_', '. ') }}</em></td>
-      <td>{{ strain.strain }}</td>
-      <td>{{ strain.isotype }}</td>
-      <td>{{ strain.previous_names }}</td>
-      <td>{{ strain.source_lab }}</td>
-      <td>{{ strain.release }}</td>
-      <td>{{ strain.latitude }}</td>
-      <td>{{ strain.longitude }}</td>
-      <td>{{ strain.substrate }}</td>
-      <td>{{ strain.sampled_by }}</td>
-      <td>{{ strain.isolated_by }}</td>
-      <td>{{ strain.issue_notes }}</td>
-      <td><a href="{{ url_for('request_strains.isotype_page', isotype_name=strain.isotype) }}">Read More</a></td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
 
 {% block script %}
 <script>
 
-  $(document).ready(function(){
-    $('#isotype-db').DataTable({
-      dom: 'Plfrtip',
-      searchPanes: {
-        initCollapsed: true,
-        cascadePanes: true,
-        show: true,
-        columns: [1,5,9]
-      }
-     
-    })
+  $.getJSON('/strains', function(data) {
+    const table = $('#isotype-db').DataTable({
+        dom: 'Plfrtip',
+        data: get_table_data(data),
+        searchPanes: {
+          initCollapsed: true,
+          cascadePanes: true,
+          show: true,
+          columns: [0,2,6]
+        }
+      })
+      $('.placeholder, .spinner-border').hide()
   })
+
+  
+  function get_table_data(d) {
+    let table_data = []
+    for (let i = 0; i < d.length; i++) {
+      const isotype_name = d[i].isotype
+      let url = '{{ url_for("request_strains.isotype_page", isotype_name=isotype_name) }}'
+      url += isotype_name;
+      table_data.push([d[i].species_name.replace('c_', 'C. ').italics(), 
+                        d[i].strain, 
+                        d[i].isotype, 
+                        d[i].source_lab, 
+                        d[i].latitude,
+                        d[i].longitude,
+                        d[i].substrate,
+                        d[i].sampled_by,
+                        d[i].isolated_by,
+                        `<a href=${url}>More info</a>`
+                        ])
+    }
+    return table_data
+  }
+ 
+
 
 </script>
 {% endblock %}

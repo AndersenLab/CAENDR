@@ -20,7 +20,7 @@
             type="button" role="tab" aria-controls="nav-home" aria-selected="true">New</button>
           <button class="nav-link" id="nav-about-tab" data-bs-toggle="tab" data-bs-target="#nav-about" type="button"
             role="tab" aria-controls="nav-about" aria-selected="false">About</button>
-            <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false"><a href="{{ url_for('data_releases.data_releases') }}">Release Notes</a></button>
+          <button class="nav-link disabled" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false">Release Notes</button>
         </div>
       </nav>
       <div class="tab-content" id="nav-tabContent">
@@ -322,6 +322,9 @@ function update_species(species_id) {
     'fullscreenButton',
   ];
   form_ids.forEach((form_id) => toggle_input(form_id, !species_empty));
+  if(!species_empty) {
+    $('#nav-linkTwo-tab').removeClass('disabled')
+  }
 
   // If no species chosen, end the update function here
   if (species_empty) return;
@@ -348,9 +351,16 @@ function update_species(species_id) {
       browser.on('locuschange', function(reference_frame, label) {
         const chrom_old = $("#chromosome").val();
         const chrom_new = reference_frame["chr"];
+
+        // Update location fields in form
+        // TODO: This event is not triggered when the browser locus is set to 'all'
         $("#chromosome").val(chrom_new);
         $("#start").val(reference_frame["start"][0] === '-' ? 1 : reference_frame["start"]);
         $("#stop").val(reference_frame["end"]);
+        toggle_input('start', reference_frame['chr'] !== 'all');
+        toggle_input('stop',  reference_frame['chr'] !== 'all');
+
+        // If the chromosome has changed, run a new query
         if (chrom_old !== chrom_new) {
           run_query();
         }
@@ -659,6 +669,18 @@ var closeButton = document.getElementById("closeButton");
     closeButton.classList.remove("d-block");
     closeButton.classList.add("d-none");
   }
+
+  // Setting up Release Notes link
+  $('#nav-linkTwo-tab').click(function() {
+    const species = $('#speciesSelect').val()
+    let url = "{{ url_for('data_releases.data_release_list', species='SPECIES') }}";
+    if (species) {
+        url = url.replace("SPECIES", species);
+    } else {
+        throw Error('No species selected.');
+    }
+    window.location.href = url;
+  });
 
 </script>
 

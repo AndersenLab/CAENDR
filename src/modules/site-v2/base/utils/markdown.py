@@ -19,7 +19,7 @@ def render_markdown(filename, directory="base/static/content/markdown"):
     return Markup(markdown.markdown(template))
 
 
-def render_ext_markdown(url: str, ignore_err=False):
+def render_ext_markdown(url: str, ignore_err=False, backup_text=None):
   if url is None:
     return ''
 
@@ -46,6 +46,8 @@ def render_ext_markdown(url: str, ignore_err=False):
   except ExternalMarkdownRenderError as ex:
     if ignore_err:
       logger.error(ex)
+      if backup_text is not None:
+        return Markup(markdown.markdown(backup_text))
     else:
       raise
 

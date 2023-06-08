@@ -27,8 +27,8 @@ prefix = '^' + source_path.replace('/','\/') + '\/.*'
 
 def generate_thumbnails(data, context):
   logger.info(f'Triggered by: bucket:{data["bucket"]}, name:{data["name"]}')
-  thumbnail_regex = f"{prefix}\.thumb.(jpg|jpeg)$"
-  image_regex = f"{prefix}\.(jpg|jpeg)$"
+  thumbnail_regex = f"\.thumb.(jpg|jpeg)$"
+  image_regex = f"\.(jpg|jpeg)$"
 
   # Only generate thumbnails for matching paths
   is_image = re.search(image_regex, data['name'])

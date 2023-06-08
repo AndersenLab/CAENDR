@@ -173,7 +173,6 @@
 $(document).ready(function() {
 
     $("#checkout").on('click', function() {
-
         $.pause = function( callback, seconds){
         return window.setTimeout( callback, seconds * 1000 );
         }
@@ -186,7 +185,6 @@ $(document).ready(function() {
         $.pause(function() {
             checkout_btn.removeClass('disabled').text("Order Now")
         }, 5)
-
     })
 
     $(".form-group > button").on('click', function() {
@@ -200,6 +198,8 @@ $(document).ready(function() {
     $('#name, #email, #phone, #address, #shipping_account').keyup(function() {
         if(formFilled()) {
             $('#checkout').prop('disabled', false)
+        } else {
+            $('#checkout').prop('disabled', true)
         }
     })
 
@@ -249,40 +249,28 @@ $(document).ready(function() {
         })
     })
 
-    $('#payment').on('change', function() {
-        if($(this).val() == 'credit_card' && $('#comments').val() == '') {
-            $('#checkout').prop('disabled', true)
-        } else if (formFilled() && $(this).val() == 'check' && $('#shipping_service').val() == 'Flat Rate Shipping'){
-            $('#checkout').prop('disabled', false)
-        }
-    })
-
     $('#shipping_service').on('change', function() {
-        
-        if($(this).val() == 'Flat Rate Shipping' && formFilled() && $('#payment').val() == 'check') {
+        if(formFilled()) {
             $('#checkout').prop('disabled', false)
         } else {
             $('#checkout').prop('disabled', true)
         }
     })
-
-
 })
 
 function formFilled() {
     let filled = true;
-    $('#name, #email, #phone, #address, #shipping_account').each(function() {
-        if($('#shipping_service').val() == 'Flat Rate Shipping') {
-            filled = true;
-        } else if ($(this).val() == '') {
+    $('#name, #email, #phone, #address').each(function() {
+        if ($(this).val() == '') {
             filled = false
+        } else if ($(this).val() != '' && $('#shipping_service').val() != 'Flat Rate Shipping') {
+            if($('#shipping_account').val() != '') {
+                filled = true
+            } else filled = false
         }
     });
-
     return filled;
     }
-
-
 
 </script>
 {% endblock %}

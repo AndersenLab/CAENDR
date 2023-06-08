@@ -8,11 +8,11 @@
         aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <div class="collapse navbar-collapse justify-content-center" id="navbarNavAltMarkup">
-        <div class="navbar-nav">
+      <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+        <div class="navbar-nav col-7 col-md-12 justify-content-center mt-3">
           <a class="nav-link {{'active' if request.blueprint == 'request_strains'}} mx-3"
             href="{{ url_for('request_strains.request_strains') }}">Request Strains</a>
-          <div class="nav-item dropdown mx-4">
+          <div class="nav-item dropdown mx-3">
             <a class="nav-link dropdown-toggle {{'active' if '/tools/' in request.full_path}}" href="#"
               id="toolsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               Tools
@@ -74,7 +74,7 @@
           <a class="nav-link mx-3 {{'active' if '/help' in request.full_path}}"
             href="{{ url_for('primary.help_item') }}">FAQs</a>
           <!-- User Menu -->
-          <div class="nav-item dropdown mx-3">
+          <div class="nav-item dropdown mx-3 my-3 my-md-0">
             <a class="dropdown-toggle rounded-circle userMenu" data-bs-toggle="dropdown" id="userMenuDropDown"
               data-bs-auto-close="false" aria-expanded="false" aria-label="User Menu"><i class="bi bi-person-fill lh-1"
                 aria-hidden="true"></i></a>
@@ -106,7 +106,7 @@
           </div>
           <!-- /User Menu -->
           <!-- Cart -->
-          <div class="nav-item">
+          <div class="nav-item mx-3">
             <a href="{{ url_for('request_strains.order_page_index') }}" class="rounded-circle userMenu"
               aria-label="Cart">
               <i class="bi bi-cart-fill lh-1" aria-hidden="true"></i>

@@ -12,7 +12,6 @@ from caendr.models.datastore import Species, SPECIES_LIST, IndelPrimer
 from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupError, EmptyReportDataError, EmptyReportResultsError
 from caendr.models.task import TaskStatus
 from caendr.services.cloud.storage import check_blob_exists
-from caendr.services.dataset_release import get_browser_tracks_path
 from caendr.utils.constants import CHROM_NUMERIC
 from caendr.utils.data import get_file_format
 
