@@ -23,6 +23,8 @@ class IndelPrimer(DataJobEntity):
   _input_file  = INDEL_INPUT_FILE
   _result_file = INDEL_RESULT_FILE
 
+  _report_display_name = 'Primer'
+
 
   ## Bucket ##
 

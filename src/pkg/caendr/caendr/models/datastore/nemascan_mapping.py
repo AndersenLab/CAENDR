@@ -16,6 +16,8 @@ class NemascanMapping(DataJobEntity):
   _blob_prefix = NEMASCAN_REPORT_PATH_PREFIX
   _input_file  = NEMASCAN_INPUT_FILE
 
+  _report_display_name = 'Genetic Mapping'
+
   __result_infix = NEMASCAN_RESULT_PATH_INFIX
   __input_data_path = INPUT_DATA_PATH
   __report_path = REPORT_DATA_PREFIX
