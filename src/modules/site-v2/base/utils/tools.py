@@ -31,16 +31,16 @@ def get_class_from_kind(kind):
       return c
 
 
-def lookup_report(kind, reportId, user=None):
+def lookup_report(kind, reportId, user=None, validate_user=True):
 
   # If no user explicitly provided, default to current user
-  if user is None:
+  if validate_user and user is None:
     user = get_current_user()
 
   # Get & validate the entity class from the provided kind
   EntityClass = get_class_from_kind(kind)
   if EntityClass is None:
-    if user_is_admin():
+    if user_is_admin() or not validate_user:
       raise ReportLookupError('Invalid report type.', 400)
     else:
       raise ReportLookupError('You do not have access to that report.', 401)
@@ -52,7 +52,7 @@ def lookup_report(kind, reportId, user=None):
   if report is None:
 
     # Let admins know the report doesn't exist
-    if user_is_admin():
+    if user_is_admin() or not validate_user:
       raise ReportLookupError('This is not a valid report URL.', 404)
 
     # For all other users, display a default "no access" message
@@ -60,7 +60,7 @@ def lookup_report(kind, reportId, user=None):
       raise ReportLookupError('You do not have access to that report.', 401)
 
   # If the user doesn't have permission to view this report, show an error message
-  if not (report.username == user.name or user_is_admin()):
+  if validate_user and not (report.username == user.name or user_is_admin()):
     raise ReportLookupError('You do not have access to that report.', 401)
 
   # If all checks passed, return the report entity
