@@ -71,12 +71,12 @@ REPORT_SUCCESS_EMAIL_TEMPLATE = """
 Your {report_type} report is now complete.
 You may access your report here:
 
-{report_url}
+{report_link}
 """
 
 REPORT_ERROR_EMAIL_TEMPLATE = """
 We're sorry, but there was an error processing your {report_type} report.
 You may find more information here:
 
-{my_results_link}
+{report_link}
 """

@@ -42,32 +42,25 @@ def job_finish(kind, id):
   # Complete message
   if report['status'] == TaskStatus.COMPLETE:
     template = REPORT_SUCCESS_EMAIL_TEMPLATE.strip('\n')
-    link = url_for(f'{ bp }.report', id=report.id, _external=True)
-    return jsonify({
-      'text': template.format(
-        report_type = report.get_report_display_name(),
-        report_url  = link,
-      ),
-      'html': template.replace('\n', '<br>').format(
-        report_type = report.get_report_display_name(),
-        report_url  = f'<a>{link}</a>',
-      ),
-    })
+    link     = url_for(bp + '.report', id=report.id, _external=True)
 
   # Error message
-  if report['status'] == TaskStatus.ERROR:
+  elif report['status'] == TaskStatus.ERROR:
     template = REPORT_ERROR_EMAIL_TEMPLATE.strip('\n')
-    link = url_for(f'{ bp }.my_results', _external=True)
-    return jsonify({
-      'text': template.format(
-        report_type     = report.get_report_display_name(),
-        my_results_link = link,
-      ),
-      'html': template.replace('\n', '<br>').format(
-        report_type     = report.get_report_display_name(),
-        my_results_link = f'<a>{link}</a>',
-      ),
-    })
+    link     = url_for(bp + '.my_results', _external=True)
 
-  # If all else failed, return an error message
-  return 'Report has invalid status for completion message.', 400
+  # For any other status, return an error message
+  else:
+    return 'Report has invalid status for completion message.', 400
+
+  # Generate plaintext and HTML versions of the body
+  return jsonify({
+    'text': template.format(
+      report_type = report.get_report_display_name(),
+      report_link = link,
+    ),
+    'html': template.replace('\n', '<br>').format(
+      report_type = report.get_report_display_name(),
+      report_link = f'<a>{link}</a>',
+    ),
+  })
