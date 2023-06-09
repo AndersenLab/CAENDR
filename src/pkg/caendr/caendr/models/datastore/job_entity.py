@@ -20,7 +20,7 @@ class JobEntity(Entity):
   # Props listed here will be converted to JobEntity object properties,
   # and will use the JobEntity.__container object as their source of truth.
   __container_prop_map = {
-    'container_repo':     'repo',
+    'container_repo':     'container_repo',
     'container_name':     'container_name',
     'container_version':  'container_tag',
   }
