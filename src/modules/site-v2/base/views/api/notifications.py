@@ -24,8 +24,8 @@ def notifications():
   abort(404)
 
 
-@api_notifications_bp.route('/job-finish/<kind>/<id>', methods=['GET'])
-def job_finish(kind, id):
+@api_notifications_bp.route('/job-finish/<kind>/<id>/<status>', methods=['GET'])
+def job_finish(kind, id, status):
 
   # Fetch requested report, aborting if kind is invalid or report cannot be found
   try:
@@ -40,18 +40,18 @@ def job_finish(kind, id):
     return f'Invalid report type "{kind}"', 400
 
   # Complete message
-  if report['status'] == TaskStatus.COMPLETE:
+  if status == TaskStatus.COMPLETE:
     template = REPORT_SUCCESS_EMAIL_TEMPLATE.strip('\n')
     link     = url_for(bp + '.report', id=report.id, _external=True)
 
   # Error message
-  elif report['status'] == TaskStatus.ERROR:
+  elif status == TaskStatus.ERROR:
     template = REPORT_ERROR_EMAIL_TEMPLATE.strip('\n')
     link     = url_for(bp + '.my_results', _external=True)
 
   # For any other status, return an error message
   else:
-    return 'Report has invalid status for completion message.', 400
+    return 'Invalid status for completion message.', 400
 
   # Generate plaintext and HTML versions of the body
   return jsonify({

@@ -259,6 +259,44 @@
                 "SENTRY_URL": "",
                 "SITE_BASE_URL": "https://localhost:8080",
             }
+        },
+        {
+            "name": "Run API pipeline server (local site)",
+            "type": "python",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/src/modules/api/pipeline-task",
+            "console": "integratedTerminal",
+            "module": "flask",
+            "python": "${workspaceFolder}/src/modules/api/pipeline-task/venv/bin/python",
+            "envFile": "${workspaceFolder}/src/modules/api/pipeline-task/.env",
+            "env": {
+                "ENV": "main",
+                "FLASK_APP": "main.py",
+                "FLASK_ENV": "development",
+                "CAENDR_USE_SSL": "1",
+                "SENTRY_URL": "",
+                "MODULE_API_PIPELINE_TASK_URL_NAME": "API_PIPELINE_TASK_URL",
+                "API_PIPELINE_TASK_URL": "https://localhost:9090",
+                "MODULE_SITE_BASE_URL":  "https://localhost:8080",
+            },
+            "args": [
+                "run",
+                "--host", "localhost",
+                "--port", "9090",
+                "--cert", "adhoc",
+                "--with-threads"
+            ],
+            "jinja": true
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Run Site-v2 + API Pipeline",
+            "configurations": [
+                "Run Site-v2 (requires a local Postgres instance or cloud-sql-proxy)",
+                "Run API pipeline server (local site)",
+            ],
+            "stopAll": true
         }
     ]
 }
