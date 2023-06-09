@@ -166,7 +166,7 @@
       <!-- /Select Species Prompt -->
       <!-- IGV Browser -->
       <div id="browser-container" class="col" style="width:100%">
-          <div id="browser">
+          <div class="bg-body" id="browser">
             <div class="d-flex flex-wrap justify-content-center col-12 text-end optionsToolbar">
               <div class="me-5">
                 <button class="d-none btn btn-danger text-light p-2 my-5" id="closeButton" onclick="closeFullscreen();"><i class="bi bi-fullscreen-exit text-light" aria-hidden="true"></i> Close Fullscreen</button>
@@ -186,6 +186,7 @@
 {% block script %}
 {% from "_includes/strain-listing.html" import unpack_species_list, replace_tokens %}
 <script src="{{ url_for('static', filename='js/strains.js') }}"></script>
+<script src="{{ url_for('static', filename='js/modernizr.js') }}"></script>
 
 <script type="text/javascript">
 {% include '_scripts/utils.js' %}       {#/* defines: fetch_json, toggle_input */#}
@@ -460,8 +461,8 @@ function draw_gt_set(genotype_set, genotype_val) {
 }
 
 // Open and Close Fullscreen Buttons
-var fullscreenBrowser = document.getElementById("browser");
-var closeButton = document.getElementById("closeButton");
+const fullscreenBrowser = document.getElementById("browser");
+const closeButton = document.getElementById("closeButton");
   function openFullscreen() {
     if (fullscreenBrowser.requestFullscreen) {
       fullscreenBrowser.requestFullscreen();
