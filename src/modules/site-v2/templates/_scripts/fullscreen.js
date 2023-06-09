@@ -1,5 +1,4 @@
 // Open and Close Fullscreen Buttons
-// let fullscreenBrowser = document.getElementById("toolContainer");
 const closeButton = document.getElementById("closeButton");
 const fullscreenButton = document.getElementById("fullscreenButton");
 const fullScreenAvailable = document.fullscreenEnabled || 
