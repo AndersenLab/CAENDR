@@ -173,7 +173,7 @@ def isotype_page(isotype_name, release=None):
 @strains_bp.route('/', methods=['GET', 'POST'])
 @cache.memoize(60*60)
 def request_strains():
-    flash(Markup("<strong>Please note:</strong> although the site is currently accepting orders, orders will <u>not ship</u> until Fall 2023."), category="danger")
+    flash(Markup("<strong>Please note:</strong> although the site is currently accepting orders, orders will <u>not ship</u> until Fall 2023."), category="warning")
 
     try:
       strain_listing = get_strains()
@@ -322,7 +322,7 @@ def order_page_index():
   if user and hasattr(user, 'email') and not form.email.data:
     form.email.data = user.email
   
-  flash(Markup("<strong>Please note:</strong> although the site is currently able to accept orders, orders will <u>not ship</u> until Fall 2023."), category="danger")
+  flash(Markup("<strong>Please note:</strong> although the site is currently able to accept orders, orders will <u>not ship</u> until Fall 2023."), category="warning")
   title = "Order Summary"
 
   if not user and not cart_id:
