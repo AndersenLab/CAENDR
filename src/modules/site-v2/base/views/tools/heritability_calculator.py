@@ -228,7 +228,7 @@ def report(id):
   # Fetch requested heritability report
   # Ensures the report exists and the user has permission to view it
   try:
-    hr = lookup_report(HeritabilityReport, id, user=user)
+    hr = lookup_report(HeritabilityReport.kind, id, user=user)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:

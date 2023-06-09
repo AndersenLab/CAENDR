@@ -264,7 +264,7 @@ def report(id, file_ext=None):
     # Fetch requested primer report
     # Ensures the report exists and the user has permission to view it
     try:
-      report = lookup_report(IndelPrimer, id)
+      report = lookup_report(IndelPrimer.kind, id)
 
     # If the report lookup request is invalid, show an error message
     except ReportLookupError as ex:

@@ -172,6 +172,7 @@ class ReportLookupError(InternalError):
   def __init__(self, msg, code):
     self.msg = msg
     self.code = code
+    self.description = msg
     super().__init__()
 
 class EmptyReportDataError(InternalError):
