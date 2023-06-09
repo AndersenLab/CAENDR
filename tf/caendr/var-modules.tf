@@ -47,6 +47,7 @@ locals {
     "container_name" = var.MODULE_API_PIPELINE_TASK_CONTAINER_NAME,
     "container_version" = var.MODULE_API_PIPELINE_TASK_CONTAINER_VERSION,
     "work_bucket_name" = var.MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME,
+    "data_bucket_name" = var.MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME,
     "pipeline_task_sa_name" = var.MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME,
     "pub_sub_topic_name" = var.MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME,
     "pub_sub_subscription_name" = var.MODULE_API_PIPELINE_TASK_PUB_SUB_SUBSCRIPTION_NAME
