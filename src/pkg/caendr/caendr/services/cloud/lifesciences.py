@@ -139,9 +139,11 @@ def update_all_linked_status_records(kind, operation_name):
 
     # Only send a notification if the report's status has not been updated yet
     # TODO: Should be able to remove kind check if all report notifications merged into one system
-    should_send_notification = done \
-      and status_record['status'] not in [TaskStatus.COMPLETE, TaskStatus.ERROR] \
-      and kind in [NemascanMapping.kind, HeritabilityReport.kind]
+    should_send_notification = all([
+      done,
+      status_record['status'] not in [TaskStatus.COMPLETE, TaskStatus.ERROR],
+      kind in [NemascanMapping.kind, HeritabilityReport.kind],
+    ])
     logger.debug(f'Should send notification for report {status_record.id}: {should_send_notification}. (done = {done}, kind = {kind}, current status = {status_record["status"]})')
 
     # Update the report status
@@ -151,21 +153,23 @@ def update_all_linked_status_records(kind, operation_name):
     # Send the notification, if applicable
     # In theory, doing this after the database update should prevent duplicate emails
     # For now, only send email notifications to admin users
-    if should_send_notification:
-      record_owner = status_record.get_user()
-      if record_owner is not None:
-        if 'admin' in record_owner['roles']:
-          logger.debug(f'Sending email notification for report {status_record.id} to {record_owner["email"]} (ID {record_owner.name}).')
-          email_result = send_result_email(status_record, status)
-        else:
-          logger.debug(f'Skipping email notification for report {status_record.id} for user {record_owner["email"]} (ID {record_owner.name}): user is not an admin.')
-      else:
-        logger.warn(f'Could not send email notification for report {status_record.id}: no user found. ({dict(status_record)})')
+    if not should_send_notification:
+      return
 
-      if email_result.status_code == 200:
-        logger.debug(f'Email sent successfully ({email_result.status_code}): {email_result.text}')
+    record_owner = status_record.get_user()
+    if record_owner is not None:
+      if 'admin' in record_owner['roles']:
+        logger.debug(f'Sending email notification for report {status_record.id} to {record_owner["email"]} (ID {record_owner.name}).')
+        email_result = send_result_email(status_record, status)
       else:
-        logger.error(f'Email failed to send ({email_result.status_code}): {email_result.text}')
+        logger.debug(f'Skipping email notification for report {status_record.id} for user {record_owner["email"]} (ID {record_owner.name}): user is not an admin.')
+    else:
+      logger.warn(f'Could not send email notification for report {status_record.id}: no user found. ({dict(status_record)})')
+
+    if email_result.status_code == 200:
+      logger.debug(f'Email sent successfully ({email_result.status_code}): {email_result.text}')
+    else:
+      logger.error(f'Email failed to send ({email_result.status_code}): {email_result.text}')
 
 
 
