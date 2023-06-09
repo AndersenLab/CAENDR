@@ -160,7 +160,10 @@ def update_all_linked_status_records(kind, operation_name):
     if record_owner is not None:
       if 'admin' in record_owner['roles']:
         logger.debug(f'Sending email notification for report {status_record.id} to {record_owner["email"]} (ID {record_owner.name}).')
-        email_result = send_result_email(status_record, status)
+        try:
+          email_result = send_result_email(status_record, status)
+        except Exception as ex:
+          logger.error(f'Email failed to send: {ex}')
       else:
         logger.debug(f'Skipping email notification for report {status_record.id} for user {record_owner["email"]} (ID {record_owner.name}): user is not an admin.')
     else:
