@@ -69,7 +69,11 @@ class CloudStorageUploadError(InternalError):
 
 class PipelineRunError(InternalError):
   description = "Unable to start the lifesciences pipeline"
-  
+  def __init__(self, desc=None):
+    if desc is not None:
+      self.description = desc
+    super().__init__()
+
 class JSONParseError(InternalError):
   description = "Unable to parse JSON"
   
