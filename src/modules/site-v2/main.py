@@ -7,6 +7,8 @@ from caendr.utils.env import load_env
 
 dotenv_file = '.env'
 load_env(dotenv_file)
+dotenv_module_file = 'module.env'
+load_env(dotenv_module_file)
 
 monitor.init_sentry("site")
 
