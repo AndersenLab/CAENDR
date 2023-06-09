@@ -23,6 +23,7 @@ GOOGLE_CLOUD_REGION = os.environ.get('GOOGLE_CLOUD_REGION')
 MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME')
 MODULE_SITE_BASE_URL = get_env_var('MODULE_SITE_BASE_URL')
 
+API_SITE_ACCESS_TOKEN = get_secret('CAENDR_API_SITE_ACCESS_TOKEN')
 NO_REPLY_EMAIL = get_secret('NO_REPLY_EMAIL')
 
 
@@ -174,6 +175,7 @@ def send_result_email(record, status):
     f'{MODULE_SITE_BASE_URL}/api/notifications/job-finish/{record.kind}/{record.id}/{status}',
     headers={
       'Content-Type':  'application/json',
+      'Authorization': 'Bearer {}'.format(API_SITE_ACCESS_TOKEN),
     },
   )
 

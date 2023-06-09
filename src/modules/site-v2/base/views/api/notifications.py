@@ -1,4 +1,4 @@
-from flask import jsonify, Blueprint, url_for, abort
+from flask import jsonify, Blueprint, url_for, abort, request
 
 from base.utils.tools import lookup_report
 from base.views.tools import pairwise_indel_finder_bp, genetic_mapping_bp, heritability_calculator_bp
@@ -7,6 +7,9 @@ from caendr.models.datastore import NemascanMapping, HeritabilityReport, IndelPr
 from caendr.models.error     import ReportLookupError
 from caendr.models.task      import TaskStatus
 from caendr.services.email   import REPORT_SUCCESS_EMAIL_TEMPLATE, REPORT_ERROR_EMAIL_TEMPLATE
+from caendr.services.cloud.secret import get_secret
+
+API_SITE_ACCESS_TOKEN = get_secret('CAENDR_API_SITE_ACCESS_TOKEN')
 
 
 api_notifications_bp = Blueprint('notifications', __name__)
@@ -26,6 +29,11 @@ def notifications():
 
 @api_notifications_bp.route('/job-finish/<kind>/<id>/<status>', methods=['GET'])
 def job_finish(kind, id, status):
+
+  # Validate that this request came from the pipeline API
+  access_token = request.headers.get('Authorization')
+  if access_token != 'Bearer {}'.format(API_SITE_ACCESS_TOKEN):
+    abort(403)
 
   # Fetch requested report, aborting if kind is invalid or report cannot be found
   try:
