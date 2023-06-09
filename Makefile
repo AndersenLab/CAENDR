@@ -196,7 +196,7 @@ publish-container-db-operations:
 	cd src/modules/site-v2 && make clean && (echo | make publish) 
 
 publish-container-api-pipeline:
-	cd src/modules/site-v2 && make clean && (echo | make publish)
+	cd src/modules/api/pipeline-task && make clean && (echo | make publish)
 
 #~
 publish-containers: #~
