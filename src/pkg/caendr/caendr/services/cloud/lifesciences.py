@@ -186,7 +186,7 @@ def send_result_email(record, status):
 
   # Send the email
   return send_email({
-    "from":    NO_REPLY_EMAIL,
+    "from":    f'CaeNDR <{NO_REPLY_EMAIL}>',
     "to":      record.get_user_email(),
     "subject": f'Your {record.get_report_display_name()} Report from CaeNDR.org',
     "text":    message['text'],
