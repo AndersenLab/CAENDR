@@ -19,11 +19,12 @@ class Container(Entity):
       'repo',
       'container_name',
       'container_registry',
+      'container_repo',
       'container_tag',
     }
 
   def uri(self):
-    s = f"{self['repo']}/{self['container_name']}"
+    s = f"{self['container_repo']}/{self['container_name']}"
     if self['container_tag']:
       s += ':' + self['container_tag']
     return s
