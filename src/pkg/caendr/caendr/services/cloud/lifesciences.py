@@ -45,7 +45,7 @@ def create_pipeline_operation_record(task, response):
   name = response.get('name')
   metadata = response.get('metadata')
   if name is None or metadata is None:
-    raise PipelineRunError('Pipeline start response missing expected properties')
+    raise PipelineRunError(f'Pipeline start response missing expected properties (name = "{name}", metadata = "{metadata}")')
 
   id = name.rsplit('/', 1)[-1]
   data = {
