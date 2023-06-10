@@ -74,4 +74,5 @@ variable "JWT_SECRET_KEY" { sensitive = true }
 variable "PASSWORD_PEPPER" { sensitive = true }
 variable "MAILGUN_API_KEY" { sensitive = true }
 variable "CC_EMAILS" { sensitive = true }
+variable "CAENDR_API_SITE_ACCESS_TOKEN" { sensitive = true }
 
