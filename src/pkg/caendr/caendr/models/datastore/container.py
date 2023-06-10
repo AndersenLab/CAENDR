@@ -18,7 +18,6 @@ class Container(Entity):
       *super().get_props_set(),
       'repo',
       'container_name',
-      'container_registry',
       'container_repo',
       'container_tag',
     }
