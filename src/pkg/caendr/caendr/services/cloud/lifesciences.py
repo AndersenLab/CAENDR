@@ -98,7 +98,12 @@ def get_pipeline_status(operation_name):
 def update_pipeline_operation_record(operation_name):
   logger.debug(f'update_pipeline_operation_record: operation_name:{operation_name}')
 
-  status = get_pipeline_status(operation_name)
+  try:
+    status = get_pipeline_status(operation_name)
+  except: 
+    logger.warn(f"GLS Operation NOT FOUND: {operation_name}")
+    return
+
   id = operation_name.rsplit('/', 1)[-1]
   data = {
     'done': status.get('done'),

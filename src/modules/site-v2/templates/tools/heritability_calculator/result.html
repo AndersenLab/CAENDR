@@ -59,6 +59,7 @@
     <div class="d-grid gap-3">
       <a class="btn btn-secondary text-light" role="button" onClick="getPDF()">Download PDF</a>
       <a class="btn btn-secondary text-light" role="button" onClick="window.open('{{ data_url }}')">Download TSV</a>
+      <a class="btn btn-secondary text-light" role="button" href="{{ url_for('heritability_calculator.view_logs', id=hr.id)}}">View Logs</a>
     </div>
   </div>
   </div>
