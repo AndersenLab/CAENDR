@@ -13,7 +13,7 @@ from flask import (render_template,
                    make_response)
 
 from config import config
-from extensions import cache
+from extensions import cache, compress
 
 from caendr.api.strain import get_strains, query_strains, get_strain_sets, get_strain_img_url
 from caendr.models.sql import Strain
@@ -147,7 +147,25 @@ def isotype_page(isotype_name, release=None):
   if not isotype_strains:
     abort(404)
 
-  # Fetch isotype images
+  return render_template('strain/isotype.html', **{
+    "title": f"Isotype {isotype_name}",
+    "isotype": isotype_strains,
+    "isotype_name": isotype_name,
+    "isotype_ref_strain": [x for x in isotype_strains if x.isotype_ref_strain][0],
+    "strain_json_output": dump_json(isotype_strains)
+  })
+
+#
+# Isotype image URLs
+#
+@strains_bp.route('/isotype-img/<isotype_name>/')
+@cache.memoize(60*60)
+def isotype_img(isotype_name, release=None):
+  """ Fetching isotype images """
+  isotype_strains = query_strains(isotype_name=isotype_name)
+  if not isotype_strains:
+    abort(404)
+
   image_urls = {}
   for s in isotype_strains:
     image_urls[s.strain] = {
@@ -156,15 +174,7 @@ def isotype_page(isotype_name, release=None):
     }
 
   logger.debug(image_urls)
-  return render_template('strain/isotype.html', **{
-    "title": f"Isotype {isotype_name}",
-    "isotype": isotype_strains,
-    "isotype_name": isotype_name,
-    "isotype_ref_strain": [x for x in isotype_strains if x.isotype_ref_strain][0],
-    "strain_json_output": dump_json(isotype_strains),
-    "image_urls": image_urls,
-  })
-
+  return jsonify(image_urls)
 
 #
 # Strain Catalog
