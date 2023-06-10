@@ -66,7 +66,8 @@ locals {
     "SECRET_KEY" = sensitive(var.SECRET_KEY),
     "JWT_SECRET_KEY" = sensitive(var.JWT_SECRET_KEY), 
     "PASSWORD_PEPPER" = sensitive(var.PASSWORD_PEPPER), 
-    "MAILGUN_API_KEY" = sensitive(var.MAILGUN_API_KEY)
-    "CC_EMAILS" = sensitive(var.CC_EMAILS)
+    "MAILGUN_API_KEY" = sensitive(var.MAILGUN_API_KEY),
+    "CC_EMAILS" = sensitive(var.CC_EMAILS),
+    "CAENDR_API_SITE_ACCESS_TOKEN" = sensitive(var.CAENDR_API_SITE_ACCESS_TOKEN)
   })
 }
