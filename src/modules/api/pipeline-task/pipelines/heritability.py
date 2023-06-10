@@ -98,6 +98,7 @@ def _generate_heritability_pipeline_req(task: HeritabilityTask):
     "DATA_DIR": DATA_DIR,
     "OUTPUT_DIR": OUTPUT_DIR,
     "DATA_HASH": h.data_hash, 
+    "SPECIES": h['species'], 
     "DATA_BUCKET": h.get_bucket_name(), 
     "DATA_BLOB_PATH": h.get_blob_path()}
 
