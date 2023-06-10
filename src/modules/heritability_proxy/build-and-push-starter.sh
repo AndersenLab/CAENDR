@@ -20,7 +20,7 @@ IMAGE_URI=gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/heritability:v0.02-debug
 if [ -d calc_heritability] ]; then
     echo "Found cloned repo: $GIT_REPO_URL."
 else
-    git clone -b GIT_BRANCH --depth 1 $GIT_URL
+    git clone -b $GIT_BRANCH --depth 1 $GIT_URL
 fi
 
 if [ "Darwin" == uname ]; then
