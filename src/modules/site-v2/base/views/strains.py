@@ -13,7 +13,7 @@ from flask import (render_template,
                    make_response)
 
 from config import config
-from extensions import cache
+from extensions import cache, compress
 
 from caendr.api.strain import get_strains, query_strains, get_strain_sets, get_strain_img_url
 from caendr.models.sql import Strain
@@ -147,7 +147,25 @@ def isotype_page(isotype_name, release=None):
   if not isotype_strains:
     abort(404)
 
-  # Fetch isotype images
+  return render_template('strain/isotype.html', **{
+    "title": f"Isotype {isotype_name}",
+    "isotype": isotype_strains,
+    "isotype_name": isotype_name,
+    "isotype_ref_strain": [x for x in isotype_strains if x.isotype_ref_strain][0],
+    "strain_json_output": dump_json(isotype_strains)
+  })
+
+#
+# Isotype image URLs
+#
+@strains_bp.route('/isotype-img/<isotype_name>/')
+@cache.memoize(60*60)
+def isotype_img(isotype_name, release=None):
+  """ Fetching isotype images """
+  isotype_strains = query_strains(isotype_name=isotype_name)
+  if not isotype_strains:
+    abort(404)
+
   image_urls = {}
   for s in isotype_strains:
     image_urls[s.strain] = {
@@ -156,15 +174,7 @@ def isotype_page(isotype_name, release=None):
     }
 
   logger.debug(image_urls)
-  return render_template('strain/isotype.html', **{
-    "title": f"Isotype {isotype_name}",
-    "isotype": isotype_strains,
-    "isotype_name": isotype_name,
-    "isotype_ref_strain": [x for x in isotype_strains if x.isotype_ref_strain][0],
-    "strain_json_output": dump_json(isotype_strains),
-    "image_urls": image_urls,
-  })
-
+  return jsonify(image_urls)
 
 #
 # Strain Catalog
@@ -173,7 +183,7 @@ def isotype_page(isotype_name, release=None):
 @strains_bp.route('/', methods=['GET', 'POST'])
 @cache.memoize(60*60)
 def request_strains():
-    flash(Markup("<strong>Please note:</strong> although the site is currently accepting orders, orders will <u>not ship</u> until Fall 2023."), category="danger")
+    flash(Markup("<strong>Please note:</strong> although the site is currently accepting orders, orders will <u>not ship</u> until Fall 2023."), category="warning")
 
     try:
       strain_listing = get_strains()
@@ -322,7 +332,7 @@ def order_page_index():
   if user and hasattr(user, 'email') and not form.email.data:
     form.email.data = user.email
   
-  flash(Markup("<strong>Please note:</strong> although the site is currently able to accept orders, orders will <u>not ship</u> until Fall 2023."), category="danger")
+  flash(Markup("<strong>Please note:</strong> although the site is currently able to accept orders, orders will <u>not ship</u> until Fall 2023."), category="warning")
   title = "Order Summary"
 
   if not user and not cart_id:
