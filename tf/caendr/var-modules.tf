@@ -68,6 +68,7 @@ locals {
     "PASSWORD_PEPPER" = sensitive(var.PASSWORD_PEPPER), 
     "MAILGUN_API_KEY" = sensitive(var.MAILGUN_API_KEY),
     "CC_EMAILS" = sensitive(var.CC_EMAILS),
-    "CAENDR_API_SITE_ACCESS_TOKEN" = sensitive(var.CAENDR_API_SITE_ACCESS_TOKEN)
+    "CAENDR_API_SITE_ACCESS_TOKEN" = sensitive(var.CAENDR_API_SITE_ACCESS_TOKEN),
+    "NO_REPLY_EMAIL" = sensitive(var.NO_REPLY_EMAIL)
   })
 }
