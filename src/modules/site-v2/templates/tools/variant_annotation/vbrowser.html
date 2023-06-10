@@ -6,6 +6,11 @@
     <script type="text/javascript" src="//cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
     <link rel="stylesheet" href="https://cdn.datatables.net/colreorder/1.5.3/css/colReorder.dataTables.min.css" />
     <script type="text/javascript" src="https://cdn.datatables.net/colreorder/1.5.3/js/dataTables.colReorder.min.js"></script>
+    <style>
+      #closeButton {
+        display:none;
+      }
+    </style>
 {% endblock %}
 
 
@@ -198,10 +203,10 @@
             <span class="visually-hidden">Loading...</span>
           </div>
         </div>
-        <div class="table-responsive" id="result-table">
+        <div class="table-responsive bg-white" id="result-table">
           <div class="d-flex flex-wrap justify-content-center col-12 text-end optionsToolbar">
             <div class="me-5">
-              <button class="d-none btn btn-danger text-light p-2 my-5" id="closeButton" onclick="closeFullscreen();"><i class="bi bi-fullscreen-exit text-light" aria-hidden="true"></i> Close Fullscreen</button>
+              <button class="btn btn-danger text-light p-2 my-5" id="closeButton" onclick="closeFullscreen();"><i class="bi bi-fullscreen-exit text-light" aria-hidden="true"></i> Close Fullscreen</button>
             </div>
           </div>
           <table id="variant-table" class="table-striped table-hover" style="width:100%;">
@@ -238,6 +243,7 @@
 <script>
 {% include '_scripts/utils.js' %}       {#/* defines: toggle_input */#}
 {% include '_scripts/gene-search.js' %} {#/* defines: prep_gene_search, run_gene_search, format_locus_string */#}
+{% include '_scripts/fullscreen.js' %} {#/* fullscreen for tools */#}
 
 
 /* Variables */
@@ -837,32 +843,9 @@ $(document).ready(function() {
   }(jQuery));
 });
 
-// Open and Close Fullscreen Buttons
-var fullscreenBrowser = document.getElementById("result-table");
-var closeButton = document.getElementById("closeButton");
-  function openFullscreen() {
-    if (fullscreenBrowser.requestFullscreen) {
-      fullscreenBrowser.requestFullscreen();
-    } else if (fullscreenBrowser.webkitRequestFullscreen) { /* Safari */
-      fullscreenBrowser.webkitRequestFullscreen();
-    } else if (fullscreenBrowser.msRequestFullscreen) { /* IE11 */
-      fullscreenBrowser.msRequestFullscreen();
-    }
-    closeButton.classList.remove("d-none");
-    closeButton.classList.add("d-block");
-  }
-  
-  function closeFullscreen() {
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    } else if (document.webkitExitFullscreen) { /* Safari */
-      document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) { /* IE11 */
-      document.msExitFullscreen();
-    }
-    closeButton.classList.remove("d-block");
-    closeButton.classList.add("d-none");
-  }
+
+// For viewing tool in fullscreen
+let fullscreenBrowser = document.getElementById("result-table");
 
   // Setting up Release Notes link
   $('#nav-linkTwo-tab').click(function() {

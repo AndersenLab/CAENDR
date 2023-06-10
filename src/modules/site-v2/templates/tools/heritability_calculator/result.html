@@ -16,6 +16,12 @@
 <meta http-equiv="refresh" content="10; url={{ request.path }}">
 {% endif %}
 
+<style>
+  #closeButton {
+    display:none;
+  }
+</style>
+
 {% endblock %}
 
 
@@ -86,10 +92,10 @@
         </div>
       
         {% if data %}
-        <div id="chartContainer">
+        <div class="bg-white" id="chartContainer">
           <div class="d-flex flex-wrap justify-content-center col-12 text-end optionsToolbar">
             <div class="me-5">
-              <button class="d-none btn btn-danger text-light p-2 my-5" onclick="closeFullscreen();" id="closeButton"><i
+              <button class="btn btn-danger text-light p-2 my-5" onclick="closeFullscreen();" id="closeButton"><i
                   class="bi bi-fullscreen-exit text-light" aria-hidden="true"></i> Close Fullscreen</button>
             </div>
           </div>
@@ -317,32 +323,9 @@
 
     })
 
-// Open and Close Fullscreen Buttons
-var fullscreenBrowser = document.getElementById("chartContainer");
-var closeButton = document.getElementById("closeButton");
-  function openFullscreen() {
-    if (fullscreenBrowser.requestFullscreen) {
-      fullscreenBrowser.requestFullscreen();
-    } else if (fullscreenBrowser.webkitRequestFullscreen) { /* Safari */
-      fullscreenBrowser.webkitRequestFullscreen();
-    } else if (fullscreenBrowser.msRequestFullscreen) { /* IE11 */
-      fullscreenBrowser.msRequestFullscreen();
-    }
-    closeButton.classList.remove("d-none");
-    closeButton.classList.add("d-block");
-  }
-  
-  function closeFullscreen() {
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    } else if (document.webkitExitFullscreen) { /* Safari */
-      document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) { /* IE11 */
-      document.msExitFullscreen();
-    }
-    closeButton.classList.remove("d-block");
-    closeButton.classList.add("d-none");
-  }
+// For viewing tool in fullscreen
+{% include '_scripts/fullscreen.js' %} {#/* fullscreen for tools */#}
+let fullscreenBrowser = document.getElementById("chartContainer");
     </script>
 {% endif %}
 

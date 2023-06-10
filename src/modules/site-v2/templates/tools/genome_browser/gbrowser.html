@@ -15,6 +15,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha256-KXn5puMvxCw+dAYznun+drMdG1IFl3agK0p/pqT9KAo=" crossorigin="anonymous"></script>
 
 <script type="text/javascript" src="//igv.org/web/release/2.6.2/dist/igv.min.js"></script>
+<style>
+  #closeButton {
+    display:none;
+  }
+</style>
 
 {% endblock %}
 
@@ -166,10 +171,10 @@
       <!-- /Select Species Prompt -->
       <!-- IGV Browser -->
       <div id="browser-container" class="col" style="width:100%">
-          <div id="browser">
+          <div class="bg-white" id="browser">
             <div class="d-flex flex-wrap justify-content-center col-12 text-end optionsToolbar">
               <div class="me-5">
-                <button class="d-none btn btn-danger text-light p-2 my-5" id="closeButton" onclick="closeFullscreen();"><i class="bi bi-fullscreen-exit text-light" aria-hidden="true"></i> Close Fullscreen</button>
+                <button class="btn btn-danger text-light p-2 my-5" id="closeButton" onclick="closeFullscreen();"><i class="bi bi-fullscreen-exit text-light" aria-hidden="true"></i> Close Fullscreen</button>
               </div>
             </div>
           </div>
@@ -191,6 +196,7 @@
 {% include '_scripts/utils.js' %}       {#/* defines: fetch_json, toggle_input */#}
 {% include '_scripts/igv-browser.js' %}
 {% include '_scripts/gene-search.js' %} {#/* defines: prep_gene_search, run_gene_search, format_locus_string */#}
+{% include '_scripts/fullscreen.js' %} {#/* fullscreen for tools */#}
 
 
 /* Variables */
@@ -459,33 +465,8 @@ function draw_gt_set(genotype_set, genotype_val) {
   return genotype_set.filter( gt => gt['GT'] == genotype_val ).map( gt_label ).join(" ");
 }
 
-// Open and Close Fullscreen Buttons
-var fullscreenBrowser = document.getElementById("browser");
-var closeButton = document.getElementById("closeButton");
-  function openFullscreen() {
-    if (fullscreenBrowser.requestFullscreen) {
-      fullscreenBrowser.requestFullscreen();
-    } else if (fullscreenBrowser.webkitRequestFullscreen) { /* Safari */
-      fullscreenBrowser.webkitRequestFullscreen();
-    } else if (fullscreenBrowser.msRequestFullscreen) { /* IE11 */
-      fullscreenBrowser.msRequestFullscreen();
-    }
-    closeButton.classList.remove("d-none");
-    closeButton.classList.add("d-block");
-  }
-  
-  function closeFullscreen() {
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    } else if (document.webkitExitFullscreen) { /* Safari */
-      document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) { /* IE11 */
-      document.msExitFullscreen();
-    }
-    closeButton.classList.remove("d-block");
-    closeButton.classList.add("d-none");
-  }
-
+// For viewing tool in fullscreen
+let fullscreenBrowser = document.getElementById("browser");
 
   // Setting up Release Notes link
   $('#nav-linkTwo-tab').click(function() {
