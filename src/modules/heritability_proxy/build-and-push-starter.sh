@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GIT_REPO_URL=git@github.com:northwestern-mti/calc_heritability.git 
+GIT_URL=git@github.com:northwestern-mti/calc_heritability.git 
 GIT_BRANCH=main
 
 echo "Env: ${ENV}"
