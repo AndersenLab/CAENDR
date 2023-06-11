@@ -21,12 +21,9 @@ GCR_REPO_NAME = f'gcr.io/{GOOGLE_CLOUD_PROJECT_ID}'
 
 def get_available_version_tags(container):
   versions = []
-  if hasattr(container, 'container_registry') and container.container_registry == 'gcr':
+  if hasattr(container, 'container_repo') and container.container_repo.startswith('gcr.io/'):
     versions = get_available_version_tags_gcr(container)
-  elif hasattr(container, 'container_registry') and container.container_registry == 'dockerhub':
-    versions = get_available_version_tags_dockerhub(container)
-  else:
-    logger.error("Unknown 'container_registry' value")
+  versions = get_available_version_tags_dockerhub(container)
 
   return versions
 
@@ -36,7 +33,7 @@ def get_available_version_tags_gcr(container):
 
 
 def get_available_version_tags_dockerhub(container):
-  versions = get_container_versions(f'{container.repo}/{container.container_name}')
+  versions = get_container_versions(f'{container.container_repo}/{container.container_name}')
   versions = [ version['name'] for version in versions ]
   return versions
 

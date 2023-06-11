@@ -247,6 +247,7 @@ $(document).ready(function () {
   //   - 'templates': the list of track templates to be filled out with strain data
   fetch_json("{{ url_for('genome_browser.get_tracks') }}")
     .then((data) => {
+      debugger
       set_trackset(data.default);
       set_templates(data.templates);
 
