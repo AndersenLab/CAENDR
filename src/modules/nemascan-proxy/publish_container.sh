@@ -28,35 +28,34 @@ done
 if [ -z ${ENV+x} ]; then
     echo "Must set var ENV";
     exit 1;
-else
-    echo "ENV is set to '$ENV'";
 fi
+echo "ENV is set to '$ENV'";
 
 
+# Get GCP project from env file
 source ../../../env/${ENV}/global.env
-
 if [ -z ${GOOGLE_CLOUD_PROJECT_ID+x} ]; then
     echo "Env file '../../../env/${ENV}/global.env' must define a variable 'GOOGLE_CLOUD_PROJECT_ID'";
     exit 1;
-else
-    echo "Using GCP project ${GOOGLE_CLOUD_PROJECT_ID}"
 fi
+echo "Using GCP project ${GOOGLE_CLOUD_PROJECT_ID}"
 
 
 # Ensure container tag passed as argument
 if [ -z ${tag} ]; then
     echo "Must provide value for tag";
     exit 1;
-else
-    echo "Publishing with tag '${tag}'";
 fi
+echo "Publishing with tag '${tag}'";
 
 
+# Clone git project
 if [ -n "${reload_git}" ]; then
     rm -rf ./NemaScan
 fi
 git clone --depth 1 git@github.com:northwestern-mti/NemaScan.git
 
 
+# Build and push container
 docker build --no-cache --platform linux/amd64 -t gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/nemascan-nxf:${tag} -f NemaScan/Dockerfile ./NemaScan
 docker push gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/nemascan-nxf:${tag}
