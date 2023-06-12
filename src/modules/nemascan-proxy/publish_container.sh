@@ -60,5 +60,5 @@ fi
 git clone --depth 1 git@github.com:northwestern-mti/NemaScan.git
 
 
-docker build --no-cache -t gcr.io/${gcp_project_id}/nemascan-nxf:${tag} -f NemaScan/Dockerfile ./NemaScan
+docker build --no-cache --platform linux/amd64 -t gcr.io/${gcp_project_id}/nemascan-nxf:${tag} -f NemaScan/Dockerfile ./NemaScan
 docker push gcr.io/${gcp_project_id}/nemascan-nxf:${tag}
