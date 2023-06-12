@@ -32,10 +32,13 @@ fi
 # Map environment to GCP project
 if [ $ENV = "qa" ]; then
     gcp_project_id="mti-caendr"
+elif [ $ENV = "development" ]; then
+    gcp_project_id="andersen-lab-dev-330218"
 else
     echo "Invalid ENV '$ENV'"
     exit 1;
 fi
+echo "Using GCP project ${gcp_project_id}"
 
 # Ensure container tag passed as argument
 if [ -z ${tag} ]; then
