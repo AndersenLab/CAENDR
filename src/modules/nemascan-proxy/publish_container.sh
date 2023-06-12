@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set +a
 set -e
 
 reload_git=''
@@ -31,16 +32,16 @@ else
     echo "ENV is set to '$ENV'";
 fi
 
-# Map environment to GCP project
-if [ $ENV = "qa" ]; then
-    gcp_project_id="mti-caendr"
-elif [ $ENV = "development" ]; then
-    gcp_project_id="andersen-lab-dev-330218"
-else
-    echo "Invalid ENV '$ENV'"
+
+source ../../../env/${ENV}/global.env
+
+if [ -z ${GOOGLE_CLOUD_PROJECT_ID+x} ]; then
+    echo "Env file '../../../env/${ENV}/global.env' must define a variable 'GOOGLE_CLOUD_PROJECT_ID'";
     exit 1;
+else
+    echo "Using GCP project ${GOOGLE_CLOUD_PROJECT_ID}"
 fi
-echo "Using GCP project ${gcp_project_id}"
+
 
 # Ensure container tag passed as argument
 if [ -z ${tag} ]; then
@@ -51,14 +52,11 @@ else
 fi
 
 
-set +a
-source ../../../env/${ENV}/global.env
-
 if [ -n "${reload_git}" ]; then
     rm -rf ./NemaScan
 fi
 git clone --depth 1 git@github.com:northwestern-mti/NemaScan.git
 
 
-docker build --no-cache --platform linux/amd64 -t gcr.io/${gcp_project_id}/nemascan-nxf:${tag} -f NemaScan/Dockerfile ./NemaScan
-docker push gcr.io/${gcp_project_id}/nemascan-nxf:${tag}
+docker build --no-cache --platform linux/amd64 -t gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/nemascan-nxf:${tag} -f NemaScan/Dockerfile ./NemaScan
+docker push gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/nemascan-nxf:${tag}
