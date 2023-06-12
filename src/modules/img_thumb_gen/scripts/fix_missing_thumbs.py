@@ -27,8 +27,8 @@ def generate_thumbnails(data, context):
   image_regex = f"\.(jpg|jpeg)$"
 
   # Only generate thumbnails for matching paths
-  is_image = re.search(image_regex, data['name'])
-  is_thumbnail = re.search(thumbnail_regex, data['name']) 
+  is_image = re.search(image_regex, data['name'], re.IGNORECASE)
+  is_thumbnail = re.search(thumbnail_regex, data['name'], re.IGNORECASE) 
 
   if (is_image and not is_thumbnail):
     logger.info(f'Creating new thumbnail for image: {data}')
@@ -38,11 +38,11 @@ def generate_thumbnails(data, context):
     thumbnail.transform(resize='x200')
 
     # Upload the thumbnail with modified name
-    path = data['name'].rsplit('.', 1)
-    blob_name = path[0] + ".thumb." + path[1]
+    filename, extension = data['name'].rsplit('.', 1)
+    blob_name = filename + ".thumb." + extension.lower()
     thumbnail_blob = bucket.blob(blob_name)
     thumbnail_blob.upload_from_string(thumbnail.make_blob())
-    logger.info(f'Uploaded new thumbnail for image: {blob_name}')
+    logger.info(f'Uploaded new thumbnail for image: {blob_name}, {thumbnail_blob}')
 
   else:
     logger.info(f'Triggered but will not create thumbnail: is_image:{is_image} is_thumbnail:{is_thumbnail}')
@@ -61,8 +61,30 @@ def run():
     prefix = '^' + source_path.replace('/','\/') + '\/.*'
 
 
-print("hello")
+def run():
+  GOOGLE_APPLICATION_CREDENTIALS=os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+  print(f"[Running script] fix_missing_thumbs ENV={ENV} GOOGLE_APPLICATION_CREDENTIALS={GOOGLE_APPLICATION_CREDENTIALS}")
+  print("hello Orzu!")
+
+  MODULE_SITE_BUCKET_PHOTOS_NAME = os.environ.get("MODULE_SITE_BUCKET_PHOTOS_NAME")
+  if MODULE_SITE_BUCKET_PHOTOS_NAME is None:
+    raise Exception("Missing MODULE_SITE_BUCKET_PHOTOS_NAME")
+  bucket = client.get_bucket(MODULE_SITE_BUCKET_PHOTOS_NAME)
+
+  files = list(bucket.list_blobs())
+  filtered_files = [ file for file in files if file.name.startswith("c_") ]
+
+  # EXAMPLE: pick a random file and create a thumb
+  #target_file = "c_briggsae/MY2049.jpg"
+  #data = {
+  #   "name" : target_file,
+  #   "bucket" : MODULE_SITE_BUCKET_PHOTOS_NAME
+  #}
+  #context = {}
+  #generate_thumbnails(data, context)
+  # run()
+
 
 if __name__ == '__main__':
-  print("[Running script] fix_missing_thumbs ENV={ENV}")
-#   run()
+  run()
+

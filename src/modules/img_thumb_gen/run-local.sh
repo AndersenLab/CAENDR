@@ -12,6 +12,7 @@ if [ -z "$SCRIPT_PATH" ]; then
 fi
 
 docker run -it \
+    --platform linux/amd64 \
     -v $GOOGLE_APPLICATION_CREDENTIALS:/secret \
     -v .:/img_thumb_gen \
     --env-file .env \
