@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 reload_git=''
 tag=''
 
