@@ -5,9 +5,9 @@ IMG_URI=local/img_thumb_gen
 SCRIPT_PATH=$1
 if [ -z "$SCRIPT_PATH" ]; then
     echo "Usage"
-    echo "\$ ./run-local-script.sh PATH_TO_SCRIPT_PY"
+    echo "\$ $0 PATH_TO_SCRIPT_PY"
     echo "Example:"
-    echo "./run-local-script.sh ./scripts/fix_missing_thumbs.py"
+    echo "$0 ./scripts/fix_missing_thumbs.py"
     exit
 fi
 
