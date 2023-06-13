@@ -21,7 +21,6 @@ from base.utils.auth import jwt_required
 from caendr.api.strain import query_strains
 from caendr.api.isotype import get_isotypes
 from caendr.models.datastore import DatasetRelease, Species, SPECIES_LIST
-from caendr.models.datastore.browser_track import BrowserTrack
 from caendr.models.sql import Strain, StrainAnnotatedVariant
 from caendr.services.cloud.storage import generate_blob_url
 from caendr.services.dataset_release import get_all_dataset_releases, get_browser_tracks_path, get_release_bucket, find_dataset_release
@@ -84,13 +83,6 @@ def data_release_list(species, release_version=None):
   except NotFoundError:
     return abort(404)
 
-  # Get path to FASTA genome file for this species/release
-  fasta_path = BrowserTrack.get_fasta_path_full().get_string(**{
-    'SPECIES': species.name,
-    'RELEASE': release['version'],
-    'WB':      release['wormbase_version'],
-  })
-
   # Package common params into an object
   params = {
     'species':  species,
@@ -98,8 +90,8 @@ def data_release_list(species, release_version=None):
     'RELEASES': releases,
     'release_bucket': get_release_bucket(),
     'release_path': release.get_versioned_path_template().get_string(SPECIES = species.name),
-    'fasta_path': fasta_path,
-    'fasta_name': fasta_path.rsplit('/', 1)[1],
+    'fasta_path': release.get_fasta_filepath_url(),
+    'fasta_name': release.get_fasta_filename(),
   }
 
   # Get list of files based on species
