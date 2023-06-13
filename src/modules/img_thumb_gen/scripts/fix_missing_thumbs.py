@@ -22,6 +22,10 @@ if ENV is None:
   
 
 def generate_thumbnails(data, context):
+  # Check if the file format is correct
+  if not data['name'].endswith('jpg') or not data['name'].endswith('jpeg'):
+    raise Exception(f"{data['name']} is wrong file format. Thumbnails are generated only for .jpg or .jpeg files")
+
   logger.info(f'Triggered by: bucket:{data["bucket"]}, name:{data["name"]}')
   thumbnail_regex = f"\.thumb.(jpg|jpeg)$"
   image_regex = f"\.(jpg|jpeg)$"
@@ -64,7 +68,6 @@ def run():
 def run():
   GOOGLE_APPLICATION_CREDENTIALS=os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
   print(f"[Running script] fix_missing_thumbs ENV={ENV} GOOGLE_APPLICATION_CREDENTIALS={GOOGLE_APPLICATION_CREDENTIALS}")
-  print("hello Orzu!")
 
   MODULE_SITE_BUCKET_PHOTOS_NAME = os.environ.get("MODULE_SITE_BUCKET_PHOTOS_NAME")
   if MODULE_SITE_BUCKET_PHOTOS_NAME is None:
@@ -73,7 +76,24 @@ def run():
 
   files = list(bucket.list_blobs())
   filtered_files = [ file for file in files if file.name.startswith("c_") ]
-
+  sorted_files = {}
+  for file in filtered_files:
+     end_idx = file.name.index('.')
+     sliced_name = file.name[0:end_idx]
+     if sliced_name not in sorted_files:
+      sorted_files[sliced_name] = [file]
+     else:
+      sorted_files.get(sliced_name).append(file)
+  no_thumb_imgs = [files[0] for files in sorted_files.values() if len(files) == 1]
+  for file in no_thumb_imgs:
+    data = {
+    "name" : file.name,
+    "bucket" : MODULE_SITE_BUCKET_PHOTOS_NAME
+    }
+    context = {}
+    generate_thumbnails(data, context)
+  
+    
   # EXAMPLE: pick a random file and create a thumb
   #target_file = "c_briggsae/MY2049.jpg"
   #data = {
