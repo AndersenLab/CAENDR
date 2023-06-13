@@ -38,3 +38,17 @@ class Strain(DictSerializable, db.Model):
 
   def __repr__(self):
     return self.strain
+
+  @staticmethod
+  def to_sortable_strain(strain):
+    import re
+    m = re.match('([A-Z]+)([0-9]+)', strain.strain)
+    if m:
+      g = m.groups()
+      return (g[0], int(g[1]))
+    else:
+      return ('', 0)
+
+  @staticmethod
+  def sort_by_strain(arr):
+    return sorted(arr, key=Strain.to_sortable_strain)

@@ -5,6 +5,7 @@ from flask import render_template, request, url_for, redirect, Blueprint, abort,
 
 from caendr.api.strain import query_strains, get_strain_img_url
 from caendr.utils.json import dump_json
+from caendr.models.sql import Strain
 
 
 
@@ -40,7 +41,12 @@ def isotype_page(isotype_name, release=None):
     Isotype page
   """
 
-  isotype_strains = query_strains(isotype_name=isotype_name)
+  try:
+    isotype_strains = Strain.sort_by_strain( query_strains(isotype_name=isotype_name) )
+  except Exception as ex:
+    logger.error(f'Failed to sort strain list for isotype {isotype_name}: {ex}')
+    abort(500)
+
   if not isotype_strains:
     abort(404)
 
