@@ -77,12 +77,21 @@
                                 </span></strong>
                             {{ isotype_ref_strain["strain"]}}
                         </li>
+                        <li class="list-group-item">
+                            <strong> <span class="tooltip-item" data-toggle="tooltip" data-placement="bottom"
+                                    title="">Species:</span>
+                            </strong>
+                            <em>{{ isotype_ref_strain["species_name"]|replace('c_', 'C. ')}}</em>
+                        </li>
                         <li class="list-group-item"><span class="tooltip-item" data-toggle="tooltip" data-placement="bottom"
                                 title="Dataset in which isotype was originally released."><strong>Release:</strong></span>
                             {{ isotype_ref_strain['release']|format_release }}
                         </li>
                         <li class="list-group-item"><strong>Sampling Date:</strong>
                             {{ isotype_ref_strain["sampling_date"] }}
+                        </li>
+                        <li class="list-group-item"><strong>Strain Issues:</strong>
+                            {{ isotype_ref_strain["issue_notes"] }}
                         </li>
                         <li class="list-group-item"><strong>Latitude, Longitude:</strong>
                             {% if isotype_ref_strain['latitude'] %}
@@ -101,28 +110,31 @@
                         <li class="list-group-item">
                             <span class='tooltip-item' data-toggle='tooltip' title='Environment type class'>
                                 <strong>Landscape:</strong></span>
-                            {{ isotype_ref_strain["landscape"] or ""}}
+                            {{ isotype_ref_strain["landscape"] or "ND"}}
                         </li>
                         <li class="list-group-item"><span class='tooltip-item' data-toggle='tooltip'
                                 title='Material in or on which nematodes were isolated'>
                                 <strong>Substrate:</strong></span>
-                            {{ isotype_ref_strain["substrate"] or "" }}
+                            {{ isotype_ref_strain["substrate"] or "ND" }}
                         </li>
                         <li class="list-group-item">
                             <strong>Sampled By:</strong>
                             {{ isotype_ref_strain["sampled_by"] }}
                         </li>
                         <li class="list-group-item"><strong>Substrate Temperature (C):</strong>
-                            {{ isotype_ref_strain['substrate_temp'] or "" }}
+                            {{ isotype_ref_strain['substrate_temp'] or "ND" }}
                         </li>
                         <li class="list-group-item"><strong>Ambient Temperature (C):</strong>
-                            {{ isotype_ref_strain['ambient_temp'] or "" }}
+                            {{ isotype_ref_strain['ambient_temp'] or "ND" }}
                         </li>
                         <li class="list-group-item"><strong>Ambient Humidity (%):</strong>
-                            {{ isotype_ref_strain['ambient_humidity'] or "" }}
+                            {{ isotype_ref_strain['ambient_humidity'] or "ND" }}
                         </li>
                         <li class="list-group-item">
                             <small>Data in this table are for the isotype reference strain.</small>
+                        </li>
+                        <li class="list-group-item">
+                            <small>ND = not done</small>
                         </li>
                     </ul>
                 </div>
