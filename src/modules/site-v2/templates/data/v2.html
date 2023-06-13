@@ -222,7 +222,11 @@
                                             <td>The reference genome build from Wormbase used for alignment and
                                                 annotation.</td>
                                             <td class="text-center">
+                                                {% if fasta_path %}
                                                 <a class="btn btn-primary text-light" href="{{ fasta_path }}">{{ fasta_name }}</a>
+                                                {% else %}
+                                                Reference genome FASTA file is not included in this release
+                                                {% endif %}
                                             </td>
                                         </tr>
                                         <tr>

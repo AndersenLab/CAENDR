@@ -160,6 +160,11 @@ class DatasetRelease(Entity):
     }
 
 
+  def check_fasta_file_exists(self):
+    obj = self.get_fasta_filepath_obj()
+    return check_blob_exists(obj['bucket'], f'{ obj["path"] }/{ obj["name"] }{ obj["ext"] }')
+
+
 
   ## FASTA URL (full) ##
 

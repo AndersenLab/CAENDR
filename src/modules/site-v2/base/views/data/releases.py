@@ -22,7 +22,7 @@ from caendr.api.strain import query_strains
 from caendr.api.isotype import get_isotypes
 from caendr.models.datastore import DatasetRelease, Species, SPECIES_LIST
 from caendr.models.sql import Strain, StrainAnnotatedVariant
-from caendr.services.cloud.storage import generate_blob_url
+from caendr.services.cloud.storage import generate_blob_url, check_blob_exists
 from caendr.services.dataset_release import get_all_dataset_releases, get_browser_tracks_path, get_release_bucket, find_dataset_release
 from caendr.models.error import NotFoundError, SpeciesUrlNameError
 
@@ -90,7 +90,7 @@ def data_release_list(species, release_version=None):
     'RELEASES': releases,
     'release_bucket': get_release_bucket(),
     'release_path': release.get_versioned_path_template().get_string(SPECIES = species.name),
-    'fasta_path': release.get_fasta_filepath_url(),
+    'fasta_path': release.get_fasta_filepath_url() if release.check_fasta_file_exists() else None,
     'fasta_name': release.get_fasta_filename(),
   }
 
