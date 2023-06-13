@@ -51,7 +51,7 @@
                                 </div>
                                 <div class="card-body">
                                     <p class="card-text">
-                                        {{ render_ext_markdown(files.get('summary')) }}
+                                        {{ render_ext_markdown(files.get('summary'), ignore_err=true, backup_text="*Release summary is not available at this time.*") }}
                                     </p>
                                 </div>
                             </div>
