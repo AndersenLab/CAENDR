@@ -1,7 +1,7 @@
 import json
 
-from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefault, BrowserTrackTemplate
-from caendr.models.datastore import SPECIES_LIST
+from caendr.models.datastore.browser_track import BrowserTrackDefault, BrowserTrackTemplate
+from caendr.models.datastore import DatasetRelease, SPECIES_LIST
 from flask import (render_template,
                     Blueprint,
                     jsonify,
@@ -104,7 +104,7 @@ def genome_browser(region="III:11746923-11750250", query=None):
     'default_tracks': sorted(BrowserTrackDefault.query_ds(), key = lambda x: x['order'] ),
 
     # Data locations
-    'fasta_url': BrowserTrack.get_fasta_path_full().get_string_safe(),
+    'fasta_url': DatasetRelease.get_fasta_filepath_url_template().get_string_safe(),
 
     # String replacement tokens
     # Maps token to the field in Species object it should be replaced with

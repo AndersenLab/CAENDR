@@ -4,6 +4,7 @@ from caendr.services.logger import logger
 from caendr.utils.env import get_env_var
 
 from caendr.models.datastore import DataJobEntity
+from caendr.services.dataset_release import get_dataset_release
 
 
 
@@ -53,26 +54,27 @@ class IndelPrimer(DataJobEntity):
     })
 
 
+
   @staticmethod
   def get_fasta_filepath(species, release = None):
+    '''
+      Uses the provided release, or looks up the most recent release supporting Indel Primer
+      for the given species.
+
+      Equivalent to running `get_fasta_filepath_obj` on the appropriate DatasetRelease object.
+    '''
     from caendr.models.datastore import SPECIES_LIST
+
+    # Lookup desired species object
     species_obj = SPECIES_LIST[species]
 
     # Default to the latest version defined for the species
     if release is None:
       release = species_obj['indel_primer_ver']
 
-    # TODO: Look up these values using release version
-    species_prj = species_obj['project_num']
-    species_wb  = species_obj['wb_ver']
-
-    # Return filepath
-    return {
-      'bucket': MODULE_SITE_BUCKET_PUBLIC_NAME,
-      'path': ('dataset_release', species, release, 'browser_tracks'),
-      'name': f'{ species }.{ species_prj }.{ species_wb }.genome',
-      'ext':  '.fa',
-    }
+    # Get DatasetRelease object and use to construct the FASTA filepath
+    release_obj = get_dataset_release(release)
+    return release_obj.get_fasta_filepath_obj()
 
 
   ## All Properties ##
