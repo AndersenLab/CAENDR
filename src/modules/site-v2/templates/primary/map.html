@@ -11,7 +11,7 @@
   }
 
   #zoomIn {
-    border-bottom: 2px solid var(--bs-white);
+    border-bottom: 2px solid var(--bs-dark);
   }
   .leaflet-control-zoom.leaflet-bar {
     border: 0;
@@ -32,24 +32,15 @@
   }
 
   .leaflet-popup-content-wrapper {
-    background-color: var(--bs-white);
+    background-color: var(--bs-light);
     color: var(--bs-black);
     font-size: 1rem;
     padding: .5em;
   }
 
   .leaflet-popup-tip {
-    background-color: var(--bs-white);
+    background-color: var(--bs-light);
   }
-
-  /* #strains {
-    position:absolute;
-    top: 1rem;
-    right: 0;
-    z-index: 1000;
-    color: white;
-    padding: 15px;
-  } */
 
   #strains > p {
     text-align: center;
@@ -60,7 +51,6 @@
     top: 1rem;
     right: 0;
     z-index: 1000;
-    color: white;
     padding: 15px;
   }
 
@@ -81,27 +71,43 @@
     right: 1rem;
   }
 
-  .hidden {
-    visibility: hidden;
-  }
 </style>
 
     <div class="position-relative" id="map" aria-hidden="true">
-      <div class="btn-group-vertical m-3 zoomContainer" role="group" aria-hidden="true">
-        <button class="btn btn-primary d-none d-md-block" id="zoomIn" tabindex="-1"><i
+      <div class="btn-group-vertical shadow-sm m-3 zoomContainer" role="group" aria-hidden="true">
+        <button class="btn text-bg-light d-none d-md-block" id="zoomIn" tabindex="-1"><i
             class="bi bi-plus-circle"></i></button>
-        <button class="btn btn-primary d-none d-md-block" id="zoomOut" tabindex="-1"><i
+        <button class="btn text-bg-light d-none d-md-block" id="zoomOut" tabindex="-1"><i
             class="bi bi-dash-circle"></i></button>
       </div>
-      <btn class="position-absolute d-block d-md-none btn btn-primary rounded-pill text-white text-center mobileSpeciesSelect" onclick="toggleSpecies();"><i class="bi bi-check-all me-1"></i> Species
+      <btn
+        class="position-absolute d-block d-md-none btn text-bg-light rounded-pill text-center mobileSpeciesSelect"
+        onclick="toggleSpecies();"><i class="bi bi-check-all me-1"></i> Species
       </btn>
-      <div class="d-none d-md-block bg-primary mt-5 mt-md-0 me-2 me-md-3 p-3" id="selectSpecies">
-      <form id="strains" aria-hidden="true">
-        <p tabindex="-1"><strong>Species:</strong></p>
-        <div><input type='checkbox' name='filters' value='elegans_layer' checked tabindex="-1"><i> C. elegans</i></div>
-        <div><input type='checkbox' name='filters' value='briggsae_layer' tabindex="-1"><i> C. briggsae</i></div>
-        <div><input type='checkbox' name='filters' value='tropicalis_layer' tabindex="-1"><i> C. tropicalis</i></div>
-      </form>
+      <div class="d-none d-md-block shadow-sm rounded-2 text-bg-light mt-5 mt-md-0 me-2 me-md-3 p-3" style="width:150px;"
+        id="selectSpecies">
+        <form id="strains" aria-hidden="true">
+          <p tabindex="-1"><strong>Species:</strong></p>
+          <div class="d-flex justify-content-between lh-lg">
+            <div>
+              <input type='checkbox' name='filters' value='elegans_layer' checked tabindex="-1"><i> C. elegans</i>
+            </div>
+            <img class="mt-2" src='{{ ext_asset("img/icons/elegansMarkerOutline.svg") }}' style="height:18px;width:auto;">
+          </div>
+          <div class="d-flex justify-content-between lh-lg">
+            <div>
+              <input type='checkbox' name='filters' value='briggsae_layer' tabindex="-1"><i> C. briggsae</i>
+            </div>
+            <img class="mt-2" src='{{ ext_asset("img/icons/briggsaeMarkerOutline.svg") }}' style="height:18px;width:auto;">
+          </div>
+          <div class="d-flex justify-content-between lh-lg">
+            <div>
+              <input type='checkbox' name='filters' value='tropicalis_layer' tabindex="-1"><i> C. tropicalis</i>
+            </div>
+            <img class="mt-2" src='{{ ext_asset("img/icons/tropicalisMarkerOutline.svg") }}'
+              style="height:18px;width:auto;">
+          </div>
+        </form>
       </div>
     </div>
     <div class="text-center my-2">
