@@ -24,6 +24,8 @@ from caendr.models.datastore import SPECIES_LIST
 from caendr.models.datastore.cart import Cart
 from caendr.models.error import NotFoundError
 from caendr.services.dataset_release import get_all_dataset_releases, find_dataset_release, get_latest_dataset_release_version
+from caendr.services.cloud.storage import get_blob_list
+
 
 """
 Author: Daniel E. Cook
@@ -48,6 +50,8 @@ from caendr.services.cloud.secret import get_secret
 MODULE_SITE_CART_COOKIE_NAME = get_env_var('MODULE_SITE_CART_COOKIE_NAME')
 MODULE_SITE_CART_COOKIE_AGE_SECONDS = get_env_var('MODULE_SITE_CART_COOKIE_AGE_SECONDS', var_type=int)
 STRAIN_SUBMISSION_URL = get_env_var('MODULE_SITE_STRAIN_SUBMISSION_URL')
+MODULE_SITE_BUCKET_PHOTOS_NAME   = get_env_var('MODULE_SITE_BUCKET_PHOTOS_NAME')
+
 
 strains_bp = Blueprint('request_strains',
                         __name__,
@@ -147,34 +151,36 @@ def isotype_page(isotype_name, release=None):
   if not isotype_strains:
     abort(404)
 
+  
+  species = isotype_strains[0].species_name
+  files = get_blob_list(MODULE_SITE_BUCKET_PHOTOS_NAME, species)
+
+  image_urls = {}
+  for s in isotype_strains:
+    # Get images and thumbs for each strain
+    for file in files:
+      start_idx = file.name.index('/')
+      end_idx = file.name.index('.')
+      file_name = file.name[start_idx+1:end_idx]
+      if s.strain != file_name:
+        continue
+      else:
+        if '.thumb' in file.name:
+          thumb = file.public_url
+          image_urls.setdefault(s.strain, {}).update({'thumb': thumb})
+        else:
+          url = file.public_url
+          image_urls.setdefault(s.strain, {}).update({'url': url})
+
   return render_template('strain/isotype.html', **{
     "title": f"Isotype {isotype_name}",
     "isotype": isotype_strains,
     "isotype_name": isotype_name,
     "isotype_ref_strain": [x for x in isotype_strains if x.isotype_ref_strain][0],
-    "strain_json_output": dump_json(isotype_strains)
+    "strain_json_output": dump_json(isotype_strains),
+    "image_urls": image_urls
   })
 
-#
-# Isotype image URLs
-#
-@strains_bp.route('/isotype-img/<isotype_name>/')
-@cache.memoize(60*60)
-def isotype_img(isotype_name, release=None):
-  """ Fetching isotype images """
-  isotype_strains = query_strains(isotype_name=isotype_name)
-  if not isotype_strains:
-    abort(404)
-
-  image_urls = {}
-  for s in isotype_strains:
-    image_urls[s.strain] = {
-      'url':   get_strain_img_url(s.strain, species=s.species_name, thumbnail=False),
-      'thumb': get_strain_img_url(s.strain, species=s.species_name, thumbnail=True),
-    }
-
-  logger.debug(image_urls)
-  return jsonify(image_urls)
 
 #
 # Strain Catalog
