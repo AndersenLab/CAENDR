@@ -212,7 +212,7 @@ class DatasetRelease(Entity):
   
 
   V2 = ReportType('V2', {
-    'release_notes':                     '$RELEASE/release_notes.md',
+    'release_notes':                     '$RELEASE/release_notes_v2.md',
     'summary':                           '$RELEASE/summary.md',
     'methods':                           '$RELEASE/methods.md',
     'alignment_report':                  '$RELEASE/alignment_report.html',
