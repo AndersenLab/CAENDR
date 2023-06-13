@@ -339,16 +339,15 @@ def order_page_index():
     cartItems = []
   elif user:
     users_cart = Cart.lookup_by_user(user['email'])
-    cartItems = users_cart['items']  
+    cartItems = users_cart['items']
+    form.version.data = users_cart['version']
   else:
     users_cart = Cart(cart_id)
     cartItems = users_cart['items']
+    form.version.data = users_cart['version']
   
-  form.version.data = users_cart['version']
-
   if len(cartItems) == 0:
     return render_template('order/order.html', title=title, form=form)
-
   else:
     for item in cartItems:
       item['price'] = Cart.get_price(item)
