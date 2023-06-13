@@ -184,8 +184,8 @@
     <!-- Tool column -->
     <div class="d-flex flex-wrap flex-column col-md-12 col-xl-8">
       <!-- Options Toolbar -->
-      <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar">
-        <div class="ps-3 pt-0">
+      <div id="options-toolbar" class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar">
+        <div class="ps-3 pt-0" style="display: none;">
           <button class="btn btn-link" disabled id="download-result-btn" onClick="onDownload();"><i
               class="bi bi-file-earmark-arrow-down-fill" aria-hidden="true"></i> Download My Results</button>
         </div>
@@ -286,6 +286,7 @@ function update_species(species_id) {
   // If no species selected, prompt user to select one; otherwise show results table
   $('#select-species-prompt').toggle(species_empty);
   $('#variant-table-container').toggle(!species_empty);
+  $('#options-toolbar > *').toggle(!species_empty);
 
   // Enable or disable form inputs that depend on species being defined
   const form_ids = [
