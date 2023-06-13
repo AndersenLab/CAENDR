@@ -1,8 +1,13 @@
 <!-- Footer -->
-<div class="row">
-<footer class="mt-5">
-  <div class="container-fluid mt-5 p-5">
-    <div class="d-flex flex-sm-column flex-md-row flex-wrap justify-content-center pt-5">
+<div class="row mt-5">
+<footer class="position-relative">
+   <!-- Feedback Form -->
+<div class="col-3 col-md-1 position-absolute top-0 end-0 rounded-top text-bg-light p-3 me-5" style="translate: 15% -100%;">
+  <a class="stretched-link" href="https://goo.gl/forms/rfWz4AlCIP" target="_blank"><i
+      class="bi bi-chat-fill me-1 fw-bold"></i>Feedback</a>
+</div>
+  <div class="container-fluid p-5">
+    <div class="d-flex flex-sm-column flex-md-row flex-wrap justify-content-start pt-5">
       <div class="col-12 col-md-3 mb-5">  
         <a href="/" aria-label="CaeNDR home"><img src="/static/img/caeNDRLogo.png" class="d-block img-fluid mx-auto footerImage"></a>
       </div>
@@ -42,7 +47,7 @@
           <li><a class="nav-link ps-0" href="{{ url_for('about.contact_us') }}"> Contact Us </a></li>
         </nav>
       </div>
-      <div class="col-5 col-md-2 mx-auto mb-5">
+      <div class="col-4 col-md-2 ms-2 mb-5">
         <nav class="nav flex-column">
           <h3 class="h5 text-dark"><i class="bi bi-chat-left-quote-fill text-secondary me-1" aria-hidden="true"></i>Cite
             CeNDR</h3>
@@ -57,11 +62,6 @@
       </div>
     </div>
   </div>
-  <!-- Feedback Form -->
-<div class="position-fixed bottom-0 end-0 rounded-top shadow-sm opacity-75 text-bg-light p-3 me-5">
-  <a class="stretched-link" href="https://goo.gl/forms/rfWz4AlCIP" target="_blank"><i
-      class="bi bi-chat-fill me-1 fw-bold"></i>Feedback</a>
-</div>
 </footer>
 </div>
 <!-- /Container /Footer /Row -->
