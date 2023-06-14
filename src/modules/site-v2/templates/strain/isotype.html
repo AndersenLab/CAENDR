@@ -1,4 +1,13 @@
 {% extends "_layouts/default.html" %}
+{% block custom_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.8.2/css/lightbox.min.css">
+<style>
+    .strainImage {
+        height: 250px;
+        width: auto;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container pb-5">
@@ -111,7 +120,7 @@
                         </div>
                     </div>
                     {% if isotype[0].previous_names %}
-                    <div class="card mb-5 overflow-auto" style="max-height:50vh;">
+                    <div class="card mb-3 overflow-auto" style="max-height:50vh;">
                         <div class="card-header sticky-top text-bg-secondary text-light fw-bold">
                             Alternative Names
                         </div>
@@ -130,11 +139,13 @@
                 <!-- /Strains Card Column -->
         </div>
         <!-- /Flex -->
+        <!-- Images section will go here here -->
+
 </div> <!-- /Container -->
 {% endblock %}
 
 {% block script %}
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.8.2/js/lightbox.min.js"></script>
 <script>
 
 $( document ).ready( function() {
