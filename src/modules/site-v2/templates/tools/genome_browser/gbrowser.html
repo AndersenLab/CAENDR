@@ -91,16 +91,17 @@
                       {{ strain.isotype }} {{ ("(" + strain.strain + ")") if (strain.isotype != strain.strain) else "" }}
                     </td>
                     <td>
-                      <label>
-                        <input type="checkbox" class="track-select isotype-item sample-track"
+                      <div class="form-check">
+                        <input type="checkbox" class="form-check-input track-select isotype-item sample-track"
                           value="{{ strain.strain }}" />
-                        VCF</label>
+                        <label class="form-check-label">VCF</label>
+                      </div>
                     </td>
                     <td>
-                      <label>
-                        <input type="checkbox" class="track-select sample-track-alignment"
-                          value="{{ strain.strain }}_bam" />
-                        BAM</label>
+                      <div class="form-check">
+                      <input type="checkbox" class="form-check-input track-select sample-track-alignment" value="{{ strain.strain }}_bam" />
+                      <label class="form-check-label">BAM</label>
+                      </div>
                     </td>
                   {% endcall %}
                 </tbody>
@@ -136,12 +137,13 @@
           <div id="track-options-container" class="p-3 mb-4 rounded-2 overflow-auto gbrowserTracks">
             <form id="track-options">
               {% for track in default_tracks %}
-                <div id="{{ track.name }}_checkbox_container" class="checkbox default-track-container" style="display: none;">
-                  <label>
-                    <input id="{{ track.name }}_checkbox" type="checkbox" class="track-select normal-track" value="{{ track.name }}" />
-                    {{ track.name }}
-                  </label>
-                </div>
+              <div id="{{ track.name }}_checkbox_container" class="form-check checkbox default-track-container" style="display: none;">
+                <input id="{{ track.name }}_checkbox" type="checkbox" class="form-check-input track-select normal-track"
+                  value="{{ track.name }}" />
+                <label class="form-check-label" for="{{ track.name }}_checkbox">
+                  {{ track.name }}
+                </label>
+              </div>
               {% endfor %}
             </form>
           </div>

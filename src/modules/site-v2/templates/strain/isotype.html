@@ -98,12 +98,21 @@
                                 </span></strong>
                             {{ isotype_ref_strain["strain"]}}
                         </li>
+                        <li class="list-group-item">
+                            <strong> <span class="tooltip-item" data-toggle="tooltip" data-placement="bottom"
+                                    title="">Species:</span>
+                            </strong>
+                            <em>{{ isotype_ref_strain["species_name"]|replace('c_', 'C. ')}}</em>
+                        </li>
                         <li class="list-group-item"><span class="tooltip-item" data-toggle="tooltip" data-placement="bottom"
                                 title="Dataset in which isotype was originally released."><strong>Release:</strong></span>
                             {{ isotype_ref_strain['release']|format_release }}
                         </li>
                         <li class="list-group-item"><strong>Sampling Date:</strong>
                             {{ isotype_ref_strain["sampling_date"] }}
+                        </li>
+                        <li class="list-group-item"><strong>Strain Issues:</strong>
+                            {{ isotype_ref_strain["issue_notes"] }}
                         </li>
                         <li class="list-group-item"><strong>Latitude, Longitude:</strong>
                             {% if isotype_ref_strain['latitude'] %}
@@ -122,28 +131,31 @@
                         <li class="list-group-item">
                             <span class='tooltip-item' data-toggle='tooltip' title='Environment type class'>
                                 <strong>Landscape:</strong></span>
-                            {{ isotype_ref_strain["landscape"] or ""}}
+                            {{ isotype_ref_strain["landscape"] or "ND"}}
                         </li>
                         <li class="list-group-item"><span class='tooltip-item' data-toggle='tooltip'
                                 title='Material in or on which nematodes were isolated'>
                                 <strong>Substrate:</strong></span>
-                            {{ isotype_ref_strain["substrate"] or "" }}
+                            {{ isotype_ref_strain["substrate"] or "ND" }}
                         </li>
                         <li class="list-group-item">
                             <strong>Sampled By:</strong>
                             {{ isotype_ref_strain["sampled_by"] }}
                         </li>
                         <li class="list-group-item"><strong>Substrate Temperature (C):</strong>
-                            {{ isotype_ref_strain['substrate_temp'] or "" }}
+                            {{ isotype_ref_strain['substrate_temp'] or "ND" }}
                         </li>
                         <li class="list-group-item"><strong>Ambient Temperature (C):</strong>
-                            {{ isotype_ref_strain['ambient_temp'] or "" }}
+                            {{ isotype_ref_strain['ambient_temp'] or "ND" }}
                         </li>
                         <li class="list-group-item"><strong>Ambient Humidity (%):</strong>
-                            {{ isotype_ref_strain['ambient_humidity'] or "" }}
+                            {{ isotype_ref_strain['ambient_humidity'] or "ND" }}
                         </li>
                         <li class="list-group-item">
                             <small>Data in this table are for the isotype reference strain.</small>
+                        </li>
+                        <li class="list-group-item">
+                            <small>ND = not done</small>
                         </li>
                     </ul>
                 </div>
@@ -163,6 +175,32 @@ $( document ).ready( function() {
   $('[data-toggle="tooltip"]').tooltip();
 });
 
+function getSpeciesMarker(species){
+    if (species === 'c_elegans') {
+        return '{{ext_asset("img/icons/elegansMarkerOutline.svg")}}'
+    } else if (species === 'c_briggsae') {
+        return '{{ext_asset("img/icons/briggsaeMarkerOutline.svg")}}'
+    } else {
+        return '{{ext_asset("img/icons/tropicalisMarkerOutline.svg")}}'
+    }
+}
+
+const species_name = {{species|tojson}}
+
+const markerUrl = getSpeciesMarker(species_name)
+
+function createMarkerEl(markerUrl) {
+  const markerEl = document.createElement('div');
+  markerEl.className = 'custom-marker';
+  markerEl.style.backgroundImage = `url(${markerUrl})`;
+  markerEl.style.backgroundSize = 'contain';
+  markerEl.style.backgroundRepeat = 'no-repeat';
+  markerEl.style.width = '30px'; 
+  markerEl.style.height = '30px';
+
+  return markerEl;
+}
+
 if (document.getElementById('map')) {
     ACCESS_TOKEN = mapboxgl.accessToken;
     var markerHeight = 50, markerRadius = 10, linearOffset = 25;
@@ -177,6 +215,8 @@ if (document.getElementById('map')) {
         'right': [-markerRadius, (markerHeight - markerRadius) * -1]
     };
 
+
+
     data = {{ strain_json_output|safe }}
 
     data.forEach(function(d) {
@@ -188,14 +228,13 @@ if (document.getElementById('map')) {
                         ${d.strain ? '<li><b>Strain: ' + d.strain + '</b></li>': ''}
                         ${d.isolation ? '<li>Isolation: ' + d.isolation + '</li>': ''}
                         ${d.elevation ? '<li>Elevation: ' + d.elevation + '</li>': ''}
-                        ${d.isolation ? '<li>Location: ' + d.location + '</li>': ''}
                     </ul>
                 </div>
             `;
             p = new mapboxgl.Popup()
                 .setHTML(innerHTML)
                 .setOffset(popupOffset);
-            m = new mapboxgl.Marker()
+            m = new mapboxgl.Marker({ element: createMarkerEl(markerUrl) })
                 .setLngLat([d.longitude, d.latitude])
                 .setPopup(p)
                 .addTo(map);
