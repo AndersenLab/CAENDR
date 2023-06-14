@@ -76,7 +76,9 @@ def genetic_mapping():
     ],
 
     # Sample data
-    'sample_data_url': generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/nemascan_sample_data.tsv'),
+    'elegans_sample_data_url': generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/nemascan_sample_data_elegans.tsv'),
+    'briggsae_sample_data_url': generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/nemascan_sample_data_elegans.tsv'),
+    'tropicalis_sample_data_url': generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/nemascan_sample_data_elegans.tsv'),
   })
 
 
