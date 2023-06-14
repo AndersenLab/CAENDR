@@ -49,8 +49,10 @@ span.bi {
 }}
 
 <!-- Report Table Container -->
-<div class="table-responsive my-5">
-
+<div class="d-flex flex-wrap justify-content-end text-end mb-2 p-0">
+  <button class="btn" onclick="reloadPage()"><i class="bi bi-arrow-clockwise text-primary fw-bold me-1"></i>Refresh Results</button>
+</div>
+<div class="table-responsive mb-5">
   <!-- Report Table -->
   {# <table id='result-table' class="table table-hover table-bordered row-border col-borderless"> #}
   <table id='result-table' class="hover row-border">
@@ -160,6 +162,12 @@ span.bi {
     });
 
   });
+
+    //Reload page
+    function reloadPage() {
+      location.reload();
+      console.log("reload the page!")
+    }
 
 </script>
 {% endblock %}
