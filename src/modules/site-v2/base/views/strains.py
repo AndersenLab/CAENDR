@@ -146,13 +146,14 @@ def isotype_page(isotype_name, release=None):
   isotype_strains = query_strains(isotype_name=isotype_name)
   if not isotype_strains:
     abort(404)
-
+  species = isotype_strains[0].species_name
   return render_template('strain/isotype.html', **{
     "title": f"Isotype {isotype_name}",
     "isotype": isotype_strains,
     "isotype_name": isotype_name,
     "isotype_ref_strain": [x for x in isotype_strains if x.isotype_ref_strain][0],
-    "strain_json_output": dump_json(isotype_strains)
+    "strain_json_output": dump_json(isotype_strains),
+    "species": species
   })
 
 #
