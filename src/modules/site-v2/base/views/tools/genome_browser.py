@@ -87,7 +87,7 @@ def genome_browser(region="III:11746923-11750250", query=None):
 
     # Page info
     'title': f"Genome Browser",
-    'alt_parent_breadcrumb': {
+    'tool_alt_parent_breadcrumb': {
       "title": "Tools",
       "url": url_for('tools.tools')
     },
