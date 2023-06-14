@@ -59,7 +59,7 @@ def genetic_mapping():
 
     # Page info
     'title': 'Genetic Mapping',
-    'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+    'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
 
     # Form info
     'jwt_csrf_token': (get_jwt() or {}).get("csrf"),
@@ -76,7 +76,9 @@ def genetic_mapping():
     ],
 
     # Sample data
-    'sample_data_url': generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/nemascan_sample_data.tsv'),
+    'elegans_sample_data_url': generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/nemascan_sample_data_elegans.tsv'),
+    'briggsae_sample_data_url': generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/nemascan_sample_data_elegans.tsv'),
+    'tropicalis_sample_data_url': generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/nemascan_sample_data_elegans.tsv'),
   })
 
 
@@ -151,7 +153,7 @@ def list_results():
 
     # Page info
     'title': ('All' if show_all else 'My') + ' Genetic Mappings',
-    'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+    'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
 
     # Tool info
     'tool_name': 'genetic_mapping',
@@ -205,7 +207,7 @@ def report(id):
     # Page info
     'title': 'Genetic Mapping Report',
     'subtitle': mapping['label'] + (f': {trait}' if trait is not None else ''),
-    'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+    'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
 
     # Job status
     'mapping_status': mapping['status'],
@@ -300,7 +302,7 @@ def results(id):
 
   return render_template('tools/genetic_mapping/result_files.html', **{
     'title': 'Genetic Mapping Result Files',
-    'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+    'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
     'subtitle': mapping.label + (f': {trait}' if trait else ''),
     'file_list': file_list,
   })

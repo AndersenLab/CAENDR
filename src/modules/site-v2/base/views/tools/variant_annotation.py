@@ -53,7 +53,7 @@ def variant_annotation():
 
     # Page info
     "title": 'Variant Annotation',
-    "alt_parent_breadcrumb": { "title": "Tools", "url": url_for('tools.tools') },
+    "tool_alt_parent_breadcrumb": { "title": "Tools", "url": url_for('tools.tools') },
     "form": VBrowserForm(),
 
     # Data

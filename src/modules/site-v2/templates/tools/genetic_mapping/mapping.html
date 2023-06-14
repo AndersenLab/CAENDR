@@ -10,7 +10,7 @@
               <div class="card-body">
                   <p class="card-text">
                       This portal will use your data to perform a genome-wide association mapping. Please enter your data using the format shown in the 
-                      <a target="_blank" href="{{ sample_data_url }}">example data file</a> 
+                      <a href="#infoModal" data-bs-toggle="modal" data-bs-target="#infoModal">example data file</a>
                       and upload the tab separated file below. This process will take your quantitative trait data for the set of strains that you scored and test for 
                       correlations of genotype and phenotype at over 50,000 loci across the <em>C. elegans</em>, <em>C. briggsae</em>, and <em>C. tropicalis</em> genomes.</p>
                       <p>You will be linked to a report for the mapping experiment along 
@@ -30,7 +30,8 @@
           <nav>
             <div class="nav nav-tabs text-bg-light p-1 pb-0" id="nav-tab" role="tablist">
               <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">New</button>
-              <button class="nav-link" id="nav-linkOne-tab" data-bs-toggle="tab" data-bs-target="#nav-linkOne" type="button" role="tab" aria-controls="nav-linkOne" aria-selected="false">Example Data</button>
+              <!-- Keep around for a while in case we need to add back later -->
+              <!-- <button class="nav-link" id="nav-linkOne-tab" data-bs-toggle="tab" data-bs-target="#nav-linkOne" type="button" role="tab" aria-controls="nav-linkOne" aria-selected="false">Example Data</button> -->
               <button class="nav-link disabled" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false">Release Notes</button>
               <button class="nav-link" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false"><a href="{{ url_for('genetic_mapping.my_results') }}">My Mapping Results</a></button>
             </div>
@@ -51,12 +52,28 @@
                 <div class='mb-4'>{{ render_field(form.label, class_="input-margin", placeholder="Enter a name for your mapping, such as the trait.", style="width:100%") }}</div>
                 <div class="mb-4">
                   {% call render_field(form.file) %}
-                    <!-- Info Popover -->
-                    <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
-                      data-bs-trigger="focus" data-bs-title="More information"
-                      data-bs-content="Enter your data using the form shown in the example data file and upload as a CSV here."><i
-                        class="bi bi-info lh-1" aria-hidden="true"></i></a>
-                    <!-- /Info Popover -->
+                      <!-- Info Button with Modal -->
+                      <button type="button" class="btn btn-secondary rounded-circle text-light text-center p-0 infoButton"
+                      data-bs-toggle="modal" data-bs-target="#infoModal" aria-label="infoModalLabel">
+                      <i class="bi bi-info lh-1" aria-hidden="true"></i>
+                  </button>
+                  <!-- Modal -->
+                  <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel"
+                      aria-hidden="true">
+                      <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                          <div class="modal-content">
+                              <div class="modal-header">
+                                  <h1 class="modal-title fs-5" id="infoModalLabel">File Format Information</h1>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                      aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body">
+                                  {% include "_includes/genetic-mapping-file-info.html" %}
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  <!-- /Modal -->
                   {% endcall %}
                 </div>
                 <div class="d-grid mb-4">
@@ -88,7 +105,8 @@
               </p>
             </div>
             <!-- Tab 2 -->
-            <div class="tab-pane fade text-start px-5 py-2 toolContent" id="nav-linkOne" role="tabpanel"
+            <!-- Keep around for a while in case we need to add back later -->
+            <!-- <div class="tab-pane fade text-start px-5 py-2 toolContent" id="nav-linkOne" role="tabpanel"
                 aria-labelledby="nav-linkOne-tab" tabindex="0">
                 <p class="card-text">
                 <h2 class="mb-4 text-center">Example Data</h2>
@@ -97,7 +115,7 @@
                   <a class="btn btn-secondary text-light" role="button" href="{{sample_data_url}}">Download Example Data</a>
                 </div>
                 </p>
-            </div>
+            </div> -->
             <!-- /Tab 2 -->
           </div>
           <!-- /Tab Menu -->

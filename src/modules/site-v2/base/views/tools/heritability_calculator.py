@@ -71,7 +71,7 @@ def results_columns():
 @heritability_calculator_bp.route('')
 def heritability_calculator():
   title = "Heritability Calculator"
-  alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
+  tool_alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   form = HeritabilityForm()
   hide_form = True
   strain_list = []
