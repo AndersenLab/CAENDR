@@ -5,7 +5,13 @@ from flask import render_template, request, url_for, redirect, Blueprint, abort,
 
 from caendr.api.strain import query_strains, get_strain_img_url
 from caendr.utils.json import dump_json
+from caendr.utils.env import get_env_var
 from caendr.models.sql import Strain
+from caendr.services.cloud.storage import get_blob_list
+
+
+MODULE_SITE_BUCKET_PHOTOS_NAME   = get_env_var('MODULE_SITE_BUCKET_PHOTOS_NAME')
+
 
 
 
@@ -44,6 +50,24 @@ def isotype_page(isotype_name, release=None):
   try:
     isotype_strains = Strain.sort_by_strain( query_strains(isotype_name=isotype_name) )
     species = isotype_strains[0].species_name
+    files = get_blob_list(MODULE_SITE_BUCKET_PHOTOS_NAME, species)
+
+    image_urls = {}
+    for s in isotype_strains:
+      # Get images and thumbs for each strain
+      for file in files:
+        start_idx = file.name.index('/')
+        end_idx = file.name.index('.')
+        file_name = file.name[start_idx+1:end_idx]
+        if s.strain != file_name:
+          continue
+        else:
+          if '.thumb' in file.name:
+            thumb = file.public_url
+            image_urls.setdefault(s.strain, {}).update({'thumb': thumb})
+          else:
+            url = file.public_url
+            image_urls.setdefault(s.strain, {}).update({'url': url})
   except Exception as ex:
     logger.error(f'Failed to sort strain list for isotype {isotype_name}: {ex}')
     abort(500)
@@ -57,33 +81,6 @@ def isotype_page(isotype_name, release=None):
     "isotype_name": isotype_name,
     "isotype_ref_strain": [ x for x in isotype_strains if x.isotype_ref_strain ][0],
     "strain_json_output": dump_json(isotype_strains),
-    "species": species
+    "species": species,
+    "image_urls": image_urls
   })
-
-
-
-#
-# Isotype image URLs
-#
-
-@isotype_bp.route('/img/<isotype_name>/')
-@cache.memoize(60*60)
-def isotype_img(isotype_name, release=None):
-  """
-    Fetching isotype images
-  """
-
-  isotype_strains = query_strains(isotype_name=isotype_name)
-  if not isotype_strains:
-    abort(404)
-
-  image_urls = {}
-  for s in isotype_strains:
-    image_urls[s.strain] = {
-      'url':   get_strain_img_url(s.strain, species=s.species_name, thumbnail=False),
-      'thumb': get_strain_img_url(s.strain, species=s.species_name, thumbnail=True),
-    }
-
-  logger.debug(image_urls)
-  return jsonify(image_urls)
-

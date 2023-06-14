@@ -25,6 +25,7 @@ from caendr.models.datastore.cart import Cart
 from caendr.models.error import NotFoundError
 from caendr.services.dataset_release import get_all_dataset_releases, find_dataset_release, get_latest_dataset_release_version
 
+
 """
 Author: Daniel E. Cook
 
@@ -48,6 +49,7 @@ from caendr.services.cloud.secret import get_secret
 MODULE_SITE_CART_COOKIE_NAME = get_env_var('MODULE_SITE_CART_COOKIE_NAME')
 MODULE_SITE_CART_COOKIE_AGE_SECONDS = get_env_var('MODULE_SITE_CART_COOKIE_AGE_SECONDS', var_type=int)
 STRAIN_SUBMISSION_URL = get_env_var('MODULE_SITE_STRAIN_SUBMISSION_URL')
+
 
 strains_bp = Blueprint('request_strains',
                         __name__,
