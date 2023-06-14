@@ -87,6 +87,7 @@ class TokenizedString():
     'WB',
     'SVA',
     'STRAIN',
+    'GENOME',
   }
 
   @classmethod
