@@ -3,8 +3,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.8.2/css/lightbox.min.css">
 <style>
     .strainImage {
-        height: 250px;
-        width: auto;
+        height: auto;
+        width: 100%;
     }
 </style>
 {% endblock %}
@@ -155,27 +155,28 @@
         {% if image_urls %}
         <h2>Images</h2>
         {% endif %}
-            <div class="d-flex flex-wrap justify-content-start my-5 overflow-auto" style="max-height:75vh;">
-                <!-- One div for each image -->
-                {% for key, img in image_urls.items() %}
-                {% if img.url %}
-                <div class="col-sm-6 col-md-2 mx-3 mb-3 item">
-                    <a href="{{ img.url }}" data-lightbox="photos" data-title="{{ key }}">
-                        <figure class="figure">
-                            {% if img.thumb %}
+        <div class="d-flex flex-wrap justify-content-start my-5 overflow-auto" style="max-height:75vh;">
+            <!-- One div for each image -->
+            {% for key, img in image_urls.items() %}
+            {% if img.url %}
+            <div class="col-sm-6 col-md-2 mx-3 mb-3">
+                <a href="{{ img.url }}" data-lightbox="photos" data-title="{{ key }}">
+                    <figure class="figure">
+                        {% if img.thumb %}
                         <img class="img-fluid img-thumbnail strainImage" src="{{ img.thumb }}" name="{{ key }}" alt="">
                         {% else %}
                         <img class="img-fluid img-thumbnail strainImage" src="{{ img.url }}" name="{{ key }}" alt="">
                         {% endif %}
-                            <figcaption class="text-center">{{ key }}</figcaption>
-                        </figure>
-                    </a>
-                </div>
-                {% endif %}
-                {% endfor %}
-                <!-- /End strain image div -->
-                </div> <!-- /flex -->
+                        <figcaption class="text-center">{{ key }}</figcaption>
+                    </figure>
+                </a>
+            </div>
+            {% endif %}
+            {% endfor %}
+            <!-- /End strain image div -->
+        </div> <!-- /flex -->
 </div> <!-- /Container -->
+
 {% endblock %}
 
 {% block script %}
