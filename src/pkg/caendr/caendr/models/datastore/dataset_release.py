@@ -61,6 +61,7 @@ class DatasetRelease(Entity):
       'id',
       'version',
       'wormbase_version',
+      'genome',
       'report_type',
       'disabled',
       'hidden',
@@ -120,13 +121,13 @@ class DatasetRelease(Entity):
 
   @staticmethod
   def get_fasta_filename_template(include_extension=True):
-    return TokenizedString('${RELEASE}_${SPECIES}.${WB}.genome' + ('.fa' if include_extension else ''))
+    return TokenizedString('${RELEASE}_${SPECIES}_${GENOME}.genome' + ('.fa' if include_extension else ''))
 
   def get_fasta_filename(self, include_extension=True):
     return DatasetRelease.get_fasta_filename_template(include_extension=include_extension).get_string(**{
       'SPECIES': self['species'],
       'RELEASE': self['version'],
-      'WB':      self['wormbase_version'],
+      'GENOME':  self['genome'],
     })
 
 
@@ -150,7 +151,7 @@ class DatasetRelease(Entity):
     params = {
       'SPECIES': self['species'],
       'RELEASE': self['version'],
-      'WB':      self['wormbase_version'],
+      'GENOME':  self['genome'],
     }
 
     # Fill in tokens from current release in template object
@@ -177,7 +178,7 @@ class DatasetRelease(Entity):
     return DatasetRelease.get_fasta_filepath_url_template().get_string(**{
       'SPECIES': self['species'],
       'RELEASE': self['version'],
-      'WB':      self['wormbase_version'],
+      'GENOME':  self['genome'],
     })
 
 
