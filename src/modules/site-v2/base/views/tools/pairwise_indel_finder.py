@@ -126,7 +126,7 @@ def pairwise_indel_finder():
     # Page info
     "title": "Pairwise Indel Finder",
     "form":  PairwiseIndelForm(request.form),
-    "alt_parent_breadcrumb": {
+    "tool_alt_parent_breadcrumb": {
       "title": "Tools",
       "url":   url_for('tools.tools')
     },
@@ -173,7 +173,7 @@ def list_results():
 
     # Page info
     'title': ('All' if show_all else 'My') + ' Primer Reports',
-    'alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools'), },
+    'tool_alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools'), },
 
     # User info
     'user':  user,
@@ -324,7 +324,7 @@ def report(id, file_ext=None):
       # Page info
       'title':    f"Indel Primer Results {data['site']}",
       'subtitle': f"{data['strain_1']} | {data['strain_2']}",
-      'alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools') },
+      'tool_alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools') },
 
       # GCP data info
       'data_hash': report.data_hash,
