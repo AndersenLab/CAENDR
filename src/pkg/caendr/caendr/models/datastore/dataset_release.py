@@ -1,5 +1,4 @@
 import os
-from string import Template
 from caendr.services.logger import logger
 
 from caendr.models.datastore import Entity
@@ -117,6 +116,74 @@ class DatasetRelease(Entity):
 
 
 
+  ## FASTA Filename ##
+
+  @staticmethod
+  def get_fasta_filename_template(include_extension=True):
+    return TokenizedString('${RELEASE}_${SPECIES}.${WB}.genome' + ('.fa' if include_extension else ''))
+
+  def get_fasta_filename(self, include_extension=True):
+    return DatasetRelease.get_fasta_filename_template(include_extension=include_extension).get_string(**{
+      'SPECIES': self['species'],
+      'RELEASE': self['version'],
+      'WB':      self['wormbase_version'],
+    })
+
+
+
+  ## FASTA File Path ##
+
+  # TODO: Wrap these in a utility class?
+  @staticmethod
+  def get_fasta_filepath_obj_template():
+    return {
+      'bucket': DatasetRelease.get_bucket_name(),
+      'path':   DatasetRelease.get_path_template(),
+      'name':   DatasetRelease.get_fasta_filename_template(include_extension=False),
+      'ext':    '.fa',
+    }
+
+
+  def get_fasta_filepath_obj(self):
+
+    # Construct the set of token replacements for this release's file
+    params = {
+      'SPECIES': self['species'],
+      'RELEASE': self['version'],
+      'WB':      self['wormbase_version'],
+    }
+
+    # Fill in tokens from current release in template object
+    return {
+      key: (val.get_string(**params) if isinstance(val, TokenizedString) else val)
+        for key, val in DatasetRelease.get_fasta_filepath_obj_template().items()
+    }
+
+
+  def check_fasta_file_exists(self):
+    obj = self.get_fasta_filepath_obj()
+    return check_blob_exists(obj['bucket'], f'{ obj["path"] }/{ obj["name"] }{ obj["ext"] }')
+
+
+
+  ## FASTA URL (full) ##
+
+  @staticmethod
+  def get_fasta_filepath_url_template():
+    obj = DatasetRelease.get_fasta_filepath_obj_template()
+    return TokenizedString( generate_blob_url(obj['bucket'], f'{ obj["path"] }/{ obj["name"] }{ obj["ext"] }') )
+
+  def get_fasta_filepath_url(self):
+    return DatasetRelease.get_fasta_filepath_url_template().get_string(**{
+      'SPECIES': self['species'],
+      'RELEASE': self['version'],
+      'WB':      self['wormbase_version'],
+    })
+
+
+
+  ## Report URLs ##
+
   def get_report_data_urls_map(self, species_name):
     '''
       Returns a dictionary of variable names for report data files mapped to their public urls in google storage
@@ -150,7 +217,7 @@ class DatasetRelease(Entity):
   
 
   V2 = ReportType('V2', {
-    'release_notes':                     '$RELEASE/release_notes.md',
+    'release_notes':                     '$RELEASE/release_notes_v2.md',
     'summary':                           '$RELEASE/summary.md',
     'methods':                           '$RELEASE/methods.md',
     'alignment_report':                  '$RELEASE/alignment_report.html',

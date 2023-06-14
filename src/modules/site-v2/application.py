@@ -24,6 +24,7 @@ from base.utils.markdown import render_markdown, render_ext_markdown
 from base.views import primary_bp
 from base.views import strains_bp
 from base.views import user_bp
+from base.views import isotype_bp
 
 # Data
 from base.views.data import data_bp
@@ -180,6 +181,7 @@ def register_blueprints(app):
   app.register_blueprint(primary_bp, url_prefix='')
   app.register_blueprint(about_bp, url_prefix='/about')
   app.register_blueprint(strains_bp, url_prefix='/request-strains')
+  app.register_blueprint(isotype_bp, url_prefix='/isotype')
   app.register_blueprint(get_involved_bp, url_prefix='/get-involved')
 
   # Data

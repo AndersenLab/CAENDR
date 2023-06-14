@@ -135,49 +135,6 @@ def strains_data_csv(release_name, species_name, file_ext):
 
 
 #
-# Isotype View
-#
-
-@strains_bp.route('/isotype/<isotype_name>/')
-@strains_bp.route('/isotype/<isotype_name>/<release>')
-@cache.memoize(60*60)
-def isotype_page(isotype_name, release=None):
-  """ Isotype page """
-  isotype_strains = query_strains(isotype_name=isotype_name)
-  if not isotype_strains:
-    abort(404)
-  species = isotype_strains[0].species_name
-  return render_template('strain/isotype.html', **{
-    "title": f"Isotype {isotype_name}",
-    "isotype": isotype_strains,
-    "isotype_name": isotype_name,
-    "isotype_ref_strain": [x for x in isotype_strains if x.isotype_ref_strain][0],
-    "strain_json_output": dump_json(isotype_strains),
-    "species": species
-  })
-
-#
-# Isotype image URLs
-#
-@strains_bp.route('/isotype-img/<isotype_name>/')
-@cache.memoize(60*60)
-def isotype_img(isotype_name, release=None):
-  """ Fetching isotype images """
-  isotype_strains = query_strains(isotype_name=isotype_name)
-  if not isotype_strains:
-    abort(404)
-
-  image_urls = {}
-  for s in isotype_strains:
-    image_urls[s.strain] = {
-      'url':   get_strain_img_url(s.strain, species=s.species_name, thumbnail=False),
-      'thumb': get_strain_img_url(s.strain, species=s.species_name, thumbnail=True),
-    }
-
-  logger.debug(image_urls)
-  return jsonify(image_urls)
-
-#
 # Strain Catalog
 #
 

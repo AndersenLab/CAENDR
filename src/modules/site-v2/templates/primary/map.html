@@ -11,7 +11,7 @@
   }
 
   #zoomIn {
-    border-bottom: 2px solid var(--bs-white);
+    border-bottom: 2px solid var(--bs-dark);
   }
   .leaflet-control-zoom.leaflet-bar {
     border: 0;
@@ -32,28 +32,26 @@
   }
 
   .leaflet-popup-content-wrapper {
-    background-color: var(--bs-white);
+    background-color: var(--bs-light);
     color: var(--bs-black);
     font-size: 1rem;
     padding: .5em;
   }
 
   .leaflet-popup-tip {
-    background-color: var(--bs-white);
-  }
-
-  #strains {
-    position:absolute;
-    top: 1rem;
-    right: 1rem;
-    z-index: 1000;
-    background-color: var(--bs-primary);
-    color: white;
-    padding: 15px;
+    background-color: var(--bs-light);
   }
 
   #strains > p {
     text-align: center;
+  }
+
+  #selectSpecies {
+    position:absolute;
+    top: 1rem;
+    right: 0;
+    z-index: 1000;
+    padding: 15px;
   }
 
   .popup {
@@ -66,19 +64,59 @@
     line-height: 1.75em;
     padding:0;
   }
+
+  .mobileSpeciesSelect {
+    z-index: 1000;
+    top: 1rem;
+    right: 1rem;
+  }
+
+  input.speciesCheckbox {
+    height:40px;
+    width:auto;
+  }
+
 </style>
 
     <div class="position-relative" id="map" aria-hidden="true">
-      <div class="btn-group-vertical m-3 zoomContainer" role="group" aria-hidden="true">
-      <button class="btn btn-primary" id="zoomIn" tabindex="-1"><i class="bi bi-plus-circle"></i></button>
-      <button class="btn btn-primary" id="zoomOut" tabindex="-1"><i class="bi bi-dash-circle"></i></button>
-    </div>
-      <form id="strains" aria-hidden="true">
-        <p tabindex="-1"><strong>Species:</strong></p>
-        <div><input type='checkbox' name='filters' value='elegans_layer' checked tabindex="-1"><i> C. elegans</i></div>
-        <div><input type='checkbox' name='filters' value='briggsae_layer' tabindex="-1"><i> C. briggsae</i></div>
-        <div><input type='checkbox' name='filters' value='tropicalis_layer' tabindex="-1"><i> C. tropicalis</i></div>
-      </form>
+      <div class="btn-group-vertical shadow-sm m-3 zoomContainer" role="group" aria-hidden="true">
+        <button class="btn text-bg-light d-none d-md-block" id="zoomIn" tabindex="-1"><i
+            class="bi bi-plus-circle"></i></button>
+        <button class="btn text-bg-light d-none d-md-block" id="zoomOut" tabindex="-1"><i
+            class="bi bi-dash-circle"></i></button>
+      </div>
+      <btn
+        class="position-absolute d-block d-md-none btn text-bg-light rounded-pill text-center mobileSpeciesSelect"
+        onclick="toggleSpecies();"><i class="bi bi-check-all me-1"></i> Species
+      </btn>
+      <div class="d-none d-md-block shadow-sm rounded-2 text-bg-light mt-5 mt-md-0 me-2 me-md-3 p-3" style="width:165px;"
+        id="selectSpecies">
+        <form id="strains" aria-hidden="true">
+          <p tabindex="-1"><strong>Species:</strong></p>
+          <div class="d-flex justify-content-between mb-2">
+            <div class="form-check">
+              <input class="form-check-input" type='checkbox' name='filters' value='elegans_layer' id="elegansCheck" checked tabindex="-1">
+              <label class="form-check-label" for="elegansCheck"><i>C. elegans</i></label>
+            </div>
+            <img src='{{ ext_asset("img/icons/elegansMarkerOutline.svg") }}' style="height:18px;width:auto;" alt="">
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <div class="form-check">
+              <input class="form-check-input" type='checkbox' name='filters' value='briggsae_layer' id="briggsaeCheck" tabindex="-1">
+              <label class="form-check-label" for="briggsaeCheck"><i> C. briggsae</i></label>
+            </div>
+            <img src='{{ ext_asset("img/icons/briggsaeMarkerOutline.svg") }}' style="height:18px;width:auto;" alt="">
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <div class="form-check">
+              <input class="form-check-input" type='checkbox' name='filters' value='tropicalis_layer' id="tropicalisCheck" tabindex="-1">
+              <label class="form-check-label" for="tropicalisCheck"><i> C. tropicalis</i></label>
+            </div>
+            <img src='{{ ext_asset("img/icons/tropicalisMarkerOutline.svg") }}'
+              style="height:18px;width:auto;" alt="">
+          </div>
+        </form>
+      </div>
     </div>
     <div class="text-center my-2">
       <small><strong>Click a pin to see information about <i>species</i> wild isolate</strong></small>
@@ -266,6 +304,15 @@ $.getJSON('/strains', function(strain_info) {
     map.setZoom(map.getZoom() - 1)
   });
 
+</script>
+
+<script>
+  //Toggle mobile species select visibility
+  function toggleSpecies() {
+  const selectSpecies = document.getElementById("selectSpecies");
+  selectSpecies.classList.toggle("d-none");
+  console.log("Class toggled!");
+}
 </script>
 
 {% endblock %}

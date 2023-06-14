@@ -226,7 +226,7 @@ thead {
                                             <label class="form-check-label visually-hidden" for="items-{{ loop.index }}">Select row</label>
                                         </td>
                                         <td class="species" data-value="{{ strains[0].species_name }}"><i>{{ strains[0].species_name|capitalize|replace('_', '. ') }}</i></td>
-                                        <td class="strainName"><a href="{{ url_for('request_strains.isotype_page', isotype_name=isotype) }}">{{ isotype }}</a></td>
+                                        <td class="strainName"><a href="{{ url_for('isotype.isotype_page', isotype_name=isotype) }}">{{ isotype }}</a></td>
                                         <td>{{ strains|join(", ") }}</td>
                                         <td>{{ strains[0]['release'] }}</td>
                                       {% if strains[0].previous_names %}

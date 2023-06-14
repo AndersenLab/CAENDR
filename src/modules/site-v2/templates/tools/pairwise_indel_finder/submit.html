@@ -63,8 +63,8 @@
   <div class="d-flex flex-wrap flex-column col-md-12 col-xl-8">
       <!-- Options Toolbar -->
       <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar">
-      <div class="ps-3 pt-0"><a href='{{ url_for("pairwise_indel_finder.my_results") }}'><i class="bi bi-journal" aria-hidden="true"></i> My Primer Reports</a></div>
-      <div class="ps-3 pt-0"><button class="btn border-0" onclick="openFullscreen();" id="fullscreenButton" disabled><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>View Fullscreen</button></div>
+        <div class="ps-3 pt-0"><a href='{{ url_for("pairwise_indel_finder.my_results") }}'><i class="bi bi-journal" aria-hidden="true"></i> My Primer Reports</a></div>
+        <div id="fullscreen-btn" class="ps-3 pt-0"><button class="btn border-0" onclick="openFullscreen();" id="fullscreenButton" disabled><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>View Fullscreen</button></div>
       </div>
       <!-- /Options Toolbar -->
       <!-- Select Species Prompt -->
@@ -319,6 +319,7 @@ function update_species(species_id) {
   // If no species selected, prompt user to select one; otherwise show the IGV browser
   $('#select-species-prompt').toggle(species_empty);
   $('#browser-container').toggle(!species_empty);
+  $('#fullscreen-btn').toggle(!species_empty);
 
   // Enable or disable form inputs that depend on species being defined
   const form_ids = [

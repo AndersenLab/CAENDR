@@ -103,7 +103,7 @@
                     {% endif %}
                 {% endfor %}
             </td>
-            <td><a href="{{ url_for('request_strains.isotype_page', isotype_name=isotype, release = release_version) }}">{{ isotype }}</a></td>
+            <td><a href="{{ url_for('isotype.isotype_page', isotype_name=isotype, release = release_version) }}">{{ isotype }}</a></td>
             <td>{% for strain in strains %} {{ strain }} {% endfor %}
             </td>
             <td>
