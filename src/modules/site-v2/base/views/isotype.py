@@ -84,31 +84,3 @@ def isotype_page(isotype_name, release=None):
     "species": species,
     "image_urls": image_urls
   })
-
-
-
-#
-# Isotype image URLs
-#
-
-@isotype_bp.route('/img/<isotype_name>/')
-@cache.memoize(60*60)
-def isotype_img(isotype_name, release=None):
-  """
-    Fetching isotype images
-  """
-
-  isotype_strains = query_strains(isotype_name=isotype_name)
-  if not isotype_strains:
-    abort(404)
-
-  image_urls = {}
-  for s in isotype_strains:
-    image_urls[s.strain] = {
-      'url':   get_strain_img_url(s.strain, species=s.species_name, thumbnail=False),
-      'thumb': get_strain_img_url(s.strain, species=s.species_name, thumbnail=True),
-    }
-
-  logger.debug(image_urls)
-  return jsonify(image_urls)
-
