@@ -76,7 +76,9 @@ def heritability_calculator():
   hide_form = True
   strain_list = []
   species_list = SPECIES_LIST
-  sample_data_url = generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/heritability_example.tsv')
+  elegans_sample_data_url = generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/heritability_example_elegans.tsv')
+  briggsae_sample_data_url = generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/heritability_example_briggsae.tsv')
+  briggsae_sample_data_url = generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/heritability_example_tropicalis.tsv')
   return render_template('tools/heritability_calculator/heritability-calculator.html', **locals())
 
 
