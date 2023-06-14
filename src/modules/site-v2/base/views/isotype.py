@@ -43,6 +43,7 @@ def isotype_page(isotype_name, release=None):
 
   try:
     isotype_strains = Strain.sort_by_strain( query_strains(isotype_name=isotype_name) )
+    species = isotype_strains[0].species_name
   except Exception as ex:
     logger.error(f'Failed to sort strain list for isotype {isotype_name}: {ex}')
     abort(500)
@@ -55,7 +56,8 @@ def isotype_page(isotype_name, release=None):
     "isotype": isotype_strains,
     "isotype_name": isotype_name,
     "isotype_ref_strain": [ x for x in isotype_strains if x.isotype_ref_strain ][0],
-    "strain_json_output": dump_json(isotype_strains)
+    "strain_json_output": dump_json(isotype_strains),
+    "species": species
   })
 
 

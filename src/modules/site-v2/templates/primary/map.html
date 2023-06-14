@@ -285,7 +285,7 @@ $.getJSON('/strains', function(strain_info) {
 
   document.querySelector('#strains').addEventListener('click', e => {
     if (e.target.tagName !== 'INPUT') return;
-
+    
     const input = e.target
     const value = input.value;
     showStrains(value)
