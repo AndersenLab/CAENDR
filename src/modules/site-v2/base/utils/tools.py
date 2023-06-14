@@ -138,7 +138,7 @@ def try_submit(EntityClass, user, data, no_cache):
       'ready':     ex.report['status'] == TaskStatus.COMPLETE,
       'data_hash': ex.report.data_hash,
       'id':        ex.report.id,
-      'message':   'You have already submitted this data.',
+      'message':   'You have already submitted this data file. Here\'s your previously generated report.',
     }, 200
 
   # Duplicate job submission from another user
