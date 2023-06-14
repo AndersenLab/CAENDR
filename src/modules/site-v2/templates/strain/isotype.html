@@ -168,8 +168,8 @@ const species_name = {{species|tojson}}
 
 const markerUrl = getSpeciesMarker(species_name)
 
-function createCustomMarkerElement(markerUrl) {
-  var markerEl = document.createElement('div');
+function createMarkerEl(markerUrl) {
+  const markerEl = document.createElement('div');
   markerEl.className = 'custom-marker';
   markerEl.style.backgroundImage = `url(${markerUrl})`;
   markerEl.style.backgroundSize = 'contain';
@@ -213,7 +213,7 @@ if (document.getElementById('map')) {
             p = new mapboxgl.Popup()
                 .setHTML(innerHTML)
                 .setOffset(popupOffset);
-            m = new mapboxgl.Marker({ element: createCustomMarkerElement(markerUrl) })
+            m = new mapboxgl.Marker({ element: createMarkerEl(markerUrl) })
                 .setLngLat([d.longitude, d.latitude])
                 .setPopup(p)
                 .addTo(map);
