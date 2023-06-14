@@ -129,7 +129,7 @@ def try_submit(EntityClass, user, data, no_cache):
   except DuplicateDataError as ex:
 
     # Log the event
-    logger.debug(f'User resubmitted duplicate {EntityClass.kind} data: id = {ex.report.id}, data hash = {ex.report.data_hash}, status = {ex.report["status"]}')
+    logger.debug(f'(CACHE HIT) User resubmitted duplicate {EntityClass.kind} data: id = {ex.report.id}, data hash = {ex.report.data_hash}, status = {ex.report["status"]}')
 
     # Return the matching entity
     return {
@@ -145,7 +145,7 @@ def try_submit(EntityClass, user, data, no_cache):
   except CachedDataError as ex:
 
     # Log the event
-    logger.debug(f'User submitted cached {EntityClass.kind} data: id = {ex.report.id}, data hash = {ex.report.data_hash}, status = {ex.report["status"]}')
+    logger.debug(f'(CACHE HIT) User submitted cached {EntityClass.kind} data: id = {ex.report.id}, data hash = {ex.report.data_hash}, status = {ex.report["status"]}')
 
     # Return the matching entity
     return {
