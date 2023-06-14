@@ -3,48 +3,8 @@
 {% block content %}
 <div class="container pb-5">
     <div class="d-flex flex-wrap justify-content-around my-5">
-        <!-- Strains Card Column -->
-        <div class="d-flex flex-column col-12 col-md-3 mb-3" id="strains-card">
-            <div class="card mb-5">
-                <div class="card-header text-bg-secondary text-light fw-bold">
-                    Strains
-                </div>
-                <div class="card-body">
-                    <p class="card-text">
-                    <ul>
-                        {% for i in isotype %}
-                        {% if i.isotype_ref_strain %}
-                        <li><strong><span class="tooltip-item" data-toggle="tooltip" data-placement="bottom"
-                                    title="reference strain">{{ i.strain }}</span></strong></li>
-                        {% else %}
-                        <li>{{ i.strain }}</li>
-                        {% endif %}
-                        {% endfor %}
-                    </ul>
-                    </p>
-                </div>
-            </div>
-            {% if isotype[0].previous_names %}
-            <div class="card mb-5">
-                <div class="card-header text-bg-secondary text-light fw-bold">
-                    Alternative Names
-                </div>
-                <div class="card-body">
-                    <p class="card-text">
-                    <ul>
-                        {% for i in isotype[0].previous_names.split("|") %}
-                        <li>{{ i }}</li>
-                        {% endfor %}
-                    </ul>
-                    </p>
-                </div>
-            </div>
-            {% endif %}
-        </div>
-        <!-- /Strains Card Column -->
-
         <!-- Summary Card Column -->
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-6 mb-5">
             <div class="card">
                 <div class="card-header text-bg-secondary text-light fw-bold">
                     Summary
@@ -129,6 +89,45 @@
               </div>
         </div>
         <!-- /Summary Card Column -->
+                <!-- Strains Card Column -->
+                <div class="d-flex flex-column col-12 col-md-5 col-lg-3 mb-3" id="strains-card">
+                    <div class="card mb-5 overflow-auto" style="max-height: 50vh;">
+                        <div class="card-header sticky-top text-bg-secondary text-light fw-bold">
+                            Strains
+                        </div>
+                        <div class="card-body mx-auto">
+                                <p class="card-text">
+                                <ul>
+                                {% for i in isotype %}
+                                {% if i.isotype_ref_strain %}
+                                <li><strong><span class="tooltip-item" data-toggle="tooltip" data-placement="bottom"
+                                            title="reference strain">{{ i.strain }}</span></strong></li>
+                                {% else %}
+                                <li>{{ i.strain }}</li>
+                                {% endif %}
+                                {% endfor %}
+                            </ul>
+                            </p>
+                        </div>
+                    </div>
+                    {% if isotype[0].previous_names %}
+                    <div class="card mb-5 overflow-auto" style="max-height:50vh;">
+                        <div class="card-header sticky-top text-bg-secondary text-light fw-bold">
+                            Alternative Names
+                        </div>
+                        <div class="card-body mx-auto">
+                            <p class="card-text">
+                            <ul>
+                                {% for i in isotype[0].previous_names.split("|") %}
+                                <li>{{ i }}</li>
+                                {% endfor %}
+                            </ul>
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <!-- /Strains Card Column -->
         </div>
         <!-- /Flex -->
 </div> <!-- /Container -->
