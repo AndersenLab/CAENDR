@@ -207,12 +207,21 @@ class DatasetReleaseForm(FlaskForm):
   hidden = BooleanField('Hidden')
 
 
+class DollarIntegerField(IntegerField):
+  def process_formdata(self, valuelist):
+    if valuelist:
+        try:
+          self.data = int(valuelist[0].strip('$'))
+        except ValueError:
+          self.data = None
+          raise ValueError(self.gettext('Please enter without decimals or commas. For example 1, not 1.00'))
+
 class DonationForm(Form):
   """ The donation form """
   name = StringField('Name', [Required(), Length(min=3, max=100)])
   address = TextAreaField('Address', [Length(min=10, max=200)])
   email = StringField('Email', [Email(), Length(min=3, max=100)])
-  total = IntegerField('Donation Amount')
+  total = DollarIntegerField('Donation Amount')
   recaptcha = RecaptchaField()
 
 
