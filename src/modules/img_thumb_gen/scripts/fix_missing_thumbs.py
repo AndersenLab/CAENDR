@@ -23,7 +23,7 @@ if ENV is None:
 
 def generate_thumbnails(data, context):
   # Check if the file format is correct
-  if not data['name'].endswith('jpg') or not data['name'].endswith('jpeg'):
+  if not data['name'].endswith(('jpg', 'jpeg', 'JPG', 'JPEG')):
     raise Exception(f"{data['name']} is wrong file format. Thumbnails are generated only for .jpg or .jpeg files")
 
   logger.info(f'Triggered by: bucket:{data["bucket"]}, name:{data["name"]}')
@@ -70,6 +70,7 @@ def run():
   print(f"[Running script] fix_missing_thumbs ENV={ENV} GOOGLE_APPLICATION_CREDENTIALS={GOOGLE_APPLICATION_CREDENTIALS}")
 
   MODULE_SITE_BUCKET_PHOTOS_NAME = os.environ.get("MODULE_SITE_BUCKET_PHOTOS_NAME")
+  print(MODULE_SITE_BUCKET_PHOTOS_NAME)
   if MODULE_SITE_BUCKET_PHOTOS_NAME is None:
     raise Exception("Missing MODULE_SITE_BUCKET_PHOTOS_NAME")
   bucket = client.get_bucket(MODULE_SITE_BUCKET_PHOTOS_NAME)
@@ -78,8 +79,12 @@ def run():
   filtered_files = [ file for file in files if file.name.startswith("c_") ]
   sorted_files = {}
   for file in filtered_files:
-     end_idx = file.name.index('.')
+     end_idx = file.name.find('.')
+     if end_idx == -1 or not file.name.endswith(('jpg', 'jpeg', 'JPG', 'JPEG')):
+        print('wrong format file', file.name)
+        continue
      sliced_name = file.name[0:end_idx]
+     
      if sliced_name not in sorted_files:
       sorted_files[sliced_name] = [file]
      else:
