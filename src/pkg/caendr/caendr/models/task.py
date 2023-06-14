@@ -195,6 +195,7 @@ class HeritabilityTask(Task):
     return {
       *super().get_props_set(),
       'data_hash',
+      'species'
     }
 
 

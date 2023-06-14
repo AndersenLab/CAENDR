@@ -142,7 +142,7 @@
     let table_data = []
     for (let i = 0; i < d.length; i++) {
       const isotype_name = d[i].isotype
-      let url = '{{ url_for("request_strains.isotype_page", isotype_name=isotype_name) }}'
+      let url = '{{ url_for("isotype.isotype_page", isotype_name=isotype_name) }}'
       url += isotype_name;
       table_data.push([d[i].species_name.replace('c_', 'C. ').italics(), 
                         d[i].strain, 

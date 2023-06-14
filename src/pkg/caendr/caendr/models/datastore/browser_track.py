@@ -25,7 +25,6 @@ class BrowserTrack(Entity):
 
   @staticmethod
   def release_path():
-    # TODO: add /browser_tracks to end of path, once all track files are in this folder
     return (DatasetRelease.get_bucket_name(), DatasetRelease.get_path_template() + '/browser_tracks')
 
   @staticmethod
@@ -41,19 +40,6 @@ class BrowserTrack(Entity):
   def get_url_template(self):
     bucket, path = self.get_path()
     return path.update_template_string( generate_blob_url(bucket, f'{ path.raw_string }/{ self["filename"] }') )
-
-
-  ## FASTA ##
-
-  @staticmethod
-  def get_fasta_filename():
-    return TokenizedString('${RELEASE}_${SPECIES}.${WB}.genome.fa')
-
-  @staticmethod
-  def get_fasta_path_full():
-    bucket, path   = BrowserTrack.release_path()
-    fasta_filename = BrowserTrack.get_fasta_filename()
-    return path.update_template_string( generate_blob_url(bucket, f'{ path.raw_string }/{ fasta_filename.raw_string }') )
 
 
   ## Props ##

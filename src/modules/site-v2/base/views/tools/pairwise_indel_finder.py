@@ -7,8 +7,8 @@ from base.forms import PairwiseIndelForm
 from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
 from base.utils.tools import lookup_report, try_submit
 
-from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefault
-from caendr.models.datastore import Species, SPECIES_LIST, IndelPrimer
+from caendr.models.datastore.browser_track import BrowserTrackDefault
+from caendr.models.datastore import Species, SPECIES_LIST, IndelPrimer, DatasetRelease
 from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupError, EmptyReportDataError, EmptyReportResultsError
 from caendr.models.task import TaskStatus
 from caendr.services.cloud.storage import check_blob_exists
@@ -136,7 +136,7 @@ def pairwise_indel_finder():
     "species_list": SPECIES_LIST,
 
     # Data locations
-    "fasta_url": BrowserTrack.get_fasta_path_full().get_string_safe(),
+    "fasta_url": DatasetRelease.get_fasta_filepath_url_template().get_string_safe(),
 
     # List of Species class fields to expose to the template
     # Optional - exposes all attributes if not provided
@@ -264,7 +264,7 @@ def report(id, file_ext=None):
     # Fetch requested primer report
     # Ensures the report exists and the user has permission to view it
     try:
-      report = lookup_report(IndelPrimer, id)
+      report = lookup_report(IndelPrimer.kind, id)
 
     # If the report lookup request is invalid, show an error message
     except ReportLookupError as ex:

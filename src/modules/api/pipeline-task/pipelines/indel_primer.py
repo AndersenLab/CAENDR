@@ -29,7 +29,7 @@ TIMEOUT = '3600s'
 BOOT_IMAGE = 'projects/cos-cloud/global/images/family/cos-stable'
 VOLUME_NAME = 'nf-pipeline-work'
 LOCAL_WORK_PATH = '/workdir'
-BOOT_DISK_SIZE_GB = 10
+BOOT_DISK_SIZE_GB = 20
 ENABLE_STACKDRIVER_MONITORING = True
 
 COMMANDS = ['python', '/indel_primer/main.py']

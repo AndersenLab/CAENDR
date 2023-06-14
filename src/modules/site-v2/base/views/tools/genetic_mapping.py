@@ -122,6 +122,9 @@ def submit():
     if not code == 200:
       flash(response['message'], 'danger')
 
+    elif response['message']:
+      flash(response['message'], 'success')
+
     # Return the response
     return jsonify( response ), code
 
@@ -175,7 +178,7 @@ def report(id):
   # Fetch requested mapping report
   # Ensures the report exists and the user has permission to view it
   try:
-    mapping = lookup_report(NemascanMapping, id)
+    mapping = lookup_report(NemascanMapping.kind, id)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:
@@ -225,7 +228,7 @@ def report_fullscreen(id):
   # Fetch requested mapping report
   # Ensures the report exists and the user has permission to view it
   try:
-    mapping = lookup_report(NemascanMapping, id)
+    mapping = lookup_report(NemascanMapping.kind, id)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:
@@ -271,7 +274,7 @@ def results(id):
   # Fetch requested mapping report
   # Ensures the report exists and the user has permission to view it
   try:
-    mapping = lookup_report(NemascanMapping, id)
+    mapping = lookup_report(NemascanMapping.kind, id)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:

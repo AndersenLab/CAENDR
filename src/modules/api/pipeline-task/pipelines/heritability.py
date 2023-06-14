@@ -38,12 +38,9 @@ ENABLE_STACKDRIVER_MONITORING = True
 # The container v0.3 is built from: https://github.com/AndersenLab/calc_heritability
 # The container v0.1a is built from: https://github.com/AndersenLab/CAENDR/tree/development/src/modules/heritability
 def _get_container_commands(version):
-  default_command = ['python', '/h2/main.py']
-  version_mapping = {
-    "v0.3": ["./heritability-nxf.sh"]
-  }
-  return version_mapping.get(version, default_command)
-
+  if version == "v0.1a":
+    return ['python', '/h2/main.py']
+  return ["./heritability-nxf.sh"]
       
 # COMMANDS = ['python', '/h2/main.py']
 # COMMANDS = ['/heritability/heritability-nxf.sh']
@@ -67,22 +64,29 @@ def _generate_heritability_pipeline_req(task: HeritabilityTask):
   GOOGLE_ZONE = os.getenv("GOOGLE_CLOUD_ZONE", None)
   MODULE_SITE_BUCKET_PRIVATE_NAME = os.getenv("MODULE_SITE_BUCKET_PRIVATE_NAME", None)
   MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME = os.getenv("MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME", None)
+  MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME = os.getenv("MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME", None)
 
   # validation
   if GOOGLE_PROJECT is None:
-    raise "Missing GOOGLE_PROJECT"
+    raise Exception("Missing GOOGLE_PROJECT")
   if GOOGLE_ZONE is None:
-    raise "Missing GOOGLE_ZONE"
+    raise Exception("Missing GOOGLE_ZONE")
   if MODULE_SITE_BUCKET_PRIVATE_NAME is None:
-    raise "Missing MODULE_SITE_BUCKET_PRIVATE_NAME"
+    raise Exception("Missing MODULE_SITE_BUCKET_PRIVATE_NAME")
   if MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME is None:
-    raise "Missing MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME"
+    raise Exception("Missing MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME")
+  if MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME is None:
+    raise Exception("Missing MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME")
+
 
   # GOOGLE_SERVICE_ACCOUNT_EMAIL = "mti-caendr-service-account@mti-caendr.iam.gserviceaccount.com"
   TRAIT_FILE = f"gs://{MODULE_SITE_BUCKET_PRIVATE_NAME}/reports/heritability/{h.container_version}/{h.data_hash}/data.tsv"
   WORK_DIR   = f"gs://{MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME}/{h.data_hash}"
+  DATA_DIR   = f"gs://{MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME}/heritability"
   OUTPUT_DIR = f"gs://{MODULE_SITE_BUCKET_PRIVATE_NAME}/reports/heritability/{h.container_version}/{h.data_hash}"
 
+
+  # running container name. THis is NOT the image 
   container_name = f"heritability-{h.id}"
   environment = {
     "GOOGLE_SERVICE_ACCOUNT_EMAIL": sa_email,
@@ -91,8 +95,10 @@ def _generate_heritability_pipeline_req(task: HeritabilityTask):
     "VCF_VERSION": VCF_VERSION,
     "TRAIT_FILE": TRAIT_FILE,
     "WORK_DIR": WORK_DIR,
+    "DATA_DIR": DATA_DIR,
     "OUTPUT_DIR": OUTPUT_DIR,
     "DATA_HASH": h.data_hash, 
+    "SPECIES": h['species'], 
     "DATA_BUCKET": h.get_bucket_name(), 
     "DATA_BLOB_PATH": h.get_blob_path()}
 

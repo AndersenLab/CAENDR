@@ -3,7 +3,7 @@
 {% if request.blueprint and request.path != "/" %}
 <div class="container-fluid">
     <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
+        <ol class="breadcrumb mx-5 mt-1 mb-4 mt-md-5 mb-md-5 mx-md-5">
             <li class="breadcrumb-item"><a href="/">Home</a></li>
             {% if request.blueprint != "primary" %}
             {% if disable_parent_breadcrumb %}
