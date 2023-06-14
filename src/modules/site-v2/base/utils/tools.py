@@ -138,6 +138,7 @@ def try_submit(EntityClass, user, data, no_cache):
       'ready':     ex.report['status'] == TaskStatus.COMPLETE,
       'data_hash': ex.report.data_hash,
       'id':        ex.report.id,
+      'message':   'You have already submitted this data.',
     }, 200
 
   # Duplicate job submission from another user
@@ -153,6 +154,7 @@ def try_submit(EntityClass, user, data, no_cache):
       'ready':     ex.report['status'] == TaskStatus.COMPLETE,
       'data_hash': ex.report.data_hash,
       'id':        ex.report.id,
+      'message':   'A matching report was found.',
     }, 200
 
   # Formatting error in uploaded data file
