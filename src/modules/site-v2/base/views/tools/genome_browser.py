@@ -2,11 +2,12 @@ import json
 
 from caendr.models.datastore.browser_track import BrowserTrackDefault, BrowserTrackTemplate
 from caendr.models.datastore import DatasetRelease, SPECIES_LIST
-from flask import (render_template,
+from flask import ( render_template,
                     Blueprint,
                     jsonify,
-                    request,
-                    url_for)
+                    url_for,
+                    abort,
+                  )
 from extensions import cache
 from base.forms import SpeciesSelectForm
 
@@ -61,13 +62,17 @@ def get_tracks():
 
 
 
-@genome_browser_bp.route('')
 @genome_browser_bp.route('/')
-@genome_browser_bp.route('/<release_version>')
-@genome_browser_bp.route('/<release_version>/<region>')
-@genome_browser_bp.route('/<release_version>/<region>/<query>')
+@genome_browser_bp.route('/<region>')
+@genome_browser_bp.route('/<region>/<query>')
 @cache.memoize(60*60)
 def genome_browser(region="III:11746923-11750250", query=None):
+
+  # Special case: IGV browser looks for a file igv.css.map at its path,
+  # which is picked up in the first string variable (`region`).
+  # In this case, return a 404 to signify the desired file does not exist.
+  if region == 'igv.css.map':
+    abort(404)
 
   # Get strain and isotype for all strains of each species
   # Produces a dictionary from species ID to list of strains
