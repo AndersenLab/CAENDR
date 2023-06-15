@@ -81,11 +81,11 @@
                     Submit
                   </button>
                   <!-- Modal - display on submit instead of going to new page -->
-                  <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+                  <div class="modal fade" id="submitModal" tabindex="-1" aria-labelledby="submitModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h1 class="modal-title fs-5" id="infoModalLabel">Thank You</h1>
+                                <h1 class="modal-title fs-5" id="submitModalLabel">Thank You</h1>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
@@ -165,7 +165,7 @@ $("#form-submit").on("submit", function(e) {
   // Get form data
   const data = new FormData($('form#form-submit')[0]);
 
-  submit_job(data, '#infoModal')
+  submit_job(data, '#submitModal')
     .done((result) => {
       // Reset the form after a successful (non-error) submission
       resetForm();
