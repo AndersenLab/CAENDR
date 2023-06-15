@@ -212,7 +212,7 @@ var doneTypingInterval = 1000;  //time in ms (5 seconds)
 var species = null;
 
 // Set of all species
-const species_list = {{ unpack_species_list(species_list, species_fields) }};
+const species_list = {{ unpack_species_list(species_list, species_fields, latest_release_genomes) }};
 
 // Species specific default tracks
 const species_supported_tracks = {

@@ -117,6 +117,7 @@ def genome_browser(region="III:11746923-11750250", query=None):
       'WB':      'wb_ver',
       'RELEASE': 'latest_release',
       'PRJ':     'project_num',
+      'GENOME':  'fasta_genome',
     },
 
     # List of Species class fields to expose to the template
@@ -124,6 +125,10 @@ def genome_browser(region="III:11746923-11750250", query=None):
     'species_fields': [
       'name', 'short_name', 'project_num', 'wb_ver', 'latest_release',
     ],
+
+    'latest_release_genomes': {
+      species_name: get_dataset_release(species['latest_release'])['genome'] for species_name, species in SPECIES_LIST.items()
+    },
 
     # Misc
     'fluid_container': True,
