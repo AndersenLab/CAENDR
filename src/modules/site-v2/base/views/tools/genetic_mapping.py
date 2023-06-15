@@ -124,8 +124,8 @@ def submit():
     if not code == 200:
       flash(response['message'], 'danger')
 
-    elif response['message'] and response['ready']:
-      flash(response['message'], 'success')
+    elif response.get('message') and response['ready']:
+      flash(response.get('message'), 'success')
 
     # Return the response
     return jsonify( response ), code

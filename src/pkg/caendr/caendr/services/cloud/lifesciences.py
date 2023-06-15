@@ -26,6 +26,8 @@ MODULE_SITE_BASE_URL = get_env_var('MODULE_SITE_BASE_URL')
 API_SITE_ACCESS_TOKEN = get_secret('CAENDR_API_SITE_ACCESS_TOKEN')
 NO_REPLY_EMAIL = get_secret('NO_REPLY_EMAIL')
 
+NOTIFICATION_LOG_PREFIX = 'email_notification'
+
 
 #sa_private_key_b64 = get_secret(MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME)
 #gls_service = authenticate_google_service(sa_private_key_b64, None, 'lifesciences', 'v2beta')
@@ -149,7 +151,7 @@ def update_all_linked_status_records(kind, operation_name):
       status_record['status'] not in [TaskStatus.COMPLETE, TaskStatus.ERROR],
       kind in [NemascanMapping.kind, HeritabilityReport.kind],
     ])
-    logger.debug(f'Should send notification for report {status_record.id}: {should_send_notification}. (done = {done}, kind = {kind}, current status = {status_record["status"]})')
+    logger.debug(f'[{NOTIFICATION_LOG_PREFIX}] Should send notification for report {status_record.id}: {should_send_notification}. (done = {done}, kind = {kind}, current status = {status_record["status"]})')
 
     # Update the report status
     status_record.set_properties(status=status)
@@ -162,22 +164,21 @@ def update_all_linked_status_records(kind, operation_name):
       return
 
     record_owner = status_record.get_user()
+    email_result = None
     if record_owner is not None:
-      if 'admin' in record_owner['roles']:
-        logger.debug(f'Sending email notification for report {status_record.id} to {record_owner["email"]} (ID {record_owner.name}).')
-        try:
-          email_result = send_result_email(status_record, status)
-        except Exception as ex:
-          logger.error(f'Email failed to send: {ex}')
-      else:
-        logger.debug(f'Skipping email notification for report {status_record.id} for user {record_owner["email"]} (ID {record_owner.name}): user is not an admin.')
+      logger.debug(f'[{NOTIFICATION_LOG_PREFIX}] Sending email notification for report {status_record.id} to {record_owner["email"]} (ID {record_owner.name}).')
+      try:
+        email_result = send_result_email(status_record, status)
+      except Exception as ex:
+        logger.error(f'[{NOTIFICATION_LOG_PREFIX}] Email failed to send: {ex}')
     else:
-      logger.warn(f'Could not send email notification for report {status_record.id}: no user found. ({dict(status_record)})')
+      logger.warn(f'[{NOTIFICATION_LOG_PREFIX}] Could not send email notification for report {status_record.id}: no user found. ({dict(status_record)})')
 
-    if email_result.status_code == 200:
-      logger.debug(f'Email sent successfully ({email_result.status_code}): {email_result.text}')
-    else:
-      logger.error(f'Email failed to send ({email_result.status_code}): {email_result.text}')
+    if email_result:
+      if email_result.status_code == 200:
+        logger.debug(f'[{NOTIFICATION_LOG_PREFIX}] Email sent successfully ({email_result.status_code}): {email_result.text}')
+      else:
+        logger.error(f'[{NOTIFICATION_LOG_PREFIX}] Email failed to send ({email_result.status_code}): {email_result.text}')
 
 
 

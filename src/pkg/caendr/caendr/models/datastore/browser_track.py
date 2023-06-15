@@ -117,7 +117,7 @@ class BrowserTrackTemplate(BrowserTrack):
     if self['is_bam']:
       return BrowserTrack.bam_bai_path()
     else:
-      return super().get_path()
+      return (DatasetRelease.get_bucket_name(), DatasetRelease.get_path_template())
 
   def __repr__(self):
     return f"<{self.kind}:{getattr(self, 'template_name', 'no-name')}>"
