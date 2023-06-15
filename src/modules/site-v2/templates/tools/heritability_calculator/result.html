@@ -47,7 +47,7 @@
       <strong>Status:</strong>  {{ hr.status }}
     
       {% if hr.status == TaskStatus.ERROR %} 
-      {% if not session["is_admin"] %}
+      {% if session["is_admin"] %}
       <strong>Error:</strong> <span class="text-danger">{{ operation.error }}</span>
       {% endif %}
       {% endif %}
