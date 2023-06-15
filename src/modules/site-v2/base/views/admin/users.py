@@ -73,7 +73,7 @@ def users_recover(id=None):
     send_email({
       "from": "no-reply@elegansvariation.org",
       "to": [ email ],
-      "subject": "CeNDR Password Reset",
+      "subject": "CaeNDR Password Reset",
       "text": PASSWORD_RESET_EMAIL_TEMPLATE.format(email=email, password_reset_magic_link=password_reset_magic_link)
     })
     logger.info(f"Sent password reset email: {email} to user: {user.name}, link: {password_reset_magic_link}")
