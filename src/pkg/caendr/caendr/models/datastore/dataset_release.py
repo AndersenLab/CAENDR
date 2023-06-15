@@ -1,8 +1,9 @@
 import os
 from caendr.services.logger import logger
 
+from caendr.api.gene import remove_prefix
 from caendr.models.datastore import Entity
-from caendr.services.cloud.storage import generate_blob_url, get_blob, check_blob_exists
+from caendr.services.cloud.storage import generate_blob_url, get_blob_list, check_blob_exists
 from caendr.utils.tokens import TokenizedString
 
 V1_V2_Cutoff_Date = 20200101
@@ -192,6 +193,11 @@ class DatasetRelease(Entity):
     bucket_name = self.__bucket_name
     blob_prefix = self.__blob_prefix
 
+    tokens = {
+      'RELEASE': self['version'],
+      'SPECIES': species_name,
+    }
+
     logger.debug(f'get_report_data_urls_map(bucket_name={bucket_name}, blob_prefix={blob_prefix})')
 
     # Check that the release has a valid report type
@@ -201,71 +207,77 @@ class DatasetRelease(Entity):
     # Get the set of release files based on the report version
     release_files = self.report_type.get_data_map()
 
+    # Get the set of available files for the release
+    release_path = TokenizedString(f'{blob_prefix}/$RELEASE').get_string(**tokens)
+    available_files = {
+      remove_prefix(file.name, release_path + '/') for file in get_blob_list(bucket_name, release_path)
+    }
+    available_files = {
+      file for file in available_files if not file.startswith('/strain') and not file.endswith('/')
+    }
+
     # for key, val in url_list.items:
     url_map_filtered = {}
     for key, blob_name in release_files.items():
-      blob_path = TokenizedString(f'{blob_prefix}/{blob_name}').get_string(**{
-        'RELEASE': self['version'],
-        'SPECIES': species_name,
-      })
+      blob_name = TokenizedString(blob_name).get_string(**tokens)
 
-      if check_blob_exists(bucket_name, blob_path):
-        url_map_filtered[key] = generate_blob_url(bucket_name, blob_path)
+      if blob_name in available_files:
+        url_map_filtered[key] = generate_blob_url(bucket_name, f'{release_path}/{blob_name}')
       else:
-        logger.warning(f'Blob {blob_path} does not exist')
+        logger.warning(f'Blob {bucket_name}/{release_path}/{blob_name} does not exist')
     
     return url_map_filtered
   
 
   V2 = ReportType('V2', {
-    'release_notes':                     '$RELEASE/release_notes_v2.md',
-    'summary':                           '$RELEASE/summary.md',
-    'methods':                           '$RELEASE/methods.md',
-    'alignment_report':                  '$RELEASE/alignment_report.html',
-    'gatk_report':                       '$RELEASE/gatk_report.html',
-    'concordance_report':                '$RELEASE/concordance_report.html',
+    'release_notes':                     'release_notes_v2.md',
+    'summary':                           'summary.md',
+    'methods':                           'methods.md',
+    'alignment_report':                  'alignment_report.html',
+    'gatk_report':                       'gatk_report.html',
+    'concordance_report':                'concordance_report.html',
 
-    'divergent_regions_strain_bed_gz':   '$RELEASE/divergent_regions_strain.$RELEASE.bed.gz',
-    'divergent_regions_strain_bed':      '$RELEASE/divergent_regions_strain.$RELEASE.bed',
+    'divergent_regions_strain_bed_gz':   'divergent_regions_strain.$RELEASE.bed.gz',
+    'divergent_regions_strain_bed':      'divergent_regions_strain.$RELEASE.bed',
 
-    'soft_filter_vcf_gz':                '$RELEASE/variation/WI.$RELEASE.soft-filter.vcf.gz',
-    'soft_filter_vcf_gz_tbi':            '$RELEASE/variation/WI.$RELEASE.soft-filter.vcf.gz.tbi',
-    'soft_filter_isotype_vcf_gz':        '$RELEASE/variation/WI.$RELEASE.soft-filter.isotype.vcf.gz',
-    'soft_filter_isotype_vcf_gz_tbi':    '$RELEASE/variation/WI.$RELEASE.soft-filter.isotype.vcf.gz.tbi',
-    'hard_filter_vcf_gz':                '$RELEASE/variation/WI.$RELEASE.hard-filter.vcf.gz',
-    'hard_filter_vcf_gz_tbi':            '$RELEASE/variation/WI.$RELEASE.hard-filter.vcf.gz.tbi',
-    'hard_filter_isotype_vcf_gz':        '$RELEASE/variation/WI.$RELEASE.hard-filter.isotype.vcf.gz',
-    'hard_filter_isotype_vcf_gz_tbi':    '$RELEASE/variation/WI.$RELEASE.hard-filter.isotype.vcf.gz.tbi',
-    'impute_isotype_vcf_gz':             '$RELEASE/variation/WI.$RELEASE.impute.isotype.vcf.gz',
-    'impute_isotype_vcf_gz_tbi':         '$RELEASE/variation/WI.$RELEASE.impute.isotype.vcf.gz.tbi',
+    'soft_filter_vcf_gz':                'variation/WI.$RELEASE.soft-filter.vcf.gz',
+    'soft_filter_vcf_gz_tbi':            'variation/WI.$RELEASE.soft-filter.vcf.gz.tbi',
+    'soft_filter_isotype_vcf_gz':        'variation/WI.$RELEASE.soft-filter.isotype.vcf.gz',
+    'soft_filter_isotype_vcf_gz_tbi':    'variation/WI.$RELEASE.soft-filter.isotype.vcf.gz.tbi',
+    'hard_filter_vcf_gz':                'variation/WI.$RELEASE.hard-filter.vcf.gz',
+    'hard_filter_vcf_gz_tbi':            'variation/WI.$RELEASE.hard-filter.vcf.gz.tbi',
+    'hard_filter_isotype_vcf_gz':        'variation/WI.$RELEASE.hard-filter.isotype.vcf.gz',
+    'hard_filter_isotype_vcf_gz_tbi':    'variation/WI.$RELEASE.hard-filter.isotype.vcf.gz.tbi',
+    'impute_isotype_vcf_gz':             'variation/WI.$RELEASE.impute.isotype.vcf.gz',
+    'impute_isotype_vcf_gz_tbi':         'variation/WI.$RELEASE.impute.isotype.vcf.gz.tbi',
 
-    'hard_filter_min4_tree':             '$RELEASE/tree/WI.$RELEASE.hard-filter.min4.tree',
-    'hard_filter_min4_tree_pdf':         '$RELEASE/tree/WI.$RELEASE.hard-filter.min4.tree.pdf',
-    'hard_filter_isotype_min4_tree':     '$RELEASE/tree/WI.$RELEASE.hard-filter.isotype.min4.tree',
-    'hard_filter_isotype_min4_tree_pdf': '$RELEASE/tree/WI.$RELEASE.hard-filter.isotype.min4.tree.pdf',
+    'hard_filter_min4_tree':             'tree/WI.$RELEASE.hard-filter.min4.tree',
+    'hard_filter_min4_tree_pdf':         'tree/WI.$RELEASE.hard-filter.min4.tree.pdf',
+    'hard_filter_isotype_min4_tree':     'tree/WI.$RELEASE.hard-filter.isotype.min4.tree',
+    'hard_filter_isotype_min4_tree_pdf': 'tree/WI.$RELEASE.hard-filter.isotype.min4.tree.pdf',
 
-    'haplotype_png':                     '$RELEASE/haplotype/haplotype.png',
-    'haplotype_pdf':                     '$RELEASE/haplotype/haplotype.pdf',
-    'sweep_pdf':                         '$RELEASE/haplotype/sweep.pdf',
-    'sweep_summary_tsv':                 '$RELEASE/haplotype/sweep_summary.tsv'
+    'haplotype_png':                     'haplotype/haplotype.png',
+    'haplotype_pdf':                     'haplotype/haplotype.pdf',
+    'sweep_pdf':                         'haplotype/sweep.pdf',
+    'sweep_summary_tsv':                 'haplotype/sweep_summary.tsv'
   }, cutoff_date=20200101)
 
   V1 = ReportType('V1', {
-    'summary':                 '$RELEASE/summary.md',
-    'methods':                 '$RELEASE/methods.md',
+    'summary':                 'summary.md',
+    'methods':                 'methods.md',
 
-    'haplotype_png_url':       '$RELEASE/haplotype/haplotype.png',
-    'haplotype_thumb_png_url': '$RELEASE/haplotype/haplotype.thumb.png',
-    'tajima_d_png_url':        '$RELEASE/popgen/tajima_d.png',
-    'tajima_d_thumb_png_url':  '$RELEASE/popgen/tajima_d.thumb.png',
-    'genome_svg_url':          '$RELEASE/popgen/trees/genome.svg',
+    'haplotype_png_url':       'haplotype/haplotype.png',
+    'haplotype_thumb_png_url': 'haplotype/haplotype.thumb.png',
+    'tajima_d_png_url':        'popgen/tajima_d.png',
+    'tajima_d_thumb_png_url':  'popgen/tajima_d.thumb.png',
+    'genome_svg_url':          'popgen/trees/genome.svg',
 
-    'soft_filter_vcf_gz':      '$RELEASE/variation/WI.$RELEASE.soft-filter.vcf.gz',
-    'hard_filter_vcf_gz':      '$RELEASE/variation/WI.$RELEASE.hard-filter.vcf.gz',
-    'impute_vcf_gz':           '$RELEASE/variation/WI.$RELEASE.impute.vcf.gz',
+    'soft_filter_vcf_gz':      'variation/WI.$RELEASE.soft-filter.vcf.gz',
+    'hard_filter_vcf_gz':      'variation/WI.$RELEASE.hard-filter.vcf.gz',
+    'impute_vcf_gz':           'variation/WI.$RELEASE.impute.vcf.gz',
 
-    'vcf_summary_url':         '$RELEASE/multiqc_bcftools_stats.json',
-    'phylo_url':               '$RELEASE/popgen/trees/genome.pdf'
+    'vcf_summary_url':         'multiqc_bcftools_stats.json',
+    'phylo_url':               'popgen/trees/genome.pdf'
   })
 
   V0 = ReportType('V0', {})
