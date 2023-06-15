@@ -71,9 +71,13 @@ def isotype_page(isotype_name, release=None):
     for s in isotype_strains:
       # Get images and thumbs for each strain
       for file in files:
-        start_idx = file.name.index('/')
-        end_idx = file.name.index('.')
-        file_name = file.name[start_idx+1:end_idx]
+        try:
+          start_idx = file.name.index('/')
+          end_idx = file.name.index('.')
+          file_name = file.name[start_idx+1:end_idx]
+        except Exception as ex:
+          logger.error(f'Failed to parse image filename "{file.name}" for isotype {isotype_name}: {ex} (file: {file})')
+          continue
         if s.strain != file_name:
           continue
         else:
