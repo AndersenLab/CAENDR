@@ -159,6 +159,15 @@ class TokenizedString():
     return self.template.template
 
 
+  @classmethod
+  def replace_string(cls, template, **tokens):
+    cls.validate_tokens(**tokens)
+    try:
+      return Template(template).substitute(**tokens)
+    except:
+      raise MissingTokenError()
+
+
 
 
 # def replace_tokens_recursive(obj, **kwargs):
