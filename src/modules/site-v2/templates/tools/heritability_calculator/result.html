@@ -46,8 +46,10 @@
     <p>
       <strong>Status:</strong>  {{ hr.status }}
     
-      {% if hr.status == TaskStatus.ERROR %}
+      {% if hr.status == TaskStatus.ERROR %} 
+      {% if not session["is_admin"] %}
       <strong>Error:</strong> <span class="text-danger">{{ operation.error }}</span>
+      {% endif %}
       {% endif %}
     </p>
     {%- if result %}
@@ -85,6 +87,10 @@
             This page will reload automatically.
           </strong>
         </p>
+        <div class="col-9 alert alert-info mt-5 mx-auto animate__animated animate__fadeIn">
+          <p class="fs-2 text-center"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></p>
+          <p class="lead">The heritability calculation is currently being run. Please check back in a few minutes for results. This page will reload automatically.</p>
+      </div>
         {% endif %}
       
         {% else %}
@@ -116,7 +122,7 @@
         {% if hr.status == TaskStatus.ERROR %}
         <div class="col-9 alert alert-danger mt-5 mx-auto animate__animated animate__fadeInDown">
           <p class="fs-2 text-center"><i class="bi bi-exclamation-circle-fill me-2" aria-hidden="true"></i></p>
-          <p class="lead">An error occurred while performing this report. Please see the error message <span class="d-none d-lg-inline-block">to the left</span> <span class="d-xs-inline-block d-lg-none">above</span> for further information.</p>
+          <p class="lead">An error occurred while performing this report. Please <a href="{{ url_for('heritability_calculator.view_logs', id=hr.id)}}">view the logs</a> for further information.</p>
         </div>
         {% endif %}
       </div>
