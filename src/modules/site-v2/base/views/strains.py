@@ -237,7 +237,7 @@ def order_page_post():
         send_email({"from": "no-reply@elegansvariation.org",
                     "to": [order_obj["email"]],
                     "cc": config.get("CC_EMAILS"),
-                    "subject": "CeNDR Order #" + str(order_obj["invoice_hash"]),
+                    "subject": "CaeNDR Order #" + str(order_obj["invoice_hash"]),
                     "text": ORDER_SUBMISSION_EMAIL_TEMPLATE.format(**order_obj)})
 
         # Save to google sheet
