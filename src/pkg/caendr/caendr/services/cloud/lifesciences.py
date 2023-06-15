@@ -174,10 +174,13 @@ def update_all_linked_status_records(kind, operation_name):
     else:
       logger.warn(f'Could not send email notification for report {status_record.id}: no user found. ({dict(status_record)})')
 
-    if email_result.status_code == 200:
-      logger.debug(f'Email sent successfully ({email_result.status_code}): {email_result.text}')
-    else:
-      logger.error(f'Email failed to send ({email_result.status_code}): {email_result.text}')
+    try:
+      if email_result.status_code == 200:
+        logger.debug(f'Email sent successfully ({email_result.status_code}): {email_result.text}')
+      else:
+        logger.error(f'Email failed to send ({email_result.status_code}): {email_result.text}')
+    except:
+      logger.debug(f'No email sent.')
 
 
 
