@@ -165,14 +165,11 @@ def update_all_linked_status_records(kind, operation_name):
 
     record_owner = status_record.get_user()
     if record_owner is not None:
-      if 'admin' in record_owner['roles']:
-        logger.debug(f'[{NOTIFICATION_LOG_PREFIX}] Sending email notification for report {status_record.id} to {record_owner["email"]} (ID {record_owner.name}).')
-        try:
-          email_result = send_result_email(status_record, status)
-        except Exception as ex:
-          logger.error(f'[{NOTIFICATION_LOG_PREFIX}] Email failed to send: {ex}')
-      else:
-        logger.debug(f'[{NOTIFICATION_LOG_PREFIX}] Skipping email notification for report {status_record.id} for user {record_owner["email"]} (ID {record_owner.name}): user is not an admin.')
+      logger.debug(f'[{NOTIFICATION_LOG_PREFIX}] Sending email notification for report {status_record.id} to {record_owner["email"]} (ID {record_owner.name}).')
+      try:
+        email_result = send_result_email(status_record, status)
+      except Exception as ex:
+        logger.error(f'[{NOTIFICATION_LOG_PREFIX}] Email failed to send: {ex}')
     else:
       logger.warn(f'[{NOTIFICATION_LOG_PREFIX}] Could not send email notification for report {status_record.id}: no user found. ({dict(status_record)})')
 
