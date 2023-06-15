@@ -112,6 +112,13 @@
       
         {% endif %}
         {% endif %}
+
+        {% if hr.status == TaskStatus.ERROR %}
+        <div class="col-9 alert alert-danger mt-5 mx-auto animate__animated animate__fadeInDown">
+          <p class="fs-2 text-center"><i class="bi bi-exclamation-circle-fill me-2" aria-hidden="true"></i></p>
+          <p class="lead">An error occurred while performing this report. Please see the error message <span class="d-none d-lg-inline-block">to the left</span> <span class="d-xs-inline-block d-lg-none">above</span> for further information.</p>
+        </div>
+        {% endif %}
       </div>
   <!-- /Tool Column -->
  </div>
