@@ -5,7 +5,6 @@ import datetime
 from caendr.services.logger import logger
 from flask import request
 from google.cloud import tasks_v2
-from google.protobuf import timestamp_pb2
 
 from caendr.models.error import APIBadRequestError, DuplicateTaskError
 from caendr.services.cloud.datastore import get_ds_entity
@@ -38,9 +37,8 @@ def add_task(queue, url, payload, delay_seconds=None, task_name=None):
   if delay_seconds is not None:
     # Convert "seconds from now" into an rfc3339 datetime string then into a Timestamp protobuf.
     d = datetime.datetime.utcnow() + datetime.timedelta(seconds=delay_seconds)
-    timestamp = timestamp_pb2.Timestamp()
-    timestamp.FromDatetime(d)
-    task["schedule_time"] = timestamp
+    schedule_time = datetime.datetime.utcnow() + datetime.timedelta(seconds=delay_seconds)
+    task["schedule_time"] = schedule_time
 
   if task_name is not None:
     task["name"] = f"{parent}/tasks/{task_name}"
