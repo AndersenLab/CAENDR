@@ -3,7 +3,7 @@ from caendr.services.logger import logger
 from extensions import cache, compress
 from flask import render_template, request, url_for, redirect, Blueprint, abort, flash, jsonify
 
-from caendr.api.strain import query_strains
+from caendr.api.strain import query_strains, get_strain_img_url
 from caendr.utils.json import dump_json
 from caendr.utils.env import get_env_var
 from caendr.models.sql import Strain
@@ -65,9 +65,6 @@ def isotype_page(isotype_name, release=None):
     logger.error(f'Failed to sort strain list for isotype {isotype_name}: {ex}')
 
   try:
-    disable_parent_breadcrumb = True
-    isotype_strains = Strain.sort_by_strain( query_strains(isotype_name=isotype_name) )
-
     species = isotype_strains[0].species_name
     files = get_blob_list(MODULE_SITE_BUCKET_PHOTOS_NAME, species)
 
@@ -85,11 +82,9 @@ def isotype_page(isotype_name, release=None):
           else:
             url = file.public_url
             image_urls.setdefault(file_name, {}).update({'url': url})
+
   except Exception as ex:
-    logger.error(f'Failed to sort strain list for isotype {isotype_name}: {ex}')
-    abort(500)  
-  if not isotype_strains:
-    abort(404)
+    logger.error(f'Failed to get images for isotype {isotype_name}: {ex}')
 
   # Get the single isotype reference strain from the list, returning an error if none is found
   # TODO: Is it possible for there to be more than one? Would this be an error?
