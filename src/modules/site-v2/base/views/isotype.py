@@ -76,11 +76,18 @@ def isotype_page(isotype_name, release=None):
   if not isotype_strains:
     abort(404)
 
+  # Get the single isotype reference strain from the list, returning an error if none is found
+  # TODO: Is it possible for there to be more than one? Would this be an error?
+  isotype_ref_strain_list = [ x for x in isotype_strains if x.isotype_ref_strain ]
+  if len(isotype_ref_strain_list) == 0:
+    logger.error(f'Could not find isotype ref strain for isotype "{isotype_name}". List: {isotype_strains}')
+    abort(500)
+
   return render_template('strain/isotype.html', **{
     "title": f"Isotype {isotype_name}",
     "isotype": isotype_strains,
     "isotype_name": isotype_name,
-    "isotype_ref_strain": [ x for x in isotype_strains if x.isotype_ref_strain ][0],
+    "isotype_ref_strain": isotype_ref_strain_list[0],
     "strain_json_output": dump_json(isotype_strains),
     "species": species,
     "image_urls": image_urls,

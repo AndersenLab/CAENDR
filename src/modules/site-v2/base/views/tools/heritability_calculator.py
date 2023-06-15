@@ -178,7 +178,7 @@ def submit():
     if not code == 200:
       flash(response['message'], 'danger')
 
-    elif response['message']:
+    elif response['message'] and response['ready']:
       flash(response['message'], 'success')
 
     # Return the response

@@ -24,7 +24,7 @@ def user():
   """
       Redirect base route to the user profile page
   """
-  return redirect(url_for('user.user_profile'))
+  return redirect(url_for('user.user_account'))
 
 
 @user_bp.route("/register", methods=["GET", "POST"])
