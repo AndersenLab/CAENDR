@@ -1,5 +1,5 @@
 
-from flask import render_template, url_for, redirect, Blueprint, jsonify
+from flask import render_template, url_for, redirect, Blueprint, jsonify, flash, Markup
 from extensions import cache, compress
 
 from caendr.utils.file import get_dir_list_sorted
@@ -15,6 +15,8 @@ def primary():
 
   # TODO: make news dynamic
   #files = sorted_files("base/static/content/news/")
+
+  flash(Markup("Welcome to the beta release of CaeNDR!"), category="success")
 
   return render_template('primary/home.html', **{
     'page_title': 'Caenorhabditis elegans Natural Diversity Resource',
