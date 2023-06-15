@@ -23,7 +23,7 @@ if ENV is None:
 
 def generate_thumbnails(data, context):
   # Check if the file format is correct
-  if not data['name'].lower().endswith(('.jpg', '.jpeg')):
+  if not data['name'].lower().endswith(('jpg', 'jpeg')):
     raise Exception(f"{data['name']} is wrong file format. Thumbnails are generated only for .jpg or .jpeg files")
 
   logger.info(f'Triggered by: bucket:{data["bucket"]}, name:{data["name"]}')
