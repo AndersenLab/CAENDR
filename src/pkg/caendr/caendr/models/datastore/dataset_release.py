@@ -208,7 +208,7 @@ class DatasetRelease(Entity):
     release_files = self.report_type.get_data_map()
 
     # Get the set of available files for the release
-    release_path = TokenizedString(f'{blob_prefix}/$RELEASE').get_string(**tokens)
+    release_path = TokenizedString.replace_string(f'{blob_prefix}/$RELEASE', **tokens)
     available_files = {
       remove_prefix(file.name, release_path + '/') for file in get_blob_list(bucket_name, release_path)
     }
@@ -219,7 +219,7 @@ class DatasetRelease(Entity):
     # for key, val in url_list.items:
     url_map_filtered = {}
     for key, blob_name in release_files.items():
-      blob_name = TokenizedString(blob_name).get_string(**tokens)
+      blob_name = TokenizedString.replace_string(blob_name, **tokens)
 
       if blob_name in available_files:
         url_map_filtered[key] = generate_blob_url(bucket_name, f'{release_path}/{blob_name}')
