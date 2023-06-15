@@ -12,6 +12,7 @@ from caendr.models.datastore import Species, SPECIES_LIST, IndelPrimer, DatasetR
 from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupError, EmptyReportDataError, EmptyReportResultsError
 from caendr.models.task import TaskStatus
 from caendr.services.cloud.storage import check_blob_exists
+from caendr.services.dataset_release import get_dataset_release
 from caendr.utils.constants import CHROM_NUMERIC
 from caendr.utils.data import get_file_format
 
@@ -144,12 +145,17 @@ def pairwise_indel_finder():
       'name', 'short_name', 'project_num', 'wb_ver', 'latest_release',
     ],
 
+    'latest_release_genomes': {
+      species_name: get_dataset_release(species['latest_release'])['genome'] for species_name, species in SPECIES_LIST.items()
+    },
+
     # String replacement tokens
     # Maps token to the field in Species object it should be replaced with
     'tokens': {
       'WB':      'wb_ver',
       'RELEASE': 'latest_release',
       'PRJ':     'project_num',
+      'GENOME':  'fasta_genome',
     },
 
     # Misc

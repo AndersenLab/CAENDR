@@ -30,7 +30,7 @@
           <form id='form-submit' method="POST">
             {{ form.csrf_token }}
             {{ render_field(form.name) }}
-            {{ render_field(form.address, placeholder="123 Sheridan Rd. \nChicago, IL. 60657") }}
+            {{ render_field(form.address) }}
             {{ render_field(form.email, placeholder="Email") }}
             {{ render_field(form.total, form_prefix="$") }}
             {{ form.recaptcha }}

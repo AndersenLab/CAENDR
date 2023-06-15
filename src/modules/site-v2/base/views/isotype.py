@@ -48,6 +48,22 @@ def isotype_page(isotype_name, release=None):
     Isotype page
   """
 
+  # Get the list of strains for this isotype, throwing the appropriate error if this fails
+  try:
+    isotype_strains = query_strains(isotype_name=isotype_name)
+  except Exception as ex:
+    logger.error(f'Failed to retrieve strain list for isotype {isotype_name}: {ex}')
+    abort(500)
+  if not isotype_strains:
+    abort(404)
+
+  # Try to sort the list of strains
+  # If this fails for any reason, we can keep going with the unsorted list
+  try:
+    isotype_strains = Strain.sort_by_strain( isotype_strains )
+  except Exception as ex:
+    logger.error(f'Failed to sort strain list for isotype {isotype_name}: {ex}')
+
   try:
     disable_parent_breadcrumb = True
     isotype_strains = Strain.sort_by_strain( query_strains(isotype_name=isotype_name) )
@@ -84,11 +100,11 @@ def isotype_page(isotype_name, release=None):
 
   return render_template('strain/isotype.html', **{
     "title": f"Isotype {isotype_name}",
+    "disable_parent_breadcrumb": True,
     "isotype": isotype_strains,
     "isotype_name": isotype_name,
     "isotype_ref_strain": isotype_ref_strain_list[0],
     "strain_json_output": dump_json(isotype_strains),
     "species": species,
     "image_urls": image_urls,
-    "disable_parent_breadcrumb": disable_parent_breadcrumb
   })
