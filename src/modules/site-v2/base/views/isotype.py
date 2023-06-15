@@ -47,9 +47,23 @@ def isotype_page(isotype_name, release=None):
     Isotype page
   """
 
+  # Get the list of strains for this isotype, throwing the appropriate error if this fails
   try:
-    disable_parent_breadcrumb = True
-    isotype_strains = Strain.sort_by_strain( query_strains(isotype_name=isotype_name) )
+    isotype_strains = query_strains(isotype_name=isotype_name)
+  except Exception as ex:
+    logger.error(f'Failed to retrieve strain list for isotype {isotype_name}: {ex}')
+    abort(500)
+  if not isotype_strains:
+    abort(404)
+
+  # Try to sort the list of strains
+  # If this fails for any reason, we can keep going with the unsorted list
+  try:
+    isotype_strains = Strain.sort_by_strain( isotype_strains )
+  except Exception as ex:
+    logger.error(f'Failed to sort strain list for isotype {isotype_name}: {ex}')
+
+  try:
     species = isotype_strains[0].species_name
     files = get_blob_list(MODULE_SITE_BUCKET_PHOTOS_NAME, species)
 
@@ -57,9 +71,13 @@ def isotype_page(isotype_name, release=None):
     for s in isotype_strains:
       # Get images and thumbs for each strain
       for file in files:
-        start_idx = file.name.index('/')
-        end_idx = file.name.index('.')
-        file_name = file.name[start_idx+1:end_idx]
+        try:
+          start_idx = file.name.index('/')
+          end_idx = file.name.index('.')
+          file_name = file.name[start_idx+1:end_idx]
+        except Exception as ex:
+          logger.error(f'Failed to parse image filename "{file.name}" for isotype {isotype_name}: {ex} (file: {file})')
+          continue
         if s.strain != file_name:
           continue
         else:
@@ -69,12 +87,9 @@ def isotype_page(isotype_name, release=None):
           else:
             url = file.public_url
             image_urls.setdefault(s.strain, {}).update({'url': url})
-  except Exception as ex:
-    logger.error(f'Failed to sort strain list for isotype {isotype_name}: {ex}')
-    abort(500)
 
-  if not isotype_strains:
-    abort(404)
+  except Exception as ex:
+    logger.error(f'Failed to get images for isotype {isotype_name}: {ex}')
 
   # Get the single isotype reference strain from the list, returning an error if none is found
   # TODO: Is it possible for there to be more than one? Would this be an error?
@@ -85,11 +100,11 @@ def isotype_page(isotype_name, release=None):
 
   return render_template('strain/isotype.html', **{
     "title": f"Isotype {isotype_name}",
+    "disable_parent_breadcrumb": True,
     "isotype": isotype_strains,
     "isotype_name": isotype_name,
     "isotype_ref_strain": isotype_ref_strain_list[0],
     "strain_json_output": dump_json(isotype_strains),
     "species": species,
     "image_urls": image_urls,
-    "disable_parent_breadcrumb": disable_parent_breadcrumb
   })
