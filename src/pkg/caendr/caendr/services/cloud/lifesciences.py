@@ -164,6 +164,7 @@ def update_all_linked_status_records(kind, operation_name):
       return
 
     record_owner = status_record.get_user()
+    email_result = None
     if record_owner is not None:
       logger.debug(f'[{NOTIFICATION_LOG_PREFIX}] Sending email notification for report {status_record.id} to {record_owner["email"]} (ID {record_owner.name}).')
       try:
@@ -173,13 +174,11 @@ def update_all_linked_status_records(kind, operation_name):
     else:
       logger.warn(f'[{NOTIFICATION_LOG_PREFIX}] Could not send email notification for report {status_record.id}: no user found. ({dict(status_record)})')
 
-    try:
+    if email_result:
       if email_result.status_code == 200:
         logger.debug(f'[{NOTIFICATION_LOG_PREFIX}] Email sent successfully ({email_result.status_code}): {email_result.text}')
       else:
         logger.error(f'[{NOTIFICATION_LOG_PREFIX}] Email failed to send ({email_result.status_code}): {email_result.text}')
-    except:
-      logger.debug(f'[{NOTIFICATION_LOG_PREFIX}] No email sent.')
 
 
 
