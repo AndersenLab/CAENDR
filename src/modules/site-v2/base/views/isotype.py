@@ -65,9 +65,6 @@ def isotype_page(isotype_name, release=None):
     logger.error(f'Failed to sort strain list for isotype {isotype_name}: {ex}')
 
   try:
-    disable_parent_breadcrumb = True
-    isotype_strains = Strain.sort_by_strain( query_strains(isotype_name=isotype_name) )
-
     species = isotype_strains[0].species_name
     files = get_blob_list(MODULE_SITE_BUCKET_PHOTOS_NAME, species)
 
@@ -75,7 +72,14 @@ def isotype_page(isotype_name, release=None):
     for s in isotype_strains:
       # Get images and thumbs for each strain
       for file in files:
-        if s.strain not in file.name:
+        try:
+          start_idx = file.name.index('/')
+          end_idx = file.name.index('.')
+          file_name = file.name[start_idx+1:end_idx]
+        except Exception as ex:
+          logger.error(f'Failed to parse image filename "{file.name}" for isotype {isotype_name}: {ex} (file: {file})')
+          continue
+        if s.strain != file_name:
           continue
         else:
           file_name = Path(file.name).stem
