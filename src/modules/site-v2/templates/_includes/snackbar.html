@@ -1,11 +1,20 @@
 {% for category, msg in get_flashed_messages(with_categories=true) %}
-<div class="container pt-3 my-5 fw-bold text-center">
-    <div id="messages">
-        
+<div class="container pt-3 my-5 fw-bold text-center" id="messages">
+    <div id="">
         <div class="alert alert-{{ category }} alert-dismissible fade show">
             <p>{{ msg }}</p>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" id="closeButton" onclick="removeMessageContainer()"></button>
         </div>
     </div>
 </div>
 {% endfor %}
+
+{% block script %}
+<script>
+    const messageContainer = document.getElementById("messages");
+    function removeMessageContainer() {
+        messageContainer.remove();
+    }
+</script>
+
+{% endblock %}
