@@ -126,7 +126,7 @@
         {% if hr.status == TaskStatus.ERROR %}
         <div class="col-9 alert alert-danger mt-5 mx-auto animate__animated animate__fadeInDown">
           <p class="fs-2 text-center"><i class="bi bi-exclamation-circle-fill me-2" aria-hidden="true"></i></p>
-          <p class="lead">We're sorry but an error occurred while performing this report. Please verify that the data you submitted is correct. If this problem persists, please <a href="{{ url_for('about.contact_us') }}">contact us.</a></p>
+          <p class="lead">We're sorry but an error occurred while performing this report. Please verify that the data you submitted is correct and matches the expected format.</p>
         </div>
         {% endif %}
       </div>
