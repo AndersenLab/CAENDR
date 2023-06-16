@@ -66,12 +66,12 @@
 {% elif mapping_status == 'ERROR' %}
         <div class="col-9 alert alert-danger mt-5 mx-auto animate__animated animate__fadeInDown">
           <p class="fs-2 text-center"><i class="bi bi-exclamation-circle-fill me-2" aria-hidden="true"></i></p>
-            <p class="lead">An error occurred while performing the genome-wide association mapping. Please check that the data you provided matches the expected format.</p>
+            <p class="lead">An error occurred while performing the genome-wide association mapping. Please verify that the data you provided matches the expected format.</p>
         </div>
 {% else %}
         <div class="col-9 alert alert-info mt-5 mx-auto animate__animated animate__fadeInDown">
           <p class="fs-2 text-center"><i class="bi bi-exclamation-circle-fill me-2" aria-hidden="true"></i></p>
-            <p class="lead">The genome-wide association mapping is currently being run - please check back in a few hours for results.</p>
+            <p class="lead">The genome-wide association mapping is currently running - please check back in a few hours for results.</p>
         </div>
 {% endif %}
   </div>
