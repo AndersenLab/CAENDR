@@ -379,7 +379,7 @@ function update_species(species_id) {
   species = species_list[species_id];
 
   document.getElementById('wormbase_version').innerHTML = species['wb_ver'];
-  document.getElementById('release_version').innerHTML  = species['latest_release'];
+  document.getElementById('release_version').innerHTML  = species['release_latest'];
 
   document.getElementById('gene-search').value  = "";
   process_gene_search();

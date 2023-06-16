@@ -118,10 +118,10 @@ class TokenizedString():
   def set_tokens_from_species(self, species):
     return self.set_tokens(**{
       'SPECIES': species.name,
-      'RELEASE': species['latest_release'],
+      'RELEASE': species['release_latest'],
       'PRJ':     species['project_num'],
       'WB':      species['wb_ver'],
-      'SVA':     species['sva_ver'],
+      'SVA':     species['release_sva'],
     })
 
 

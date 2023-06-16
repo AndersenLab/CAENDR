@@ -73,7 +73,7 @@ def genetic_mapping():
     # Species list
     'species_list': SPECIES_LIST,
     'species_fields': [
-      'name', 'short_name', 'project_num', 'wb_ver', 'latest_release',
+      'name', 'short_name', 'project_num', 'wb_ver', 'release_latest',
     ],
 
     # Sample data
