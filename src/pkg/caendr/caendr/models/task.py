@@ -32,6 +32,10 @@ class TaskStatus:
       TaskStatus.SUBMITTED,
     ]
 
+  @staticmethod
+  def is_finished(status):
+    return status in [ TaskStatus.COMPLETE, TaskStatus.ERROR ]
+
 class Task(object):
 
   # A human readable name for this Task type

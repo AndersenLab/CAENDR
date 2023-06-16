@@ -135,7 +135,7 @@ def try_submit(EntityClass, user, data, no_cache):
     return {
       'cached':    True,
       'same_user': True,
-      'ready':     ex.report['status'] == TaskStatus.COMPLETE,
+      'ready':     TaskStatus.is_finished( ex.report['status'] ),
       'data_hash': ex.report.data_hash,
       'id':        ex.report.id,
       'message':   'You have already submitted this data file. Here\'s your previously generated report.',
@@ -151,7 +151,7 @@ def try_submit(EntityClass, user, data, no_cache):
     return {
       'cached':    True,
       'same_user': False,
-      'ready':     ex.report['status'] == TaskStatus.COMPLETE,
+      'ready':     TaskStatus.is_finished( ex.report['status'] ),
       'data_hash': ex.report.data_hash,
       'id':        ex.report.id,
       'message':   'A matching report was found.',
