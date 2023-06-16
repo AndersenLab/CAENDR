@@ -37,6 +37,7 @@ from caendr.services.persistent_logger import PersistentLogger
 
 
 MODULE_SITE_BUCKET_ASSETS_NAME = get_env_var('MODULE_SITE_BUCKET_ASSETS_NAME')
+HERITABILITY_EXAMPLE_FILE      = get_env_var('HERITABILITY_EXAMPLE_FILE', as_template=True)
 
 
 
@@ -70,16 +71,20 @@ def results_columns():
 
 @heritability_calculator_bp.route('')
 def heritability_calculator():
-  title = "Heritability Calculator"
-  tool_alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
-  form = HeritabilityForm()
-  hide_form = True
-  strain_list = []
-  species_list = SPECIES_LIST
-  elegans_sample_data_url = generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/heritability_example_elegans.tsv')
-  briggsae_sample_data_url = generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/heritability_example_briggsae.tsv')
-  tropicalis_sample_data_url = generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/heritability_example_tropicalis.tsv')
-  return render_template('tools/heritability_calculator/heritability-calculator.html', **locals())
+  return render_template('tools/heritability_calculator/heritability-calculator.html', **{
+    'title': "Heritability Calculator",
+    'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+
+    'form': HeritabilityForm(),
+    'hide_form': True,
+
+    'strain_list': [],
+    'species_list': SPECIES_LIST,
+    'sample_data_urls': {
+      species: generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, HERITABILITY_EXAMPLE_FILE.get_string(SPECIES=species))
+        for species in SPECIES_LIST.keys()
+    },
+  })
 
 
 @heritability_calculator_bp.route('/create', methods=["GET"])
