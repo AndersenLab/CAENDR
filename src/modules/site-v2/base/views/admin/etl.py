@@ -83,13 +83,11 @@ def create_op():
 
   db_op = request.form.get('db_op')
   note = request.form.get('note')
-  username = get_jwt_identity()
   user = get_current_user()
-  email = user.email
 
   args = {
     'SPECIES_LIST': form.data.get('species'),
   }
 
-  create_new_db_op(db_op, username, email, args=args, note=note)
+  create_new_db_op(db_op, user, args=args, note=note)
   return redirect(url_for("admin_etl_op.admin_etl_op"), code=302)

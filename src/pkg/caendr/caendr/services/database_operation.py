@@ -92,16 +92,14 @@ def get_db_op_form_options():
   return [(key, val) for key, val in DB_OPS.items()]
 
 
-def create_new_db_op(op, username, email, args=None, note=None):
-  logger.debug(f'Creating new Database Operation: op:{op}, username:{username}, email:{email}, args:{args}, note:{note}')
+def create_new_db_op(op, user, args=None, note=None):
+  logger.debug(f'Creating new Database Operation: op:{op}, user:{user}, args:{args}, note:{note}')
 
   # Get the DB Operations container from datastoer
   container = Container.get(MODULE_DB_OPERATIONS_CONTAINER_NAME)
 
   # Create Database Operation entity & upload to datastore
   db_op = DatabaseOperation(**{
-    'username':          username,
-    'email':             email,
     'note':              note,
     'db_operation':      op,
     'args':              args,
@@ -109,13 +107,14 @@ def create_new_db_op(op, username, email, args=None, note=None):
 
   # Set entity's container & user fields
   db_op.set_container(container)
+  db_op.set_user(user)
 
   # Upload the new entity to datastore
   db_op['status'] = TaskStatus.SUBMITTED
   db_op.save()
 
   # Schedule mapping in task queue
-  task   = DatabaseOperationTask(db_op)
+  task   = DatabaseOperationTask(db_op, email=db_op.get_user_email())
   result = task.submit()
 
   # Update entity status to reflect whether task was submitted successfully
