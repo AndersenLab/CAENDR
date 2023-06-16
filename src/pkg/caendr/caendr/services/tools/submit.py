@@ -187,7 +187,7 @@ class SubmissionManager():
 
     # Check if user has already submitted this job, and "return" it in a duplicate data error if so
     if not no_cache:
-      cached_entity = cls.check_cached_submission(data_hash, user.name, container)
+      cached_entity = cls.check_cached_submission(data_hash, user.name, container, status=TaskStatus.COMPLETE)
       if cached_entity:
         raise DuplicateDataError(cached_entity)
 
