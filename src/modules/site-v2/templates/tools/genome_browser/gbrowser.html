@@ -216,8 +216,8 @@ const species_list = {{ unpack_species_list(species_list, species_fields, latest
 
 // Species specific default tracks
 const species_supported_tracks = {
-  {% for species_name, species in species_list.items() %}
-    "{{species_name}}": [{% for track in species.browser_tracks %} "{{ track }}", {% endfor %}],
+  {% for species_name in species_list.keys() %}
+    "{{species_name}}": [{% for track in supported_tracks[species_name] %} "{{ track }}", {% endfor %}],
   {% endfor %}
 };
 
@@ -379,7 +379,7 @@ function update_species(species_id) {
   species = species_list[species_id];
 
   document.getElementById('wormbase_version').innerHTML = species['wb_ver'];
-  document.getElementById('release_version').innerHTML  = species['latest_release'];
+  document.getElementById('release_version').innerHTML  = species['release_latest'];
 
   document.getElementById('gene-search').value  = "";
   process_gene_search();

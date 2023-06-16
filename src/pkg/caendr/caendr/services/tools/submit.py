@@ -318,7 +318,7 @@ class IndelPrimerSubmissionManager(SubmissionManager):
     data_hash = get_object_hash(data, length=32)
 
     # TODO: Pull this value from somewhere
-    release = SPECIES_LIST[ data['species'] ].indel_primer_ver
+    release = SPECIES_LIST[ data['species'] ].release_pif
 
     # Add release information to data object
     data.update({

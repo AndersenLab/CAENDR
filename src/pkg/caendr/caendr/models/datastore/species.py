@@ -23,11 +23,10 @@ class Species(Entity):
             'scientific_name',     # Scientific name of the species (e.g. 'Caenorhabditis elegans')
             'project_num',         # WormBase project number associated with species release (e.g. 'PRJNA13758')
             'wb_ver',              # WormBase version associated with species release (e.g. 'WS276)
-            'sva_ver',             # CaeNDR release to use for Strain Variant Annotation
-            'latest_release',      # Most recent CaeNDR release that supports the species
-            'indel_primer_ver',
+            'release_latest',      # Most recent CaeNDR release of this species
+            'release_pif',         # CaeNDR release to use for Pairwise Indel Finder
+            'release_sva',         # CaeNDR release to use for Strain Variant Annotation
             'gene_prefix',         # Species-specific prefix for genes. Will be removed from gene names whenever found.
-            'browser_tracks',      # List of browser tracks species supports, by name
             'order',
         }
 
@@ -88,19 +87,19 @@ class Species(Entity):
 
 
 
-    ## Property: sva_ver (CaeNDR Strain Variant Annotation Version) ##
+    ## Property: release_sva (CaeNDR Strain Variant Annotation Version) ##
 
     @property
-    def sva_ver(self):
-        if not self._sva_ver:
-            logger.warning(f"E_NOT_SET: 'sva_ver' (Strain Variant Annotation version) for species {self.name}")
+    def release_sva(self):
+        if not self._release_sva:
+            logger.warning(f"E_NOT_SET: 'release_sva' (Strain Variant Annotation version) for species {self.name}")
             raise BadRequestError()
-        return self._sva_ver
+        return self._release_sva
 
-    @sva_ver.setter
-    def sva_ver(self, new_sva_ver: str):
+    @release_sva.setter
+    def release_sva(self, new_release_sva: str):
         # TODO: validate -- looks like this should be the 8 digit date string
-        self._sva_ver = new_sva_ver
+        self._release_sva = new_release_sva
 
 
     def get_url_name(self):

@@ -103,6 +103,13 @@ def data_release_list(species, release_version=None):
   elif release.report_type == DatasetRelease.V1:
     params.update(data_v01(params, files))
 
+  # Special case:
+  # Only show the Divergent Regions BED file if it defines a valid track for this species + release,
+  # even if the file exists.
+  if 'Divergent Regions' not in release['browser_tracks']:
+    files['divergent_regions_strain_bed']    = None
+    files['divergent_regions_strain_bed_gz'] = None
+
   # Render the page
   return render_template('data/releases.html', **{
     'title': "Data Releases",

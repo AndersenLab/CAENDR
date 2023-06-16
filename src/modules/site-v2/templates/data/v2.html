@@ -338,20 +338,21 @@
                                                     <i>et al.</i></a></td>
                                             <td>
                                                 {% if files.get('divergent_regions_strain_bed') %}
-                                                <a
-                                                    href="{{ files.get('divergent_regions_strain_bed') }}">divergent_regions_strain.bed</a>
+                                                <a href="{{ files.get('divergent_regions_strain_bed') }}">
+                                                    {{ release_version }}_{{ species.name }}_divergent_regions_strain.bed
+                                                </a>
                                                 <br />
                                                 {% endif %}
 
                                                 {% if files.get('divergent_regions_strain_bed_gz') %}
-                                                <a
-                                                    href="{{ files.get('divergent_regions_strain_bed_gz') }}">divergent_regions_strain.bed.gz</a>
+                                                <a href="{{ files.get('divergent_regions_strain_bed_gz') }}">
+                                                    {{ release_version }}_{{ species.name }}_divergent_regions_strain.bed.gz</a>
                                                 <br />
                                                 {% endif %}
 
                                                 {% if not (files.get('divergent_regions_strain_bed') or
                                                 files.get('divergent_regions_strain_bed_gz')) %}
-                                                divergent_regions_strain.bed is not included in this release
+                                                {{ release_version }}_{{ species.name }}_divergent_regions_strain.bed is not included in this release
                                                 {% endif %}
                                             </td>
                                         </tr>

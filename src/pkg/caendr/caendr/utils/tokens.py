@@ -67,7 +67,7 @@ class TokenizedString():
     elif isinstance(other, TokenizedString):
       for key in self.tokens:
         if key in other.tokens and self.tokens[key] != other.tokens[key]:
-          raise InvalidTokenError(key)
+          raise InvalidTokenError(key, 'other TokenizedString object')
       return TokenizedString(self.raw_string + other.raw_string).set_tokens(**{**self.tokens, **other.tokens})
     
     # Other - throw error
@@ -98,7 +98,7 @@ class TokenizedString():
   def validate_tokens(cls, **kwargs):
     for key in kwargs:
       if not cls.is_valid_token(key):
-        raise InvalidTokenError(key)
+        raise InvalidTokenError(key, 'token list')
 
 
 
@@ -112,16 +112,16 @@ class TokenizedString():
       if self.is_valid_token(key):
         self.tokens[key] = val
       else:
-        raise InvalidTokenError(key)
+        raise InvalidTokenError(key, 'token list')
     return self
 
   def set_tokens_from_species(self, species):
     return self.set_tokens(**{
       'SPECIES': species.name,
-      'RELEASE': species['latest_release'],
+      'RELEASE': species['release_latest'],
       'PRJ':     species['project_num'],
       'WB':      species['wb_ver'],
-      'SVA':     species['sva_ver'],
+      'SVA':     species['release_sva'],
     })
 
 
@@ -138,8 +138,8 @@ class TokenizedString():
     self.validate_tokens(**kwargs)
     try:
       return self.template.substitute(**{**self.tokens, **kwargs})
-    except:
-      raise MissingTokenError()
+    except KeyError as ex:
+      raise self.construct_token_error(ex.args[0], self.template)
 
 
   def get_string_safe(self, **kwargs):
@@ -164,8 +164,16 @@ class TokenizedString():
     cls.validate_tokens(**tokens)
     try:
       return Template(template).substitute(**tokens)
-    except:
-      raise MissingTokenError()
+    except KeyError as ex:
+      raise cls.construct_token_error(ex.args[0], template)
+
+
+  @classmethod
+  def construct_token_error(cls, invalid_token, template):
+    if cls.is_valid_token(invalid_token):
+      return MissingTokenError(invalid_token, template)
+    else:
+      return InvalidTokenError(invalid_token, f'template string "{template}"')
 
 
 

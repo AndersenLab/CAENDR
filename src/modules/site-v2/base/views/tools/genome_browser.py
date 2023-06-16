@@ -107,6 +107,10 @@ def genome_browser(region="III:11746923-11750250", query=None):
 
     # Tracks
     'default_tracks': sorted(BrowserTrackDefault.query_ds(), key = lambda x: x['order'] ),
+    'supported_tracks': {
+      species_name: get_dataset_release(species['release_latest'])['browser_tracks']
+        for species_name, species in SPECIES_LIST.items()
+    },
 
     # Data locations
     'fasta_url': DatasetRelease.get_fasta_filepath_url_template().get_string_safe(),
@@ -115,7 +119,7 @@ def genome_browser(region="III:11746923-11750250", query=None):
     # Maps token to the field in Species object it should be replaced with
     'tokens': {
       'WB':      'wb_ver',
-      'RELEASE': 'latest_release',
+      'RELEASE': 'release_latest',
       'PRJ':     'project_num',
       'GENOME':  'fasta_genome',
     },
@@ -123,11 +127,11 @@ def genome_browser(region="III:11746923-11750250", query=None):
     # List of Species class fields to expose to the template
     # Optional - exposes all attributes if not provided
     'species_fields': [
-      'name', 'short_name', 'project_num', 'wb_ver', 'latest_release',
+      'name', 'short_name', 'project_num', 'wb_ver', 'release_latest',
     ],
 
     'latest_release_genomes': {
-      species_name: get_dataset_release(species['latest_release'])['genome'] for species_name, species in SPECIES_LIST.items()
+      species_name: get_dataset_release(species['release_latest'])['genome'] for species_name, species in SPECIES_LIST.items()
     },
 
     # Misc
