@@ -33,8 +33,22 @@ class TaskStatus:
     ]
 
   @staticmethod
+  def finished():
+    return [ TaskStatus.COMPLETE, TaskStatus.ERROR ]
+
+  @staticmethod
   def is_finished(status):
-    return status in [ TaskStatus.COMPLETE, TaskStatus.ERROR ]
+    return status in TaskStatus.finished()
+
+  @staticmethod
+  def not_err():
+    return [ TaskStatus.SUBMITTED, TaskStatus.RUNNING, TaskStatus.COMPLETE ]
+
+  @staticmethod
+  def is_not_err(status):
+    return status in TaskStatus.not_err()
+
+
 
 class Task(object):
 
