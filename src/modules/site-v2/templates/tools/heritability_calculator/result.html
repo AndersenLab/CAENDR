@@ -30,7 +30,7 @@
 <div class="container-fluid px-5 pb-5">
   <div class="d-flex justify-content-around flex-wrap mt-2">
   <!-- Results Card -->
-  <div class="col col-md-6 col-xl-3 text-bg-light mb-5 p-5 rounded-2 shadow-sm overflow-auto" style="max-height:525px">
+  <div class="col col-md-6 col-xl-3 text-bg-light mb-5 p-5 rounded-2 shadow-sm overflow-auto" style="max-height:75vh;">
    <p>
       <strong>Trait:</strong> {{ hr.trait }}
    </p>
@@ -48,7 +48,7 @@
     
       {% if hr.status == TaskStatus.ERROR %} 
       {% if session["is_admin"] %}
-      <strong>Error:</strong> <span class="text-danger">{{ operation.error }}</span>
+      <p><strong>Error:</strong> <span class="text-danger">{{ operation.error }}</span></p>
       {% endif %}
       {% endif %}
     </p>
@@ -61,7 +61,9 @@
     <div class="d-grid gap-3">
       <a class="btn btn-secondary text-light" role="button" onClick="getPDF()">Download PDF</a>
       <a class="btn btn-secondary text-light" role="button" onClick="window.open('{{ data_url }}')">Download TSV</a>
+      {% if session["is_admin"] %}
       <a class="btn btn-secondary text-light" role="button" href="{{ url_for('heritability_calculator.view_logs', id=hr.id)}}">View Logs</a>
+      {% endif %}
     </div>
   </div>
   </div>
@@ -122,7 +124,7 @@
         {% if hr.status == TaskStatus.ERROR %}
         <div class="col-9 alert alert-danger mt-5 mx-auto animate__animated animate__fadeInDown">
           <p class="fs-2 text-center"><i class="bi bi-exclamation-circle-fill me-2" aria-hidden="true"></i></p>
-          <p class="lead">An error occurred while performing this report. Please <a href="{{ url_for('heritability_calculator.view_logs', id=hr.id)}}">view the logs</a> for further information.</p>
+          <p class="lead">We're sorry but an error occurred while performing this report. Please verify that the data you submitted is correct. If this problem persists, please <a href="{{ url_for('about.contact_us') }}">contact us.</a></p>
         </div>
         {% endif %}
       </div>
