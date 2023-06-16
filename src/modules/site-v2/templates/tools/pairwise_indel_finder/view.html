@@ -55,19 +55,23 @@
 {% if not ready %}
 <div class="row">
     <div class="col-12 p-5">
-        <p>
-            Indel Primer Analysis is currently running. Please wait a few minutes. This page will automatically reload.
-        </p>
+        <div class="col-6 alert alert-info text-center mt-5 mx-auto animate__animated animate__fadeIn">
+            <p class="fs-2"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></p>
+            <p class="lead">Indel Primer Analysis is currently running. Please wait a few minutes. This page will automatically reload.</p>
+        </div>
     </div>
 </div>
 {% endif %}
 
 {% if data and ready %}
     {% if empty %}
-        <div class="row text-center">
-            <div class="col-12">
-                <h3>No Results</h3>
-                <strong>Unfortunately, no primers could be found for this site.</strong>
+        <div class="row">
+            <div class="col-12 p-5">
+                <h2 class="text-center">No Results</h2>
+                <div class="col-6 alert alert-warning text-center mt-5 mx-auto animate__animated animate__fadeInDown">
+                    <p class="fs-2"><i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i></p>
+                    <p class="lead">Unfortunately, no primers could be found for this site.</p>
+                </div>
             </div>{# /col-md-4 #}
         </div>{# /row #}
     {% else %}

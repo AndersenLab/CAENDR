@@ -273,7 +273,7 @@ def report(id):
   return render_template("tools/heritability_calculator/result.html", **{
     'title': "Heritability Results",
     'subtitle': trait,
-    'alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+    'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
 
     'ready': ready,
 
