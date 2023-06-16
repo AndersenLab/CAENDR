@@ -20,7 +20,6 @@ class DatabaseOperation(JobEntity):
       *super().get_props_set(),
 
       # Submission
-      'id',
       'username',
       'email',
 

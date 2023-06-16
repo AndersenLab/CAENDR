@@ -2,7 +2,7 @@ import os
 from caendr.services.logger import logger
 from sqlalchemy import func 
 
-from caendr.models.datastore import DatabaseOperation
+from caendr.models.datastore import DatabaseOperation, Container
 from caendr.models.task import DatabaseOperationTask, TaskStatus
 from caendr.models.sql import Homolog, StrainAnnotatedVariant, Strain, WormbaseGene, WormbaseGeneSummary
 from caendr.services.tool_versions import GCR_REPO_NAME
@@ -95,21 +95,23 @@ def get_db_op_form_options():
 def create_new_db_op(op, username, email, args=None, note=None):
   logger.debug(f'Creating new Database Operation: op:{op}, username:{username}, email:{email}, args:{args}, note:{note}')
 
-  # Compute unique ID for new Database Operation entity
-  id = unique_id()
+  # Get the DB Operations container from datastoer
+  container = Container.get(MODULE_DB_OPERATIONS_CONTAINER_NAME)
 
   # Create Database Operation entity & upload to datastore
-  db_op = DatabaseOperation(id, **{
-    'id':                id,
+  db_op = DatabaseOperation(**{
     'username':          username,
     'email':             email,
     'note':              note,
     'db_operation':      op,
     'args':              args,
-    'container_repo':    GCR_REPO_NAME,
-    'container_name':    MODULE_DB_OPERATIONS_CONTAINER_NAME,
-    'container_version': MODULE_DB_OPERATIONS_CONTAINER_VERSION,
   })
+
+  # Set entity's container & user fields
+  db_op.set_container(container)
+
+  # Upload the new entity to datastore
+  db_op['status'] = TaskStatus.SUBMITTED
   db_op.save()
 
   # Schedule mapping in task queue
