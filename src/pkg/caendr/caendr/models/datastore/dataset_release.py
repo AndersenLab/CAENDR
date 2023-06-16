@@ -237,8 +237,8 @@ class DatasetRelease(Entity):
     'gatk_report':                       'gatk_report.html',
     'concordance_report':                'concordance_report.html',
 
-    'divergent_regions_strain_bed_gz':   'divergent_regions_strain.$RELEASE.bed.gz',
-    'divergent_regions_strain_bed':      'divergent_regions_strain.$RELEASE.bed',
+    'divergent_regions_strain_bed_gz':   'browser_tracks/${RELEASE}_${SPECIES}_divergent_regions_strain.bed.gz',
+    'divergent_regions_strain_bed':      'browser_tracks/${RELEASE}_${SPECIES}_divergent_regions_strain.bed',
 
     'soft_filter_vcf_gz':                'variation/WI.$RELEASE.soft-filter.vcf.gz',
     'soft_filter_vcf_gz_tbi':            'variation/WI.$RELEASE.soft-filter.vcf.gz.tbi',
