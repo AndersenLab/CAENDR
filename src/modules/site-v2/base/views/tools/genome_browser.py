@@ -107,6 +107,10 @@ def genome_browser(region="III:11746923-11750250", query=None):
 
     # Tracks
     'default_tracks': sorted(BrowserTrackDefault.query_ds(), key = lambda x: x['order'] ),
+    'supported_tracks': {
+      species_name: get_dataset_release(species['release_latest'])['browser_tracks']
+        for species_name, species in SPECIES_LIST.items()
+    },
 
     # Data locations
     'fasta_url': DatasetRelease.get_fasta_filepath_url_template().get_string_safe(),

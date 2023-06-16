@@ -27,7 +27,6 @@ class Species(Entity):
             'release_pif',         # CaeNDR release to use for Pairwise Indel Finder
             'release_sva',         # CaeNDR release to use for Strain Variant Annotation
             'gene_prefix',         # Species-specific prefix for genes. Will be removed from gene names whenever found.
-            'browser_tracks',      # List of browser tracks species supports, by name
             'order',
         }
 

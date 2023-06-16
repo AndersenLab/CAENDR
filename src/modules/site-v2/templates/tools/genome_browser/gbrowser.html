@@ -216,8 +216,8 @@ const species_list = {{ unpack_species_list(species_list, species_fields, latest
 
 // Species specific default tracks
 const species_supported_tracks = {
-  {% for species_name, species in species_list.items() %}
-    "{{species_name}}": [{% for track in species.browser_tracks %} "{{ track }}", {% endfor %}],
+  {% for species_name in species_list.keys() %}
+    "{{species_name}}": [{% for track in supported_tracks[species_name] %} "{{ track }}", {% endfor %}],
   {% endfor %}
 };
 

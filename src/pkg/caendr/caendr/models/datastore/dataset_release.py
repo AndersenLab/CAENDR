@@ -67,6 +67,7 @@ class DatasetRelease(Entity):
       'disabled',
       'hidden',
       'species',
+      'browser_tracks',      # List of browser tracks supported for this species & release, by name
     }
 
 
@@ -98,6 +99,23 @@ class DatasetRelease(Entity):
       self.__dict__['report_type'] = val.name
     else:
       self.__dict__['report_type'] = val
+
+
+  # Prop should default to empty list if not set
+  @property
+  def browser_tracks(self):
+    return self.__dict__.get('browser_tracks', [])
+
+  @browser_tracks.setter
+  def browser_tracks(self, val):
+
+    # Only allow list to be set
+    if not isinstance(val, list):
+      raise TypeError('Must set browser_tracks to a list.')
+
+    # Save prop in object's local dictionary
+    self.__dict__['browser_tracks'] = val
+
 
 
 
