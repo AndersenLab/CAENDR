@@ -75,7 +75,9 @@
       <div class="ps-3 pt-0"><a href="{{ url_for('heritability_calculator.heritability_calculator') }}"><i class="bi bi-plus-circle" aria-hidden="true"></i> New Calculation</a></div>
       <div class="ps-3 pt-0"><a href="{{ url_for('heritability_calculator.my_results') }}"><i class="bi bi-journal" aria-hidden="true"></i>View All My Heritability Results</a></div>
       {% if data %}
+      {% if hr.status == TaskStatus.COMPLETE %}
       <div class="ps-3 pt-0"><button class="btn border-0" onclick="openFullscreen();" id="fullscreenButton"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>View Fullscreen</button></div>
+      {% endif %}
       {% endif %}
       </div>
       <!-- /Options Toolbar -->
