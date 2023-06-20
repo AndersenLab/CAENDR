@@ -118,16 +118,16 @@ class DataJobEntity(JobEntity, UserOwnedEntity):
       ('username',  '=', username),
     ]
 
-    # If desired, filter by status as well
-    if status:
-      filters += [('status', '=', status)]
+    # Convert status to list, if a single value passed
+    if status is not None and not hasattr(status, '__iter__'):
+      status = [status]
 
     # Loop through each matching report, sorted newest to oldest
     # Prefer a match with a date, if one exists
     for match in cls.sort_by_created_date( cls.query_ds(filters=filters), set_none_max=True ):
 
-      # If containers match, return the matching Entity
-      if match.container_equals(container):
+      # If containers match and status is correct, return the matching Entity
+      if match.container_equals(container) and (status and match['status'] in status):
         return match
 
 
