@@ -26,7 +26,6 @@ class GeneBrowserTracks(JobEntity):
       *super().get_props_set(),
 
       # Submission
-      'id',
       'username',
 
       # Query
