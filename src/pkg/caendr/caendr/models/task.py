@@ -32,22 +32,6 @@ class TaskStatus:
       TaskStatus.SUBMITTED,
     ]
 
-  @staticmethod
-  def finished():
-    return [ TaskStatus.COMPLETE, TaskStatus.ERROR ]
-
-  @staticmethod
-  def is_finished(status):
-    return status in TaskStatus.finished()
-
-  @staticmethod
-  def not_err():
-    return [ TaskStatus.SUBMITTED, TaskStatus.RUNNING, TaskStatus.COMPLETE ]
-
-  @staticmethod
-  def is_not_err(status):
-    return status in TaskStatus.not_err()
-
 
 
 class Task(object):
@@ -156,6 +140,25 @@ class Task(object):
       raise ValueError(f'Target queue is undefined for task of type "{self.name}".')
 
     return add_task( self.queue, self.queue_url, dict(self) )
+
+
+  ## Task Status Helpers ##
+
+  @staticmethod
+  def finished():
+    return [ TaskStatus.COMPLETE, TaskStatus.ERROR ]
+
+  @staticmethod
+  def is_finished(status):
+    return status in Task.finished()
+
+  @staticmethod
+  def not_err():
+    return [ TaskStatus.SUBMITTED, TaskStatus.RUNNING, TaskStatus.COMPLETE ]
+
+  @staticmethod
+  def is_not_err(status):
+    return status in Task.not_err()
 
 
 
