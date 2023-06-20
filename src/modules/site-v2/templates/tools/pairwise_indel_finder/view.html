@@ -13,28 +13,23 @@
         .table {
             border: 1px solid black;
             font-size: 12px;
-            font-family: monospace;
         }
 
-        .info-table, .primer-table {
-            border-radius: 5px !important;
-        }
-
-        .primer-table th, .info-table th {
+        /* .primer-table th, .info-table th {
             width: 9%
-        }
+        } */
 
-        .info-table {
+        /* .info-table {
             font-size: 12px;
-        }
+        } */
 
-        .primer-table {
+        /* .primer-table {
             font-size: 11px;
-            font-family: monospace;
-        }
+        } */
 
-        .table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th {
+        td, th {
             border: 1px solid black !important;
+            text-align: left;
         }
 
         .table-hover:hover {
@@ -138,8 +133,8 @@
                 {{ format_table.to_html(index=False, classes='table table-hover primer-table') | safe }}
             </div>
 
-            <div class="col-10 overflow-auto mx-auto" id="svgchartarea"></div>
-            <small class="d-block mx-auto">The red line indicates the location of the indel. Arrows indicate the
+            <div class="col-10 overflow-auto mx-auto bg-white" id="svgchartarea"></div>
+            <small class="d-block mt-3 mx-auto text-center">The red line indicates the location of the indel. Arrows indicate the
                 locations of primer sets.</small>
         </div>
     </div>
