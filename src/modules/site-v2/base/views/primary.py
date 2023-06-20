@@ -42,6 +42,15 @@ def reroute_software():
   return redirect(url_for('primary.help_item', filename="Software"))
 
 
+@primary_bp.route("/strains/isotype_list")
+def reroute_isotype_list():
+  '''
+    This is a redirect for older Genome Mapping reports, which use an older version of this URL.
+  '''
+  return redirect(url_for('request_strains.strains_list'))
+
+
+
 @primary_bp.route("/news")
 @primary_bp.route("/news/<filename>/")
 @cache.memoize(60*60)

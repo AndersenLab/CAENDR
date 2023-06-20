@@ -4,8 +4,10 @@ import requests
 
 from datetime import datetime
 from caendr.services.logger import logger
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
 from flask_wtf.csrf import CSRFProtect
+from flask_httpauth import HTTPBasicAuth
+from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import exc
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.exceptions import HTTPException
@@ -13,6 +15,7 @@ from werkzeug.exceptions import HTTPException
 from config import config
 import pytz
 
+from caendr.models.error import InternalError
 from caendr.services.cloud.postgresql import db, health_database_status
 from base.utils.markdown import render_markdown, render_ext_markdown
 
@@ -99,6 +102,11 @@ from extensions import (
   compress
 )
 
+from caendr.utils.env import get_env_var
+from caendr.services.cloud.secret import get_secret
+
+MODULE_SITE_HOST = get_env_var('MODULE_SITE_HOST')
+
 
 def create_app(config=config):
   """Returns an initialized Flask application."""
@@ -115,8 +123,11 @@ def create_app(config=config):
   register_template_filters(app)
   register_extensions(app)
   register_errorhandlers(app)
+  register_request_handlers(app)
   configure_jinja(app)
   configure_ssl(app)
+
+  password_protect_site(app)
 
   # app.teardown_request(close_active_connections)
 
@@ -336,3 +347,70 @@ def register_errorhandlers(app):
 #     db.session.remove()
 #   except Exception as db_err:
 #     logger.error(f'Exception closing sessions: {db_err}')
+
+
+def register_request_handlers(app):
+
+  # Redirect all URLs that point to this application to the host value in MODULE_SITE_HOST
+  # Individual API calls may fail if request body not copied over(?), but these should only be sent
+  # after initial page load, which will redirect to the correct host first
+  @app.before_request
+  def handle_redirects():
+    if request.host != MODULE_SITE_HOST:
+      return redirect(request.scheme + "://" + MODULE_SITE_HOST + request.full_path, code=307)
+
+
+def password_protect_site(app):
+
+  # Check the environment to determine whether the site should be password protected
+  should_password_protect = get_env_var('MODULE_SITE_PASSWORD_PROTECTED', var_type=bool, can_be_none=True)
+  if not should_password_protect:
+    logger.debug(f'[SITE-PASSWORD] Not setting password for site (env = "{get_env_var("ENV")}", host = "{get_env_var("MODULE_SITE_HOST")}")')
+    return
+
+  # Create mapping of usernames to password environment variables
+  # Env vars should hold the name of a secret, in turn containing the password for this account
+  profiles = {
+    'mti':  'MODULE_SITE_PASSWORD_MTI',
+    'test': 'MODULE_SITE_PASSWORD_TEST',
+  }
+
+  # Create the set of user accounts, skipping any for which the password can't be retrieved
+  USERS = {}
+  for username, password_var in profiles.items():
+    password_secret = get_env_var(password_var, can_be_none=True)
+    if password_secret is None:
+      logger.error(f'[SITE-PASSWORD] Could not create password-protected account "{username}": {ex}')
+      continue
+    try:
+      USERS[username] = generate_password_hash(get_secret(password_secret))
+    except Exception as ex:
+      logger.error(f'[SITE-PASSWORD] Could not create password-protected account "{username}": {ex}')
+
+  # If no user accounts could be created, raise an error
+  if len(USERS) == 0:
+    msg = 'Could not password-protect site: no valid accounts.'
+    logger.error(f'[SITE-PASSWORD] {msg}')
+    raise InternalError(msg)
+
+  # Initialize basic auth object
+  auth = HTTPBasicAuth()
+  @auth.verify_password
+  def verify_password(username, password):
+    if username in USERS and check_password_hash(USERS.get(username), password):
+      return username
+
+
+  # Adapted from https://stackoverflow.com/a/30761573
+
+  # A dummy callable to execute the login_required logic
+  login_required_dummy_view = auth.login_required(lambda: None)
+
+  @app.before_request
+  def default_login_required():
+    # Exclude 404 errors and static routes
+    # Uses split to handle blueprint static routes as well
+    if not request.endpoint or request.endpoint.rsplit('.', 1)[-1] == 'static':
+      return
+
+    return login_required_dummy_view()
