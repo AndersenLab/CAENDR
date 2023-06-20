@@ -8,6 +8,7 @@ Flask_Caching==1.3.3
 Flask_Compress==1.13
 Flask-Dance==3.0.0
 Flask_DebugToolbar==0.10.1  
+Flask_HTTPAuth==4.8.0
 flask_jwt_extended==4.1.0
 Flask-Markdown==0.3
 Flask_RESTful==0.3.6
