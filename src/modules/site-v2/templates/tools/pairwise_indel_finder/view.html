@@ -15,18 +15,6 @@
             font-size: 12px;
         }
 
-        /* .primer-table th, .info-table th {
-            width: 9%
-        } */
-
-        /* .info-table {
-            font-size: 12px;
-        } */
-
-        /* .primer-table {
-            font-size: 11px;
-        } */
-
         td, th {
             border: 1px solid black !important;
             text-align: left;
@@ -35,6 +23,18 @@
         .table-hover:hover {
             cursor: crosshair;
         }
+
+        @media print {
+            h3, #svgchartarea {
+                page-break-before: always;
+            }
+            .table {
+                table-layout: fixed;
+                word-break: break-all;
+
+            }
+        }
+
 
 	</style>
 
@@ -77,14 +77,13 @@
         </div>
     </div>{# /row #} -->
 
-<div id="report">
     <div class="d-flex justify-content-around flex-wrap px-3 mt-5">
         <div class="col-12 col-md-2 text-bg-light mb-5 py-5 px-3 rounded-2 shadow-sm overflow-auto d-print-none"
             style="max-height:500px">
             <h2 class="text-dark">Download Results</h2>
             <div class="d-grid gap-2 mt-5">
                 <a role="button" id="pdd" class="btn btn-secondary text-light"
-                    onClick='getPDF("containerfluid")'>PDF</a>
+                    onClick='getPDF("containerfluid")'>Print to PDF</a>
                 <a role="button" class="btn btn-secondary text-light"
                     href="{{ url_for('pairwise_indel_finder.report', id=id, file_ext='csv') }}"
                     class="col-sm-4">CSV</a>
@@ -98,6 +97,7 @@
                 </div>
             </div>
             <!-- /Options Toolbar -->
+            <div id="report">
             <h2 class="mb-4">
                 Indel Primer Details
             </h2>
@@ -138,8 +138,8 @@
                 locations of primer sets.</small>
         </div>
     </div>
+    </div>
     <!-- /flex -->
-</div>{# /report #}
 {% endif %}
 {% endif %}
 
