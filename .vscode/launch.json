@@ -25,7 +25,8 @@
                 // "API_PIPELINE_TASK_URL": "https://localhost:9090",
                 "CAENDR_USE_SSL": "1",
                 "SENTRY_URL": "",
-                "SITE_BASE_URL": "https://localhost:8080",
+                // "SITE_BASE_URL": "https://localhost:8080",
+                "MODULE_SITE_HOST": "localhost:8080",
             },
             "args": [
                 "run",
@@ -277,7 +278,8 @@
                 "SENTRY_URL": "",
                 "MODULE_API_PIPELINE_TASK_URL_NAME": "API_PIPELINE_TASK_URL",
                 "API_PIPELINE_TASK_URL": "https://localhost:9090",
-                "MODULE_SITE_BASE_URL":  "https://localhost:8080",
+                // "MODULE_SITE_BASE_URL":  "https://localhost:8080",
+                "MODULE_SITE_HOST": "localhost:8080",
             },
             "args": [
                 "run",
