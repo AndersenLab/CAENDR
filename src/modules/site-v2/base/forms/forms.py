@@ -335,6 +335,6 @@ class MappingSubmissionForm(Form):
   
 
 class StrainListForm(Form):
-  species = SpeciesSelectField(validators=[Required()])
+  species = SpeciesSelectField(validators=[Required()], exclude_species=['c_briggsae', 'c_tropicalis'])
 
 
