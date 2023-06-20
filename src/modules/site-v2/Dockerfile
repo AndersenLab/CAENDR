@@ -37,6 +37,10 @@ RUN apt-get update && \
 ENV APP_HOME /site
 WORKDIR $APP_HOME
 
+ARG GIT_COMMIT=GIT_COMMIT_NOT_AVAILABLE
+RUN echo -e "\n\n# GIT_COMMIT automatically added during the makefile build container" >> module.env
+RUN echo "GIT_COMMIT=${GIT_COMMIT}" >> module.env
+
 RUN mkdir /gcloud
 RUN cd /gcloud && curl -O "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-380.0.0-linux-x86_64.tar.gz" && tar xvzf google-cloud-sdk-380.0.0-linux-x86_64.tar.gz
 

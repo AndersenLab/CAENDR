@@ -62,6 +62,7 @@ def system_dashboard():
 
   module_name = os.getenv("MODULE_NAME", "n/a")
   module_version = os.getenv("MODULE_VERSION", "n/a")
+  git_commit = os.getenv("GIT_COMMIT", "n/a")
 
 
   return render_template('admin/system/system.html', **locals())
