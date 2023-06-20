@@ -70,7 +70,8 @@ class SpeciesSelectField(SelectField):
   CHOICES = [(name, value.short_name) for name, value in SPECIES_LIST.items()]
 
   def __init__(self, exclude_species=[], **kwargs):
-    species_choices = [ x for x in SpeciesSelectField.CHOICES if x[0] not in exclude_species ]
+    species_choices = SpeciesSelectField.CHOICES
+    self.exclude_species = exclude_species
     return super().__init__('Species:', id=SpeciesSelectField.elementId, choices=[ ('', "Choose"), *species_choices ], **kwargs)
 
 

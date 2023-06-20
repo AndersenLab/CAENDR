@@ -13,6 +13,14 @@
     addEventListener("pageshow", (event) => {
       const selector = document.getElementById('{{ field.elementId }}');
       selector.value = '';
+      {% if field.exclude_species %}
+      const exclude_species = [
+        {%- for v in field.exclude_species %}'{{v}}',{%- endfor -%}
+      ];
+      Array.from(selector.children).forEach(opt => {
+          opt.disabled = exclude_species.includes(opt.value);
+      })
+      {%- endif %}
       {#/* toggle_input(selector.options[0], false); // Un-comment to disable "Choose" from start. Is this compatible with all browsers? */#}
     });
   </script>
