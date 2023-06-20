@@ -4,7 +4,7 @@ import requests
 
 from datetime import datetime
 from caendr.services.logger import logger
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
 from flask_wtf.csrf import CSRFProtect
 from sqlalchemy import exc
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -99,6 +99,10 @@ from extensions import (
   compress
 )
 
+from caendr.utils.env import get_env_var
+
+MODULE_SITE_HOST = get_env_var('MODULE_SITE_HOST')
+
 
 def create_app(config=config):
   """Returns an initialized Flask application."""
@@ -115,6 +119,7 @@ def create_app(config=config):
   register_template_filters(app)
   register_extensions(app)
   register_errorhandlers(app)
+  register_request_handlers(app)
   configure_jinja(app)
   configure_ssl(app)
 
@@ -336,3 +341,14 @@ def register_errorhandlers(app):
 #     db.session.remove()
 #   except Exception as db_err:
 #     logger.error(f'Exception closing sessions: {db_err}')
+
+
+def register_request_handlers(app):
+
+  # Redirect all URLs that point to this application to the host value in MODULE_SITE_HOST
+  # Individual API calls may fail if request body not copied over(?), but these should only be sent
+  # after initial page load, which will redirect to the correct host first
+  @app.before_request
+  def handle_redirects():
+    if request.host != MODULE_SITE_HOST:
+      return redirect(request.scheme + "://" + MODULE_SITE_HOST + request.full_path, code=307)
