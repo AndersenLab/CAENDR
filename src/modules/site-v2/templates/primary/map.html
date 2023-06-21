@@ -96,9 +96,9 @@
 
     <div class="position-relative" id="map" aria-hidden="true">
       <div class="btn-group-vertical m-3 zoomContainer" role="group" aria-hidden="true">
-      <button class="btn btn-primary" id="zoomIn" tabindex="-1"><i class="bi bi-plus-circle"></i></button>
-      <button class="btn btn-primary" id="zoomOut" tabindex="-1"><i class="bi bi-dash-circle"></i></button>
-    </div>
+        <button class="btn btn-primary" id="zoomIn" tabindex="-1"><i class="bi bi-plus-circle"></i></button>
+        <button class="btn btn-primary" id="zoomOut" tabindex="-1"><i class="bi bi-dash-circle"></i></button>
+      </div>
       <btn
         class="position-absolute d-block d-md-none btn text-bg-light rounded-pill text-center mobileSpeciesSelect"
         onclick="toggleSpecies();"><i class="bi bi-check-all me-1"></i> Species
@@ -175,11 +175,18 @@ const MB_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Stree
 const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const OSM_ATTRIB = '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
-const southWest = L.latLng(-90, -180);
-const northEast = L.latLng(90, 180);
+const southWest = L.latLng(-120, -240);
+const northEast = L.latLng(120, 240);
 const bounds = L.latLngBounds(southWest, northEast);
 
-const map = L.map('map', {minZoom:2, maxZoom: 10, maxBounds: bounds, scrollWheelZoom: false, zoomControl: false, attributionControl: false,}).setView([20, -100], 2);
+const map = L.map('map', {renderer: L.canvas(), 
+                          minZoom:2, 
+                          maxZoom: 10, 
+                          maxBounds: bounds, 
+                          scrollWheelZoom: false, 
+                          zoomControl: false, 
+                          attributionControl: false})
+                          .setView([20, -100], 2);
 L.tileLayer(MB_URL, {attribution: MB_ATTR, id: 'mapbox.streets', continuousWorld: false, worldCopyJump: true}).addTo(map);
 const strain_names = [];
 const elegans = [];
@@ -269,18 +276,27 @@ $.getJSON('/strains', function(strain_info) {
     }
   });
 
+  const slice_idx1 = elegans.length/3
+  const slice_idx2 = (elegans.length - slice_idx1)/2
+  const elegans1 = elegans.slice(0, slice_idx1)
+  const elegans2 = elegans.slice(slice_idx1, slice_idx2)
+  const elegans3 = elegans.slice(slice_idx2)
+  L.layerGroup(elegans1).addTo(map)
+  L.layerGroup(elegans2).addTo(map)
+  L.layerGroup(elegans3).addTo(map)
+
+
   const elegans_layer = L.layerGroup(elegans)
   const briggsae_layer = L.layerGroup(briggsae)
   const tropicalis_layer = L.layerGroup(tropicalis)
-  elegans_layer.addTo(map)
-  const overlaysTest = {
-    '<p><i>C. elegans</i></p><img src={{ ext_asset("img/icons/elegansMarkerOutline.svg") }} style="height:18px;width:auto;" alt="">': elegans_layer,
-    '<p><i>C. briggsae</i></p><img src={{ ext_asset("img/icons/briggsaeMarkerOutline.svg") }} style="height:18px;width:auto;" alt="">': briggsae_layer,
-    '<p><i>C. tropicalis</i></p><img src={{ ext_asset("img/icons/tropicalisMarkerOutline.svg") }} style="height:18px;width:auto;" alt="">': tropicalis_layer
+  const overlays = {
+    '<p><i>C. elegans</i></p><img src={{ ext_asset("img/icons/elegansMarkerOutline@2x.png") }} style="height:18px;width:auto;" alt="">': elegans_layer,
+    '<p><i>C. briggsae</i></p><img src={{ ext_asset("img/icons/briggsaeMarkerOutline@2x.png") }} style="height:18px;width:auto;" alt="">': briggsae_layer,
+    '<p><i>C. tropicalis</i></p><img src={{ ext_asset("img/icons/tropicalisMarkerOutline@2x.png") }} style="height:18px;width:auto;" alt="">': tropicalis_layer
   }
 
 
-  const layerControl = L.control.layers(null, overlaysTest, {collapsed: false}).addTo(map)
+  const layerControl = L.control.layers(null, overlays, {collapsed: false}).addTo(map)
   const title = document.createElement("div")
   title.innerHTML = '<p class="text-center"><strong>Species:</strong></p>'
   const firstChild = layerControl.getContainer().firstChild
