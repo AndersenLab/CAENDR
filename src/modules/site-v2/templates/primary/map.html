@@ -142,20 +142,20 @@
 // Icons
 {% autoescape off %}
 const icon_elegans = L.icon({
-    iconUrl: '{{ ext_asset("img/icons/elegansMarker.png") }}',
+    iconUrl: '{{ ext_asset("img/icons/elegansMarkerOutline@2x.png") }}',
     iconSize: [20, 30],
     iconAnchor: [12, 16],
     popupAnchor: [0, -15],
 });
 
 const icon_briggsae = L.icon({
-    iconUrl: '{{ ext_asset("img/icons/briggsaeMarker.png") }}',
+    iconUrl: '{{ ext_asset("img/icons/briggsaeMarkerOutline@2x.png") }}',
     iconSize: [20, 30],
     iconAnchor: [12, 16],
     popupAnchor: [0, -15],
 });
 const icon_tropicalis = L.icon({
-    iconUrl: '{{ ext_asset("img/icons/tropicalisMarker.png") }}',
+    iconUrl: '{{ ext_asset("img/icons/tropicalisMarkerOutline@2x.png") }}',
     iconSize: [20, 30],
     iconAnchor: [12, 16],
     popupAnchor: [0, -15],
@@ -163,7 +163,7 @@ const icon_tropicalis = L.icon({
 
 
 const icon_hover = L.icon({
-    iconUrl: '{{ ext_asset("img/icons/hoverMarkerOutline.svg") }}',
+    iconUrl: '{{ ext_asset("img/icons/hoverMarkerOutline.png") }}',
     iconSize: [20, 30],
     iconAnchor: [12, 16],
     popupAnchor: [0, -15],
@@ -179,7 +179,7 @@ const southWest = L.latLng(-90, -180);
 const northEast = L.latLng(90, 180);
 const bounds = L.latLngBounds(southWest, northEast);
 
-const map = L.map('map', {minZoom:2, maxBounds: bounds, scrollWheelZoom: false, zoomControl: false, attributionControl: false,}).setView([20, -100], 2);
+const map = L.map('map', {minZoom:2, maxZoom: 10, maxBounds: bounds, scrollWheelZoom: false, zoomControl: false, attributionControl: false,}).setView([20, -100], 2);
 L.tileLayer(MB_URL, {attribution: MB_ATTR, id: 'mapbox.streets', continuousWorld: false, worldCopyJump: true}).addTo(map);
 const strain_names = [];
 const elegans = [];
