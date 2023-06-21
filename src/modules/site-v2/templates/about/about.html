@@ -18,33 +18,24 @@
 {% block content %}
 
 <div class="container-fluid px-5">
-  <!-- Hiding video section until final version is available --> 
-  <!-- <video class="d-block mx-auto" controls preload="auto" poster="/static/img/video-placeholder.png" aria-hidden="true">
-    <source src="/static/video/test-video.mp4" type="video/mp4">
-  </video>
-  <div class="row mb-5">
-    <div class="d-flex flex-wrap justify-content-end text-end mx-auto my-2 optionsToolbar">
-      <a href="#collapseTranscript" data-bs-toggle="collapse" data-bs-target="#collapseTranscript" aria-expanded="false"
-        aria-control="collapseTranscript"><i class="bi bi-card-text" aria-hidden="true"></i> View Video Transcript</a>
-    </div>
-    <div clas="d-flex flex-wrap justify-content-start">
-      <div class="collapse" id="collapseTranscript">
-        <div class="card card-body">
-          A video transcript can go here.
+  <div class="row">  
+    <div class="pb-5 mb-0 mb-md-5">
+      <script src="https://fast.wistia.com/embed/medias/vss2540hx4.jsonp" async></script>
+      <script src="https://fast.wistia.com/assets/external/E-v1.js" async></script>
+      <div class="wistia_responsive_padding" style="padding:56.25% 0 0 0;position:relative;">
+        <div class="wistia_responsive_wrapper" style="height:100%;left:0;position:absolute;top:0;width:100%;">
+          <div class="wistia_embed wistia_async_vss2540hx4 videoFoam=true" style="height:100%;position:relative;width:100%">
+            <div class="wistia_swatch"
+              style="height:100%;left:0;opacity:0;overflow:hidden;position:absolute;top:0;transition:opacity 200ms;width:100%;">
+              <img src="https://fast.wistia.com/embed/medias/vss2540hx4/swatch"
+                style="filter:blur(5px);height:100%;object-fit:contain;width:100%;" alt="" aria-hidden="true"
+                onload="this.parentNode.style.opacity=1;" /></div>
+          </div>
         </div>
       </div>
     </div>
-  </div> -->
-  <!-- /Row -->
-  <!-- /video section -->
-  <div class="row">
-    <div style="padding:75% 0 0 0;position:relative;"><iframe
-        src="https://player.vimeo.com/video/838114843?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479"
-        frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen
-        style="position:absolute;top:0;left:0;width:100%;height:100%;"
-        title="2023-06-16_ErikAndersen_CaeNDR_Introduction_Rough"></iframe></div>
-    <script src="https://player.vimeo.com/api/player.js"></script>
   </div>
+  <!-- /row -->
   <div class="row px-2 mb-5">
     <div class="col-12 col-md-6">
       <h2>What is <em>C. elegans</em>?</h2>
