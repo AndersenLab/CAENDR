@@ -371,21 +371,17 @@ def password_protect_site(app):
   # Create mapping of usernames to password environment variables
   # Env vars should hold the name of a secret, in turn containing the password for this account
   profiles = {
-    'mti':  'MODULE_SITE_PASSWORD_MTI',
-    'test': 'MODULE_SITE_PASSWORD_TEST',
+    'SITE_BASICAUTH_MTI_USERNAME':  'SITE_BASICAUTH_MTI_PASSWORD',
+    'SITE_BASICAUTH_TEST_USERNAME': 'SITE_BASICAUTH_TEST_PASSWORD',
   }
 
   # Create the set of user accounts, skipping any for which the password can't be retrieved
   USERS = {}
-  for username, password_var in profiles.items():
-    password_secret = get_env_var(password_var, can_be_none=True)
-    if password_secret is None:
-      logger.error(f'[SITE-PASSWORD] Could not create password-protected account "{username}": {ex}')
-      continue
+  for username_secret, password_secret in profiles.items():
     try:
-      USERS[username] = generate_password_hash(get_secret(password_secret))
+      USERS[get_secret(username_secret)] = generate_password_hash(get_secret(password_secret))
     except Exception as ex:
-      logger.error(f'[SITE-PASSWORD] Could not create password-protected account "{username}": {ex}')
+      logger.error(f'[SITE-PASSWORD] Could not create password-protected account for "{username_secret}": {ex}')
 
   # If no user accounts could be created, raise an error
   if len(USERS) == 0:
