@@ -56,6 +56,30 @@
     text-align: center;
   }
 
+  .leaflet-control-layers {
+    width: 165px;
+    padding: 15px;
+  }
+
+  .leaflet-control-layers-overlays>label>div{
+    display: flex;
+    align-items: baseline;
+  }
+  .leaflet-control-layers-overlays span {
+    display: flex;
+    justify-content: space-between;
+    flex-grow: 1;
+    margin-left: 0.5rem
+  }
+
+  #selectSpecies {
+    position:absolute;
+    top: 1rem;
+    right: 0;
+    z-index: 1000;
+    padding: 15px;
+  }
+
   .popup {
     position:relative;
     z-index: 2;
@@ -73,12 +97,38 @@
       <button class="btn btn-primary" id="zoomIn" tabindex="-1"><i class="bi bi-plus-circle"></i></button>
       <button class="btn btn-primary" id="zoomOut" tabindex="-1"><i class="bi bi-dash-circle"></i></button>
     </div>
-      <form id="strains" aria-hidden="true">
-        <p tabindex="-1"><strong>Species:</strong></p>
-        <div><input type='checkbox' name='filters' value='elegans_layer' checked tabindex="-1"><i> C. elegans</i></div>
-        <div><input type='checkbox' name='filters' value='briggsae_layer' tabindex="-1"><i> C. briggsae</i></div>
-        <div><input type='checkbox' name='filters' value='tropicalis_layer' tabindex="-1"><i> C. tropicalis</i></div>
-      </form>
+      <btn
+        class="position-absolute d-block d-md-none btn text-bg-light rounded-pill text-center mobileSpeciesSelect"
+        onclick="toggleSpecies();"><i class="bi bi-check-all me-1"></i> Species
+      </btn>
+      <!-- <div class="d-none d-md-block shadow-sm rounded-2 text-bg-light mt-5 mt-md-0 me-2 me-md-3 p-3" style="width:165px;"
+        id="selectSpecies">
+        <form id="strains" aria-hidden="true">
+          <p tabindex="-1"><strong>Species:</strong></p>
+          <div class="d-flex justify-content-between mb-2">
+            <div class="form-check">
+              <input class="form-check-input" type='checkbox' name='filters' value='elegans_layer' id="elegansCheck" checked tabindex="-1">
+              <label class="form-check-label" for="elegansCheck"><i>C. elegans</i></label>
+            </div>
+            <img src='{{ ext_asset("img/icons/elegansMarkerOutline.svg") }}' style="height:18px;width:auto;" alt="">
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <div class="form-check">
+              <input class="form-check-input" type='checkbox' name='filters' value='briggsae_layer' id="briggsaeCheck" tabindex="-1">
+              <label class="form-check-label" for="briggsaeCheck"><i> C. briggsae</i></label>
+            </div>
+            <img src='{{ ext_asset("img/icons/briggsaeMarkerOutline.svg") }}' style="height:18px;width:auto;" alt="">
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <div class="form-check">
+              <input class="form-check-input" type='checkbox' name='filters' value='tropicalis_layer' id="tropicalisCheck" tabindex="-1">
+              <label class="form-check-label" for="tropicalisCheck"><i> C. tropicalis</i></label>
+            </div>
+            <img src='{{ ext_asset("img/icons/tropicalisMarkerOutline.svg") }}'
+              style="height:18px;width:auto;" alt="">
+          </div>
+        </form>
+      </div> -->
     </div>
     <div class="text-center my-2">
       <small><strong>Click a pin to see information about <i>species</i> wild isolate</strong></small>
@@ -90,20 +140,20 @@
 // Icons
 {% autoescape off %}
 const icon_elegans = L.icon({
-    iconUrl: '{{ ext_asset("img/icons/elegansMarkerOutline.svg") }}',
+    iconUrl: '{{ ext_asset("img/icons/elegansMarker.png") }}',
     iconSize: [20, 30],
     iconAnchor: [12, 16],
     popupAnchor: [0, -15],
 });
 
 const icon_briggsae = L.icon({
-    iconUrl: '{{ ext_asset("img/icons/briggsaeMarkerOutline.svg") }}',
+    iconUrl: '{{ ext_asset("img/icons/briggsaeMarker.png") }}',
     iconSize: [20, 30],
     iconAnchor: [12, 16],
     popupAnchor: [0, -15],
 });
 const icon_tropicalis = L.icon({
-    iconUrl: '{{ ext_asset("img/icons/tropicalisMarkerOutline.svg") }}',
+    iconUrl: '{{ ext_asset("img/icons/tropicalisMarker.png") }}',
     iconSize: [20, 30],
     iconAnchor: [12, 16],
     popupAnchor: [0, -15],
@@ -173,7 +223,6 @@ function set_marker_color (species) {
 function formatDate(date) {
   return String(date).replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3")
 }
-
 $.getJSON('/strains', function(strain_info) {
   strain_info.sort(naturalCompare)
   strain_info.forEach(function(d) {
@@ -204,7 +253,6 @@ $.getJSON('/strains', function(strain_info) {
                                                         const original_icon = set_marker_color(d.species)
                                                         marker.setIcon(original_icon)
                                                       })
-                              
       marker.bindPopup(popup_content)
 
       if (marker.options.species === Species.ELEGANS) {
@@ -222,36 +270,48 @@ $.getJSON('/strains', function(strain_info) {
   const elegans_layer = L.layerGroup(elegans)
   const briggsae_layer = L.layerGroup(briggsae)
   const tropicalis_layer = L.layerGroup(tropicalis)
-
-  let overlays = L.layerGroup().addLayer(elegans_layer).addTo(map)
-
-  function showStrains() {
-    const filters = document.getElementById('strains').filters
-
-    const checked_species = []
-    for (let i = 0; i < filters.length; i++) {
-      if(filters[i].checked) checked_species.push(filters[i].value)
-    }
-    overlays.clearLayers()
-
-    if(checked_species.includes('elegans_layer')) {
-    overlays.addLayer(elegans_layer)
-    }
-    if(checked_species.includes('briggsae_layer')) {
-    overlays.addLayer(briggsae_layer)
-    }
-    if(checked_species.includes('tropicalis_layer')) {
-    overlays.addLayer(tropicalis_layer)
-    }
+  elegans_layer.addTo(map)
+  const overlaysTest = {
+    '<p><i>C. elegans</i></p><img src={{ ext_asset("img/icons/elegansMarkerOutline.svg") }} style="height:18px;width:auto;" alt="">': elegans_layer,
+    '<p><i>C. briggsae</i></p><img src={{ ext_asset("img/icons/briggsaeMarkerOutline.svg") }} style="height:18px;width:auto;" alt="">': briggsae_layer,
+    '<p><i>C. tropicalis</i></p><img src={{ ext_asset("img/icons/tropicalisMarkerOutline.svg") }} style="height:18px;width:auto;" alt="">': tropicalis_layer
   }
 
-  document.querySelector('#strains').addEventListener('click', e => {
-    if (e.target.tagName !== 'INPUT') return;
 
-    const input = e.target
-    const value = input.value;
-    showStrains(value)
-  })
+  const layerControl = L.control.layers(null, overlaysTest, {collapsed: false}).addTo(map)
+  const title = document.createElement("div")
+  title.innerHTML = '<p class="text-center"><strong>Species:</strong></p>'
+  const firstChild = layerControl.getContainer().firstChild
+  layerControl.getContainer().insertBefore(title, firstChild)
+
+  // let overlays = L.layerGroup().addLayer(elegans_layer).addTo(map)
+
+  // function showStrains() {
+  //   const filters = document.getElementById('strains').filters
+
+  //   const checked_species = []
+  //   for (let i = 0; i < filters.length; i++) {
+  //     if(filters[i].checked) checked_species.push(filters[i].value)
+  //   }
+  //   overlays.clearLayers()
+
+  //   if(checked_species.includes('elegans_layer')) {
+  //   overlays.addLayer(elegans_layer)
+  //   }
+  //   if(checked_species.includes('briggsae_layer')) {
+  //   overlays.addLayer(briggsae_layer)
+  //   }
+  //   if(checked_species.includes('tropicalis_layer')) {
+  //   overlays.addLayer(tropicalis_layer)
+  //   }
+  // }
+
+  // document.querySelector('#strains').addEventListener('click', e => {
+  //   if (e.target.tagName !== 'INPUT') return;
+  //   const input = e.target
+  //   const value = input.value;
+  //   showStrains(value)
+  // })
 })
 
 
