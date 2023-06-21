@@ -292,13 +292,13 @@
                                                     <i>et al.</i></a></td>
                                             <td>
                                                 {% if files.get('haplotype_png') %}
-                                                <a href="{{ files.get('haplotype_png') }}"> haplotype.png </a>
+                                                <a href="{{ files.get('haplotype_png') }}?response-content-disposition=attachment"> haplotype.png </a>
                                                 {% else %}
                                                 haplotype.png is not included in this release
                                                 {% endif %}
                                                 <br />
                                                 {% if files.get('haplotype_pdf') %}
-                                                <a href="{{ files.get('haplotype_pdf')}}"> haplotype.pdf </a>
+                                                <a href="{{ files.get('haplotype_pdf') }}"> haplotype.pdf </a>
                                                 {% else %}
                                                 haplotype.pdf is not included in this release
                                                 {% endif %}
@@ -338,20 +338,21 @@
                                                     <i>et al.</i></a></td>
                                             <td>
                                                 {% if files.get('divergent_regions_strain_bed') %}
-                                                <a
-                                                    href="{{ files.get('divergent_regions_strain_bed') }}">divergent_regions_strain.bed</a>
+                                                <a href="{{ files.get('divergent_regions_strain_bed') }}">
+                                                    {{ release_version }}_{{ species.name }}_divergent_regions_strain.bed
+                                                </a>
                                                 <br />
                                                 {% endif %}
 
                                                 {% if files.get('divergent_regions_strain_bed_gz') %}
-                                                <a
-                                                    href="{{ files.get('divergent_regions_strain_bed_gz') }}">divergent_regions_strain.bed.gz</a>
+                                                <a href="{{ files.get('divergent_regions_strain_bed_gz') }}">
+                                                    {{ release_version }}_{{ species.name }}_divergent_regions_strain.bed.gz</a>
                                                 <br />
                                                 {% endif %}
 
                                                 {% if not (files.get('divergent_regions_strain_bed') or
                                                 files.get('divergent_regions_strain_bed_gz')) %}
-                                                divergent_regions_strain.bed is not included in this release
+                                                {{ release_version }}_{{ species.name }}_divergent_regions_strain.bed is not included in this release
                                                 {% endif %}
                                             </td>
                                         </tr>
@@ -424,7 +425,7 @@
             </div>
             <!-- /Tab - Concordance -->
             <!-- Tab - Haplotypes -->
-            {% if files.get('haplotype_pdf') %}
+            {% if files.get('haplotype_png') %}
             <div class="tab-pane fade show" id="haplotypes" role="tabpanel" aria-labelledby="haplotypes" tabindex="0">
                 <div class="p-5 mb-5 rounded shadow-sm text-bg-light">
                     <div class="row">
@@ -432,9 +433,21 @@
                             <figure class="figure">
                                 <img class="img-fluid" src="{{ files.get('haplotype_png') }}" style="height: 450px; width: auto;">
                                 <figcaption class="text-center">
-                                    <a href="{{ files.get('haplotype_png') }}" target="_blank">Click to open full-sized in a new window</a>
+                                    <a href="{{ files.get('haplotype_png') }}?response-content-disposition=inline" target="_blank">Click to open full-sized in a new window</a>
                                 </figcaption>
                             </figure>
+                            {% if files.get('haplotype_png') %}
+                                <br />
+                                <a href="{{ files.get('haplotype_png') }}?response-content-disposition=attachment" download>
+                                    Download as PNG
+                                </a>
+                            {% endif %}
+                            {% if files.get('haplotype_pdf') %}
+                                <br />
+                                <a href="{{ files.get('haplotype_pdf') }}" download>
+                                    Download as PDF
+                                </a>
+                            {% endif %}
                         </div>
                     </div>
                     <!-- /Row -->

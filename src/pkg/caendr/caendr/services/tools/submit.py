@@ -6,7 +6,7 @@ from caendr.services.logger import logger
 
 from caendr.models.datastore import Container, IndelPrimer, HeritabilityReport, NemascanMapping, SPECIES_LIST
 from caendr.models.error     import CachedDataError, DuplicateDataError, DataFormatError
-from caendr.models.task      import TaskStatus, IndelPrimerTask, HeritabilityTask, NemaScanTask
+from caendr.models.task      import Task, TaskStatus, IndelPrimerTask, HeritabilityTask, NemaScanTask
 
 from caendr.api.strain             import query_strains
 from caendr.api.isotype            import get_distinct_isotypes
@@ -187,7 +187,7 @@ class SubmissionManager():
 
     # Check if user has already submitted this job, and "return" it in a duplicate data error if so
     if not no_cache:
-      cached_entity = cls.check_cached_submission(data_hash, user.name, container)
+      cached_entity = cls.check_cached_submission(data_hash, user.name, container, status=Task.not_err())
       if cached_entity:
         raise DuplicateDataError(cached_entity)
 
@@ -318,7 +318,7 @@ class IndelPrimerSubmissionManager(SubmissionManager):
     data_hash = get_object_hash(data, length=32)
 
     # TODO: Pull this value from somewhere
-    release = SPECIES_LIST[ data['species'] ].indel_primer_ver
+    release = SPECIES_LIST[ data['species'] ].release_pif
 
     # Add release information to data object
     data.update({

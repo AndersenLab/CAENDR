@@ -37,6 +37,7 @@ RUN apt-get update && \
 ENV APP_HOME /site
 WORKDIR $APP_HOME
 
+
 RUN mkdir /gcloud
 RUN cd /gcloud && curl -O "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-380.0.0-linux-x86_64.tar.gz" && tar xvzf google-cloud-sdk-380.0.0-linux-x86_64.tar.gz
 
@@ -48,6 +49,11 @@ RUN python -m pip install --upgrade pip
 
 # Copy local code to container image
 COPY . ./
+
+# Inject the git commit into the file $WORKDIR/module.env
+ARG GIT_COMMIT=GIT_COMMIT_NOT_AVAILABLE
+RUN echo "\n\n# GIT_COMMIT automatically added during the makefile build container" >> module.env
+RUN echo "GIT_COMMIT=$GIT_COMMIT" >> module.env
 
 # Install python modules from pip
 RUN python -m pip install --no-cache-dir -r requirements.txt

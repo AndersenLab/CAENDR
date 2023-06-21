@@ -7,14 +7,17 @@
             <li class="breadcrumb-item"><a href="/">Home</a></li>
             {% if request.blueprint != "primary" %}
             {% if disable_parent_breadcrumb %}
-            <li class="breadcrumb-item"> {{request.blueprint|title|replace('_', ' ')}}</li>
+            <li class="breadcrumb-item"> {{request.blueprint|replace('_', ' ')|title}}</li>
             {% elif alt_parent_breadcrumb %}
             <li class="breadcrumb-item">{{ alt_parent_breadcrumb["title"] }}</li>
             {% elif tool_alt_parent_breadcrumb %}
+                {% if tool_alt_parent_breadcrumb["title"] == 'Strain Catalog' %}
+                <li class="breadcrumb-item">{{request.blueprint|replace('_', ' ')|title}}</li>
+                {% endif %}
             <li class="breadcrumb-item"><a href="{{ tool_alt_parent_breadcrumb.url }}">{{ tool_alt_parent_breadcrumb["title"] }}</a></li>
             {% else %}
             <li class="breadcrumb-item"><a href='{{ url_for(request.blueprint + "." + request.blueprint) }}'>{{
-                    request.blueprint|title }}</a></li>
+                    request.blueprint|replace('_', ' ')|title }}</a></li>
             {% endif %}
             {% endif %}
             {% if title %}

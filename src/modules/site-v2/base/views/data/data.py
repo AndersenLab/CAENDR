@@ -61,21 +61,3 @@ def protocols():
     }
     return render_template('data/protocols.html', **params)
 
-
-#
-# Submit A Strain
-#
-@data_bp.route('/submit')
-@cache.memoize(60*60)
-def submit_strain():
-  """
-      Google form for submitting strains
-  """
-  title = "Submit A Strain"
-  disable_parent_breadcrumb = True
-
-  # TODO: Move this to configurable location
-  #STRAIN_SUBMISSION_FORM = '1w0VjB3jvAZmQlDbxoTx_SKkRo2uJ6TcjjX-emaQnHlQ'
-  #strain_submission_url = f'https://docs.google.com/forms/d/{STRAIN_SUBMISSION_FORM}/viewform?embedded=true'
-  strain_submission_url = "https://docs.google.com/forms/d/1w0VjB3jvAZmQlDbxoTx_SKkRo2uJ6TcjjX-emaQnHlQ/viewform?embedded=true"
-  return render_template('data/submit-strain.html', **locals())
