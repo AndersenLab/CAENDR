@@ -15,7 +15,7 @@ from werkzeug.exceptions import HTTPException
 from config import config
 import pytz
 
-from caendr.models.error import InternalError
+from caendr.models.error import BasicAuthError
 from caendr.services.cloud.postgresql import db, health_database_status
 from base.utils.markdown import render_markdown, render_ext_markdown
 
@@ -391,7 +391,7 @@ def password_protect_site(app):
   if len(USERS) == 0:
     msg = 'Could not password-protect site: no valid accounts.'
     logger.error(f'[SITE-PASSWORD] {msg}')
-    raise InternalError(msg)
+    raise BasicAuthError(msg)
 
   # Initialize basic auth object
   auth = HTTPBasicAuth()
