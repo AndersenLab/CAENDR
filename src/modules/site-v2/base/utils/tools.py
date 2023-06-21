@@ -5,6 +5,7 @@ from caendr.services.logger import logger
 from base.utils.auth import get_current_user, user_is_admin
 from werkzeug.utils import secure_filename
 
+from caendr.models.datastore import IndelPrimer, NemascanMapping, HeritabilityReport
 from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 from caendr.models.error import (
@@ -26,11 +27,25 @@ os.makedirs(uploads_dir, exist_ok=True)
 SUPPORT_EMAIL = get_secret('SUPPORT_EMAIL')
 
 
-def lookup_report(EntityClass, reportId, user=None):
+def get_class_from_kind(kind):
+  for c in [ IndelPrimer, NemascanMapping, HeritabilityReport ]:
+    if kind == c.kind:
+      return c
+
+
+def lookup_report(kind, reportId, user=None, validate_user=True):
 
   # If no user explicitly provided, default to current user
-  if user is None:
+  if validate_user and user is None:
     user = get_current_user()
+
+  # Get & validate the entity class from the provided kind
+  EntityClass = get_class_from_kind(kind)
+  if EntityClass is None:
+    if user_is_admin() or not validate_user:
+      raise ReportLookupError('Invalid report type.', 400)
+    else:
+      raise ReportLookupError('You do not have access to that report.', 401)
 
   # Retrieve the report entity from datastore, or None if no entity with that ID exists
   report = EntityClass.get_ds(reportId)
@@ -39,7 +54,7 @@ def lookup_report(EntityClass, reportId, user=None):
   if report is None:
 
     # Let admins know the report doesn't exist
-    if user_is_admin():
+    if user_is_admin() or not validate_user:
       raise ReportLookupError('This is not a valid report URL.', 404)
 
     # For all other users, display a default "no access" message
@@ -47,7 +62,7 @@ def lookup_report(EntityClass, reportId, user=None):
       raise ReportLookupError('You do not have access to that report.', 401)
 
   # If the user doesn't have permission to view this report, show an error message
-  if not (report.username == user.name or user_is_admin()):
+  if validate_user and not (report.username == user.name or user_is_admin()):
     raise ReportLookupError('You do not have access to that report.', 401)
 
   # If all checks passed, return the report entity
@@ -114,7 +129,7 @@ def try_submit(EntityClass, user, data, no_cache):
   except DuplicateDataError as ex:
 
     # Log the event
-    logger.debug(f'User resubmitted duplicate {EntityClass.kind} data: id = {ex.report.id}, data hash = {ex.report.data_hash}, status = {ex.report["status"]}')
+    logger.debug(f'(CACHE HIT) User resubmitted duplicate {EntityClass.kind} data: id = {ex.report.id}, data hash = {ex.report.data_hash}, status = {ex.report["status"]}')
 
     # Return the matching entity
     return {
@@ -123,13 +138,14 @@ def try_submit(EntityClass, user, data, no_cache):
       'ready':     ex.report['status'] == TaskStatus.COMPLETE,
       'data_hash': ex.report.data_hash,
       'id':        ex.report.id,
+      'message':   'You have already submitted this data file. Here\'s your previously generated report.',
     }, 200
 
   # Duplicate job submission from another user
   except CachedDataError as ex:
 
     # Log the event
-    logger.debug(f'User submitted cached {EntityClass.kind} data: id = {ex.report.id}, data hash = {ex.report.data_hash}, status = {ex.report["status"]}')
+    logger.debug(f'(CACHE HIT) User submitted cached {EntityClass.kind} data: id = {ex.report.id}, data hash = {ex.report.data_hash}, status = {ex.report["status"]}')
 
     # Return the matching entity
     return {
@@ -138,6 +154,7 @@ def try_submit(EntityClass, user, data, no_cache):
       'ready':     ex.report['status'] == TaskStatus.COMPLETE,
       'data_hash': ex.report.data_hash,
       'id':        ex.report.id,
+      'message':   'A matching report was found.',
     }, 200
 
   # Formatting error in uploaded data file

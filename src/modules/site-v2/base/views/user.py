@@ -24,7 +24,7 @@ def user():
   """
       Redirect base route to the user profile page
   """
-  return redirect(url_for('user.user_profile'))
+  return redirect(url_for('user.user_account'))
 
 
 @user_bp.route("/register", methods=["GET", "POST"])
@@ -72,7 +72,7 @@ def user_recover():
     send_email({
       "from": "no-reply@elegansvariation.org",
       "to": [ email ],
-      "subject": "CeNDR Password Reset",
+      "subject": "CaeNDR Password Reset",
       "text": PASSWORD_RESET_EMAIL_TEMPLATE.format(email=email, password_reset_magic_link=password_reset_magic_link)
     })
     logger.info(f"Sent password reset email: {email}, link: {password_reset_magic_link}")

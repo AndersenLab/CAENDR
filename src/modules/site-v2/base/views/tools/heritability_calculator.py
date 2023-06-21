@@ -71,12 +71,14 @@ def results_columns():
 @heritability_calculator_bp.route('')
 def heritability_calculator():
   title = "Heritability Calculator"
-  alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
+  tool_alt_parent_breadcrumb = {"title": "Tools", "url": url_for('tools.tools')}
   form = HeritabilityForm()
   hide_form = True
   strain_list = []
   species_list = SPECIES_LIST
-  sample_data_url = generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/heritability_example.tsv')
+  elegans_sample_data_url = generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/heritability_example_elegans.tsv')
+  briggsae_sample_data_url = generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/heritability_example_briggsae.tsv')
+  tropicalis_sample_data_url = generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/heritability_example_tropicalis.tsv')
   return render_template('tools/heritability_calculator/heritability-calculator.html', **locals())
 
 
@@ -176,6 +178,9 @@ def submit():
     if not code == 200:
       flash(response['message'], 'danger')
 
+    elif response.get('message') and response['ready']:
+      flash(response.get('message'), 'success')
+
     # Return the response
     return jsonify( response ), code
 
@@ -228,7 +233,7 @@ def report(id):
   # Fetch requested heritability report
   # Ensures the report exists and the user has permission to view it
   try:
-    hr = lookup_report(HeritabilityReport, id, user=user)
+    hr = lookup_report(HeritabilityReport.kind, id, user=user)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:

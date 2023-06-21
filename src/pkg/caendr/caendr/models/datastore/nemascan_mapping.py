@@ -16,6 +16,8 @@ class NemascanMapping(DataJobEntity):
   _blob_prefix = NEMASCAN_REPORT_PATH_PREFIX
   _input_file  = NEMASCAN_INPUT_FILE
 
+  _report_display_name = 'Genetic Mapping'
+
   __result_infix = NEMASCAN_RESULT_PATH_INFIX
   __input_data_path = INPUT_DATA_PATH
   __report_path = REPORT_DATA_PREFIX
@@ -74,11 +76,11 @@ class NemascanMapping(DataJobEntity):
       if check_blob_exists(self.get_bucket_name(), path):
         return path
       else:
-        logger.error(f'Genetic Mapping report {self.id} lists its report path as "{path}", but this file does not exist. Recomputing...')
+        logger.warn(f'Genetic Mapping report {self.id} lists its report path as "{path}", but this file does not exist. Recomputing...')
 
     # If job threw an error, don't search for report path
     if self['status'] == TaskStatus.ERROR:
-      logger.error(f'Trying to compute report path for Genetic Mapping report "{self.id}", but job returned an error.')
+      logger.warn(f'Trying to compute report path for Genetic Mapping report "{self.id}", but job returned an error. Returning None.')
       return None
 
     # Get a list of all files with this report's prefix

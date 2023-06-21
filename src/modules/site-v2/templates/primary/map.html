@@ -11,7 +11,7 @@
   }
 
   #zoomIn {
-    border-bottom: 2px solid var(--bs-white);
+    border-bottom: 2px solid var(--bs-dark);
   }
   .leaflet-control-zoom.leaflet-bar {
     border: 0;
@@ -32,30 +32,21 @@
   }
 
   .leaflet-popup-content-wrapper {
-    background-color: var(--bs-white);
+    background-color: var(--bs-light);
     color: var(--bs-black);
     font-size: 1rem;
     padding: .5em;
   }
 
   .leaflet-popup-tip {
-    background-color: var(--bs-white);
-  }
-
-  #strains {
-    position:absolute;
-    top: 1rem;
-    right: 1rem;
-    z-index: 1000;
-    background-color: var(--bs-primary);
-    color: white;
-    padding: 15px;
+    background-color: var(--bs-light);
   }
 
   #strains > p {
     text-align: center;
   }
 
+<<<<<<< HEAD
   .leaflet-control-layers {
     width: 165px;
     padding: 15px;
@@ -72,6 +63,8 @@
     margin-left: 0.5rem
   }
 
+=======
+>>>>>>> development
   #selectSpecies {
     position:absolute;
     top: 1rem;
@@ -90,18 +83,43 @@
     line-height: 1.75em;
     padding:0;
   }
+
+  .mobileSpeciesSelect {
+    z-index: 1000;
+    top: 1rem;
+    right: 1rem;
+  }
+
+  input.speciesCheckbox {
+    height:40px;
+    width:auto;
+  }
+
 </style>
 
     <div class="position-relative" id="map" aria-hidden="true">
+<<<<<<< HEAD
       <div class="btn-group-vertical m-3 zoomContainer" role="group" aria-hidden="true">
       <button class="btn btn-primary" id="zoomIn" tabindex="-1"><i class="bi bi-plus-circle"></i></button>
       <button class="btn btn-primary" id="zoomOut" tabindex="-1"><i class="bi bi-dash-circle"></i></button>
     </div>
+=======
+      <div class="btn-group-vertical shadow-sm m-3 zoomContainer" role="group" aria-hidden="true">
+        <button class="btn text-bg-light d-none d-md-block" id="zoomIn" tabindex="-1"><i
+            class="bi bi-plus-circle"></i></button>
+        <button class="btn text-bg-light d-none d-md-block" id="zoomOut" tabindex="-1"><i
+            class="bi bi-dash-circle"></i></button>
+      </div>
+>>>>>>> development
       <btn
         class="position-absolute d-block d-md-none btn text-bg-light rounded-pill text-center mobileSpeciesSelect"
         onclick="toggleSpecies();"><i class="bi bi-check-all me-1"></i> Species
       </btn>
+<<<<<<< HEAD
       <!-- <div class="d-none d-md-block shadow-sm rounded-2 text-bg-light mt-5 mt-md-0 me-2 me-md-3 p-3" style="width:165px;"
+=======
+      <div class="d-none d-md-block shadow-sm rounded-2 text-bg-light mt-5 mt-md-0 me-2 me-md-3 p-3" style="width:165px;"
+>>>>>>> development
         id="selectSpecies">
         <form id="strains" aria-hidden="true">
           <p tabindex="-1"><strong>Species:</strong></p>
@@ -128,7 +146,11 @@
               style="height:18px;width:auto;" alt="">
           </div>
         </form>
+<<<<<<< HEAD
       </div> -->
+=======
+      </div>
+>>>>>>> development
     </div>
     <div class="text-center my-2">
       <small><strong>Click a pin to see information about <i>species</i> wild isolate</strong></small>
@@ -277,6 +299,7 @@ $.getJSON('/strains', function(strain_info) {
     '<p><i>C. tropicalis</i></p><img src={{ ext_asset("img/icons/tropicalisMarkerOutline.svg") }} style="height:18px;width:auto;" alt="">': tropicalis_layer
   }
 
+<<<<<<< HEAD
 
   const layerControl = L.control.layers(null, overlaysTest, {collapsed: false}).addTo(map)
   const title = document.createElement("div")
@@ -312,6 +335,15 @@ $.getJSON('/strains', function(strain_info) {
   //   const value = input.value;
   //   showStrains(value)
   // })
+=======
+  document.querySelector('#strains').addEventListener('click', e => {
+    if (e.target.tagName !== 'INPUT') return;
+    
+    const input = e.target
+    const value = input.value;
+    showStrains(value)
+  })
+>>>>>>> development
 })
 
 
@@ -326,6 +358,15 @@ $.getJSON('/strains', function(strain_info) {
     map.setZoom(map.getZoom() - 1)
   });
 
+</script>
+
+<script>
+  //Toggle mobile species select visibility
+  function toggleSpecies() {
+  const selectSpecies = document.getElementById("selectSpecies");
+  selectSpecies.classList.toggle("d-none");
+  console.log("Class toggled!");
+}
 </script>
 
 {% endblock %}

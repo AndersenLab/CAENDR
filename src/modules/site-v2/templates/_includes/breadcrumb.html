@@ -3,13 +3,15 @@
 {% if request.blueprint and request.path != "/" %}
 <div class="container-fluid">
     <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
+        <ol class="breadcrumb mx-5 mt-1 mb-4 mt-md-5 mb-md-5 mx-md-5">
             <li class="breadcrumb-item"><a href="/">Home</a></li>
             {% if request.blueprint != "primary" %}
             {% if disable_parent_breadcrumb %}
             <li class="breadcrumb-item"> {{request.blueprint|title|replace('_', ' ')}}</li>
             {% elif alt_parent_breadcrumb %}
             <li class="breadcrumb-item">{{ alt_parent_breadcrumb["title"] }}</li>
+            {% elif tool_alt_parent_breadcrumb %}
+            <li class="breadcrumb-item"><a href="{{ tool_alt_parent_breadcrumb.url }}">{{ tool_alt_parent_breadcrumb["title"] }}</a></li>
             {% else %}
             <li class="breadcrumb-item"><a href='{{ url_for(request.blueprint + "." + request.blueprint) }}'>{{
                     request.blueprint|title }}</a></li>

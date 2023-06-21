@@ -27,6 +27,9 @@ class DataJobEntity(JobEntity, UserOwnedEntity):
   _input_file  = None
   _result_file = None
 
+  # Display name for reports of this type, used for human-readable messages & notifications
+  _report_display_name = None
+
 
   ## Initialization ##
 
@@ -45,6 +48,13 @@ class DataJobEntity(JobEntity, UserOwnedEntity):
 
     # Initialize from superclass
     super().__init__(name_or_obj, *args, **kwargs)
+
+
+  @classmethod
+  def get_report_display_name(cls):
+    if cls._report_display_name is None:
+      raise NotImplementedError(f'Class {cls.__name__} must define a value for _report_display_name.')
+    return cls._report_display_name
 
 
 

@@ -51,7 +51,7 @@
                                 </div>
                                 <div class="card-body">
                                     <p class="card-text">
-                                        {{ render_ext_markdown(files.get('summary')) }}
+                                        {{ render_ext_markdown(files.get('summary'), ignore_err=true, backup_text="*Release summary is not available at this time.*") }}
                                     </p>
                                 </div>
                             </div>
@@ -222,7 +222,11 @@
                                             <td>The reference genome build from Wormbase used for alignment and
                                                 annotation.</td>
                                             <td class="text-center">
+                                                {% if fasta_path %}
                                                 <a class="btn btn-primary text-light" href="{{ fasta_path }}">{{ fasta_name }}</a>
+                                                {% else %}
+                                                Reference genome FASTA file is not included in this release
+                                                {% endif %}
                                             </td>
                                         </tr>
                                         <tr>
@@ -425,8 +429,12 @@
                 <div class="p-5 mb-5 rounded shadow-sm text-bg-light">
                     <div class="row">
                         <div class="col">
-                            <object style="width:100%;height:200vh;" type="application/pdf"
-                                data="{{ files.get('haplotype_pdf') }}"></object>
+                            <figure class="figure">
+                                <img class="img-fluid" src="{{ files.get('haplotype_png') }}" style="height: 450px; width: auto;">
+                                <figcaption class="text-center">
+                                    <a href="{{ files.get('haplotype_png') }}" target="_blank">Click to open full-sized in a new window</a>
+                                </figcaption>
+                            </figure>
                         </div>
                     </div>
                     <!-- /Row -->

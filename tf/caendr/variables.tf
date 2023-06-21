@@ -19,6 +19,7 @@ variable "GOOGLE_CLOUDSQL_SERVICE_ACCOUNT_NAME" {}
 variable "MODULE_API_PIPELINE_TASK_CONTAINER_NAME" { }
 variable "MODULE_API_PIPELINE_TASK_CONTAINER_VERSION" { }
 variable "MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME" { }
+variable "MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME" { }
 variable "MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME" { }
 variable "MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME" { }
 variable "MODULE_API_PIPELINE_TASK_PUB_SUB_SUBSCRIPTION_NAME" { }
@@ -73,4 +74,6 @@ variable "JWT_SECRET_KEY" { sensitive = true }
 variable "PASSWORD_PEPPER" { sensitive = true }
 variable "MAILGUN_API_KEY" { sensitive = true }
 variable "CC_EMAILS" { sensitive = true }
+variable "CAENDR_API_SITE_ACCESS_TOKEN" { sensitive = true }
+variable "NO_REPLY_EMAIL" { sensitive = true }
 

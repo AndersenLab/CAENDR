@@ -12,6 +12,8 @@ class HeritabilityReport(DataJobEntity):
   _input_file  = H2_INPUT_FILE
   _result_file = H2_RESULT_FILE
 
+  _report_display_name = 'Heritability'
+
 
   @classmethod
   def get_props_set(cls):

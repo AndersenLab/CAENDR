@@ -132,6 +132,9 @@ def update_task():
     try:
       logger.debug("updating the pipeline operation record...")
       op = update_pipeline_operation_record(operation)
+      if op == None:
+        logger.warn(f"Nothing to do. GLS operation could not be found. bailing out.")
+        return jsonify({'status': 'NOT_FOUND'}), 404
 
       logger.debug(f"updating all linked status records for operation {op}: {dict(op)}")
       update_all_linked_status_records(op['operation_kind'], operation)

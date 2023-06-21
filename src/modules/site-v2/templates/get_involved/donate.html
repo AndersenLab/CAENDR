@@ -6,6 +6,11 @@
   .form-group {
     margin: 1rem 0 1rem 0;
   }
+
+  .input-group-addon {
+    margin-right: .5rem;
+    padding-top: .25rem;
+  }
 </style>
 {% endblock %}
 
@@ -25,9 +30,9 @@
           <form id='form-submit' method="POST">
             {{ form.csrf_token }}
             {{ render_field(form.name) }}
-            {{ render_field(form.address, placeholder="123 Sheridan Rd. \nChicago, IL. 60657") }}
+            {{ render_field(form.address) }}
             {{ render_field(form.email, placeholder="Email") }}
-            {{ render_field(form.total, form_prefix="$", form_suffix=".00") }}
+            {{ render_field(form.total, form_prefix="$") }}
             {{ form.recaptcha }}
           <br />
           <button id='donate_amount' type='submit' value="Checkout" class="btn btn-secondary text-light"><span class="bi bi-cart-fill" aria-hidden="true"></span> Donate</button>

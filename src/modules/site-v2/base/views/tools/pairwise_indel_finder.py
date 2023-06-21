@@ -7,11 +7,12 @@ from base.forms import PairwiseIndelForm
 from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
 from base.utils.tools import lookup_report, try_submit
 
-from caendr.models.datastore.browser_track import BrowserTrack, BrowserTrackDefault
-from caendr.models.datastore import Species, SPECIES_LIST, IndelPrimer
+from caendr.models.datastore.browser_track import BrowserTrackDefault
+from caendr.models.datastore import Species, SPECIES_LIST, IndelPrimer, DatasetRelease
 from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupError, EmptyReportDataError, EmptyReportResultsError
 from caendr.models.task import TaskStatus
 from caendr.services.cloud.storage import check_blob_exists
+from caendr.services.dataset_release import get_dataset_release
 from caendr.utils.constants import CHROM_NUMERIC
 from caendr.utils.data import get_file_format
 
@@ -126,7 +127,7 @@ def pairwise_indel_finder():
     # Page info
     "title": "Pairwise Indel Finder",
     "form":  PairwiseIndelForm(request.form),
-    "alt_parent_breadcrumb": {
+    "tool_alt_parent_breadcrumb": {
       "title": "Tools",
       "url":   url_for('tools.tools')
     },
@@ -136,7 +137,7 @@ def pairwise_indel_finder():
     "species_list": SPECIES_LIST,
 
     # Data locations
-    "fasta_url": BrowserTrack.get_fasta_path_full().get_string_safe(),
+    "fasta_url": DatasetRelease.get_fasta_filepath_url_template().get_string_safe(),
 
     # List of Species class fields to expose to the template
     # Optional - exposes all attributes if not provided
@@ -144,12 +145,17 @@ def pairwise_indel_finder():
       'name', 'short_name', 'project_num', 'wb_ver', 'latest_release',
     ],
 
+    'latest_release_genomes': {
+      species_name: get_dataset_release(species['latest_release'])['genome'] for species_name, species in SPECIES_LIST.items()
+    },
+
     # String replacement tokens
     # Maps token to the field in Species object it should be replaced with
     'tokens': {
       'WB':      'wb_ver',
       'RELEASE': 'latest_release',
       'PRJ':     'project_num',
+      'GENOME':  'fasta_genome',
     },
 
     # Misc
@@ -173,7 +179,7 @@ def list_results():
 
     # Page info
     'title': ('All' if show_all else 'My') + ' Primer Reports',
-    'alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools'), },
+    'tool_alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools'), },
 
     # User info
     'user':  user,
@@ -264,7 +270,7 @@ def report(id, file_ext=None):
     # Fetch requested primer report
     # Ensures the report exists and the user has permission to view it
     try:
-      report = lookup_report(IndelPrimer, id)
+      report = lookup_report(IndelPrimer.kind, id)
 
     # If the report lookup request is invalid, show an error message
     except ReportLookupError as ex:
@@ -324,7 +330,7 @@ def report(id, file_ext=None):
       # Page info
       'title':    f"Indel Primer Results {data['site']}",
       'subtitle': f"{data['strain_1']} | {data['strain_2']}",
-      'alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools') },
+      'tool_alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools') },
 
       # GCP data info
       'data_hash': report.data_hash,

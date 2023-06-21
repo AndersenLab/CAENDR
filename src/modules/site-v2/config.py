@@ -40,6 +40,23 @@ BOOL_PROPS = [
   'JWT_CSRF_CHECK_FORM'
 ]
 
+MODULE_ENV_VARS = [
+  'MODULE_SITE_CONTAINER_NAME',
+  'MODULE_SITE_CONTAINER_VERSION',
+  'MODULE_SITE_SERVING_STATUS',
+  'MODULE_SITE_CLOUDRUN_SA_NAME',
+  'MODULE_SITE_BUCKET_PHOTOS_NAME',
+  'MODULE_SITE_BUCKET_ASSETS_NAME',
+  'MODULE_SITE_BUCKET_PUBLIC_NAME',
+  'MODULE_SITE_BUCKET_PRIVATE_NAME',
+  'MODULE_SITE_SENTRY_NAME',
+  'MODULE_SITE_CART_COOKIE_NAME',
+  'MODULE_SITE_CART_COOKIE_AGE_SECONDS',
+  'MODULE_SITE_CART_COOKIE_NAME',
+  'MODULE_SITE_STRAIN_SUBMISSION_URL',
+  'MODULE_SITE_PASSWORD_RESET_EXPIRATION_SECONDS'
+]
+
 TEMPLATE_PROPS = []
 
 def get_config():
@@ -48,6 +65,14 @@ def get_config():
 
   # Load environment config values
   config.update(list_env_vars('.env'))
+  config.update(list_env_vars('module.env'))
+
+  # ENV vars come from CloudRun, If they exist, override all other envs from .env and module.env
+  for key in MODULE_ENV_VARS:
+    value = os.getenv(key, None)
+    if value is not None:
+      config[key] = value
+
 
   config['PERMANENT_SESSION_LIFETIME'] = int(config.get('PERMANENT_SESSION_LIFETIME', '86400'))
 

@@ -5,73 +5,76 @@
 {% endblock %}
 
 {% block content %}
-<div class="row row-margin">
 
-  <div class="text-center col-lg-4 col-md-6 col-sm-6">
-    <a href="{{ url_for('genome_browser.genome_browser') }}" style="text-decoration: none;">
-      <div class="menu-card">
-        <img class="card-img-top" src="{{ ext_asset('img/icons/genome_browser.png') }}" alt="Genome Browser">
+<div class="container px-5 pb-5">
+  <div class="row row-cols-1 row-cols-md-3 g-5">
+    <!-- Card Column -->
+    <div class="col mb-3">
+      <div class="card h-100 shadow text-center pt-5 mt-5 mx-auto cardBorderBottom" style="min-height:20rem;">
+        <i class="bi bi-gear-fill text-info"></i>
         <div class="card-body">
-          <h4 class="card-title">Genome Browser</h4>
-          <p class="card-text text-center">Use the IGV browser to compare strain variant data</p>
+          <h2 class="h4 text-dark"><a class="stretched-link"
+              href="{{ url_for('genome_browser.genome_browser')                   }}">
+              Genome Browser
+            </a></h2>
         </div>
-      </div> {# /card #}
-    </a>
-  </div> {#/col #}
-
-
-  <div class="text-center col-lg-4 col-md-6 col-sm-6">
-    <a href="{{ url_for('variant_annotation.variant_annotation') }}" style="text-decoration: none;">
-      <div class="menu-card">
-        <img class="card-img-top" src="{{ ext_asset('img/icons/variant_annotation.png') }}" alt="Variant Annotation">
+      </div>
+    </div>
+    <!-- /Card Column -->
+    <!-- Card Column -->
+    <div class="col mb-3">
+      <div class="card h-100 shadow text-center pt-5 mt-5 mx-auto cardBorderBottom" style="min-height:20rem;">
+        <i class="bi bi-gear-fill text-info"></i>
         <div class="card-body">
-          <h4 class="card-title">Variant Annotation</h4>
-          <p class="card-text text-center">Search and sort genetic variants and their predicted consequences by strain</p>
+          <h2 class="h4 text-dark"><a class="stretched-link"
+              href="{{ url_for('variant_annotation.variant_annotation')           }}">
+              Variant Annotation
+            </a></h2>
         </div>
-      </div> {# /card #}
-    </a>
-  </div> {#/col #}
-
-
-  <div class="text-center col-lg-4 col-md-6 col-sm-6">
-    <a href="{{ url_for('genetic_mapping.genetic_mapping') }}" style="text-decoration: none;">
-      <div class="menu-card">
-        <img class="card-img-top" src="static/img/pin.png" alt="Genetic Mapping">
+      </div>
+    </div>
+    <!-- /Card Column -->
+    <!-- Card Column -->
+    <div class="col mb-3">
+      <div class="card h-100 shadow text-center pt-5 mt-5 mx-auto cardBorderBottom" style="min-height:20rem;">
+        <i class="bi bi-gear-fill text-info"></i>
         <div class="card-body">
-          <h4 class="card-title">Genetic Mapping</h4>
-          <p class="card-text text-center">Facilitation of genetic mappings to empower researchers in quantitative genetics</p>
+          <h2 class="h4 text-dark"><a class="stretched-link"
+              href="{{ url_for('genetic_mapping.genetic_mapping')                 }}">
+              Genetic Mapping
+            </a></h2>
         </div>
-      </div> {# /card #}
-    </a>
-  </div> {#/col #}
-
-
-  <div class="text-center col-lg-4 col-md-6 col-sm-6">
-    <a href="{{ url_for('pairwise_indel_finder.pairwise_indel_finder') }}" style="text-decoration: none;">
-      <div class="menu-card">
-        <img class="card-img-top" src="{{ ext_asset('img/icons/pairwise_indel_finder.png') }}" alt="Pairwise Indel Finder">
+      </div>
+    </div>
+    <!-- /Card Column -->
+    <!-- Card Column -->
+    <div class="col mb-3">
+      <div class="card h-100 shadow text-center pt-5 mt-5 mx-auto cardBorderBottom" style="min-height:20rem;">
+        <i class="bi bi-gear-fill text-info"></i>
         <div class="card-body">
-          <h4 class="card-title">Pairwise Indel Finder</h4>
-          <p class="card-text text-center">Compare any two wild C. elegans strains for insertion-deletion (indel) variants that can be genotyped using PCR</p>
+          <h2 class="h4 text-dark"><a class="stretched-link"
+              href="{{ url_for('pairwise_indel_finder.pairwise_indel_finder')     }}">
+              Pairwise Indel Finder
+            </a></h2>
         </div>
-      </div> {# /card #}
-    </a>
-  </div> {#/col #}
-
-
-  <div class="text-center col-lg-4 col-md-6 col-sm-6">
-    <a href="{{ url_for('heritability_calculator.heritability_calculator') }}" style="text-decoration: none;">
-      <div class="menu-card">
-        <img class="card-img-top" src="{{ ext_asset('img/icons/heritability_calculator.png') }}" alt="Heritability Calculator">
+      </div>
+    </div>
+    <!-- /Card Column -->
+    <!-- Card Column -->
+    <div class="col mb-3">
+      <div class="card h-100 shadow text-center pt-5 mt-5 mx-auto cardBorderBottom" style="min-height:20rem;">
+        <i class="bi bi-gear-fill text-info"></i>
         <div class="card-body">
-          <h4 class="card-title">Heritability Calculator</h4>
-          <p class="card-text text-center">Calculate the broad-sense heritability for your trait of interest using a set of C. elegans wild isolates</p>
+          <h2 class="h4 text-dark"><a class="stretched-link"
+              href="{{ url_for('heritability_calculator.heritability_calculator') }}">
+              Heritability Calculator
+            </a></h2>
         </div>
-      </div> {# /card #}
-    </a>
-  </div> {#/col #}
-
-</div> {# /row #}
-
+      </div>
+    </div>
+    <!-- /Card Column -->
+  </div>
+  <!-- /Row -->
+</div> <!-- /Container -->
 {% endblock %}
 

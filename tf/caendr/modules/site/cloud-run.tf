@@ -62,16 +62,13 @@ resource "google_cloud_run_service" "site" {
     }
   }
 
-
-
   traffic {
     percent         = 100
     latest_revision = true
   }
 
-  
-
   depends_on = [
+    google_secret_manager_secret_version.app_engine_group
   ]
 }
 

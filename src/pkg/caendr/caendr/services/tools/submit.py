@@ -535,9 +535,9 @@ def validate_strain(species, force_unique=False, force_unique_msg=None):
     # Check if strain is valid for the desired species
     if value not in valid_names_species:
       if value in valid_names_all:
-        raise DataFormatError(f'The strain { value } is not a valid strain for { species.short_name }. Please enter a valid { species.short_name } strain.', line)
+        raise DataFormatError(f'The strain { value } is not a valid strain for { species.short_name } in our current dataset. Please enter a valid { species.short_name } strain.', line)
       else:
-        raise DataFormatError(f'The strain { value } is not a valid strain name. Please ensure that { value } is valid.', line)
+        raise DataFormatError(f'The strain { value } is not a valid strain name in our current dataset. Please ensure that { value } is valid.', line)
 
     # If desired, keep track of list of strains and throw an error if a duplicate is found
     if force_unique:

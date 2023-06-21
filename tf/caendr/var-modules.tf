@@ -47,6 +47,7 @@ locals {
     "container_name" = var.MODULE_API_PIPELINE_TASK_CONTAINER_NAME,
     "container_version" = var.MODULE_API_PIPELINE_TASK_CONTAINER_VERSION,
     "work_bucket_name" = var.MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME,
+    "data_bucket_name" = var.MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME,
     "pipeline_task_sa_name" = var.MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME,
     "pub_sub_topic_name" = var.MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME,
     "pub_sub_subscription_name" = var.MODULE_API_PIPELINE_TASK_PUB_SUB_SUBSCRIPTION_NAME
@@ -65,7 +66,9 @@ locals {
     "SECRET_KEY" = sensitive(var.SECRET_KEY),
     "JWT_SECRET_KEY" = sensitive(var.JWT_SECRET_KEY), 
     "PASSWORD_PEPPER" = sensitive(var.PASSWORD_PEPPER), 
-    "MAILGUN_API_KEY" = sensitive(var.MAILGUN_API_KEY)
-    "CC_EMAILS" = sensitive(var.CC_EMAILS)
+    "MAILGUN_API_KEY" = sensitive(var.MAILGUN_API_KEY),
+    "CC_EMAILS" = sensitive(var.CC_EMAILS),
+    "CAENDR_API_SITE_ACCESS_TOKEN" = sensitive(var.CAENDR_API_SITE_ACCESS_TOKEN),
+    "NO_REPLY_EMAIL" = sensitive(var.NO_REPLY_EMAIL)
   })
 }

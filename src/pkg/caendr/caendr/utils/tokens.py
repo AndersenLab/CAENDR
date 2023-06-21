@@ -87,6 +87,7 @@ class TokenizedString():
     'WB',
     'SVA',
     'STRAIN',
+    'GENOME',
   }
 
   @classmethod
@@ -156,6 +157,15 @@ class TokenizedString():
     '''
     # TODO: Make sure braces are included around tokens? For JS compatibility
     return self.template.template
+
+
+  @classmethod
+  def replace_string(cls, template, **tokens):
+    cls.validate_tokens(**tokens)
+    try:
+      return Template(template).substitute(**tokens)
+    except:
+      raise MissingTokenError()
 
 
 

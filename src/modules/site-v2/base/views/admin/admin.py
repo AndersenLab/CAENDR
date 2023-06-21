@@ -33,6 +33,6 @@ def admin_strain_sheet():
 @admin_bp.route('/publications')
 @admin_required()
 def admin_publications_sheet():
-  title = "CeNDR Publications Sheet"
+  title = "CaeNDR Publications Sheet"
   sheet_url = f"{GOOGLE_SHEET_PREFIX}/{CENDR_PUBLICATIONS_SHEET}"
   return render_template('admin/google_sheet.html', **locals())
