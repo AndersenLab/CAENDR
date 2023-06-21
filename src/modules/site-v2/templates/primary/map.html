@@ -225,7 +225,7 @@ $.getJSON('/strains', function(strain_info) {
       <div class="popup">
         <ul>
           ${d.species ? `<li><strong>Species:</strong> <i>${d.species}</i></li>` : ''}
-          ${d.isotype ? '<li><strong>Isotype:</strong> <a href="../isotype/' + d.isotype + '">' + d.isotype + '</a></li>' : ''}
+          ${d.isotype ? `<li><strong>Isotype:</strong> <a href="../isotype/${d.isotype}">${d.isotype}</a></li>` : ''}
           ${d.isotype_ref_strain ? `<li><strong>Reference Strain:</strong> ${d.isotype_ref_strain}</li>` : ''}
           ${d.strain ? `<li><strong>Strains:</strong> ${d.strain}</li>` : ''}
           ${d.previous_names ? `<li><strong>Alternative Names:</strong> ${d.previous_names}</li>` : ''}
