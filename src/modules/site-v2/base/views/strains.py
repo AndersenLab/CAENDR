@@ -154,6 +154,9 @@ def request_strains():
     except Exception:
       strain_sets = {}
 
+    # TODO: Both species selectors on this page are rendered from the same form, so they have the same ID
+    # Currently, the mapping sets selector has species disabled because it's the first on the page,
+    # so it satisfies the ID query first.  To be safer, we should assign these different IDs.
     return render_template('strain/catalog.html', **{
       'title': "Strain Catalog",
       'disable_parent_breadcrumb': True,
