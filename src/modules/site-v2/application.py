@@ -357,7 +357,7 @@ def register_request_handlers(app):
   @app.before_request
   def handle_redirects():
     if request.host != MODULE_SITE_HOST:
-      return redirect(request.scheme + "://" + MODULE_SITE_HOST + request.full_path, code=307)
+      return redirect(request.scheme + "://" + MODULE_SITE_HOST + request.full_path, code=301)
 
 
 def password_protect_site(app):
