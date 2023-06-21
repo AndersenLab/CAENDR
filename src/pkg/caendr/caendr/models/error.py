@@ -158,6 +158,12 @@ class EnvVarError(InternalError):
       return 'A required environment variable'
 
 
+class BasicAuthError(InternalError):
+  def __init__(self, description):
+    self.description = description
+    super().__init__()
+
+
 class NonUniqueEntity(InternalError):
   def __init__(self, kind, key, val, matches):
     self.kind = kind
