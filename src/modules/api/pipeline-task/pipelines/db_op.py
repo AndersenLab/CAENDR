@@ -44,7 +44,7 @@ def start_db_op_pipeline(task: DatabaseOperationTask):
 
 def _generate_db_op_pipeline(task: DatabaseOperationTask):
   d = DatabaseOperation(task.id)
-  image_uri = f"{task.container_repo}/{task.container_name}:{task.container_version}"
+  image_uri = d.get_container().uri()
 
   container_name = f"db-op-{d.id}"
   environment = task.args

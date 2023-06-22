@@ -53,7 +53,7 @@ def start_heritability_pipeline(task: HeritabilityTask):
 def _generate_heritability_pipeline_req(task: HeritabilityTask):
   h = HeritabilityReport(task.id)
   
-  image_uri = f"{task.container_repo}/{task.container_name}:{task.container_version}"
+  image_uri = h.get_container().uri()
   container_commands = _get_container_commands(task.container_version)
   logger.debug(f"Using image: {image_uri} with commands: {container_commands}")
 
