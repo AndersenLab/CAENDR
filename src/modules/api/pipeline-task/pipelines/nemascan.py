@@ -38,7 +38,7 @@ COMMAND = 'nemascan-nxf.sh'
 
 def start_nemascan_pipeline(task: NemaScanTask):
   pipeline_req = _generate_nemascan_pipeline_req(task)
-  return start_pipeline(pipeline_req)
+  return start_pipeline(task.id, pipeline_req)
 
 
 def _generate_nemascan_pipeline_req(task: NemaScanTask):

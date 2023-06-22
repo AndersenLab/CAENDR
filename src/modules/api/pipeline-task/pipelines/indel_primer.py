@@ -37,7 +37,7 @@ COMMANDS = ['python', '/indel_primer/main.py']
 
 def start_indel_primer_pipeline(task: IndelPrimerTask):
   pipeline_req = _generate_indel_primer_pipeline_req(task)
-  return start_pipeline(pipeline_req)
+  return start_pipeline(task.id, pipeline_req)
 
 
 def _generate_indel_primer_pipeline_req(task: IndelPrimerTask):

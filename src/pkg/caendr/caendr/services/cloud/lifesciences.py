@@ -26,7 +26,7 @@ MODULE_SITE_HOST = get_env_var('MODULE_SITE_HOST')
 API_SITE_ACCESS_TOKEN = get_secret('CAENDR_API_SITE_ACCESS_TOKEN')
 NO_REPLY_EMAIL = get_secret('NO_REPLY_EMAIL')
 
-NOTIFICATION_LOG_PREFIX = 'email_notification'
+NOTIFICATION_LOG_PREFIX = 'EMAIL_NOTIFICATION'
 
 
 #sa_private_key_b64 = get_secret(MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME)
@@ -44,17 +44,17 @@ def get_operation_id_from_name(operation_name):
     return operation_name
 
 
-def start_pipeline(pipeline_request):
+def start_pipeline(task_id, pipeline_request):
   req_body = get_json_from_class(pipeline_request)
-  logger.debug(f'Starting Pipeline Request: {req_body}')
+  logger.debug(f'[TASK {task_id}] Starting Pipeline Request: {req_body}')
 
   try:
     request = gls_service.projects().locations().pipelines().run(parent=parent_id, body=req_body)
     response = request.execute()
-    logger.debug(f'Pipeline Response: {response}')
+    logger.debug(f'[TASK {task_id}] Pipeline Response: {response}')
     return response
   except Exception as err:
-    logger.error(f"pipeline error: {err}")
+    logger.error(f"[TASK {task_id}] Pipeline Error: {err}")
     raise PipelineRunError(err)
 
 
@@ -103,25 +103,28 @@ def get_pipeline_status(operation_name):
   logger.debug(f'get_pipeline_status: operation_name:{operation_name}')
   request = gls_service.projects().locations().operations().get(name=operation_name)
   response = request.execute()
-  logger.debug(response)
+
+  id = get_operation_id_from_name(operation_name)
+  logger.debug(f'[STATUS {id}] Pipeline status response: {response}')
   return response
 
 
 def update_pipeline_operation_record(operation_name):
   logger.debug(f'update_pipeline_operation_record: operation_name:{operation_name}')
+  id = get_operation_id_from_name(operation_name)
 
   try:
     status = get_pipeline_status(operation_name)
   except: 
-    logger.warn(f"GLS Operation NOT FOUND: {operation_name}")
+    logger.warn(f"[UPDATE {id}] GLS Operation NOT FOUND")
     return
 
-  id = get_operation_id_from_name(operation_name)
   op = PipelineOperation(id)
   if not op._exists:
     logger.warn(f'[UPDATE {id}] PipelineOperation entity with ID {id} not found.')
     return
 
+  logger.info(f"[UPDATE {id}] Done = {status.get('done')}, Error = {status.get('error')}")
   op.set_properties(**{
     'done':  status.get('done'),
     'error': status.get('error'),
@@ -132,11 +135,13 @@ def update_pipeline_operation_record(operation_name):
 
 def update_all_linked_status_records(kind, operation_name):
   logger.debug(f'update_all_linked_status_records: kind:{kind} operation_name:{operation_name}')
+  op_id = get_operation_id_from_name(operation_name)
+
   status = get_pipeline_status(operation_name)
   done = status.get('done')
   error = status.get('error')
   if error:
-    logger.error(f"Error: Kind: {kind} Operation Name: {operation_name} error: {error}")
+    logger.error(f"[UPDATE {op_id}] Error: Kind: {kind} Operation Name: {operation_name} error: {error}")
   if done:
     status = TaskStatus.ERROR if error  else TaskStatus.COMPLETE
   else:
