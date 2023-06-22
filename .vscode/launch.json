@@ -262,6 +262,36 @@
             }
         },
         {
+            "name": "Run Site-v2 (local API)",
+            "type": "python",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/src/modules/site-v2",
+            "console": "integratedTerminal",
+            "module": "flask",
+            "python": "${workspaceFolder}/src/modules/site-v2/venv/bin/python",
+            "envFile": "${workspaceFolder}/src/modules/site-v2/.env",
+            "env": {
+                "ENV": "main",
+                "FLASK_APP": "main.py",
+                "FLASK_ENV": "development",
+                "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "localhost",
+                "MODULE_DB_TIMEOUT": "3",
+                "MODULE_API_PIPELINE_TASK_URL_NAME": "API_PIPELINE_TASK_URL",
+                "API_PIPELINE_TASK_URL": "https://localhost:9090",
+                "CAENDR_USE_SSL": "1",
+                "SENTRY_URL": "",
+                "MODULE_SITE_HOST": "localhost:8080",
+            },
+            "args": [
+                "run",
+                "--host", "localhost",
+                "--port", "8080",
+                "--cert", "adhoc",
+                "--with-threads"
+            ],
+            "jinja": true
+        },
+        {
             "name": "Run API pipeline server (local site)",
             "type": "python",
             "request": "launch",
@@ -278,7 +308,6 @@
                 "SENTRY_URL": "",
                 "MODULE_API_PIPELINE_TASK_URL_NAME": "API_PIPELINE_TASK_URL",
                 "API_PIPELINE_TASK_URL": "https://localhost:9090",
-                // "MODULE_SITE_BASE_URL":  "https://localhost:8080",
                 "MODULE_SITE_HOST": "localhost:8080",
             },
             "args": [
@@ -295,7 +324,7 @@
         {
             "name": "Run Site-v2 + API Pipeline",
             "configurations": [
-                "Run Site-v2 (requires a local Postgres instance or cloud-sql-proxy)",
+                "Run Site-v2 (local API)",
                 "Run API pipeline server (local site)",
             ],
             "stopAll": true
