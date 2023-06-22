@@ -4,11 +4,8 @@ from caendr.services.logger import logger
 from caendr.utils import monitor
 from caendr.utils.env import load_env
 
-
-dotenv_file = '.env'
-load_env(dotenv_file)
-dotenv_module_file = 'module.env'
-load_env(dotenv_module_file)
+load_env('.env')
+load_env('module.env')
 
 monitor.init_sentry("site")
 
