@@ -143,11 +143,11 @@ def update_all_linked_status_records(kind, operation_name):
   if error:
     logger.error(f"[UPDATE {op_id}] Error: Kind: {kind} Operation Name: {operation_name} error: {error}")
   if done:
-    status = TaskStatus.ERROR if error  else TaskStatus.COMPLETE
+    status = TaskStatus.ERROR if error else TaskStatus.COMPLETE
   else:
     status = TaskStatus.RUNNING
 
-  filters=[("operation_name", "=", operation_name)]
+  filters = [("operation_name", "=", operation_name)]
   ds_entities = query_ds_entities(kind, filters=filters, keys_only=True)
   for entity in ds_entities:
     if kind == DatabaseOperation.kind:
