@@ -10,10 +10,12 @@ from base.forms import DonationForm
 from base.utils.auth import jwt_required, get_current_user
 
 from caendr.api.isotype import get_isotypes
+from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.sheets import add_to_order_ws
 from caendr.services.email import send_email, DONATION_SUBMISSION_EMAIL_TEMPLATE
 from caendr.utils.data import get_object_hash
 
+NO_REPLY_EMAIL  = get_secret('NO_REPLY_EMAIL')
 
 get_involved_bp = Blueprint(
   'get_involved', __name__, template_folder='templates'
@@ -57,7 +59,7 @@ def donate():
     order_obj['invoice_hash'] = get_object_hash(order_obj, length=8)
     order_obj['url'] = url_for('request_strains.order_confirmation', invoice_hash=order_obj['invoice_hash'], _external=True)
     send_email({
-      "from": "no-reply@elegansvariation.org",
+      "from": f'CaeNDR <{NO_REPLY_EMAIL}>',
       "to": [order_obj["email"]],
       "cc": config.get("CC_EMAILS"),
       "subject": f"CaeNDR Donation #{order_obj['invoice_hash']}",
