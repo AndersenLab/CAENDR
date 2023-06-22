@@ -36,6 +36,14 @@ gls_service = discovery.build('lifesciences', 'v2beta', credentials=GoogleCreden
 parent_id = f"projects/{GOOGLE_CLOUD_PROJECT_NUMBER}/locations/{GOOGLE_CLOUD_REGION}"
 
 
+def get_operation_id_from_name(operation_name):
+  try:
+    return operation_name.rsplit('/', 1)[-1]
+  except:
+    logger.warn(f'Could not parse operation ID from operation_name "{operation_name}"')
+    return operation_name
+
+
 def start_pipeline(pipeline_request):
   req_body = get_json_from_class(pipeline_request)
   logger.debug(f'Starting Pipeline Request: {req_body}')
@@ -59,7 +67,7 @@ def create_pipeline_operation_record(task, response):
   if name is None or metadata is None:
     raise PipelineRunError(f'Pipeline start response missing expected properties (name = "{name}", metadata = "{metadata}")')
 
-  id = name.rsplit('/', 1)[-1]
+  id = get_operation_id_from_name(name)
   data = {
     'id': id,
     'operation': name,
@@ -106,7 +114,7 @@ def update_pipeline_operation_record(operation_name):
     logger.warn(f"GLS Operation NOT FOUND: {operation_name}")
     return
 
-  id = operation_name.rsplit('/', 1)[-1]
+  id = get_operation_id_from_name(operation_name)
   data = {
     'done': status.get('done'),
     'error': status.get('error')
