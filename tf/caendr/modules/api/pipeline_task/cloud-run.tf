@@ -23,8 +23,8 @@ resource "google_cloud_run_service" "api_pipeline_task" {
 
     metadata {
       annotations = {
-        "autoscaling.knative.dev/maxScale" = 5,
-        "autoscaling.knative.dev/minScale" = 1,
+        "autoscaling.knative.dev/minScale" = var.module_api_pipeline_task_vars.cloudrun_min_scale,
+        "autoscaling.knative.dev/maxScale" = var.module_api_pipeline_task_vars.cloudrun_max_scale,
         "run.googleapis.com/startup-cpu-boost" = true,
         "run.googleapis.com/client-name" = "terraform"
       }
