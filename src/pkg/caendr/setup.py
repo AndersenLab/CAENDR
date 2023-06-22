@@ -11,6 +11,7 @@ setup(
     'Flask==1.1.2',
     'protobuf==3.20.2',
     'google-cloud-appengine-logging==0.1.0',
+    'google_cloud_audit_log==0.2.5',
     'google-api-python-client',
     'google-cloud-datastore',
     'google_cloud_logging',
