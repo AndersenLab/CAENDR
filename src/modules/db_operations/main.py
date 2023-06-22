@@ -16,6 +16,7 @@ load_env('.env')
 monitor.init_sentry("db_operations")
 
 from caendr.services.cloud.postgresql import get_db_conn_uri, get_db_timeout, db, health_database_status
+from caendr.services.cloud.secret import get_secret
 from operations import execute_operation
 
 
@@ -26,6 +27,8 @@ EXTERNAL_DB_BACKUP_PATH          = get_env_var('EXTERNAL_DB_BACKUP_PATH')
 DB_OP                            = get_env_var('DATABASE_OPERATION')
 EMAIL                            = get_env_var('EMAIL',        can_be_none=True)
 OPERATION_ID                     = get_env_var('OPERATION_ID', can_be_none=True)
+
+NO_REPLY_EMAIL = get_secret('NO_REPLY_EMAIL')
 
 client = storage.Client()
 
@@ -122,10 +125,12 @@ def run():
 
   if EMAIL is not None:
     logger.info(f"Sending email to: {EMAIL}")
-    send_email({"from": "no-reply@elegansvariation.org",
-                    "to": EMAIL,
-                    "subject": f"ETL finished for operation: {DB_OP} in {elapsed} seconds",
-                    "text": text })
+    send_email({
+      "from": f'CaeNDR <{NO_REPLY_EMAIL}>',
+      "to": EMAIL,
+      "subject": f"ETL finished for operation: {DB_OP} in {elapsed} seconds",
+      "text": text,
+    })
 
 if __name__ == "__main__":
   try:    
