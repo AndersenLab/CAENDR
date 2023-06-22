@@ -104,10 +104,20 @@ class JobEntity(Entity):
   def status(self, val):
     from caendr.models.task import TaskStatus # Prevents import error
 
-    if not TaskStatus.isValid(val):
+    if not TaskStatus.is_valid(val):
       raise TypeError(f'Cannot set status of {self.kind} job to "{val}".')
 
     self.__status = val
+
+
+  def is_finished(self) -> bool:
+    from caendr.models.task import TaskStatus # Prevents import error
+    return self['status'] in TaskStatus.FINISHED
+
+
+  def is_not_err(self) -> bool:
+    from caendr.models.task import TaskStatus # Prevents import error
+    return self['status'] in TaskStatus.NOT_ERR
 
 
 
