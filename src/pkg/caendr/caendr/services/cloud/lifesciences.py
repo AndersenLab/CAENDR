@@ -68,7 +68,11 @@ def create_pipeline_operation_record(task, response):
     raise PipelineRunError(f'Pipeline start response missing expected properties (name = "{name}", metadata = "{metadata}")')
 
   id = get_operation_id_from_name(name)
-  data = {
+  op = PipelineOperation(id)
+  if op._exists:
+    logger.warn(f'[CREATE {id}] PipelineOperation object with ID {id} already exists: {dict(op)}')
+
+  op.set_properties(**{
     'id': id,
     'operation': name,
     'operation_kind': task.kind,
@@ -76,11 +80,9 @@ def create_pipeline_operation_record(task, response):
     'report_path': None,
     'done': False,
     'error': False
-  }
-  op = PipelineOperation(id)
-  op.set_properties(**data)
+  })
   op.save()
-  return PipelineOperation(id)
+  return op
 
 
 def get_pipeline_status(operation_name):
@@ -115,14 +117,17 @@ def update_pipeline_operation_record(operation_name):
     return
 
   id = get_operation_id_from_name(operation_name)
-  data = {
-    'done': status.get('done'),
-    'error': status.get('error')
-  }
   op = PipelineOperation(id)
-  op.set_properties(**data)
+  if not op._exists:
+    logger.warn(f'[UPDATE {id}] PipelineOperation entity with ID {id} not found.')
+    return
+
+  op.set_properties(**{
+    'done':  status.get('done'),
+    'error': status.get('error'),
+  })
   op.save()
-  return PipelineOperation(id)
+  return op
 
 
 def update_all_linked_status_records(kind, operation_name):
