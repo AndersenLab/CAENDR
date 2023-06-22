@@ -147,6 +147,9 @@ def update_all_linked_status_records(kind, operation_name):
   else:
     status = TaskStatus.RUNNING
 
+  if kind is None:
+    logger.warn(f'[UPDATE {op_id}] "kind" is undefined.')
+
   filters = [("operation_name", "=", operation_name)]
   ds_entities = query_ds_entities(kind, filters=filters, keys_only=True)
   for entity in ds_entities:
