@@ -18,11 +18,18 @@ API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 
 # Define the Status values
 class TaskStatus:
+
+  # Basic TaskStatus values
   ERROR     = "ERROR"
   RUNNING   = "RUNNING"
   COMPLETE  = "COMPLETE"
   SUBMITTED = "SUBMITTED"
 
+  # Meaningful sets of TaskStatus values
+  FINISHED  = { COMPLETE, ERROR }
+  NOT_ERR   = { SUBMITTED, RUNNING, COMPLETE }
+
+  # Check whether a variable is a valid TaskStatus
   @staticmethod
   def isValid(value):
     return value in [
@@ -140,25 +147,6 @@ class Task(object):
       raise ValueError(f'Target queue is undefined for task of type "{self.name}".')
 
     return add_task( self.queue, self.queue_url, dict(self) )
-
-
-  ## Task Status Helpers ##
-
-  @staticmethod
-  def finished():
-    return [ TaskStatus.COMPLETE, TaskStatus.ERROR ]
-
-  @staticmethod
-  def is_finished(status):
-    return status in Task.finished()
-
-  @staticmethod
-  def not_err():
-    return [ TaskStatus.SUBMITTED, TaskStatus.RUNNING, TaskStatus.COMPLETE ]
-
-  @staticmethod
-  def is_not_err(status):
-    return status in Task.not_err()
 
 
 

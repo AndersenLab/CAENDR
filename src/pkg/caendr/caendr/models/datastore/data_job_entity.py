@@ -118,9 +118,9 @@ class DataJobEntity(JobEntity, UserOwnedEntity):
       ('username',  '=', username),
     ]
 
-    # Convert status to list, if a single value passed
+    # Convert status to iterable (set), if a single value passed
     if status is not None and not hasattr(status, '__iter__'):
-      status = [status]
+      status = {status}
 
     # Loop through each matching report, sorted newest to oldest
     # Prefer a match with a date, if one exists

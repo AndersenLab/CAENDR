@@ -110,6 +110,16 @@ class JobEntity(Entity):
     self.__status = val
 
 
+  def is_finished(self) -> bool:
+    from caendr.models.task import TaskStatus # Prevents import error
+    return self['status'] in TaskStatus.FINISHED
+
+
+  def is_not_err(self) -> bool:
+    from caendr.models.task import TaskStatus # Prevents import error
+    return self['status'] in TaskStatus.NOT_ERR
+
+
 
   ## Pipeline Operation ##
 
