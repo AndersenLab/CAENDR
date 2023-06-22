@@ -85,6 +85,11 @@ clean-venv:
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
 
+
+container-cache:
+	@echo -e "\n$(COLOR_B)Pulling down container image layers to speed up container build...$(COLOR_N)" && \
+	docker pull --platform=linux/amd64 gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${MODULE_NAME}:${MODULE_VERSION} 
+
 #~
 container: #~
 #~ Removes the virtual environment and python cache, regenerates the module .env file, 
@@ -94,12 +99,13 @@ container: verify-env print-module-env print-ver confirm clean clean-venv dot-en
 
 container-auto: verify-env print-module-env print-ver clean clean-venv dot-env container-build
 
-container-build: 
+container-build: container-cache
 	@echo -e "\n$(COLOR_B)Copying caendr package source locally...$(COLOR_N)"
 	$(MAKE) -C $(PKG_SETUP_DIR) clean --no-print-directory && \
 	cp -r $(PKG_SETUP_DIR) $(MODULE_DIR) && \
 	echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
-	
+
+
 	@echo -e "\n$(COLOR_B)Building container image...$(COLOR_N)" && \
 	docker buildx build --platform=linux/amd64 --build-arg GIT_COMMIT=$(GIT_COMMIT) $(MODULE_DIR) -t gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${MODULE_NAME}:${MODULE_VERSION} && \
 	echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
