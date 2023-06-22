@@ -1,4 +1,4 @@
-
+import os
 from flask import render_template, url_for, redirect, Blueprint, jsonify, flash, Markup
 from extensions import cache, compress
 
@@ -23,6 +23,17 @@ def primary():
     #'files': files,
     'fluid_container': True,
   })
+
+@primary_bp.route('/version')
+@cache.memoize(60*60)
+def version():
+  version = os.environ.get("MODULE_VERSION", "n/a")
+  git_commit = os.environ.get("GIT_COMMIT", "n/a")
+  return jsonify({
+    'version': version,
+    'git_commit': git_commit
+  })
+
 
 @primary_bp.route('/strains')
 @cache.memoize(60*60*24)

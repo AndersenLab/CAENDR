@@ -47,6 +47,13 @@ RUN virtualenv -p python3 $VIRTUAL_ENV
 ENV PATH $VIRTUAL_ENV/bin:$PATH
 RUN python -m pip install --upgrade pip
 
+# Install python modules from pip
+COPY requirements.txt .
+RUN python -m pip install --no-cache-dir -r requirements.txt
+
+COPY caendr caendr
+RUN python -m pip install --no-cache-dir -e ./caendr
+
 # Copy local code to container image
 COPY . ./
 
@@ -54,10 +61,6 @@ COPY . ./
 ARG GIT_COMMIT=GIT_COMMIT_NOT_AVAILABLE
 RUN echo "\n\n# GIT_COMMIT automatically added during the makefile build container" >> module.env
 RUN echo "GIT_COMMIT=$GIT_COMMIT" >> module.env
-
-# Install python modules from pip
-RUN python -m pip install --no-cache-dir -r requirements.txt
-RUN python -m pip install --no-cache-dir -e ./caendr
 
 CMD export $(cat .env | sed -e '/^\s*$/d' | sed -e '/^\#/d' | xargs) && \
   gunicorn -b :$PORT main:app

@@ -2,8 +2,8 @@ import os
 from flask import Flask
 from dotenv import load_dotenv
 
-dotenv_file = '.env'
-load_dotenv(dotenv_file)
+load_dotenv('.env')
+load_dotenv('module.env')
 
 from caendr.utils import monitor
 from caendr.blueprints import api_error_handler_bp
