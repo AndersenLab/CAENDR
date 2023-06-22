@@ -114,7 +114,7 @@ def handle_task(payload, task_route):
     msg = f"[TASK {payload.get('id', 'no-id')}] Error: {e}"
     logger.error(msg)
     persistent_logger.log(msg)
-    status = 'ERROR'
+    status = TaskStatus.ERROR
 
   update_status(task.id, status=status, operation_name=operation_name)
 
