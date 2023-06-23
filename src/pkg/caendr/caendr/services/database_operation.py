@@ -2,27 +2,66 @@ import os
 from caendr.services.logger import logger
 from sqlalchemy import func 
 
-from caendr.models.datastore import DatabaseOperation, Container
+from caendr.models.datastore import DatabaseOperation, Container, SPECIES_LIST
 from caendr.models.task import DatabaseOperationTask, TaskStatus
 from caendr.models.sql import Homolog, StrainAnnotatedVariant, Strain, WormbaseGene, WormbaseGeneSummary
 from caendr.services.tool_versions import GCR_REPO_NAME
 from caendr.services.cloud.datastore import get_ds_entity, query_ds_entities
+from caendr.services.cloud.storage import get_blob_list
+from caendr.services.sql.dataset._env import internal_db_blob_templates
 from caendr.utils.data import unique_id
+from caendr.utils.env import get_env_var
+from caendr.utils.tokens import TokenizedString
 
 
-
-MODULE_DB_OPERATIONS_CONTAINER_NAME = os.environ.get('MODULE_DB_OPERATIONS_CONTAINER_NAME')
-MODULE_DB_OPERATIONS_CONTAINER_VERSION = os.environ.get('MODULE_DB_OPERATIONS_CONTAINER_VERSION')
+MODULE_DB_OPERATIONS_BUCKET_NAME       = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
+MODULE_DB_OPERATIONS_CONTAINER_NAME    = get_env_var('MODULE_DB_OPERATIONS_CONTAINER_NAME')
+MODULE_DB_OPERATIONS_CONTAINER_VERSION = get_env_var('MODULE_DB_OPERATIONS_CONTAINER_VERSION')
 
 
 
 DB_OPS = {
-  'DROP_AND_POPULATE_STRAINS': 'Rebuild strain table from google sheet',
-  'DROP_AND_POPULATE_WORMBASE_GENES': 'Rebuild wormbase gene table from external sources',
-  'DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS': 'Rebuild Strain Annotated Variant table from .csv.gz file',
-  'DROP_AND_POPULATE_ALL_TABLES': 'Rebuild All Tables',
-  'TEST_ECHO': 'Test ETL - Echo',
-  'TEST_MOCK_DATA': 'Test ETL - Mock Data '
+
+  ## Rebuild Tables ##
+
+  'DROP_AND_POPULATE_STRAINS': {
+    'title': 'Rebuild strain table from google sheet',
+    'files': [],
+  },
+  'DROP_AND_POPULATE_WORMBASE_GENES': {
+    'title': 'Rebuild wormbase gene table from external sources',
+    'files': [
+      internal_db_blob_templates['GENE_GFF'],
+      internal_db_blob_templates['GENE_GTF'],
+      internal_db_blob_templates['GENE_IDS'],
+    ],
+  },
+  'DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS': {
+    'title': 'Rebuild Strain Annotated Variant table from .csv.gz file',
+    'files': [
+      internal_db_blob_templates['SVA_CSVGZ'],
+    ],
+  },
+  'DROP_AND_POPULATE_ALL_TABLES': {
+    'title': 'Rebuild All Tables',
+    'files': [
+      internal_db_blob_templates['GENE_GFF'],
+      internal_db_blob_templates['GENE_GTF'],
+      internal_db_blob_templates['GENE_IDS'],
+      internal_db_blob_templates['SVA_CSVGZ'],
+    ],
+  },
+
+  ## Tests ##
+
+  'TEST_ECHO': {
+    'title': 'Test ETL - Echo',
+    'files': [],
+  },
+  'TEST_MOCK_DATA': {
+    'title': 'Test ETL - Mock Data',
+    'files': [],
+  },
 }
 
 
@@ -89,7 +128,43 @@ def get_etl_op(op_id, keys_only=False, order=None, placeholder=True):
   return op
 
 def get_db_op_form_options(): 
-  return [(key, val) for key, val in DB_OPS.items()]
+  return [(key, val['title']) for key, val in DB_OPS.items()]
+
+
+def db_op_preflight_check(op, species_list):
+  '''
+    Check that all files required for a given operation & species list are defined.
+    Returns a list of all missing files.  If list is empty, no files are missing.
+  '''
+
+  op_config = DB_OPS.get(op)
+  if op_config is None:
+    raise Exception(f'Invalid operation name {op}')
+
+  # Map list of species IDs to species objects
+  if species_list is None or len(species_list) == 0:
+    species_list = SPECIES_LIST.keys()
+  species_list = [ SPECIES_LIST[key] for key in species_list ]
+
+  # Get list of all filenames in db ops bucket
+  all_files = [
+    file.name for file in get_blob_list(MODULE_DB_OPERATIONS_BUCKET_NAME, '') if not file.name.endswith('/')
+  ]
+
+  # Loop through all required files, tracking those that don't appear in the database
+  missing_files = []
+  for file_template in op_config.get('files', []):
+    for species in species_list:
+      filepath = TokenizedString.replace_string(file_template, **{
+        'SPECIES': species.name,
+        'RELEASE': species['release_latest'],
+        'SVA':     species['release_sva'],
+      })
+      if filepath not in all_files:
+        missing_files.append(f'- {MODULE_DB_OPERATIONS_BUCKET_NAME}/{filepath}')
+
+  # Return the list of missing files
+  return missing_files
 
 
 def create_new_db_op(op, user, args=None, note=None):

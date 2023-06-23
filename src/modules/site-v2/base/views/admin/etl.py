@@ -3,23 +3,25 @@ import os
 # from attr import has
 from caendr.services.cloud.postgresql import health_database_status
 from caendr.services.logger import logger
-from flask import Blueprint, render_template, url_for, request, redirect
+from flask import Blueprint, render_template, url_for, request, redirect, flash, Markup
 
 from base.utils.auth import admin_required, get_jwt, get_jwt_identity, get_current_user
 from base.forms import AdminCreateDatabaseOperationForm
 
-from caendr.services.database_operation import get_all_db_ops, get_all_db_stats, get_etl_op, create_new_db_op, get_db_op_form_options
+from caendr.services.database_operation import get_all_db_ops, get_all_db_stats, get_etl_op, create_new_db_op, get_db_op_form_options, db_op_preflight_check
 
 from google.cloud import storage
+
 
 ETL_LOGS_BUCKET_NAME = os.getenv('ETL_LOGS_BUCKET_NAME')
 
 storage_client = storage.Client()
 
 
-admin_etl_op_bp = Blueprint('admin_etl_op',
-                            __name__,
-                            template_folder='templates')
+admin_etl_op_bp = Blueprint(
+  'admin_etl_op', __name__, template_folder='templates'
+)
+
 
 
 @admin_etl_op_bp.route('', methods=["GET"])
@@ -61,33 +63,52 @@ def view_op(id):
       log_contents = blob.download_as_string().decode('utf8')
       log_contents.replace("\n", "<br/>")
 
-        
-
   format = request.args.get('format')
   if format == 'json':
     return json.dumps(op, indent=4, sort_keys=True, default=str)
 
   return render_template('admin/etl/view.html', **locals())
 
+
+
 @admin_etl_op_bp.route('/create', methods=["GET", "POST"])
 @admin_required()
 def create_op():
-  title = 'Execute a Database Operation'
-  alt_parent_breadcrumb = {"title": "Admin/ETL", "url": url_for('admin_etl_op.admin_etl_op')}
 
-  jwt_csrf_token = (get_jwt() or {}).get("csrf")
+  # Set up the form
   form = AdminCreateDatabaseOperationForm(request.form)
   form.db_op.choices = get_db_op_form_options()
-  if not (request.method == 'POST' and form.validate_on_submit()):
-    return render_template('admin/etl/create.html', **locals())
 
+  ## GET Request ##
+  # Show the form page
+  if not (request.method == 'POST' and form.validate_on_submit()):
+    return render_template('admin/etl/create.html', **{
+      'title': 'Execute a Database Operation',
+      'alt_parent_breadcrumb': { "title": "Admin/ETL", "url": url_for('admin_etl_op.admin_etl_op') },
+
+      # Form
+      'jwt_csrf_token': (get_jwt() or {}).get("csrf"),
+      'form': form,
+    })
+
+  ## POST Request ##
+  # Submit the form
+
+  # Extract form fields
   db_op = request.form.get('db_op')
   note = request.form.get('note')
   user = get_current_user()
-
   args = {
     'SPECIES_LIST': form.data.get('species'),
   }
 
+  # Pre-flight check: Ensure all necessary files exist in the database
+  missing_files = db_op_preflight_check(db_op, args['SPECIES_LIST'])
+  if len(missing_files) > 0:
+    files_txt = ''.join([ f'<br />{filename}' for filename in missing_files ])
+    flash(Markup(f'Could not submit job. Missing the following files:{files_txt}'), category='danger')
+    return redirect(request.url)
+
+  # Create the job and redirect back to the full list
   create_new_db_op(db_op, user, args=args, note=note)
   return redirect(url_for("admin_etl_op.admin_etl_op"), code=302)
