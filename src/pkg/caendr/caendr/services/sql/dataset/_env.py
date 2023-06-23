@@ -22,11 +22,12 @@ external_db_url_templates = {
 
 
 # Construct URL templates for internal DBs (managed by CaeNDR)
+# TODO: Keep these variables as TokenizedStrings
 internal_db_blob_templates = {
     'GENE_GTF':  f'{RELEASE_FILEPATH.raw_string}/{get_env_var("GENE_GTF_FILENAME")}',
     'GENE_GFF':  f'{RELEASE_FILEPATH.raw_string}/{get_env_var("GENE_GFF_FILENAME")}',
     'GENE_IDS':  f'{RELEASE_FILEPATH.raw_string}/{get_env_var("GENE_IDS_FILENAME")}',
-    'SVA_CSVGZ': f'{SVA_FILEPATH.raw_string}/$SPECIES.strain-annotation.bcsq.$SVA.tsv.gz',
+    'SVA_CSVGZ': f'{SVA_FILEPATH.raw_string}/{get_env_var("SVA_CSVGZ_FILENAME", as_template=True).raw_string}',
 }
 
 
