@@ -37,15 +37,13 @@ COMMANDS = ['python', '/indel_primer/main.py']
 
 def start_indel_primer_pipeline(task: IndelPrimerTask):
   pipeline_req = _generate_indel_primer_pipeline_req(task)
-  return start_pipeline(pipeline_req)
+  return start_pipeline(task.id, pipeline_req)
 
 
 def _generate_indel_primer_pipeline_req(task: IndelPrimerTask):
   ip = IndelPrimer(task.id)
-  
-  # TODO: Should be able to replace with ip.get_container().uri()
-  image_uri = f"{task.container_repo}/{task.container_name}:{task.container_version}"
-  
+  image_uri = ip.get_container().uri()
+
   container_name = f"indel-primer-{ip.id}"
   environment = {
     "INDEL_STRAIN_1": ip.strain_1,
