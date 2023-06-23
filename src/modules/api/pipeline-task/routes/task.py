@@ -97,10 +97,17 @@ def handle_task(payload, task_route):
   task_class, start_pipeline, update_status = task_metadata.values()
 
   if task_class is None:
-    raise APIBadRequestError(f'Invalid task route "{task_route}" for operation "{payload.get("id", "no-id")}"')
+    raise APIBadRequestError(f'[TASK {payload.get("id", "no-id")}] Invalid task route "{task_route}"')
 
   task = task_class(**payload)
-  response = start_pipeline(task)
+  try:
+    response = start_pipeline(task)
+  except Exception as ex_outer:
+    try:
+      update_status(task.id, status=TaskStatus.ERROR)
+    except Exception as ex_inner:
+      logger.error(f'[TASK {task.id}] Failed to update status to {TaskStatus.ERROR}: {ex_inner}')
+    raise ex_outer
 
   persistent_logger = PersistentLogger(task_route)
 
@@ -111,7 +118,7 @@ def handle_task(payload, task_route):
     op = create_pipeline_operation_record(task, response)
     operation_name = op.operation
   except Exception as e:
-    msg = f"[TASK {payload.get('id', 'no-id')}] Error: {e}"
+    msg = f"[TASK {task.id}] Error: {e}"
     logger.error(msg)
     persistent_logger.log(msg)
     status = TaskStatus.ERROR
