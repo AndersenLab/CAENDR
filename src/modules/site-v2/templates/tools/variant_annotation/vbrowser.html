@@ -796,6 +796,11 @@ $(document).ready(function() {
       dTable.columns.adjust().draw();
     });
 
+    // Prevent form from submitting & reloading the page
+    $('#form-submit').submit(function(e) {
+      e.preventDefault();
+    })
+
     $("#search-interval-btn").on("click", function(e) {
       e.preventDefault();
       toggleDisableForm(true);
