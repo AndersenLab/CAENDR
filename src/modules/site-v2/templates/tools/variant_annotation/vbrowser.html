@@ -307,11 +307,8 @@ function update_species(species_id) {
   // Set species object from ID
   species = species_list[species_id];
 
-  // Reprocess gene search with the new species
-  $("#loading-search-table").fadeIn();
-  process_gene_search();
-
-  // Clear the interval search on switching species, to help avoid confusion
+  // Clear the gene and interval searches on switching species, to help avoid confusion
+  clear_gene_search();
   clear_interval_search();
 
   // Show only strains matching current species
@@ -404,6 +401,11 @@ function process_gene_search() {
 function set_position(pos) {
   $('#interval').val(pos);
   $('#search-interval-btn').click();
+}
+
+function clear_gene_search() {
+  $('#gene-search').val(null);
+  process_gene_search();
 }
 
 function clear_interval_search() {
