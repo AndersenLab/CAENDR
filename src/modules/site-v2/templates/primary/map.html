@@ -10,9 +10,21 @@
     z-index: 1000;
   }
 
-  #zoomIn {
-    border-bottom: 2px solid var(--bs-dark);
+  #zoomIn, #zoomIn:hover, #zoomIn:active {
+    border-color: var(--bs-gray-100);
+    border-bottom: 1px solid var(--bs-gray);
+    margin-bottom: 1px;
   }
+  
+  #zoomOut:active {
+    border-color: var(--bs-gray-100)!important;
+  }
+
+  #zoomOut:disabled {
+    border-color: var(--bs-gray-100)!important;
+    color: #666!important;
+  }
+
   .leaflet-control-zoom.leaflet-bar {
     border: 0;
   }
@@ -84,8 +96,8 @@
 
     <div class="position-relative" id="map" aria-hidden="true">
       <div class="btn-group-vertical m-3 zoomContainer" role="group" aria-hidden="true">
-        <button class="btn btn-primary" id="zoomIn" tabindex="-1"><i class="bi bi-plus-circle"></i></button>
-        <button class="btn btn-primary" id="zoomOut" tabindex="-1"><i class="bi bi-dash-circle"></i></button>
+        <button class="btn text-bg-light d-none d-md-block" id="zoomIn" tabindex="-1"><i class="bi bi-plus-circle"></i></button>
+        <button class="btn text-bg-light d-none d-md-block" id="zoomOut" tabindex="-1"><i class="bi bi-dash-circle"></i></button>
       </div>
       <btn
         class="position-absolute d-block d-md-none btn text-bg-light rounded-pill text-center mobileSpeciesSelect"
@@ -169,7 +181,7 @@ const bounds = L.latLngBounds(southWest, northEast);
 
 const map = L.map('map', {renderer: L.canvas(), 
                           minZoom:2, 
-                          maxZoom: 10, 
+                          maxZoom: 10,
                           maxBounds: bounds, 
                           scrollWheelZoom: false, 
                           zoomControl: false, 
@@ -298,15 +310,35 @@ $.getJSON('/strains', function(strain_info) {
   })
 })
 
-  // zoom in function
-  $('#zoomIn').click(function () {
-    map.setZoom(map.getZoom() + 1)
-  });
+  // custom zoom
+  const zoomInButton = document.getElementById("zoomIn");
+  const zoomOutButton = document.getElementById("zoomOut");
+  const minMapZoom = map.getMinZoom();
+  let zoomLevel = map.getZoom();
+  zoomOutButton.disabled = true;
 
-  // zoom out function
-  $('#zoomOut').click(function () {
-    map.setZoom(map.getZoom() - 1)
-  });
+  function zoomMapIn() {
+    map.zoomIn();
+    zoomLevel = (zoomLevel + 1);
+    disableButton();
+  }
+
+   function zoomMapOut() {
+    map.zoomOut();
+    zoomLevel = (zoomLevel - 1);
+    disableButton();
+  }
+
+  function disableButton() {
+    if (zoomLevel > minMapZoom) {
+      zoomOutButton.disabled = false;
+    } else {
+      zoomOutButton.disabled = true;
+    }
+  }
+
+  zoomInButton.addEventListener ("click", zoomMapIn);
+  zoomOutButton.addEventListener ("click", zoomMapOut);
 
 </script>
 
@@ -315,7 +347,6 @@ $.getJSON('/strains', function(strain_info) {
   function toggleSpecies() {
   const selectSpecies = document.getElementById("selectSpecies");
   selectSpecies.classList.toggle("d-none");
-  console.log("Class toggled!");
 }
 </script>
 
