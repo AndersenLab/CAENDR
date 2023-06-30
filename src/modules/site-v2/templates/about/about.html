@@ -294,9 +294,9 @@ function set_marker_color (species) {
 
 // custom zoom
 const zoomInButton = document.getElementById("zoomIn");
-  const zoomOutButton = document.getElementById("zoomOut");
-  const minMapZoom = map.getMinZoom();
-  zoomOutButton.disabled = true;
+const zoomOutButton = document.getElementById("zoomOut");
+const minMapZoom = map.getMinZoom();
+zoomOutButton.disabled = true;
 
   function zoomMapIn() {
     map.zoomIn();
