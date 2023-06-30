@@ -18,8 +18,14 @@
     z-index: 1000;
   }
 
-  #zoomIn {
-    border-bottom: 2px solid var(--bs-dark);
+  #zoomIn, #zoomIn:hover, #zoomIn:active {
+    border-bottom: 1px solid var(--bs-gray);
+    margin-bottom: 1px;
+  }
+
+  #zoomOut:disabled {
+    border:0!important;
+    color: #666!important;
   }
 </style>
 
