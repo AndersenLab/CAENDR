@@ -176,7 +176,7 @@ const bounds = L.latLngBounds(southWest, northEast);
 
 const map = L.map('map', {renderer: L.canvas(), 
                           minZoom:2, 
-                          maxZoom: 10, 
+                          maxZoom: 10,
                           maxBounds: bounds, 
                           scrollWheelZoom: false, 
                           zoomControl: false, 
@@ -305,15 +305,34 @@ $.getJSON('/strains', function(strain_info) {
   })
 })
 
-  // zoom in function
-  $('#zoomIn').click(function () {
-    map.setZoom(map.getZoom() + 1)
-  });
+  // custom zoom
+  const zoomInButton = document.getElementById("zoomIn");
+  const zoomOutButton = document.getElementById("zoomOut");
+  const minMapZoom = map.getMinZoom();
+  zoomOutButton.disabled = true;
 
-  // zoom out function
-  $('#zoomOut').click(function () {
-    map.setZoom(map.getZoom() - 1)
-  });
+  function zoomMapIn() {
+    map.zoomIn();
+    let zoomLevel = (map.getZoom() + 1);
+    if (zoomLevel > minMapZoom) {
+      zoomOutButton.disabled = false;
+    } else {
+      zoomOutButton.disabled = true;
+    }
+  }
+
+  function zoomMapOut() {
+    map.zoomOut();
+    let zoomLevel = (map.getZoom() - 1);
+    if (zoomLevel > minMapZoom) {
+      zoomOutButton.disabled = false;
+    } else {
+      zoomOutButton.disabled = true;
+    }
+  }
+
+  zoomInButton.addEventListener ("click", zoomMapIn);
+  zoomOutButton.addEventListener ("click", zoomMapOut);
 
 </script>
 
@@ -322,7 +341,6 @@ $.getJSON('/strains', function(strain_info) {
   function toggleSpecies() {
   const selectSpecies = document.getElementById("selectSpecies");
   selectSpecies.classList.toggle("d-none");
-  console.log("Class toggled!");
 }
 </script>
 
