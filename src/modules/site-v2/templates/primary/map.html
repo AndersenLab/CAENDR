@@ -314,21 +314,22 @@ $.getJSON('/strains', function(strain_info) {
   const zoomInButton = document.getElementById("zoomIn");
   const zoomOutButton = document.getElementById("zoomOut");
   const minMapZoom = map.getMinZoom();
+  let zoomLevel = map.getZoom();
   zoomOutButton.disabled = true;
 
   function zoomMapIn() {
     map.zoomIn();
-    let zoomLevel = (map.getZoom() + 1);
-    if (zoomLevel > minMapZoom) {
-      zoomOutButton.disabled = false;
-    } else {
-      zoomOutButton.disabled = true;
-    }
+    zoomLevel = (zoomLevel + 1);
+    disableButton();
   }
 
-  function zoomMapOut() {
+   function zoomMapOut() {
     map.zoomOut();
-    let zoomLevel = (map.getZoom() - 1);
+    zoomLevel = (zoomLevel - 1);
+    disableButton();
+  }
+
+  function disableButton() {
     if (zoomLevel > minMapZoom) {
       zoomOutButton.disabled = false;
     } else {
