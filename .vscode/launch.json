@@ -18,6 +18,7 @@
                 "FLASK_APP": "main.py",
                 "FLASK_ENV": "development",
                 "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "localhost",
+                "MODULE_SITE_PASSWORD_PROTECTED": "false",
                 // "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "file",
                 // "MODULE_DB_OPERATIONS_CONNECTION_FILE": "${workspaceFolder}/src/modules/db_operations/13.db",
                 "MODULE_DB_TIMEOUT": "3",
