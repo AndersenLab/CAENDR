@@ -1,5 +1,5 @@
 import os
-from flask import render_template, Blueprint, url_for, send_file, abort
+from flask import render_template, Blueprint, url_for, send_file, abort, Response, stream_with_context
 from base.utils.auth import jwt_required
 from extensions import cache
 
@@ -7,6 +7,10 @@ from caendr.api.strain import get_bam_bai_download_link, fetch_bam_bai_download_
 from caendr.models.datastore import Species
 from caendr.models.error import NotFoundError
 from caendr.services.dataset_release import get_all_dataset_releases, find_dataset_release
+from caendr.utils.env import get_env_var
+
+
+BAM_BAI_DOWNLOAD_SCRIPT_NAME = get_env_var('BAM_BAI_DOWNLOAD_SCRIPT_NAME', as_template=True)
 
 
 data_downloads_bp = Blueprint('data_downloads',
@@ -61,7 +65,13 @@ def download_bam_bai_script(species_name, release_version):
   except NotFoundError:
     return abort(404)
 
-  # Generate the download script and get the local filename
-  filename = generate_bam_bai_download_script(species, release)
+  # Compute the desired filename from the species & release
+  filename = BAM_BAI_DOWNLOAD_SCRIPT_NAME.get_string(**{
+    'SPECIES': species.name,
+    'RELEASE': release.version,
+  })
 
-  return send_file(filename, as_attachment=True)
+  # Stream the file as an attachment with the desired filename
+  resp = Response(stream_with_context(generate_bam_bai_download_script(species, release)), mimetype='text/plain')
+  resp.headers['Content-Disposition'] = f'attachment; filename={ filename }'
+  return resp

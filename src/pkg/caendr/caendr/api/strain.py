@@ -188,7 +188,6 @@ def get_joined_strain_list():
 def generate_bam_bai_download_script(species, release, signed=False):
   '''
     Generate a Bash script that downloads all BAM/BAI files for a given species and release.
-    Returns the local name of the file.
 
     Args:
       species: The Species object to download from.
@@ -196,18 +195,12 @@ def generate_bam_bai_download_script(species, release, signed=False):
       signed (bool): Whether the generated URLs should be signed. Defaults to False.
 
     Return:
-      filename (str): The local name of the resulting Bash file.
+      Generator that yields the file line by line.
   '''
 
   expiration  = timedelta(days=7)
   bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
   credentials = get_google_storage_credentials()
-
-  # Get the filename for this species/release
-  filename = BAM_BAI_DOWNLOAD_SCRIPT_NAME.get_string(**{
-    'SPECIES': species.name,
-    'RELEASE': release.version,
-  })
 
   # Get the location of the BAM files in the bucket for this species/release
   bam_prefix = BAM_BAI_PREFIX.get_string(**{
@@ -218,36 +211,31 @@ def generate_bam_bai_download_script(species, release, signed=False):
   # Get a list of all strains for this species
   strain_listing = query_strains(is_sequenced=True, species=species.name)
 
-  if os.path.exists(filename):
-    os.remove(filename)
+  # Log species and release
+  yield f'# Species: { species.short_name }\n'
+  yield f'# Release: { release.version }\n'
+  yield '\n\n'
 
-  with open(filename, "a") as f:
+  # Add download statements for each strain
+  for strain in strain_listing:
+    yield f'# Strain: {strain}\n'
+    bam_path = f'{bam_prefix}/{strain}.bam'
+    bai_path = f'{bam_prefix}/{strain}.bam.bai'
 
-    # Log species and release
-    f.write(f'# Species: { species.short_name }\n')
-    f.write(f'# Release: { release.version }\n')
+    # Generate download URLs
+    if signed:
+      bam_url = generate_download_signed_url_v4(bucket_name, bam_path, expiration=expiration, credentials=credentials)
+      bai_url = generate_download_signed_url_v4(bucket_name, bai_path, expiration=expiration, credentials=credentials)
+    else:
+      bam_url = generate_blob_url(bucket_name, bam_path)
+      bai_url = generate_blob_url(bucket_name, bai_path)
 
-    # Add download statements for each strain
-    for strain in strain_listing:
-      f.write(f'\n\n# Strain: {strain}')
-      bam_path = f'{bam_prefix}/{strain}.bam'
-      bai_path = f'{bam_prefix}/{strain}.bam.bai'
-
-      # Generate download URLs
-      if signed:
-        bam_url = generate_download_signed_url_v4(bucket_name, bam_path, expiration=expiration, credentials=credentials)
-        bai_url = generate_download_signed_url_v4(bucket_name, bai_path, expiration=expiration, credentials=credentials)
-      else:
-        bam_url = generate_blob_url(bucket_name, bam_path)
-        bai_url = generate_blob_url(bucket_name, bai_path)
-
-      # Add download statements
-      if bam_url:
-        f.write(f'\nwget -O "{strain}.bam" "{bam_url}"')
-      if bai_url:
-        f.write(f'\nwget -O "{strain}.bam.bai" "{bai_url}"')
-
-  return filename
+    # Add download statements
+    if bam_url:
+      yield f'wget -O "{strain}.bam" "{bam_url}"\n'
+    if bai_url:
+      yield f'wget -O "{strain}.bam.bai" "{bai_url}"\n'
+    yield '\n'
 
 
 # NOTE: This is likely obsolete
