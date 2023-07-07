@@ -25,6 +25,8 @@ def cleanup_cache():
   return response
   
 
+# TODO: This is out of date, since download scripts now depend on species & release.
+#       It is likely also obsolete, since the download script is now generated on-demand.
 @maintenance_bp.route('/create_bam_bai_download_script', methods=['GET'])
 def create_bam_bai_download_script():
   if not (verify_cron_req_origin(request) or user_has_role("admin")):

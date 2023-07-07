@@ -3,7 +3,11 @@ from flask import render_template, Blueprint, url_for, send_file, abort
 from base.utils.auth import jwt_required
 from extensions import cache
 
-from caendr.api.strain import get_bam_bai_download_link, fetch_bam_bai_download_script
+from caendr.api.strain import get_bam_bai_download_link, fetch_bam_bai_download_script, generate_bam_bai_download_script
+from caendr.models.datastore import Species
+from caendr.models.error import NotFoundError
+from caendr.services.dataset_release import get_all_dataset_releases, find_dataset_release
+
 
 data_downloads_bp = Blueprint('data_downloads',
                     __name__,
@@ -46,3 +50,18 @@ def download_bam_bai_file(strain_name='', ext=''):
   
   return render_template('data/download-redirect.html', **locals())
 
+
+@data_downloads_bp.route('/download/<string:species_name>/<string:release_version>/bam-bai-download-script', methods=['GET'])
+def download_bam_bai_script(species_name, release_version):
+
+  # Parse the species & release from the URL
+  try:
+    species = Species.get(species_name.replace('-', '_'))
+    release = find_dataset_release(get_all_dataset_releases(order='-version', species=species.name), release_version)
+  except NotFoundError:
+    return abort(404)
+
+  # Generate the download script and get the local filename
+  filename = generate_bam_bai_download_script(species, release)
+
+  return send_file(filename, as_attachment=True)
