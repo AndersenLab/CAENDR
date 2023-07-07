@@ -11,6 +11,7 @@ from caendr.models.error import BadRequestError
 from caendr.models.sql import Strain
 from caendr.services.cloud.postgresql import db, rollback_on_error
 from caendr.services.cloud.storage import get_blob, generate_download_signed_url_v4, download_blob_to_file, upload_blob_from_file, get_google_storage_credentials, generate_blob_url
+from caendr.utils.data import unique_id
 from caendr.utils.env import get_env_var
 
 MODULE_IMG_THUMB_GEN_SOURCE_PATH = get_env_var('MODULE_IMG_THUMB_GEN_SOURCE_PATH', as_template=True)
@@ -255,9 +256,9 @@ def generate_bam_bai_download_script(species, release, signed=False):
 
 
 # NOTE: This is likely obsolete
-def upload_bam_bai_download_script(joined_strain_list, species, release):
+def upload_bam_bai_download_script(species, release, signed=False):
   '''
-    Generate the download script for a given species + release, and upload it to the datastore.
+    Generate the download script for a given species & release, and upload it to the datastore.
   '''
 
   filename = BAM_BAI_DOWNLOAD_SCRIPT_NAME.get_string(**{
@@ -273,7 +274,23 @@ def upload_bam_bai_download_script(joined_strain_list, species, release):
   bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
   blob_name = f'{bam_prefix}/{filename}'
 
-  # Generate the file and get the local filename
-  local_filename = generate_bam_bai_download_script(joined_strain_list, species, release)
+  # Generate a unique local filename
+  local_filename = f'{unique_id()}-{filename}'
 
-  upload_blob_from_file(bucket_name, local_filename, blob_name)
+  # If somehow this already exists, raise an error
+  if os.path.exists(local_filename):
+    raise Exception(f'Couldn\'t generate and upload BAM/BAI download script: local filename "{local_filename}" already exists')
+
+  # Try to generate and upload the file
+  try:
+    with open(local_filename, 'a') as f:
+      for line in generate_bam_bai_download_script(species, release, signed=signed):
+        f.write(line)
+    upload_blob_from_file(bucket_name, local_filename, blob_name)
+
+  # Make sure the local file is removed before returning
+  finally:
+    try:
+      os.remove(local_filename)
+    except FileNotFoundError:
+      pass
