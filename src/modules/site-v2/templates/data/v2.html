@@ -306,14 +306,17 @@
                                         </tr>
                                         <tr>
                                             <th scope="row">Sweep Haplotypes</th>
-                                            <td>The most frequent haplotype that covers at least 30% of the chromosome
+                                            <td>
+                                                The most frequent haplotype that covers at least 30% of the chromosome
                                                 and is found on chromosome centers was determined and classified as a
-                                                selective sweep. For more details, see <a
-                                                    href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3365839/">Andersen
-                                                    <i>et al.</i></a> and <a
-                                                    href="https://andersenlab.org/publications/2021LeeNatureEE.pdf">Lee
-                                                    <i>et al.</i></a>. The plot shows red (swept), gray (non-swept), and
-                                                white (not classified) regions.</td>
+                                                selective sweep. For more details of <i>C. elegans</i> selective sweeps,
+                                                see <a
+                                                href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3365839/">Andersen
+                                                <i>et al.</i></a> and <a
+                                                href="https://andersenlab.org/publications/2021LeeNatureEE.pdf">Lee
+                                                <i>et al.</i></a>.
+                                                The plot shows red (swept), gray (non-swept), and white (not classified) regions.
+                                            </td>
                                             <td>
                                                 {% if files.get('sweep_pdf') %}
                                                 <a href="{{ files.get('sweep_pdf') }}"> sweep.pdf </a>
@@ -330,12 +333,16 @@
                                         </tr>
                                         <tr>
                                             <th scope="row">Hyper-Divergent Regions</th>
-                                            <td>The hyper-divergent regions are characterized by higher-than-average
+                                            <td>
+                                                The hyper-divergent regions are characterized by higher-than-average
                                                 density of small variants and large genomic spans where short sequence
-                                                reads fail to align to the N2 reference genome. They were identified as
-                                                described in <a
-                                                    href="https://andersenlab.org/publications/2021LeeNatureEE.pdf">Lee
-                                                    <i>et al.</i></a></td>
+                                                reads fail to align to the reference genome.
+                                                The <i>C. elegans</i> hyper-divergent regions were identified as described
+                                                in <a href="https://andersenlab.org/publications/2021LeeNatureEE.pdf">Lee
+                                                <i>et al.</i></a>.
+                                                <i>C. briggsae</i> and <i>C. tropicalis</i> hyper-divergent regions will
+                                                be released in the future.
+                                            </td>
                                             <td>
                                                 {% if files.get('divergent_regions_strain_bed') %}
                                                 <a href="{{ files.get('divergent_regions_strain_bed') }}">
