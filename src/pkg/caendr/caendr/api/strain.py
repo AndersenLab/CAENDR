@@ -194,14 +194,6 @@ def fetch_bam_bai_download_script(reload=False):
   return BAM_BAI_DOWNLOAD_SCRIPT_NAME
 
 
-def get_joined_strain_list():
-  strain_listing = query_strains(is_sequenced=True)
-  joined_strain_list = ''
-  for strain in strain_listing:
-    joined_strain_list += strain.strain + ','
-  return joined_strain_list
-
-
 def generate_bam_bai_download_script(species, release, signed=False):
   '''
     Generate a Bash script that downloads all BAM/BAI files for a given species and release.
