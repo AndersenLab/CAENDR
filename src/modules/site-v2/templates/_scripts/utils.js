@@ -48,6 +48,9 @@ function form_data_to_object(form_id) {
 
 function force_download(el, url) {
 
+  // If this function has run on the element already, use the href normally
+  if (el.href[el.href.length - 1] != '#') return;
+
   // Fetch the provided URL and create a blob object from it
   fetch(url)
     .then(response => response.blob())
@@ -56,14 +59,11 @@ function force_download(el, url) {
       // Create an object URL for the blob object
       const url = URL.createObjectURL(blob);
 
-      // Create a new anchor element
-      const a = document.createElement('a');
+      // Point the element's href to the URL of the new blob object
+      el.href = url;
 
-      // Set the href and download attributes for the anchor element
-      a.href = url;
-      a.download = el.download || 'download';
-
-      a.click();
+      // Re-click the element, now that the href is updated
+      el.click();
     })
 
   // Stop the first click from following the dummy link
