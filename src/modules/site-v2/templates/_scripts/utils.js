@@ -44,3 +44,28 @@ function form_data_to_object(form_id) {
   });
   return data;
 }
+
+
+function force_download(el, url) {
+
+  // Fetch the provided URL and create a blob object from it
+  fetch(url)
+    .then(response => response.blob())
+    .then(blob => {
+
+      // Create an object URL for the blob object
+      const url = URL.createObjectURL(blob);
+
+      // Create a new anchor element
+      const a = document.createElement('a');
+
+      // Set the href and download attributes for the anchor element
+      a.href = url;
+      a.download = el.download || 'download';
+
+      a.click();
+    })
+
+  // Stop the first click from following the dummy link
+  return false;
+}
