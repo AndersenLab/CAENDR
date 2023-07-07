@@ -43,16 +43,17 @@ def download_script(release_version):
 @cache.memoize(60*60)
 @jwt_required()
 def download_bam_bai_file(strain_name='', ext=''):
-  title = f'{strain_name}.{ext}'
-  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.data')}
 
-  signed_download_url = get_bam_bai_download_link(strain_name, ext)
-  msg = 'download will begin shortly...'
-  if not signed_download_url:
-    msg = 'error fetching download link'
-    signed_download_url = ''
-  
-  return render_template('data/download-redirect.html', **locals())
+  # Get the download link for this strain
+  signed_download_url = get_bam_bai_download_link(strain_name, ext) or ''
+
+  return render_template('data/download-redirect.html', **{
+    'title': f'{strain_name}.{ext}',
+    'alt_parent_breadcrumb': {"title": "Data", "url": url_for('data.data')},
+
+    'signed_download_url': signed_download_url,
+    'msg': 'download will begin shortly...' if signed_download_url else 'error fetching download link',
+  })
 
 
 @data_downloads_bp.route('/download/<string:species_name>/<string:release_version>/bam-bai-download-script', methods=['GET'])
