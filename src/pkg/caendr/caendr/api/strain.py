@@ -157,10 +157,26 @@ def get_strain_img_url(strain_name, species, thumbnail=True):
     return None
 
 
-def get_bam_bai_download_link(strain_name, ext):
-  blob_name = f'{bam_prefix}/{strain_name}.{ext}'
+def get_bam_bai_download_link(species, strain_name, ext, signed=False):
+  '''
+    Get the URL to download a BAM or BAI file for a given strain.
+
+    Args:
+      species: The Species object that this strain is under
+      strain_name: The name of the strain to download
+      ext: The extension of the desired file. Should be either 'bam' or 'bam.bai'.
+      signed (bool): Whether the generated URL should be signed. Defaults to False.
+  '''
+
   bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
-  return generate_download_signed_url_v4(bucket_name, blob_name)
+  bam_prefix = BAM_BAI_PREFIX.get_string(SPECIES=species.name)
+
+  blob_name = f'{bam_prefix}/{strain_name}.{ext}'
+
+  if signed:
+    return generate_download_signed_url_v4(bucket_name, blob_name)
+  else:
+    return generate_blob_url(bucket_name, blob_name)
 
 
 # TODO: This is now out of date, since script name relies on species & release

@@ -39,13 +39,19 @@ def download_script(release_version):
     return abort(404, description="BAM/BAI download script not found")
 
 
-@data_downloads_bp.route('/download/files/<string:strain_name>/<string:ext>')
+@data_downloads_bp.route('/download/<string:species_name>/<string:strain_name>/<string:ext>')
 @cache.memoize(60*60)
 @jwt_required()
-def download_bam_bai_file(strain_name='', ext=''):
+def download_bam_bai_file(species_name='', strain_name='', ext=''):
+
+  # Parse the species & release from the URL
+  try:
+    species = Species.get(species_name.replace('-', '_'))
+  except NotFoundError:
+    return abort(404)
 
   # Get the download link for this strain
-  signed_download_url = get_bam_bai_download_link(strain_name, ext) or ''
+  signed_download_url = get_bam_bai_download_link(species, strain_name, ext) or ''
 
   return render_template('data/download-redirect.html', **{
     'title': f'{strain_name}.{ext}',
