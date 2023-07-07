@@ -12,14 +12,15 @@ from caendr.models.sql import Strain
 from caendr.services.cloud.postgresql import db, rollback_on_error
 from caendr.services.cloud.storage import get_blob, generate_download_signed_url_v4, download_blob_to_file, upload_blob_from_file, get_google_storage_credentials, generate_blob_url
 from caendr.utils.env import get_env_var
-from caendr.utils.tokens import TokenizedString
 
 MODULE_IMG_THUMB_GEN_SOURCE_PATH = get_env_var('MODULE_IMG_THUMB_GEN_SOURCE_PATH', as_template=True)
 MODULE_SITE_BUCKET_PHOTOS_NAME   = get_env_var('MODULE_SITE_BUCKET_PHOTOS_NAME')
 MODULE_SITE_BUCKET_PRIVATE_NAME  = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
 
-BAM_BAI_DOWNLOAD_SCRIPT_NAME = TokenizedString("${RELEASE}_${SPECIES}_bam_bai_download.sh")
-BAM_BAI_PREFIX = TokenizedString('bam/${SPECIES}')
+BAM_BAI_DOWNLOAD_SCRIPT_NAME     = get_env_var('BAM_BAI_DOWNLOAD_SCRIPT_NAME', as_template=True)
+BAM_BAI_PREFIX                   = get_env_var('BAM_BAI_PREFIX', as_template=True)
+
+# TODO: This is still here so functions that haven't been updated will still work.
 bam_prefix = 'bam/c_elegans'
 
 
@@ -162,6 +163,7 @@ def get_bam_bai_download_link(strain_name, ext):
   return generate_download_signed_url_v4(bucket_name, blob_name)
 
 
+# TODO: This is now out of date, since script name relies on species & release
 def fetch_bam_bai_download_script(reload=False):
   if reload and os.path.exists(BAM_BAI_DOWNLOAD_SCRIPT_NAME):
     os.remove(BAM_BAI_DOWNLOAD_SCRIPT_NAME)
@@ -255,6 +257,11 @@ def upload_bam_bai_download_script(joined_strain_list, species, release):
   '''
 
   filename = BAM_BAI_DOWNLOAD_SCRIPT_NAME.get_string(**{
+    'SPECIES': species.name,
+    'RELEASE': release.version,
+  })
+
+  bam_prefix = BAM_BAI_PREFIX.get_string(**{
     'SPECIES': species.name,
     'RELEASE': release.version,
   })
