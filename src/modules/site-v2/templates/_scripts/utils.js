@@ -46,13 +46,24 @@ function form_data_to_object(form_id) {
 }
 
 
-function force_download(el, url) {
+function force_download(e) {
 
-  // If this function has run on the element already, use the href normally
-  if (el.href[el.href.length - 1] != '#') return;
+  // Get the current event & target element (cross-browser)
+  e = e || window.event;
+  const el = e.target || e.srcElement;
+
+  // If this function has run on the element already (i.e. references a local blob),
+  // use the href normally
+  if (el.href.substring(0, 5) === 'blob:') {
+    console.info('Downloading file...')
+    return;
+  }
+
+  // Otherwise, stop the first click from following the link
+  e.preventDefault();
 
   // Fetch the provided URL and create a blob object from it
-  fetch(url)
+  fetch(el.href)
     .then(response => response.blob())
     .then(blob => {
 
@@ -65,7 +76,4 @@ function force_download(el, url) {
       // Re-click the element, now that the href is updated
       el.click();
     })
-
-  // Stop the first click from following the dummy link
-  return false;
 }

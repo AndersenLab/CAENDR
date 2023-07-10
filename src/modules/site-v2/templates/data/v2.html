@@ -292,8 +292,7 @@
                                                     <i>et al.</i></a></td>
                                             <td>
                                                 {% if files.get('haplotype_png') %}
-                                                <a href="#"
-                                                    onclick="return force_download(this, '{{ files.get('haplotype_png') }}')"
+                                                <a href="{{ files.get('haplotype_png') }}" onclick="force_download(event)"
                                                     download="{{release_version}}_{{species.name}}_haplotype.png"
                                                 > haplotype.png </a>
                                                 {% else %}
@@ -441,8 +440,7 @@
                             </figure>
                             {% if files.get('haplotype_png') %}
                                 <br />
-                                <a href="#"
-                                    onclick="return force_download(this, '{{ files.get('haplotype_png') }}')"
+                                <a href="{{ files.get('haplotype_png') }}" onclick="force_download(event)"
                                     download="{{release_version}}_{{species.name}}_haplotype.png"
                                 >
                                     Download as PNG
