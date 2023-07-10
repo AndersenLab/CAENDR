@@ -46,6 +46,13 @@ function form_data_to_object(form_id) {
 }
 
 
+/* Force a link to download a file
+ *
+ * Intercepts the initial click, fetches the URL in the href attribute as a blob,
+ * points the link to the new blob, and simulates a new click.
+ *
+ * All future clicks are allowed to use the new blob link directly.
+ */
 function force_download(e) {
 
   // Get the current event & target element (cross-browser)
