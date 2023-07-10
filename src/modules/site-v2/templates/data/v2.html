@@ -292,7 +292,9 @@
                                                     <i>et al.</i></a></td>
                                             <td>
                                                 {% if files.get('haplotype_png') %}
-                                                <a href="{{ files.get('haplotype_png') }}?response-content-disposition=attachment"> haplotype.png </a>
+                                                <a href="{{ files.get('haplotype_png') }}" onclick="force_download(event)"
+                                                    download="{{release_version}}_{{species.name}}_haplotype.png"
+                                                > haplotype.png </a>
                                                 {% else %}
                                                 haplotype.png is not included in this release
                                                 {% endif %}
@@ -433,12 +435,14 @@
                             <figure class="figure">
                                 <img class="img-fluid" src="{{ files.get('haplotype_png') }}" style="height: 450px; width: auto;">
                                 <figcaption class="text-center">
-                                    <a href="{{ files.get('haplotype_png') }}?response-content-disposition=inline" target="_blank">Click to open full-sized in a new window</a>
+                                    <a href="{{ files.get('haplotype_png') }}" target="_blank">Click to open full-sized in a new window</a>
                                 </figcaption>
                             </figure>
                             {% if files.get('haplotype_png') %}
                                 <br />
-                                <a href="{{ files.get('haplotype_png') }}?response-content-disposition=attachment" download>
+                                <a href="{{ files.get('haplotype_png') }}" onclick="force_download(event)"
+                                    download="{{release_version}}_{{species.name}}_haplotype.png"
+                                >
                                     Download as PNG
                                 </a>
                             {% endif %}
