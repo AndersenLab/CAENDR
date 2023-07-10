@@ -62,7 +62,7 @@ function force_download(e) {
   // If this function has run on the element already (i.e. references a local blob),
   // use the href normally
   if (el.href.substring(0, 5) === 'blob:') {
-    console.info('Downloading file...')
+    console.warn('Downloading file again...')
     return;
   }
 
@@ -80,7 +80,15 @@ function force_download(e) {
       // Point the element's href to the URL of the new blob object
       el.href = url;
 
-      // Re-click the element, now that the href is updated
-      el.click();
+      // Create a new anchor element to download the URL
+      // Do this instead of clicking the existing el directly to prevent any
+      // possible recursion bugs, which could spam / timeout the browser.
+      // If everything succeeds, all future clicks will use the modified href
+      // in the existing anchor element. If something fails, all clicks should
+      // restart the blob download process, which is is acceptable.
+      const a = document.createElement('a');
+      a.href = el.href;
+      a.download = el.download || 'download';
+      a.click();
     })
 }
