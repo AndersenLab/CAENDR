@@ -361,8 +361,12 @@
                                         <tr>
                                             <th scope="row">Download BAMs Script</th>
                                             <td>You can batch download individual strain BAMs using this script.</td>
-                                            <td class="text-center"><a class="btn btn-primary text-light"
-                                                    href="{{ url_for('data_downloads.download_script_strain_v2', release_version=release_version) }}">download_bams.sh</a>
+                                            <td class="text-center">
+                                                <a class="btn btn-primary text-light"
+                                                    href="{{ url_for('data_downloads.download_bam_bai_script', species_name=species.get_url_name(), release_version=release_version) }}"
+                                                >
+                                                    {{ download_bams_name }}
+                                                </a>
                                             </td>
                                         </tr>
                                     </tbody>

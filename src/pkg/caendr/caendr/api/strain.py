@@ -10,15 +10,18 @@ from caendr.models.datastore import SPECIES_LIST
 from caendr.models.error import BadRequestError
 from caendr.models.sql import Strain
 from caendr.services.cloud.postgresql import db, rollback_on_error
-from caendr.services.cloud.storage import get_blob, generate_download_signed_url_v4, download_blob_to_file, upload_blob_from_file, get_google_storage_credentials
+from caendr.services.cloud.storage import get_blob, generate_download_signed_url_v4, download_blob_to_file, upload_blob_from_file, get_google_storage_credentials, generate_blob_url
+from caendr.utils.data import unique_id
 from caendr.utils.env import get_env_var
-from caendr.utils.tokens import TokenizedString
 
 MODULE_IMG_THUMB_GEN_SOURCE_PATH = get_env_var('MODULE_IMG_THUMB_GEN_SOURCE_PATH', as_template=True)
 MODULE_SITE_BUCKET_PHOTOS_NAME   = get_env_var('MODULE_SITE_BUCKET_PHOTOS_NAME')
 MODULE_SITE_BUCKET_PRIVATE_NAME  = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
 
-BAM_BAI_DOWNLOAD_SCRIPT_NAME = "bam_bai_signed_download_script.sh"
+BAM_BAI_DOWNLOAD_SCRIPT_NAME     = get_env_var('BAM_BAI_DOWNLOAD_SCRIPT_NAME', as_template=True)
+BAM_BAI_PREFIX                   = get_env_var('BAM_BAI_PREFIX', as_template=True)
+
+# TODO: This is still here so functions that haven't been updated will still work.
 bam_prefix = 'bam/c_elegans'
 
 
@@ -153,14 +156,31 @@ def get_strain_img_url(strain_name, species, thumbnail=True):
     return blob.public_url
   except AttributeError:
     return None
-  
-  
-def get_bam_bai_download_link(strain_name, ext):
-  blob_name = f'{bam_prefix}/{strain_name}.{ext}'
+
+
+def get_bam_bai_download_link(species, strain_name, ext, signed=False):
+  '''
+    Get the URL to download a BAM or BAI file for a given strain.
+
+    Args:
+      species: The Species object that this strain is under
+      strain_name: The name of the strain to download
+      ext: The extension of the desired file. Should be either 'bam' or 'bam.bai'.
+      signed (bool): Whether the generated URL should be signed. Defaults to False.
+  '''
+
   bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
-  return generate_download_signed_url_v4(bucket_name, blob_name)
+  bam_prefix = BAM_BAI_PREFIX.get_string(SPECIES=species.name)
+
+  blob_name = f'{bam_prefix}/{strain_name}.{ext}'
+
+  if signed:
+    return generate_download_signed_url_v4(bucket_name, blob_name)
+  else:
+    return generate_blob_url(bucket_name, blob_name)
 
 
+# TODO: This is now out of date, since script name relies on species & release
 def fetch_bam_bai_download_script(reload=False):
   if reload and os.path.exists(BAM_BAI_DOWNLOAD_SCRIPT_NAME):
     os.remove(BAM_BAI_DOWNLOAD_SCRIPT_NAME)
@@ -174,37 +194,95 @@ def fetch_bam_bai_download_script(reload=False):
   return BAM_BAI_DOWNLOAD_SCRIPT_NAME
 
 
-def get_joined_strain_list():
-  strain_listing = query_strains(is_sequenced=True)
-  joined_strain_list = ''
-  for strain in strain_listing:
-    joined_strain_list += strain.strain + ','
-  return joined_strain_list
+def generate_bam_bai_download_script(species, release, signed=False):
+  '''
+    Generate a Bash script that downloads all BAM/BAI files for a given species and release.
 
+    Args:
+      species: The Species object to download from.
+      release: The DatasetRelease object to download from.
+      signed (bool): Whether the generated URLs should be signed. Defaults to False.
 
-def generate_bam_bai_download_script(joined_strain_list):
-  expiration = timedelta(days=7)
-  filename = BAM_BAI_DOWNLOAD_SCRIPT_NAME
-  blob_name = f'{bam_prefix}/{BAM_BAI_DOWNLOAD_SCRIPT_NAME}'
+    Return:
+      Generator that yields the file line by line.
+  '''
+
+  expiration  = timedelta(days=7)
   bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
   credentials = get_google_storage_credentials()
-  
-  if os.path.exists(filename):
-    os.remove(filename)
-  f = open(filename, "a")
 
-  strain_listing = joined_strain_list.split(',')
+  # Get the location of the BAM files in the bucket for this species/release
+  bam_prefix = BAM_BAI_PREFIX.get_string(**{
+    'SPECIES': species.name,
+    'RELEASE': release.version,
+  })
+
+  # Get a list of all strains for this species
+  strain_listing = query_strains(is_sequenced=True, species=species.name)
+
+  # Log species and release
+  yield f'# Species: { species.short_name }\n'
+  yield f'# Release: { release.version }\n'
+  yield '\n\n'
+
+  # Add download statements for each strain
   for strain in strain_listing:
-    f.write(f'\n\n# Strain: {strain}')
+    yield f'# Strain: {strain}\n'
     bam_path = f'{bam_prefix}/{strain}.bam'
     bai_path = f'{bam_prefix}/{strain}.bam.bai'
-    bam_signed_url = generate_download_signed_url_v4(bucket_name, bam_path, expiration=expiration, credentials=credentials)
-    bai_signed_url = generate_download_signed_url_v4(bucket_name, bai_path, expiration=expiration, credentials=credentials)
-    if bam_signed_url:
-      f.write(f'\nwget -O "{strain}.bam" "{bam_signed_url}"')
-    if bai_signed_url:
-      f.write(f'\nwget -O "{strain}.bam.bai" "{bai_signed_url}"')
 
-  f.close()
-  upload_blob_from_file(bucket_name, filename, blob_name)
+    # Generate download URLs
+    if signed:
+      bam_url = generate_download_signed_url_v4(bucket_name, bam_path, expiration=expiration, credentials=credentials)
+      bai_url = generate_download_signed_url_v4(bucket_name, bai_path, expiration=expiration, credentials=credentials)
+    else:
+      bam_url = generate_blob_url(bucket_name, bam_path)
+      bai_url = generate_blob_url(bucket_name, bai_path)
 
+    # Add download statements
+    if bam_url:
+      yield f'wget -O "{strain}.bam" "{bam_url}"\n'
+    if bai_url:
+      yield f'wget -O "{strain}.bam.bai" "{bai_url}"\n'
+    yield '\n'
+
+
+# NOTE: This is likely obsolete
+def upload_bam_bai_download_script(species, release, signed=False):
+  '''
+    Generate the download script for a given species & release, and upload it to the datastore.
+  '''
+
+  filename = BAM_BAI_DOWNLOAD_SCRIPT_NAME.get_string(**{
+    'SPECIES': species.name,
+    'RELEASE': release.version,
+  })
+
+  bam_prefix = BAM_BAI_PREFIX.get_string(**{
+    'SPECIES': species.name,
+    'RELEASE': release.version,
+  })
+
+  bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
+  blob_name = f'{bam_prefix}/{filename}'
+
+  # Generate a unique local filename
+  local_filename = f'{unique_id()}-{filename}'
+
+  # If somehow this already exists, raise an error
+  if os.path.exists(local_filename):
+    raise Exception(f'Couldn\'t generate and upload BAM/BAI download script: local filename "{local_filename}" already exists')
+
+  # Try to generate and upload the file
+  try:
+    with open(local_filename, 'a') as f:
+      for line in generate_bam_bai_download_script(species, release, signed=signed):
+        f.write(line)
+    upload_blob_from_file(bucket_name, local_filename, blob_name)
+
+  # Make sure the local file is removed before returning
+  finally:
+    try:
+      os.remove(local_filename)
+    except FileNotFoundError:
+      pass
