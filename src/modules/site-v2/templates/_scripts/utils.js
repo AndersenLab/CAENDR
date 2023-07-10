@@ -69,6 +69,12 @@ function force_download(e) {
   // Otherwise, stop the first click from following the link
   e.preventDefault();
 
+  // If no href provided, print an error message
+  if (!el.href) {
+    console.error('No URL provided for download.')
+    return;
+  }
+
   // Fetch the provided URL and create a blob object from it
   fetch(el.href)
     .then(response => response.blob())
