@@ -292,7 +292,9 @@
                                                     <i>et al.</i></a></td>
                                             <td>
                                                 {% if files.get('haplotype_png') %}
-                                                <a href="{{ files.get('haplotype_png') }}?response-content-disposition=attachment"> haplotype.png </a>
+                                                <a href="{{ files.get('haplotype_png') }}" onclick="force_download(event)"
+                                                    download="{{release_version}}_{{species.name}}_haplotype.png"
+                                                > haplotype.png </a>
                                                 {% else %}
                                                 haplotype.png is not included in this release
                                                 {% endif %}
@@ -366,8 +368,12 @@
                                         <tr>
                                             <th scope="row">Download BAMs Script</th>
                                             <td>You can batch download individual strain BAMs using this script.</td>
-                                            <td class="text-center"><a class="btn btn-primary text-light"
-                                                    href="{{ url_for('data_downloads.download_script_strain_v2', release_version=release_version) }}">download_bams.sh</a>
+                                            <td class="text-center">
+                                                <a class="btn btn-primary text-light"
+                                                    href="{{ url_for('data_downloads.download_bam_bai_script', species_name=species.get_url_name(), release_version=release_version) }}"
+                                                >
+                                                    {{ download_bams_name }}
+                                                </a>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -440,12 +446,14 @@
                             <figure class="figure">
                                 <img class="img-fluid" src="{{ files.get('haplotype_png') }}" style="height: 450px; width: auto;">
                                 <figcaption class="text-center">
-                                    <a href="{{ files.get('haplotype_png') }}?response-content-disposition=inline" target="_blank">Click to open full-sized in a new window</a>
+                                    <a href="{{ files.get('haplotype_png') }}" target="_blank">Click to open full-sized in a new window</a>
                                 </figcaption>
                             </figure>
                             {% if files.get('haplotype_png') %}
                                 <br />
-                                <a href="{{ files.get('haplotype_png') }}?response-content-disposition=attachment" download>
+                                <a href="{{ files.get('haplotype_png') }}" onclick="force_download(event)"
+                                    download="{{release_version}}_{{species.name}}_haplotype.png"
+                                >
                                     Download as PNG
                                 </a>
                             {% endif %}

@@ -25,7 +25,10 @@ from caendr.models.sql import Strain, StrainAnnotatedVariant
 from caendr.services.cloud.storage import generate_blob_url, check_blob_exists
 from caendr.services.dataset_release import get_all_dataset_releases, get_browser_tracks_path, get_release_bucket, find_dataset_release
 from caendr.models.error import NotFoundError, SpeciesUrlNameError
+from caendr.utils.env import get_env_var
 
+
+BAM_BAI_DOWNLOAD_SCRIPT_NAME = get_env_var('BAM_BAI_DOWNLOAD_SCRIPT_NAME', as_template=True)
 
 
 releases_bp = Blueprint(
@@ -132,6 +135,11 @@ def data_v02(params, files):
   return {
     'browser_tracks_path': browser_tracks_path,
     'browser_tracks_url': generate_blob_url(params['release_bucket'], browser_tracks_path),
+
+    'download_bams_name': BAM_BAI_DOWNLOAD_SCRIPT_NAME.get_string(**{
+      'SPECIES': params['species'].name,
+      'RELEASE': params['RELEASE'].version,
+    }),
   }
 
 

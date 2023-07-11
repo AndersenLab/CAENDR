@@ -1,7 +1,7 @@
 
 <style>
   #map {
-    height: 48vh;
+    height: 55vh;
     z-index: 0;
   }
   
@@ -175,19 +175,22 @@ const MB_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Stree
 const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const OSM_ATTRIB = '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
-const southWest = L.latLng(-120, -240);
-const northEast = L.latLng(120, 240);
-const bounds = L.latLngBounds(southWest, northEast);
+const northWest = L.latLng(100, 170);
+const southEast = L.latLng(-90, -170)
+const bounds = L.latLngBounds(northWest, southEast);
 
 const map = L.map('map', {renderer: L.canvas(), 
                           minZoom:2, 
                           maxZoom: 10,
-                          maxBounds: bounds, 
+                          zoomSnap: .25,
+                          zoomDelta: .25,
+                          maxBounds: bounds,
+                          maxBoundsViscosity: 1.0, 
                           scrollWheelZoom: false, 
-                          zoomControl: false, 
-                          attributionControl: false})
-                          .setView([20, -100], 2);
-L.tileLayer(MB_URL, {attribution: MB_ATTR, id: 'mapbox.streets', continuousWorld: false, worldCopyJump: true}).addTo(map);
+                          zoomControl: false,
+                          attributionControl: false,})
+                          .setView([30, -170], 2.5);
+L.tileLayer(MB_URL, {attribution: MB_ATTR, id: 'mapbox.streets', continuousWorld: false, worldCopyJump: false}).addTo(map);
 const strain_names = [];
 const elegans = [];
 const briggsae = [];
@@ -295,7 +298,8 @@ $.getJSON('/strains', function(strain_info) {
     'tropicalis_layer': tropicalis_layer
   }
 
-  let overlays = L.layerGroup().addLayer(elegans_layer).addTo(map)
+  let overlays = L.featureGroup().addLayer(elegans_layer).addTo(map);
+  
 
   document.querySelector('#strains').addEventListener('click', e => {
     if (e.target.tagName !== 'INPUT') return;
@@ -309,6 +313,11 @@ $.getJSON('/strains', function(strain_info) {
     }
   })
 })
+
+
+
+
+
 
   // custom zoom
   const zoomInButton = document.getElementById("zoomIn");
@@ -325,7 +334,7 @@ $.getJSON('/strains', function(strain_info) {
 
    function zoomMapOut() {
     map.zoomOut();
-    zoomLevel = (zoomLevel - 1);
+    zoomLevel = (zoomLevel - 1.75);
     disableButton();
   }
 
