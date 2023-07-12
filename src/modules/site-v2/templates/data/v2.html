@@ -1,5 +1,6 @@
 {% from "_includes/macros.html" import render_download_link with context %}
 {% set file_prefix = release_version + '_' + species.name %}
+{% set wi_prefix   = 'WI.' + release_version %}
 
 <div class="row">
     <div class="col mt-3">
@@ -110,22 +111,22 @@
                                                 <br />
                                                 {{ render_download_link(
                                                     'soft_filter_vcf_gz',
-                                                    'WI.' + release_version + '.soft-filter.vcf.gz'
+                                                    wi_prefix + '.soft-filter.vcf.gz'
                                                 ) }}
                                                 {{ render_download_link(
                                                     'soft_filter_vcf_gz_tbi',
-                                                    'WI.' + release_version + '.soft-filter.vcf.gz.tbi'
+                                                    wi_prefix + '.soft-filter.vcf.gz.tbi'
                                                 ) }}
                                                 <br />
                                                 <strong>Isotypes</strong>
                                                 <br />
                                                 {{ render_download_link(
                                                     'soft_filter_isotype_vcf_gz',
-                                                    'WI.' + release_version + '.soft-filter.isotype.vcf.gz'
+                                                    wi_prefix + '.soft-filter.isotype.vcf.gz'
                                                 ) }}
                                                 {{ render_download_link(
                                                     'soft_filter_isotype_vcf_gz_tbi',
-                                                    'WI.' + release_version + '.soft-filter.isotype.vcf.gz.tbi'
+                                                    wi_prefix + '.soft-filter.isotype.vcf.gz.tbi'
                                                 ) }}
                                             </td>
                                         </tr>
@@ -140,22 +141,22 @@
                                                 <br />
                                                 {{ render_download_link(
                                                     'hard_filter_vcf_gz',
-                                                    'WI.' + release_version + '.hard-filter.vcf.gz'
+                                                    wi_prefix + '.hard-filter.vcf.gz'
                                                 ) }}
                                                 {{ render_download_link(
                                                     'hard_filter_vcf_gz_tbi',
-                                                    'WI.' + release_version + '.hard-filter.vcf.gz.tbi'
+                                                    wi_prefix + '.hard-filter.vcf.gz.tbi'
                                                 ) }}
                                                 <br />
                                                 <strong>Isotypes</strong>
                                                 <br />
                                                 {{ render_download_link(
                                                     'hard_filter_isotype_vcf_gz',
-                                                    'WI.' + release_version + '.hard-filter.isotype.vcf.gz'
+                                                    wi_prefix + '.hard-filter.isotype.vcf.gz'
                                                 ) }}
                                                 {{ render_download_link(
                                                     'hard_filter_isotype_vcf_gz_tbi',
-                                                    'WI.' + release_version + '.hard-filter.isotype.vcf.gz.tbi'
+                                                    wi_prefix + '.hard-filter.isotype.vcf.gz.tbi'
                                                 ) }}
                                             </td>
                                         </tr>
@@ -171,11 +172,11 @@
                                                 <br />
                                                 {{ render_download_link(
                                                     'impute_isotype_vcf_gz',
-                                                    'WI.' + release_version + '.impute.isotype.vcf.gz'
+                                                    wi_prefix + '.impute.isotype.vcf.gz'
                                                 ) }}
                                                 {{ render_download_link(
                                                     'impute_isotype_vcf_gz_tbi',
-                                                    'WI.' + release_version + '.impute.isotype.vcf.gz.tbi'
+                                                    wi_prefix + '.impute.isotype.vcf.gz.tbi'
                                                 ) }}
                                             </td>
                                         </tr>
@@ -222,22 +223,22 @@
                                                 <br />
                                                 {{ render_download_link(
                                                     'hard_filter_min4_tree',
-                                                    'WI.' + release_version + '.hard-filter.min4.tree'
+                                                    wi_prefix + '.hard-filter.min4.tree'
                                                 ) }}
                                                 {{ render_download_link(
                                                     'hard_filter_min4_tree_pdf',
-                                                    'WI.' + release_version + '.hard-filter.min4.tree.pdf'
+                                                    wi_prefix + '.hard-filter.min4.tree.pdf'
                                                 ) }}
                                                 <br />
                                                 <strong>Isotype</strong>
                                                 <br />
                                                 {{ render_download_link(
                                                     'hard_filter_isotype_min4_tree',
-                                                    'WI.' + release_version + '.hard-filter.isotype.min4.tree'
+                                                    wi_prefix + '.hard-filter.isotype.min4.tree'
                                                 ) }}
                                                 {{ render_download_link(
                                                     'hard_filter_isotype_min4_tree_pdf',
-                                                    'WI.' + release_version + '.hard-filter.isotype.min4.tree.pdf'
+                                                    wi_prefix + '.hard-filter.isotype.min4.tree.pdf'
                                                 ) }}
                                             </td>
                                         </tr>
