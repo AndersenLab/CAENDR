@@ -234,8 +234,14 @@
                                             <td>We have performed transposon calling for a subset of isotypes as part of
                                                 <a href="https://andersenlab.org/publications/2017Laricchia.pdf">Laricchia
                                                     <i>et al.</i></a></td>
-                                            <td class="text-center"><a class="btn btn-primary text-light"
-                                                    href="https://storage.googleapis.com/andersenlab.org/publications/2017Laricchia/tes_cender.bed">tes_cender.bed</a>
+                                            <td class="text-center">
+                                                {% if files.get('transposon_calls') %}
+                                                <a class="btn btn-primary text-light" href="{{ files.get('transposon_calls') }}"
+                                                >{{ release_version }}_{{ species.name }}_transposon_calls.bed</a>
+                                                {% else %}
+                                                {{ release_version }}_{{ species.name }}_transposon_calls.bed is not
+                                                included in this release
+                                                {% endif %}
                                             </td>
                                         </tr>
                                         <tr>
