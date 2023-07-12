@@ -248,8 +248,8 @@
                                                     href="https://andersenlab.org/publications/2021LeeNatureEE.pdf">Lee
                                                     <i>et al.</i></a></td>
                                             <td>
-                                                {{ render_download_link('haplotype_png', 'haplotype.png', true) }}
-                                                {{ render_download_link('haplotype_pdf', 'haplotype.pdf') }}
+                                                {{ render_download_link('haplotype_png', file_prefix + '_haplotype.png', true) }}
+                                                {{ render_download_link('haplotype_pdf', file_prefix + '_haplotype.pdf') }}
                                             </td>
                                         </tr>
                                         <tr>
@@ -263,8 +263,8 @@
                                                     <i>et al.</i></a>. The plot shows red (swept), gray (non-swept), and
                                                 white (not classified) regions.</td>
                                             <td>
-                                                {{ render_download_link('sweep_pdf', 'sweep.pdf') }}
-                                                {{ render_download_link('sweep_summary_tsv', 'sweep_summary.tsv') }}
+                                                {{ render_download_link('sweep_pdf',         file_prefix + '_sweep.pdf') }}
+                                                {{ render_download_link('sweep_summary_tsv', file_prefix + '_sweep_summary.tsv', true) }}
                                             </td>
                                         </tr>
                                         <tr>
