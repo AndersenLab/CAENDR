@@ -221,28 +221,32 @@
                                             <th scope="row">Reference Genome FASTA ({{ RELEASE.wormbase_version }})</th>
                                             <td>The reference genome build from Wormbase used for alignment and
                                                 annotation.</td>
+                                            {% if fasta_path %}
                                             <td class="text-center">
-                                                {% if fasta_path %}
                                                 <a class="btn btn-primary text-light" href="{{ fasta_path }}">{{ fasta_name }}</a>
-                                                {% else %}
-                                                Reference genome FASTA file is not included in this release
-                                                {% endif %}
                                             </td>
+                                            {% else %}
+                                            <td>
+                                                Reference genome FASTA file is not included in this release
+                                            </td>
+                                            {% endif %}
                                         </tr>
                                         <tr>
                                             <th scope="row">Transposon Calls</th>
                                             <td>We have performed transposon calling for a subset of isotypes as part of
                                                 <a href="https://andersenlab.org/publications/2017Laricchia.pdf">Laricchia
                                                     <i>et al.</i></a></td>
+                                            {% if files.get('transposon_calls') %}
                                             <td class="text-center">
-                                                {% if files.get('transposon_calls') %}
                                                 <a class="btn btn-primary text-light" href="{{ files.get('transposon_calls') }}"
                                                 >{{ release_version }}_{{ species.name }}_transposon_calls.bed</a>
-                                                {% else %}
+                                            </td>
+                                            {% else %}
+                                            <td>
                                                 {{ release_version }}_{{ species.name }}_transposon_calls.bed is not
                                                 included in this release
-                                                {% endif %}
                                             </td>
+                                            {% endif %}
                                         </tr>
                                         <tr>
                                             <th scope="row">Tree</th>
