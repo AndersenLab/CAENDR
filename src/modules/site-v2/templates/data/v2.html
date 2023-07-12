@@ -1,4 +1,6 @@
+{% from "_includes/macros.html" import render_download_link with context %}
 {% set file_prefix = release_version + '_' + species.name %}
+
 <div class="row">
     <div class="col mt-3">
         <nav>
@@ -106,41 +108,25 @@
                                             <td>
                                                 <strong>All Strains</strong>
                                                 <br />
-                                                {% if files.get('soft_filter_vcf_gz') %}
-                                                <a href="{{ files['soft_filter_vcf_gz'] }}"> WI.{{ release_version
-                                                    }}.soft-filter.vcf.gz </a>
-                                                {% else %}
-                                                WI.{{ release_version }}.soft-filter.vcf.gz is not included in this
-                                                release
-                                                {% endif %}
-                                                <br />
-                                                {% if files.get('soft_filter_vcf_gz_tbi') %}
-                                                <a href="{{ files.get('soft_filter_vcf_gz_tbi') }}"> WI.{{
-                                                    release_version }}.soft-filter.vcf.gz.tbi </a>
-                                                {% else %}
-                                                WI.{{ release_version }}.soft-filter.vcf.gz.tbi is not included in this
-                                                release
-                                                {% endif %}
-                                                <br />
+                                                {{ render_download_link(
+                                                    'soft_filter_vcf_gz',
+                                                    'WI.' + release_version + '.soft-filter.vcf.gz'
+                                                ) }}
+                                                {{ render_download_link(
+                                                    'soft_filter_vcf_gz_tbi',
+                                                    'WI.' + release_version + '.soft-filter.vcf.gz.tbi'
+                                                ) }}
                                                 <br />
                                                 <strong>Isotypes</strong>
                                                 <br />
-                                                {% if files.get('soft_filter_isotype_vcf_gz') %}
-                                                <a href="{{ files.get('soft_filter_isotype_vcf_gz') }}"> WI.{{
-                                                    release_version }}.soft-filter.isotype.vcf.gz </a>
-                                                {% else %}
-                                                WI.{{ release_version }}.soft-filter.isotype.vcf.gz is not included in
-                                                this release
-                                                {% endif %}
-                                                <br />
-                                                {% if files.get('soft_filter_isotype_vcf_gz_tbi') %}
-                                                <a href="{{ files.get('soft_filter_isotype_vcf_gz_tbi') }}"> WI.{{
-                                                    release_version }}.soft-filter.isotype.vcf.gz.tbi </a>
-                                                {% else %}
-                                                WI.{{ release_version }}.soft-filter.isotype.vcf.gz.tbi is not included
-                                                in this release
-                                                {% endif %}
-                                                <br />
+                                                {{ render_download_link(
+                                                    'soft_filter_isotype_vcf_gz',
+                                                    'WI.' + release_version + '.soft-filter.isotype.vcf.gz'
+                                                ) }}
+                                                {{ render_download_link(
+                                                    'soft_filter_isotype_vcf_gz_tbi',
+                                                    'WI.' + release_version + '.soft-filter.isotype.vcf.gz.tbi'
+                                                ) }}
                                             </td>
                                         </tr>
                                         <tr>
@@ -152,41 +138,25 @@
                                             <td>
                                                 <strong>All Strains</strong>
                                                 <br />
-                                                {% if files.get('hard_filter_vcf_gz') %}
-                                                <a href="{{ files.get('hard_filter_vcf_gz') }}"> WI.{{ release_version
-                                                    }}.hard-filter.vcf.gz </a>
-                                                {% else %}
-                                                WI.{{ release_version }}.hard-filter.vcf.gz is not included in this
-                                                release
-                                                {% endif %}
-                                                <br />
-                                                {% if files.get('hard_filter_vcf_gz_tbi') %}
-                                                <a href="{{ files.get('hard_filter_vcf_gz_tbi') }}"> WI.{{
-                                                    release_version }}.hard-filter.vcf.gz.tbi </a>
-                                                {% else %}
-                                                WI.{{ release_version }}.hard-filter.vcf.gz.tbi is not included in this
-                                                release
-                                                {% endif %}
-                                                <br />
+                                                {{ render_download_link(
+                                                    'hard_filter_vcf_gz',
+                                                    'WI.' + release_version + '.hard-filter.vcf.gz'
+                                                ) }}
+                                                {{ render_download_link(
+                                                    'hard_filter_vcf_gz_tbi',
+                                                    'WI.' + release_version + '.hard-filter.vcf.gz.tbi'
+                                                ) }}
                                                 <br />
                                                 <strong>Isotypes</strong>
                                                 <br />
-                                                {% if files.get('hard_filter_isotype_vcf_gz') %}
-                                                <a href="{{ files.get('hard_filter_isotype_vcf_gz') }}"> WI.{{
-                                                    release_version }}.hard-filter.isotype.vcf.gz </a>
-                                                {% else %}
-                                                WI.{{ release_version }}.hard-filter.isotype.vcf.gz is not included in
-                                                this release
-                                                {% endif %}
-                                                <br />
-                                                {% if files.get('hard_filter_isotype_vcf_gz_tbi') %}
-                                                <a href="{{ files.get('hard_filter_isotype_vcf_gz_tbi') }}"> WI.{{
-                                                    release_version }}.hard-filter.isotype.vcf.gz.tbi </a>
-                                                {% else %}
-                                                WI.{{ release_version }}.hard-filter.isotype.vcf.gz.tbi is not included
-                                                in this release
-                                                {% endif %}
-                                                <br />
+                                                {{ render_download_link(
+                                                    'hard_filter_isotype_vcf_gz',
+                                                    'WI.' + release_version + '.hard-filter.isotype.vcf.gz'
+                                                ) }}
+                                                {{ render_download_link(
+                                                    'hard_filter_isotype_vcf_gz_tbi',
+                                                    'WI.' + release_version + '.hard-filter.isotype.vcf.gz.tbi'
+                                                ) }}
                                             </td>
                                         </tr>
                                         {% if files.get('impute_isotype_vcf_gz') %}
@@ -199,22 +169,14 @@
                                             <td>
                                                 <strong>Isotypes</strong>
                                                 <br />
-                                                {% if files.get('impute_isotype_vcf_gz') %}
-                                                <a href="{{ files.get('impute_isotype_vcf_gz') }}"> WI.{{
-                                                    release_version }}.impute.isotype.vcf.gz </a>
-                                                {% else %}
-                                                WI.{{ release_version }}.impute.isotype.vcf.gz is not included in this
-                                                release
-                                                {% endif %}
-                                                <br />
-                                                {% if files.get('impute_isotype_vcf_gz_tbi') %}
-                                                <a href="{{ files.get('impute_isotype_vcf_gz_tbi') }}"> WI.{{
-                                                    release_version }}.impute.isotype.vcf.gz.tbi </a>
-                                                {% else %}
-                                                WI.{{ release_version }}.impute.isotype.vcf.gz.tbi is not included in
-                                                this release
-                                                {% endif %}
-                                                <br />
+                                                {{ render_download_link(
+                                                    'impute_isotype_vcf_gz',
+                                                    'WI.' + release_version + '.impute.isotype.vcf.gz'
+                                                ) }}
+                                                {{ render_download_link(
+                                                    'impute_isotype_vcf_gz_tbi',
+                                                    'WI.' + release_version + '.impute.isotype.vcf.gz.tbi'
+                                                ) }}
                                             </td>
                                         </tr>
                                         {% endif %}
@@ -258,41 +220,25 @@
                                             <td>
                                                 <strong>All Strains</strong>
                                                 <br />
-                                                {% if files.get('hard_filter_min4_tree') %}
-                                                <a href="{{ files.get('hard_filter_min4_tree') }}"> WI.{{
-                                                    release_version }}.hard-filter.min4.tree </a>
-                                                {% else %}
-                                                WI.{{ release_version }}.hard-filter.min4.tree is not included in this
-                                                release
-                                                {% endif %}
-                                                <br />
-                                                {% if files.get('hard_filter_min4_tree_pdf') %}
-                                                <a href="{{ files.get('hard_filter_min4_tree_pdf') }}"> WI.{{
-                                                    release_version }}.hard-filter.min4.tree.pdf </a>
-                                                {% else %}
-                                                WI.{{ release_version }}.hard-filter.min4.tree.pdf is not included in
-                                                this release
-                                                {% endif %}
-                                                <br />
+                                                {{ render_download_link(
+                                                    'hard_filter_min4_tree',
+                                                    'WI.' + release_version + '.hard-filter.min4.tree'
+                                                ) }}
+                                                {{ render_download_link(
+                                                    'hard_filter_min4_tree_pdf',
+                                                    'WI.' + release_version + '.hard-filter.min4.tree.pdf'
+                                                ) }}
                                                 <br />
                                                 <strong>Isotype</strong>
                                                 <br />
-                                                {% if files.get('hard_filter_isotype_min4_tree') %}
-                                                <a href="{{ files.get('hard_filter_isotype_min4_tree') }}"> WI.{{
-                                                    release_version }}.hard-filter.isotype.min4.tree </a>
-                                                {% else %}
-                                                WI.{{ release_version }}.hard-filter.isotype.min4.tree is not included
-                                                in this release
-                                                {% endif %}
-                                                <br />
-                                                {% if files.get('hard_filter_isotype_min4_tree_pdf') %}
-                                                <a href="{{ files.get('hard_filter_isotype_min4_tree_pdf') }}"> WI.{{
-                                                    release_version }}.hard-filter.isotype.min4.tree.pdf </a>
-                                                {% else %}
-                                                WI.{{ release_version }}.hard-filter.isotype.min4.tree.pdf is not
-                                                included in this release
-                                                {% endif %}
-                                                <br />
+                                                {{ render_download_link(
+                                                    'hard_filter_isotype_min4_tree',
+                                                    'WI.' + release_version + '.hard-filter.isotype.min4.tree'
+                                                ) }}
+                                                {{ render_download_link(
+                                                    'hard_filter_isotype_min4_tree_pdf',
+                                                    'WI.' + release_version + '.hard-filter.isotype.min4.tree.pdf'
+                                                ) }}
                                             </td>
                                         </tr>
                                         <tr>
@@ -301,19 +247,8 @@
                                                     href="https://andersenlab.org/publications/2021LeeNatureEE.pdf">Lee
                                                     <i>et al.</i></a></td>
                                             <td>
-                                                {% if files.get('haplotype_png') %}
-                                                <a href="{{ files.get('haplotype_png') }}" onclick="force_download(event)"
-                                                    download="{{ file_prefix }}_haplotype.png"
-                                                > haplotype.png </a>
-                                                {% else %}
-                                                haplotype.png is not included in this release
-                                                {% endif %}
-                                                <br />
-                                                {% if files.get('haplotype_pdf') %}
-                                                <a href="{{ files.get('haplotype_pdf') }}"> haplotype.pdf </a>
-                                                {% else %}
-                                                haplotype.pdf is not included in this release
-                                                {% endif %}
+                                                {{ render_download_link('haplotype_png', 'haplotype.png', true) }}
+                                                {{ render_download_link('haplotype_pdf', 'haplotype.pdf') }}
                                             </td>
                                         </tr>
                                         <tr>
@@ -327,17 +262,8 @@
                                                     <i>et al.</i></a>. The plot shows red (swept), gray (non-swept), and
                                                 white (not classified) regions.</td>
                                             <td>
-                                                {% if files.get('sweep_pdf') %}
-                                                <a href="{{ files.get('sweep_pdf') }}"> sweep.pdf </a>
-                                                {% else %}
-                                                sweep.pdf is not included in this release
-                                                {% endif %}
-                                                <br />
-                                                {% if files.get('sweep_summary_tsv') %}
-                                                <a href="{{ files.get('sweep_summary_tsv') }}"> sweep_summary.tsv </a>
-                                                {% else %}
-                                                sweep_summary.tsv is not included in this release
-                                                {% endif %}
+                                                {{ render_download_link('sweep_pdf', 'sweep.pdf') }}
+                                                {{ render_download_link('sweep_summary_tsv', 'sweep_summary.tsv') }}
                                             </td>
                                         </tr>
                                         <tr>
