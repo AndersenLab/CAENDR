@@ -29,7 +29,6 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
   percent_protein = db.Column(db.Float(), nullable=True)
   gene = db.Column(db.String(), index=True, nullable=True)
   variant_impact = db.Column(db.String(), nullable=True)
-  snpeff_impact = db.Column(db.String(), nullable=True)
   divergent = db.Column(db.Boolean(), nullable=True)
   release = db.Column(db.String(), nullable=True)
 
@@ -75,7 +74,6 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
       {'id': 'percent_protein', 'name': 'Percent Protein'},
       {'id': 'gene', 'name': 'Gene'},
       {'id': 'variant_impact', 'name': 'Variant Impact'},
-      {'id': 'snpeff_impact', 'name': 'SnpEff Impact'},
       {'id': 'divergent', 'name': 'Divergent'},
       {'id': 'release', 'name': 'Release Date'}
     ]

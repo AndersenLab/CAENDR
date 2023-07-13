@@ -13,7 +13,7 @@ def parse_strain_variant_annotation_data(species, sva_fname: str, start_idx = 0)
 
       CHROM,POS,REF,ALT,CONSEQUENCE,WORMBASE_ID,TRANSCRIPT,BIOTYPE,
       STRAND,AMINO_ACID_CHANGE,DNA_CHANGE,Strains,BLOSUM,Grantham,
-      Percent_Protein,GENE,VARIANT_IMPACT,SNPEFF_IMPACT,DIVERGENT,RELEASE
+      Percent_Protein,GENE,VARIANT_IMPACT,DIVERGENT,RELEASE
 
       Expected sample headers/rows format:
         Headers:
@@ -21,11 +21,13 @@ def parse_strain_variant_annotation_data(species, sva_fname: str, start_idx = 0)
             "CHROM",       "POS",            "REF",           "ALT",       "CONSEQUENCE",
             "WORMBASE_ID", "TRANSCRIPT",     "BIOTYPE",       "STRAND",    "AMINO_ACID_CHANGE",
             "DNA_CHANGE",  "Strains",        "BLOSUM",        "Grantham",  "Percent_Protein",
-            "GENE",        "VARIANT_IMPACT", "SNPEFF_IMPACT", "DIVERGENT", "RELEASE"
+            "GENE",        "VARIANT_IMPACT", "DIVERGENT",     "RELEASE"
           ]
         Rows:
           ["I",3782,"G","A",NA,NA,NA,NA,NA,NA,NA,"",NA,NA,NA,NA,NA,NA,NA,NA]
 
+      Note: There used to be a column "SNPEFF_IMPACT" at index 17 (between "VARIANT_IMPACT"
+            and "DIVERGENT"). This column has been removed.
   """
   logger.info('Parsing extracted strain variant annotation TSV file')
 
