@@ -63,14 +63,22 @@ def api_search_genes(query=""):
 #   return (search_genes(query, species=species) + search_homologs(query, species=species))[0:10]
 
 
-@api_gene_bp.route('/search/interval/<string:gene>') # Seach for IGV Browser
+@api_gene_bp.route('/search/interval/<string:gene>')
 @cache.memoize(60*60)
 @jsonify_request
 def api_search_gene_interval(gene=None):
+  '''
+    Get the interval for a given gene. Used in IGV Browser search.
+  '''
   if gene:
     result = get_gene(gene)
     if result:
-      return {'result': [{"chromosome": result.chrom,
-              'start': result.start,
-              'end': result.end}]}
-  return {'error': 'not found'}
+      return {
+        'result': [{
+          "chromosome": result.chrom,
+          'start':      result.start,
+          'end':        result.end,
+        }]
+      }
+
+  return { 'error': 'not found' }
