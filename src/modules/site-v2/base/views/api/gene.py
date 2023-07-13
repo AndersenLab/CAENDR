@@ -25,6 +25,16 @@ api_gene_bp = Blueprint('api_gene',
 @cache.memoize(60*60)
 @jsonify_request
 def api_search_genes(query=""):
+  '''
+    Query the table for genes based on a search and an optional species.
+
+    Returns a list of results, or None for a blank query.  Gives a maximum of 10 results.
+
+    Note that if a species is selected and the query equals the gene prefix for that species,
+    this will be considered a blank query.  (Otherwise, this would return all genes.)
+  '''
+
+  # Read the query & species frim the request
   query = request.args.get('query', query)
   query = str(query).lower()
   species = request.args.get('species')
@@ -33,6 +43,10 @@ def api_search_genes(query=""):
   if species:
     species_object = SPECIES_LIST[species]
     query = remove_prefix(query, species_object['gene_prefix'].lower())
+
+  # If the query is empty, return None
+  if not query:
+    return None
 
   return sorted(search_genes(query, species=species), key=lambda x: x['gene_symbol'])
 

@@ -76,7 +76,14 @@ function run_gene_search(gene, species, div_ids, callback) {
     contentType: 'application/xml',
   })
   .done(function(results) {
-    if (results.length > 0) {
+
+    // Null results - query evaluated to empty
+    if (results === null) {
+      swap_fade([ load_div ]);
+    }
+
+    // If one or more results found, display to user
+    else if (results.length > 0) {
 
       // Map each gene to a set of cell values, and add to the table as <td> elements (if applicable)
       $.each(results, (i, row) => {
@@ -96,6 +103,8 @@ function run_gene_search(gene, species, div_ids, callback) {
     }
   })
   .fail(function() {
+
+    // If query returned an error, inform the user
     console.error('Gene query failed.');
     swap_fade([ load_div ], error_div);
   });
