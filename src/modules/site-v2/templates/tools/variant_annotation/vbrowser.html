@@ -71,6 +71,9 @@
               <div id="v-search-table-empty" style="display:none;">
                 That gene name is not found in this species, so either that gene does not exist in this species or a different gene name is indexed.
               </div>
+              <div id="v-search-table-error" style="display:none;">
+                There was an error processing your gene search.
+              </div>
             </div>
           </div>
         </div>
@@ -279,6 +282,7 @@ const gene_search_div_ids = {
   "table":   "#v-search-table",
   "loading": "#loading-search-table",
   "empty":   "#v-search-table-empty",
+  "error":   "#v-search-table-error",
 }
 
 

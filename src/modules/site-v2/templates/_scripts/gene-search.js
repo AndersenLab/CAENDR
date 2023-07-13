@@ -6,6 +6,7 @@
  *     - table: The ID of the table element where results are stored. Required.
  *     - loading (optional): The ID of the table loading icon. Displays while gene search is running.
  *     - empty (optional): The ID of the empty message. Displays if no results are found.
+ *     - error (optional): The ID of the error message. Displays if the server returns an error code.
  */
 function prep_gene_search(gene, div_ids) {
 
@@ -16,15 +17,16 @@ function prep_gene_search(gene, div_ids) {
   const table_div = $(div_ids.table);
   const load_div  = div_ids.loading ? $(div_ids.loading) : null;
   const empty_div = div_ids.empty   ? $(div_ids.empty)   : null;
+  const error_div = div_ids.error   ? $(div_ids.error)   : null;
 
   // If gene is empty, hide all search elements
   if (gene.trim().length == 0) {
-    swap_fade([ table_div, load_div, empty_div ])
+    swap_fade([ table_div, load_div, empty_div, error_div ])
   }
 
   // If gene not empty, replace the table with the loading icon
   else {
-    swap_fade([ table_div, empty_div ], load_div);
+    swap_fade([ table_div, empty_div, error_div ], load_div);
   }
 }
 
@@ -39,6 +41,7 @@ function prep_gene_search(gene, div_ids) {
  *              NOTE: If used on a table with multiple tbody elements, will append to ALL bodies.
  *     - loading (optional): The ID of the table loading icon. Displays while gene search is running.
  *     - empty (optional): The ID of the empty message. Displays if no results are found.
+ *     - error (optional): The ID of the error message. Displays if the server returns an error code.
  *   - callback: A function to run on each returned gene:
  *       Arguments: element index & element (gene object)
  *       Return: a list of object to be placed in table cells, or null if this gene should be skipped.
@@ -57,6 +60,7 @@ function run_gene_search(gene, species, div_ids, callback) {
   const table_div = $(div_ids.table);
   const load_div  = div_ids.loading ? $(div_ids.loading) : null;
   const empty_div = div_ids.empty   ? $(div_ids.empty)   : null;
+  const error_div = div_ids.error   ? $(div_ids.error)   : null;
 
   // If no search term provided, hide both dropdown elements
   if (gene.length == 0) {
@@ -93,6 +97,7 @@ function run_gene_search(gene, species, div_ids, callback) {
   })
   .fail(function() {
     console.error('Gene query failed.');
+    swap_fade([ load_div ], error_div);
   });
 }
 
