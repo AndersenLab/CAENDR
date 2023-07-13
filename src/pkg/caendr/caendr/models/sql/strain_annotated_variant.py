@@ -93,20 +93,21 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
 
 
   @classmethod
-  def generate_interval_sql(cls, interval):
+  def generate_interval_sql(cls, interval, species=None):
     interval = interval.replace(',','')
     chrom = interval.split(':')[0]
     range = interval.split(':')[1]
     start = int(range.split('-')[0])
     stop = int(range.split('-')[1])
 
-    query = f"SELECT * FROM {cls.__tablename__} WHERE chrom='{chrom}' AND pos > {start} AND pos < {stop};"
+    species_clause = f"species_name='{species.name}' AND " if species else ''
+    query = f"SELECT * FROM {cls.__tablename__} WHERE {species_clause} chrom='{chrom}' AND pos > {start} AND pos < {stop};"
     return query
 
 
   @classmethod
-  def run_interval_query(cls, query):
-    query = cls.generate_interval_sql(query)
+  def run_interval_query(cls, query, species=None):
+    query = cls.generate_interval_sql(query, species=species)
     data_frame = pd.read_sql_query(query, db.engine)
     col_list = [ col.get('id') for col in cls.get_column_details()]
     cols = [ 'id', *col_list ]
@@ -120,18 +121,19 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
 
   
   @classmethod
-  def generate_position_sql(cls, pos):
+  def generate_position_sql(cls, pos, species=None):
     pos = pos.replace(',','')  
     chrom = pos.split(':')[0]
     pos = int(pos.split(':')[1])
 
-    query = f"SELECT * FROM {cls.__tablename__} WHERE chrom='{chrom}' AND pos = {pos};"
+    species_clause = f"species_name='{species.name}' AND " if species else ''
+    query = f"SELECT * FROM {cls.__tablename__} WHERE {species_clause} chrom='{chrom}' AND pos = {pos};"
     return query
 
 
   @classmethod
-  def run_position_query(cls, query):
-    query = cls.generate_position_sql(query)
+  def run_position_query(cls, query, species=None):
+    query = cls.generate_position_sql(query, species=species)
     data_frame = pd.read_sql_query(query, db.engine)
     col_list = [ col.get('id') for col in cls.get_column_details()]
     cols = [ 'id', *col_list ]

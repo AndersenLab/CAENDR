@@ -9,12 +9,14 @@ from flask import (render_template,
                     make_response,
                     jsonify,
                     flash,
+                    abort,
                     Blueprint)
 from extensions import cache
 from base.forms import VBrowserForm
 
 from caendr.api.isotype import get_distinct_isotypes
-from caendr.models.datastore import SPECIES_LIST
+from caendr.models.datastore import SPECIES_LIST, Species
+from caendr.models.error import NotFoundError
 from caendr.models.sql import StrainAnnotatedVariant
 from caendr.services.dataset_release import get_latest_dataset_release_version
 from caendr.services.strain_annotated_variants import verify_interval_query, verify_position_query
@@ -74,18 +76,28 @@ def variant_annotation():
 
 
 
-@variant_annotation_bp.route('/query/interval', methods=['POST'])
+@variant_annotation_bp.route('/query/interval',                       methods=['POST'])
+@variant_annotation_bp.route('/query/interval/<string:species_name>', methods=['POST'])
 @cache.memoize(60*60)
-def query_interval():
+def query_interval(species_name=None):
 
   # Extract the query
   payload = json.loads(request.data)
   query = payload.get('query')
 
+  # Get the species from the URL, allowing undefined
+  if species_name:
+    try:
+      species = Species.get(species_name.replace('-', '_'))
+    except NotFoundError:
+      return abort(404)
+  else:
+    species = None
+
   # If query is valid, run it and return the results
   is_valid = verify_interval_query(query=query)
   if is_valid:
-    data = StrainAnnotatedVariant.run_interval_query(query=query)
+    data = StrainAnnotatedVariant.run_interval_query(query=query, species=species)
     return jsonify(data)
 
   # Otherwise, return an empty response
@@ -93,18 +105,28 @@ def query_interval():
 
 
 
-@variant_annotation_bp.route('/query/position', methods=['POST'])
+@variant_annotation_bp.route('/query/position',                       methods=['POST'])
+@variant_annotation_bp.route('/query/position/<string:species_name>', methods=['POST'])
 @cache.memoize(60*60)
-def query_position():
+def query_position(species_name=None):
 
   # Extract the query
   payload = json.loads(request.data)
   query = payload.get('query')
 
+  # Get the species from the URL, allowing undefined
+  if species_name:
+    try:
+      species = Species.get(species_name.replace('-', '_'))
+    except NotFoundError:
+      return abort(404)
+  else:
+    species = None
+
   # If query is valid, run it and return the results
   is_valid = verify_position_query(query=query)
   if is_valid:
-    data = StrainAnnotatedVariant.run_position_query(query=query)
+    data = StrainAnnotatedVariant.run_position_query(query=query, species=species)
     return jsonify(data)
 
   # Otherwise, return an empty response

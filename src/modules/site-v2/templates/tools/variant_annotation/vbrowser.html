@@ -573,7 +573,7 @@ function fetchTargetConsequence(el, q) {
       type: "POST",
       contentType: 'application/json',
       dataType: 'json',
-      url: "{{ url_for('variant_annotation.query_position') }}",
+      url: "{{ url_for('variant_annotation.query_position') }}/" + species.name,
       data: JSON.stringify({query: q}),
       success:function(result) {
         cachedTargets[q] = result;
@@ -820,7 +820,7 @@ $(document).ready(function() {
 				type: "POST",
         contentType: 'application/json',
         dataType: 'json',
-				url: "{{ url_for('variant_annotation.query_interval') }}",
+				url: "{{ url_for('variant_annotation.query_interval') }}/" + species.name,
 				data: JSON.stringify(data),
 				success:function(result) {
           const has_results = !!Object.keys(result).length;
