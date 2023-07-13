@@ -2,27 +2,29 @@
  *
  * Arguments:
  *   - gene: The gene search term
- *   - table_id: The ID of the table element where results are stored.
- *   - loading_id: The ID of the table loading icon. Displays while gene search is running.
+ *   - div_ids: A dict containing IDs of elements used to display the search results:
+ *     - table: The ID of the table element where results are stored. Required.
+ *     - loading (optional): The ID of the table loading icon. Displays while gene search is running.
+ *     - empty (optional): The ID of the empty message. Displays if no results are found.
  */
-function prep_gene_search(gene, table_id, loading_id) {
+function prep_gene_search(gene, div_ids) {
 
-  const no_results_div = $(`${table_id}-no-results`)
+  // Make sure table ID is provided
+  if (!div_ids.table) throw Error('Must provide table ID.');
+
+  // Get all relevant divs
+  const table_div = $(div_ids.table);
+  const load_div  = div_ids.loading ? $(div_ids.loading) : null;
+  const empty_div = div_ids.empty   ? $(div_ids.empty)   : null;
 
   // If gene is empty, hide all search elements
   if (gene.trim().length == 0) {
-    $(table_id).fadeOut();
-    $(loading_id).fadeOut();
-    if (no_results_div) no_results_div.fadeOut();
+    swap_fade([ table_div, load_div, empty_div ])
   }
 
   // If gene not empty, replace the table with the loading icon
   else {
-    $(table_id).fadeOut().promise().done(() => {
-      no_results_div.fadeOut().promise().done(() => {
-        $(loading_id).fadeIn();
-      })
-    })
+    swap_fade([ table_div, empty_div ], load_div);
   }
 }
 
@@ -32,27 +34,33 @@ function prep_gene_search(gene, table_id, loading_id) {
  * Arguments:
  *   - gene: The gene to query for
  *   - species: The species to query for
- *   - table_id: The ID of the table element to store the results in. Clears & appends rows to the tbody(s) of this table.
- *       NOTE: If used on a table with multiple tbody elements, will append to ALL bodies.
- *   - loading_id: The ID of the table loading icon. Displays while gene search is running.
+ *   - div_ids: A dict containing IDs of elements used to display the search results:
+ *     - table: The ID of the table element to store the results in. Clears & appends rows to the tbody(s) of this table.
+ *              NOTE: If used on a table with multiple tbody elements, will append to ALL bodies.
+ *     - loading (optional): The ID of the table loading icon. Displays while gene search is running.
+ *     - empty (optional): The ID of the empty message. Displays if no results are found.
  *   - callback: A function to run on each returned gene:
  *       Arguments: element index & element (gene object)
  *       Return: a list of object to be placed in table cells, or null if this gene should be skipped.
  */
-function run_gene_search(gene, species, table_id, loading_id, callback) {
+function run_gene_search(gene, species, div_ids, callback) {
+
+  if (!div_ids.table) throw Error('Must provide table ID.');
 
   // Make sure all whitespace is trimmed
   gene = gene.trim();
 
   // Get the body of the table to fill out
-  const tbody = $(`${table_id} > tbody`);
+  const tbody = $(`${div_ids.table} > tbody`);
 
-  const no_results_div = $(`${table_id}-no-results`)
+  // Get relevant divs
+  const table_div = $(div_ids.table);
+  const load_div  = div_ids.loading ? $(div_ids.loading) : null;
+  const empty_div = div_ids.empty   ? $(div_ids.empty)   : null;
 
   // If no search term provided, hide both dropdown elements
   if (gene.length == 0) {
-    $(table_id).fadeOut();
-    $(loading_id).fadeOut();
+    swap_fade([ table_div, load_div ])
     return;
   }
 
@@ -75,14 +83,12 @@ function run_gene_search(gene, species, table_id, loading_id, callback) {
       });
 
       // Hide the loading symbol & show the table
-      $(loading_id).fadeOut().promise().done(() => { $(table_id).fadeIn(); });
+      swap_fade([ load_div ], table_div)
     }
 
     // If no results found, inform the user
     else {
-      $(loading_id).fadeOut().promise().done(() => {
-        if (no_results_div) no_results_div.fadeIn();
-      });
+      swap_fade([ load_div ], empty_div)
     }
   })
   .fail(function() {
@@ -93,4 +99,16 @@ function run_gene_search(gene, species, table_id, loading_id, callback) {
 
 function format_locus_string(chrom, start, end) {
   return `${ chrom }:${ start }-${ end }`;
+}
+
+
+async function swap_fade(from, to = null) {
+
+  // Filter out nulls, then wait for all elements to fade out
+  await Promise.all(
+    from.filter( p => p !== null ).map( el => el.fadeOut().promise() )
+  );
+
+  // If provided, fade in the target element
+  if (to) to.fadeIn();
 }

@@ -69,7 +69,7 @@
                 </thead>
                 <tbody id="orthologs"></tbody>
               </table>
-              <div id="g-search-table-no-results" style="display:none;">
+              <div id="g-search-table-empty" style="display:none;">
                 That gene name is not found in this species, so either that gene does not exist in this species or a different gene name is indexed.
               </div>
             </div>
@@ -236,6 +236,13 @@ const default_checked_tracks = [
   {% for track in default_tracks %} {% if track.checked %} "{{ track.name }}", {% endif %} {% endfor %}
 ];
 
+// Divs used by the gene search
+const gene_search_div_ids = {
+  "table":   "#g-search-table",
+  "loading": "#loading-search-table",
+  "empty":   "#g-search-table-empty",
+}
+
 
 
 /* Initialization */
@@ -285,7 +292,7 @@ $(document).ready(function () {
   $("#gene-search").on("input", function(e) {
 
     var gene = $('#gene-search').val().trim();
-    prep_gene_search(gene, "#g-search-table", "#loading-search-table");
+    prep_gene_search(gene, gene_search_div_ids);
 
     clearTimeout(typingTimer);
     typingTimer = setTimeout(process_gene_search, doneTypingInterval);
@@ -423,7 +430,7 @@ function update_species(species_id) {
 function process_gene_search() {
   var gene = $('#gene-search').val().trim();
 
-  run_gene_search(gene, species, "#g-search-table", "#loading-search-table", (i, row) => {
+  run_gene_search(gene, species, gene_search_div_ids, (i, row) => {
     link = ("chrom" in row) ? format_locus_string(row["chrom"], row["start"], row["end"]) : row["locus"];
     gene_name = `<a onclick="set_position('${link}')" link='${link}' class='ortholink'>${row["locus"]}</a>`;
     return [ gene_name, row["gene_symbol"] ];
