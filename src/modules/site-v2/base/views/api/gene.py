@@ -29,9 +29,6 @@ def api_search_genes(query=""):
     Query the table for genes based on a search and an optional species.
 
     Returns a list of results, or None for a blank query.  Gives a maximum of 10 results.
-
-    Note that if a species is selected and the query equals the gene prefix for that species,
-    this will be considered a blank query.  (Otherwise, this would return all genes.)
   '''
 
   # Read the query & species frim the request
@@ -42,7 +39,11 @@ def api_search_genes(query=""):
   # If a species was provided, remove the optional species-specific gene prefix from the query
   if species:
     species_object = SPECIES_LIST[species]
-    query = remove_prefix(query, species_object['gene_prefix'].lower())
+
+    # Remove the species-specific gene prefix from the query, unless the whole query is just the prefix
+    # Want to avoid creating a blank query
+    if query != species_object['gene_prefix'].lower():
+      query = remove_prefix(query, species_object['gene_prefix'].lower())
 
   # If the query is empty, return None
   if not query:
