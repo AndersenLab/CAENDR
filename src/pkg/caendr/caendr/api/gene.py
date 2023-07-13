@@ -5,6 +5,31 @@ from sqlalchemy import and_, or_, func
 from caendr.services.logger import logger
 
 
+def gene_symbol_sort_key(key):
+    """
+      Helper function to map a gene symbol for a more natural sort.
+      Use e.g. as the key for 'sorted'.
+
+      If the symbol has the format '{symbol}-{number}-...', will split on dashes
+      and map to a list [ '{symbol}', int({number}), ... ].
+      Otherwise, wraps the full string key in a list.
+
+      TODO: This function is not perfect -- fails to naturally sort genes with a
+      mixed-alphanum second item, e.g. 'lin-15A'.
+
+      Args:
+        key (str): A gene symbol
+
+      Returns:
+        A list used as a sorting key for the gene symbol.
+    """
+    x = key.split('-')
+    try:
+      return [ x[0], int(x[1]), *x[2:] ]
+    except:
+      return [ key ]
+
+
 def get_gene(query: str):
   """Lookup a single gene
 
@@ -42,14 +67,14 @@ def get_gene(query: str):
   return result
 
 
-def search_genes(query: str, species: str = None):
-  """Query gene
-
+def search_genes(query: str, species: str = None, limit: int = 10):
+  """
   Query genes in the wormbase summary gene table.
 
   Args:
       query (str): Query string
       species (str, optional): Limit query to one species. If not provided, will query all species.
+      limit (int, optional): Number of results to limit the query to. Defaults to 10.
 
   Returns:
       results (list): List of dictionaries with gene results.
@@ -66,12 +91,15 @@ def search_genes(query: str, species: str = None):
   if species is not None:
     search = and_( search, func.lower(WormbaseGeneSummary.species_name) == species )
 
-  # Perform the query
-  results = WormbaseGeneSummary.query.filter(search).limit(10).all()
+  # Create the main query
+  query = WormbaseGeneSummary.query.filter(search)
+
+  # If a limit is provided, apply it
+  if limit:
+    query = query.limit(limit)
 
   # Map to JSON and return
-  results = [x.to_json() for x in results]
-  return results
+  return [ x.to_json() for x in query.all() ]
 
 
 def search_homologs(query: str, species: str = None):

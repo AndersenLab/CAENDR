@@ -2,7 +2,7 @@ from flask import request, Blueprint
 from caendr.services.logger import logger
 from extensions import cache
 
-from caendr.api.gene import search_genes, search_homologs, get_gene, remove_prefix
+from caendr.api.gene import search_genes, search_homologs, get_gene, remove_prefix, gene_symbol_sort_key
 from caendr.utils.json import jsonify_request
 from caendr.models.datastore import SPECIES_LIST
 
@@ -48,7 +48,9 @@ def api_search_genes(query=""):
   if not query:
     return None
 
-  return sorted(search_genes(query, species=species), key=lambda x: x['gene_symbol'])
+  # Otherwise, apply the search, sort by gene symbol, and return the first 10 results
+  gene_results = search_genes(query, species=species, limit=None)
+  return sorted( gene_results, key=lambda x: gene_symbol_sort_key(x['gene_symbol']) )[:10]
 
 
 # @api_gene_bp.route('/search/<string:query>')
