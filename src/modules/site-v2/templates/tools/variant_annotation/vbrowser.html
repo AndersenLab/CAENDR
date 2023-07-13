@@ -364,7 +364,7 @@ async function downloadCSV(json_data) {
     const link = document.createElement("a");
     link.href = window.URL.createObjectURL(blob);
     const interval = $('#interval').val()
-    link.download = `data_${interval}.csv`;
+    link.download = `${ species['name'] }_${interval}_sva.csv`;
     link.click();
   } else {
     const err = await res.json()

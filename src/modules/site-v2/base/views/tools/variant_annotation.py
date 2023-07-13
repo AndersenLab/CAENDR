@@ -114,14 +114,20 @@ def query_position():
 
 @variant_annotation_bp.route('/download/csv', methods=['POST'])
 def download_csv():
+
+  # Load columns from StrainAnnotatedVariant class
+  columns = [ col['id'] for col in StrainAnnotatedVariant.get_column_details() ]
+
   try:
     data = request.data
     pd_obj = pd.read_json(data)
-    csv = pd_obj.to_csv(index=False, sep=",")
+    csv = pd_obj.to_csv(index=False, sep=",", columns=columns)
+
     res = make_response(csv)
-    res.headers["Content-Disposition"] = "attachment; filename=data.csv"
+    res.headers["Content-Disposition"] = "attachment; filename=variant_annotation_data.csv"
     res.headers["Content-Type"] = "text/csv"
     return res
+
   except Exception as err:
     logger.error(err)
     return make_response(jsonify({ "message": "CSV download failed." }), 500)
