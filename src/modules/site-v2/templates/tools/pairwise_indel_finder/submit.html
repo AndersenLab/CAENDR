@@ -2,7 +2,7 @@
 
 {% block custom_head %}
     <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min.js"></script>
-    <script type="text/javascript" src="//igv.org/web/release/2.6.2/dist/igv.min.js"></script>
+    <script type="text/javascript" src="//igv.org/web/release/2.8.3/dist/igv.min.js"></script>
     <link rel="stylesheet" href="//cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css" />
     <script type="text/javascript" src="//cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
     <style>
@@ -135,7 +135,7 @@ let species;
 let strains;
 
 /* IGV Browser */
-const browser_div = $("#browser");
+const browser_div = $("#browser")[0];
 const browser_options = {}
 let divergent_track_name;
 const COLORS = {
@@ -632,11 +632,11 @@ function set_position(browser, ignore_start_stop=false) {
 
     // Go to the desired locus, then return it from the Promise
     browser.search(search_locus).then(([locus]) => {
-      const chromosome = locus.chromosome.name;
+      const chromosome = locus.chr;
       resolve({
         chromosome,
-        start: chromosome === 'all' ? null : locus.start,
-        end:   chromosome === 'all' ? null : locus.end,
+        start: chromosome === 'all' ? null : locus.initialStart,
+        end:   chromosome === 'all' ? null : locus.initialEnd,
       });
     });
   })
