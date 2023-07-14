@@ -237,7 +237,7 @@ function form_change() {
 
   // Ensure browser is loaded
   if (!loaded) return;
-  const browser = igv.getBrowser()
+  const browser = get_browser()
 
   // Get the new values from the form elements
   const species_id = $("#{{ form.species.elementId }}").val().trim();
@@ -425,7 +425,7 @@ function update_species(species_id) {
 function process_indel_finder_query_results(results) {
 
   // Ensure browser already exists
-  const browser = igv.getBrowser();
+  const browser = get_browser();
   if (!browser) return;
 
   // Handle data table

@@ -14,6 +14,12 @@ function set_templates(val) {
   templates = val;
 }
 
+let igv_browser = null;
+
+function get_browser() {
+  return igv_browser;
+}
+
 
 // Ensure the browser exists & is set to the desired parameters
 // Returns as a Promise:
@@ -29,7 +35,7 @@ function create_or_update_browser(browser_div, browser_options, species) {
     "fastaURL": replace_tokens("{{ fasta_url }}"),
   }
 
-  const browser = igv.getBrowser();
+  const browser = igv_browser;
 
   // If browser exists, swap out species params (name and FASTA file)
   if (browser) {
@@ -57,6 +63,7 @@ function create_or_update_browser(browser_div, browser_options, species) {
     };
 
     return igv.createBrowser(browser_div, options).then((browser) => {
+      igv_browser = browser;
       return { browser, created: true, changed: true };
     });
   }
@@ -69,7 +76,7 @@ function add_track(track_name, track_data = null) {
   if (!tracks.has(track_name)) {
     const track = track_data || get_track(track_name)
     tracks.add(track_name);
-    return igv.getBrowser().loadTrack(track);
+    return igv_browser.loadTrack(track);
   }
 }
 
@@ -77,7 +84,7 @@ function add_track(track_name, track_data = null) {
 function remove_track(track_name) {
   if (track_name == '') return;
   tracks.delete(track_name);
-  return igv.getBrowser().removeTrackByName(track_name);
+  return igv_browser.removeTrackByName(track_name);
 }
 
 function update_track(track_name, track_data = null) {
