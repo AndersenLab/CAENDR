@@ -52,3 +52,64 @@ class Strain(DictSerializable, db.Model):
   @staticmethod
   def sort_by_strain(arr):
     return sorted(arr, key=Strain.to_sortable_strain)
+
+
+  @classmethod
+  def get_columns_ordered(cls, names_only=False):
+    '''
+      Get the list of columns in this table, in the order specified in the source data sheet.
+    '''
+
+    # Define the column order using the column names
+    col_order = [
+      'species',
+      'species_id_method',
+      'strain',
+      'isotype',
+      'previous_names',
+      'release',
+      'source_lab',
+      'latitude',
+      'longitude',
+      'landscape',
+      'locality_description',
+      'substrate',
+      'substrate_comments',
+      'substrate_temp',
+      'ambient_temp',
+      'ambient_humidity',
+      'associated_organism',
+      'inbreeding_state',
+      'sampled_by',
+      'isolated_by',
+      'sampling_date',
+      'sampling_date_comments',
+      'notes',
+      'strain_set',              # "set" in source data sheet
+      'issues',
+      'issue_notes',
+      'isotype_ref_strain',
+      'sequenced',               # "wgs_seq" in source data sheet
+      # 'peel-zeel',
+      # 'pha-sup',
+      # 'nagoya',
+    ]
+
+    # Get the list of columns, associated with their index in the ordered list
+    col_list = [
+      (col_order.index(c.name) if c.name in col_order else None, c)
+        for c in list(cls.__mapper__.columns)
+    ]
+
+    # Filter out any columns not in the ordered list
+    col_list = [ c for c in col_list if c[0] is not None]
+
+    # Sort by index in ordered list, and map back to just the column object
+    col_list = [ c[1] for c in sorted(col_list, key=lambda x: x[0]) ]
+
+    # Return names or full columns, as requested
+    # Can't just return ordered list above because some of the columns listed are not defined in this table
+    if names_only:
+      return [ c.name for c in col_list ]
+    else:
+      return col_list

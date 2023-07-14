@@ -121,16 +121,14 @@ def strains_data_csv(release_name, species_name, file_ext):
     abort(404)
 
   # Get list of column names in desired order
-  col_list = [ c for c in list(Strain.__mapper__.columns) if c.name != 'species_name' ]
-  col_order = [1, 0, 3, 4, 5, 7, 8, 9, 10, 28, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 2, 6]
-  col_list[:] = [ col_list[i].name for i in col_order ]
+  columns = Strain.get_columns_ordered(names_only=True)
 
   # Get list of strains for this species as set of rows for pandas
   strains_by_species = query_strains(species=species_name, issues=False)
-  data = ( [ getattr(row, column) for column in col_list ] for row in strains_by_species )
+  data = ( [ getattr(row, column) for column in columns ] for row in strains_by_species )
 
   # Convert to a CSV/TSV file
-  output = convert_data_table_to_csv(data, col_list, sep=file_format['sep'])
+  output = convert_data_table_to_csv(data, columns, sep=file_format['sep'])
 
   # Stream the response as a file with the correct filename
   resp = Response(output, mimetype=file_format['mimetype'])
