@@ -20,7 +20,7 @@ from caendr.models.sql import Strain
 from caendr.utils.json import dump_json
 from caendr.utils.data import get_file_format, convert_data_table_to_csv
 from caendr.utils.env import get_env_var
-from caendr.models.datastore import SPECIES_LIST
+from caendr.models.datastore import Species
 from caendr.models.datastore.cart import Cart
 from caendr.models.error import NotFoundError
 from caendr.services.dataset_release import get_all_dataset_releases, find_dataset_release, get_latest_dataset_release_version
@@ -95,12 +95,18 @@ def external_links():
 #
 # Strain Data
 #
-@strains_bp.route('/download/<release_name>/<species_name>/strain-data/<file_ext>')
+@strains_bp.route('/download/<species_name>/<release_name>/strain-data/<file_ext>')
 @cache.memoize(60*60)
-def strains_data_csv(release_name, species_name, file_ext):
+def strains_data_csv(species_name, release_name, file_ext):
   """
     Dumps strain dataset; Normalizes lat/lon on the way out.
   """
+
+  # Get the species from the URL
+  try:
+    species = Species.get(species_name.replace('-', '_'))
+  except NotFoundError:
+    return abort(404)
 
   # Validate release
   try:
@@ -109,10 +115,6 @@ def strains_data_csv(release_name, species_name, file_ext):
     else:
       release = find_dataset_release(get_all_dataset_releases(order='-version'), release_name)
   except NotFoundError:
-    abort(404)
-
-  # Validate species
-  if species_name not in SPECIES_LIST:
     abort(404)
 
   # Get file settings from the extension, rejecting bad extensions
@@ -124,7 +126,7 @@ def strains_data_csv(release_name, species_name, file_ext):
   columns = Strain.get_columns_ordered(names_only=True)
 
   # Get list of strains for this species as set of rows for pandas
-  strains_by_species = query_strains(species=species_name, issues=False)
+  strains_by_species = query_strains(species=species.name, issues=False)
   data = ( [ getattr(row, column) for column in columns ] for row in strains_by_species )
 
   # Convert to a CSV/TSV file
@@ -132,7 +134,7 @@ def strains_data_csv(release_name, species_name, file_ext):
 
   # Stream the response as a file with the correct filename
   resp = Response(output, mimetype=file_format['mimetype'])
-  resp.headers['Content-Disposition'] = f'filename={release["version"]}_{species_name}_strain_data.{file_ext}'
+  resp.headers['Content-Disposition'] = f'filename={release["version"]}_{species.name}_strain_data.{file_ext}'
   return resp
 
 

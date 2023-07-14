@@ -77,7 +77,7 @@
                                             <th scope="row">Strain Data</th>
                                             <td>Includes strain, isotype, location information, and more.</td>
                                             <td class="text-center">
-                                                <a class="btn btn-primary text-light" href="{{ url_for('request_strains.strains_data_csv', release_name = release_version, species_name = species.name, file_ext='csv') }}">
+                                                <a class="btn btn-primary text-light" href="{{ url_for('request_strains.strains_data_csv', release_name = release_version, species_name = species.get_url_name(), file_ext='csv') }}">
                                                     {{release_version}}_{{species.name}}_strain_data.csv
                                                 </a>
                                             </td>
