@@ -18,7 +18,7 @@ from extensions import cache, compress
 from caendr.api.strain import get_strains, query_strains, get_strain_sets, get_strain_img_url
 from caendr.models.sql import Strain
 from caendr.utils.json import dump_json
-from caendr.utils.data import get_file_format
+from caendr.utils.data import get_file_format, convert_data_table_to_csv
 from caendr.utils.env import get_env_var
 from caendr.models.datastore import SPECIES_LIST
 from caendr.models.datastore.cart import Cart
@@ -120,20 +120,20 @@ def strains_data_csv(release_name, species_name, file_ext):
   if file_format is None:
     abort(404)
 
-  # Generator function to produce the file line-by-line
-  def generate():
-    strains_by_species = query_strains(species=species_name, issues=False)
-    col_list = list(Strain.__mapper__.columns)
-    col_order = [1, 0, 3, 4, 5, 7, 8, 9, 10, 28, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 2, 6]
-    col_list[:] = [col_list[i] for i in col_order]
-    header = [x.name for x in col_list]
-    yield file_format['sep'].join(header) + "\n"
-    for row in strains_by_species:
-      row = [getattr(row, column.name) for column in col_list]
-      yield file_format['sep'].join(map(str, row)) + "\n"
+  # Get list of column names in desired order
+  col_list = [ c for c in list(Strain.__mapper__.columns) if c.name != 'species_name' ]
+  col_order = [1, 0, 3, 4, 5, 7, 8, 9, 10, 28, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 2, 6]
+  col_list[:] = [ col_list[i].name for i in col_order ]
+
+  # Get list of strains for this species as set of rows for pandas
+  strains_by_species = query_strains(species=species_name, issues=False)
+  data = ( [ getattr(row, column) for column in col_list ] for row in strains_by_species )
+
+  # Convert to a CSV/TSV file
+  output = convert_data_table_to_csv(data, col_list, sep=file_format['sep'])
 
   # Stream the response as a file with the correct filename
-  resp = Response(stream_with_context(generate()), mimetype=file_format['mimetype'])
+  resp = Response(output, mimetype=file_format['mimetype'])
   resp.headers['Content-Disposition'] = f'filename={release["version"]}_{species_name}_strain_data.{file_ext}'
   return resp
 

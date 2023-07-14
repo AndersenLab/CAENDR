@@ -30,7 +30,7 @@ from caendr.models.datastore import SPECIES_LIST, HeritabilityReport
 from caendr.models.task import TaskStatus
 from caendr.api.strain import get_strains
 from caendr.services.heritability_report import get_heritability_report, get_heritability_reports, fetch_heritability_report
-from caendr.utils.data import unique_id, convert_data_table_to_tsv, get_object_hash
+from caendr.utils.data import unique_id, get_object_hash
 from caendr.utils.env import get_env_var
 from caendr.services.cloud.storage import get_blob, generate_blob_url
 from caendr.services.persistent_logger import PersistentLogger

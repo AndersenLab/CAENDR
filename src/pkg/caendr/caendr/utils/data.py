@@ -71,9 +71,9 @@ def coalesce(*values):
   return next((v for v in values if v is not None), None)
 
 
-def convert_data_table_to_tsv(data, columns):
+def convert_data_table_to_csv(data, columns, sep='\t'):
   data = pd.DataFrame(data, columns=columns)
-  data = data.to_csv(index=False, sep="\t")
+  data = data.to_csv(index=False, sep=sep)
   return data
 
 
