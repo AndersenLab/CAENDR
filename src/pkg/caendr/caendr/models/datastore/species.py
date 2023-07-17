@@ -10,18 +10,19 @@ class Species(Entity):
     kind = 'species'
 
     @staticmethod
-    def get(species_name):
-        return SPECIES_LIST.get(species_name, None)
-
-    @staticmethod
-    def from_name(species_name, from_url=False):
+    def get(species_name, from_url=False):
 
         # If allowing URL version, map dashes to underscores
         if from_url:
             species_name = species_name.replace('-', '_')
 
+        return SPECIES_LIST.get(species_name, None)
+
+    @staticmethod
+    def from_name(species_name, from_url=False):
+
         # Try to get the species
-        species = Species.get(species_name)
+        species = Species.get(species_name, from_url=from_url)
 
         # Raise an error instead of returning None
         if species is not None:
