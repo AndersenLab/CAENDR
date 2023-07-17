@@ -88,7 +88,7 @@ def query_interval(species_name=None):
   # Get the species from the URL, allowing undefined
   if species_name:
     try:
-      species = Species.get(species_name.replace('-', '_'))
+      species = Species.from_name(species_name, from_url=True)
     except NotFoundError:
       return abort(404)
   else:
@@ -117,7 +117,7 @@ def query_position(species_name=None):
   # Get the species from the URL, allowing undefined
   if species_name:
     try:
-      species = Species.get(species_name.replace('-', '_'))
+      species = Species.from_name(species_name, from_url=True)
     except NotFoundError:
       return abort(404)
   else:

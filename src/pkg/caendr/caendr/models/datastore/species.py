@@ -11,8 +11,21 @@ class Species(Entity):
 
     @staticmethod
     def get(species_name):
-        if species_name in SPECIES_LIST:
-            return SPECIES_LIST[species_name]
+        return SPECIES_LIST.get(species_name, None)
+
+    @staticmethod
+    def from_name(species_name, from_url=False):
+
+        # If allowing URL version, map dashes to underscores
+        if from_url:
+            species_name = species_name.replace('-', '_')
+
+        # Try to get the species
+        species = Species.get(species_name)
+
+        # Raise an error instead of returning None
+        if species is not None:
+            return species
         raise NotFoundError(Species, {'name': species_name})
 
 
@@ -101,6 +114,9 @@ class Species(Entity):
         # TODO: validate -- looks like this should be the 8 digit date string
         self._release_sva = new_release_sva
 
+
+
+    ## URL variable(s) ##
 
     def get_url_name(self):
         return self.name.replace('_', '-')

@@ -46,7 +46,7 @@ def download_bam_bai_file(species_name='', strain_name='', ext=''):
 
   # Parse the species & release from the URL
   try:
-    species = Species.get(species_name.replace('-', '_'))
+    species = Species.from_name(species_name, from_url=True)
   except NotFoundError:
     return abort(404)
 
@@ -67,7 +67,7 @@ def download_bam_bai_script(species_name, release_version):
 
   # Parse the species & release from the URL
   try:
-    species = Species.get(species_name.replace('-', '_'))
+    species = Species.from_name(species_name, from_url=True)
     release = find_dataset_release(get_all_dataset_releases(order='-version', species=species.name), release_version)
   except NotFoundError:
     return abort(404)

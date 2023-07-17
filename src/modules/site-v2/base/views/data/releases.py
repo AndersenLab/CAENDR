@@ -37,7 +37,7 @@ releases_bp = Blueprint(
 
 
 def interpret_url_vars(species_name, release_version):
-  species = Species.get(species_name.replace('-', '_'))
+  species = Species.from_name(species_name, from_url=True)
 
   if species.get_url_name() != species_name:
     raise SpeciesUrlNameError(species.get_url_name())

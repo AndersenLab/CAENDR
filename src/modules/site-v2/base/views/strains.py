@@ -104,7 +104,7 @@ def strains_data_csv(species_name, release_name, file_ext):
 
   # Get the species from the URL
   try:
-    species = Species.get(species_name.replace('-', '_'))
+    species = Species.from_name(species_name, from_url=True)
   except NotFoundError:
     return abort(404)
 
