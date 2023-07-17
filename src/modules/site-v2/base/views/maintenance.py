@@ -5,7 +5,7 @@ from caendr.services.logger import logger
 from caendr.services.cloud.cron import verify_cron_req_origin
 from caendr.api.strain import upload_bam_bai_download_script
 from caendr.models.error import APIDeniedError, APIError, NotFoundError
-from caendr.models.datastore import Species
+from caendr.models.datastore import DatasetRelease, Species
 from caendr.services.dataset_release import get_all_dataset_releases, find_dataset_release
 
 from base.utils.auth import user_has_role
@@ -36,7 +36,7 @@ def create_bam_bai_download_script(species_name, release_version):
   # Parse the species & release from the URL
   try:
     species = Species.from_name(species_name, from_url=True)
-    release = find_dataset_release(get_all_dataset_releases(order='-version', species=species.name), release_version)
+    release = DatasetRelease.from_name(release_version, species_name=species.name)
   except NotFoundError:
     return abort(404)
 

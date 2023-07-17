@@ -4,7 +4,7 @@ from base.utils.auth import jwt_required
 from extensions import cache
 
 from caendr.api.strain import get_bam_bai_download_link, fetch_bam_bai_download_script, generate_bam_bai_download_script
-from caendr.models.datastore import Species
+from caendr.models.datastore import DatasetRelease, Species
 from caendr.models.error import NotFoundError
 from caendr.services.dataset_release import get_all_dataset_releases, find_dataset_release
 from caendr.utils.env import get_env_var
@@ -68,7 +68,7 @@ def download_bam_bai_script(species_name, release_version):
   # Parse the species & release from the URL
   try:
     species = Species.from_name(species_name, from_url=True)
-    release = find_dataset_release(get_all_dataset_releases(order='-version', species=species.name), release_version)
+    release = DatasetRelease.from_name(release_version, species_name=species.name)
   except NotFoundError:
     return abort(404)
 

@@ -3,6 +3,7 @@ from caendr.services.logger import logger
 
 from caendr.api.gene import remove_prefix
 from caendr.models.datastore import Entity
+from caendr.models.error import NotFoundError
 from caendr.services.cloud.storage import generate_blob_url, get_blob_list, check_blob_exists
 from caendr.utils.tokens import TokenizedString
 
@@ -53,6 +54,19 @@ class DatasetRelease(Entity):
 
   def __repr__(self):
     return f"<{self.kind}:{getattr(self, 'name', 'no-name')}>"
+
+
+  @staticmethod
+  def from_name(release_name, species_name=None):
+    release = DatasetRelease.get_ds(release_name)
+
+    if release is None:
+      raise NotFoundError(DatasetRelease, {'name': release_name})
+
+    if release['species'] != species_name:
+      raise NotFoundError(DatasetRelease, {'name': release_name, 'species': species_name})
+
+    return release
 
 
   @classmethod
