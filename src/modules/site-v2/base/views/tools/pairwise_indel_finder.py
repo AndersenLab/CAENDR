@@ -91,9 +91,9 @@ def get_tracks():
 
   # If a species was passed, check that the referenced track file exists for this species
   # If not, return a 404 error
-  species_name = request.args.get('species')
-  if species_name:
-    species = Species.from_name(species_name)
+  # If species invalid, ignore (since this is an optional URL variable)
+  species = Species.get(request.args.get('species'), from_url=True)
+  if species:
 
     # Get the bucket and filepath
     bucket, tkn_path = divergent_track.get_path()

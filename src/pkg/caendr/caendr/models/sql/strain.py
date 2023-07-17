@@ -111,5 +111,4 @@ class Strain(DictSerializable, db.Model):
     # Can't just return ordered list above because some of the columns listed are not defined in this table
     if names_only:
       return [ c.name for c in col_list ]
-    else:
-      return col_list
+    return col_list
