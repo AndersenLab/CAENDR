@@ -26,7 +26,7 @@ from caendr.models.error import (
     FileUploadError,
     ReportLookupError,
 )
-from caendr.models.datastore import SPECIES_LIST, HeritabilityReport
+from caendr.models.datastore import Species, HeritabilityReport
 from caendr.models.task import TaskStatus
 from caendr.api.strain import get_strains
 from caendr.services.heritability_report import get_heritability_report, get_heritability_reports, fetch_heritability_report
@@ -79,10 +79,10 @@ def heritability_calculator():
     'hide_form': True,
 
     'strain_list': [],
-    'species_list': SPECIES_LIST,
+    'species_list': Species.all(),
     'sample_data_urls': {
       species: generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, HERITABILITY_EXAMPLE_FILE.get_string(SPECIES=species))
-        for species in SPECIES_LIST.keys()
+        for species in Species.all().keys()
     },
   })
 
@@ -133,7 +133,7 @@ def list_results():
     },
 
     # Table info
-    'species_list': SPECIES_LIST,
+    'species_list': Species.all(),
     'items': get_heritability_reports(None if show_all else user.name, filter_errs),
     'columns': results_columns(),
 

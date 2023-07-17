@@ -28,6 +28,10 @@ class Species(Entity):
             return species
         raise NotFoundError(Species, {'name': species_name})
 
+    @staticmethod
+    def all():
+        return SPECIES_LIST
+
 
     @classmethod
     def get_props_set(cls):

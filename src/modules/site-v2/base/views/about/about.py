@@ -15,7 +15,7 @@ from extensions import cache
 from base.utils.statistics import cum_sum_strain_isotype, get_strain_collection_plot, get_mappings_summary_legacy, get_report_sumary_plot_legacy, get_weekly_visits_plot, get_num_registered_users
 
 from caendr.api.isotype import get_isotypes
-from caendr.models.datastore.species import SPECIES_LIST
+from caendr.models.datastore.species import Species
 from caendr.models.datastore.profile import Profile
 from caendr.services.cloud.analytics import get_weekly_visits
 from caendr.services.publication import get_publications_html_df
@@ -93,11 +93,11 @@ def statistics():
   df = cum_sum_strain_isotype()
   try:
     n_strains = {
-      species_name: max(df[f'{species_name}_strain']) for species_name in SPECIES_LIST
+      species_name: max(df[f'{species_name}_strain']) for species_name in Species.all()
     }
     n_strains = sum([ n for _, n in n_strains.items() if not isnan(n) ])
     n_isotypes = {
-      species_name: max(df[f'{species_name}_isotype']) for species_name in SPECIES_LIST
+      species_name: max(df[f'{species_name}_isotype']) for species_name in Species.all()
     }
     n_isotypes = sum([ n for _, n in n_isotypes.items() if not isnan(n) ])
     strain_collection_plot = get_strain_collection_plot(df)

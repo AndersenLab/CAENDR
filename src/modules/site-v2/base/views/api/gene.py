@@ -4,7 +4,7 @@ from extensions import cache
 
 from caendr.api.gene import search_genes, search_homologs, get_gene, remove_prefix
 from caendr.utils.json import jsonify_request
-from caendr.models.datastore import SPECIES_LIST
+from caendr.models.datastore import Species
 
 
 api_gene_bp = Blueprint('api_gene',
@@ -31,7 +31,7 @@ def api_search_genes(query=""):
 
   # If a species was provided, remove the optional species-specific gene prefix from the query
   if species:
-    species_object = SPECIES_LIST[species]
+    species_object = Species.from_name(species)
     query = remove_prefix(query, species_object['gene_prefix'].lower())
 
   return sorted(search_genes(query, species=species), key=lambda x: x['gene_symbol'])

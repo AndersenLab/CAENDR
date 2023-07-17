@@ -63,10 +63,10 @@ class IndelPrimer(DataJobEntity):
 
       Equivalent to running `get_fasta_filepath_obj` on the appropriate DatasetRelease object.
     '''
-    from caendr.models.datastore import SPECIES_LIST
+    from caendr.models.datastore import Species
 
     # Lookup desired species object
-    species_obj = SPECIES_LIST[species]
+    species_obj = Species.from_name(species)
 
     # Default to the latest version defined for the species
     if release is None:

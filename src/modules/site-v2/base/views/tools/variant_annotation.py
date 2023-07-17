@@ -15,7 +15,7 @@ from extensions import cache
 from base.forms import VBrowserForm
 
 from caendr.api.isotype import get_distinct_isotypes
-from caendr.models.datastore import SPECIES_LIST, Species
+from caendr.models.datastore import Species
 from caendr.models.error import NotFoundError
 from caendr.models.sql import StrainAnnotatedVariant
 from caendr.services.dataset_release import get_latest_dataset_release_version
@@ -44,7 +44,7 @@ def variant_annotation():
     col['default_visibility'] = col_visibility_func(col)
 
   # Organize distinct isotypes by species
-  strain_listing = { name: sorted( get_distinct_isotypes(species=name) ) for name in SPECIES_LIST }
+  strain_listing = { name: sorted( get_distinct_isotypes(species=name) ) for name in Species.all() }
 
   if request.args.get('download_err'):
     flash('CSV Download Failed.', 'error')
@@ -62,7 +62,7 @@ def variant_annotation():
     "strain_listing": strain_listing,
     "columns": columns,
     "current_version": get_latest_dataset_release_version().version,
-    "species_list": SPECIES_LIST,
+    "species_list": Species.all(),
 
     # List of Species class fields to expose to the template
     # Optional - exposes all attributes if not provided

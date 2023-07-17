@@ -1,7 +1,7 @@
 import json
 
 from caendr.models.datastore.browser_track import BrowserTrackDefault, BrowserTrackTemplate
-from caendr.models.datastore import DatasetRelease, SPECIES_LIST
+from caendr.models.datastore import DatasetRelease, Species
 from flask import ( render_template,
                     Blueprint,
                     jsonify,
@@ -84,7 +84,7 @@ def genome_browser(region="III:11746923-11750250", query=None):
       }
       for strain in get_isotypes( species=species )
     ]
-    for species in SPECIES_LIST
+    for species in Species.all()
   }
 
   # Render the page
@@ -101,7 +101,7 @@ def genome_browser(region="III:11746923-11750250", query=None):
     'region':         region,
     'query':          query,
     'strain_listing': strain_listing,
-    'species_list':   SPECIES_LIST,
+    'species_list':   Species.all(),
 
     'form': SpeciesSelectForm(),
 
@@ -109,7 +109,7 @@ def genome_browser(region="III:11746923-11750250", query=None):
     'default_tracks': sorted(BrowserTrackDefault.query_ds(), key = lambda x: x['order'] ),
     'supported_tracks': {
       species_name: get_dataset_release(species['release_latest'])['browser_tracks']
-        for species_name, species in SPECIES_LIST.items()
+        for species_name, species in Species.all().items()
     },
 
     # Data locations
@@ -131,7 +131,7 @@ def genome_browser(region="III:11746923-11750250", query=None):
     ],
 
     'latest_release_genomes': {
-      species_name: get_dataset_release(species['release_latest'])['genome'] for species_name, species in SPECIES_LIST.items()
+      species_name: get_dataset_release(species['release_latest'])['genome'] for species_name, species in Species.all().items()
     },
 
     # Misc
