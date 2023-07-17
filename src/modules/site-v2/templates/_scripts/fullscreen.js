@@ -6,14 +6,23 @@ const fullScreenAvailable = document.fullscreenEnabled ||
                             document.webkitFullscreenEnabled ||
                             document.msFullscreenEnabled
 
+
+/* Run any time fullscreen changes */
+function onFullscreenChange() {
+
+  // Check for an IGV variable and trigger browser(s) to resize
+  if (typeof igv !== 'undefined') igv.visibilityChange();
+}
+
+
 if (fullScreenAvailable) {
   function openFullscreen() {
     if (fullscreenBrowser.requestFullscreen) {
-      fullscreenBrowser.requestFullscreen();
+      fullscreenBrowser.requestFullscreen().then(onFullscreenChange);
     } else if (fullscreenBrowser.webkitRequestFullscreen) { /* Safari */
-      fullscreenBrowser.webkitRequestFullscreen();
+      fullscreenBrowser.webkitRequestFullscreen().then(onFullscreenChange);
     } else if (fullscreenBrowser.msRequestFullscreen) { /* IE11 */
-      fullscreenBrowser.msRequestFullscreen();
+      fullscreenBrowser.msRequestFullscreen().then(onFullscreenChange);
     }
   }
 } else {
@@ -23,11 +32,11 @@ if (fullScreenAvailable) {
 
   function closeFullscreen() {
     if (document.exitFullscreen) {
-      document.exitFullscreen();
+      document.exitFullscreen().then(onFullscreenChange);
     } else if (document.webkitExitFullscreen) { /* Safari */
-      document.webkitExitFullscreen();
+      document.webkitExitFullscreen().then(onFullscreenChange);
     } else if (document.msExitFullscreen) { /* IE11 */
-      document.msExitFullscreen();
+      document.msExitFullscreen().then(onFullscreenChange);
     }
   }
 
