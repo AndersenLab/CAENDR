@@ -13,7 +13,7 @@ from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupErro
 from caendr.models.task import TaskStatus
 from caendr.services.cloud.storage import check_blob_exists
 from caendr.services.dataset_release import get_dataset_release
-from caendr.utils.bio import parse_interval_query
+from caendr.utils.bio import parse_chrom_interval
 from caendr.utils.constants import CHROM_NUMERIC
 from caendr.utils.data import get_file_format
 
@@ -297,7 +297,7 @@ def report(id, file_ext=None):
       return abort(404, description="Something went wrong")
 
     # Get indel interval
-    interval = parse_interval_query(data['site'])
+    interval = parse_chrom_interval(data['site'])
 
     # Update the result object with computed fields and generate a format table
     # If result is None or empty, does nothing

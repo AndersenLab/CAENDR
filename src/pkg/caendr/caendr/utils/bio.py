@@ -22,13 +22,13 @@ def arm_or_center(chrom, pos):
 
 
 
-def parse_interval_query(query, silent=True):
+def parse_chrom_interval(interval, silent=True):
   '''
     Parse a string representing a chromosome interval into a dict.
 
     Args:
-      query (str): The interval string to parse.
-      silent (bool, optional): If False, throw a ValueError if the query is not a valid interval. If True, returns None instead. Default True.
+      interval (str): The interval string to parse.
+      silent (bool, optional): If False, throw a ValueError if the given value is not a valid interval. If True, returns None instead. Default True.
 
     Returns:
       dict:
@@ -37,8 +37,8 @@ def parse_interval_query(query, silent=True):
         - stop (int):  The stop location
   '''
 
-  # Perform RegEx search on query string
-  match = re.search(CHROM_INTERVAL_REGEX, query.replace(',',''))
+  # Perform RegEx search on interval string
+  match = re.search(CHROM_INTERVAL_REGEX, interval.replace(',',''))
 
   # If there was a match, parse the capture groups
   if match:
@@ -49,16 +49,16 @@ def parse_interval_query(query, silent=True):
     }
 
   if not silent:
-    raise ValueError(f'Invalid interval query string: {query}')
+    raise ValueError(f'Invalid chromosome interval string: "{interval}"')
 
 
-def parse_position_query(query, silent=True):
+def parse_chrom_position(position, silent=True):
   '''
     Parse a string representing a chromosome position into a dict.
 
     Args:
-      query (str): The interval string to parse.
-      silent (bool, optional): If False, throw a ValueError if the query is not a valid position. If True, returns None instead. Default True.
+      position (str): The interval string to parse.
+      silent (bool, optional): If False, throw a ValueError if the given value is not a valid position. If True, returns None instead. Default True.
 
     Returns:
       dict:
@@ -66,8 +66,8 @@ def parse_position_query(query, silent=True):
         - pos (int):   The location
   '''
 
-  # Perform RegEx search on query string
-  match = re.search(CHROM_POSITION_REGEX, query.replace(',',''))
+  # Perform RegEx search on position string
+  match = re.search(CHROM_POSITION_REGEX, position.replace(',',''))
 
   # If there was a match, parse the capture groups
   if match:
@@ -77,4 +77,4 @@ def parse_position_query(query, silent=True):
     }
 
   if not silent:
-    raise ValueError(f'Invalid position query string: {query}')
+    raise ValueError(f'Invalid chromosome position string: "{position}"')

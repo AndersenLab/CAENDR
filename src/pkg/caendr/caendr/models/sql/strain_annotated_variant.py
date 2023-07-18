@@ -3,7 +3,7 @@ from sqlalchemy import and_
 
 from caendr.services.cloud.postgresql import db
 from caendr.models.sql.dict_serializable import DictSerializable
-from caendr.utils.bio  import parse_interval_query, parse_position_query
+from caendr.utils.bio  import parse_chrom_interval, parse_chrom_position
 from caendr.utils.data import convert_query_to_data_table
 
 class StrainAnnotatedVariant(DictSerializable, db.Model):
@@ -106,7 +106,7 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
     # If interval was passed as a string, parse into a dict
     # Otherwise, it should already be a dict with the right structure
     if isinstance(interval, str):
-      interval = parse_interval_query(interval, silent=False)
+      interval = parse_chrom_interval(interval, silent=False)
 
     # Construct the query object from the given interval
     query = StrainAnnotatedVariant.query.filter( and_(
@@ -124,7 +124,7 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
     # If position was passed as a string, parse into a dict
     # Otherwise, it should already be a dict with the right structure
     if isinstance(position, str):
-      position = parse_position_query(position, silent=False)
+      position = parse_chrom_position(position, silent=False)
 
     # Construct the query object from the given position
     query = StrainAnnotatedVariant.query.filter( and_(
