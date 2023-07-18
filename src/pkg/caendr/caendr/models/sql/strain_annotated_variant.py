@@ -4,6 +4,7 @@ from sqlalchemy import and_
 from caendr.services.cloud.postgresql import db
 from caendr.models.sql.dict_serializable import DictSerializable
 from caendr.utils.bio  import parse_interval_query, parse_position_query
+from caendr.utils.data import convert_query_to_data_table
 
 class StrainAnnotatedVariant(DictSerializable, db.Model):
   """
@@ -121,10 +122,7 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
       query = query.filter( StrainAnnotatedVariant.species_name == species.name )
 
     # Convert query into a DataFrame (using iterable as intermediate step)
-    data_frame = pd.DataFrame(
-      ({ col: getattr(row, col) for col in cols } for row in query.all()),
-      columns=cols,
-    )
+    data_frame = convert_query_to_data_table(query, columns=cols)
 
     try:  
       test = data_frame[cols].dropna(how='all')
@@ -160,10 +158,7 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
       query = query.filter( StrainAnnotatedVariant.species_name == species.name )
 
     # Convert query into a DataFrame (using iterable as intermediate step)
-    data_frame = pd.DataFrame(
-      ({ col: getattr(row, col) for col in cols } for row in query.all()),
-      columns=cols,
-    )
+    data_frame = convert_query_to_data_table(query, columns=cols)
 
     try:  
       result = data_frame[cols].dropna(how='all').fillna(value="").agg(list).to_dict()

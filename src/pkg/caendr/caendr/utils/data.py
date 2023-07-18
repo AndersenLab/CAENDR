@@ -71,6 +71,12 @@ def coalesce(*values):
   return next((v for v in values if v is not None), None)
 
 
+def convert_query_to_data_table(query, columns):
+  return pd.DataFrame(
+    ({ col: getattr(row, col) for col in columns } for row in query.all()), columns=columns
+  )
+
+
 def convert_data_table_to_csv(data, columns, sep='\t'):
   data = pd.DataFrame(data, columns=columns)
   data = data.to_csv(index=False, sep=sep)
