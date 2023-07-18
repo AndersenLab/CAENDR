@@ -240,7 +240,7 @@ const default_checked_tracks = [
 ];
 
 // Divs used by the gene search
-const gene_search_div_ids = {
+const gene_search_selectors = {
   "table":   "#g-search-table",
   "loading": "#loading-search-table",
   "empty":   "#g-search-table-empty",
@@ -296,7 +296,7 @@ $(document).ready(function () {
   $("#gene-search").on("input", function(e) {
 
     var gene = $('#gene-search').val().trim();
-    prep_gene_search(gene, gene_search_div_ids);
+    prep_gene_search(gene, gene_search_selectors);
 
     clearTimeout(typingTimer);
     typingTimer = setTimeout(process_gene_search, doneTypingInterval);
@@ -434,7 +434,7 @@ function update_species(species_id) {
 function process_gene_search() {
   var gene = $('#gene-search').val().trim();
 
-  run_gene_search(gene, species, gene_search_div_ids, (i, row) => {
+  run_gene_search(gene, species, gene_search_selectors, (i, row) => {
     link = ("chrom" in row) ? format_locus_string(row["chrom"], row["start"], row["end"]) : row["locus"];
     gene_name = `<a onclick="set_position('${link}')" link='${link}' class='ortholink'>${row["locus"]}</a>`;
     return [ gene_name, row["gene_symbol"] ];

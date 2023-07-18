@@ -2,31 +2,31 @@
  *
  * Arguments:
  *   - gene: The gene search term
- *   - div_ids: A dict containing IDs of elements used to display the search results:
- *     - table: The ID of the table element where results are stored. Required.
- *     - loading (optional): The ID of the table loading icon. Displays while gene search is running.
- *     - empty (optional): The ID of the empty message. Displays if no results are found.
- *     - error (optional): The ID of the error message. Displays if the server returns an error code.
+ *   - selectors: A dict containing selectors for the elements used to display the search results:
+ *     - table:              Selector for the table element where results are stored. Required.
+ *     - loading (optional): Selector for the table loading icon. Displays while gene search is running.
+ *     - empty (optional):   Selector the empty message. Displays if no results are found.
+ *     - error (optional):   Selector the error message. Displays if the server returns an error code.
  */
-function prep_gene_search(gene, div_ids) {
+function prep_gene_search(gene, selectors) {
 
   // Make sure table ID is provided
-  if (!div_ids.table) throw Error('Must provide table ID.');
+  if (!selectors.table) throw Error('Must provide table ID.');
 
-  // Get all relevant divs
-  const table_div = $(div_ids.table);
-  const load_div  = div_ids.loading ? $(div_ids.loading) : null;
-  const empty_div = div_ids.empty   ? $(div_ids.empty)   : null;
-  const error_div = div_ids.error   ? $(div_ids.error)   : null;
+  // Get all elements
+  const table_el = $(selectors.table);
+  const load_el  = selectors.loading ? $(selectors.loading) : null;
+  const empty_el = selectors.empty   ? $(selectors.empty)   : null;
+  const error_el = selectors.error   ? $(selectors.error)   : null;
 
   // If gene is empty, hide all search elements
   if (gene.trim().length == 0) {
-    swap_fade([ table_div, load_div, empty_div, error_div ])
+    swap_fade([ table_el, load_el, empty_el, error_el ])
   }
 
   // If gene not empty, replace the table with the loading icon
   else {
-    swap_fade([ table_div, empty_div, error_div ], load_div);
+    swap_fade([ table_el, empty_el, error_el ], load_el);
   }
 }
 
@@ -36,35 +36,36 @@ function prep_gene_search(gene, div_ids) {
  * Arguments:
  *   - gene: The gene to query for
  *   - species: The species to query for
- *   - div_ids: A dict containing IDs of elements used to display the search results:
- *     - table: The ID of the table element to store the results in. Clears & appends rows to the tbody(s) of this table.
- *              NOTE: If used on a table with multiple tbody elements, will append to ALL bodies.
- *     - loading (optional): The ID of the table loading icon. Displays while gene search is running.
- *     - empty (optional): The ID of the empty message. Displays if no results are found.
- *     - error (optional): The ID of the error message. Displays if the server returns an error code.
+ *   - selectors: A dict containing selectors for the elements used to display the search results:
+ *     - table:              Selector for the table element to store the results in.
+ *                           Clears & appends rows to the tbody(s) of this table.
+ *                             NOTE: If used on a table with multiple tbody elements, will append to ALL bodies.
+ *     - loading (optional): Selector for the table loading icon. Displays while gene search is running.
+ *     - empty (optional):   Selector the empty message. Displays if no results are found.
+ *     - error (optional):   Selector the error message. Displays if the server returns an error code.
  *   - callback: A function to run on each returned gene:
  *       Arguments: element index & element (gene object)
  *       Return: a list of object to be placed in table cells, or null if this gene should be skipped.
  */
-function run_gene_search(gene, species, div_ids, callback) {
+function run_gene_search(gene, species, selectors, callback) {
 
-  if (!div_ids.table) throw Error('Must provide table ID.');
+  if (!selectors.table) throw Error('Must provide table ID.');
 
   // Make sure all whitespace is trimmed
   gene = gene.trim();
 
   // Get the body of the table to fill out
-  const tbody = $(`${div_ids.table} > tbody`);
+  const tbody = $(`${selectors.table} > tbody`);
 
-  // Get relevant divs
-  const table_div = $(div_ids.table);
-  const load_div  = div_ids.loading ? $(div_ids.loading) : null;
-  const empty_div = div_ids.empty   ? $(div_ids.empty)   : null;
-  const error_div = div_ids.error   ? $(div_ids.error)   : null;
+  // Get all elements
+  const table_el = $(selectors.table);
+  const load_el  = selectors.loading ? $(selectors.loading) : null;
+  const empty_el = selectors.empty   ? $(selectors.empty)   : null;
+  const error_el = selectors.error   ? $(selectors.error)   : null;
 
   // If no search term provided, hide both dropdown elements
   if (gene.length == 0) {
-    swap_fade([ table_div, load_div ])
+    swap_fade([ table_el, load_el ])
     return;
   }
 
@@ -79,7 +80,7 @@ function run_gene_search(gene, species, div_ids, callback) {
 
     // Null results - query evaluated to empty
     if (results === null) {
-      swap_fade([ load_div ]);
+      swap_fade([ load_el ]);
     }
 
     // If one or more results found, display to user
@@ -94,19 +95,19 @@ function run_gene_search(gene, species, div_ids, callback) {
       });
 
       // Hide the loading symbol & show the table
-      swap_fade([ load_div ], table_div)
+      swap_fade([ load_el ], table_el)
     }
 
     // If no results found, inform the user
     else {
-      swap_fade([ load_div ], empty_div)
+      swap_fade([ load_el ], empty_el)
     }
   })
   .fail(function() {
 
     // If query returned an error, inform the user
     console.error('Gene query failed.');
-    swap_fade([ load_div ], error_div);
+    swap_fade([ load_el ], error_el);
   });
 }
 
@@ -120,7 +121,7 @@ async function swap_fade(from, to = null) {
 
   // Filter out nulls, then wait for all elements to fade out
   await Promise.all(
-    from.filter( p => p !== null ).map( el => el.fadeOut().promise() )
+    from.filter( el => el !== null ).map( el => el.fadeOut().promise() )
   );
 
   // If provided, fade in the target element
