@@ -277,7 +277,9 @@ class DatasetRelease(Entity):
     'haplotype_png':                     'haplotype/haplotype.png',
     'haplotype_pdf':                     'haplotype/haplotype.pdf',
     'sweep_pdf':                         'haplotype/sweep.pdf',
-    'sweep_summary_tsv':                 'haplotype/sweep_summary.tsv'
+    'sweep_summary_tsv':                 'haplotype/sweep_summary.tsv',
+
+    'transposon_calls':                  '${RELEASE}_${SPECIES}_transposon_calls.bed',
   }, cutoff_date=20200101)
 
   V1 = ReportType('V1', {
