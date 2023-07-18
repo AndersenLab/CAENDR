@@ -81,6 +81,10 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
       {'id': 'release', 'name': 'Release Date'}
     ]
 
+  @staticmethod
+  def get_column_names():
+    return [ 'id', *[ col.get('id') for col in StrainAnnotatedVariant.get_column_details()] ]
+
 
   @staticmethod
   def column_default_visibility(col):
@@ -99,10 +103,6 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
   @classmethod
   def run_interval_query(cls, interval, species=None):
 
-    # Get the list of column names, making sure to include ID
-    col_list = [ col.get('id') for col in cls.get_column_details()]
-    cols = [ 'id', *col_list ]
-
     # If interval was passed as a string, parse into a dict
     # Otherwise, it should already be a dict with the right structure
     if isinstance(interval, str):
@@ -115,28 +115,11 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
       StrainAnnotatedVariant.pos < interval['stop'],
     ) )
 
-    # If a species was provided, use it to refine the query
-    if species:
-      query = query.filter( StrainAnnotatedVariant.species_name == species.name )
-
-    # Convert query into a DataFrame (using iterable as intermediate step)
-    data_frame = convert_query_to_data_table(query, columns=cols)
-
-    try:  
-      test = data_frame[cols].dropna(how='all')
-      print(test)
-      result = data_frame[cols].dropna(how='all').fillna(value="").agg(list).to_dict()
-    except ValueError:
-      result = {}
-    return result
+    return cls.__run_query(query, species=species)
 
 
   @classmethod
   def run_position_query(cls, position, species=None):
-
-    # Get the list of column names, making sure to include ID
-    col_list = [ col.get('id') for col in cls.get_column_details()]
-    cols = [ 'id', *col_list ]
 
     # If position was passed as a string, parse into a dict
     # Otherwise, it should already be a dict with the right structure
@@ -149,15 +132,24 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
       StrainAnnotatedVariant.pos   == position['pos'],
     ) )
 
+    return cls.__run_query(query, species=species)
+
+
+  @classmethod
+  def __run_query(cls, query, species=None):
+
+    # Get the list of column names
+    columns = StrainAnnotatedVariant.get_column_names()
+
     # If a species was provided, use it to refine the query
     if species:
       query = query.filter( StrainAnnotatedVariant.species_name == species.name )
 
     # Convert query into a DataFrame (using iterable as intermediate step)
-    data_frame = convert_query_to_data_table(query, columns=cols)
+    data_frame = convert_query_to_data_table(query, columns=columns)
 
-    try:  
-      result = data_frame[cols].dropna(how='all').fillna(value="").agg(list).to_dict()
+    try:
+      result = data_frame[columns].dropna(how='all').fillna(value="").agg(list).to_dict()
     except ValueError:
       result = {}
     return result
