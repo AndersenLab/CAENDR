@@ -106,9 +106,7 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
     # If interval was passed as a string, parse into a dict
     # Otherwise, it should already be a dict with the right structure
     if isinstance(interval, str):
-      interval = parse_interval_query(interval)
-      if interval is None:
-        raise ValueError()
+      interval = parse_interval_query(interval, silent=False)
 
     # Construct the query object from the given interval
     query = StrainAnnotatedVariant.query.filter( and_(
@@ -143,9 +141,7 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
     # If position was passed as a string, parse into a dict
     # Otherwise, it should already be a dict with the right structure
     if isinstance(position, str):
-      position = parse_position_query(position)
-      if position is None:
-        raise ValueError()
+      position = parse_position_query(position, silent=False)
 
     # Construct the query object from the given position
     query = StrainAnnotatedVariant.query.filter( and_(
