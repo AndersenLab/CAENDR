@@ -13,6 +13,7 @@ from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupErro
 from caendr.models.task import TaskStatus
 from caendr.services.cloud.storage import check_blob_exists
 from caendr.services.dataset_release import get_dataset_release
+from caendr.utils.bio import parse_interval_query
 from caendr.utils.constants import CHROM_NUMERIC
 from caendr.utils.data import get_file_format
 
@@ -31,8 +32,6 @@ from caendr.services.indel_primer import (
 pairwise_indel_finder_bp = Blueprint(
   'pairwise_indel_finder', __name__, template_folder='tools'
 )
-
-from caendr.utils.constants import CHROM_NUMERIC
 
 
 
@@ -297,9 +296,8 @@ def report(id, file_ext=None):
     except Exception:
       return abort(404, description="Something went wrong")
 
-    # Get indel information
-    chrom, indel_start, indel_stop = re.split(":|-", data['site'])
-    indel_start, indel_stop = int(indel_start), int(indel_stop)
+    # Get indel interval
+    interval = parse_interval_query(data['site'])
 
     # Update the result object with computed fields and generate a format table
     # If result is None or empty, does nothing
@@ -341,8 +339,8 @@ def report(id, file_ext=None):
 
       # Data
       'data':  data,
-      'indel_start': indel_start,
-      'indel_stop':  indel_stop,
+      'indel_start': interval['start'],
+      'indel_stop':  interval['stop'],
       # 'size': data['size'],
 
       # Results
