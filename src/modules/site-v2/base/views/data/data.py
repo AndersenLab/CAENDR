@@ -1,10 +1,9 @@
 import yaml
 
-from flask import render_template, Blueprint
+from flask import render_template, Blueprint, redirect, url_for
 from extensions import cache
 from config import config
 
-from caendr.models.datastore import SPECIES_LIST
 from caendr.models.error import EnvVarError
 from caendr.services.cloud.storage import get_blob
 
@@ -20,10 +19,7 @@ data_bp = Blueprint(
 @data_bp.route('/')
 @cache.memoize(60*60)
 def data():
-  return render_template('data/landing.html', **{
-    'disable_parent_breadcrumb': True,
-    'species_list': SPECIES_LIST,
-  })
+  return redirect(url_for('data_releases.data_releases'))
 
 
 #
