@@ -1,5 +1,8 @@
+import re
+
 from caendr.services.cloud.postgresql import db
 from caendr.models.sql.dict_serializable import DictSerializable
+from caendr.utils.constants import STRAIN_NAME_REGEX
 
 class Strain(DictSerializable, db.Model):
   species_id_method = db.Column(db.String(50), nullable=True)
@@ -41,13 +44,10 @@ class Strain(DictSerializable, db.Model):
 
   @staticmethod
   def to_sortable_strain(strain):
-    import re
-    m = re.match('([A-Z]+)([0-9]+)', strain.strain)
+    m = re.match(STRAIN_NAME_REGEX, strain.strain)
     if m:
-      g = m.groups()
-      return (g[0], int(g[1]))
-    else:
-      return ('', 0)
+      return (m.group(1), int(m.group(2)))
+    return ('', 0)
 
   @staticmethod
   def sort_by_strain(arr):
