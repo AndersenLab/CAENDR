@@ -1,7 +1,9 @@
 import pandas as pd
+from sqlalchemy import and_
 
 from caendr.services.cloud.postgresql import db
 from caendr.models.sql.dict_serializable import DictSerializable
+from caendr.utils.bio  import parse_interval_query, parse_position_query
 
 class StrainAnnotatedVariant(DictSerializable, db.Model):
   """
@@ -92,25 +94,38 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
     return col['id'] in StrainAnnotatedVariant._column_default_list
 
 
-  @classmethod
-  def generate_interval_sql(cls, interval, species=None):
-    interval = interval.replace(',','')
-    chrom = interval.split(':')[0]
-    range = interval.split(':')[1]
-    start = int(range.split('-')[0])
-    stop = int(range.split('-')[1])
-
-    species_clause = f"species_name='{species.name}' AND " if species else ''
-    query = f"SELECT * FROM {cls.__tablename__} WHERE {species_clause} chrom='{chrom}' AND pos > {start} AND pos < {stop};"
-    return query
-
 
   @classmethod
-  def run_interval_query(cls, query, species=None):
-    query = cls.generate_interval_sql(query, species=species)
-    data_frame = pd.read_sql_query(query, db.engine)
+  def run_interval_query(cls, interval, species=None):
+
+    # Get the list of column names, making sure to include ID
     col_list = [ col.get('id') for col in cls.get_column_details()]
     cols = [ 'id', *col_list ]
+
+    # If interval was passed as a string, parse into a dict
+    # Otherwise, it should already be a dict with the right structure
+    if isinstance(interval, str):
+      interval = parse_interval_query(interval)
+      if interval is None:
+        raise ValueError()
+
+    # Construct the query object from the given interval
+    query = StrainAnnotatedVariant.query.filter( and_(
+      StrainAnnotatedVariant.chrom == interval['chrom'],
+      StrainAnnotatedVariant.pos > interval['start'],
+      StrainAnnotatedVariant.pos < interval['stop'],
+    ) )
+
+    # If a species was provided, use it to refine the query
+    if species:
+      query = query.filter( StrainAnnotatedVariant.species_name == species.name )
+
+    # Convert query into a DataFrame (using iterable as intermediate step)
+    data_frame = pd.DataFrame(
+      ({ col: getattr(row, col) for col in cols } for row in query.all()),
+      columns=cols,
+    )
+
     try:  
       test = data_frame[cols].dropna(how='all')
       print(test)
@@ -119,24 +134,37 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
       result = {}
     return result
 
-  
-  @classmethod
-  def generate_position_sql(cls, pos, species=None):
-    pos = pos.replace(',','')  
-    chrom = pos.split(':')[0]
-    pos = int(pos.split(':')[1])
-
-    species_clause = f"species_name='{species.name}' AND " if species else ''
-    query = f"SELECT * FROM {cls.__tablename__} WHERE {species_clause} chrom='{chrom}' AND pos = {pos};"
-    return query
-
 
   @classmethod
-  def run_position_query(cls, query, species=None):
-    query = cls.generate_position_sql(query, species=species)
-    data_frame = pd.read_sql_query(query, db.engine)
+  def run_position_query(cls, position, species=None):
+
+    # Get the list of column names, making sure to include ID
     col_list = [ col.get('id') for col in cls.get_column_details()]
     cols = [ 'id', *col_list ]
+
+    # If position was passed as a string, parse into a dict
+    # Otherwise, it should already be a dict with the right structure
+    if isinstance(position, str):
+      position = parse_position_query(position)
+      if position is None:
+        raise ValueError()
+
+    # Construct the query object from the given position
+    query = StrainAnnotatedVariant.query.filter( and_(
+      StrainAnnotatedVariant.chrom == position['chrom'],
+      StrainAnnotatedVariant.pos   == position['pos'],
+    ) )
+
+    # If a species was provided, use it to refine the query
+    if species:
+      query = query.filter( StrainAnnotatedVariant.species_name == species.name )
+
+    # Convert query into a DataFrame (using iterable as intermediate step)
+    data_frame = pd.DataFrame(
+      ({ col: getattr(row, col) for col in cols } for row in query.all()),
+      columns=cols,
+    )
+
     try:  
       result = data_frame[cols].dropna(how='all').fillna(value="").agg(list).to_dict()
     except ValueError:

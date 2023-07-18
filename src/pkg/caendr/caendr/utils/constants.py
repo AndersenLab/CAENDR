@@ -36,3 +36,6 @@ CHROM_ARM_CENTER = {'I': (527, 3331, 7182, 3835, 197),
                     'V': (643, 5254, 10653, 3787, 583),
                     'X': (572, 5565, 6343, 3937, 1302)}
 
+
+CHROM_INTERVAL_REGEX = "^(I|II|III|IV|V|X|MtDNA):([0-9,]+)-([0-9,]+)$"
+CHROM_POSITION_REGEX = "^(I|II|III|IV|V|X|MtDNA):([0-9,]+)$"

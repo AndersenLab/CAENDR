@@ -19,7 +19,7 @@ from caendr.models.datastore import Species
 from caendr.models.error import NotFoundError
 from caendr.models.sql import StrainAnnotatedVariant
 from caendr.services.dataset_release import get_latest_dataset_release_version
-from caendr.services.strain_annotated_variants import verify_interval_query, verify_position_query
+from caendr.utils.bio import parse_interval_query, parse_position_query
 
 
 variant_annotation_bp = Blueprint(
@@ -95,9 +95,9 @@ def query_interval(species_name=None):
     species = None
 
   # If query is valid, run it and return the results
-  is_valid = verify_interval_query(query=query)
-  if is_valid:
-    data = StrainAnnotatedVariant.run_interval_query(query=query, species=species)
+  interval = parse_interval_query(query)
+  if interval:
+    data = StrainAnnotatedVariant.run_interval_query(interval, species=species)
     return jsonify(data)
 
   # Otherwise, return an empty response
@@ -124,9 +124,9 @@ def query_position(species_name=None):
     species = None
 
   # If query is valid, run it and return the results
-  is_valid = verify_position_query(query=query)
-  if is_valid:
-    data = StrainAnnotatedVariant.run_position_query(query=query, species=species)
+  position = parse_position_query(query)
+  if position:
+    data = StrainAnnotatedVariant.run_position_query(position, species=species)
     return jsonify(data)
 
   # Otherwise, return an empty response
