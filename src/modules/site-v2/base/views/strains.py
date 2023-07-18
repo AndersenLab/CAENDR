@@ -18,7 +18,7 @@ from extensions import cache, compress
 from caendr.api.strain import get_strains, query_strains, get_strain_sets, get_strain_img_url
 from caendr.models.sql import Strain
 from caendr.utils.json import dump_json
-from caendr.utils.data import get_file_format, convert_data_table_to_csv
+from caendr.utils.data import get_file_format, convert_data_to_download_file
 from caendr.utils.env import get_env_var
 from caendr.models.datastore import Species
 from caendr.models.datastore.cart import Cart
@@ -130,7 +130,7 @@ def strains_data_csv(species_name, release_name, file_ext):
   data = ( [ getattr(row, column) for column in columns ] for row in strains_by_species )
 
   # Convert to a CSV/TSV file
-  output = convert_data_table_to_csv(data, columns, sep=file_format['sep'])
+  output = convert_data_to_download_file(data, columns, file_ext=file_ext)
 
   # Stream the response as a file with the correct filename
   resp = Response(output, mimetype=file_format['mimetype'])

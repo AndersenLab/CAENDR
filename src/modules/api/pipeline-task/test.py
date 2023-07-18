@@ -4,7 +4,7 @@ import random
 from caendr.models.task import HeritabilityTask
 
 from caendr.services.heritability_report import HERITABILITY_TASK_QUEUE_NAME, create_new_heritability_report
-from caendr.utils.data import convert_data_table_to_csv, get_object_hash, unique_id
+from caendr.utils.data import convert_data_to_download_file, get_object_hash, unique_id
 from pipelines.heritability import start_heritability_pipeline
 from routes.task import handle_task
 
@@ -21,7 +21,7 @@ def test():
     trait = data[0][2]
 
     columns = ["AssayNumber", "Strain", "TraitName", "Replicate", "Value"]
-    data_tsv = convert_data_table_to_csv(data, columns, sep='\t')
+    data_tsv = convert_data_to_download_file(data, columns, file_ext='tsv')
 
     report = create_new_heritability_report(id, username, label, data_hash, trait, data_tsv)
 
