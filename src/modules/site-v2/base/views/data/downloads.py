@@ -62,8 +62,9 @@ def download_bam_bai_file(species_name='', strain_name='', ext=''):
   })
 
 
+@data_downloads_bp.route('/download/<string:species_name>/latest/bam-bai-download-script',                   methods=['GET'])
 @data_downloads_bp.route('/download/<string:species_name>/<string:release_version>/bam-bai-download-script', methods=['GET'])
-def download_bam_bai_script(species_name, release_version):
+def download_bam_bai_script(species_name, release_version=None):
 
   # Parse the species & release from the URL
   try:

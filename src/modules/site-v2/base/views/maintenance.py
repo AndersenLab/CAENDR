@@ -28,8 +28,9 @@ def cleanup_cache():
   
 
 # TODO: This is likely obsolete, since the download script is now generated on-demand.
+@maintenance_bp.route('/create_bam_bai_download_script/<string:species_name>/latest',                   methods=['GET'])
 @maintenance_bp.route('/create_bam_bai_download_script/<string:species_name>/<string:release_version>', methods=['GET'])
-def create_bam_bai_download_script(species_name, release_version):
+def create_bam_bai_download_script(species_name, release_version=None):
   if not (verify_cron_req_origin(request) or user_has_role("admin")):
     return APIError.default_handler(APIDeniedError)
 

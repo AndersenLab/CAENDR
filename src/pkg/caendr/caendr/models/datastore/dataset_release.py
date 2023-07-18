@@ -57,7 +57,19 @@ class DatasetRelease(Entity):
 
 
   @staticmethod
-  def from_name(release_name, species_name=None):
+  def from_name(release_name=None, species_name=None):
+
+    # Make sure at least one argument is provided
+    if release_name is None and species_name is None:
+      raise ValueError('At least one of "release_name" and "species_name" must be provided.')
+
+    # If no release name provided, use species name to look up latest release for that species
+    if release_name is None:
+      from .species import Species
+      species = Species.from_name(species_name)
+      release_name = species['release_latest']
+
+    # Look for a release object with the matching name in the datastore
     release = DatasetRelease.get_ds(release_name)
 
     if release is None:
