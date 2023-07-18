@@ -145,7 +145,7 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
     if species:
       query = query.filter( StrainAnnotatedVariant.species_name == species.name )
 
-    # Convert query into a DataFrame (using iterable as intermediate step)
+    # Convert query into a DataFrame
     data_frame = convert_query_to_data_table(query, columns=columns)
 
     try:

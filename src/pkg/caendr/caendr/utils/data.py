@@ -72,6 +72,9 @@ def coalesce(*values):
 
 
 def convert_query_to_data_table(query, columns):
+  """
+    Convert a Flask SQLAlchemy query into a Pandas DataFrame.
+  """
   return pd.DataFrame(
     ({ col: getattr(row, col) for col in columns } for row in query.all()), columns=columns
   )
