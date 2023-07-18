@@ -20,6 +20,7 @@ from caendr.models.error import NotFoundError
 from caendr.models.sql import StrainAnnotatedVariant
 from caendr.services.dataset_release import get_latest_dataset_release_version
 from caendr.utils.bio import parse_interval_query, parse_position_query
+from caendr.utils.constants import CHROM_INTERVAL_REGEX
 
 
 variant_annotation_bp = Blueprint(
@@ -72,6 +73,7 @@ def variant_annotation():
 
     # Misc
     "fluid_container": True,
+    "chrom_interval_regex": CHROM_INTERVAL_REGEX,
   })
 
 
