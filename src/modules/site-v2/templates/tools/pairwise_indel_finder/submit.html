@@ -135,7 +135,7 @@ let species;
 let strains;
 
 /* IGV Browser */
-const browser_div = $("#browser")[0];
+const browser_el = document.getElementById('browser');
 const browser_options = {}
 let divergent_track_name;
 const COLORS = {
@@ -340,7 +340,7 @@ function update_species(species_id) {
   species = species_list[species_id];
 
   // Update the browser species & the strain dropdown lists
-  create_or_update_browser(browser_div, browser_options, species).then(({browser}) => {
+  create_or_update_browser(browser_el, browser_options, species).then(({browser}) => {
     Promise.all([
       update_strain_dropdown("strain_1", strains, species, ""),
       update_strain_dropdown("strain_2", strains, species, ""),

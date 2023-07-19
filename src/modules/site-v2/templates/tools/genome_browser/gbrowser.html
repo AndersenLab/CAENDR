@@ -222,7 +222,7 @@ const species_supported_tracks = {
 };
 
 // Browser location & options
-const browser_div = $("#browser")[0];
+const browser_el = document.getElementById('browser');
 const browser_options = {
   search: {
     url: "{{ url_for('api_gene.api_search_genes', species='', query='') }}$FEATURE$",
@@ -393,7 +393,7 @@ function update_species(species_id) {
 
   // Ensure the browser exists and is displaying the correct species,
   // then sort out the tracks in it
-  return create_or_update_browser(browser_div, browser_options, species).then(({browser, created}) => {
+  return create_or_update_browser(browser_el, browser_options, species).then(({browser, created}) => {
 
     // If browser newly created, make it responsive
     if (created) {
