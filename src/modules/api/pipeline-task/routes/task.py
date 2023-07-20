@@ -14,7 +14,7 @@ from caendr.models.datastore.database_operation import DatabaseOperation
 from caendr.models.datastore.indel_primer import IndelPrimer
 from caendr.models.datastore.heritability_report import HeritabilityReport
 
-from caendr.models.error import APIBadRequestError, APIInternalError
+from caendr.models.error import APIBadRequestError, APIInternalError, NotFoundError
 from caendr.models.task import TaskStatus, NemaScanTask, DatabaseOperationTask, IndelPrimerTask, HeritabilityTask
 from caendr.models.pub_sub import PubSubAttributes, PubSubMessage, PubSubStatus
 
@@ -100,8 +100,16 @@ def handle_task(payload, task_route):
     raise APIBadRequestError(f'[TASK {payload.get("id", "no-id")}] Invalid task route "{task_route}"')
 
   task = task_class(**payload)
+
+  # Try to start the task
   try:
     response = start_pipeline(task)
+
+  # If the corresponding report couldn't be found, convert to a Bad Request error
+  except NotFoundError as ex:
+    raise APIBadRequestError(f'[TASK {task.id}] Could not find {task_class.kind} object wih this ID.') from ex
+
+  # Intercept any other exceptions and try setting the task status to Error
   except Exception as ex_outer:
     try:
       update_status(task.id, status=TaskStatus.ERROR)

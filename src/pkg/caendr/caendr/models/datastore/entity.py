@@ -426,7 +426,7 @@ class Entity(object):
 
 
   @classmethod
-  def get_ds(cls, name, safe=False):
+  def get_ds(cls, name, safe=False, silent=True):
     '''
       Get the Entity from datastore with the matching name.
     '''
@@ -441,3 +441,6 @@ class Entity(object):
     # If a match was found, initialize an Entity object from it
     if match is not None:
       return cls(name, safe=safe)
+
+    if not silent:
+      raise NotFoundError(cls, {'name': name})

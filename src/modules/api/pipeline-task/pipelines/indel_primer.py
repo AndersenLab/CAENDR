@@ -41,7 +41,7 @@ def start_indel_primer_pipeline(task: IndelPrimerTask):
 
 
 def _generate_indel_primer_pipeline_req(task: IndelPrimerTask):
-  ip = IndelPrimer(task.id)
+  ip = IndelPrimer.get_ds(task.id, silent=False)
   image_uri = ip.get_container().uri()
 
   container_name = f"indel-primer-{ip.id}"

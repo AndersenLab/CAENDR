@@ -43,7 +43,7 @@ def start_db_op_pipeline(task: DatabaseOperationTask):
 
 
 def _generate_db_op_pipeline(task: DatabaseOperationTask):
-  d = DatabaseOperation(task.id)
+  d = DatabaseOperation.get_ds(task.id, silent=False)
   image_uri = d.get_container().uri()
 
   container_name = f"db-op-{d.id}"

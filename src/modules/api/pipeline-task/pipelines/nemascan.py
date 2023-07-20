@@ -42,7 +42,7 @@ def start_nemascan_pipeline(task: NemaScanTask):
 
 
 def _generate_nemascan_pipeline_req(task: NemaScanTask):
-  m = NemascanMapping(task.id)
+  m = NemascanMapping.get_ds(task.id, silent=False)
   image_uri = m.get_container().uri()
 
   trait_file = f"gs://{m.get_bucket_name()}/{m.get_data_blob_path()}"
