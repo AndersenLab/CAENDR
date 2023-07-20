@@ -2,7 +2,7 @@ import os
 import logging
 
 from caendr.models.task import NemaScanTask
-from caendr.models.datastore import NemascanMapping
+from caendr.models.datastore import NemascanMapping, Species
 from caendr.services.nemascan_mapping import get_mapping
 from caendr.services.cloud.lifesciences import start_pipeline
 from caendr.models.lifesciences import ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
@@ -57,6 +57,7 @@ def _generate_nemascan_pipeline_req(task: NemaScanTask):
     "USERNAME": m.username if m.username else None,
     "EMAIL": m.email if m.email else None,
     "SPECIES": m.species,
+    "VCF_VERSION": Species.get(m.species)['release_latest'],
     "TRAIT_FILE": trait_file,
     "OUTPUT_DIR": output_dir,
     "WORK_DIR": work_dir,

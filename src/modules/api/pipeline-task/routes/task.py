@@ -9,6 +9,7 @@ from pipelines.db_op import start_db_op_pipeline
 from pipelines.indel_primer import start_indel_primer_pipeline
 from pipelines.heritability import start_heritability_pipeline
 
+from caendr.models.datastore import Species
 from caendr.models.datastore.nemascan_mapping import NemascanMapping
 from caendr.models.datastore.database_operation import DatabaseOperation
 from caendr.models.datastore.indel_primer import IndelPrimer
@@ -107,7 +108,10 @@ def handle_task(payload, task_route):
 
   # If the corresponding report couldn't be found, convert to a Bad Request error
   except NotFoundError as ex:
-    raise APIBadRequestError(f'[TASK {task.id}] Could not find {task_class.kind} object wih this ID.') from ex
+    if ex.kind == Species.kind:
+      raise APIBadRequestError(f'[TASK {task.id}] {task_class.kind} task has invalid species value.') from ex
+    else:
+      raise APIBadRequestError(f'[TASK {task.id}] Could not find {task_class.kind} object wih this ID.') from ex
 
   # Intercept any other exceptions and try setting the task status to Error
   except Exception as ex_outer:

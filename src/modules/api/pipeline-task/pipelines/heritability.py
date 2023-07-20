@@ -5,7 +5,7 @@ import tabix
 from caendr.services.logger import logger
 
 from caendr.models.task import HeritabilityTask
-from caendr.models.datastore import HeritabilityReport
+from caendr.models.datastore import HeritabilityReport, Species
 from caendr.services.heritability_report import get_heritability_report
 from caendr.services.cloud.lifesciences import start_pipeline
 from caendr.models.lifesciences import ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
@@ -58,8 +58,6 @@ def _generate_heritability_pipeline_req(task: HeritabilityTask):
   logger.debug(f"Using image: {image_uri} with commands: {container_commands}")
 
   # prepare args
-  # VCF_VERSION = "20210121"
-  VCF_VERSION = "20220216"
   GOOGLE_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT_ID", None)
   GOOGLE_ZONE = os.getenv("GOOGLE_CLOUD_ZONE", None)
   MODULE_SITE_BUCKET_PRIVATE_NAME = os.getenv("MODULE_SITE_BUCKET_PRIVATE_NAME", None)
@@ -92,7 +90,7 @@ def _generate_heritability_pipeline_req(task: HeritabilityTask):
     "GOOGLE_SERVICE_ACCOUNT_EMAIL": sa_email,
     "GOOGLE_PROJECT": GOOGLE_PROJECT,
     "GOOGLE_ZONE": GOOGLE_ZONE,
-    "VCF_VERSION": VCF_VERSION,
+    "VCF_VERSION": Species.get(h.species)['release_latest'],
     "TRAIT_FILE": TRAIT_FILE,
     "WORK_DIR": WORK_DIR,
     "DATA_DIR": DATA_DIR,
