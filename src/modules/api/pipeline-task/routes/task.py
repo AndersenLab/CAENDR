@@ -95,8 +95,10 @@ def handle_task(payload, task_route):
   logger.info(f"[TASK {payload.get('id', 'no-id')}] handle_task: {task_route}")
 
   task_metadata = _get_task_metadata(task_route)
-  task_class, start_pipeline, update_status = task_metadata.values()
+  if task_metadata is None:
+    raise APIBadRequestError(f'[TASK {payload.get("id", "no-id")}] Invalid task route "{task_route}"')
 
+  task_class, start_pipeline, update_status = task_metadata.values()
   if task_class is None:
     raise APIBadRequestError(f'[TASK {payload.get("id", "no-id")}] Invalid task route "{task_route}"')
 
