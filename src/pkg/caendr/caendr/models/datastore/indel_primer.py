@@ -70,7 +70,7 @@ class IndelPrimer(DataJobEntity):
 
     # Default to the latest version defined for the species
     if release is None:
-      release = species_obj['indel_primer_ver']
+      release = species_obj['release_pif']
 
     # Get DatasetRelease object and use to construct the FASTA filepath
     release_obj = get_dataset_release(release)

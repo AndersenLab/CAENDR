@@ -69,7 +69,9 @@ function add_track(track_name, track_data = null) {
   if (!tracks.has(track_name)) {
     const track = track_data || get_track(track_name)
     tracks.add(track_name);
-    return igv.getBrowser().loadTrack(track);
+    return igv.getBrowser().loadTrack(track).catch(error => {
+      console.log('Error loading track ' + track_name + ': ', error)
+    });
   }
 }
 

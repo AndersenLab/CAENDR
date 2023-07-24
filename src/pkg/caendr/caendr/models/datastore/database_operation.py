@@ -1,12 +1,12 @@
 import os
 
-from caendr.models.datastore import JobEntity
+from caendr.models.datastore import JobEntity, UserOwnedEntity
 
 
 MODULE_DB_OPERATIONS_BUCKET_NAME = os.environ.get('MODULE_DB_OPERATIONS_BUCKET_NAME')
 
 
-class DatabaseOperation(JobEntity):
+class DatabaseOperation(JobEntity, UserOwnedEntity):
   kind = 'database_operation'
   __bucket_name = MODULE_DB_OPERATIONS_BUCKET_NAME
 
@@ -18,13 +18,6 @@ class DatabaseOperation(JobEntity):
   def get_props_set(cls):
     return {
       *super().get_props_set(),
-
-      # Submission
-      'id',
-      'username',
-      'email',
-
-      # Other
       'note',
       'db_operation',
       'args',

@@ -12,6 +12,8 @@ MODULE_ENV_FILE_GENERATED = $(MODULE_DIR)/.env
 MODULE_PKG_DIR = $(MODULE_DIR)/caendr
 PKG_SETUP_DIR = $(PROJECT_DIR)/src/pkg/caendr
 
+GIT_COMMIT:=$(shell git rev-parse --short HEAD)
+
 
 -include $(ENV_FILE)
 include $(MODULE_ENV_FILE)
@@ -97,9 +99,9 @@ container-build:
 	$(MAKE) -C $(PKG_SETUP_DIR) clean --no-print-directory && \
 	cp -r $(PKG_SETUP_DIR) $(MODULE_DIR) && \
 	echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
-	
+
 	@echo -e "\n$(COLOR_B)Building container image...$(COLOR_N)" && \
-	docker buildx build --platform=linux/amd64 $(MODULE_DIR) -t gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${MODULE_NAME}:${MODULE_VERSION} && \
+	docker buildx build --pull --platform=linux/amd64 --build-arg GIT_COMMIT=$(GIT_COMMIT) $(MODULE_DIR) -t gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${MODULE_NAME}:${MODULE_VERSION} && \
 	echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
 	@echo -e "\n$(COLOR_B)Removing local caendr package source copy$(COLOR_N)" && \

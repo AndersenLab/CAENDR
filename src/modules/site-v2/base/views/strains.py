@@ -50,6 +50,8 @@ MODULE_SITE_CART_COOKIE_NAME = get_env_var('MODULE_SITE_CART_COOKIE_NAME')
 MODULE_SITE_CART_COOKIE_AGE_SECONDS = get_env_var('MODULE_SITE_CART_COOKIE_AGE_SECONDS', var_type=int)
 STRAIN_SUBMISSION_URL = get_env_var('MODULE_SITE_STRAIN_SUBMISSION_URL')
 
+NO_REPLY_EMAIL = get_secret('NO_REPLY_EMAIL')
+
 
 strains_bp = Blueprint('request_strains',
                         __name__,
@@ -154,6 +156,9 @@ def request_strains():
     except Exception:
       strain_sets = {}
 
+    # TODO: Both species selectors on this page are rendered from the same form, so they have the same ID
+    # Currently, the mapping sets selector has species disabled because it's the first on the page,
+    # so it satisfies the ID query first.  To be safer, we should assign these different IDs.
     return render_template('strain/catalog.html', **{
       'title': "Strain Catalog",
       'disable_parent_breadcrumb': True,
@@ -235,11 +240,13 @@ def order_page_post():
         order_obj['items'] = '\n'.join(sorted([f"{item['name']}:{item['price']}" for item in cartItems]))
         order_obj['invoice_hash'] = str(uuid.uuid4()).split("-")[0]
         order_obj["order_confirmation_link"] = url_for('request_strains.order_confirmation', invoice_hash=order_obj['invoice_hash'], _external=True)
-        send_email({"from": "no-reply@elegansvariation.org",
-                    "to": [order_obj["email"]],
-                    "cc": config.get("CC_EMAILS"),
-                    "subject": "CaeNDR Order #" + str(order_obj["invoice_hash"]),
-                    "text": ORDER_SUBMISSION_EMAIL_TEMPLATE.format(**order_obj)})
+        send_email({
+          "from": f'CaeNDR <{NO_REPLY_EMAIL}>',
+          "to": [order_obj["email"]],
+          "cc": config.get("CC_EMAILS"),
+          "subject": "CaeNDR Order #" + str(order_obj["invoice_hash"]),
+          "text": ORDER_SUBMISSION_EMAIL_TEMPLATE.format(**order_obj),
+        })
 
         # Save to google sheet
         add_to_order_ws(order_obj)

@@ -12,6 +12,7 @@ from caendr.services.email import send_email, PASSWORD_RESET_EMAIL_TEMPLATE
 from base.forms import UserRegisterForm, UserUpdateForm, RecoverUserForm, PasswordResetForm
 from base.utils.auth import jwt_required, get_jwt, get_current_user, assign_access_refresh_tokens, magic_link_required, create_one_time_token, use_password_reset_token
 
+NO_REPLY_EMAIL  = get_secret('NO_REPLY_EMAIL')
 PASSWORD_PEPPER = get_secret('PASSWORD_PEPPER')
 
 user_bp = Blueprint('user',
@@ -70,7 +71,7 @@ def user_recover():
   password_reset_magic_link = url_for('user.user_reset_password', token=token, _external=True)
   try:
     send_email({
-      "from": "no-reply@elegansvariation.org",
+      "from": f'CaeNDR <{NO_REPLY_EMAIL}>',
       "to": [ email ],
       "subject": "CaeNDR Password Reset",
       "text": PASSWORD_RESET_EMAIL_TEMPLATE.format(email=email, password_reset_magic_link=password_reset_magic_link)

@@ -18,19 +18,28 @@ API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 
 # Define the Status values
 class TaskStatus:
+
+  # Basic TaskStatus values
   ERROR     = "ERROR"
   RUNNING   = "RUNNING"
   COMPLETE  = "COMPLETE"
   SUBMITTED = "SUBMITTED"
 
+  # Meaningful sets of TaskStatus values
+  FINISHED  = { COMPLETE, ERROR }
+  NOT_ERR   = { SUBMITTED, RUNNING, COMPLETE }
+
+  # Check whether a variable is a valid TaskStatus
   @staticmethod
-  def isValid(value):
-    return value in [
+  def is_valid(value):
+    return value in {
       TaskStatus.ERROR,
       TaskStatus.RUNNING,
       TaskStatus.COMPLETE,
       TaskStatus.SUBMITTED,
-    ]
+    }
+
+
 
 class Task(object):
 

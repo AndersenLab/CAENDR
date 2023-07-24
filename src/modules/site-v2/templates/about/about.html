@@ -9,6 +9,29 @@
     width: 100%;
     height: auto;
   }
+  #map {
+    z-index: 0;
+  }
+  
+  .zoomContainer {
+    position: relative;
+    z-index: 1000;
+  }
+
+  #zoomIn, #zoomIn:hover, #zoomIn:active {
+    border-color: var(--bs-gray-100);
+    border-bottom: 1px solid var(--bs-gray);
+    margin-bottom: 1px;
+  }
+  
+  #zoomOut:active {
+    border-color: var(--bs-gray-100)!important;
+  }
+
+  #zoomOut:disabled {
+    border-color: var(--bs-gray-100)!important;
+    color: #666!important;
+  }
 </style>
 
 {% endblock %}
@@ -18,25 +41,24 @@
 {% block content %}
 
 <div class="container-fluid px-5">
-  <!-- Hiding video section until final version is available --> 
-  <!-- <video class="d-block mx-auto" controls preload="auto" poster="/static/img/video-placeholder.png" aria-hidden="true">
-    <source src="/static/video/test-video.mp4" type="video/mp4">
-  </video>
-  <div class="row mb-5">
-    <div class="d-flex flex-wrap justify-content-end text-end mx-auto my-2 optionsToolbar">
-      <a href="#collapseTranscript" data-bs-toggle="collapse" data-bs-target="#collapseTranscript" aria-expanded="false"
-        aria-control="collapseTranscript"><i class="bi bi-card-text" aria-hidden="true"></i> View Video Transcript</a>
-    </div>
-    <div clas="d-flex flex-wrap justify-content-start">
-      <div class="collapse" id="collapseTranscript">
-        <div class="card card-body">
-          A video transcript can go here.
+  <div class="row">  
+    <div class="pb-5 mb-0 mb-md-5">
+      <script src="https://fast.wistia.com/embed/medias/vss2540hx4.jsonp" async></script>
+      <script src="https://fast.wistia.com/assets/external/E-v1.js" async></script>
+      <div class="wistia_responsive_padding" style="padding:56.25% 0 0 0;position:relative;">
+        <div class="wistia_responsive_wrapper" style="height:100%;left:0;position:absolute;top:0;width:100%;">
+          <div class="wistia_embed wistia_async_vss2540hx4 videoFoam=true" style="height:100%;position:relative;width:100%">
+            <div class="wistia_swatch"
+              style="height:100%;left:0;opacity:0;overflow:hidden;position:absolute;top:0;transition:opacity 200ms;width:100%;">
+              <img src="https://fast.wistia.com/embed/medias/vss2540hx4/swatch"
+                style="filter:blur(5px);height:100%;object-fit:contain;width:100%;" alt="" aria-hidden="true"
+                onload="this.parentNode.style.opacity=1;" /></div>
+          </div>
         </div>
       </div>
     </div>
-  </div> -->
-  <!-- /Row -->
-  <!-- /video section -->
+  </div>
+  <!-- /row -->
   <div class="row px-2 mb-5">
     <div class="col-12 col-md-6">
       <h2>What is <em>C. elegans</em>?</h2>
@@ -79,17 +101,30 @@
       </p>
     </div>
     <div class="col-12 col-md-6 mb-5">
+      <!-- Map -->
       <div id="map" style="height: 500px; width:100%">
-        <script>
-          mapboxgl.accessToken = 'pk.eyJ1Ijoic3dhY2hzcHJlc3MiLCJhIjoiY2trZDJyZWtmMHM3OTJvcWlpNmE3cTQ1ZSJ9.UwY-WYd78c7SnO1S_37vtg';
-          var map = new mapboxgl.Map({
-              container: 'map',
-              style: 'mapbox://styles/mapbox/outdoors-v11', // stylesheet location
-              center: [ '0', '0'], // starting position [lng, lat]
-              zoom: -2 // starting zoom
-          });
-        </script>
+        <div class="btn-group-vertical shadow-sm m-3 zoomContainer" role="group" aria-hidden="true">
+          <button class="btn text-bg-light d-none d-md-block" id="zoomIn" tabindex="-1"><i
+              class="bi bi-plus-circle"></i></button>
+          <button class="btn text-bg-light d-none d-md-block" id="zoomOut" tabindex="-1"><i
+              class="bi bi-dash-circle"></i></button>
+        </div>
       </div>
+      <div class="d-flex justify-content-around mt-2">
+        <div>
+          <img src='{{ ext_asset("img/icons/elegansMarkerOutline.svg") }}' style="height:18px;width:auto;" alt="">
+          <i>C. elegans</i>
+        </div>
+        <div>
+          <img src='{{ ext_asset("img/icons/briggsaeMarkerOutline.svg") }}' style="height:18px;width:auto;" alt="">
+          <i>C. briggsae</i>
+        </div>
+        <div>
+          <img src='{{ ext_asset("img/icons/tropicalisMarkerOutline.svg") }}' style="height:18px;width:auto;" alt="">
+          <i>C. tropicalis</i>
+        </div>
+      </div>
+      <!-- /Map -->
     </div>
   </div>
   <!-- /Row -->
@@ -133,30 +168,66 @@
 {% block script %}
 
 <script>
-  $(document).ready(function () {
 
-  if (document.getElementById('map')) {
-    ACCESS_TOKEN = mapboxgl.accessToken;
-    var markerHeight = 50, markerRadius = 10, linearOffset = 25;
-    var popupOffset = {
-      'top': [0, 0],
-      'top-left': [0,0],
-      'top-right': [0,0],
-      'bottom': [0, -markerHeight],
-      'bottom-left': [linearOffset, (markerHeight - markerRadius + linearOffset) * -1],
-      'bottom-right': [-linearOffset, (markerHeight - markerRadius + linearOffset) * -1],
-      'left': [markerRadius, (markerHeight - markerRadius) * -1],
-      'right': [-markerRadius, (markerHeight - markerRadius) * -1]
-    };
+    // Icons
+{% autoescape off %}
+const icon_elegans = L.icon({
+    iconUrl: '{{ ext_asset("img/icons/elegansMarkerOutline.svg") }}',
+    iconSize: [20, 30],
+    iconAnchor: [12, 16],
+    popupAnchor: [0, -15],
+});
 
-  data = {{ strain_listing|tojson|safe }}
+const icon_briggsae = L.icon({
+    iconUrl: '{{ ext_asset("img/icons/briggsaeMarkerOutline.svg") }}',
+    iconSize: [20, 30],
+    iconAnchor: [12, 16],
+    popupAnchor: [0, -15],
+});
+const icon_tropicalis = L.icon({
+    iconUrl: '{{ ext_asset("img/icons/tropicalisMarkerOutline.svg") }}',
+    iconSize: [20, 30],
+    iconAnchor: [12, 16],
+    popupAnchor: [0, -15],
+});
+
+
+const icon_hover = L.icon({
+    iconUrl: '{{ ext_asset("img/icons/hoverMarkerOutline.svg") }}',
+    iconSize: [20, 30],
+    iconAnchor: [12, 16],
+    popupAnchor: [0, -15],
+});
+{% endautoescape %}
+
+const MB_ATTR = 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, METI, TomTom, 2012';
+const MB_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
+const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+const OSM_ATTRIB = '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+const southWest = L.latLng(-100, -200);
+const northEast = L.latLng(100, 200);
+const bounds = L.latLngBounds(southWest, northEast);
+
+const map = L.map('map', {minZoom:1, maxZoom:8, maxBounds: bounds, scrollWheelZoom: false, zoomControl: false, attributionControl: false,}).setView([20, -100], 1);
+L.tileLayer(MB_URL, {attribution: MB_ATTR, id: 'mapbox.streets', continuousWorld: false, worldCopyJump: true}).addTo(map);
+
+const Species = Object.freeze({
+  ELEGANS: 'Caenorhabditis elegans',
+  BRIGGSAE: 'Caenorhabditis briggsae',
+  TROPICALIS: 'Caenorhabditis tropicalis'
+});
+
+$(document).ready(function () {
+
+  const data = {{ strain_listing|tojson|safe }}
 
   data.forEach(function(d) {
     if (d.latitude) {
-      const innerHTML = `
+      const popup_content = `
         <div>
           <ul style="list-style-type:none; padding-left:0px">
-            ${d.isotype ? '<li><b><a href="../strains/isotype/' + d.isotype + '">Isotype: ' + d.isotype + '</a></b></li>': ''}
+            ${d.isotype ? '<li><b><a href="../isotype/' + d.isotype + '">Isotype: ' + d.isotype + '</a></b></li>': ''}
             ${d.strain ? '<li>Strain: ' + d.strain + '</li>': ''}
             ${d.isolation ? '<li>Isolation: ' + d.isolation + '</li>': ''}
             ${d.elevation ? '<li>Elevation: ' + d.elevation + '</li>': ''}
@@ -164,18 +235,92 @@
           </ul>
         </div>
         `;
-        p = new mapboxgl.Popup()
-            .setHTML(innerHTML)
-            .setOffset(popupOffset);
-        m = new mapboxgl.Marker()
-            .setLngLat([d.longitude, d.latitude])
-            .setPopup(p)
-            .addTo(map);
-      }
-    })
+
+      const marker = L.marker([d.latitude, d.longitude], { keyboard: false, alt: "a marker showing the geographic location of a strain", icon: set_marker_color(d.species),
+                                                      species: d.species})
+                                                      .on('mouseover', function(){
+                                                        marker.setIcon(icon_hover)
+                                                      })
+                                                      .on('mouseout', function(){
+                                                        const original_icon = set_marker_color(d.species)
+                                                        marker.setIcon(original_icon)
+                                                      })
+                              
+      marker.bindPopup(popup_content).addTo(map)
+
+      // if (marker.options.species === Species.ELEGANS) {
+      //   elegans.push(marker)
+      // }
+      // if (marker.options.species === Species.BRIGGSAE) {
+      //   briggsae.push(marker)
+      // }
+      // if (marker.options.species === Species.TROPICALIS) {
+      //   tropicalis.push(marker)
+      // }
+    //     p = new mapboxgl.Popup()
+    //         .setHTML(innerHTML)
+    //         .setOffset(popupOffset);
+    //     m = new mapboxgl.Marker()
+    //         .setLngLat([d.longitude, d.latitude])
+    //         .setPopup(p)
+    //         .addTo(map);
+    //   }
+    // })
+    }
+  })
+});
+
+function set_marker_color (species) {
+  if (species === Species.ELEGANS) {
+    return icon_elegans;
+  }
+  if (species === Species.BRIGGSAE) {
+    return icon_briggsae;
+  }
+  if (species === Species.TROPICALIS) {
+    return icon_tropicalis;
+  }
+}
+
+// zoom in function
+// $('#zoomIn').click(function () {
+//   map.setZoom(map.getZoom() + 1)
+// });
+
+// zoom out function
+// $('#zoomOut').click(function () {
+//   map.setZoom(map.getZoom() - 1)
+// });
+
+// custom zoom
+const zoomInButton = document.getElementById("zoomIn");
+const zoomOutButton = document.getElementById("zoomOut");
+const minMapZoom = map.getMinZoom();
+let zoomLevel = map.getZoom();
+zoomOutButton.disabled = true;
+
+  function zoomMapIn() {
+    map.zoomIn();
+    zoomLevel = (zoomLevel + 1);
+    disableButton();
   }
 
-});
+   function zoomMapOut() {
+    map.zoomOut();
+    zoomLevel = (zoomLevel - 1);
+    disableButton();
+  }
+
+  function disableButton() {
+    if (zoomLevel > minMapZoom) {
+      zoomOutButton.disabled = false;
+    } else {
+      zoomOutButton.disabled = true;
+    }
+  }
+
+  zoomInButton.addEventListener ("click", zoomMapIn);
+  zoomOutButton.addEventListener ("click", zoomMapOut);
 
 </script>
 

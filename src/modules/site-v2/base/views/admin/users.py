@@ -5,8 +5,11 @@ from base.forms import AdminEditUserForm
 from base.utils.auth import get_jwt, create_one_time_token, admin_required, get_current_user
 
 from caendr.models.datastore import User
+from caendr.services.cloud.secret import get_secret
 from caendr.services.user import get_all_users, delete_user
 from caendr.services.email import send_email, PASSWORD_RESET_EMAIL_TEMPLATE
+
+NO_REPLY_EMAIL  = get_secret('NO_REPLY_EMAIL')
 
 admin_users_bp = Blueprint('admin_users',
                             __name__,
@@ -71,7 +74,7 @@ def users_recover(id=None):
   password_reset_magic_link = url_for('user.user_reset_password', token=token, _external=True)
   try:
     send_email({
-      "from": "no-reply@elegansvariation.org",
+      "from": f'CaeNDR <{NO_REPLY_EMAIL}>',
       "to": [ email ],
       "subject": "CaeNDR Password Reset",
       "text": PASSWORD_RESET_EMAIL_TEMPLATE.format(email=email, password_reset_magic_link=password_reset_magic_link)

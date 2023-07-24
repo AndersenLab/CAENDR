@@ -5,7 +5,6 @@ from caendr.services.logger import logger
 from caendr.models.datastore import JobEntity, UserOwnedEntity
 
 from caendr.services.cloud.storage import check_blob_exists
-from caendr.utils.data import unique_id
 
 
 
@@ -38,16 +37,6 @@ class DataJobEntity(JobEntity, UserOwnedEntity):
       raise TypeError(f"Class '{cls.__name__}' should never be instantiated directly -- subclasses should be used instead.")
     return super(DataJobEntity, cls).__new__(cls)
 
-
-  def __init__(self, name_or_obj = None, *args, **kwargs):
-
-    # If nothing passed for name_or_obj, create a new ID to use for this object
-    if name_or_obj is None:
-      name_or_obj = unique_id()
-      self.set_properties_meta(id = name_or_obj)
-
-    # Initialize from superclass
-    super().__init__(name_or_obj, *args, **kwargs)
 
 
   @classmethod
@@ -90,7 +79,6 @@ class DataJobEntity(JobEntity, UserOwnedEntity):
   def get_props_set_meta(cls):
     return {
       *super().get_props_set_meta(),
-      'id',
       'data_hash',
     }
 
@@ -104,14 +92,6 @@ class DataJobEntity(JobEntity, UserOwnedEntity):
   ## Meta props ##
 
   # Meta props are stored in self.__dict__ by default.
-
-  @property
-  def id(self):
-    '''
-      This Entity's unique ID.
-      This field cannot be set manually; it must be determined at initialization.
-    '''
-    return self._get_meta_prop('id')
 
   @property
   def data_hash(self):
@@ -138,16 +118,16 @@ class DataJobEntity(JobEntity, UserOwnedEntity):
       ('username',  '=', username),
     ]
 
-    # If desired, filter by status as well
-    if status:
-      filters += [('status', '=', status)]
+    # Convert status to iterable (set), if a single value passed
+    if status is not None and not hasattr(status, '__iter__'):
+      status = {status}
 
     # Loop through each matching report, sorted newest to oldest
     # Prefer a match with a date, if one exists
     for match in cls.sort_by_created_date( cls.query_ds(filters=filters), set_none_max=True ):
 
-      # If containers match, return the matching Entity
-      if match.container_equals(container):
+      # If containers match and status is correct, return the matching Entity
+      if match.container_equals(container) and (status and match['status'] in status):
         return match
 
 

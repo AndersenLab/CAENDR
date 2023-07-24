@@ -22,6 +22,7 @@ from caendr.utils.env import get_env_var
 
 
 MODULE_SITE_BUCKET_ASSETS_NAME = get_env_var('MODULE_SITE_BUCKET_ASSETS_NAME')
+NEMASCAN_EXAMPLE_FILE          = get_env_var('NEMASCAN_EXAMPLE_FILE', as_template=True)
 
 
 
@@ -72,13 +73,14 @@ def genetic_mapping():
     # Species list
     'species_list': SPECIES_LIST,
     'species_fields': [
-      'name', 'short_name', 'project_num', 'wb_ver', 'latest_release',
+      'name', 'short_name', 'project_num', 'wb_ver', 'release_latest',
     ],
 
     # Sample data
-    'elegans_sample_data_url': generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/nemascan_sample_data_elegans.tsv'),
-    'briggsae_sample_data_url': generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/nemascan_sample_data_briggsae.tsv'),
-    'tropicalis_sample_data_url': generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, 'data/nemascan_sample_data_tropicalis.tsv'),
+    'sample_data_urls': {
+      species: generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, NEMASCAN_EXAMPLE_FILE.get_string(SPECIES=species))
+        for species in SPECIES_LIST.keys()
+    },
   })
 
 

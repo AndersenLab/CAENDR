@@ -2,6 +2,7 @@ from caendr.services.logger import logger
 
 from caendr.models.datastore import Container, Entity
 from caendr.models.datastore.pipeline_operation import PipelineOperation
+from caendr.utils.data import unique_id
 
 
 
@@ -38,13 +39,18 @@ class JobEntity(Entity):
     return super(JobEntity, cls).__new__(cls)
 
 
-  def __init__(self, *args, **kwargs):
+  def __init__(self, name_or_obj = None, *args, **kwargs):
 
     # Create Container object to store relevant Container fields
     self.__container = Container()
 
+    # If nothing passed for name_or_obj, create a new ID to use for this object
+    if name_or_obj is None:
+      name_or_obj = unique_id()
+      self.set_properties_meta(id = name_or_obj)
+
     # Initialize from superclass
-    super().__init__(*args, **kwargs)
+    super().__init__(name_or_obj, *args, **kwargs)
 
 
 
@@ -67,6 +73,26 @@ class JobEntity(Entity):
     }
 
 
+  @classmethod
+  def get_props_set_meta(cls):
+    return {
+      *super().get_props_set_meta(),
+      'id',
+    }
+
+
+
+  ## Unique ID ##
+
+  @property
+  def id(self):
+    '''
+      This Entity's unique ID.
+      This field cannot be set manually; it must be determined at initialization.
+    '''
+    return self._get_meta_prop('id')
+
+
 
   ## Status ##
 
@@ -78,10 +104,20 @@ class JobEntity(Entity):
   def status(self, val):
     from caendr.models.task import TaskStatus # Prevents import error
 
-    if not TaskStatus.isValid(val):
+    if not TaskStatus.is_valid(val):
       raise TypeError(f'Cannot set status of {self.kind} job to "{val}".')
 
     self.__status = val
+
+
+  def is_finished(self) -> bool:
+    from caendr.models.task import TaskStatus # Prevents import error
+    return self['status'] in TaskStatus.FINISHED
+
+
+  def is_not_err(self) -> bool:
+    from caendr.models.task import TaskStatus # Prevents import error
+    return self['status'] in TaskStatus.NOT_ERR
 
 
 

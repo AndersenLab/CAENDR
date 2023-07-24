@@ -67,6 +67,7 @@ class DatasetRelease(Entity):
       'disabled',
       'hidden',
       'species',
+      'browser_tracks',      # List of browser tracks supported for this species & release, by name
     }
 
 
@@ -98,6 +99,23 @@ class DatasetRelease(Entity):
       self.__dict__['report_type'] = val.name
     else:
       self.__dict__['report_type'] = val
+
+
+  # Prop should default to empty list if not set
+  @property
+  def browser_tracks(self):
+    return self.__dict__.get('browser_tracks', [])
+
+  @browser_tracks.setter
+  def browser_tracks(self, val):
+
+    # Only allow list to be set
+    if not isinstance(val, list):
+      raise TypeError('Must set browser_tracks to a list.')
+
+    # Save prop in object's local dictionary
+    self.__dict__['browser_tracks'] = val
+
 
 
 
@@ -237,8 +255,8 @@ class DatasetRelease(Entity):
     'gatk_report':                       'gatk_report.html',
     'concordance_report':                'concordance_report.html',
 
-    'divergent_regions_strain_bed_gz':   'divergent_regions_strain.$RELEASE.bed.gz',
-    'divergent_regions_strain_bed':      'divergent_regions_strain.$RELEASE.bed',
+    'divergent_regions_strain_bed_gz':   'browser_tracks/${RELEASE}_${SPECIES}_divergent_regions_strain.bed.gz',
+    'divergent_regions_strain_bed':      'browser_tracks/${RELEASE}_${SPECIES}_divergent_regions_strain.bed',
 
     'soft_filter_vcf_gz':                'variation/WI.$RELEASE.soft-filter.vcf.gz',
     'soft_filter_vcf_gz_tbi':            'variation/WI.$RELEASE.soft-filter.vcf.gz.tbi',
@@ -259,7 +277,9 @@ class DatasetRelease(Entity):
     'haplotype_png':                     'haplotype/haplotype.png',
     'haplotype_pdf':                     'haplotype/haplotype.pdf',
     'sweep_pdf':                         'haplotype/sweep.pdf',
-    'sweep_summary_tsv':                 'haplotype/sweep_summary.tsv'
+    'sweep_summary_tsv':                 'haplotype/sweep_summary.tsv',
+
+    'transposon_calls':                  '${RELEASE}_${SPECIES}_transposon_calls.bed',
   }, cutoff_date=20200101)
 
   V1 = ReportType('V1', {

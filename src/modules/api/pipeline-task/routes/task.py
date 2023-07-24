@@ -20,7 +20,7 @@ from caendr.models.pub_sub import PubSubAttributes, PubSubMessage, PubSubStatus
 
 from caendr.services.cloud.task import update_task_status, verify_task_headers
 from caendr.services.cloud.pubsub import get_operation
-from caendr.services.cloud.lifesciences import create_pipeline_operation_record, update_pipeline_operation_record, update_all_linked_status_records
+from caendr.services.cloud.lifesciences import create_pipeline_operation_record, update_pipeline_operation_record, update_all_linked_status_records, get_operation_id_from_name
 
 from caendr.services.nemascan_mapping import update_nemascan_mapping_status
 from caendr.services.database_operation import update_db_op_status
@@ -52,7 +52,13 @@ def start_task(task_route):
   except:
     raise APIBadRequestError('Failed to parse request body as valid JSON')
 
-  logger.info(f"Payload: {payload}")
+  op_id = payload.get('id')
+  if op_id is None:
+    logger.error(f'Request body must define an operation ID. Payload: {payload}')
+    raise APIBadRequestError('Request body must define an operation ID')
+  else:
+    logger.info(f"[TASK {op_id}] Payload: {payload}")
+
   handle_task(payload, task_route)
 
   #return jsonify({'operation': op.id}), 200
@@ -85,16 +91,23 @@ def _get_task_metadata(queue_name):
   return mapping.get(queue_name, None)
 
 def handle_task(payload, task_route):
-  logger.info(f"Task: {task_route}")
+  logger.info(f"[TASK {payload.get('id', 'no-id')}] handle_task: {task_route}")
 
   task_metadata = _get_task_metadata(task_route)
   task_class, start_pipeline, update_status = task_metadata.values()
 
   if task_class is None:
-      raise APIBadRequestError("Invalid task route")
+    raise APIBadRequestError(f'[TASK {payload.get("id", "no-id")}] Invalid task route "{task_route}"')
 
   task = task_class(**payload)
-  response = start_pipeline(task)
+  try:
+    response = start_pipeline(task)
+  except Exception as ex_outer:
+    try:
+      update_status(task.id, status=TaskStatus.ERROR)
+    except Exception as ex_inner:
+      logger.error(f'[TASK {task.id}] Failed to update status to {TaskStatus.ERROR}: {ex_inner}')
+    raise ex_outer
 
   persistent_logger = PersistentLogger(task_route)
 
@@ -105,9 +118,10 @@ def handle_task(payload, task_route):
     op = create_pipeline_operation_record(task, response)
     operation_name = op.operation
   except Exception as e:
-    logger.error(e)
-    persistent_logger.log(e)
-    status = 'ERROR'
+    msg = f"[TASK {task.id}] Error: {e}"
+    logger.error(msg)
+    persistent_logger.log(msg)
+    status = TaskStatus.ERROR
 
   update_status(task.id, status=status, operation_name=operation_name)
 
@@ -125,22 +139,23 @@ def update_task():
     # Marshall JSON to PubSubStatus object
     try:
       operation = payload.get('message').get("attributes").get("operation")
+      op_id = get_operation_id_from_name(operation)
     except Exception as e:
       logger.error(e)
       raise APIBadRequestError('Error parsing PubSub status message.')
 
     try:
-      logger.debug("updating the pipeline operation record...")
+      logger.debug(f"[STATUS {op_id}] Updating the pipeline operation record...")
       op = update_pipeline_operation_record(operation)
       if op == None:
-        logger.warn(f"Nothing to do. GLS operation could not be found. bailing out.")
+        logger.warn(f"[STATUS {op_id}] Nothing to do. GLS operation could not be found. bailing out.")
         return jsonify({'status': 'NOT_FOUND'}), 404
 
-      logger.debug(f"updating all linked status records for operation {op}: {dict(op)}")
+      logger.debug(f"[STATUS {op_id}] Updating all linked status records for operation {op}: {dict(op)}")
       update_all_linked_status_records(op['operation_kind'], operation)
       logger.debug(operation)
     except Exception as e:
-      logger.error(f"Unable to update pipeline record[s]: {e}")
+      logger.error(f"[STATUS {op_id}] Unable to update pipeline record[s]: {e}")
       raise APIInternalError(f"Error updating status records. Error: {e}")
 
   except Exception as error:

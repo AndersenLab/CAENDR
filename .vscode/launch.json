@@ -18,6 +18,7 @@
                 "FLASK_APP": "main.py",
                 "FLASK_ENV": "development",
                 "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "localhost",
+                "MODULE_SITE_PASSWORD_PROTECTED": "false",
                 // "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "file",
                 // "MODULE_DB_OPERATIONS_CONNECTION_FILE": "${workspaceFolder}/src/modules/db_operations/13.db",
                 "MODULE_DB_TIMEOUT": "3",
@@ -25,7 +26,8 @@
                 // "API_PIPELINE_TASK_URL": "https://localhost:9090",
                 "CAENDR_USE_SSL": "1",
                 "SENTRY_URL": "",
-                "SITE_BASE_URL": "https://localhost:8080",
+                // "SITE_BASE_URL": "https://localhost:8080",
+                "MODULE_SITE_HOST": "localhost:8080",
             },
             "args": [
                 "run",
@@ -261,6 +263,36 @@
             }
         },
         {
+            "name": "Run Site-v2 (local API)",
+            "type": "python",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/src/modules/site-v2",
+            "console": "integratedTerminal",
+            "module": "flask",
+            "python": "${workspaceFolder}/src/modules/site-v2/venv/bin/python",
+            "envFile": "${workspaceFolder}/src/modules/site-v2/.env",
+            "env": {
+                "ENV": "main",
+                "FLASK_APP": "main.py",
+                "FLASK_ENV": "development",
+                "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "localhost",
+                "MODULE_DB_TIMEOUT": "3",
+                "MODULE_API_PIPELINE_TASK_URL_NAME": "API_PIPELINE_TASK_URL",
+                "API_PIPELINE_TASK_URL": "https://localhost:9090",
+                "CAENDR_USE_SSL": "1",
+                "SENTRY_URL": "",
+                "MODULE_SITE_HOST": "localhost:8080",
+            },
+            "args": [
+                "run",
+                "--host", "localhost",
+                "--port", "8080",
+                "--cert", "adhoc",
+                "--with-threads"
+            ],
+            "jinja": true
+        },
+        {
             "name": "Run API pipeline server (local site)",
             "type": "python",
             "request": "launch",
@@ -277,7 +309,7 @@
                 "SENTRY_URL": "",
                 "MODULE_API_PIPELINE_TASK_URL_NAME": "API_PIPELINE_TASK_URL",
                 "API_PIPELINE_TASK_URL": "https://localhost:9090",
-                "MODULE_SITE_BASE_URL":  "https://localhost:8080",
+                "MODULE_SITE_HOST": "localhost:8080",
             },
             "args": [
                 "run",
@@ -293,7 +325,7 @@
         {
             "name": "Run Site-v2 + API Pipeline",
             "configurations": [
-                "Run Site-v2 (requires a local Postgres instance or cloud-sql-proxy)",
+                "Run Site-v2 (local API)",
                 "Run API pipeline server (local site)",
             ],
             "stopAll": true

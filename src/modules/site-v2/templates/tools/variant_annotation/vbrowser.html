@@ -19,8 +19,8 @@
 {% from "_includes/strain-listing.html" import list_strains %}
 
 <div class="container-fluid px-5">
-  <div class="d-flex justify-content-around flex-wrap mt-2 pb-5">
-    <div class="col-10 col-md-8 col-xl-3 mb-5" style="max-height:80vh;">
+  <div class="d-flex justify-content-around flex-wrap pb-5">
+    <div class="col-10 col-md-8 col-xl-3">
       <nav>
         <div class="nav nav-tabs border-0" id="nav-tab" role="tablist">
           <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home"
@@ -68,8 +68,11 @@
                 </thead>
                 <tbody id="orthologs"></tbody>
               </table>
-              <div id="v-search-table-no-results" style="display:none;">
+              <div id="v-search-table-empty" class="m-2" style="display:none;">
                 That gene name is not found in this species, so either that gene does not exist in this species or a different gene name is indexed.
+              </div>
+              <div id="v-search-table-error" class="m-2" style="display:none;">
+                There was an error processing your gene search.
               </div>
             </div>
           </div>
@@ -274,6 +277,14 @@ const columnList = JSON.parse('{{ columns | tojson }}');
 
 const strainListing = JSON.parse('{{ strain_listing | tojson }}');
 
+// Divs used by the gene search
+const gene_search_selectors = {
+  "table":   "#v-search-table",
+  "loading": "#loading-search-table",
+  "empty":   "#v-search-table-empty",
+  "error":   "#v-search-table-error",
+}
+
 
 
 /* Species */
@@ -307,11 +318,8 @@ function update_species(species_id) {
   // Set species object from ID
   species = species_list[species_id];
 
-  // Reprocess gene search with the new species
-  $("#loading-search-table").fadeIn();
-  process_gene_search();
-
-  // Clear the interval search on switching species, to help avoid confusion
+  // Clear the gene and interval searches on switching species, to help avoid confusion
+  clear_gene_search();
   clear_interval_search();
 
   // Show only strains matching current species
@@ -389,7 +397,7 @@ function onDownload() {
 function process_gene_search() {
   let gene = $('#gene-search').val().trim();
 
-  run_gene_search(gene, species, "#v-search-table", "#loading-search-table", (i, gene) => {
+  run_gene_search(gene, species, gene_search_selectors, (i, gene) => {
     if (!gene["chrom"] || !gene["start"] || !gene["end"]) return null;
     const position = format_locus_string(gene["chrom"], gene["start"], gene["end"]);
     const link = `<a onclick="set_position('${position}')" link='${position}' class='ortholink'>${gene['gene_id']}</a>`;
@@ -404,6 +412,11 @@ function process_gene_search() {
 function set_position(pos) {
   $('#interval').val(pos);
   $('#search-interval-btn').click();
+}
+
+function clear_gene_search() {
+  $('#gene-search').val(null);
+  process_gene_search();
 }
 
 function clear_interval_search() {
@@ -717,7 +730,7 @@ $(document).ready(function() {
     $("#gene-search").on("input", function(e) {
 
       var gene = $('#gene-search').val().trim();
-      prep_gene_search(gene, "#v-search-table", "#loading-search-table");
+      prep_gene_search(gene, gene_search_selectors);
 
       clearTimeout(typingTimer);
       typingTimer = setTimeout(process_gene_search, doneTypingInterval);
@@ -793,6 +806,11 @@ $(document).ready(function() {
       column.visible(state);
       dTable.columns.adjust().draw();
     });
+
+    // Prevent form from submitting & reloading the page
+    $('#form-submit').submit(function(e) {
+      e.preventDefault();
+    })
 
     $("#search-interval-btn").on("click", function(e) {
       e.preventDefault();

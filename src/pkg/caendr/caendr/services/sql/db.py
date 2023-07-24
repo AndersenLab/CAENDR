@@ -47,7 +47,10 @@ def backup_external_db(downloaded_files, bucket_name: str, path_prefix: str):
 
 def drop_tables(app, db, species=None, tables=None):
   '''
-    drop_tables [Drops tables from the SQL db. Drops all tables if non are provided. ]
+    Drops tables from the SQL db. Drops all tables if none are provided.
+    Expects tables to be provided in dependency order:
+    E.g., if table B contains a foreign key into table A, they should be provided as [... A, ..., B, ...]
+
       Args:
         app : Flask app instance
         db : SQLAlchemy db registered with the Flask App
@@ -74,7 +77,10 @@ def drop_tables(app, db, species=None, tables=None):
       logger.info(f'Dropping species [{", ".join(species)}] from tables: {tables}')
 
     db.metadata.create_all(bind=db.engine, tables=tables)
-    for table in tables:
+
+    # Loop through tables in reverse order, so rows that depend on earlier tables are
+    # dropped first
+    for table in tables[::-1]:
       for species_name in species:
         del_statement = table.delete().where(table.c.species_name == species_name)
         db.engine.execute(del_statement)

@@ -33,8 +33,10 @@
 
 
 {% block script %}
-
 <script>
+{% include '_scripts/utils.js' %}  {#/* defines: force_download */#}
+
+
 $(document).ready(function() {
 
     (function($) {
@@ -52,6 +54,7 @@ $(document).ready(function() {
     }(jQuery));
 
 });
+
 
 $(document).ready(function() {
 
@@ -72,8 +75,5 @@ $(document).ready(function() {
 });
 
 
-
 </script>
-
 {% endblock %}
-

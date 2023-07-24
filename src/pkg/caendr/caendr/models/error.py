@@ -158,6 +158,12 @@ class EnvVarError(InternalError):
       return 'A required environment variable'
 
 
+class BasicAuthError(InternalError):
+  def __init__(self, description):
+    self.description = description
+    super().__init__()
+
+
 class NonUniqueEntity(InternalError):
   def __init__(self, kind, key, val, matches):
     self.kind = kind
@@ -203,10 +209,20 @@ class SpeciesUrlNameError(InternalError):
     self.species_name = species_name
 
 class InvalidTokenError(InternalError):
-  def __init__(self, token):
+  def __init__(self, token, source):
     self.token = token
-    self.description = f'Invalid token name {token}'
+    self.description = f'Invalid token name ${token} in {source}'
     super().__init__()
 
 class MissingTokenError(InternalError):
-  description = 'Cannot get filled-in template until all tokens are defined'
+  def __init__(self, token, template=None):
+    self.token    = token
+    self.template = template
+
+    self.description = 'Missing value for token'
+    if token:
+      self.description += f' ${token}'
+    if template:
+      self.description += f' in template "{template}"'
+
+    super().__init__()

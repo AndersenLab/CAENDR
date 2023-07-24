@@ -30,7 +30,7 @@
 <div class="container-fluid px-5 pb-5">
   <div class="d-flex justify-content-around flex-wrap mt-2">
   <!-- Results Card -->
-  <div class="col col-md-6 col-xl-3 text-bg-light mb-5 p-5 rounded-2 shadow-sm overflow-auto" style="max-height:525px">
+  <div class="col col-md-6 col-xl-3 text-bg-light mb-5 p-5 rounded-2 shadow-sm overflow-auto" style="max-height:75vh;">
    <p>
       <strong>Trait:</strong> {{ hr.trait }}
    </p>
@@ -46,8 +46,10 @@
     <p>
       <strong>Status:</strong>  {{ hr.status }}
     
-      {% if hr.status == TaskStatus.ERROR %}
-      <strong>Error:</strong> <span class="text-danger">{{ operation.error }}</span>
+      {% if hr.status == TaskStatus.ERROR %} 
+      {% if session["is_admin"] %}
+      <p><strong>Error:</strong> <span class="text-danger">{{ operation.error }}</span></p>
+      {% endif %}
       {% endif %}
     </p>
     {%- if result %}
@@ -59,7 +61,9 @@
     <div class="d-grid gap-3">
       <a class="btn btn-secondary text-light" role="button" onClick="getPDF()">Download PDF</a>
       <a class="btn btn-secondary text-light" role="button" onClick="window.open('{{ data_url }}')">Download TSV</a>
+      {% if session["is_admin"] %}
       <a class="btn btn-secondary text-light" role="button" href="{{ url_for('heritability_calculator.view_logs', id=hr.id)}}">View Logs</a>
+      {% endif %}
     </div>
   </div>
   </div>
@@ -71,7 +75,9 @@
       <div class="ps-3 pt-0"><a href="{{ url_for('heritability_calculator.heritability_calculator') }}"><i class="bi bi-plus-circle" aria-hidden="true"></i> New Calculation</a></div>
       <div class="ps-3 pt-0"><a href="{{ url_for('heritability_calculator.my_results') }}"><i class="bi bi-journal" aria-hidden="true"></i>View All My Heritability Results</a></div>
       {% if data %}
+      {% if hr.status == TaskStatus.COMPLETE %}
       <div class="ps-3 pt-0"><button class="btn border-0" onclick="openFullscreen();" id="fullscreenButton"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>View Fullscreen</button></div>
+      {% endif %}
       {% endif %}
       </div>
       <!-- /Options Toolbar -->
@@ -85,6 +91,10 @@
             This page will reload automatically.
           </strong>
         </p>
+        <div class="col-9 alert alert-info mt-5 mx-auto animate__animated animate__fadeIn">
+          <p class="fs-2 text-center"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></p>
+          <p class="lead">The heritability calculation is currently being run. Please check back in a few minutes for results. This page will reload automatically.</p>
+      </div>
         {% endif %}
       
         {% else %}
@@ -111,6 +121,13 @@
         </div>
       
         {% endif %}
+        {% endif %}
+
+        {% if hr.status == TaskStatus.ERROR %}
+        <div class="col-9 alert alert-danger mt-5 mx-auto animate__animated animate__fadeInDown">
+          <p class="fs-2 text-center"><i class="bi bi-exclamation-circle-fill me-2" aria-hidden="true"></i></p>
+          <p class="lead">We're sorry but an error occurred while performing this report. Please verify that the data you submitted is correct and matches the expected format.</p>
+        </div>
         {% endif %}
       </div>
   <!-- /Tool Column -->
