@@ -39,8 +39,8 @@ releases_bp = Blueprint(
 def interpret_url_vars(species_name, release_version):
   species = Species.from_name(species_name, from_url=True)
 
-  if species.get_url_name() != species_name:
-    raise SpeciesUrlNameError(species.get_url_name())
+  if species.get_slug() != species_name:
+    raise SpeciesUrlNameError(species.get_slug())
 
   releases = get_all_dataset_releases(order='-version', species=species.name)
   release  = find_dataset_release(releases, release_version)

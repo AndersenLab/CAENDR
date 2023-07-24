@@ -123,7 +123,7 @@ class Species(Entity):
 
     ## URL variable(s) ##
 
-    def get_url_name(self):
+    def get_slug(self):
         return self.name.replace('_', '-')
 
 
