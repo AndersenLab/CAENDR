@@ -90,9 +90,6 @@ class Strain(DictSerializable, db.Model):
       'issue_notes',
       'isotype_ref_strain',
       'sequenced',               # "wgs_seq" in source data sheet
-      # 'peel-zeel',
-      # 'pha-sup',
-      # 'nagoya',
     ]
 
     # Get the list of columns, associated with their index in the ordered list
