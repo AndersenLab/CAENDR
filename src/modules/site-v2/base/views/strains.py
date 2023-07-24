@@ -123,7 +123,7 @@ def strains_data_csv(species_name, release_name, file_ext):
     abort(404)
 
   # Get list of column names in desired order
-  columns = Strain.get_columns_ordered(names_only=True)
+  columns = Strain.get_column_names_ordered()
 
   # Get list of strains for this species as set of rows for pandas
   strains_by_species = query_strains(species=species.name, issues=False)

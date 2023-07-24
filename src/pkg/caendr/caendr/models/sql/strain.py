@@ -55,6 +55,14 @@ class Strain(DictSerializable, db.Model):
 
 
   @classmethod
+  def get_column_names_ordered(cls):
+    '''
+      Get the list of column names in this table, in the order specified in the source data sheet.
+    '''
+    return [ c.name for c in cls.get_columns_ordered() ]
+
+
+  @classmethod
   def get_columns_ordered(cls, names_only=False):
     '''
       Get the list of columns in this table, in the order specified in the source data sheet.
@@ -104,8 +112,5 @@ class Strain(DictSerializable, db.Model):
     # Sort by index in ordered list, and map back to just the column object
     col_list = [ c[1] for c in sorted(col_list, key=lambda x: x[0]) ]
 
-    # Return names or full columns, as requested
-    # Can't just return ordered list above because some of the columns listed are not defined in this table
-    if names_only:
-      return [ c.name for c in col_list ]
+    # Return columns
     return col_list
