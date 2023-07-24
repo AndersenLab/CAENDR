@@ -95,7 +95,7 @@
 </style>
 
     <div class="position-relative" id="map" aria-hidden="true" tabindex="-1">
-      <div class="btn-group-vertical m-3 zoomContainer" role="group" aria-hidden="true">
+      <div class="btn-group-vertical m-3 zoomContainer" role="group" aria-hidden="true" tabindex="-1">
         <button class="btn text-bg-light d-none d-md-block" id="zoomIn" tabindex="-1"><i class="bi bi-plus-circle"></i></button>
         <button class="btn text-bg-light d-none d-md-block" id="zoomOut" tabindex="-1"><i class="bi bi-dash-circle"></i></button>
       </div>
@@ -105,8 +105,8 @@
       </btn>
       <div class="d-none d-md-block shadow-sm rounded-2 text-bg-light mt-5 mt-md-0 me-2 me-md-3 p-3" style="width:165px;"
         id="selectSpecies">
-        <form id="strains" aria-hidden="true">
-          <p tabindex="-1"><strong>Species:</strong></p>
+        <form id="strains" aria-hidden="true" tabindex="-1">
+          <p aria-hidden="true" tabindex="-1"><strong>Species:</strong></p>
           <div class="d-flex justify-content-between mb-2">
             <div class="form-check">
               <input class="form-check-input" type='checkbox' name='filters' value='elegans_layer' id="elegansCheck" checked tabindex="-1">
