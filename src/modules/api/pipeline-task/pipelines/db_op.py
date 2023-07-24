@@ -1,30 +1,27 @@
-import os
-import logging
-
 from caendr.utils import monitor
 from caendr.models.task import DatabaseOperationTask
 from caendr.models.datastore import DatabaseOperation
 from caendr.services.cloud.lifesciences import start_pipeline
 from caendr.models.lifesciences import ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
-from caendr.utils.json import get_json_from_class
+from caendr.utils.env import get_env_var
 
 monitor.init_sentry("pipelines-task")
 
 
-GOOGLE_CLOUD_PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID')
-GOOGLE_CLOUD_REGION = os.environ.get('GOOGLE_CLOUD_REGION')
+# Project Environment Variables
+GOOGLE_CLOUD_PROJECT_ID = get_env_var('GOOGLE_CLOUD_PROJECT_ID')
+GOOGLE_CLOUD_REGION     = get_env_var('GOOGLE_CLOUD_REGION')
 
-MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME')
-
-MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME')
-
-
-sa_email = f"{MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME}@{GOOGLE_CLOUD_PROJECT_ID}.iam.gserviceaccount.com"
-pub_sub_topic = f'projects/{GOOGLE_CLOUD_PROJECT_ID}/topics/{MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME}'
+# Module Environment Variables
+SERVICE_ACCOUNT_NAME    = get_env_var('MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME')
+PUB_SUB_TOPIC_NAME      = get_env_var('MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME')
 
 
-COMMAND = '/db_operations/run.sh'
+sa_email = f"{SERVICE_ACCOUNT_NAME}@{GOOGLE_CLOUD_PROJECT_ID}.iam.gserviceaccount.com"
+pub_sub_topic = f'projects/{GOOGLE_CLOUD_PROJECT_ID}/topics/{PUB_SUB_TOPIC_NAME}'
 
+
+# Job Parameters
 SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
 MACHINE_TYPE = 'n1-standard-4'
 PREEMPTIBLE = False
@@ -36,6 +33,8 @@ LOCAL_WORK_PATH = '/workdir'
 BOOT_DISK_SIZE_GB = 50
 ENABLE_STACKDRIVER_MONITORING = True
 
+COMMAND = '/db_operations/run.sh'
+
 
 def start_db_op_pipeline(task: DatabaseOperationTask):
   pipeline_req = _generate_db_op_pipeline(task)
@@ -43,7 +42,7 @@ def start_db_op_pipeline(task: DatabaseOperationTask):
 
 
 def _generate_db_op_pipeline(task: DatabaseOperationTask):
-  d = DatabaseOperation(task.id)
+  d = DatabaseOperation.get_ds(task.id, silent=False)
   image_uri = d.get_container().uri()
 
   container_name = f"db-op-{d.id}"

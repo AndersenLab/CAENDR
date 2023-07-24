@@ -9,12 +9,13 @@ from pipelines.db_op import start_db_op_pipeline
 from pipelines.indel_primer import start_indel_primer_pipeline
 from pipelines.heritability import start_heritability_pipeline
 
+from caendr.models.datastore import Species
 from caendr.models.datastore.nemascan_mapping import NemascanMapping
 from caendr.models.datastore.database_operation import DatabaseOperation
 from caendr.models.datastore.indel_primer import IndelPrimer
 from caendr.models.datastore.heritability_report import HeritabilityReport
 
-from caendr.models.error import APIBadRequestError, APIInternalError
+from caendr.models.error import APIBadRequestError, APIInternalError, NotFoundError
 from caendr.models.task import TaskStatus, NemaScanTask, DatabaseOperationTask, IndelPrimerTask, HeritabilityTask
 from caendr.models.pub_sub import PubSubAttributes, PubSubMessage, PubSubStatus
 
@@ -94,14 +95,27 @@ def handle_task(payload, task_route):
   logger.info(f"[TASK {payload.get('id', 'no-id')}] handle_task: {task_route}")
 
   task_metadata = _get_task_metadata(task_route)
-  task_class, start_pipeline, update_status = task_metadata.values()
+  if task_metadata is None:
+    raise APIBadRequestError(f'[TASK {payload.get("id", "no-id")}] Invalid task route "{task_route}"')
 
+  task_class, start_pipeline, update_status = task_metadata.values()
   if task_class is None:
     raise APIBadRequestError(f'[TASK {payload.get("id", "no-id")}] Invalid task route "{task_route}"')
 
   task = task_class(**payload)
+
+  # Try to start the task
   try:
     response = start_pipeline(task)
+
+  # If the corresponding report couldn't be found, convert to a Bad Request error
+  except NotFoundError as ex:
+    if ex.kind == Species.kind:
+      raise APIBadRequestError(f'[TASK {task.id}] {task_class.kind} task has invalid species value.') from ex
+    else:
+      raise APIBadRequestError(f'[TASK {task.id}] Could not find {task_class.kind} object wih this ID.') from ex
+
+  # Intercept any other exceptions and try setting the task status to Error
   except Exception as ex_outer:
     try:
       update_status(task.id, status=TaskStatus.ERROR)

@@ -1,27 +1,26 @@
-import os
-import logging
-
 from caendr.models.task import NemaScanTask
-from caendr.models.datastore import NemascanMapping
-from caendr.services.nemascan_mapping import get_mapping
+from caendr.models.datastore import NemascanMapping, Species
 from caendr.services.cloud.lifesciences import start_pipeline
 from caendr.models.lifesciences import ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
-from caendr.utils.json import get_json_from_class
+from caendr.utils.env import get_env_var
 
 
-GOOGLE_CLOUD_PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID')
-GOOGLE_CLOUD_REGION = os.environ.get('GOOGLE_CLOUD_REGION')
-GOOGLE_CLOUD_ZONE = os.environ.get('GOOGLE_CLOUD_ZONE')
+# Project Environment Variables
+GOOGLE_CLOUD_PROJECT_ID = get_env_var('GOOGLE_CLOUD_PROJECT_ID')
+GOOGLE_CLOUD_REGION     = get_env_var('GOOGLE_CLOUD_REGION')
+GOOGLE_CLOUD_ZONE       = get_env_var('GOOGLE_CLOUD_ZONE')
 
-MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME')
-MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME')
-MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME')
-
-
-sa_email = f"{MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME}@{GOOGLE_CLOUD_PROJECT_ID}.iam.gserviceaccount.com"
-pub_sub_topic = f'projects/{GOOGLE_CLOUD_PROJECT_ID}/topics/{MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME}'
+# Module Environment Variables
+SERVICE_ACCOUNT_NAME    = get_env_var('MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME')
+WORK_BUCKET_NAME        = get_env_var('MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME')
+PUB_SUB_TOPIC_NAME      = get_env_var('MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME')
 
 
+sa_email = f"{SERVICE_ACCOUNT_NAME}@{GOOGLE_CLOUD_PROJECT_ID}.iam.gserviceaccount.com"
+pub_sub_topic = f'projects/{GOOGLE_CLOUD_PROJECT_ID}/topics/{PUB_SUB_TOPIC_NAME}'
+
+
+# Job Parameters
 SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
 MACHINE_TYPE = 'n1-standard-1'
 PREEMPTIBLE = False
@@ -42,27 +41,26 @@ def start_nemascan_pipeline(task: NemaScanTask):
 
 
 def _generate_nemascan_pipeline_req(task: NemaScanTask):
-  m = NemascanMapping(task.id)
-  image_uri = m.get_container().uri()
+  m = NemascanMapping.get_ds(task.id, silent=False)
 
-  trait_file = f"gs://{m.get_bucket_name()}/{m.get_data_blob_path()}"
-  output_dir = f"gs://{m.get_bucket_name()}/{m.get_result_path()}"
-  work_dir = f"gs://{MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME}/{m.data_hash}"
-  data_dir = f"gs://{m.get_bucket_name()}/{m.get_input_data_path()}"
-  google_project = GOOGLE_CLOUD_PROJECT_ID
-  google_zone = GOOGLE_CLOUD_ZONE
+  image_uri  = m.get_container().uri()
+  trait_file = f"gs://{ m.get_bucket_name() }/{ m.get_data_blob_path() }"
+  output_dir = f"gs://{ m.get_bucket_name() }/{ m.get_result_path() }"
+  work_dir   = f"gs://{ WORK_BUCKET_NAME    }/{ m.data_hash }"
+  data_dir   = f"gs://{ m.get_bucket_name() }/{ m.get_input_data_path() }"
 
   container_name = f"nemascan-{m.id}"
   environment = {
     "USERNAME": m.username if m.username else None,
     "EMAIL": m.email if m.email else None,
     "SPECIES": m.species,
+    "VCF_VERSION": Species.get(m.species)['release_latest'],
     "TRAIT_FILE": trait_file,
     "OUTPUT_DIR": output_dir,
     "WORK_DIR": work_dir,
     "DATA_DIR": data_dir,
-    "GOOGLE_PROJECT": google_project,
-    "GOOGLE_ZONE": google_zone,
+    "GOOGLE_PROJECT": GOOGLE_CLOUD_PROJECT_ID,
+    "GOOGLE_ZONE": GOOGLE_CLOUD_ZONE,
     "GOOGLE_SERVICE_ACCOUNT_EMAIL": sa_email
   }
 

@@ -1,28 +1,33 @@
-import os
 import json
-import logging
-import tabix
 from caendr.services.logger import logger
 
 from caendr.models.task import HeritabilityTask
-from caendr.models.datastore import HeritabilityReport
-from caendr.services.heritability_report import get_heritability_report
+from caendr.models.datastore import HeritabilityReport, Species
 from caendr.services.cloud.lifesciences import start_pipeline
 from caendr.models.lifesciences import ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
+from caendr.utils.env import get_env_var
 
 
-GOOGLE_CLOUD_PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID')
-GOOGLE_CLOUD_REGION = os.environ.get('GOOGLE_CLOUD_REGION')
-GOOGLE_CLOUD_ZONE = os.environ.get('GOOGLE_CLOUD_ZONE')
+# Project Environment Variables
+GOOGLE_CLOUD_PROJECT_ID = get_env_var('GOOGLE_CLOUD_PROJECT_ID')
+GOOGLE_CLOUD_REGION     = get_env_var('GOOGLE_CLOUD_REGION')
+GOOGLE_CLOUD_ZONE       = get_env_var('GOOGLE_CLOUD_ZONE')
 
-MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME')
-MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME')
+# Site Environment Variables
+MODULE_SITE_BUCKET_PRIVATE_NAME = get_env_var("MODULE_SITE_BUCKET_PRIVATE_NAME")
+
+# Module Environment Variables
+SERVICE_ACCOUNT_NAME    = get_env_var('MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME')
+PUB_SUB_TOPIC_NAME      = get_env_var('MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME')
+WORK_BUCKET_NAME        = get_env_var("MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME")
+DATA_BUCKET_NAME        = get_env_var("MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME")
 
 
-sa_email = f"{MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME}@{GOOGLE_CLOUD_PROJECT_ID}.iam.gserviceaccount.com"
-pub_sub_topic = f'projects/{GOOGLE_CLOUD_PROJECT_ID}/topics/{MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME}'
+sa_email = f"{SERVICE_ACCOUNT_NAME}@{GOOGLE_CLOUD_PROJECT_ID}.iam.gserviceaccount.com"
+pub_sub_topic = f'projects/{GOOGLE_CLOUD_PROJECT_ID}/topics/{PUB_SUB_TOPIC_NAME}'
 
 
+# Job Parameters
 SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
 MACHINE_TYPE = 'n1-standard-1'
 PREEMPTIBLE = False
@@ -51,57 +56,33 @@ def start_heritability_pipeline(task: HeritabilityTask):
 
 
 def _generate_heritability_pipeline_req(task: HeritabilityTask):
-  h = HeritabilityReport(task.id)
+  h = HeritabilityReport.get_ds(task.id, silent=False)
   
   image_uri = h.get_container().uri()
-  container_commands = _get_container_commands(task.container_version)
-  logger.debug(f"Using image: {image_uri} with commands: {container_commands}")
-
-  # prepare args
-  # VCF_VERSION = "20210121"
-  VCF_VERSION = "20220216"
-  GOOGLE_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT_ID", None)
-  GOOGLE_ZONE = os.getenv("GOOGLE_CLOUD_ZONE", None)
-  MODULE_SITE_BUCKET_PRIVATE_NAME = os.getenv("MODULE_SITE_BUCKET_PRIVATE_NAME", None)
-  MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME = os.getenv("MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME", None)
-  MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME = os.getenv("MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME", None)
-
-  # validation
-  if GOOGLE_PROJECT is None:
-    raise Exception("Missing GOOGLE_PROJECT")
-  if GOOGLE_ZONE is None:
-    raise Exception("Missing GOOGLE_ZONE")
-  if MODULE_SITE_BUCKET_PRIVATE_NAME is None:
-    raise Exception("Missing MODULE_SITE_BUCKET_PRIVATE_NAME")
-  if MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME is None:
-    raise Exception("Missing MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME")
-  if MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME is None:
-    raise Exception("Missing MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME")
-
-
-  # GOOGLE_SERVICE_ACCOUNT_EMAIL = "mti-caendr-service-account@mti-caendr.iam.gserviceaccount.com"
   TRAIT_FILE = f"gs://{MODULE_SITE_BUCKET_PRIVATE_NAME}/reports/heritability/{h.container_version}/{h.data_hash}/data.tsv"
-  WORK_DIR   = f"gs://{MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME}/{h.data_hash}"
-  DATA_DIR   = f"gs://{MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME}/heritability"
+  WORK_DIR   = f"gs://{WORK_BUCKET_NAME}/{h.data_hash}"
+  DATA_DIR   = f"gs://{DATA_BUCKET_NAME}/heritability"
   OUTPUT_DIR = f"gs://{MODULE_SITE_BUCKET_PRIVATE_NAME}/reports/heritability/{h.container_version}/{h.data_hash}"
-
 
   # running container name. THis is NOT the image 
   container_name = f"heritability-{h.id}"
   environment = {
     "GOOGLE_SERVICE_ACCOUNT_EMAIL": sa_email,
-    "GOOGLE_PROJECT": GOOGLE_PROJECT,
-    "GOOGLE_ZONE": GOOGLE_ZONE,
-    "VCF_VERSION": VCF_VERSION,
+    "GOOGLE_PROJECT": GOOGLE_CLOUD_PROJECT_ID,
+    "GOOGLE_ZONE": GOOGLE_CLOUD_ZONE,
+    "VCF_VERSION": Species.get(h.species)['release_latest'],
     "TRAIT_FILE": TRAIT_FILE,
     "WORK_DIR": WORK_DIR,
     "DATA_DIR": DATA_DIR,
     "OUTPUT_DIR": OUTPUT_DIR,
-    "DATA_HASH": h.data_hash, 
-    "SPECIES": h['species'], 
-    "DATA_BUCKET": h.get_bucket_name(), 
-    "DATA_BLOB_PATH": h.get_blob_path()}
+    "DATA_HASH": h.data_hash,
+    "SPECIES": h['species'],
+    "DATA_BUCKET": h.get_bucket_name(),
+    "DATA_BLOB_PATH": h.get_blob_path(),
+  }
 
+  container_commands = _get_container_commands(task.container_version)
+  logger.debug(f"Using image: {image_uri} with commands: {container_commands}")
   logger.debug(f"Environment: { json.dumps(environment) }")
 
   service_account = ServiceAccount(email=sa_email, scopes=SCOPES)
