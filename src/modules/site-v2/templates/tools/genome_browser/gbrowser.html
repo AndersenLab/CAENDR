@@ -14,7 +14,7 @@
 <script>$.widget.bridge('uitooltip', $.ui.tooltip);</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha256-KXn5puMvxCw+dAYznun+drMdG1IFl3agK0p/pqT9KAo=" crossorigin="anonymous"></script>
 
-<script type="text/javascript" src="//igv.org/web/release/2.6.2/dist/igv.min.js"></script>
+<script type="text/javascript" src="//igv.org/web/release/2.8.3/dist/igv.min.js"></script>
 <style>
   #closeButton {
     display:none;
@@ -225,7 +225,7 @@ const species_supported_tracks = {
 };
 
 // Browser location & options
-const browser_div = $("#browser")[0];
+const browser_el = document.getElementById('browser');
 const browser_options = {
   search: {
     url: "{{ url_for('api_gene.api_search_genes', species='', query='') }}$FEATURE$",
@@ -404,7 +404,7 @@ function update_species(species_id) {
 
   // Ensure the browser exists and is displaying the correct species,
   // then sort out the tracks in it
-  return create_or_update_browser(browser_div, browser_options, species).then(({browser, created}) => {
+  return create_or_update_browser(browser_el, browser_options, species).then(({browser, created}) => {
 
     // If browser newly created, make it responsive
     if (created) {
@@ -443,7 +443,7 @@ function process_gene_search() {
 
 function set_position(coord) {
   // Sets browser position based on input
-  igv.getBrowser().search(coord);
+  get_browser().search(coord);
 }
 
 
