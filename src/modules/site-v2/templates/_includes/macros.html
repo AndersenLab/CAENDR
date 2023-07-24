@@ -131,3 +131,27 @@
 {% macro render_dataTable_result_list_header(title, data_class=none, extra_classes='') %}
 <th scope="col" class='data-{% if data_class %}{{data_class}}{%else%}{{title|lower}}{%endif%} {{extra_classes}} bg-secondary bg-opacity-25'>{{title}}</th>
 {% endmacro%}
+
+
+
+{#
+  Render a file for download in a dataset release.
+
+  If the file exists, creates an anchor element linked to it. If not, prints the filename and a message.
+  Requires a dict `files` to be defined, which contains the given file ID if the file exists. Recommended to do this using "import ... with context".
+
+  Arguments:
+    file_id (str): The key of the file in `files`, if it exists.
+    file_name (str): The name of the file (used to display & as the downloaded file name)
+    force_download (bool, optional): Whether to force a download of the file on click. Requires the function force_download to be included in order to work properly.
+#}
+{%- macro render_download_link(file_id, file_name, force_download=false, line_break=true) %}
+    {%- if files.get(file_id) -%}
+        <a href="{{ files.get(file_id) }}"
+            {%- if force_download %} onclick="force_download(event)" download="{{ file_name }}" {% endif -%}
+        >{{ file_name }}</a>
+    {%- else %}
+        {{ file_name }} is not included in this release
+    {%- endif %}
+    {%- if line_break %}<br />{% endif %}
+{%- endmacro %}
