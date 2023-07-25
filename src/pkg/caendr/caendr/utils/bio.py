@@ -22,19 +22,21 @@ def arm_or_center(chrom, pos):
 
 
 
-def parse_chrom_interval(interval, silent=True):
+def parse_chrom_interval(interval):
   '''
     Parse a string representing a chromosome interval into a dict.
 
     Args:
       interval (str): The interval string to parse.
-      silent (bool, optional): If False, throw a ValueError if the given value is not a valid interval. If True, returns None instead. Default True.
 
     Returns:
       dict:
         - chrom (str): The chromosome
         - start (int): The start location
         - stop (int):  The stop location
+
+    Raises:
+      ValueError: If input is not a valid interval string.
   '''
 
   # Perform RegEx search on interval string
@@ -48,22 +50,24 @@ def parse_chrom_interval(interval, silent=True):
       'stop':  int(match.group(3)),
     }
 
-  if not silent:
-    raise ValueError(f'Invalid chromosome interval string: "{interval}"')
+  # Otherwise, raise a ValueError
+  raise ValueError(f'Invalid chromosome interval string: "{interval}"')
 
 
-def parse_chrom_position(position, silent=True):
+def parse_chrom_position(position):
   '''
     Parse a string representing a chromosome position into a dict.
 
     Args:
       position (str): The interval string to parse.
-      silent (bool, optional): If False, throw a ValueError if the given value is not a valid position. If True, returns None instead. Default True.
 
     Returns:
       dict:
         - chrom (str): The chromosome
         - pos (int):   The location
+
+    Raises:
+      ValueError: If input is not a valid position string.
   '''
 
   # Perform RegEx search on position string
@@ -76,5 +80,5 @@ def parse_chrom_position(position, silent=True):
       'pos':   int(match.group(2)),
     }
 
-  if not silent:
-    raise ValueError(f'Invalid chromosome position string: "{position}"')
+  # Otherwise, raise a ValueError
+  raise ValueError(f'Invalid chromosome position string: "{position}"')

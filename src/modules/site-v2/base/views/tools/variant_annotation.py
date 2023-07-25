@@ -96,14 +96,16 @@ def query_interval(species_name=None):
   else:
     species = None
 
-  # If query is valid, run it and return the results
-  interval = parse_chrom_interval(query)
-  if interval:
-    data = StrainAnnotatedVariant.run_interval_query(interval, species=species)
-    return jsonify(data)
+  # Parse the query interval, returning an empty response if invalid
+  try:
+    interval = parse_chrom_interval(query)
+  except ValueError as ex:
+    logger.warn(ex)
+    return jsonify({})
 
-  # Otherwise, return an empty response
-  return jsonify({})
+  # Run the query and return the results
+  data = StrainAnnotatedVariant.run_interval_query(interval, species=species)
+  return jsonify(data)
 
 
 
@@ -125,14 +127,16 @@ def query_position(species_name=None):
   else:
     species = None
 
-  # If query is valid, run it and return the results
-  position = parse_chrom_position(query)
-  if position:
-    data = StrainAnnotatedVariant.run_position_query(position, species=species)
-    return jsonify(data)
+  # Parse the query position, returning an empty response if invalid
+  try:
+    position = parse_chrom_position(query)
+  except ValueError as ex:
+    logger.warn(ex)
+    return jsonify({})
 
-  # Otherwise, return an empty response
-  return jsonify({})
+  # Run the query and return the results
+  data = StrainAnnotatedVariant.run_position_query(position, species=species)
+  return jsonify(data)
 
 
 

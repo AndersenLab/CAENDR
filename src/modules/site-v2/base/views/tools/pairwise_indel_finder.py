@@ -297,7 +297,13 @@ def report(id, file_ext=None):
       return abort(404, description="Something went wrong")
 
     # Get indel interval
-    interval = parse_chrom_interval(data['site'])
+    try:
+      interval = parse_chrom_interval(data['site'])
+      indel_start, indel_stop = interval['start'], interval['stop']
+    except ValueError:
+      logger.error(f'Invalid interval "{data["site"]}" for Indel Finder report {id}')
+      indel_start, indel_stop = None, None
+
 
     # Update the result object with computed fields and generate a format table
     # If result is None or empty, does nothing
@@ -339,8 +345,8 @@ def report(id, file_ext=None):
 
       # Data
       'data':  data,
-      'indel_start': interval['start'],
-      'indel_stop':  interval['stop'],
+      'indel_start': indel_start,
+      'indel_stop':  indel_stop,
       # 'size': data['size'],
 
       # Results
