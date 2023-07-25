@@ -1,4 +1,12 @@
 
+{% set ns = namespace(hasIssue=false) %}
+{% for strain in strain_listing_issues %}
+    {% if strain.issues == True %}
+        {% set ns.hasIssue=true %}
+    {% endif %}
+{% endfor %}
+
+{% if ns.hasIssue == true %}
 <table class="table table-hover table-condensed strain-table">
     <thead>
         <tr>
@@ -14,8 +22,6 @@
             </th>
         </tr>
     </thead>
-    <div style="height: 30px;"></div>
-        {% set count = namespace(value=0) %}
         {% for strain in strain_listing_issues %}
             {% if strain.issues == True %}
             <tr {% if strain.isotype_ref_strain %}class="success ref_strain"{% else %}class="strain"{% endif %}>
@@ -35,3 +41,9 @@
             {% endif %}
         {% endfor %}
 </table>
+
+{% else %}
+<p class="lead">There were no strain issues found in this release.</p>
+{% endif %}
+
+
