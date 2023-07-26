@@ -14,8 +14,8 @@ def fetch_internal_db(self, *args, **kwargs):
           str: [The downloaded file's local filename.]
     '''
 
-    # Unzip downloaded files, unless caller explicitly asks not to
-    kwargs['unzip'] = kwargs.get('unzip', True)
+    # Keep downloaded file zipped, unless caller explicitly asks for unzipped
+    kwargs['unzip'] = kwargs.get('unzip', False)
 
     return fetch_db(self, 'internal', *args, **kwargs)
 
