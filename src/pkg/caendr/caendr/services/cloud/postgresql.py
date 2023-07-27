@@ -32,21 +32,25 @@ DB_USER_NAME  = get_env_var('MODULE_DB_OPERATIONS_DB_USER_NAME')
 DB_PASSWORD   = get_secret('POSTGRES_DB_PASSWORD')
 
 
-db_instance_uri = f'{GOOGLE_CLOUD_PROJECT_ID}:{GOOGLE_CLOUD_REGION}:{INSTANCE_NAME}'
 
-db_conn_uri     = f'postgresql+psycopg2://{DB_USER_NAME}:{DB_PASSWORD}@/{DB_NAME}?host=/cloudsql/{db_instance_uri}'
-alt_db_conn_uri = f'postgresql+pg8000://{DB_USER_NAME}:{DB_PASSWORD}@/{DB_NAME}?unix_sock={SOCKET_PATH}/{db_instance_uri}/.s.PGSQL.5432'
-
+def get_db_instance_uri():
+    '''
+        Get the URI for the database instance on GCP
+    '''
+    return f'{GOOGLE_CLOUD_PROJECT_ID}:{GOOGLE_CLOUD_REGION}:{INSTANCE_NAME}'
 
 
 def get_db_conn_uri():
+    '''
+        Get the URI for the database connection, based on the connection type specified in the environment
+    '''
     connection_type = get_env_var('MODULE_DB_OPERATIONS_CONNECTION_TYPE', "host")
 
     if connection_type == "localhost":
         return f'postgresql+psycopg2://{DB_USER_NAME}:{DB_PASSWORD}@localhost/{DB_NAME}'
 
     if connection_type == "host":
-        return db_conn_uri
+        return f'postgresql+psycopg2://{DB_USER_NAME}:{DB_PASSWORD}@/{DB_NAME}?host=/cloudsql/{get_db_instance_uri()}'
 
     if connection_type == "memory":
         return "sqlite://"
@@ -68,7 +72,8 @@ def get_db_conn_uri():
             # file.close()
             logger.info(f"SQLITE3 sqlite:///{filepath.name}")
             return f"sqlite:///{filepath.name}"
-    return alt_db_conn_uri
+
+    return f'postgresql+pg8000://{DB_USER_NAME}:{DB_PASSWORD}@/{DB_NAME}?unix_sock={SOCKET_PATH}/{get_db_instance_uri()}/.s.PGSQL.5432'
 
 
 def get_db_timeout():
