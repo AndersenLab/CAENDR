@@ -1,13 +1,12 @@
-from caendr.services.logger import logger
-import os
 import json
 
 from flask import Blueprint, jsonify, request
+from caendr.services.logger import logger
+from caendr.utils import monitor
 
 from pipelines.utils import start_job, update_status_safe
 
-
-from caendr.models.error import APIError, APIBadRequestError, APIInternalError, NotFoundError, APIUnprocessableEntity
+from caendr.models.error import APIError, APIBadRequestError, APIInternalError, APIUnprocessableEntity
 from caendr.models.task import TaskStatus
 from caendr.models.pub_sub import PubSubAttributes, PubSubMessage, PubSubStatus
 
@@ -16,12 +15,11 @@ from caendr.services.cloud.pubsub import get_operation
 from caendr.services.cloud.lifesciences import create_pipeline_operation_record, update_pipeline_operation_record, update_all_linked_status_records, get_operation_id_from_name
 from caendr.services.persistent_logger import PersistentLogger
 
-from caendr.utils import monitor
+
 
 monitor.init_sentry("pipeline-task")
 
 task_handler_bp = Blueprint('task_bp', __name__)
-
 
 
 
