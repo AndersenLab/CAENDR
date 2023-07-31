@@ -61,3 +61,28 @@ def run_job_request(name):
       A request object that can be executed using .execute()
   '''
   return SERVICE.projects().locations().jobs().run( name=f'{parent_id}/jobs/{name}' )
+
+
+def get_job_execution_status(name):
+  '''
+    Retrieve the status of a job execution.
+
+    Returns:
+      A dict object with the following fields:
+        - response: The response object from GCP
+        - done (bool): Whether the job has finished running.
+        - error (str | None): The error message if an error occurred, or None if no error.
+  '''
+  response = SERVICE.projects().locations().jobs().executions().get( name=name ).execute()
+
+  done  = False
+  error = None
+
+  # TODO: Make sure this is adequate
+  for condition in response['conditions']:
+    if condition['type'] == 'Completed':
+      done = True
+    if condition['state'] == 'CONDITION_FAILED':
+      error = condition['message']
+
+  return {'done': done, 'error': error, 'response': response}

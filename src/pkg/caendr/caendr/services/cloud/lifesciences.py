@@ -62,7 +62,10 @@ def create_pipeline_operation_record(task, response):
   if response is None:
     raise PipelineRunError()
 
-  name = response.get('name')
+  try:
+    name = response.get('response').get('name')
+  except:
+    name = response.get('name')
   metadata = response.get('metadata')
   if name is None or metadata is None:
     raise PipelineRunError(f'Pipeline start response missing expected properties (name = "{name}", metadata = "{metadata}")')
@@ -106,40 +109,25 @@ def get_pipeline_status(operation_name):
 
   id = get_operation_id_from_name(operation_name)
   logger.debug(f'[STATUS {id}] Pipeline status response: {response}')
-  return response
-
-
-def update_pipeline_operation_record(operation_name):
-  logger.debug(f'update_pipeline_operation_record: operation_name:{operation_name}')
-  id = get_operation_id_from_name(operation_name)
-
-  try:
-    status = get_pipeline_status(operation_name)
-  except: 
-    logger.warn(f"[UPDATE {id}] GLS Operation NOT FOUND")
-    return
-
-  op = PipelineOperation(id)
-  if not op._exists:
-    logger.warn(f'[UPDATE {id}] PipelineOperation entity with ID {id} not found.')
-    return
-
-  logger.info(f"[UPDATE {id}] Done = {status.get('done')}, Error = {status.get('error')}")
-  op.set_properties(**{
-    'done':  status.get('done'),
-    'error': status.get('error'),
-  })
-  op.save()
-  return op
+  return {
+    'response': response,
+    'done':     response.get('done', False),
+    'error':    response.get('error', False),
+  }
 
 
 def update_all_linked_status_records(kind, operation_name):
-  logger.debug(f'update_all_linked_status_records: kind:{kind} operation_name:{operation_name}')
-  op_id = get_operation_id_from_name(operation_name)
 
-  status = get_pipeline_status(operation_name)
+  # TODO: This entire function should move to "utils", since it's agnostic to pipeline type
+  #       This would get rid of the local import.
+  from caendr.services.cloud.utils import get_operation_status
+
+  logger.debug(f'update_all_linked_status_records: kind:{kind} operation_name:{operation_name}')
+
+  status, service, op_id = get_operation_status(operation_name)
   done = status.get('done')
   error = status.get('error')
+
   if error:
     logger.error(f"[UPDATE {op_id}] Error: Kind: {kind} Operation Name: {operation_name} error: {error}")
   if done:

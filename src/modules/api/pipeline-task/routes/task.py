@@ -12,7 +12,8 @@ from caendr.models.pub_sub import PubSubAttributes, PubSubMessage, PubSubStatus
 
 from caendr.services.cloud.task import update_task_status, verify_task_headers
 from caendr.services.cloud.pubsub import get_operation
-from caendr.services.cloud.lifesciences import create_pipeline_operation_record, update_pipeline_operation_record, update_all_linked_status_records, get_operation_id_from_name
+from caendr.services.cloud.lifesciences import create_pipeline_operation_record, update_all_linked_status_records, get_operation_id_from_name
+from caendr.services.cloud.utils import update_pipeline_operation_record
 from caendr.services.persistent_logger import PersistentLogger
 
 
@@ -82,38 +83,54 @@ def start_task(task_route):
 
 @task_handler_bp.route('/status', methods=['POST'])
 def update_task():
+
+  # Parse request payload
   try:
-    try:
-      payload = json.loads(request.data)
-      logger.info(f"Task Status Payload: {payload}")
-    except Exception as e:
-      logger.error(e)
-      raise APIBadRequestError('Error parsing JSON payload')
+    payload = json.loads(request.data)
+    logger.info(f"[STATUS] Payload: {payload}")
+  except Exception as ex:
+    raise APIUnprocessableEntity('Failed to parse request body as valid JSON') from ex
 
-    # Marshall JSON to PubSubStatus object
-    try:
-      operation = payload.get('message').get("attributes").get("operation")
-      op_id = get_operation_id_from_name(operation)
-    except Exception as e:
-      logger.error(e)
-      raise APIBadRequestError('Error parsing PubSub status message.')
 
-    try:
-      logger.debug(f"[STATUS {op_id}] Updating the pipeline operation record...")
-      op = update_pipeline_operation_record(operation)
-      if op == None:
-        logger.warn(f"[STATUS {op_id}] Nothing to do. GLS operation could not be found. bailing out.")
-        return jsonify({'status': 'NOT_FOUND'}), 404
+  # Marshall JSON to PubSubStatus object
+  # Get the task ID from the payload
+  try:
+    operation_name = payload.get('message').get("attributes").get("operation")
+    op_id = get_operation_id_from_name(operation_name)
+    call_id = f'STATUS {op_id}'
+  except Exception as ex:
+    logger.error(ex)
+    raise APIUnprocessableEntity('Error parsing PubSub status message') from ex
 
-      logger.debug(f"[STATUS {op_id}] Updating all linked status records for operation {op}: {dict(op)}")
-      update_all_linked_status_records(op['operation_kind'], operation)
-      logger.debug(operation)
-    except Exception as e:
-      logger.error(f"[STATUS {op_id}] Unable to update pipeline record[s]: {e}")
-      raise APIInternalError(f"Error updating status records. Error: {e}")
 
-  except Exception as error:
-    logger.error(f"Error updating records for operation. {type(error).__name__}: {str(error)}")
-    return jsonify({'error': f"{type(error).__name__}: {str(error)}" }), 500
+  # Update the operation record itself
+  logger.debug(f"[{ call_id }] Updating the pipeline operation record...")
+  try:
+    op = update_pipeline_operation_record(operation_name)
+
+  # Intercept API errors to add task ID
+  except APIError as ex:
+    ex.set_call_id(call_id)
+    raise ex
+
+  # Wrap generic exceptions in an Internal Error class
+  except Exception as ex:
+    raise APIInternalError('Error updating pipeline operation record', call_id) from ex
+
+
+  # Update all linked report entities
+  try:
+    logger.debug(f"[{ call_id }] Updating all linked status records for operation {op}: {dict(op)}")
+    update_all_linked_status_records(op['operation_kind'], operation_name)
+
+  # Intercept API errors to add task ID
+  except APIError as ex:
+    ex.set_call_id(call_id)
+    raise ex
+
+  # Wrap generic exceptions in an Internal Error class
+  except Exception as ex:
+    raise APIInternalError(f"Error updating status record(s)", call_id) from ex
+
 
   return jsonify({'status': 'OK'}), 200
