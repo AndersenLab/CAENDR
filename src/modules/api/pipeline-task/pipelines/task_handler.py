@@ -361,6 +361,7 @@ class NemascanTaskHandler(TaskHandler):
 
   _BOOT_DISK_SIZE_GB = 100
   _TIMEOUT           = '86400s'
+  _MEMORY_LIMITS     = { 'memory': '4Gi', 'cpu': '1' }
 
   def construct_command(self):
     return ['nemascan-nxf.sh']
