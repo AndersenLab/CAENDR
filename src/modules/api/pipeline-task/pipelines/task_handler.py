@@ -106,7 +106,7 @@ class TaskHandler:
   
   @property
   def job_name(self):
-    return self.container_name
+    return f'{self.kind}-{self.entity.data_hash}'.lower().replace('_', '-')
 
 
   # Lookup Function #
