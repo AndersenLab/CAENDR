@@ -1,10 +1,22 @@
+import requests
+
 from caendr.services.logger import logger
 
 from .cloudrun     import get_job_execution_status
 from .lifesciences import get_pipeline_status
 
-from caendr.models.datastore  import PipelineOperation
+from caendr.models.datastore  import PipelineOperation, DatabaseOperation, IndelPrimer, HeritabilityReport, NemascanMapping
 from caendr.models.error      import APINotFoundError
+from caendr.services.email    import send_email
+
+from caendr.services.cloud.secret import get_secret
+from caendr.utils.env import get_env_var
+
+
+
+MODULE_SITE_HOST      = get_env_var('MODULE_SITE_HOST')
+API_SITE_ACCESS_TOKEN = get_secret('CAENDR_API_SITE_ACCESS_TOKEN')
+NO_REPLY_EMAIL        = get_secret('NO_REPLY_EMAIL')
 
 
 
@@ -59,3 +71,29 @@ def update_pipeline_operation_record(operation_name):
   })
   op.save()
   return op
+
+
+
+def send_result_email(record, status):
+
+  response = requests.get(
+    f'https://{MODULE_SITE_HOST}/api/notifications/job-finish/{record.kind}/{record.id}/{status}',
+    headers={
+      'Content-Type':  'application/json',
+      'Authorization': 'Bearer {}'.format(API_SITE_ACCESS_TOKEN),
+    },
+  )
+
+  # Get the JSON body from the request
+  if response.status_code != 200:
+    return response
+  message = response.json()
+
+  # Send the email
+  return send_email({
+    "from":    f'CaeNDR <{NO_REPLY_EMAIL}>',
+    "to":      record.get_user_email(),
+    "subject": f'Your {record.get_report_display_name()} Report from CaeNDR.org',
+    "text":    message['text'],
+    "html":    message['html'],
+  })

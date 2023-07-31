@@ -1,19 +1,14 @@
 import os
-import requests
-
-from caendr.models.datastore.heritability_report import HeritabilityReport
-from caendr.models.task import TaskStatus
 
 from caendr.services.logger import logger
 from googleapiclient import discovery
 from oauth2client.client import GoogleCredentials
 
-from caendr.models.datastore import PipelineOperation, DatabaseOperation, NemascanMapping, IndelPrimer
-from caendr.models.error import PipelineRunError
+from caendr.models.datastore import PipelineOperation, HeritabilityReport, NemascanMapping, get_entity_by_kind
+from caendr.models.error import PipelineRunError, NotFoundError
+from caendr.models.task import TaskStatus
 from caendr.services.cloud.datastore import query_ds_entities
 from caendr.services.cloud.service_account import authenticate_google_service
-from caendr.services.cloud.secret import get_secret
-from caendr.services.email import send_email
 from caendr.utils.env import get_env_var
 from caendr.utils.json import get_json_from_class
 
@@ -21,10 +16,7 @@ from caendr.utils.json import get_json_from_class
 GOOGLE_CLOUD_PROJECT_NUMBER = os.environ.get('GOOGLE_CLOUD_PROJECT_NUMBER')
 GOOGLE_CLOUD_REGION = os.environ.get('GOOGLE_CLOUD_REGION')
 MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME')
-MODULE_SITE_HOST = get_env_var('MODULE_SITE_HOST')
 
-API_SITE_ACCESS_TOKEN = get_secret('CAENDR_API_SITE_ACCESS_TOKEN')
-NO_REPLY_EMAIL = get_secret('NO_REPLY_EMAIL')
 
 NOTIFICATION_LOG_PREFIX = 'EMAIL_NOTIFICATION'
 
@@ -120,7 +112,7 @@ def update_all_linked_status_records(kind, operation_name):
 
   # TODO: This entire function should move to "utils", since it's agnostic to pipeline type
   #       This would get rid of the local import.
-  from caendr.services.cloud.utils import get_operation_status
+  from caendr.services.cloud.utils import get_operation_status, send_result_email
 
   logger.debug(f'update_all_linked_status_records: kind:{kind} operation_name:{operation_name}')
 
@@ -141,17 +133,12 @@ def update_all_linked_status_records(kind, operation_name):
   filters = [("operation_name", "=", operation_name)]
   ds_entities = query_ds_entities(kind, filters=filters, keys_only=True)
   for entity in ds_entities:
-    if kind == DatabaseOperation.kind:
-      status_record = DatabaseOperation(entity.key.name)
-    elif kind == IndelPrimer.kind:
-      status_record = IndelPrimer(entity.key.name)
-    elif kind == NemascanMapping.kind:
-      status_record = NemascanMapping(entity.key.name)
-    elif kind == HeritabilityReport.kind:
-      status_record = HeritabilityReport(entity.key.name)
-    else:
-      logger.warn(f"Unrecognized kind: {kind}")
-      continue
+
+    # Retrieve the current status record as an Entity of the correct type
+    try:
+      status_record = get_entity_by_kind(kind, entity.key.name)
+    except (ValueError, NotFoundError) as ex:
+      logger.warn(f'[UPDATE {op_id}] Skipping status record update: {ex}')
 
     # Only send a notification if the report's status has not been updated yet
     # TODO: Should be able to remove kind check if all report notifications merged into one system
@@ -189,28 +176,3 @@ def update_all_linked_status_records(kind, operation_name):
       else:
         logger.error(f'[{NOTIFICATION_LOG_PREFIX}] Email failed to send ({email_result.status_code}): {email_result.text}')
 
-
-
-def send_result_email(record, status):
-
-  response = requests.get(
-    f'https://{MODULE_SITE_HOST}/api/notifications/job-finish/{record.kind}/{record.id}/{status}',
-    headers={
-      'Content-Type':  'application/json',
-      'Authorization': 'Bearer {}'.format(API_SITE_ACCESS_TOKEN),
-    },
-  )
-
-  # Get the JSON body from the request
-  if response.status_code != 200:
-    return response
-  message = response.json()
-
-  # Send the email
-  return send_email({
-    "from":    f'CaeNDR <{NO_REPLY_EMAIL}>',
-    "to":      record.get_user_email(),
-    "subject": f'Your {record.get_report_display_name()} Report from CaeNDR.org',
-    "text":    message['text'],
-    "html":    message['html'],
-  })
