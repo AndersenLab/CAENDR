@@ -1,3 +1,4 @@
+import time
 from googleapiclient.errors import HttpError
 
 from caendr.services.logger import logger
@@ -84,7 +85,17 @@ def start_job(payload, task_route, run_if_exists=False):
 
   # Run the CloudRun job
   # TODO: Wait to make sure job is created first?
-  run_response = handler.run_job()
+  try:
+    run_response = handler.run_job()
+
+  # If server responds with 400, wait a few seconds and try again, in case the job is still being created
+  # TODO: This is not a good way to wait for the job to be created, but as far as I can tell, the API
+  #       doesn't accept an "execute-now" parameter the way the CLI / online interface do.
+  #       Properly waiting and retrying is a larger project.
+  except HttpError as ex:
+    if ex.status_code == 400:
+      time.sleep(5)
+      run_response = handler.run_job()
 
   # Return all computed values
   return handler, create_response, run_response
