@@ -121,7 +121,7 @@ def update_task():
   # Update all linked report entities
   try:
     logger.debug(f"[{ call_id }] Updating all linked status records for operation {op}: {dict(op)}")
-    update_all_linked_status_records(op['operation_kind'], operation_name)
+    update_all_linked_status_records(op['operation_kind'], op['operation'])
 
   # Intercept API errors to add task ID
   except APIError as ex:
