@@ -39,6 +39,9 @@ class NemascanMapping(DataJobEntity):
   def get_input_data_path(self):
     return f'{self.__input_data_path}'
 
+  def get_data_directory(self):
+    return f"gs://{ self.get_bucket_name() }/{ self.get_input_data_path() }",
+
 
   ## Properties List ##
 

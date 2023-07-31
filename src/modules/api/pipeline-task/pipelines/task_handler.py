@@ -139,7 +139,7 @@ class TaskHandler:
     return {
       "TRAIT_FILE": f"gs://{ self.entity.get_bucket_name() }/{ self.entity.get_data_blob_path() }",
       "WORK_DIR":   f"gs://{ WORK_BUCKET_NAME              }/{ self.entity.data_hash }",
-      "DATA_DIR":   f"gs://{ self.entity.get_bucket_name() }/{ self.entity.get_input_data_path() }",
+      "DATA_DIR":   self.entity.get_data_directory(),
       "OUTPUT_DIR": f"gs://{ self.entity.get_bucket_name() }/{ self.entity.get_result_path() }",
     }
 
@@ -325,19 +325,6 @@ class HeritabilityTaskHandler(TaskHandler):
     return ["./heritability-nxf.sh"]
 
   def construct_environment(self):
-    h2 = self.entity
-  
-    # TRAIT_FILE = f"gs://{MODULE_SITE_BUCKET_PRIVATE_NAME}/reports/heritability/{h2.container_version}/{h2.data_hash}/data.tsv"
-    # WORK_DIR   = f"gs://{WORK_BUCKET_NAME}/{h2.data_hash}"
-    # DATA_DIR   = f"gs://{DATA_BUCKET_NAME}/heritability"
-    # OUTPUT_DIR = f"gs://{MODULE_SITE_BUCKET_PRIVATE_NAME}/reports/heritability/{h2.container_version}/{h2.data_hash}"
-
-    # TODO: Make sure get_data_job_vars returns these values
-    # TRAIT_FILE = f"gs://{ h2.get_bucket_name() }/{ h2.get_data_blob_path() }"
-    # WORK_DIR   = f"gs://{ WORK_BUCKET_NAME     }/{ h2.data_hash }"
-    # DATA_DIR   = f"gs://{DATA_BUCKET_NAME}/heritability"
-    # OUTPUT_DIR = f"gs://{ h2.get_bucket_name() }/{ h2.get_blob_path() }"
-
     return {
       **self.get_gcp_vars(),
       **self.get_data_job_vars(),
@@ -367,13 +354,6 @@ class NemascanTaskHandler(TaskHandler):
     return ['nemascan-nxf.sh']
 
   def construct_environment(self):
-    # ns = self.entity
-
-    # trait_file = f"gs://{ ns.get_bucket_name() }/{ ns.get_data_blob_path() }"
-    # work_dir   = f"gs://{ WORK_BUCKET_NAME     }/{ ns.data_hash }"
-    # data_dir   = f"gs://{ ns.get_bucket_name() }/{ ns.get_input_data_path() }"
-    # output_dir = f"gs://{ ns.get_bucket_name() }/{ ns.get_result_path() }"
-
     return {
       **self.get_gcp_vars(),
       **self.get_data_job_vars(),
