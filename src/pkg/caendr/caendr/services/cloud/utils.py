@@ -5,7 +5,7 @@ from caendr.services.logger import logger
 from .cloudrun     import get_job_execution_status
 from .lifesciences import get_pipeline_status
 
-from caendr.models.datastore  import PipelineOperation, DatabaseOperation, IndelPrimer, HeritabilityReport, NemascanMapping
+from caendr.models.datastore  import PipelineOperation
 from caendr.models.error      import APINotFoundError
 from caendr.services.email    import send_email
 
