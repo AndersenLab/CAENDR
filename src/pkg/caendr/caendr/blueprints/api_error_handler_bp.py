@@ -17,7 +17,7 @@ def handle_exception(err):
   """
   message = f'ERROR: {err.description}: {err.message}.'
   if err.__cause__ is not None:
-    message += f' Caused by: {err.__cause__}'
+    message += f' Caused by {type(err.__cause__).__name__}: {err.__cause__}'
   logger.error(message)
 
   return jsonify(err.get_response()), err.code
