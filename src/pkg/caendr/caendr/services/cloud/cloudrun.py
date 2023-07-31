@@ -1,5 +1,8 @@
 from googleapiclient import discovery
+from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
+
+from caendr.services.logger import logger
 
 from caendr.utils.env import get_env_var
 
@@ -21,9 +24,9 @@ sa_email  = f"{SERVICE_ACCOUNT_NAME}@{GOOGLE_CLOUD_PROJECT_ID}.iam.gserviceaccou
 
 
 
-def create_job_request(name, task_count, timeout, max_retries, container):
+def create_job(name, task_count, timeout, max_retries, container, update_if_exists=True):
   '''
-    Create a request that creates a CloudRun job.
+    Create a CloudRun job.
     For more details, see https://googleapis.github.io/google-api-python-client/docs/dyn/run_v2.projects.locations.jobs.html#create
 
     Args:
@@ -32,11 +35,12 @@ def create_job_request(name, task_count, timeout, max_retries, container):
       - timeout (str): The amount of time to allocate for running the job
       - max_retries (int): The total number of times to try running the job, if one or more executions fail
       - container: An object that configures the container to be run.
+      - update_if_exists: If True, if a job with this name already exists, update its fields and run a new execution. If False, raises an error if the job already exists.
 
     Returns:
-      A request object that can be executed using .execute()
+      A response object.
   '''
-  return SERVICE.projects().locations().jobs().create( parent=parent_id, jobId=name, body={
+  body = {
     'launchStage':        'BETA',  # Required for jobs longer than 1hr
     'template': {
       'taskCount':        task_count,
@@ -47,12 +51,28 @@ def create_job_request(name, task_count, timeout, max_retries, container):
         'serviceAccount': sa_email,
       },
     }
-  })
+  }
+
+  # If desired, create/update the job
+  if update_if_exists:
+    try:
+      return SERVICE.projects().locations().jobs().patch( name=f'{parent_id}/jobs/{name}', allowMissing=True, body=body).execute()
+
+    # If the request returns a 404, ignore it and fall-through -- i.e. try creating the job directly
+    # The `allowMissing` param above should handle this, but in my experience it doesn't
+    except HttpError as ex:
+      if ex.status_code == 404:
+        logger.warn(f'Ignoring error patching job: {ex}')
+      else:
+        raise
+
+  # Otherwise, try creating the job, and propagate the error if it already exists
+  return SERVICE.projects().locations().jobs().create( parent=parent_id, jobId=name, body=body ).execute()
 
 
-def run_job_request(name):
+def run_job(name):
   '''
-    Create a request that runs a CloudRun job.
+    Run a CloudRun job.
 
     Args:
       - name (str): The ID of the job in CloudRun
@@ -60,7 +80,7 @@ def run_job_request(name):
     Returns:
       A request object that can be executed using .execute()
   '''
-  return SERVICE.projects().locations().jobs().run( name=f'{parent_id}/jobs/{name}' )
+  return SERVICE.projects().locations().jobs().run( name=f'{parent_id}/jobs/{name}' ).execute()
 
 
 def get_job_execution_status(name):

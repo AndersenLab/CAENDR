@@ -5,7 +5,7 @@ from caendr.models.task      import DatabaseOperationTask, IndelPrimerTask, Heri
 
 # GCP
 from caendr.models.lifesciences import ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
-from caendr.services.cloud.cloudrun import create_job_request, run_job_request
+from caendr.services.cloud.cloudrun import create_job, run_job
 from caendr.services.cloud.lifesciences import start_pipeline
 
 # Utils
@@ -150,7 +150,7 @@ class TaskHandler:
     '''
       Create a CloudRun Job to run this task.
     '''
-    request = create_job_request(**{
+    return create_job(**{
       'name':        self.job_name,
       'task_count':  self.get('TASK_COUNT'),
       'timeout':     self.get('TIMEOUT'),
@@ -176,15 +176,13 @@ class TaskHandler:
         },
       }
     })
-    return request.execute()
 
 
   def run_job(self):
     '''
       Initiate the CloudRun Job associated with this task.
     '''
-    request = run_job_request(self.job_name)
-    return request.execute()
+    return run_job(self.job_name)
 
 
   def start_pipeline(self):
