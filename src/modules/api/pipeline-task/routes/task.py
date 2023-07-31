@@ -41,7 +41,8 @@ def start_task(task_route):
     logger.error(f'Request body must define an operation ID. Payload: {payload}')
     raise APIUnprocessableEntity('Request body must define an operation ID')
   else:
-    logger.info(f"[TASK {op_id}] Payload: {payload}")
+    call_id = f'TASK {op_id}'
+    logger.info(f'[{ call_id }] Payload: {payload}')
 
 
   # Create & start the job
@@ -52,13 +53,13 @@ def start_task(task_route):
   # Intercept API errors to add task ID
   except APIError as ex:
     update_status_safe(queue, op_id, status=TaskStatus.ERROR)
-    ex.set_call_id(f'TASK {op_id}')
+    ex.set_call_id(call_id)
     raise ex
 
   # Wrap generic exceptions in an Internal Error class
   except Exception as ex:
     update_status_safe(queue, op_id, status=TaskStatus.ERROR)
-    raise APIInternalError('Failed to create job', f'TASK {op_id}') from ex
+    raise APIInternalError('Failed to create job', call_id) from ex
 
 
   # Create a Pipeline Operation record for the task
@@ -68,14 +69,14 @@ def start_task(task_route):
 
   # Intercept API errors to add task ID
   except APIError as ex:
-    ex.set_call_id(f'TASK {op_id}')
+    ex.set_call_id(call_id)
     raise ex
 
   # Wrap generic exceptions in an Internal Error class
   # TODO: Do we need to send anything to the persistent logger?
   except Exception as ex:
     # persistent_logger = PersistentLogger(task_route)
-    raise APIInternalError('Could not create pipeline_operation record', f'TASK { op_id }') from ex
+    raise APIInternalError('Could not create pipeline_operation record', call_id) from ex
 
   #return jsonify({'operation': op.id}), 200
   return jsonify({}), 200
