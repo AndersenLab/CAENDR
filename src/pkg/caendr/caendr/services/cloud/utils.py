@@ -86,10 +86,17 @@ def update_all_linked_status_records(kind, operation_name):
 
   logger.debug(f'update_all_linked_status_records: kind:{kind} operation_name:{operation_name}')
 
-  status, service, op_id = get_operation_status(operation_name)
-  done = status.get('done')
-  error = status.get('error')
+  # Get the operation status, plus the parsed service & id values
+  try:
+    status, service, op_id = get_operation_status(operation_name)
 
+  # Operation could not be found
+  except Exception as ex:
+    raise APINotFoundError(f'Operation "{operation_name}" NOT FOUND in service "{service}". Nothing to do.') from ex
+
+  # Get task status from operation values
+  done  = status.get('done')
+  error = status.get('error')
   if error:
     logger.error(f"[UPDATE {op_id}] Error: Kind: {kind} Operation Name: {operation_name} error: {error}")
   if done:
