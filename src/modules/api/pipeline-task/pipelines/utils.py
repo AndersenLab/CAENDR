@@ -96,6 +96,8 @@ def start_job(payload, task_route, run_if_exists=False):
     if ex.status_code == 400:
       time.sleep(5)
       run_response = handler.run_job()
+    else:
+      raise
 
   # Return all computed values
   return handler, create_response, run_response
