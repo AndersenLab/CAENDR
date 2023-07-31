@@ -12,8 +12,8 @@ from caendr.models.pub_sub import PubSubAttributes, PubSubMessage, PubSubStatus
 
 from caendr.services.cloud.task import update_task_status, verify_task_headers
 from caendr.services.cloud.pubsub import get_operation
-from caendr.services.cloud.lifesciences import create_pipeline_operation_record, update_all_linked_status_records, get_operation_id_from_name
-from caendr.services.cloud.utils import update_pipeline_operation_record
+from caendr.services.cloud.lifesciences import create_pipeline_operation_record, get_operation_id_from_name
+from caendr.services.cloud.utils import update_pipeline_operation_record, update_all_linked_status_records
 from caendr.services.persistent_logger import PersistentLogger
 
 
