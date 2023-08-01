@@ -36,7 +36,7 @@ from caendr.services.user import get_user_role_form_options, get_local_user_by_e
 from caendr.services.database_operation import get_db_op_form_options
 from caendr.services.indel_primer import get_indel_primer_chrom_choices
 from caendr.services.markdown import get_content_type_form_options
-from caendr.models.datastore import User, SPECIES_LIST, DatasetRelease
+from caendr.models.datastore import User, Species, DatasetRelease
 from caendr.api.strain import query_strains
 from base.forms.validators import (validate_duplicate_strain, 
                                    validate_duplicate_isotype, 
@@ -67,7 +67,7 @@ class SpeciesSelectField(SelectField):
   elementId = 'speciesSelect'
 
   # Automatically validates that species choice is in this list
-  CHOICES = [(name, value.short_name) for name, value in SPECIES_LIST.items()]
+  CHOICES = [(name, value.short_name) for name, value in Species.all().items()]
 
   def __init__(self, exclude_species=[], **kwargs):
     species_choices = SpeciesSelectField.CHOICES
@@ -185,7 +185,7 @@ class AdminCreateDatabaseOperationForm(FlaskForm):
   _ops = get_db_op_form_options()
   
   db_op = SelectField('Database Operation', choices=_ops, validators=[Required()])
-  species = MultiCheckboxField('Species', choices=[(key, val.short_name) for key, val in SPECIES_LIST.items()])
+  species = MultiCheckboxField('Species', choices=[(key, val.short_name) for key, val in Species.all().items()])
   note = StringField('Notes', [Optional(), Length(min=3, max=200)])
 
 

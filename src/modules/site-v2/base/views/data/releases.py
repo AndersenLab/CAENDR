@@ -20,7 +20,7 @@ from base.utils.auth import jwt_required
 
 from caendr.api.strain import query_strains
 from caendr.api.isotype import get_isotypes
-from caendr.models.datastore import DatasetRelease, Species, SPECIES_LIST
+from caendr.models.datastore import DatasetRelease, Species
 from caendr.models.sql import Strain, StrainAnnotatedVariant
 from caendr.services.cloud.storage import generate_blob_url, check_blob_exists
 from caendr.services.dataset_release import get_all_dataset_releases, get_browser_tracks_path, get_release_bucket, find_dataset_release
@@ -37,10 +37,10 @@ releases_bp = Blueprint(
 
 
 def interpret_url_vars(species_name, release_version):
-  species = Species.get(species_name.replace('-', '_'))
+  species = Species.from_name(species_name, from_url=True)
 
-  if species.get_url_name() != species_name:
-    raise SpeciesUrlNameError(species.get_url_name())
+  if species.get_slug() != species_name:
+    raise SpeciesUrlNameError(species.get_slug())
 
   releases = get_all_dataset_releases(order='-version', species=species.name)
   release  = find_dataset_release(releases, release_version)
@@ -62,7 +62,7 @@ def data_releases():
   return render_template('data/landing.html', **{
     'title': "Data Releases",
     'alt_parent_breadcrumb': {"title": "Data", "url": url_for('data.data')},
-    'species_list': SPECIES_LIST,
+    'species_list': Species.all(),
   })
 
 

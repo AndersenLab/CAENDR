@@ -12,7 +12,7 @@ from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 from caendr.services.nemascan_mapping import get_mapping, get_mappings
 from caendr.services.cloud.storage import get_blob, generate_blob_url, get_blob_list, check_blob_exists
-from caendr.models.datastore import SPECIES_LIST, NemascanMapping
+from caendr.models.datastore import Species, NemascanMapping
 from caendr.models.error import (
     FileUploadError,
     ReportLookupError,
@@ -71,7 +71,7 @@ def genetic_mapping():
     'nemascan_github_url':    'https://github.com/AndersenLab/NemaScan',
 
     # Species list
-    'species_list': SPECIES_LIST,
+    'species_list': Species.all(),
     'species_fields': [
       'name', 'short_name', 'project_num', 'wb_ver', 'release_latest',
     ],
@@ -79,7 +79,7 @@ def genetic_mapping():
     # Sample data
     'sample_data_urls': {
       species: generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, NEMASCAN_EXAMPLE_FILE.get_string(SPECIES=species))
-        for species in SPECIES_LIST.keys()
+        for species in Species.all().keys()
     },
   })
 
@@ -167,7 +167,7 @@ def list_results():
     },
 
     # Table info
-    'species_list': SPECIES_LIST,
+    'species_list': Species.all(),
     'items': get_mappings(None if show_all else user.name, filter_errs),
     'columns': results_columns(),
 

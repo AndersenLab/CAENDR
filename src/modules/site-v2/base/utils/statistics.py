@@ -4,7 +4,7 @@ import arrow
 
 from datetime import datetime
 
-from caendr.models.datastore.species import SPECIES_LIST
+from caendr.models.datastore.species import Species
 from caendr.models.sql import Strain
 from caendr.services.cloud.postgresql import db
 from caendr.services.cloud.datastore import query_ds_entities
@@ -13,11 +13,11 @@ from caendr.utils.plots import time_series_plot
 
 
 
-species_sorted = list(SPECIES_LIST.keys())
+species_sorted = list(Species.all().keys())
 
 def make_line_style(n, column, colors):
   species_code, type_code = column.rsplit('_', 1)
-  species_name = SPECIES_LIST[species_code].short_name
+  species_name = Species.from_name(species_code).short_name
   type_name = type_code.capitalize()
   return {
     'name': f'{type_name}s',
@@ -99,7 +99,7 @@ def cum_sum_strain_isotype():
 
   # Loop through all species, adding to result frame
   result = None
-  for species_name in SPECIES_LIST:
+  for species_name in Species.all():
 
     # Filter data frame by current species
     species_frame = df[df["species_name"] == species_name]

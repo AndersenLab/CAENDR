@@ -71,10 +71,24 @@ def coalesce(*values):
   return next((v for v in values if v is not None), None)
 
 
-def convert_data_table_to_tsv(data, columns):
-  data = pd.DataFrame(data, columns=columns)
-  data = data.to_csv(index=False, sep="\t")
-  return data
+def convert_query_to_data_table(query, columns):
+  """
+    Convert a Flask SQLAlchemy query into a Pandas DataFrame.
+  """
+  return pd.DataFrame(
+    ({ col: getattr(row, col) for col in columns } for row in query.all()), columns=columns
+  )
+
+
+def convert_data_to_download_file(data, columns, file_ext='csv'):
+
+  # Interpret the desired output file format
+  format_params = get_file_format(file_ext)
+  if format_params is None:
+    raise ValueError(f'Cannot convert data to file format "{file_ext}".')
+
+  # Convert to DataFrame, then to CSV
+  return pd.DataFrame(data, columns=columns).to_csv(index=False, sep=format_params['sep'])
 
 
 def get_file_format(file_ext, valid_formats=None):
