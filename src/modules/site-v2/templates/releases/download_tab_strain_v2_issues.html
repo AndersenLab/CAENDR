@@ -1,12 +1,12 @@
 
-{% set ns = namespace(hasIssue=false) %}
+{% set ns = namespace(hasIssue=False) %}
 {% for strain in strain_listing_issues %}
-    {% if strain.issues == True %}
-        {% set ns.hasIssue=true %}
+    {% if strain.issues %}
+        {% set ns.hasIssue=True %}
     {% endif %}
 {% endfor %}
 
-{% if ns.hasIssue == true %}
+{% if ns.hasIssue %}
 <table class="table table-hover table-condensed strain-table">
     <thead>
         <tr>
