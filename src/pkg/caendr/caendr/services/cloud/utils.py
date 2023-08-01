@@ -61,7 +61,7 @@ def update_pipeline_operation_record(operation_name):
 
   # Operation could not be found
   except Exception as ex:
-    raise APINotFoundError(f'Operation "{operation_name}" NOT FOUND in service "{service}". Nothing to do.') from ex
+    raise APINotFoundError(f'Operation "{operation_name}" NOT FOUND. Nothing to do.') from ex
 
   # Try getting the operation record
   # Raises NotFound error if record doesn't exist
@@ -92,7 +92,7 @@ def update_all_linked_status_records(kind, operation_name):
 
   # Operation could not be found
   except Exception as ex:
-    raise APINotFoundError(f'Operation "{operation_name}" NOT FOUND in service "{service}". Nothing to do.') from ex
+    raise APINotFoundError(f'Operation "{operation_name}" NOT FOUND. Nothing to do.') from ex
 
   # Get task status from operation values
   done  = status.get('done')
