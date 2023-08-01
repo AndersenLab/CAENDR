@@ -190,7 +190,7 @@ class TaskHandler:
     # Publish a Pub/Sub message to periodically check this job's status
     pub_sub_id = None
     try:
-      pub_sub_id = publish_message(PUB_SUB_TOPIC_NAME, operation=self.job_name)
+      pub_sub_id = publish_message(PUB_SUB_TOPIC_NAME, operation=response['metadata']['name'])
     except Exception as ex:
       logger.error(f'Could not publish Pub/Sub message for job {self.job_name}: {ex}')
 
