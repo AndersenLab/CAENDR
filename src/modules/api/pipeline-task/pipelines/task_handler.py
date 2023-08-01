@@ -1,3 +1,5 @@
+from caendr.services.logger import logger
+
 # Models
 from caendr.models.datastore import DatabaseOperation, IndelPrimer, HeritabilityReport, NemascanMapping, Species
 from caendr.models.error     import NotFoundError
@@ -7,6 +9,7 @@ from caendr.models.task      import DatabaseOperationTask, IndelPrimerTask, Heri
 from caendr.models.lifesciences import ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
 from caendr.services.cloud.cloudrun import create_job, run_job
 from caendr.services.cloud.lifesciences import start_pipeline
+from caendr.services.cloud.pubsub import publish_message
 
 # Utils
 from caendr.utils.env import get_env_var
@@ -182,7 +185,16 @@ class TaskHandler:
     '''
       Initiate the CloudRun Job associated with this task.
     '''
-    return run_job(self.job_name)
+    response = run_job(self.job_name)
+
+    # Publish a Pub/Sub message to periodically check this job's status
+    pub_sub_id = None
+    try:
+      pub_sub_id = publish_message(PUB_SUB_TOPIC_NAME, operation=self.job_name)
+    except Exception as ex:
+      logger.error(f'Could not publish Pub/Sub message for job {self.job_name}: {ex}')
+
+    return response, pub_sub_id
 
 
   def start_pipeline(self):

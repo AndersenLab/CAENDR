@@ -86,7 +86,7 @@ def start_job(payload, task_route, run_if_exists=False):
   # Run the CloudRun job
   # TODO: Wait to make sure job is created first?
   try:
-    run_response = handler.run_job()
+    run_response, pub_sub_id = handler.run_job()
 
   # If server responds with 400, wait a few seconds and try again, in case the job is still being created
   # TODO: This is not a good way to wait for the job to be created, but as far as I can tell, the API
@@ -95,7 +95,7 @@ def start_job(payload, task_route, run_if_exists=False):
   except HttpError as ex:
     if ex.status_code == 400:
       time.sleep(5)
-      run_response = handler.run_job()
+      run_response, pub_sub_id = handler.run_job()
     else:
       raise
 
