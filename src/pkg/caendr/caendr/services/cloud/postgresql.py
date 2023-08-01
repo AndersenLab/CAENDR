@@ -1,5 +1,4 @@
 from curses.ascii import alt
-import os
 import psycopg2
 import pg8000
 
@@ -8,45 +7,56 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, exc
 
-from dotenv import load_dotenv
-
 from caendr.services.cloud.secret import get_secret
+from caendr.utils.env import load_env, get_env_var
 
-dotenv_file = '.env'
-load_dotenv(dotenv_file)
+
+
+# Load the env file
+load_env('.env')
 
 db = SQLAlchemy()
 
-GOOGLE_CLOUD_PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID')
-GOOGLE_CLOUD_REGION = os.environ.get('GOOGLE_CLOUD_REGION')
-GOOGLE_CLOUDSQL_SERVICE_ACCOUNT_NAME = os.environ.get('GOOGLE_CLOUDSQL_SERVICE_ACCOUNT_NAME')
+# GCP Variables
+GOOGLE_CLOUD_PROJECT_ID              = get_env_var('GOOGLE_CLOUD_PROJECT_ID')
+GOOGLE_CLOUD_REGION                  = get_env_var('GOOGLE_CLOUD_REGION')
+GOOGLE_CLOUDSQL_SERVICE_ACCOUNT_NAME = get_env_var('GOOGLE_CLOUDSQL_SERVICE_ACCOUNT_NAME')
 
-MODULE_DB_OPERATIONS_SOCKET_PATH = os.environ.get('MODULE_DB_OPERATIONS_SOCKET_PATH')
-MODULE_DB_OPERATIONS_INSTANCE_NAME = os.environ.get('MODULE_DB_OPERATIONS_INSTANCE_NAME')
-MODULE_DB_OPERATIONS_DB_NAME = os.environ.get('MODULE_DB_OPERATIONS_DB_NAME')
-MODULE_DB_OPERATIONS_DB_STAGE_NAME = os.environ.get('MODULE_DB_OPERATIONS_DB_STAGE_NAME')
-MODULE_DB_OPERATIONS_DB_USER_NAME = os.environ.get('MODULE_DB_OPERATIONS_DB_USER_NAME')
+# Module Variables
+SOCKET_PATH   = get_env_var('MODULE_DB_OPERATIONS_SOCKET_PATH')
+INSTANCE_NAME = get_env_var('MODULE_DB_OPERATIONS_INSTANCE_NAME')
+DB_NAME       = get_env_var('MODULE_DB_OPERATIONS_DB_NAME')
+DB_STAGE_NAME = get_env_var('MODULE_DB_OPERATIONS_DB_STAGE_NAME')
+DB_USER_NAME  = get_env_var('MODULE_DB_OPERATIONS_DB_USER_NAME')
 
-POSTGRES_DB_PASSWORD = get_secret('POSTGRES_DB_PASSWORD')
-
-
-db_instance_uri = f'{GOOGLE_CLOUD_PROJECT_ID}:{GOOGLE_CLOUD_REGION}:{MODULE_DB_OPERATIONS_INSTANCE_NAME}'
+DB_PASSWORD   = get_secret('POSTGRES_DB_PASSWORD')
 
 
-db_conn_uri = f'postgresql+psycopg2://{MODULE_DB_OPERATIONS_DB_USER_NAME}:{POSTGRES_DB_PASSWORD}@/{MODULE_DB_OPERATIONS_DB_NAME}?host=/cloudsql/{db_instance_uri}'
 
-alt_db_conn_uri = f'postgresql+pg8000://{MODULE_DB_OPERATIONS_DB_USER_NAME}:{POSTGRES_DB_PASSWORD}@/{MODULE_DB_OPERATIONS_DB_NAME}?unix_sock={MODULE_DB_OPERATIONS_SOCKET_PATH}/{db_instance_uri}/.s.PGSQL.5432'
+def get_db_instance_uri():
+    '''
+        Get the URI for the database instance on GCP
+    '''
+    return f'{GOOGLE_CLOUD_PROJECT_ID}:{GOOGLE_CLOUD_REGION}:{INSTANCE_NAME}'
+
 
 def get_db_conn_uri():
-    connection_type = os.getenv('MODULE_DB_OPERATIONS_CONNECTION_TYPE', "host")
+    '''
+        Get the URI for the database connection, based on the connection type specified in the environment
+    '''
+    connection_type = get_env_var('MODULE_DB_OPERATIONS_CONNECTION_TYPE', "host")
+
     if connection_type == "localhost":
-        return f'postgresql+psycopg2://{MODULE_DB_OPERATIONS_DB_USER_NAME}:{POSTGRES_DB_PASSWORD}@localhost/{MODULE_DB_OPERATIONS_DB_NAME}'
+        return f'postgresql+psycopg2://{DB_USER_NAME}:{DB_PASSWORD}@localhost/{DB_NAME}'
+
     if connection_type == "host":
-        return db_conn_uri
+        return f'postgresql+psycopg2://{DB_USER_NAME}:{DB_PASSWORD}@/{DB_NAME}?host=/cloudsql/{get_db_instance_uri()}'
+
     if connection_type == "memory":
         return "sqlite://"
+
     if connection_type == "file":
-        target_file = os.getenv('MODULE_DB_OPERATIONS_CONNECTION_FILE')
+        target_file = get_env_var('MODULE_DB_OPERATIONS_CONNECTION_FILE', can_be_none=True)
 
         # If filename is provided, use it as the database
         if (target_file != None):
@@ -62,12 +72,13 @@ def get_db_conn_uri():
             # file.close()
             logger.info(f"SQLITE3 sqlite:///{filepath.name}")
             return f"sqlite:///{filepath.name}"
-    return alt_db_conn_uri
+
+    return f'postgresql+pg8000://{DB_USER_NAME}:{DB_PASSWORD}@/{DB_NAME}?unix_sock={SOCKET_PATH}/{get_db_instance_uri()}/.s.PGSQL.5432'
 
 
 def get_db_timeout():
-    timeout = int(os.getenv("MODULE_DB_TIMEOUT", "30" ))
-    return timeout
+    return get_env_var('MODULE_DB_TIMEOUT', 30, var_type=int)
+
 
 def health_database_status():
     conn_uri = get_db_conn_uri()

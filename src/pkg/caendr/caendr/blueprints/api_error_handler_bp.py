@@ -9,14 +9,19 @@ from caendr.models.error import (APIError,
 
 api_error_handler_bp = Blueprint('error_handler_bp', __name__)
 
+
 @api_error_handler_bp.app_errorhandler(APIError)
 def handle_exception(err):
-  """ Return custom JSON error messages """
-  response = {"error": err.description, "message": ""}
-  if len(err.args) > 0:
-    response["message"] = err.args[0]
-  logger.error(f'ERROR: {err.description}: {response["message"]}')
-  return jsonify(response), err.code
+  """
+    Return custom JSON error messages
+  """
+  message = f'ERROR: {err.description}: {err.message}.'
+  if err.__cause__ is not None:
+    message += f' Caused by {type(err.__cause__).__name__}: {err.__cause__}'
+  logger.error(message)
+
+  return jsonify(err.get_response()), err.code
+
 
 @api_error_handler_bp.app_errorhandler(APIBadRequestError.code)
 def error_bad_request(error):

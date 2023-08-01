@@ -1,5 +1,6 @@
 import os
 import csv
+import gzip
 import re
 
 from caendr.services.logger import logger
@@ -34,7 +35,7 @@ def parse_strain_variant_annotation_data(species, sva_fname: str, start_idx = 0)
   column_header_map = {}
 
   # Loop through each line in the CSV file, indexed
-  with open(sva_fname) as csv_file:
+  with gzip.open(sva_fname, mode='rt') as csv_file:
     for idx, row in enumerate( csv.reader(csv_file, delimiter='\t') ):
 
       # First line is column names - don't interpret as data
