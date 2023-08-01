@@ -11,7 +11,7 @@ from caendr.models.task import TaskStatus
 from caendr.models.pub_sub import PubSubAttributes, PubSubMessage, PubSubStatus
 
 from caendr.services.cloud.task import update_task_status, verify_task_headers
-from caendr.services.cloud.pubsub import get_operation
+from caendr.services.cloud.pubsub import get_attribute
 from caendr.services.cloud.lifesciences import create_pipeline_operation_record, get_operation_id_from_name
 from caendr.services.cloud.utils import update_pipeline_operation_record, update_all_linked_status_records
 from caendr.services.persistent_logger import PersistentLogger
@@ -92,16 +92,12 @@ def update_task():
   except Exception as ex:
     raise APIUnprocessableEntity('Failed to parse request body as valid JSON') from ex
 
-
   # Marshall JSON to PubSubStatus object
-  # Get the task ID from the payload
-  try:
-    operation_name = payload.get('message').get("attributes").get("operation")
-    op_id = get_operation_id_from_name(operation_name)
-    call_id = f'STATUS {op_id}'
-  except Exception as ex:
-    logger.error(ex)
-    raise APIUnprocessableEntity('Error parsing PubSub status message') from ex
+  # Get the task ID from the payload (raises an error if not provided)
+  operation_name = get_attribute(payload, "operation")
+
+  # String that identifies this API call, for debugging purposes
+  call_id = f'STATUS {get_operation_id_from_name(operation_name)}'
 
 
   # Update the operation record itself
