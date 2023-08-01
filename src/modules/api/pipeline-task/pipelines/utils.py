@@ -33,16 +33,16 @@ def get_task_handler(queue_name, *args, **kwargs):
   cls = mapping.get(queue_name, None)
 
   if cls is None:
-    raise APIBadRequestError(f'Invalid task route {queue_name}.')
+    raise APIBadRequestError(f'Invalid task route {queue_name}')
 
   try:
     return cls(*args, **kwargs)
 
   except NotFoundError as ex:
     if ex.kind == Species.kind:
-      raise APIBadRequestError(f'{ cls._Entity_Class.kind } task has invalid species value.') from ex
+      raise APIBadRequestError(f'{ cls._Entity_Class.kind } task has invalid species value') from ex
     else:
-      raise APIBadRequestError(f'Could not find { cls._Entity_Class.kind } object wih this ID.') from ex
+      raise APIBadRequestError(f'Could not find { cls._Entity_Class.kind } object wih this ID') from ex
 
 
 
