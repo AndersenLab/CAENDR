@@ -223,6 +223,12 @@ $(document).ready(function () {
 
   const data = {{ strain_listing|tojson|safe }}
 
+  /*{# TODO: Error handling if can't retrieve strains #}*/
+  if (data === null) {
+    console.error('Failed to retrieve strains.');
+    return;
+  }
+
   data.forEach(function(d) {
     if (d.latitude) {
       const popup_content = `

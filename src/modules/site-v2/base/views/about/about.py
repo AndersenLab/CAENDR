@@ -31,22 +31,36 @@ about_bp = Blueprint(
 @cache.memoize(60*60)
 def about():
   ''' About us Page - Gives an overview of CaeNDR '''
-  title = "About CaeNDR"
-  disable_parent_breadcrumb = True
-  isotypes = get_isotypes(known_origin=True)
-  strain_listing = [s.to_json() for s in isotypes]
-  return render_template('about/about.html', **locals())
+
+  try:
+    strain_listing = [s.to_json() for s in get_isotypes(known_origin=True)]
+  except Exception as ex:
+    logger.error(f'Failed to retrieve strain list: {ex}')
+    strain_listing = None
+
+  return render_template('about/about.html', **{
+    'title': 'About CaeNDR',
+    'disable_parent_breadcrumb': True,
+    'strain_listing': strain_listing,
+  })
 
 
 @about_bp.route('/getting_started')
 @cache.memoize(60*60)
 def getting_started():
   ''' Getting Started - provides information on how to get started with CeNDR '''
-  title = "Getting Started"
-  isotypes = get_isotypes(known_origin=True)
-  strain_listing = [s.to_json() for s in isotypes]
-  disable_parent_breadcrumb = True
-  return render_template('about/getting_started.html', **locals())
+
+  try:
+    strain_listing = [s.to_json() for s in get_isotypes(known_origin=True)]
+  except Exception as ex:
+    logger.error(f'Failed to retrieve strain list: {ex}')
+    strain_listing = None
+
+  return render_template('about/getting_started.html', **{
+    'title': "Getting Started",
+    'disable_parent_breadcrumb': True,
+    'strain_listing': strain_listing,
+  })
 
 
 @about_bp.route('/people')
