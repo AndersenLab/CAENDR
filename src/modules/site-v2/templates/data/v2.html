@@ -333,7 +333,7 @@
                 <div class="p-5 mb-5 rounded shadow-sm text-bg-light">
                     <div class="row">
                         <div class="col">
-                            {{ render_ext_markdown(files.get('methods')) }}
+                            {{ render_ext_markdown(files.get('methods'), ignore_err=true, backup_text='*Methods are not available at this time.*') }}
                         </div>
                     </div>
                     <!-- /Row -->
