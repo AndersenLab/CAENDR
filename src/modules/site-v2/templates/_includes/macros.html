@@ -155,3 +155,15 @@
     {%- endif %}
     {%- if line_break %}<br />{% endif %}
 {%- endmacro %}
+
+
+{#
+  Render a block with one or more calls to `render_download_link`, or an error message if the fileset is undefined.
+#}
+{%- macro render_download_link_set(files) %}
+{%- if files %}
+  {{ caller() }}
+{%- else %}
+  <em>Unable to retrieve files.</em>
+{%- endif %}
+{%- endmacro %}

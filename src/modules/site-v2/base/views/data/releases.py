@@ -10,6 +10,7 @@ from flask import (request,
                     Blueprint,
                     send_file,
                     url_for,
+                    flash,
                     abort)
 from caendr.services.logger import logger
 
@@ -98,7 +99,12 @@ def data_release_list(species, release_version=None):
   }
 
   # Get list of files based on species
-  files = release.get_report_data_urls_map(species.name)
+  try:
+    files = release.get_report_data_urls_map(species.name)
+  except Exception as ex:
+    files = None
+    logger.error(f'Failed to retrieve release files: {ex}')
+    flash('Unable to retrieve release files at this time. Please try again later.', 'danger')
 
   # Update params object with version-specific fields
   if release.report_type == DatasetRelease.V2:
@@ -109,7 +115,7 @@ def data_release_list(species, release_version=None):
   # Special case:
   # Only show the Divergent Regions BED file if it defines a valid track for this species + release,
   # even if the file exists.
-  if 'Divergent Regions' not in release['browser_tracks']:
+  if files and 'Divergent Regions' not in release['browser_tracks']:
     files['divergent_regions_strain_bed']    = None
     files['divergent_regions_strain_bed_gz'] = None
 
