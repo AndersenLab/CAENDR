@@ -119,7 +119,6 @@ def data_release_list(species, release_version=None):
     'alt_parent_breadcrumb': {"title": "Data", "url": url_for('data.data')},
 
     'release_version': release.version,
-    'strain_listing': query_strains(release_version=release.version),
 
     **params,
     'files': files,
