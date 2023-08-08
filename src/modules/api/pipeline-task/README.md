@@ -3,11 +3,14 @@
 ## src/modules/api/pipeline-task
 -------------------------------------------------------------------
 Requirements:
-python3
-python3-venv
-virtualenv
-python3-virtualenv
-google-cloud-sdk
+* `python3`
+* `python3-venv`
+* `virtualenv`
+* `python3-virtualenv`
+* `google-cloud-sdk`
+
+Additional Packages:
+* `backoff` - Ensures that jobs are created and run by retrying failed requests. Solves CloudRun scheduling issues and GCP broken pipe errors.
 
 gcloud auth configure-docker
 
