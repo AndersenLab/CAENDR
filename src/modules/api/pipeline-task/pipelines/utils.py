@@ -72,10 +72,10 @@ def start_job(payload, task_route, run_if_exists=False):
   max_tries = 8
 
   def log_backoff(details):
-    logger.warn(f'[TASK {task_id}] Failed to run job on attempt #{details["tries"]}/{max_tries} (time elapsed: {details["elapsed"]:00.1f}s). Trying again...')
+    logger.warn(f'[TASK {task_id}] Failed to run job on attempt {details["tries"]}/{max_tries}. Trying again in {details["wait"]:00.1f}s...')
 
   def log_giveup(details):
-    logger.warn(f'[TASK {task_id}] Failed to run job on attempt #{details["tries"]}/{max_tries} (time elapsed: {details["elapsed"]:00.1f}s).')
+    logger.warn(f'[TASK {task_id}] Failed to run job on attempt {details["tries"]}/{max_tries}. Total time elapsed: {details["elapsed"]:00.1f}s.')
 
   @backoff.on_exception(
       backoff.expo, HttpError, giveup=lambda ex: ex.status_code != 400, max_tries=max_tries, on_backoff=log_backoff, on_giveup=log_giveup, jitter=None
