@@ -62,6 +62,9 @@ def start_job(payload, task_route, run_if_exists=False):
   '''
     Start a job on the given route.
 
+    On encountering an SSL EOF error, will wait 20s and try again, up to 3 times total.
+    This should help ensure the job runs even if an existing connection has gone stale.
+
     Args:
       - payload: The job payload.
       - task_route: The queue to run the job in.
@@ -89,6 +92,9 @@ def start_job(payload, task_route, run_if_exists=False):
   def log_giveup(details):
     logger.warn(f'[TASK {task_id}] Failed to run job on attempt {details["tries"]}/{max_tries}. Total time elapsed: {details["elapsed"]:00.1f}s.')
 
+  # Local helper function to ensure job is started
+  # There is a delay between when the job "create" request is sent and when the job becomes available for "run",
+  # so we use exponential backoff to wait for the job to finish being created
   @backoff.on_exception(
       backoff.expo, HttpError, giveup=lambda ex: ex.status_code != 400, max_tries=max_tries, on_backoff=log_backoff, on_giveup=log_giveup, jitter=None
   )
