@@ -1,11 +1,41 @@
 from flask import jsonify
 from caendr.services.logger import logger
+
+
+
 class APIError(Exception):
-  """ General API Error exception handler base class """
+  """
+    General API Error exception handler base class
+  """
+
+  def __init__(self, message='', call_id=''):
+    '''
+      Args:
+        - message (str, optional): A more specific description of the error.
+        - call_id (str, optional): A string that helps to identify the API call that raised this error. Used for logging/debugging purposes.
+    '''
+    self._call_id = call_id or None
+    self._message = message
+
+  def set_call_id(self, call_id):
+    self._call_id = call_id
+
+  @property
+  def message(self):
+    if self._call_id:
+      return f'[{self._call_id}] {self._message}'
+    return self._message
+
+  def get_response(self):
+    return {
+      'error':   self.description,
+      'message': self.message,
+    }
+
   def default_handler(self):
     logger.error(f'ERROR: {self.description}')
-    response = {"error": self.description}
-    return jsonify(response), self.code
+    return jsonify(self.get_response()), self.code
+
 
 class APIBadRequestError(APIError):
   """ API Bad Request exception error handler """
@@ -32,6 +62,8 @@ class APIUnprocessableEntity(APIError):
 class APIInternalError(APIError):
   code = 500
   description = "Internal Server Error"
+
+
 
 class InternalError(Exception):
   """

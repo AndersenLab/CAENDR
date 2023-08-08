@@ -42,8 +42,8 @@
                 </td>
                 <td>
                     {% if strain.sequenced %}
-                      <a href="{{ url_for('data_downloads.download_bam_bai_file', species_name=species.get_url_name(), strain_name=strain, ext='bam') }}" target="_blank">BAM</a>
-                      <a href="{{ url_for('data_downloads.download_bam_bai_file', species_name=species.get_url_name(), strain_name=strain, ext='bam.bai') }}" target="_blank">BAI</a>
+                      <a href="{{ url_for('data_downloads.download_bam_bai_file', species_name=species.get_slug(), strain_name=strain, ext='bam') }}" target="_blank">BAM</a>
+                      <a href="{{ url_for('data_downloads.download_bam_bai_file', species_name=species.get_slug(), strain_name=strain, ext='bam.bai') }}" target="_blank">BAI</a>
                     {% endif %}
                 </td>
             </tr>

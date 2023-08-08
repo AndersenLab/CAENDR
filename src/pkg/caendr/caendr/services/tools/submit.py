@@ -4,7 +4,7 @@ import json
 
 from caendr.services.logger import logger
 
-from caendr.models.datastore import Container, IndelPrimer, HeritabilityReport, NemascanMapping, SPECIES_LIST
+from caendr.models.datastore import Container, Species, IndelPrimer, HeritabilityReport, NemascanMapping
 from caendr.models.error     import CachedDataError, DuplicateDataError, DataFormatError
 from caendr.models.task      import TaskStatus, IndelPrimerTask, HeritabilityTask, NemaScanTask
 
@@ -318,7 +318,7 @@ class IndelPrimerSubmissionManager(SubmissionManager):
     data_hash = get_object_hash(data, length=32)
 
     # TODO: Pull this value from somewhere
-    release = SPECIES_LIST[ data['species'] ].release_pif
+    release = Species.from_name( data['species'] ).release_pif
 
     # Add release information to data object
     data.update({
@@ -363,7 +363,7 @@ class HeritabilitySubmissionManager(SubmissionManager):
       },
       {
         'header': 'Strain',
-        'validator': validate_strain( SPECIES_LIST[data['species']] ),
+        'validator': validate_strain( Species.from_name(data['species']) ),
       },
       {
         'header': 'TraitName',
@@ -445,7 +445,7 @@ class MappingSubmissionManager(SubmissionManager):
     columns = [
       {
         'header': 'strain',
-        'validator': validate_strain(SPECIES_LIST[data['species']], force_unique=True, force_unique_msg=duplicate_strain_formatter)
+        'validator': validate_strain(Species.from_name(data['species']), force_unique=True, force_unique_msg=duplicate_strain_formatter)
       },
       {
         # 'header': {

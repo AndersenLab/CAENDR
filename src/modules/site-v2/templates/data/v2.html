@@ -81,7 +81,7 @@
                                             <th scope="row">Strain Data</th>
                                             <td>Includes strain, isotype, location information, and more.</td>
                                             <td class="text-center">
-                                                <a class="btn btn-primary text-light" href="{{ url_for('request_strains.strains_data_csv', release_name = release_version, species_name = species.name, file_ext='csv') }}">
+                                                <a class="btn btn-primary text-light" href="{{ url_for('request_strains.strains_data_csv', release_name = release_version, species_name = species.get_slug(), file_ext='csv') }}">
                                                     {{ file_prefix }}_strain_data.csv
                                                 </a>
                                             </td>
@@ -89,14 +89,14 @@
                                         <tr>
                                             <th scope="row">Strain Issues</th>
                                             <td>This <a
-                                                    href="{{ url_for('data_releases.strain_issues', species = species.get_url_name(), release_version = release_version) }}">link</a>
+                                                    href="{{ url_for('data_releases.strain_issues', species = species.get_slug(), release_version = release_version) }}">link</a>
                                                 contains all strain issues for this release</td>
                                             <td></td>
                                         </tr>
                                         <tr>
                                             <th scope="row">Alignment Data</th>
                                             <td>This <a
-                                                    href="{{ url_for('data_releases.alignment_data', species = species.get_url_name(), release_version = release_version) }}">link</a>
+                                                    href="{{ url_for('data_releases.alignment_data', species = species.get_slug(), release_version = release_version) }}">link</a>
                                                 contains all alignment data as BAM or BAI files.</td>
                                             <td></td>
                                         </tr>
@@ -312,7 +312,7 @@
                                             <td>You can batch download individual strain BAMs using this script.</td>
                                             <td class="text-center">
                                                 <a class="btn btn-primary text-light"
-                                                    href="{{ url_for('data_downloads.download_bam_bai_script', species_name=species.get_url_name(), release_version=release_version) }}"
+                                                    href="{{ url_for('data_downloads.download_bam_bai_script', species_name=species.get_slug(), release_version=release_version) }}"
                                                 >
                                                     {{ download_bams_name }}
                                                 </a>

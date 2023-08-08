@@ -429,7 +429,9 @@ class Entity(object):
 
     # If a match was found, initialize an Entity object from it
     if match is not None:
-      return cls(name, safe=safe)
+      e = cls(name, safe=safe)
+      if e._exists:
+        return e
 
     if not silent:
       raise NotFoundError(cls, {'name': name})

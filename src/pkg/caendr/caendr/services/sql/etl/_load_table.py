@@ -10,6 +10,23 @@ from .strain_annotated_variants import parse_strain_variant_annotation_data
 # https://github.com/phil-bergmann/2016_DLRW_brain/blob/3f69c945a40925101c58a3d77c5621286ad8d787/brain/data.py
 
 
+## Util(s) ##
+
+def batch_generator(g, batch_size=1000000):
+    '''
+        Split a generator into a generator of generators, which produce the same sequence when taken together.
+        Useful for managing RAM when bulk inserting mappings into a table.
+    '''
+    def _inner(top):
+        yield top
+        for i, x in enumerate(g, start=1):
+            yield x
+            if i % (batch_size - 1) == 0:
+                return
+
+    for top in g:
+        yield _inner(top)
+
 
 ## Generic Table ##
 
@@ -50,8 +67,9 @@ def load_table(self, db, table, generator, fetch_funcs, species=None):
         filenames = [ fetch(species_name) for fetch in fetch_funcs ]
 
         # Load gene table data
-        db.session.bulk_insert_mappings(table, generator(species_obj, *filenames, start_idx=table.query.count()))
-        db.session.commit()
+        for g in batch_generator(generator(species_obj, *filenames, start_idx=table.query.count())):
+            db.session.bulk_insert_mappings(table, g)
+            db.session.commit()
 
     # Print how many entries were added
     total_records = table.query.count() - initial_count
