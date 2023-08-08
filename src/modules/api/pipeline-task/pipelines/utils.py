@@ -1,5 +1,6 @@
 import backoff
 from googleapiclient.errors import HttpError
+from ssl import SSLEOFError
 
 from caendr.services.logger import logger
 from caendr.utils.env       import get_env_var
@@ -20,6 +21,14 @@ DB_OPERATIONS_TASK_QUEUE_NAME = get_env_var('MODULE_DB_OPERATIONS_TASK_QUEUE_NAM
 INDEL_PRIMER_TASK_QUEUE_NAME  = get_env_var('INDEL_PRIMER_TASK_QUEUE_NAME')
 HERITABILITY_TASK_QUEUE_NAME  = get_env_var('HERITABILITY_TASK_QUEUE_NAME')
 NEMASCAN_TASK_QUEUE_NAME      = get_env_var('NEMASCAN_TASK_QUEUE_NAME')
+
+
+
+def log_ssl_backoff(details):
+  logger.warn(f'[TASK {details["args"][0].get("id", "no-id")}] Encountered SSLEOFError trying to start job. Trying again in {details["wait"]:00.1f}s...')
+
+def log_ssl_giveup(details):
+  logger.warn(f'[TASK {details["args"][0].get("id", "no-id")}] Encountered SSLEOFError trying to start job. Giving up. Total time elapsed: {details["elapsed"]:00.1f}s.')
 
 
 
@@ -46,6 +55,9 @@ def get_task_handler(queue_name, *args, **kwargs):
 
 
 
+@backoff.on_exception(
+    backoff.constant, SSLEOFError, max_tries=3, interval=20, jitter=None, on_backoff=log_ssl_backoff, on_giveup=log_ssl_giveup,
+)
 def start_job(payload, task_route, run_if_exists=False):
   '''
     Start a job on the given route.
