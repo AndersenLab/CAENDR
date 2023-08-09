@@ -360,6 +360,13 @@ def register_request_handlers(app):
       return redirect(request.scheme + "://" + MODULE_SITE_HOST + request.full_path, code=301)
 
 
+  @app.teardown_appcontext
+  def close_db_connections(error):
+    logger.debug('Closing db session...')
+    db.session.close()
+    db.get_engine(app).dispose()
+
+
 def password_protect_site(app):
 
   # Check the environment to determine whether the site should be password protected

@@ -1,5 +1,6 @@
-import time
+import backoff
 from googleapiclient.errors import HttpError
+from ssl import SSLEOFError
 
 from caendr.services.logger import logger
 from caendr.utils.env       import get_env_var
@@ -20,6 +21,14 @@ DB_OPERATIONS_TASK_QUEUE_NAME = get_env_var('MODULE_DB_OPERATIONS_TASK_QUEUE_NAM
 INDEL_PRIMER_TASK_QUEUE_NAME  = get_env_var('INDEL_PRIMER_TASK_QUEUE_NAME')
 HERITABILITY_TASK_QUEUE_NAME  = get_env_var('HERITABILITY_TASK_QUEUE_NAME')
 NEMASCAN_TASK_QUEUE_NAME      = get_env_var('NEMASCAN_TASK_QUEUE_NAME')
+
+
+
+def log_ssl_backoff(details):
+  logger.warn(f'[TASK {details["args"][0].get("id", "no-id")}] Encountered SSLEOFError trying to start job. Trying again in {details["wait"]:00.1f}s...')
+
+def log_ssl_giveup(details):
+  logger.warn(f'[TASK {details["args"][0].get("id", "no-id")}] Encountered SSLEOFError trying to start job. Giving up. Total time elapsed: {details["elapsed"]:00.1f}s.')
 
 
 
@@ -46,9 +55,15 @@ def get_task_handler(queue_name, *args, **kwargs):
 
 
 
+@backoff.on_exception(
+    backoff.constant, SSLEOFError, max_tries=3, interval=20, jitter=None, on_backoff=log_ssl_backoff, on_giveup=log_ssl_giveup,
+)
 def start_job(payload, task_route, run_if_exists=False):
   '''
     Start a job on the given route.
+
+    On encountering an SSL EOF error, will wait 20s and try again, up to 3 times total.
+    This should help ensure the job runs even if an existing connection has gone stale.
 
     Args:
       - payload: The job payload.
@@ -67,6 +82,26 @@ def start_job(payload, task_route, run_if_exists=False):
   task_id = payload.get('id', 'no-id')
   logger.info(f"[TASK {task_id}] Starting job in queue { task_route }. Payload: { payload }")
 
+
+  # With exponential backoff, this is approx (2^(n-1))-1 = 127 sec, or a little over 2 minutes
+  max_tries = 8
+
+  def log_backoff(details):
+    logger.warn(f'[TASK {task_id}] Failed to run job on attempt {details["tries"]}/{max_tries}. Trying again in {details["wait"]:00.1f}s...')
+
+  def log_giveup(details):
+    logger.warn(f'[TASK {task_id}] Failed to run job on attempt {details["tries"]}/{max_tries}. Total time elapsed: {details["elapsed"]:00.1f}s.')
+
+  # Local helper function to ensure job is started
+  # There is a delay between when the job "create" request is sent and when the job becomes available for "run",
+  # so we use exponential backoff to wait for the job to finish being created
+  @backoff.on_exception(
+      backoff.expo, HttpError, giveup=lambda ex: ex.status_code != 400, max_tries=max_tries, on_backoff=log_backoff, on_giveup=log_giveup, jitter=None
+  )
+  def _run_job(handler):
+    return handler.run_job()
+
+
   # Try to create a task handler of the appropriate type
   handler = get_task_handler(task_route, **payload)
 
@@ -84,20 +119,7 @@ def start_job(payload, task_route, run_if_exists=False):
       raise
 
   # Run the CloudRun job
-  # TODO: Wait to make sure job is created first?
-  try:
-    run_response, pub_sub_id = handler.run_job()
-
-  # If server responds with 400, wait a few seconds and try again, in case the job is still being created
-  # TODO: This is not a good way to wait for the job to be created, but as far as I can tell, the API
-  #       doesn't accept an "execute-now" parameter the way the CLI / online interface do.
-  #       Properly waiting and retrying is a larger project.
-  except HttpError as ex:
-    if ex.status_code == 400:
-      time.sleep(5)
-      run_response, pub_sub_id = handler.run_job()
-    else:
-      raise
+  run_response, pub_sub_id = _run_job(handler)
 
   # Return all computed values
   return handler, create_response, run_response
