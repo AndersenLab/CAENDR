@@ -1,4 +1,4 @@
-{% from "_includes/macros.html" import render_download_link with context %}
+{% from "_includes/macros.html" import render_download_link, render_download_link_set with context %}
 {% set file_prefix = release_version + '_' + species.name %}
 {% set wi_prefix   = 'WI.' + release_version %}
 
@@ -8,6 +8,7 @@
             <div class="nav nav-tabs border-0" id="nav-tab" role="tablist">
                 <button class="nav-link active" id="nav-datasets-link" data-bs-toggle="tab" data-bs-target="#datasets"
                     type="button" role="tab" aria-controls="datasets" aria-selected="true">Datasets</button>
+                {% if files %}
                 {% if files.get('methods') %}
                 <button class="nav-link" id="nav-methods-link" data-bs-toggle="tab" data-bs-target="#methods"
                     type="button" role="tab" aria-controls="methods" aria-selected="false">Methods</button>
@@ -36,6 +37,7 @@
                 <button class="nav-link" id="nav-species-link" data-bs-toggle="tab" data-bs-target="#species"
                     type="button" role="tab" aria-controls="species" aria-selected="false">Species Tree</button>
                 {% endif %}
+                {% endif %}
             </div>
         </nav>
         <div class="tab-content" id="nav-tabContent">
@@ -46,7 +48,7 @@
                     <div class="row">
                         <div class="col-6">
                             <h2>Release Notes</h2>
-                            <p>{{ render_ext_markdown(files.get('release_notes'), ignore_err=true, backup_text="*Release notes are not available at this time.*") }}</p>
+                            <p>{{ render_ext_markdown(files and files.get('release_notes'), ignore_err=true, backup_text="*Release notes are not available at this time.*") }}</p>
                         </div>
                         <div class="col-6">
                             <div class="card">
@@ -55,7 +57,7 @@
                                 </div>
                                 <div class="card-body">
                                     <p class="card-text">
-                                        {{ render_ext_markdown(files.get('summary'), ignore_err=true, backup_text="*Release summary is not available at this time.*") }}
+                                        {{ render_ext_markdown(files and files.get('summary'), ignore_err=true, backup_text="*Release summary is not available at this time.*") }}
                                     </p>
                                 </div>
                             </div>
@@ -107,6 +109,7 @@
                                                 field=<code>FILTER</code>) and genotype (Format Field=<code>FT</code>)
                                                 is specified by a VCF Field.</td>
                                             <td>
+                                            {%- call render_download_link_set(files) %}
                                                 <strong>All Strains</strong>
                                                 <br />
                                                 {{ render_download_link(
@@ -128,6 +131,7 @@
                                                     'soft_filter_isotype_vcf_gz_tbi',
                                                     wi_prefix + '.soft-filter.isotype.vcf.gz.tbi'
                                                 ) }}
+                                            {%- endcall %}
                                             </td>
                                         </tr>
                                         <tr>
@@ -137,6 +141,7 @@
                                                 vcf for a single or a subset of strains, use
                                                 <code>bcftools view --samples</code></td>
                                             <td>
+                                            {%- call render_download_link_set(files) %}
                                                 <strong>All Strains</strong>
                                                 <br />
                                                 {{ render_download_link(
@@ -158,9 +163,10 @@
                                                     'hard_filter_isotype_vcf_gz_tbi',
                                                     wi_prefix + '.hard-filter.isotype.vcf.gz.tbi'
                                                 ) }}
+                                            {%- endcall %}
                                             </td>
                                         </tr>
-                                        {% if files.get('impute_isotype_vcf_gz') %}
+                                        {% if files and files.get('impute_isotype_vcf_gz') %}
                                         <tr>
                                             <th scope="row">Imputed Variants</th>
                                             <td>The imputed VCF includes all the variants from the hard-filtered Isotype
@@ -205,6 +211,7 @@
                                                 <i>C. tropicalis</i>, these data will be deposited as soon as they are
                                                 generated.
                                             </td>
+                                            {%- if files %}
                                             {% if files.get('transposon_calls') %}
                                             <td class="text-center">
                                                 <a class="btn btn-primary text-light" href="{{ files.get('transposon_calls') }}"
@@ -215,6 +222,11 @@
                                                 {{ file_prefix }}_transposon_calls.bed is not included in this release
                                             </td>
                                             {% endif %}
+                                            {%- else %}
+                                            <td>
+                                                {{ render_download_link_set(null) }}
+                                            </td>
+                                            {%- endif %}
                                         </tr>
                                         <tr>
                                             <th scope="row">Tree</th>
@@ -224,6 +236,7 @@
                                                 and PDF format.
                                             </td>
                                             <td>
+                                            {%- call render_download_link_set(files) %}
                                                 <strong>All Strains</strong>
                                                 <br />
                                                 {{ render_download_link(
@@ -245,6 +258,7 @@
                                                     'hard_filter_isotype_min4_tree_pdf',
                                                     wi_prefix + '.hard-filter.isotype.min4.tree.pdf'
                                                 ) }}
+                                            {%- endcall %}
                                             </td>
                                         </tr>
                                         <tr>
@@ -253,8 +267,10 @@
                                                     href="https://andersenlab.org/publications/2021LeeNatureEE.pdf">Lee
                                                     <i>et al.</i></a></td>
                                             <td>
+                                            {%- call render_download_link_set(files) %}
                                                 {{ render_download_link('haplotype_png', file_prefix + '_haplotype.png', true) }}
                                                 {{ render_download_link('haplotype_pdf', file_prefix + '_haplotype.pdf') }}
+                                            {%- endcall %}
                                             </td>
                                         </tr>
                                         <tr>
@@ -271,8 +287,10 @@
                                                 The plot shows red (swept), gray (non-swept), and white (not classified) regions.
                                             </td>
                                             <td>
+                                            {%- call render_download_link_set(files) %}
                                                 {{ render_download_link('sweep_pdf',         file_prefix + '_sweep.pdf') }}
                                                 {{ render_download_link('sweep_summary_tsv', file_prefix + '_sweep_summary.tsv', true) }}
+                                            {%- endcall %}
                                             </td>
                                         </tr>
                                         <tr>
@@ -288,6 +306,7 @@
                                                 be released in the future.
                                             </td>
                                             <td>
+                                            {%- call render_download_link_set(files) %}
                                                 {% if files.get('divergent_regions_strain_bed') %}
                                                 <a href="{{ files.get('divergent_regions_strain_bed') }}">
                                                     {{ file_prefix }}_divergent_regions_strain.bed
@@ -305,6 +324,7 @@
                                                 files.get('divergent_regions_strain_bed_gz')) %}
                                                 {{ file_prefix }}_divergent_regions_strain.bed is not included in this release
                                                 {% endif %}
+                                            {%- endcall %}
                                             </td>
                                         </tr>
                                         <tr>
@@ -328,12 +348,14 @@
                 </div>
             </div>
             <!-- /Tab - Datasets -->
+
+            {%- if files %}
             <!-- Tab - Methods -->
             <div class="tab-pane fade show" id="methods" role="tabpanel" aria-labelledby="methods" tabindex="0">
                 <div class="p-5 mb-5 rounded shadow-sm text-bg-light">
                     <div class="row">
                         <div class="col">
-                            {{ render_ext_markdown(files.get('methods')) }}
+                            {{ render_ext_markdown(files.get('methods'), ignore_err=true, backup_text='*Methods are not available at this time.*') }}
                         </div>
                     </div>
                     <!-- /Row -->
@@ -442,6 +464,7 @@
             </div>
             {% endif %}
             <!-- /Tab - Species Tree -->
+            {%- endif %}
         </div>
     </div>{# /col #}
 </div>{# /row #}
