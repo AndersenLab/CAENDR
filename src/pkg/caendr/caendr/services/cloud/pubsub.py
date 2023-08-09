@@ -1,18 +1,14 @@
-from googleapiclient import discovery
-from oauth2client.client import GoogleCredentials
-
 from caendr.services.logger import logger
+from caendr.utils.env import get_env_var
 
 from caendr.models.error import APIUnprocessableEntity
 from caendr.models.pub_sub import PubSubStatus, PubSubMessage, PubSubAttributes
-from caendr.utils.env import get_env_var
+
+from .discovery import use_service
 
 
 
 GOOGLE_CLOUD_PROJECT_ID = get_env_var('GOOGLE_CLOUD_PROJECT_ID')
-
-# Create the Pub/Sub service
-SERVICE = discovery.build('pubsub', 'v1', credentials=GoogleCredentials.get_application_default())
 parent = f'projects/{GOOGLE_CLOUD_PROJECT_ID}'
 
 
@@ -34,7 +30,8 @@ def get_attribute(payload, key, can_be_none=False):
   return value
 
 
-def publish_message(topic, data=None, **kwargs):
+@use_service('pubsub', 'v1')
+def publish_message(SERVICE, topic, data=None, **kwargs):
   '''
     Publish a message to the specified topic.
     Arbitrary keyword args are interpreted as message attributes.
