@@ -11,7 +11,7 @@ from caendr.models.task import TaskStatus
 from caendr.models.pub_sub import PubSubAttributes, PubSubMessage, PubSubStatus
 
 from caendr.services.cloud.task import update_task_status, verify_task_headers
-from caendr.services.cloud.pubsub import get_attribute
+from caendr.services.cloud.pubsub import get_attribute, make_pubsub_response
 from caendr.services.cloud.lifesciences import create_pipeline_operation_record, get_operation_id_from_name
 from caendr.services.cloud.utils import update_pipeline_operation_record, update_all_linked_status_records
 from caendr.services.persistent_logger import PersistentLogger
@@ -130,4 +130,7 @@ def update_task():
     raise APIInternalError(f"Error updating status record(s)", call_id) from ex
 
 
-  return jsonify({'status': 'OK'}), 200
+  # If the job has finished or errored out, acknowledge the Pub/Sub message
+  # If the job is still running, don't acknowledge -- tells Pub/Sub to try the request again
+  response_status, response_code = make_pubsub_response( op['done'] or op['error'] )
+  return jsonify({'status': response_status}), response_code

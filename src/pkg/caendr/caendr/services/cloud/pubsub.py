@@ -59,3 +59,30 @@ def publish_message(SERVICE, topic, data=None, **kwargs):
   except Exception as ex:
     logger.warn(f'Couldn\'t extract message ID from Pub/Sub response: {response}. Error: {ex}')
     return None
+
+
+def make_pubsub_response(ack: bool):
+  '''
+    Create a response for a Pub/Sub push subscription, either acknowledging or not-acknowledging a message.
+
+    If the message is acknowledged, Pub/Sub will stop sending messages.
+    If not, Pub/Sub may retry the message after some period of time (based on the subscription configuration).
+
+    For information on acknowledging push messages, see https://cloud.google.com/pubsub/docs/push#receive_push.
+
+    Args:
+      - ack (bool): Whether or not to acknowledge the message.
+
+    Returns:
+      - status (str): The response status string
+      - code (int): The response code
+  '''
+
+  # To acknowledge a message, return an OK response
+  # This tells Pub/Sub to stop sending requests
+  if ack:
+    return 'OK', 200
+
+  # Otherwise, return a Continue response
+  # This counts as a NACK (not acknowledged), which tells Pub/Sub to try the request again later (if applicable)
+  return 'Continue', 100
