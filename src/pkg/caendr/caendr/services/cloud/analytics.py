@@ -7,12 +7,13 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.service_account import get_service_account_credentials
+from caendr.utils.env import get_env_var
 
 from .discovery import use_service
 
 
 
-GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME = os.environ.get('GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME')
+GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME = get_env_var('GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME')
 
 
 
