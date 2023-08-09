@@ -97,11 +97,15 @@ def get_job_execution_status(SERVICE, name):
   done  = False
   error = None
 
-  # TODO: Make sure this is adequate
   for condition in response['conditions']:
+
+    # If the "Completed" condition succeeded, mark as done
     if condition['type'] == 'Completed' and condition['state'] == 'CONDITION_SUCCEEDED':
       done = True
+
+    # If any condition failed, mark as done and record error
     if condition['state'] == 'CONDITION_FAILED':
+      done = True
       error = condition['message']
 
   return {'done': done, 'error': error, 'response': response}
