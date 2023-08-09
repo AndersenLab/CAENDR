@@ -1,3 +1,6 @@
+import functools
+from flask import jsonify
+
 from caendr.services.logger import logger
 from caendr.utils.env import get_env_var
 
@@ -86,3 +89,22 @@ def make_pubsub_response(ack: bool):
   # Otherwise, return a Continue response
   # This counts as a NACK (not acknowledged), which tells Pub/Sub to try the request again later (if applicable)
   return 'Continue', 100
+
+
+def pubsub_endpoint(func):
+  '''
+    Decorator for view functions that are the target endpoint for a Pub/Sub push subscription.
+
+    If view function returns a truthy value, acknowledges the message. Otherwise, nacks the message.
+    If view function raises an error, that error is propagated.
+  '''
+  @functools.wraps(func)
+  def wrapper(*args, **kwargs):
+
+    # Run the decorated function, and convert its return value to a Pub/Sub response
+    response_status, response_code = make_pubsub_response( func(*args, **kwargs) )
+
+    # Return the Pub/Sub response as JSON
+    return jsonify({ 'status': response_status }), response_code
+
+  return wrapper
