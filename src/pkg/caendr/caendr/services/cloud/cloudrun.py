@@ -100,7 +100,7 @@ def get_job_execution_status(name):
 
   # TODO: Make sure this is adequate
   for condition in response['conditions']:
-    if condition['type'] == 'Completed':
+    if condition['type'] == 'Completed' and condition['state'] == 'CONDITION_SUCCEEDED':
       done = True
     if condition['state'] == 'CONDITION_FAILED':
       error = condition['message']
