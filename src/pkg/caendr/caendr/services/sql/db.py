@@ -95,6 +95,8 @@ def drop_tables(app, db, species=None, tables=None):
     # Loop through tables in reverse order, so rows that depend on earlier tables are
     # dropped first
     for table in tables[::-1]:
+      logger.info(f'Initial size of table { table.__tablename__ }: { table.query.count() }')
+
       for species_name in species:
         del_statement = table.__table__.delete().where(table.__table__.c.species_name == species_name)
         db.engine.execute(del_statement)
