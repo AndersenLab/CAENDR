@@ -12,7 +12,9 @@ from .strain_annotated_variants import parse_strain_variant_annotation_data
 
 ## Util(s) ##
 
-def batch_generator(g, batch_size=100000):
+DEFAULT_BATCH_SIZE = 100000
+
+def batch_generator(g, batch_size=DEFAULT_BATCH_SIZE):
     '''
         Split a generator into a generator of generators, which produce the same sequence when taken together.
         Useful for managing RAM when bulk inserting mappings into a table.
@@ -67,9 +69,11 @@ def load_table(self, db, table, generator, fetch_funcs, species=None):
         filenames = [ fetch(species_name) for fetch in fetch_funcs ]
 
         # Load & insert gene table data in batches, to help reduce local memory footprint
-        for g in batch_generator(generator(species_obj, *filenames)):
+        for i, g in enumerate(batch_generator(generator(species_obj, *filenames))):
+            logger.debug(f'Processing {species_name} batch {i} (rows {i * DEFAULT_BATCH_SIZE}-{(i+1) * DEFAULT_BATCH_SIZE})...')
             db.session.bulk_insert_mappings(table, g)
             db.session.commit()
+            logger.debug(f'Finished inserting {species_name} batch {i}.')
 
     # Print how many entries were added
     total_records = table.query.count() - initial_count
