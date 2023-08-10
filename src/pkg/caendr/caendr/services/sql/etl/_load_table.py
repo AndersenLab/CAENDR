@@ -12,7 +12,7 @@ from .strain_annotated_variants import parse_strain_variant_annotation_data
 
 ## Util(s) ##
 
-def batch_generator(g, batch_size=1000000):
+def batch_generator(g, batch_size=100000):
     '''
         Split a generator into a generator of generators, which produce the same sequence when taken together.
         Useful for managing RAM when bulk inserting mappings into a table.
