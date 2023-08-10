@@ -461,6 +461,12 @@ class MappingSubmissionManager(SubmissionManager):
     # Compute data hash using entire file
     data_hash = get_file_hash(local_path, length=32)
 
+    # Open the file and extract the trait name from the header row
+    with open(local_path, 'r') as f:
+      csv_reader = csv.reader(f, delimiter=delimiter)
+      header_row = next(csv_reader)
+      data['trait'] = header_row[1]
+
     return local_path, data_hash, data
 
 
