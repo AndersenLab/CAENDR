@@ -38,7 +38,7 @@ def execute_operation(app, db, DB_OP, species=None):
 
 
 def drop_and_populate_strains(app, db, species):
-  drop_tables(app, db, species=species, tables=[Strain.__table__])
+  drop_tables(app, db, species=species, tables=[ Strain ])
   load_strains(db, species)
 
 
@@ -54,9 +54,9 @@ def drop_and_populate_wormbase_genes(app, db, species):
   # Drop relevant tables
   logger.info(f"Dropping tables...")
   drop_tables(app, db, species=species, tables=[
-    WormbaseGeneSummary.__table__,
-    WormbaseGene.__table__,
-    # Homolog.__table__,
+    WormbaseGeneSummary,
+    WormbaseGene,
+    # Homolog,
   ])
 
   # Fetch and load data using ETL Manager
@@ -79,7 +79,7 @@ def drop_and_populate_strain_annotated_variants(app, db, species):
   # Drop relevant table
   logger.info(f"Dropping table...")
   db.session.commit()
-  drop_tables(app, db, species=species, tables=[StrainAnnotatedVariant.__table__])
+  drop_tables(app, db, species=species, tables=[ StrainAnnotatedVariant ])
 
   # Fetch and load data using ETL Manager
   logger.info("Loading strain annotated variants...")
