@@ -66,8 +66,8 @@ def load_table(self, db, table, generator, fetch_funcs, species=None):
         # Fetch relevant dataset(s) and append '.gz' to the names
         filenames = [ fetch(species_name) for fetch in fetch_funcs ]
 
-        # Load gene table data
-        for g in batch_generator(generator(species_obj, *filenames, start_idx=table.query.count())):
+        # Load & insert gene table data in batches, to help reduce local memory footprint
+        for g in batch_generator(generator(species_obj, *filenames)):
             db.session.bulk_insert_mappings(table, g)
             db.session.commit()
 
