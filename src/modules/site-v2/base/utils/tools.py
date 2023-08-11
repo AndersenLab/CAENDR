@@ -4,7 +4,7 @@ from caendr.services.logger import logger
 
 from base.utils.auth import get_current_user, user_is_admin
 
-from caendr.models.datastore import IndelPrimer, NemascanMapping, HeritabilityReport
+from caendr.models.datastore import get_class_by_kind
 from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 from caendr.models.error import (
@@ -19,12 +19,6 @@ from caendr.services.cloud.secret import get_secret
 
 
 SUPPORT_EMAIL = get_secret('SUPPORT_EMAIL')
-
-
-def get_class_from_kind(kind):
-  for c in [ IndelPrimer, NemascanMapping, HeritabilityReport ]:
-    if kind == c.kind:
-      return c
 
 
 def get_upload_err_msg(code):
@@ -42,7 +36,7 @@ def lookup_report(kind, reportId, user=None, validate_user=True):
     user = get_current_user()
 
   # Get & validate the entity class from the provided kind
-  EntityClass = get_class_from_kind(kind)
+  EntityClass = get_class_by_kind(kind)
   if EntityClass is None:
     if user_is_admin() or not validate_user:
       raise ReportLookupError('Invalid report type.', 400)
