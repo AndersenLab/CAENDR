@@ -99,8 +99,10 @@ def update_all_linked_status_records(kind, operation_name):
   error = status.get('error')
   if error:
     logger.error(f"[UPDATE {op_id}] Error: Kind: {kind} Operation Name: {operation_name} error: {error}")
-  if done:
-    status = TaskStatus.ERROR if error else TaskStatus.COMPLETE
+    status = TaskStatus.ERROR
+  elif done:
+    logger.debug(f"[UPDATE {op_id}] Complete: Kind: {kind} Operation Name: {operation_name}")
+    status = TaskStatus.COMPLETE
   else:
     status = TaskStatus.RUNNING
 
