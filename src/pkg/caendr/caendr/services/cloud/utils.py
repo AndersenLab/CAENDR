@@ -68,7 +68,7 @@ def update_pipeline_operation_record(operation_name):
   op = PipelineOperation.get_ds(op_id, silent=False)
 
   # Update and return the record object
-  logger.info(f"[UPDATE {id}] Done = {status.get('done')}, Error = {status.get('error')}")
+  logger.info(f"[UPDATE {op_id}] Done = {status.get('done')}, Error = {status.get('error')}")
   op.set_properties(**{
     'done':  status.get('done'),
     'error': status.get('error'),
