@@ -6,7 +6,7 @@ import numpy as np
 from cyvcf2 import VCF
 from caendr.services.logger import logger
 
-from caendr.models.datastore import IndelPrimer, SPECIES_LIST
+from caendr.models.datastore import IndelPrimer, Species
 from caendr.models.error     import NotFoundError, EmptyReportDataError, EmptyReportResultsError
 
 from caendr.services.cloud.storage import (
@@ -82,14 +82,14 @@ def get_indel_primers(username=None, filter_errs=False):
 
 
 def get_bed_url(species, release = None, secure = True):
-  release = release or SPECIES_LIST[species].release_pif
+  release = release or Species.from_name(species).release_pif
   filename = IndelPrimer.get_source_filename(species, release)
   return generate_blob_url(
     MODULE_SITE_BUCKET_PRIVATE_NAME, f"{INDEL_PRIMER_TOOL_PATH}/{filename}.bed.gz", secure = secure
   )
 
 def get_vcf_url(species, release = None, secure = True):
-  release = release or SPECIES_LIST[species].release_pif
+  release = release or Species.from_name(species).release_pif
   filename = IndelPrimer.get_source_filename(species, release)
   return generate_blob_url(
     MODULE_SITE_BUCKET_PRIVATE_NAME, f"{INDEL_PRIMER_TOOL_PATH}/{filename}.vcf.gz", secure = secure
@@ -105,7 +105,7 @@ def get_sv_strains(species, release = None):
   logger.debug('get_sv_strains')
 
   # Use the given release if provided, otherwise default to species value
-  release = release or SPECIES_LIST[species].release_pif
+  release = release or Species.from_name(species).release_pif
 
   # Compute and log the URL of the VCF file on GCP
   vcf_url = get_vcf_url( species, release, secure=False )

@@ -3,6 +3,7 @@ from caendr.services.logger import logger
 
 from caendr.api.gene import remove_prefix
 from caendr.models.datastore import Entity
+from caendr.models.error import NotFoundError
 from caendr.services.cloud.storage import generate_blob_url, get_blob_list, check_blob_exists
 from caendr.utils.tokens import TokenizedString
 
@@ -53,6 +54,31 @@ class DatasetRelease(Entity):
 
   def __repr__(self):
     return f"<{self.kind}:{getattr(self, 'name', 'no-name')}>"
+
+
+  @staticmethod
+  def from_name(release_name=None, species_name=None):
+
+    # Make sure at least one argument is provided
+    if release_name is None and species_name is None:
+      raise ValueError('At least one of "release_name" and "species_name" must be provided.')
+
+    # If no release name provided, use species name to look up latest release for that species
+    if release_name is None:
+      from .species import Species
+      species = Species.from_name(species_name)
+      release_name = species['release_latest']
+
+    # Look for a release object with the matching name in the datastore
+    release = DatasetRelease.get_ds(release_name)
+
+    if release is None:
+      raise NotFoundError(DatasetRelease, {'name': release_name})
+
+    if release['species'] != species_name:
+      raise NotFoundError(DatasetRelease, {'name': release_name, 'species': species_name})
+
+    return release
 
 
   @classmethod

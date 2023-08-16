@@ -54,7 +54,7 @@
                 Strain Data including isolation location, isotype information, and more is available for download.
                 <br />
                 <br />
-                <a href="{{ url_for('request_strains.strains_data_csv', release_name = release_version, species_name = species.name, file_ext='csv') }}" type="button" class="btn btn-default btn-block btn-success">Download Strain Data</a>
+                <a href="{{ url_for('request_strains.strains_data_csv', release_name = release_version, species_name = species.get_slug(), file_ext='csv') }}" type="button" class="btn btn-default btn-block btn-success">Download Strain Data</a>
             </div>
         </div>
         <h4>Included Variants</h4>
@@ -109,7 +109,7 @@
             <td>
             {% for strain in strains %}
                 {% if strain.isotype_ref_strain %}
-                    <a href="{{ url_for('data_downloads.download_bam_bai_file', species_name=species.get_url_name(), strain_name=strain, ext='bam') }}" target="_blank"> BAM </a> / <a href="{{ url_for('data_downloads.download_bam_bai_file', species_name=species.get_url_name(), strain_name=strain, ext='bam.bai') }}" target="_blank"> BAI </a>
+                    <a href="{{ url_for('data_downloads.download_bam_bai_file', species_name=species.get_slug(), strain_name=strain, ext='bam') }}" target="_blank"> BAM </a> / <a href="{{ url_for('data_downloads.download_bam_bai_file', species_name=species.get_slug(), strain_name=strain, ext='bam.bai') }}" target="_blank"> BAI </a>
                 {% endif %}
             {% endfor %}
             </td>

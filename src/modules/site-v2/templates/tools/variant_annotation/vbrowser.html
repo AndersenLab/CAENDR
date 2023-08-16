@@ -90,7 +90,7 @@
           <form id='form-submit-interval' method='post'>
             <div class="input-group">
               <input name="interval" id="interval" class="form-control text-center"
-                placeholder="III:11,746,923-11,750,250" pattern="(I|II|III|IV|V|X|MtDNA):[0-9,]+-[0-9,]+">
+                placeholder="III:11,746,923-11,750,250" pattern="{{ chrom_interval_regex }}">
               <button class="btn btn-secondary text-light" id="search-interval-btn">Search</button>
             </div>
           </form>
@@ -375,7 +375,7 @@ async function downloadCSV(json_data) {
     const link = document.createElement("a");
     link.href = window.URL.createObjectURL(blob);
     const interval = $('#interval').val()
-    link.download = `data_${interval}.csv`;
+    link.download = `${ species['name'] }_${interval}_sva.csv`;
     link.click();
   } else {
     const err = await res.json()
@@ -584,7 +584,7 @@ function fetchTargetConsequence(el, q) {
       type: "POST",
       contentType: 'application/json',
       dataType: 'json',
-      url: "{{ url_for('variant_annotation.query_position') }}",
+      url: "{{ url_for('variant_annotation.query_position') }}/" + species.name,
       data: JSON.stringify({query: q}),
       success:function(result) {
         cachedTargets[q] = result;
@@ -831,7 +831,7 @@ $(document).ready(function() {
 				type: "POST",
         contentType: 'application/json',
         dataType: 'json',
-				url: "{{ url_for('variant_annotation.query_interval') }}",
+				url: "{{ url_for('variant_annotation.query_interval') }}/" + species.name,
 				data: JSON.stringify(data),
 				success:function(result) {
           const has_results = !!Object.keys(result).length;

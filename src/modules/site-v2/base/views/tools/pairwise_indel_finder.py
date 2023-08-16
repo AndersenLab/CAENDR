@@ -8,11 +8,12 @@ from base.utils.auth import jwt_required, admin_required, get_current_user, user
 from base.utils.tools import lookup_report, try_submit
 
 from caendr.models.datastore.browser_track import BrowserTrackDefault
-from caendr.models.datastore import Species, SPECIES_LIST, IndelPrimer, DatasetRelease
+from caendr.models.datastore import Species, IndelPrimer, DatasetRelease
 from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupError, EmptyReportDataError, EmptyReportResultsError
 from caendr.models.task import TaskStatus
 from caendr.services.cloud.storage import check_blob_exists
 from caendr.services.dataset_release import get_dataset_release
+from caendr.utils.bio import parse_chrom_interval
 from caendr.utils.constants import CHROM_NUMERIC
 from caendr.utils.data import get_file_format
 
@@ -31,8 +32,6 @@ from caendr.services.indel_primer import (
 pairwise_indel_finder_bp = Blueprint(
   'pairwise_indel_finder', __name__, template_folder='tools'
 )
-
-from caendr.utils.constants import CHROM_NUMERIC
 
 
 
@@ -91,15 +90,14 @@ def get_tracks():
 
   # If a species was passed, check that the referenced track file exists for this species
   # If not, return a 404 error
-  species = request.args.get('species')
+  # If species invalid, ignore (since this is an optional URL variable)
+  species = Species.get(request.args.get('species'), from_url=True)
   if species:
-    if species not in SPECIES_LIST:
-      raise NotFoundError(Species, {'name': species})
 
     # Get the bucket and filepath
     bucket, tkn_path = divergent_track.get_path()
     tkn_path += '/' + divergent_track["filename"]
-    blob_name = tkn_path.set_tokens_from_species(SPECIES_LIST[species]).get_string()
+    blob_name = tkn_path.set_tokens_from_species(species).get_string()
     if not check_blob_exists(bucket, blob_name):
       abort(404)
 
@@ -111,7 +109,7 @@ def get_tracks():
 @jwt_required()
 def get_strains():
   return jsonify({
-    species: try_get_sv_strains( species ) for species in SPECIES_LIST.keys()
+    species: try_get_sv_strains( species ) for species in Species.all().keys()
   })
 
 
@@ -134,7 +132,7 @@ def pairwise_indel_finder():
 
     # Data
     "chroms":       CHROM_NUMERIC.keys(),
-    "species_list": SPECIES_LIST,
+    "species_list": Species.all(),
 
     # Data locations
     "fasta_url": DatasetRelease.get_fasta_filepath_url_template().get_string_safe(),
@@ -146,7 +144,7 @@ def pairwise_indel_finder():
     ],
 
     'latest_release_genomes': {
-      species_name: get_dataset_release(species['release_latest'])['genome'] for species_name, species in SPECIES_LIST.items()
+      species_name: get_dataset_release(species['release_latest'])['genome'] for species_name, species in Species.all().items()
     },
 
     # String replacement tokens
@@ -194,7 +192,7 @@ def list_results():
     },
 
     # Table info
-    'species_list': SPECIES_LIST,
+    'species_list': Species.all(),
     'items': get_indel_primers(None if show_all else user.name, filter_errs),
     'columns': results_columns(),
 
@@ -298,9 +296,14 @@ def report(id, file_ext=None):
     except Exception:
       return abort(404, description="Something went wrong")
 
-    # Get indel information
-    chrom, indel_start, indel_stop = re.split(":|-", data['site'])
-    indel_start, indel_stop = int(indel_start), int(indel_stop)
+    # Get indel interval
+    try:
+      interval = parse_chrom_interval(data['site'])
+      indel_start, indel_stop = interval['start'], interval['stop']
+    except ValueError:
+      logger.error(f'Invalid interval "{data["site"]}" for Indel Finder report {id}')
+      indel_start, indel_stop = None, None
+
 
     # Update the result object with computed fields and generate a format table
     # If result is None or empty, does nothing

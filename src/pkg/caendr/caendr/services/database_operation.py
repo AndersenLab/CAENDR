@@ -2,7 +2,7 @@ import os
 from caendr.services.logger import logger
 from sqlalchemy import func 
 
-from caendr.models.datastore import DatabaseOperation, Container, SPECIES_LIST
+from caendr.models.datastore import DatabaseOperation, Container, Species
 from caendr.models.task import DatabaseOperationTask, TaskStatus
 from caendr.models.sql import Homolog, StrainAnnotatedVariant, Strain, WormbaseGene, WormbaseGeneSummary
 from caendr.services.tool_versions import GCR_REPO_NAME
@@ -143,8 +143,8 @@ def db_op_preflight_check(op, species_list):
 
   # Map list of species IDs to species objects
   if species_list is None or len(species_list) == 0:
-    species_list = SPECIES_LIST.keys()
-  species_list = [ SPECIES_LIST[key] for key in species_list ]
+    species_list = Species.all().keys()
+  species_list = [ Species.from_name(key) for key in species_list ]
 
   # Get list of all filenames in db ops bucket
   all_files = [
