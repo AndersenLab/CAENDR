@@ -119,7 +119,7 @@ def user_update():
   password = request.form.get('password')
   user.set_properties(email=email, full_name=full_name, password=password, salt=PASSWORD_PEPPER)
   user.save()
-  return redirect(url_for('user.user_profile'))
+  return redirect(url_for('user.user_account'))
 
 
 @user_bp.route("/password/reset", methods=["GET", "POST"])
