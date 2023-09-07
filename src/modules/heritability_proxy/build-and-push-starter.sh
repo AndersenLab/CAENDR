@@ -15,7 +15,7 @@ set +a
 source ../../../env/${ENV}/global.env
 
 # this requires reading the respective global.env above
-IMAGE_URI=gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/heritability:v0.04
+IMAGE_URI=gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${HERITABILITY_CONTAINER_NAME}:${HERITABILITY_CONTAINER_VERSION}
 
 if [ -d calc_heritability] ]; then
     echo "Found cloned repo: $GIT_REPO_URL."
