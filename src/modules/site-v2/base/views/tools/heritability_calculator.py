@@ -70,6 +70,7 @@ def results_columns():
 
 
 @heritability_calculator_bp.route('')
+@jwt_required()
 def heritability_calculator():
   return render_template('tools/heritability_calculator/heritability-calculator.html', **{
     'title': "Heritability Calculator",
