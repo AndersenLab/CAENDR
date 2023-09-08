@@ -28,7 +28,14 @@ $ cd $HOME
 $ mkdir homebrew && curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C homebrew
 ```
 
-Add this line to the bottom of your file `~/.bash_profile`:
+Find out which shell you are using: 
+```
+echo $SHELL
+```
+
+If you see "bash" then update the `~/.bash_profile` in the next step. If you see `zsh` as your shell, then update the file `~/.zprofile`
+
+Add this line to the bottom of your file `~/.bash_profile`, or `.zprofile`.
 ```
 export PATH=$HOME/homebrew/bin:$PATH
 ```
@@ -52,7 +59,6 @@ i386
 ### Install Dependencies:
 ```
 arch -x86_64 brew  update
-arch -x86_64 brew install python-devel
 arch -x86_64 brew install pyenv OpenSSL readline gettext xz
 ```
 
