@@ -16,6 +16,8 @@ The last line should open MacOS Finder on the `~/.gcp/` folder. Drop the `.json`
 ### Visual Studio Code
 
 Download from https://code.visualstudio.com/
+Install the extension: "Python" (should have 96M downloads)
+
 
 ### Docker Mac 
 
