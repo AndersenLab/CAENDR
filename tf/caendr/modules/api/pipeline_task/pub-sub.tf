@@ -27,6 +27,11 @@ resource "google_pubsub_subscription" "pipeline_task" {
     ttl = "2678400s"
   }
 
+  retry_policy {
+    minimum_backoff = "60s"
+    maximum_backoff = "300s"
+  }
+
   message_retention_duration = "259200s"
   name                       = var.module_api_pipeline_task_vars.pub_sub_subscription_name
   project                    = var.google_cloud_vars.project_id

@@ -91,7 +91,7 @@ class FileUploadForm(FlaskForm):
 
 # class HeritabilityForm(FileUploadForm):
 class HeritabilityForm(FlaskForm):
-  species = SpeciesSelectField(exclude_species=['c_briggsae', 'c_tropicalis'])
+  species = SpeciesSelectField()
   label = StringField('Description:', validators=[Required(message='You must include a description of your data.')])
   file = FileField('Select file:', render_kw={'accept': ','.join({ f'.{ext}' for ext in TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS})})
 

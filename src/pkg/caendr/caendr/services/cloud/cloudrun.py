@@ -1,10 +1,9 @@
-from googleapiclient import discovery
 from googleapiclient.errors import HttpError
-from oauth2client.client import GoogleCredentials
 
 from caendr.services.logger import logger
-
 from caendr.utils.env import get_env_var
+
+from .discovery import use_service
 
 
 
@@ -16,15 +15,13 @@ GOOGLE_CLOUD_ZONE           = get_env_var('GOOGLE_CLOUD_ZONE')
 SERVICE_ACCOUNT_NAME        = get_env_var('MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME')
 
 
-# Create the CloudRun service using the v2 API
-SERVICE = discovery.build('run', 'v2', credentials=GoogleCredentials.get_application_default())
-
 parent_id = f"projects/{GOOGLE_CLOUD_PROJECT_NUMBER}/locations/{GOOGLE_CLOUD_REGION}"
 sa_email  = f"{SERVICE_ACCOUNT_NAME}@{GOOGLE_CLOUD_PROJECT_ID}.iam.gserviceaccount.com"
 
 
 
-def create_job(name, task_count, timeout, max_retries, container, update_if_exists=True):
+@use_service('run', 'v2')
+def create_job(SERVICE, name, task_count, timeout, max_retries, container, update_if_exists=True):
   '''
     Create a CloudRun job.
     For more details, see https://googleapis.github.io/google-api-python-client/docs/dyn/run_v2.projects.locations.jobs.html#create
@@ -70,7 +67,8 @@ def create_job(name, task_count, timeout, max_retries, container, update_if_exis
   return SERVICE.projects().locations().jobs().create( parent=parent_id, jobId=name, body=body ).execute()
 
 
-def run_job(name):
+@use_service('run', 'v2')
+def run_job(SERVICE, name):
   '''
     Run a CloudRun job.
 
@@ -83,7 +81,8 @@ def run_job(name):
   return SERVICE.projects().locations().jobs().run( name=f'{parent_id}/jobs/{name}' ).execute()
 
 
-def get_job_execution_status(name):
+@use_service('run', 'v2')
+def get_job_execution_status(SERVICE, name):
   '''
     Retrieve the status of a job execution.
 
@@ -98,11 +97,15 @@ def get_job_execution_status(name):
   done  = False
   error = None
 
-  # TODO: Make sure this is adequate
   for condition in response['conditions']:
+
+    # If the "Completed" condition succeeded, mark as done
     if condition['type'] == 'Completed' and condition['state'] == 'CONDITION_SUCCEEDED':
       done = True
+
+    # If any condition failed, mark as done and record error
     if condition['state'] == 'CONDITION_FAILED':
+      done = True
       error = condition['message']
 
   return {'done': done, 'error': error, 'response': response}
