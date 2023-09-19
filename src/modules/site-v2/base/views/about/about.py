@@ -91,10 +91,11 @@ def people():
 @about_bp.route('/funding')
 @cache.memoize(60*60)
 def funding():
-  title = "Funding"
-  disable_parent_breadcrumb = True
-  funding_set = load_yaml('funding.yaml')
-  return render_template('about/funding.html', **locals())
+  return render_template('about/funding.html', **{
+    'title': 'Funding',
+    'disable_parent_breadcrumb': True,
+    'funding_set': load_yaml('funding.yaml'),
+  })
 
 
 @about_bp.route('/statistics')

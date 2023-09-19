@@ -335,36 +335,42 @@ def order_page_index():
 
 @strains_bp.route("/checkout/confirmation/<invoice_hash>", methods=['GET', 'POST'])
 def order_confirmation(invoice_hash):
+
+  # Look up the order
   order_obj = lookup_order(invoice_hash)
   if order_obj is None:
     abort(404)
-  else:
-    order_obj["items"] = {x.split(":")[0]: float(x.split(":")[1])
-                          for x in order_obj['items'].split("\n")}
-    items = [{'strain': k, 'price': v} for k, v in order_obj["items"].items()]
-    strains = get_strains()
-    
-    # get species
-    for item in items:
-      for strain in strains:
-        if item['strain'] == strain.isotype:
-          item['species'] = strain.species_name
-          break
-        else:
-          item['species'] = ''
 
-    title = "Order Confirmation"
-    invoice = f"Invoice {order_obj['invoice_hash']}"
-    SUPPORT_EMAIL = get_secret('SUPPORT_EMAIL')
+  # Parse the individual items in the order into (1) a dict {name: price} and (2) a list of dicts
+  order_obj["items"] = {
+    x.split(":")[0]: float(x.split(":")[1]) for x in order_obj['items'].split("\n")
+  }
+  items = [ {'strain': k, 'price': v} for k, v in order_obj["items"].items() ]
 
-    return render_template('order/order_confirm.html', **({
-      'tool_alt_parent_breadcrumb': {"title": "Strain Catalog", "url": url_for('request_strains.request_strains')},
-      'title': "Order Confirmation",
-      'invoice': invoice,
-      'order_obj': order_obj,
-      'items': items
-    }
-    ))
+  # Add species to each strain, if applicable
+  strains = get_strains()
+  for item in items:
+    for strain in strains:
+      if item['strain'] == strain.isotype:
+        item['species'] = strain.species_name
+        break
+      else:
+        item['species'] = ''
+
+  return render_template('order/order_confirm.html', **({
+    'title': "Order Confirmation",
+    'tool_alt_parent_breadcrumb': {
+      'title': 'Strain Catalog', 'url': url_for('request_strains.request_strains')
+    },
+
+    # Order info
+    'invoice':   f"Invoice {order_obj['invoice_hash']}",
+    'order_obj': order_obj,
+    'items':     items,
+
+    # Contact info
+    'support_email': get_secret('SUPPORT_EMAIL'),
+  }))
   
     
 @strains_bp.route('/submit')
