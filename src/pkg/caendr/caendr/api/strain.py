@@ -6,7 +6,7 @@ from sqlalchemy import or_
 from flask import request
 from datetime import timedelta
 
-from caendr.models.datastore import SPECIES_LIST
+from caendr.models.datastore import Species
 from caendr.models.error import BadRequestError
 from caendr.models.sql import Strain
 from caendr.services.cloud.postgresql import db, rollback_on_error
@@ -71,7 +71,7 @@ def query_strains(
     query = query
 
   if species is not None:
-    if species in SPECIES_LIST.keys():
+    if species in Species.all().keys():
       query = query.filter(Strain.species_name == species)
     else:
       raise BadRequestError(f'Unrecognized species ID "{species}".')

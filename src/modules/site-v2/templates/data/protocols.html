@@ -10,8 +10,7 @@
     <h4>{{ section }}</h4>
     {% for protocol in protocols[section] %}
       <h5>
-        <a href="{{ ext_asset('protocols/' + protocol.link) }}"><img src="{{ ext_asset('img/logos/pdf.png') }}"></a> &nbsp; 
-        <a href="{{ ext_asset('protocols/' + protocol.link) }}">{{ protocol.name|safe }}</a>
+        <a href="{{ ext_asset('protocols/' + protocol.link) }}"><img src="{{ ext_asset('img/logos/pdf.png') }}" alt=""></a> &nbsp; {{ protocol.name|safe }}</a>
       </h5>
     {% endfor %}
     {% if section == 'Maintenance' %}

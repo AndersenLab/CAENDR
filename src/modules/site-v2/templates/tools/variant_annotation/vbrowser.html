@@ -44,7 +44,7 @@
           <!-- Info Popover -->
           <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
             data-bs-trigger="focus" data-bs-title="More information"
-            data-bs-content="Search by WBGeneID, alphanumeric name (F37A4.8), or gene name (isw-1)"><i
+            data-bs-content="Search by WBGeneID, alphanumeric name (F37A4.8), or gene name (isw-1)" aria-label="More infomation about gene search"><i
               class="bi bi-info lh-1" aria-hidden="true"></i></a>
           <!-- /Info Popover -->
           <div class="dropdown">
@@ -68,8 +68,11 @@
                 </thead>
                 <tbody id="orthologs"></tbody>
               </table>
-              <div id="v-search-table-no-results" style="display:none;">
+              <div id="v-search-table-empty" class="m-2" style="display:none;">
                 That gene name is not found in this species, so either that gene does not exist in this species or a different gene name is indexed.
+              </div>
+              <div id="v-search-table-error" class="m-2" style="display:none;">
+                There was an error processing your gene search.
               </div>
             </div>
           </div>
@@ -81,13 +84,13 @@
           <!-- Info Popover -->
           <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
             data-bs-trigger="focus" data-bs-title="More information"
-            data-bs-content="Search using the format [chromosome:START-STOP]"><i class="bi bi-info lh-1"
+            data-bs-content="Search using the format [chromosome:START-STOP]" aria-label="More information about interval"><i class="bi bi-info lh-1"
               aria-hidden="true"></i></a>
           <!-- /Info Popover -->
           <form id='form-submit-interval' method='post'>
             <div class="input-group">
               <input name="interval" id="interval" class="form-control text-center"
-                placeholder="III:11,746,923-11,750,250" pattern="(I|II|III|IV|V|X|MtDNA):[0-9,]+-[0-9,]+">
+                placeholder="III:11,746,923-11,750,250" pattern="{{ chrom_interval_regex }}">
               <button class="btn btn-secondary text-light" id="search-interval-btn">Search</button>
             </div>
           </form>
@@ -274,6 +277,14 @@ const columnList = JSON.parse('{{ columns | tojson }}');
 
 const strainListing = JSON.parse('{{ strain_listing | tojson }}');
 
+// Divs used by the gene search
+const gene_search_selectors = {
+  "table":   "#v-search-table",
+  "loading": "#loading-search-table",
+  "empty":   "#v-search-table-empty",
+  "error":   "#v-search-table-error",
+}
+
 
 
 /* Species */
@@ -364,7 +375,7 @@ async function downloadCSV(json_data) {
     const link = document.createElement("a");
     link.href = window.URL.createObjectURL(blob);
     const interval = $('#interval').val()
-    link.download = `data_${interval}.csv`;
+    link.download = `${ species['name'] }_${interval}_sva.csv`;
     link.click();
   } else {
     const err = await res.json()
@@ -386,7 +397,7 @@ function onDownload() {
 function process_gene_search() {
   let gene = $('#gene-search').val().trim();
 
-  run_gene_search(gene, species, "#v-search-table", "#loading-search-table", (i, gene) => {
+  run_gene_search(gene, species, gene_search_selectors, (i, gene) => {
     if (!gene["chrom"] || !gene["start"] || !gene["end"]) return null;
     const position = format_locus_string(gene["chrom"], gene["start"], gene["end"]);
     const link = `<a onclick="set_position('${position}')" link='${position}' class='ortholink'>${gene['gene_id']}</a>`;
@@ -573,7 +584,7 @@ function fetchTargetConsequence(el, q) {
       type: "POST",
       contentType: 'application/json',
       dataType: 'json',
-      url: "{{ url_for('variant_annotation.query_position') }}",
+      url: "{{ url_for('variant_annotation.query_position') }}/" + species.name,
       data: JSON.stringify({query: q}),
       success:function(result) {
         cachedTargets[q] = result;
@@ -719,7 +730,7 @@ $(document).ready(function() {
     $("#gene-search").on("input", function(e) {
 
       var gene = $('#gene-search').val().trim();
-      prep_gene_search(gene, "#v-search-table", "#loading-search-table");
+      prep_gene_search(gene, gene_search_selectors);
 
       clearTimeout(typingTimer);
       typingTimer = setTimeout(process_gene_search, doneTypingInterval);
@@ -820,7 +831,7 @@ $(document).ready(function() {
 				type: "POST",
         contentType: 'application/json',
         dataType: 'json',
-				url: "{{ url_for('variant_annotation.query_interval') }}",
+				url: "{{ url_for('variant_annotation.query_interval') }}/" + species.name,
 				data: JSON.stringify(data),
 				success:function(result) {
           const has_results = !!Object.keys(result).length;

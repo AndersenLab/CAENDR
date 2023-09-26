@@ -9,15 +9,18 @@ from flask import (render_template,
                     make_response,
                     jsonify,
                     flash,
+                    abort,
                     Blueprint)
 from extensions import cache
 from base.forms import VBrowserForm
 
 from caendr.api.isotype import get_distinct_isotypes
-from caendr.models.datastore import SPECIES_LIST
+from caendr.models.datastore import Species
+from caendr.models.error import NotFoundError
 from caendr.models.sql import StrainAnnotatedVariant
 from caendr.services.dataset_release import get_latest_dataset_release_version
-from caendr.services.strain_annotated_variants import verify_interval_query, verify_position_query
+from caendr.utils.bio import parse_chrom_interval, parse_chrom_position
+from caendr.utils.constants import CHROM_INTERVAL_REGEX
 
 
 variant_annotation_bp = Blueprint(
@@ -42,7 +45,7 @@ def variant_annotation():
     col['default_visibility'] = col_visibility_func(col)
 
   # Organize distinct isotypes by species
-  strain_listing = { name: sorted( get_distinct_isotypes(species=name) ) for name in SPECIES_LIST }
+  strain_listing = { name: sorted( get_distinct_isotypes(species=name) ) for name in Species.all() }
 
   if request.args.get('download_err'):
     flash('CSV Download Failed.', 'error')
@@ -60,7 +63,7 @@ def variant_annotation():
     "strain_listing": strain_listing,
     "columns": columns,
     "current_version": get_latest_dataset_release_version().version,
-    "species_list": SPECIES_LIST,
+    "species_list": Species.all(),
 
     # List of Species class fields to expose to the template
     # Optional - exposes all attributes if not provided
@@ -70,58 +73,89 @@ def variant_annotation():
 
     # Misc
     "fluid_container": True,
+    "chrom_interval_regex": CHROM_INTERVAL_REGEX,
   })
 
 
 
-@variant_annotation_bp.route('/query/interval', methods=['POST'])
+@variant_annotation_bp.route('/query/interval',                       methods=['POST'])
+@variant_annotation_bp.route('/query/interval/<string:species_name>', methods=['POST'])
 @cache.memoize(60*60)
-def query_interval():
+def query_interval(species_name=None):
 
   # Extract the query
   payload = json.loads(request.data)
   query = payload.get('query')
 
-  # If query is valid, run it and return the results
-  is_valid = verify_interval_query(query=query)
-  if is_valid:
-    data = StrainAnnotatedVariant.run_interval_query(query=query)
-    return jsonify(data)
+  # Get the species from the URL, allowing undefined
+  if species_name:
+    try:
+      species = Species.from_name(species_name, from_url=True)
+    except NotFoundError:
+      return abort(404)
+  else:
+    species = None
 
-  # Otherwise, return an empty response
-  return jsonify({})
+  # Parse the query interval, returning an empty response if invalid
+  try:
+    interval = parse_chrom_interval(query)
+  except ValueError as ex:
+    logger.warn(ex)
+    return jsonify({})
+
+  # Run the query and return the results
+  data = StrainAnnotatedVariant.run_interval_query(interval, species=species)
+  return jsonify(data)
 
 
 
-@variant_annotation_bp.route('/query/position', methods=['POST'])
+@variant_annotation_bp.route('/query/position',                       methods=['POST'])
+@variant_annotation_bp.route('/query/position/<string:species_name>', methods=['POST'])
 @cache.memoize(60*60)
-def query_position():
+def query_position(species_name=None):
 
   # Extract the query
   payload = json.loads(request.data)
   query = payload.get('query')
 
-  # If query is valid, run it and return the results
-  is_valid = verify_position_query(query=query)
-  if is_valid:
-    data = StrainAnnotatedVariant.run_position_query(query=query)
-    return jsonify(data)
+  # Get the species from the URL, allowing undefined
+  if species_name:
+    try:
+      species = Species.from_name(species_name, from_url=True)
+    except NotFoundError:
+      return abort(404)
+  else:
+    species = None
 
-  # Otherwise, return an empty response
-  return jsonify({})
+  # Parse the query position, returning an empty response if invalid
+  try:
+    position = parse_chrom_position(query)
+  except ValueError as ex:
+    logger.warn(ex)
+    return jsonify({})
+
+  # Run the query and return the results
+  data = StrainAnnotatedVariant.run_position_query(position, species=species)
+  return jsonify(data)
 
 
 
 @variant_annotation_bp.route('/download/csv', methods=['POST'])
 def download_csv():
+
+  # Load columns from StrainAnnotatedVariant class
+  columns = [ col['id'] for col in StrainAnnotatedVariant.get_column_details() ]
+
   try:
     data = request.data
     pd_obj = pd.read_json(data)
-    csv = pd_obj.to_csv(index=False, sep=",")
+    csv = pd_obj.to_csv(index=False, sep=",", columns=columns)
+
     res = make_response(csv)
-    res.headers["Content-Disposition"] = "attachment; filename=data.csv"
+    res.headers["Content-Disposition"] = "attachment; filename=variant_annotation_data.csv"
     res.headers["Content-Type"] = "text/csv"
     return res
+
   except Exception as err:
     logger.error(err)
     return make_response(jsonify({ "message": "CSV download failed." }), 500)

@@ -1,6 +1,5 @@
 import os
 import json
-import googleapiclient.discovery
 import pandas as pd
 
 from datetime import datetime
@@ -8,25 +7,32 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.service_account import get_service_account_credentials
+from caendr.utils.env import get_env_var
 
-GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME = os.environ.get('GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME')
+from .discovery import use_service
 
 
-def authenticate_google_analytics():
-  """ Uses service account credentials to authorize access to google analytics """
+
+GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME = get_env_var('GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME')
+
+
+
+def get_analytics_credentials():
+  '''
+    Helper function to get the service account credentials that authorize access to Google Analytics
+  '''
   service_credentials = get_service_account_credentials(get_secret(GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME))
   scope = ['https://www.googleapis.com/auth/analytics.readonly']
-  credentials = ServiceAccountCredentials.from_json_keyfile_dict(service_credentials, scope)
-  return googleapiclient.discovery.build('analyticsreporting', 'v4', credentials=credentials)
+  return ServiceAccountCredentials.from_json_keyfile_dict(service_credentials, scope)
 
 
-def get_weekly_visits():
+@use_service('analyticsreporting', 'v4', credentials=get_analytics_credentials)
+def get_weekly_visits(SERVICE):
   """
       Get the number of weekly visitors
       Cached weekly
   """
-  ga = authenticate_google_analytics()
-  response = ga.reports().batchGet(
+  response = SERVICE.reports().batchGet(
     body={
       'reportRequests': [{
         'viewId': '117392266',

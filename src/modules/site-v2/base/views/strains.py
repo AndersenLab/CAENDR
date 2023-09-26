@@ -18,9 +18,9 @@ from extensions import cache, compress
 from caendr.api.strain import get_strains, query_strains, get_strain_sets, get_strain_img_url
 from caendr.models.sql import Strain
 from caendr.utils.json import dump_json
-from caendr.utils.data import get_file_format
+from caendr.utils.data import get_file_format, convert_data_to_download_file
 from caendr.utils.env import get_env_var
-from caendr.models.datastore import SPECIES_LIST
+from caendr.models.datastore import Species
 from caendr.models.datastore.cart import Cart
 from caendr.models.error import NotFoundError
 from caendr.services.dataset_release import get_all_dataset_releases, find_dataset_release, get_latest_dataset_release_version
@@ -95,12 +95,18 @@ def external_links():
 #
 # Strain Data
 #
-@strains_bp.route('/download/<release_name>/<species_name>/strain-data/<file_ext>')
+@strains_bp.route('/download/<species_name>/<release_name>/strain-data/<file_ext>')
 @cache.memoize(60*60)
-def strains_data_csv(release_name, species_name, file_ext):
+def strains_data_csv(species_name, release_name, file_ext):
   """
     Dumps strain dataset; Normalizes lat/lon on the way out.
   """
+
+  # Get the species from the URL
+  try:
+    species = Species.from_name(species_name, from_url=True)
+  except NotFoundError:
+    return abort(404)
 
   # Validate release
   try:
@@ -111,30 +117,24 @@ def strains_data_csv(release_name, species_name, file_ext):
   except NotFoundError:
     abort(404)
 
-  # Validate species
-  if species_name not in SPECIES_LIST:
-    abort(404)
-
   # Get file settings from the extension, rejecting bad extensions
   file_format = get_file_format(file_ext, valid_formats=['csv', 'tsv'])
   if file_format is None:
     abort(404)
 
-  # Generator function to produce the file line-by-line
-  def generate():
-    strains_by_species = query_strains(species=species_name, issues=False)
-    col_list = list(Strain.__mapper__.columns)
-    col_order = [1, 0, 3, 4, 5, 7, 8, 9, 10, 28, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 2, 6]
-    col_list[:] = [col_list[i] for i in col_order]
-    header = [x.name for x in col_list]
-    yield file_format['sep'].join(header) + "\n"
-    for row in strains_by_species:
-      row = [getattr(row, column.name) for column in col_list]
-      yield file_format['sep'].join(map(str, row)) + "\n"
+  # Get list of column names in desired order
+  columns = Strain.get_column_names_ordered()
+
+  # Get list of strains for this species as set of rows for pandas
+  strains_by_species = query_strains(species=species.name, issues=False)
+  data = ( [ getattr(row, column) for column in columns ] for row in strains_by_species )
+
+  # Convert to a CSV/TSV file
+  output = convert_data_to_download_file(data, columns, file_ext=file_ext)
 
   # Stream the response as a file with the correct filename
-  resp = Response(stream_with_context(generate()), mimetype=file_format['mimetype'])
-  resp.headers['Content-Disposition'] = f'filename={release["version"]}_{species_name}_strain_data.{file_ext}'
+  resp = Response(output, mimetype=file_format['mimetype'])
+  resp.headers['Content-Disposition'] = f'filename={release["version"]}_{species.name}_strain_data.{file_ext}'
   return resp
 
 
@@ -335,36 +335,42 @@ def order_page_index():
 
 @strains_bp.route("/checkout/confirmation/<invoice_hash>", methods=['GET', 'POST'])
 def order_confirmation(invoice_hash):
+
+  # Look up the order
   order_obj = lookup_order(invoice_hash)
   if order_obj is None:
     abort(404)
-  else:
-    order_obj["items"] = {x.split(":")[0]: float(x.split(":")[1])
-                          for x in order_obj['items'].split("\n")}
-    items = [{'strain': k, 'price': v} for k, v in order_obj["items"].items()]
-    strains = get_strains()
-    
-    # get species
-    for item in items:
-      for strain in strains:
-        if item['strain'] == strain.isotype:
-          item['species'] = strain.species_name
-          break
-        else:
-          item['species'] = ''
 
-    title = "Order Confirmation"
-    invoice = f"Invoice {order_obj['invoice_hash']}"
-    SUPPORT_EMAIL = get_secret('SUPPORT_EMAIL')
+  # Parse the individual items in the order into (1) a dict {name: price} and (2) a list of dicts
+  order_obj["items"] = {
+    x.split(":")[0]: float(x.split(":")[1]) for x in order_obj['items'].split("\n")
+  }
+  items = [ {'strain': k, 'price': v} for k, v in order_obj["items"].items() ]
 
-    return render_template('order/order_confirm.html', **({
-      'tool_alt_parent_breadcrumb': {"title": "Strain Catalog", "url": url_for('request_strains.request_strains')},
-      'title': "Order Confirmation",
-      'invoice': invoice,
-      'order_obj': order_obj,
-      'items': items
-    }
-    ))
+  # Add species to each strain, if applicable
+  strains = get_strains()
+  for item in items:
+    for strain in strains:
+      if item['strain'] == strain.isotype:
+        item['species'] = strain.species_name
+        break
+      else:
+        item['species'] = ''
+
+  return render_template('order/order_confirm.html', **({
+    'title': "Order Confirmation",
+    'tool_alt_parent_breadcrumb': {
+      'title': 'Strain Catalog', 'url': url_for('request_strains.request_strains')
+    },
+
+    # Order info
+    'invoice':   f"Invoice {order_obj['invoice_hash']}",
+    'order_obj': order_obj,
+    'items':     items,
+
+    # Contact info
+    'support_email': get_secret('SUPPORT_EMAIL'),
+  }))
   
     
 @strains_bp.route('/submit')

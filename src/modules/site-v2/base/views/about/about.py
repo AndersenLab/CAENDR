@@ -15,7 +15,7 @@ from extensions import cache
 from base.utils.statistics import cum_sum_strain_isotype, get_strain_collection_plot, get_mappings_summary_legacy, get_report_sumary_plot_legacy, get_weekly_visits_plot, get_num_registered_users
 
 from caendr.api.isotype import get_isotypes
-from caendr.models.datastore.species import SPECIES_LIST
+from caendr.models.datastore.species import Species
 from caendr.models.datastore.profile import Profile
 from caendr.services.cloud.analytics import get_weekly_visits
 from caendr.services.publication import get_publications_html_df
@@ -31,22 +31,36 @@ about_bp = Blueprint(
 @cache.memoize(60*60)
 def about():
   ''' About us Page - Gives an overview of CaeNDR '''
-  title = "About CaeNDR"
-  disable_parent_breadcrumb = True
-  isotypes = get_isotypes(known_origin=True)
-  strain_listing = [s.to_json() for s in isotypes]
-  return render_template('about/about.html', **locals())
+
+  try:
+    strain_listing = [s.to_json() for s in get_isotypes(known_origin=True)]
+  except Exception as ex:
+    logger.error(f'Failed to retrieve strain list: {ex}')
+    strain_listing = None
+
+  return render_template('about/about.html', **{
+    'title': 'About CaeNDR',
+    'disable_parent_breadcrumb': True,
+    'strain_listing': strain_listing,
+  })
 
 
 @about_bp.route('/getting_started')
 @cache.memoize(60*60)
 def getting_started():
   ''' Getting Started - provides information on how to get started with CeNDR '''
-  title = "Getting Started"
-  isotypes = get_isotypes(known_origin=True)
-  strain_listing = [s.to_json() for s in isotypes]
-  disable_parent_breadcrumb = True
-  return render_template('about/getting_started.html', **locals())
+
+  try:
+    strain_listing = [s.to_json() for s in get_isotypes(known_origin=True)]
+  except Exception as ex:
+    logger.error(f'Failed to retrieve strain list: {ex}')
+    strain_listing = None
+
+  return render_template('about/getting_started.html', **{
+    'title': "Getting Started",
+    'disable_parent_breadcrumb': True,
+    'strain_listing': strain_listing,
+  })
 
 
 @about_bp.route('/people')
@@ -77,10 +91,11 @@ def people():
 @about_bp.route('/funding')
 @cache.memoize(60*60)
 def funding():
-  title = "Funding"
-  disable_parent_breadcrumb = True
-  funding_set = load_yaml('funding.yaml')
-  return render_template('about/funding.html', **locals())
+  return render_template('about/funding.html', **{
+    'title': 'Funding',
+    'disable_parent_breadcrumb': True,
+    'funding_set': load_yaml('funding.yaml'),
+  })
 
 
 @about_bp.route('/statistics')
@@ -93,11 +108,11 @@ def statistics():
   df = cum_sum_strain_isotype()
   try:
     n_strains = {
-      species_name: max(df[f'{species_name}_strain']) for species_name in SPECIES_LIST
+      species_name: max(df[f'{species_name}_strain']) for species_name in Species.all()
     }
     n_strains = sum([ n for _, n in n_strains.items() if not isnan(n) ])
     n_isotypes = {
-      species_name: max(df[f'{species_name}_isotype']) for species_name in SPECIES_LIST
+      species_name: max(df[f'{species_name}_isotype']) for species_name in Species.all()
     }
     n_isotypes = sum([ n for _, n in n_isotypes.items() if not isnan(n) ])
     strain_collection_plot = get_strain_collection_plot(df)

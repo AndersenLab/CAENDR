@@ -1,9 +1,14 @@
 from caendr.models.datastore import DataJobEntity
+from caendr.utils.env import get_env_var
 
 
 H2_REPORT_PATH_PREFIX = 'reports'
 H2_INPUT_FILE = 'data.tsv'
 H2_RESULT_FILE = 'heritability_result.tsv'
+
+# TODO: Should this bucket be the data path?
+#       Should Nemascan point here too, or should this point to the Private bucket like Nemascan?
+DATA_BUCKET_NAME = get_env_var("MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME")
 
 
 class HeritabilityReport(DataJobEntity):
@@ -13,6 +18,16 @@ class HeritabilityReport(DataJobEntity):
   _result_file = H2_RESULT_FILE
 
   _report_display_name = 'Heritability'
+
+
+  def get_result_path(self):
+    return self.get_blob_path()
+
+  def get_input_data_path(self):
+    return 'heritability'
+
+  def get_data_directory(self):
+    return f"gs://{ DATA_BUCKET_NAME }/{ self.get_input_data_path() }"
 
 
   @classmethod

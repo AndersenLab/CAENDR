@@ -1,7 +1,10 @@
 import pandas as pd
+from sqlalchemy import and_
 
 from caendr.services.cloud.postgresql import db
 from caendr.models.sql.dict_serializable import DictSerializable
+from caendr.utils.bio  import parse_chrom_interval, parse_chrom_position
+from caendr.utils.data import convert_query_to_data_table
 
 class StrainAnnotatedVariant(DictSerializable, db.Model):
   """
@@ -29,7 +32,6 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
   percent_protein = db.Column(db.Float(), nullable=True)
   gene = db.Column(db.String(), index=True, nullable=True)
   variant_impact = db.Column(db.String(), nullable=True)
-  snpeff_impact = db.Column(db.String(), nullable=True)
   divergent = db.Column(db.Boolean(), nullable=True)
   release = db.Column(db.String(), nullable=True)
 
@@ -75,10 +77,13 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
       {'id': 'percent_protein', 'name': 'Percent Protein'},
       {'id': 'gene', 'name': 'Gene'},
       {'id': 'variant_impact', 'name': 'Variant Impact'},
-      {'id': 'snpeff_impact', 'name': 'SnpEff Impact'},
       {'id': 'divergent', 'name': 'Divergent'},
       {'id': 'release', 'name': 'Release Date'}
     ]
+
+  @staticmethod
+  def get_column_names():
+    return [ 'id', *[ col.get('id') for col in StrainAnnotatedVariant.get_column_details()] ]
 
 
   @staticmethod
@@ -94,51 +99,57 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
     return col['id'] in StrainAnnotatedVariant._column_default_list
 
 
-  @classmethod
-  def generate_interval_sql(cls, interval):
-    interval = interval.replace(',','')
-    chrom = interval.split(':')[0]
-    range = interval.split(':')[1]
-    start = int(range.split('-')[0])
-    stop = int(range.split('-')[1])
-
-    query = f"SELECT * FROM {cls.__tablename__} WHERE chrom='{chrom}' AND pos > {start} AND pos < {stop};"
-    return query
-
 
   @classmethod
-  def run_interval_query(cls, query):
-    query = cls.generate_interval_sql(query)
-    data_frame = pd.read_sql_query(query, db.engine)
-    col_list = [ col.get('id') for col in cls.get_column_details()]
-    cols = [ 'id', *col_list ]
-    try:  
-      test = data_frame[cols].dropna(how='all')
-      print(test)
-      result = data_frame[cols].dropna(how='all').fillna(value="").agg(list).to_dict()
-    except ValueError:
-      result = {}
-    return result
+  def run_interval_query(cls, interval, species=None):
 
-  
-  @classmethod
-  def generate_position_sql(cls, pos):
-    pos = pos.replace(',','')  
-    chrom = pos.split(':')[0]
-    pos = int(pos.split(':')[1])
+    # If interval was passed as a string, parse into a dict
+    # Otherwise, it should already be a dict with the right structure
+    if isinstance(interval, str):
+      interval = parse_chrom_interval(interval)
 
-    query = f"SELECT * FROM {cls.__tablename__} WHERE chrom='{chrom}' AND pos = {pos};"
-    return query
+    # Construct the query object from the given interval
+    query = StrainAnnotatedVariant.query.filter( and_(
+      StrainAnnotatedVariant.chrom == interval['chrom'],
+      StrainAnnotatedVariant.pos > interval['start'],
+      StrainAnnotatedVariant.pos < interval['stop'],
+    ) )
+
+    return cls.__run_query(query, species=species)
 
 
   @classmethod
-  def run_position_query(cls, query):
-    query = cls.generate_position_sql(query)
-    data_frame = pd.read_sql_query(query, db.engine)
-    col_list = [ col.get('id') for col in cls.get_column_details()]
-    cols = [ 'id', *col_list ]
-    try:  
-      result = data_frame[cols].dropna(how='all').fillna(value="").agg(list).to_dict()
+  def run_position_query(cls, position, species=None):
+
+    # If position was passed as a string, parse into a dict
+    # Otherwise, it should already be a dict with the right structure
+    if isinstance(position, str):
+      position = parse_chrom_position(position)
+
+    # Construct the query object from the given position
+    query = StrainAnnotatedVariant.query.filter( and_(
+      StrainAnnotatedVariant.chrom == position['chrom'],
+      StrainAnnotatedVariant.pos   == position['pos'],
+    ) )
+
+    return cls.__run_query(query, species=species)
+
+
+  @classmethod
+  def __run_query(cls, query, species=None):
+
+    # Get the list of column names
+    columns = StrainAnnotatedVariant.get_column_names()
+
+    # If a species was provided, use it to refine the query
+    if species:
+      query = query.filter( StrainAnnotatedVariant.species_name == species.name )
+
+    # Convert query into a DataFrame
+    data_frame = convert_query_to_data_table(query, columns=columns)
+
+    try:
+      result = data_frame[columns].dropna(how='all').fillna(value="").agg(list).to_dict()
     except ValueError:
       result = {}
     return result

@@ -5,6 +5,7 @@ setup(
   version='1.0.1',
   packages=['caendr'],
   install_requires=[
+    'backoff==2.2.1',
     'cachelib',
     'cyvcf2==0.30.22',
     'Flask_SQLAlchemy==2.5.1',

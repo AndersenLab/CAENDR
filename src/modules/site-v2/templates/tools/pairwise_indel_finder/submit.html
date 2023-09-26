@@ -2,7 +2,7 @@
 
 {% block custom_head %}
     <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min.js"></script>
-    <script type="text/javascript" src="//igv.org/web/release/2.6.2/dist/igv.min.js"></script>
+    <script type="text/javascript" src="//igv.org/web/release/2.8.3/dist/igv.min.js"></script>
     <link rel="stylesheet" href="//cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css" />
     <script type="text/javascript" src="//cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
     <style>
@@ -135,7 +135,7 @@ let species;
 let strains;
 
 /* IGV Browser */
-const browser_div = $("#browser");
+const browser_el = document.getElementById('browser');
 const browser_options = {}
 let divergent_track_name;
 const COLORS = {
@@ -237,7 +237,7 @@ function form_change() {
 
   // Ensure browser is loaded
   if (!loaded) return;
-  const browser = igv.getBrowser()
+  const browser = get_browser()
 
   // Get the new values from the form elements
   const species_id = $("#{{ form.species.elementId }}").val().trim();
@@ -340,7 +340,7 @@ function update_species(species_id) {
   species = species_list[species_id];
 
   // Update the browser species & the strain dropdown lists
-  create_or_update_browser(browser_div, browser_options, species).then(({browser}) => {
+  create_or_update_browser(browser_el, browser_options, species).then(({browser}) => {
     Promise.all([
       update_strain_dropdown("strain_1", strains, species, ""),
       update_strain_dropdown("strain_2", strains, species, ""),
@@ -425,7 +425,7 @@ function update_species(species_id) {
 function process_indel_finder_query_results(results) {
 
   // Ensure browser already exists
-  const browser = igv.getBrowser();
+  const browser = get_browser();
   if (!browser) return;
 
   // Handle data table
@@ -632,11 +632,11 @@ function set_position(browser, ignore_start_stop=false) {
 
     // Go to the desired locus, then return it from the Promise
     browser.search(search_locus).then(([locus]) => {
-      const chromosome = locus.chromosome.name;
+      const chromosome = locus.chr;
       resolve({
         chromosome,
-        start: chromosome === 'all' ? null : locus.start,
-        end:   chromosome === 'all' ? null : locus.end,
+        start: chromosome === 'all' ? null : locus.initialStart,
+        end:   chromosome === 'all' ? null : locus.initialEnd,
       });
     });
   })

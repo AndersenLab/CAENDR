@@ -10,6 +10,7 @@ from flask import (request,
                     Blueprint,
                     send_file,
                     url_for,
+                    flash,
                     abort)
 from caendr.services.logger import logger
 
@@ -20,7 +21,7 @@ from base.utils.auth import jwt_required
 
 from caendr.api.strain import query_strains
 from caendr.api.isotype import get_isotypes
-from caendr.models.datastore import DatasetRelease, Species, SPECIES_LIST
+from caendr.models.datastore import DatasetRelease, Species
 from caendr.models.sql import Strain, StrainAnnotatedVariant
 from caendr.services.cloud.storage import generate_blob_url, check_blob_exists
 from caendr.services.dataset_release import get_all_dataset_releases, get_browser_tracks_path, get_release_bucket, find_dataset_release
@@ -37,10 +38,10 @@ releases_bp = Blueprint(
 
 
 def interpret_url_vars(species_name, release_version):
-  species = Species.get(species_name.replace('-', '_'))
+  species = Species.from_name(species_name, from_url=True)
 
-  if species.get_url_name() != species_name:
-    raise SpeciesUrlNameError(species.get_url_name())
+  if species.get_slug() != species_name:
+    raise SpeciesUrlNameError(species.get_slug())
 
   releases = get_all_dataset_releases(order='-version', species=species.name)
   release  = find_dataset_release(releases, release_version)
@@ -62,7 +63,7 @@ def data_releases():
   return render_template('data/landing.html', **{
     'title': "Data Releases",
     'alt_parent_breadcrumb': {"title": "Data", "url": url_for('data.data')},
-    'species_list': SPECIES_LIST,
+    'species_list': Species.all(),
   })
 
 
@@ -98,7 +99,12 @@ def data_release_list(species, release_version=None):
   }
 
   # Get list of files based on species
-  files = release.get_report_data_urls_map(species.name)
+  try:
+    files = release.get_report_data_urls_map(species.name)
+  except Exception as ex:
+    files = None
+    logger.error(f'Failed to retrieve release files: {ex}')
+    flash('Unable to retrieve release files at this time. Please try again later.', 'danger')
 
   # Update params object with version-specific fields
   if release.report_type == DatasetRelease.V2:
@@ -109,7 +115,7 @@ def data_release_list(species, release_version=None):
   # Special case:
   # Only show the Divergent Regions BED file if it defines a valid track for this species + release,
   # even if the file exists.
-  if 'Divergent Regions' not in release['browser_tracks']:
+  if files and 'Divergent Regions' not in release['browser_tracks']:
     files['divergent_regions_strain_bed']    = None
     files['divergent_regions_strain_bed_gz'] = None
 
@@ -119,7 +125,6 @@ def data_release_list(species, release_version=None):
     'alt_parent_breadcrumb': {"title": "Data", "url": url_for('data.data')},
 
     'release_version': release.version,
-    'strain_listing': query_strains(release_version=release.version),
 
     **params,
     'files': files,
