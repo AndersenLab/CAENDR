@@ -1,4 +1,5 @@
 import backoff
+import json
 from googleapiclient.errors import HttpError
 from ssl import SSLEOFError
 
@@ -22,6 +23,17 @@ INDEL_PRIMER_TASK_QUEUE_NAME  = get_env_var('INDEL_PRIMER_TASK_QUEUE_NAME')
 HERITABILITY_TASK_QUEUE_NAME  = get_env_var('HERITABILITY_TASK_QUEUE_NAME')
 NEMASCAN_TASK_QUEUE_NAME      = get_env_var('NEMASCAN_TASK_QUEUE_NAME')
 
+
+
+def load_json_from_request(request):
+  '''
+    Loads the request data as JSON.
+    Raises a 400 error if the body is not valid JSON.
+  '''
+  try:
+    return json.loads(request.data)
+  except Exception as ex:
+    raise APIBadRequestError('Failed to parse request body as valid JSON') from ex
 
 
 def log_ssl_backoff(details):
