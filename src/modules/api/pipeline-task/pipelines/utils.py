@@ -9,7 +9,7 @@ from caendr.utils.env       import get_env_var
 from pipelines.task_handler import DatabaseOperationTaskHandler, IndelFinderTaskHandler, HeritabilityTaskHandler, NemascanTaskHandler
 
 from caendr.models.datastore             import Species
-from caendr.models.error                 import APIBadRequestError, NotFoundError
+from caendr.models.error                 import APIBadRequestError, APINotFoundError, NotFoundError
 from caendr.services.nemascan_mapping    import update_nemascan_mapping_status
 from caendr.services.database_operation  import update_db_op_status
 from caendr.services.indel_primer        import update_indel_primer_status
@@ -63,7 +63,7 @@ def get_task_handler(queue_name, *args, **kwargs):
     if ex.kind == Species.kind:
       raise APIBadRequestError(f'{ cls._Entity_Class.kind } task has invalid species value') from ex
     else:
-      raise APIBadRequestError(f'Could not find { cls._Entity_Class.kind } object wih this ID') from ex
+      raise APINotFoundError(f'Could not find { cls._Entity_Class.kind } object wih this ID') from ex
 
 
 
