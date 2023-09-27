@@ -12,7 +12,7 @@ from caendr.api.strain             import query_strains
 from caendr.api.isotype            import get_distinct_isotypes
 from caendr.services.cloud.storage import upload_blob_from_string, upload_blob_from_file
 
-from caendr.utils.data import get_object_hash, get_file_format
+from caendr.utils.data import get_object_hash, get_file_format, join_commas_and
 from caendr.utils.env  import get_env_var
 from caendr.utils.file import get_file_hash
 
@@ -251,16 +251,28 @@ class SubmissionManager():
         raise DataFormatError(f'The file contains an incorrect number of columns. Please edit the file to ensure it contains { num_cols } columns.', 1)
 
       # Check first line for column headers
+      invalid_headers = []
       for col in range(num_cols):
         target_header = columns[col].get('header')
         if target_header is None:
           continue
         # if isinstance(target_header, str):
         if csv_headings[col] != target_header:
-          raise DataFormatError(f'The file contains an incorrect column header. Column #{ col + 1 } should be { columns[col]["header"] }.', 1)
+          invalid_headers.append(col)
         # else:
         #   if not target_header['validator'](csv_headings[col]):
         #     raise DataFormatError(f'The file contains an incorrect column header. { target_header["make_err_msg"]( col + 1, csv_headings[col] ) }', 1)
+
+      # If one header was incorrect, flag it
+      if len(invalid_headers) == 1:
+        col = invalid_headers[0]
+        raise DataFormatError(f'The file contains an incorrect column header. Column #{ col + 1 } should be { columns[col]["header"] }.', 1)
+
+      # If multiple headers were incorrect, flag all of them at once
+      elif len(invalid_headers) > 1:
+        cs = join_commas_and([ f'#{c + 1}' for c in invalid_headers ])
+        hs = join_commas_and([ c["header"] for c in columns ])
+        raise DataFormatError(f'The file contains incorrect headers in columns { cs }. The full set of headers should be: { hs }.', 1)
 
       # Loop through all remaining lines in the file
       has_data = False
