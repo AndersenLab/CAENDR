@@ -308,6 +308,10 @@ class SubmissionManager():
       if not has_data:
         raise DataFormatError('The file is empty. Please edit the file to include your data.')
 
+      # Run each validator at the end, in case any of them are accumulating values
+      for c in columns:
+        c['validator'](None, None, None)
+
 
 class IndelPrimerSubmissionManager(SubmissionManager):
 
@@ -498,6 +502,7 @@ def validate_num(accept_float = False, accept_na = False):
   # Define the validator function
   def func(header, value, line):
     nonlocal data_type
+    if header is None or value is None or line is None: return
 
     # Try casting the value to the appropriate num type
     try:
@@ -541,21 +546,72 @@ def validate_strain(species, force_unique=False, force_unique_msg=None):
     force_unique_msg = lambda prev_line, curr_line: \
       f'Lines #{ prev_line } and #{ curr_line } contain duplicate values for the same strain. Please ensure that only one unique value exists per strain.'
 
+  problems = {
+    'blank_line':     [],
+    'wrong_species':  [],
+    'unknown_strain': [],
+  }
+
   # Define the validator function
   def func(header, value, line):
     nonlocal force_unique, force_unique_msg
     nonlocal strain_line_numbers, valid_names_species, valid_names_all
 
+    # Special case - run after all lines are parsed
+    if header is None and value is None and line is None:
+
+      # Blank lines #
+
+      num_problems = len(problems['blank_line'])
+      if num_problems > 0:
+        line_str = join_commas_and([ p['line'] for p in problems['blank_line'] ])
+        raise DataFormatError(f'Strain values cannot be blank. Please check line(s) { line_str } to ensure valid strains have been entered.')
+
+
+      # Wrong species #
+
+      prob_strains = []
+      for s in problems['wrong_species']:
+        if s['value'] not in prob_strains:
+          prob_strains.append(s['value'])
+
+      num_problems = len(prob_strains)
+      if num_problems == 1:
+        raise DataFormatError(f'The strain { prob_strains[0] } is not a valid strain for { species.short_name } in our current dataset. Please enter a valid { species.short_name } strain.')
+      elif num_problems > 1:
+        prob_str = join_commas_and(prob_strains, truncate=8)
+        raise DataFormatError(f'The strains { prob_str } are not valid strains for { species.short_name } in our current dataset. Please enter valid { species.short_name } strains.')
+
+
+      # Unknown strains #
+
+      prob_strains = []
+      for s in problems['unknown_strain']:
+        if s['value'] not in prob_strains:
+          prob_strains.append(s['value'])
+
+      num_problems = len(prob_strains)
+      if num_problems == 1:
+        raise DataFormatError(f'The strain { prob_strains[0] } is not a valid strain name in our current dataset. Please enter valid strain names.')
+      elif num_problems > 1:
+        prob_str = join_commas_and(prob_strains, truncate=8)
+        raise DataFormatError(f'The strains { prob_str } are not valid strain names in our current dataset. Please enter valid strain names.')
+
+
+      # All final checks passed - return
+      return
+
+
     # Check for blank strain
     if value == '':
-      raise DataFormatError(f'Strain values cannot be blank. Please check line { line } to ensure a valid strain has been entered.', line)
+      problems['blank_line'].append({'value': value, 'line': line})
 
     # Check if strain is valid for the desired species
-    if value not in valid_names_species:
+    elif value not in valid_names_species:
       if value in valid_names_all:
-        raise DataFormatError(f'The strain { value } is not a valid strain for { species.short_name } in our current dataset. Please enter a valid { species.short_name } strain.', line)
+        problems['wrong_species'].append({'value': value, 'line': line})
       else:
-        raise DataFormatError(f'The strain { value } is not a valid strain name in our current dataset. Please ensure that { value } is valid.', line)
+        problems['unknown_strain'].append({'value': value, 'line': line})
 
     # If desired, keep track of list of strains and throw an error if a duplicate is found
     if force_unique:
@@ -575,6 +631,7 @@ def validate_trait():
   # Define the validator function
   def func(header, value, line):
     nonlocal trait_name
+    if header is None or value is None or line is None: return
 
     # If no trait name has been encountered yet, save the first value
     if trait_name is None:
