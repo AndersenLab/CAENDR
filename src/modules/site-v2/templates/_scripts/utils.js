@@ -98,3 +98,31 @@ function force_download(e) {
       a.click();
     })
 }
+
+
+/* Create a DOM node from a string of HTML, without adding the element to the DOM yet */
+function create_node(html) {
+  const placeholder = document.createElement("div");
+  placeholder.innerHTML = html;
+  return placeholder.firstElementChild;
+}
+
+
+/* Flash a message to the user without reloading the page.
+ * This function is roundabout to prevent code injection.
+ */
+function flash_message(message) {
+
+  // Define the template for an alert popup using a static string
+  {%- with msg='', category='danger' %}
+  const raw_html = `{% include '_includes/alert.html' %}`;
+  {%- endwith %}
+
+  // Create as a new DOM node, and insert the desired message as text
+  // Inserting as text protects against code injection
+  const node = create_node(raw_html);
+  node.firstElementChild.innerText = message;
+
+  // Add the new node to the container for alert messages
+  document.getElementById('alert-container').appendChild(node);
+}

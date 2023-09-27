@@ -131,6 +131,7 @@
 {% from "_scripts/submit-job.js" import def_submit_job %}
 {% from "_includes/macros.html" import update_species_field %}
 <script>
+{% include '_scripts/utils.js' %} {#/* defines: flash_message */#}
 
 {{ def_submit_job('heritability_calculator', true) }}
 
@@ -164,9 +165,17 @@ $("#form-submit").on("submit", function(e) {
   const data = new FormData($('form#form-submit')[0]);
 
   submit_job(data, '#submit-modal')
+    // Reset the form after a successful (non-error) submission
     .done((result) => {
-      // Reset the form after a successful (non-error) submission
       resetForm();
+    })
+    // If file validation fails: flash the error, reset the file input, and re-enable the submit button
+    .fail((error) => {
+      if (error.responseJSON && error.responseJSON.message) {
+        flash_message(error.responseJSON.message);
+      }
+      document.getElementById('{{ form.file.id }}').value = '';
+      enableButton();
     })
 });
 

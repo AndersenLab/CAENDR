@@ -181,10 +181,10 @@ def submit():
     response, code = try_submit(HeritabilityReport, user, data, no_cache)
 
     # If there was an error, flash it
-    if not code == 200:
+    if code != 200 and int(request.args.get('reloadonerr', 1)):
       flash(response['message'], 'danger')
 
-    elif response.get('message') and response['ready']:
+    elif response.get('message') and response.get('ready', False):
       flash(response.get('message'), 'success')
 
     # Return the response
