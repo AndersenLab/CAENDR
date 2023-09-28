@@ -151,7 +151,7 @@
             }
         }
 
-    var trait = "{{ trait }}"
+    var trait = "{{ hr.trait }}"
     var imag
     var chartJson = {{ data|tojson|safe }};
     var traits =[];
@@ -273,7 +273,8 @@
         page_width = doc.internal.pageSize.getWidth();
         /*doc.addImage(document.getElementById('svg'), 'SVG', 0, 0, page_width, page_height, NaN, 'NONE', 90);*/
         doc.setFontSize(16);
-        doc.fromHTML('Trait: {{ trait }}', 120, 10)
+        doc.fromHTML('Trait: {{ hr.trait }}', 120, 10)
+
         doc.fromHTML('Broad-sense heritability (<i> H</i>',  120, 20)
         doc.setFontSize(4);
         doc.fromHTML('<i>2</i>', 225, 15)
@@ -315,7 +316,7 @@
         // newPt.innerHTML = "Broad-sense heritability (<i> H<sup>2</sup> </i>) = {{ (result['H2']*100)|round(2) }}% (range {{ (result['ci_l']*100)|round(2) }}% to {{ (result['ci_r']*100)|round(2) }}%)";
         document.getElementById("htresarea").appendChild(newPt);
         newPt = document.createElement("p")
-        // newPt.appendChild(document.createTextNode("Trait: " + "{{ trait }}"));
+        // newPt.appendChild(document.createTextNode("Trait: " + "{{ hr.trait }}"));
         document.getElementById("htresarea").appendChild(newPt);
 
         // chart(data,aes)
