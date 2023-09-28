@@ -52,9 +52,16 @@
       {% endif %}
       {% endif %}
     </p>
-    {%- if result %}
+    {%- if result and result['broad-sense'] %}
     <p>
-      <strong>Broad-Sense Heritability (H<sup>2</sup>):</strong> {{ (result['H2']*100)|round(2) }}% <small>(range {{ (result['ci_l']*100)|round(2) }}% to {{ (result['ci_r']*100)|round(2) }}%)</small>
+      <strong>Broad-Sense Heritability (H<sup>2</sup>):</strong> {{ (result['broad-sense']['H2']*100)|round(2) }}%
+      <small>(range {{ (result['broad-sense']['ci_l']*100)|round(2) }}% to {{ (result['broad-sense']['ci_r']*100)|round(2) }}%)</small>
+    </p>
+    {%- endif %}
+    {%- if result and result['narrow-sense'] %}
+    <p>
+      <strong>Narrow-Sense Heritability (h<sup>2</sup>):</strong> {{ (result['narrow-sense']['H2']*100)|round(2) }}%
+      <small>(range {{ (result['narrow-sense']['ci_l']*100)|round(2) }}% to {{ (result['narrow-sense']['ci_r']*100)|round(2) }}%)</small>
     </p>
     {%- endif %}
   <div class="mt-5">
@@ -263,7 +270,7 @@
         var doc = new jsPDF(options);
 
         margins = {
-            top: 40,
+            top: 60,
             bottom: 40,
             left: 40,
             right: 40
@@ -279,9 +286,17 @@
         doc.setFontSize(4);
         doc.fromHTML('<i>2</i>', 225, 15)
         doc.setFontSize(10);
-        {% if result %}
-        doc.fromHTML(') = {{ (result['H2']*100)|round(2) }}% (range {{ (result['ci_l']*100)|round(2) }}% to {{ (result['ci_r']*100)|round(2) }}%)', 230, 20);
-        {% endif %}
+        {%- if result['broad-sense'] %}
+        doc.fromHTML(') = {{ (result["broad-sense"]['H2']*100)|round(2) }}% (range {{ (result["broad-sense"]['ci_l']*100)|round(2) }}% to {{ (result["broad-sense"]['ci_r']*100)|round(2) }}%)', 230, 20);
+        {%- endif %}
+
+        doc.fromHTML('Narrow-sense heritability (<i> h</i>',  120, 30)
+        doc.setFontSize(4);
+        doc.fromHTML('<i>2</i>', 225, 25)
+        doc.setFontSize(10);
+        {%- if result['narrow-sense'] %}
+        doc.fromHTML(') = {{ (result["narrow-sense"]['H2']*100)|round(2) }}% (range {{ (result["narrow-sense"]['ci_l']*100)|round(2) }}% to {{ (result["narrow-sense"]['ci_r']*100)|round(2) }}%)', 230, 30);
+        {%- endif %}
 
         doc.addImage(document.getElementById('img1').src, 'PNG', margins.left, margins.top,
                     page_width - (margins.left + margins.right),
@@ -313,7 +328,7 @@
         $("#svgchartarea").html("")
         //node.querySelectorAll('*').forEach(n => n.remove());
         newPt = document.createElement("p")
-        // newPt.innerHTML = "Broad-sense heritability (<i> H<sup>2</sup> </i>) = {{ (result['H2']*100)|round(2) }}% (range {{ (result['ci_l']*100)|round(2) }}% to {{ (result['ci_r']*100)|round(2) }}%)";
+        {# // newPt.innerHTML = "Broad-sense heritability (<i> H<sup>2</sup> </i>) = {{ (result['H2']*100)|round(2) }}% (range {{ (result['ci_l']*100)|round(2) }}% to {{ (result['ci_r']*100)|round(2) }}%)"; #}
         document.getElementById("htresarea").appendChild(newPt);
         newPt = document.createElement("p")
         // newPt.appendChild(document.createTextNode("Trait: " + "{{ hr.trait }}"));
