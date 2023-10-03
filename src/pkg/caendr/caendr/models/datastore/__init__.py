@@ -7,6 +7,8 @@ from .container           import Container
 from .user                import User
 from .pipeline_operation  import PipelineOperation
 from .dataset_release     import DatasetRelease
+from .wormbase            import WormbaseVersion, WormbaseProjectNumber
+from .species             import Species, SPECIES_LIST # Imports WormbaseVersion, WormbaseProjectNumber
 
 # Intermediate subclasses (primarily for tools)
 from .job_entity          import JobEntity           # Imports Container
@@ -18,15 +20,13 @@ from .database_operation  import DatabaseOperation   # Subclasses JobEntity, Use
 from .gene_browser_tracks import GeneBrowserTracks   # Subclasses JobEntity  (DEPRECATED)
 
 # Tools
-from .indel_primer        import IndelPrimer         # Subclasses DataJobEntity, imports DatasetRelease
+from .indel_primer        import IndelPrimer         # Subclasses DataJobEntity, imports DatasetRelease, Species
 from .heritability_report import HeritabilityReport  # Subclasses DataJobEntity
 from .nemascan_mapping    import NemascanMapping     # Subclasses DataJobEntity
 
 # Other
 from .profile             import Profile
 from .markdown            import Markdown
-from .wormbase            import WormbaseVersion, WormbaseProjectNumber
-from .species             import Species, SPECIES_LIST
 
 
 def get_entity_by_kind(kind, name):
