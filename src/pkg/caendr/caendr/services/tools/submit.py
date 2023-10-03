@@ -559,14 +559,6 @@ def validate_strain(species, force_unique=False, force_unique_msg=None):
     truncate_length = 4
 
 
-    # Blank lines #
-
-    num_problems = len(problems['blank_line'])
-    if num_problems > 0:
-      line_str = join_commas_and([ p['line'] for p in problems['blank_line'] ])
-      raise DataFormatError(f'Strain values cannot be blank. Please check line(s) { line_str } to ensure valid strains have been entered.')
-
-
     # Wrong species #
 
     prob_strains = []
@@ -586,6 +578,14 @@ def validate_strain(species, force_unique=False, force_unique_msg=None):
         full_msg_link='View the full list of strains.',
         full_msg_body=', '.join(prob_strains),
       )
+
+
+    # Blank lines #
+
+    num_problems = len(problems['blank_line'])
+    if num_problems > 0:
+      line_str = join_commas_and([ p['line'] for p in problems['blank_line'] ])
+      raise DataFormatError(f'Strain values cannot be blank. Please check line(s) { line_str } to ensure valid strains have been entered.')
 
 
     # Unknown strains #
