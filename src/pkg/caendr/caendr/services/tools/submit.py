@@ -457,13 +457,15 @@ class MappingSubmissionManager(SubmissionManager):
 
     # Define a formatting function that customizes the message if duplicate strains are found
     # Do this so we can explicitly reference "trait" values for mapping only
-    duplicate_strain_formatter = lambda prev_line, curr_line: \
-      f'Lines #{ prev_line } and #{ curr_line } contain duplicate trait values for the same strain. Please ensure that only one unique trait value exists per strain.'
+    force_unique_msgs = {
+      'single':  lambda x: f'Multiple lines contain duplicate trait values for the strain { x }. Please ensure that only one unique trait value exists per strain.',
+      'default': lambda x: f'Multiple lines contain duplicate trait values for the same strain. Please ensure that only one unique trait value exists per strain.',
+    }
 
     columns = [
       {
         'header': 'strain',
-        'validator': validate_strain(Species.from_name(data['species']), force_unique=True, force_unique_msg=duplicate_strain_formatter)
+        'validator': validate_strain(Species.from_name(data['species']), force_unique=True, force_unique_msgs=force_unique_msgs)
       },
       {
         # 'header': {
@@ -521,7 +523,7 @@ def validate_num(accept_float = False, accept_na = False):
 
 
 # Check that column is a valid strain name for the desired species
-def validate_strain(species, force_unique=False, force_unique_msg=None):
+def validate_strain(species, force_unique=False, force_unique_msgs=None):
 
   # Get the list of all valid strain names for this species
   # Pull from strain names & isotype names, to allow for isotypes with no strain of the same name
@@ -541,16 +543,11 @@ def validate_strain(species, force_unique=False, force_unique_msg=None):
   # Used to ensure strains are unique, if applicable
   strain_line_numbers = {}
 
-  # Provide a default message if the same strain is found more than once
-  # Only used if force_unique is True and if the calling function doesn't customize this message
-  if force_unique_msg is None:
-    force_unique_msg = lambda prev_line, curr_line: \
-      f'Lines #{ prev_line } and #{ curr_line } contain duplicate values for the same strain. Please ensure that only one unique value exists per strain.'
-
   problems = {
     'blank_line':     [],
     'wrong_species':  [],
     'unknown_strain': [],
+    'duplicates':     [],
   }
 
 
@@ -604,6 +601,7 @@ def validate_strain(species, force_unique=False, force_unique_msg=None):
 
   # Validator function run at the end of the file
   def func_final():
+    nonlocal force_unique_msgs
     nonlocal problems
 
     # Wrong species #
@@ -625,11 +623,17 @@ def validate_strain(species, force_unique=False, force_unique_msg=None):
       'default': lambda x: f'Multiple strains are not valid in our current dataset.',
     })
 
+    # Duplicate strains #
+    check_strain_list(problems['duplicates'], force_unique_msgs or {
+      'single':  lambda x: f'Multiple lines contain duplicate values for the strain { x }. Please ensure that only one unique value exists per strain.',
+      'default': lambda x: f'Multiple lines contain duplicate values for the same strain. Please ensure that only one unique value exists per strain.',
+    })
+
 
   # Validator function run on each individual line
   # Keeps track of all errors, which are then run at the end by func_final
   def func_step(header, value, line):
-    nonlocal force_unique, force_unique_msg
+    nonlocal force_unique
     nonlocal strain_line_numbers, valid_names_species, valid_names_all, problems
 
     # Check for blank strain
@@ -646,8 +650,9 @@ def validate_strain(species, force_unique=False, force_unique_msg=None):
     # If desired, keep track of list of strains and throw an error if a duplicate is found
     if force_unique:
       if value in strain_line_numbers:
-        raise DataFormatError(force_unique_msg(prev_line=strain_line_numbers[value], curr_line=line))
-      strain_line_numbers[value] = line
+        problems['duplicates'].append({'value': value, 'line': line})
+      else:
+        strain_line_numbers[value] = line
 
 
   # Return both validator functions
