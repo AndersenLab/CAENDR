@@ -111,7 +111,7 @@ function create_node(html) {
 /* Flash a message to the user without reloading the page.
  * This function is roundabout to prevent code injection.
  */
-function flash_message(message) {
+function flash_message(message, full_msg_link=null, full_msg_body=null) {
 
   // Define the template for an alert popup using a static string
   {%- with msg='', category='danger' %}
@@ -122,6 +122,24 @@ function flash_message(message) {
   // Inserting as text protects against code injection
   const node = create_node(raw_html);
   node.firstElementChild.innerText = message;
+
+  // If both full message fields are provided, add as a link & collapse dropdown
+  if (full_msg_link && full_msg_body) {
+    node.firstElementChild.innerText += ' ';
+
+    // Create a unique ID to link the trigger & collapse elements
+    const id = `err-dropdown-${(new Date()).getTime()}`;
+
+    // Create a link to open the full message
+    const full_msg_link_el = create_node(`<a data-bs-toggle="collapse" href="#${id}" role="button" aria-expanded="false" aria-controls="${id}"></a>`);
+    full_msg_link_el.innerText = full_msg_link;
+    node.firstElementChild.appendChild(full_msg_link_el);
+
+    // Create a collapse element containing the full message
+    const full_msg_body_el = create_node(`<div class="collapse" id="${id}"></div>`);
+    full_msg_body_el.innerText = full_msg_body;
+    node.appendChild(full_msg_body_el);
+  }
 
   // Add the new node to the container for alert messages
   document.getElementById('alert-container').appendChild(node);

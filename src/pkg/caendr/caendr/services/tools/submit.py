@@ -556,6 +556,7 @@ def validate_strain(species, force_unique=False, force_unique_msg=None):
   # Validator function run at the end of the file
   def func_final():
     nonlocal problems
+    truncate_length = 4
 
 
     # Blank lines #
@@ -576,9 +577,15 @@ def validate_strain(species, force_unique=False, force_unique_msg=None):
     num_problems = len(prob_strains)
     if num_problems == 1:
       raise DataFormatError(f'The strain { prob_strains[0] } is not a valid strain for { species.short_name } in our current dataset. Please enter a valid { species.short_name } strain.')
-    elif num_problems > 1:
-      prob_str = join_commas_and(prob_strains, truncate=8)
+    elif 1 < num_problems <= truncate_length:
+      prob_str = join_commas_and(prob_strains)
       raise DataFormatError(f'The strains { prob_str } are not valid strains for { species.short_name } in our current dataset. Please enter valid { species.short_name } strains.')
+    elif num_problems > truncate_length:
+      raise DataFormatError(
+        f'Multiple strains are not valid for { species.short_name } in our current dataset.',
+        full_msg_link='View the full list of strains.',
+        full_msg_body=', '.join(prob_strains),
+      )
 
 
     # Unknown strains #
@@ -591,9 +598,15 @@ def validate_strain(species, force_unique=False, force_unique_msg=None):
     num_problems = len(prob_strains)
     if num_problems == 1:
       raise DataFormatError(f'The strain { prob_strains[0] } is not a valid strain name in our current dataset. Please enter valid strain names.')
-    elif num_problems > 1:
-      prob_str = join_commas_and(prob_strains, truncate=8)
+    elif 1 < num_problems <= truncate_length:
+      prob_str = join_commas_and(prob_strains)
       raise DataFormatError(f'The strains { prob_str } are not valid strain names in our current dataset. Please enter valid strain names.')
+    elif num_problems > truncate_length:
+      raise DataFormatError(
+        f'Multiple strains are not valid in our current dataset.',
+        full_msg_link='View the full list of strains.',
+        full_msg_body=', '.join(prob_strains),
+      )
 
 
   # Validator function run on each individual line

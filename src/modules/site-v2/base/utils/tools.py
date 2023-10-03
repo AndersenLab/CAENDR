@@ -168,7 +168,11 @@ def try_submit(EntityClass, user, data, no_cache):
       msg += f' (Line: { ex.line })'
 
     # Return the error message
-    return { 'message': msg }, 400
+    return {
+      'message': msg,
+      'full_msg_link': ex.full_msg_link,
+      'full_msg_body': ex.full_msg_body,
+    }, 400
 
   # General error
   except Exception as ex:

@@ -173,8 +173,9 @@ $("#form-submit").on("submit", function(e) {
     })
     // If file validation fails: flash the error, reset the file input, and re-enable the submit button
     .fail((error) => {
-      if (error.responseJSON && error.responseJSON.message) {
-        flash_message(error.responseJSON.message);
+      const resp = error.responseJSON
+      if (resp && resp.message) {
+        flash_message(resp.message, resp.full_msg_link, resp.full_msg_body);
       }
       document.getElementById('{{ form.file.id }}').value = '';
       enableButton();
