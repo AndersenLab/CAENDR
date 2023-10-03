@@ -295,11 +295,12 @@ class SubmissionManager():
           else:
             rows[as_string] = line
 
-        # Check that all columns have valid data
+        # Check that all columns have valid data, using the "step" validator
         for column, value in zip(columns, csv_row):
           header    = column.get('header')
           validator = column['validator']
-          validator( header, value.strip(), line )
+          if 'step' in validator:
+            validator['step']( header, value.strip(), line )
 
         # Track that we parsed at least one line of data properly
         has_data = True
@@ -308,9 +309,10 @@ class SubmissionManager():
       if not has_data:
         raise DataFormatError('The file is empty. Please edit the file to include your data.')
 
-      # Run each validator at the end, in case any of them are accumulating values
+      # Run each validator's "final" function at the end, in case any of the "step" validators were accumulating values
       for c in columns:
-        c['validator'](None, None, None)
+        if 'final' in c['validator']:
+          c['validator']['final']()
 
 
 class IndelPrimerSubmissionManager(SubmissionManager):
@@ -502,7 +504,6 @@ def validate_num(accept_float = False, accept_na = False):
   # Define the validator function
   def func(header, value, line):
     nonlocal data_type
-    if header is None or value is None or line is None: return
 
     # Try casting the value to the appropriate num type
     try:
@@ -516,7 +517,7 @@ def validate_num(accept_float = False, accept_na = False):
       if not (accept_na and value == 'NA'):
         raise DataFormatError(f'Column { header } is not a valid { data_type }. Please edit { header } to ensure only { data_type } values are included.', line)
 
-  return func
+  return { 'step': func }
 
 
 # Check that column is a valid strain name for the desired species
@@ -552,55 +553,54 @@ def validate_strain(species, force_unique=False, force_unique_msg=None):
     'unknown_strain': [],
   }
 
-  # Define the validator function
-  def func(header, value, line):
+  # Validator function run at the end of the file
+  def func_final():
+    nonlocal problems
+
+
+    # Blank lines #
+
+    num_problems = len(problems['blank_line'])
+    if num_problems > 0:
+      line_str = join_commas_and([ p['line'] for p in problems['blank_line'] ])
+      raise DataFormatError(f'Strain values cannot be blank. Please check line(s) { line_str } to ensure valid strains have been entered.')
+
+
+    # Wrong species #
+
+    prob_strains = []
+    for s in problems['wrong_species']:
+      if s['value'] not in prob_strains:
+        prob_strains.append(s['value'])
+
+    num_problems = len(prob_strains)
+    if num_problems == 1:
+      raise DataFormatError(f'The strain { prob_strains[0] } is not a valid strain for { species.short_name } in our current dataset. Please enter a valid { species.short_name } strain.')
+    elif num_problems > 1:
+      prob_str = join_commas_and(prob_strains, truncate=8)
+      raise DataFormatError(f'The strains { prob_str } are not valid strains for { species.short_name } in our current dataset. Please enter valid { species.short_name } strains.')
+
+
+    # Unknown strains #
+
+    prob_strains = []
+    for s in problems['unknown_strain']:
+      if s['value'] not in prob_strains:
+        prob_strains.append(s['value'])
+
+    num_problems = len(prob_strains)
+    if num_problems == 1:
+      raise DataFormatError(f'The strain { prob_strains[0] } is not a valid strain name in our current dataset. Please enter valid strain names.')
+    elif num_problems > 1:
+      prob_str = join_commas_and(prob_strains, truncate=8)
+      raise DataFormatError(f'The strains { prob_str } are not valid strain names in our current dataset. Please enter valid strain names.')
+
+
+  # Validator function run on each individual line
+  # Keeps track of all errors, which are then run at the end by func_final
+  def func_step(header, value, line):
     nonlocal force_unique, force_unique_msg
-    nonlocal strain_line_numbers, valid_names_species, valid_names_all
-
-    # Special case - run after all lines are parsed
-    if header is None and value is None and line is None:
-
-      # Blank lines #
-
-      num_problems = len(problems['blank_line'])
-      if num_problems > 0:
-        line_str = join_commas_and([ p['line'] for p in problems['blank_line'] ])
-        raise DataFormatError(f'Strain values cannot be blank. Please check line(s) { line_str } to ensure valid strains have been entered.')
-
-
-      # Wrong species #
-
-      prob_strains = []
-      for s in problems['wrong_species']:
-        if s['value'] not in prob_strains:
-          prob_strains.append(s['value'])
-
-      num_problems = len(prob_strains)
-      if num_problems == 1:
-        raise DataFormatError(f'The strain { prob_strains[0] } is not a valid strain for { species.short_name } in our current dataset. Please enter a valid { species.short_name } strain.')
-      elif num_problems > 1:
-        prob_str = join_commas_and(prob_strains, truncate=8)
-        raise DataFormatError(f'The strains { prob_str } are not valid strains for { species.short_name } in our current dataset. Please enter valid { species.short_name } strains.')
-
-
-      # Unknown strains #
-
-      prob_strains = []
-      for s in problems['unknown_strain']:
-        if s['value'] not in prob_strains:
-          prob_strains.append(s['value'])
-
-      num_problems = len(prob_strains)
-      if num_problems == 1:
-        raise DataFormatError(f'The strain { prob_strains[0] } is not a valid strain name in our current dataset. Please enter valid strain names.')
-      elif num_problems > 1:
-        prob_str = join_commas_and(prob_strains, truncate=8)
-        raise DataFormatError(f'The strains { prob_str } are not valid strain names in our current dataset. Please enter valid strain names.')
-
-
-      # All final checks passed - return
-      return
-
+    nonlocal strain_line_numbers, valid_names_species, valid_names_all, problems
 
     # Check for blank strain
     if value == '':
@@ -619,7 +619,12 @@ def validate_strain(species, force_unique=False, force_unique_msg=None):
         raise DataFormatError(force_unique_msg(prev_line=strain_line_numbers[value], curr_line=line))
       strain_line_numbers[value] = line
 
-  return func
+
+  # Return both validator functions
+  return {
+    'step': func_step,
+    'final': func_final,
+  }
 
 
 # Check that all values in a column have the same trait name
@@ -631,7 +636,6 @@ def validate_trait():
   # Define the validator function
   def func(header, value, line):
     nonlocal trait_name
-    if header is None or value is None or line is None: return
 
     # If no trait name has been encountered yet, save the first value
     if trait_name is None:
@@ -641,4 +645,4 @@ def validate_trait():
     elif value != trait_name:
       raise DataFormatError(f'The data contain multiple unique trait name values. Only one trait name may be tested per file.', line)
 
-  return func
+  return { 'step': func }
