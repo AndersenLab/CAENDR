@@ -1,17 +1,29 @@
+# Base class
+# Everything else derives from this
 from .entity              import Entity
+
+# Basic data classes
 from .container           import Container
 from .user                import User
-from .job_entity          import JobEntity
-from .user_owned_entity   import UserOwnedEntity
-from .data_job_entity     import DataJobEntity
-from .dataset_release     import DatasetRelease
-from .profile             import Profile
-from .nemascan_mapping    import NemascanMapping
 from .pipeline_operation  import PipelineOperation
-from .database_operation  import DatabaseOperation
-from .indel_primer        import IndelPrimer
-from .heritability_report import HeritabilityReport
-from .gene_browser_tracks import GeneBrowserTracks
+from .dataset_release     import DatasetRelease
+
+# Intermediate subclasses (primarily for tools)
+from .job_entity          import JobEntity           # Imports Container
+from .user_owned_entity   import UserOwnedEntity     # Imports User
+from .data_job_entity     import DataJobEntity       # Subclasses JobEntity, UserOwnedEntity
+
+# Jobs
+from .database_operation  import DatabaseOperation   # Subclasses JobEntity, UserOwnedEntity
+from .gene_browser_tracks import GeneBrowserTracks   # Subclasses JobEntity  (DEPRECATED)
+
+# Tools
+from .indel_primer        import IndelPrimer         # Subclasses DataJobEntity, imports DatasetRelease
+from .heritability_report import HeritabilityReport  # Subclasses DataJobEntity
+from .nemascan_mapping    import NemascanMapping     # Subclasses DataJobEntity
+
+# Other
+from .profile             import Profile
 from .markdown            import Markdown
 from .wormbase            import WormbaseVersion, WormbaseProjectNumber
 from .species             import Species, SPECIES_LIST
