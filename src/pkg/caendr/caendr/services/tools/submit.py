@@ -555,7 +555,30 @@ def validate_strain(species, force_unique=False, force_unique_msg=None):
 
 
   def check_strain_list(problem_list, err_messages):
+    '''
+      Given a list of lines that matched a specific error condition, collate the unique set of strains and create an error message.
+      If the list is empty, no error will be thrown.
+
+      Arguments:
+        - problem_list (list): The list of values matching the error condition. Each entry should be a dict with the field 'value' containing the strain name.
+        - err_messages (dict): A dict of functions for turning one or more strain names into an error message. Valid keys:
+            - single:  Called when one strain matches the error condition.
+            - few:     Called when 2-3 strains match the error condition. Can be used to display a short list of names inline, rather than in a dropdown.
+            - default: REQUIRED. Called when 4+ strains match the error condition, OR as a fallback if any of the above functions are not defined.
+
+      Returns:
+        None, if validation succeeded
+
+      Throws:
+        DataFormatError, containing the appropriate error message.  If strain list was longer than 4 elements, will contain full list in the full_msg_* fields.
+
+      NOTE: The `err_messages` dict MUST contain a key "default", as this is the final fallback value.
+            If other keys are omitted, this function will be used.
+    '''
     truncate_length = 3
+
+    if not err_messages.get('default'):
+      raise ValueError('The "err_messages" dict must contain a key "default".')
 
     prob_strains = []
     for s in problem_list:
@@ -563,17 +586,17 @@ def validate_strain(species, force_unique=False, force_unique_msg=None):
         prob_strains.append(s['value'])
     num_problems = len(prob_strains)
 
-    if num_problems == 1:
+    if err_messages.get('single') and (num_problems == 1):
       raise DataFormatError( err_messages['single'](prob_strains[0]) )
 
-    elif 1 < num_problems <= truncate_length:
+    elif err_messages.get('few') and (1 < num_problems <= truncate_length):
       prob_str = join_commas_and(prob_strains)
       raise DataFormatError( err_messages['few'](prob_str) )
 
-    elif num_problems > truncate_length:
+    elif 1 <= num_problems:
       prob_str = join_commas_and(prob_strains, truncate=truncate_length)
       raise DataFormatError(
-        err_messages['many'](prob_str),
+        err_messages['default'](prob_str),
         full_msg_link='View the full list of strains.',
         full_msg_body=', '.join(prob_strains),
       )
@@ -585,9 +608,9 @@ def validate_strain(species, force_unique=False, force_unique_msg=None):
 
     # Wrong species #
     check_strain_list(problems['wrong_species'], {
-      'single': lambda x: f'The strain { x } is not a valid strain for { species.short_name } in our current dataset. Please enter a valid { species.short_name } strain.',
-      'few':    lambda x: f'The strains { x } are not valid strains for { species.short_name } in our current dataset. Please enter valid { species.short_name } strains.',
-      'many':   lambda x: f'Multiple strains are not valid for { species.short_name } in our current dataset.',
+      'single':  lambda x: f'The strain { x } is not a valid strain for { species.short_name } in our current dataset. Please enter a valid { species.short_name } strain.',
+      'few':     lambda x: f'The strains { x } are not valid strains for { species.short_name } in our current dataset. Please enter valid { species.short_name } strains.',
+      'default': lambda x: f'Multiple strains are not valid for { species.short_name } in our current dataset.',
     })
 
     # Blank lines #
@@ -597,9 +620,9 @@ def validate_strain(species, force_unique=False, force_unique_msg=None):
 
     # Unknown strains #
     check_strain_list(problems['unknown_strain'], {
-      'single': lambda x: f'The strain { x } is not a valid strain name in our current dataset. Please enter valid strain names.',
-      'few':    lambda x: f'The strains { x } are not valid strain names in our current dataset. Please enter valid strain names.',
-      'many':   lambda x: f'Multiple strains are not valid in our current dataset.',
+      'single':  lambda x: f'The strain { x } is not a valid strain name in our current dataset. Please enter valid strain names.',
+      'few':     lambda x: f'The strains { x } are not valid strain names in our current dataset. Please enter valid strain names.',
+      'default': lambda x: f'Multiple strains are not valid in our current dataset.',
     })
 
 
