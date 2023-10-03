@@ -5,7 +5,7 @@ from caendr.services.logger import logger
 from .cloudrun     import get_job_execution_status
 from .lifesciences import get_pipeline_status
 
-from caendr.models.datastore         import PipelineOperation, HeritabilityReport, NemascanMapping, get_entity_by_kind
+from caendr.models.datastore         import PipelineOperation, HeritabilityReport, NemascanReport, get_entity_by_kind
 from caendr.models.error             import APINotFoundError, NotFoundError
 from caendr.models.task              import TaskStatus
 from caendr.services.email           import send_email
@@ -124,7 +124,7 @@ def update_all_linked_status_records(kind, operation_name):
     should_send_notification = all([
       done,
       status_record['status'] not in [TaskStatus.COMPLETE, TaskStatus.ERROR],
-      kind in [NemascanMapping.kind, HeritabilityReport.kind],
+      kind in [NemascanReport.kind, HeritabilityReport.kind],
     ])
     logger.debug(f'[{NOTIFICATION_LOG_PREFIX}] Should send notification for report {status_record.id}: {should_send_notification}. (done = {done}, kind = {kind}, current status = {status_record["status"]})')
 

@@ -20,9 +20,9 @@ from .database_operation  import DatabaseOperation   # Subclasses JobEntity, Use
 from .gene_browser_tracks import GeneBrowserTracks   # Subclasses JobEntity  (DEPRECATED)
 
 # Tools
-from .indel_primer        import IndelPrimer         # Subclasses DataJobEntity, imports DatasetRelease, Species
+from .indel_primer        import IndelPrimerReport   # Subclasses DataJobEntity, imports DatasetRelease, Species
 from .heritability_report import HeritabilityReport  # Subclasses DataJobEntity
-from .nemascan_mapping    import NemascanMapping     # Subclasses DataJobEntity
+from .nemascan_mapping    import NemascanReport      # Subclasses DataJobEntity
 
 # Other
 from .profile             import Profile
@@ -53,9 +53,9 @@ def get_entity_by_kind(kind, name):
     PipelineOperation.kind:  PipelineOperation,
 
     DatabaseOperation.kind:  DatabaseOperation,
-    IndelPrimer.kind:        IndelPrimer,
+    IndelPrimerReport.kind:  IndelPrimerReport,
     HeritabilityReport.kind: HeritabilityReport,
-    NemascanMapping.kind:    NemascanMapping,
+    NemascanReport.kind:     NemascanReport,
 
     GeneBrowserTracks.kind:  GeneBrowserTracks,
     Markdown.kind:           Markdown,

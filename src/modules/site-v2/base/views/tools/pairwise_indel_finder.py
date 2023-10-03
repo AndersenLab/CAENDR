@@ -8,7 +8,7 @@ from base.utils.auth import jwt_required, admin_required, get_current_user, user
 from base.utils.tools import lookup_report, try_submit
 
 from caendr.models.datastore.browser_track import BrowserTrackDefault
-from caendr.models.datastore import Species, IndelPrimer, DatasetRelease
+from caendr.models.datastore import Species, IndelPrimerReport, DatasetRelease
 from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupError, EmptyReportDataError, EmptyReportResultsError
 from caendr.models.task import TaskStatus
 from caendr.services.cloud.storage import check_blob_exists
@@ -240,7 +240,7 @@ def submit():
   no_cache = bool(user_is_admin() and request.args.get("nocache", False))
 
   # Try submitting the job & getting a JSON status message
-  response, code = try_submit(IndelPrimer, user, data, no_cache)
+  response, code = try_submit(IndelPrimerReport, user, data, no_cache)
 
   # If there was an error, flash it
   if not code == 200:
@@ -268,7 +268,7 @@ def report(id, file_ext=None):
     # Fetch requested primer report
     # Ensures the report exists and the user has permission to view it
     try:
-      report = lookup_report(IndelPrimer.kind, id)
+      report = lookup_report(IndelPrimerReport.kind, id)
 
     # If the report lookup request is invalid, show an error message
     except ReportLookupError as ex:

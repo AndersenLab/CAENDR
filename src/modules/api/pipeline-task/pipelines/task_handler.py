@@ -1,9 +1,9 @@
 from caendr.services.logger import logger
 
 # Models
-from caendr.models.datastore import DatabaseOperation, IndelPrimer, HeritabilityReport, NemascanMapping, Species
+from caendr.models.datastore import DatabaseOperation, IndelPrimerReport, HeritabilityReport, NemascanReport, Species
 from caendr.models.error     import NotFoundError
-from caendr.models.task      import DatabaseOperationTask, IndelPrimerTask, HeritabilityTask, NemaScanTask
+from caendr.models.task      import DatabaseOperationTask, IndelPrimerTask, HeritabilityTask, NemascanTask
 
 # GCP
 from caendr.models.lifesciences import ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
@@ -296,7 +296,7 @@ class DatabaseOperationTaskHandler(TaskHandler):
 #
 class IndelFinderTaskHandler(TaskHandler):
 
-  _Entity_Class = IndelPrimer
+  _Entity_Class = IndelPrimerReport
   _Task_Class   = IndelPrimerTask
 
   _BOOT_DISK_SIZE_GB = 20
@@ -353,8 +353,8 @@ class HeritabilityTaskHandler(TaskHandler):
 #
 class NemascanTaskHandler(TaskHandler):
 
-  _Entity_Class = NemascanMapping
-  _Task_Class   = NemaScanTask
+  _Entity_Class = NemascanReport
+  _Task_Class   = NemascanTask
 
   _BOOT_DISK_SIZE_GB = 100
   _TIMEOUT           = '86400s'

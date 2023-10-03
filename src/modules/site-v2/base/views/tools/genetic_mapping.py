@@ -12,7 +12,7 @@ from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 from caendr.services.nemascan_mapping import get_mapping, get_mappings
 from caendr.services.cloud.storage import get_blob, generate_blob_url, get_blob_list, check_blob_exists
-from caendr.models.datastore import Species, NemascanMapping
+from caendr.models.datastore import Species, NemascanReport
 from caendr.models.error import (
     FileUploadError,
     ReportLookupError,
@@ -120,7 +120,7 @@ def submit():
 
   # Try submitting the job & returning a JSON status message
   try:
-    response, code = try_submit(NemascanMapping, user, data, no_cache)
+    response, code = try_submit(NemascanReport, user, data, no_cache)
 
     # If there was an error, flash it
     if not code == 200:
@@ -182,7 +182,7 @@ def report(id):
   # Fetch requested mapping report
   # Ensures the report exists and the user has permission to view it
   try:
-    mapping = lookup_report(NemascanMapping.kind, id)
+    mapping = lookup_report(NemascanReport.kind, id)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:
@@ -232,7 +232,7 @@ def report_fullscreen(id):
   # Fetch requested mapping report
   # Ensures the report exists and the user has permission to view it
   try:
-    mapping = lookup_report(NemascanMapping.kind, id)
+    mapping = lookup_report(NemascanReport.kind, id)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:
@@ -278,7 +278,7 @@ def results(id):
   # Fetch requested mapping report
   # Ensures the report exists and the user has permission to view it
   try:
-    mapping = lookup_report(NemascanMapping.kind, id)
+    mapping = lookup_report(NemascanReport.kind, id)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:

@@ -5,7 +5,7 @@ from caendr.services.logger import logger
 from base.utils.auth import get_current_user, user_is_admin
 from werkzeug.utils import secure_filename
 
-from caendr.models.datastore import IndelPrimer, NemascanMapping, HeritabilityReport
+from caendr.models.datastore import IndelPrimerReport, NemascanReport, HeritabilityReport
 from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 from caendr.models.error import (
@@ -27,7 +27,7 @@ SUPPORT_EMAIL = get_secret('SUPPORT_EMAIL')
 
 
 def get_class_from_kind(kind):
-  for c in [ IndelPrimer, NemascanMapping, HeritabilityReport ]:
+  for c in [ IndelPrimerReport, NemascanReport, HeritabilityReport ]:
     if kind == c.kind:
       return c
 

@@ -12,7 +12,7 @@ from subprocess import Popen, PIPE, STDOUT
 from caendr.services.logger import logger
 
 from caendr.utils import monitor
-from caendr.models.datastore import IndelPrimer
+from caendr.models.datastore import IndelPrimerReport
 from caendr.services.cloud.storage import download_blob_to_file, upload_blob_from_file
 from caendr.utils.env import get_env_var, env_log_string
 
@@ -69,7 +69,7 @@ logger.info( f'Indel Primer: { env_log_string(vars(), _env_vars) }' )
 genome_directory = get_genome_directory()
 
 # Construct FASTA file path
-fasta_path = IndelPrimer.get_fasta_filepath(SPECIES, RELEASE)
+fasta_path = IndelPrimerReport.get_fasta_filepath(SPECIES, RELEASE)
 
 # Define the source and target filenames
 # TODO: This adds the .gz extension to the end of the file because it's what VCF-Kit looks for,
@@ -93,8 +93,8 @@ if not os.path.exists(target_fasta_file_name):
 #
 
 # Generate local name for VCF file
-source_vcf_file_name = f'{ INDEL_TOOL_PATH }/{ IndelPrimer.get_source_filename(SPECIES, RELEASE) }.vcf.gz'
-target_vcf_file_name = f'{ INDEL_CACHE_DIR }/{ IndelPrimer.get_source_filename(SPECIES, RELEASE) }.vcf.gz'
+source_vcf_file_name = f'{ INDEL_TOOL_PATH }/{ IndelPrimerReport.get_source_filename(SPECIES, RELEASE) }.vcf.gz'
+target_vcf_file_name = f'{ INDEL_CACHE_DIR }/{ IndelPrimerReport.get_source_filename(SPECIES, RELEASE) }.vcf.gz'
 
 # Create a folder at the desired path if one does not yet exist
 if not os.path.exists(INDEL_CACHE_DIR):

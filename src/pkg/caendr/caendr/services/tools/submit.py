@@ -4,9 +4,9 @@ import json
 
 from caendr.services.logger import logger
 
-from caendr.models.datastore import Container, Species, IndelPrimer, HeritabilityReport, NemascanMapping
+from caendr.models.datastore import Container, Species, IndelPrimerReport, HeritabilityReport, NemascanReport
 from caendr.models.error     import CachedDataError, DuplicateDataError, DataFormatError
-from caendr.models.task      import TaskStatus, IndelPrimerTask, HeritabilityTask, NemaScanTask
+from caendr.models.task      import TaskStatus, IndelPrimerTask, HeritabilityTask, NemascanTask
 
 from caendr.api.strain             import query_strains
 from caendr.api.isotype            import get_distinct_isotypes
@@ -62,7 +62,7 @@ def submit_job(entity_class, user, data, container_version=None, no_cache=False,
       for c in [
         IndelPrimerSubmissionManager,
         HeritabilitySubmissionManager,
-        MappingSubmissionManager,
+        NemascanSubmissionManager,
       ]
   }
 
@@ -299,7 +299,7 @@ class SubmissionManager():
 
 class IndelPrimerSubmissionManager(SubmissionManager):
 
-  _Entity_Class = IndelPrimer
+  _Entity_Class = IndelPrimerReport
   _Task_Class   = IndelPrimerTask
 
   @classmethod
@@ -323,8 +323,8 @@ class IndelPrimerSubmissionManager(SubmissionManager):
     # Add release information to data object
     data.update({
       'release':         release,
-      'sv_bed_filename': IndelPrimer.get_source_filename(data['species'], release) + '.bed.gz',
-      'sv_vcf_filename': IndelPrimer.get_source_filename(data['species'], release) + '.vcf.gz',
+      'sv_bed_filename': IndelPrimerReport.get_source_filename(data['species'], release) + '.bed.gz',
+      'sv_vcf_filename': IndelPrimerReport.get_source_filename(data['species'], release) + '.vcf.gz',
     })
 
     return data_file, data_hash, data
@@ -410,10 +410,10 @@ class HeritabilitySubmissionManager(SubmissionManager):
 
 
 
-class MappingSubmissionManager(SubmissionManager):
+class NemascanSubmissionManager(SubmissionManager):
 
-  _Entity_Class = NemascanMapping
-  _Task_Class   = NemaScanTask
+  _Entity_Class = NemascanReport
+  _Task_Class   = NemascanTask
 
   @classmethod
   def container_name(cls):

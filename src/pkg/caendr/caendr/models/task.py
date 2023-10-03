@@ -2,7 +2,7 @@ import os
 
 from caendr.services.logger import logger
 
-from caendr.models.datastore import Entity, DatabaseOperation, HeritabilityReport, IndelPrimer, NemascanMapping
+from caendr.models.datastore import Entity, DatabaseOperation, HeritabilityReport, IndelPrimerReport, NemascanReport
 
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.task   import add_task
@@ -211,7 +211,7 @@ class HeritabilityTask(Task):
 class IndelPrimerTask(Task):
   name  = 'indel_primer_task'
   queue = os.environ.get('INDEL_PRIMER_TASK_QUEUE_NAME')
-  kind  = IndelPrimer.kind
+  kind  = IndelPrimerReport.kind
 
   @classmethod
   def get_props_set(cls):
@@ -228,10 +228,10 @@ class IndelPrimerTask(Task):
     }
 
 
-class NemaScanTask(Task):
+class NemascanTask(Task):
   name  = 'nemascan_task'
   queue = os.environ.get('NEMASCAN_TASK_QUEUE_NAME')
-  kind  = NemascanMapping.kind
+  kind  = NemascanReport.kind
 
   @classmethod
   def get_props_set(cls):

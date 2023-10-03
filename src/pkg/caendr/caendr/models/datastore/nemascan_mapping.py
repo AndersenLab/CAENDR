@@ -11,7 +11,7 @@ REPORT_DATA_PREFIX = 'Reports/NemaScan_Report_'
 NEMASCAN_INPUT_FILE = 'data.tsv'
 
 
-class NemascanMapping(DataJobEntity):
+class NemascanReport(DataJobEntity):
   kind = 'nemascan_mapping'
   _blob_prefix = NEMASCAN_REPORT_PATH_PREFIX
   _input_file  = NEMASCAN_INPUT_FILE
@@ -123,7 +123,7 @@ class NemascanMapping(DataJobEntity):
     from caendr.models.task import TaskStatus
 
     # Check for reports with a matching data hash & container version
-    matches = NemascanMapping.query_ds( filters = [
+    matches = NemascanReport.query_ds( filters = [
       ('data_hash',         '=', self.data_hash),
       ('container_version', '=', self['container_version']),
     ])

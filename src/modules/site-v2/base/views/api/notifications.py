@@ -3,7 +3,7 @@ from flask import jsonify, Blueprint, url_for, abort, request
 from base.utils.tools import lookup_report
 from base.views.tools import pairwise_indel_finder_bp, genetic_mapping_bp, heritability_calculator_bp
 
-from caendr.models.datastore import NemascanMapping, HeritabilityReport, IndelPrimer
+from caendr.models.datastore import NemascanReport, HeritabilityReport, IndelPrimerReport
 from caendr.models.error     import ReportLookupError
 from caendr.models.task      import TaskStatus
 from caendr.services.email   import REPORT_SUCCESS_EMAIL_TEMPLATE, REPORT_ERROR_EMAIL_TEMPLATE
@@ -16,8 +16,8 @@ api_notifications_bp = Blueprint('notifications', __name__)
 
 
 REPORT_BP_MAP = {
-  IndelPrimer.kind:        pairwise_indel_finder_bp.name,
-  NemascanMapping.kind:    genetic_mapping_bp.name,
+  IndelPrimerReport.kind:  pairwise_indel_finder_bp.name,
+  NemascanReport.kind:     genetic_mapping_bp.name,
   HeritabilityReport.kind: heritability_calculator_bp.name,
 }
 

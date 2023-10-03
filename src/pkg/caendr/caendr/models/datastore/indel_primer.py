@@ -18,7 +18,7 @@ SOURCE_FILENAME                = get_env_var('INDEL_PRIMER_SOURCE_FILENAME', as_
 
 
 
-class IndelPrimer(DataJobEntity):
+class IndelPrimerReport(DataJobEntity):
   kind = 'indel_primer'
   _blob_prefix = INDEL_REPORT_PATH_PREFIX
   _input_file  = INDEL_INPUT_FILE

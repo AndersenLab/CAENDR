@@ -2,7 +2,7 @@ import os
 
 from caendr.services.logger import logger
 
-from caendr.models.datastore import NemascanMapping
+from caendr.models.datastore import NemascanReport
 from caendr.models.error     import NotFoundError
 from caendr.models.task      import TaskStatus
 
@@ -14,7 +14,7 @@ NEMASCAN_NXF_CONTAINER_NAME = get_env_var('NEMASCAN_NXF_CONTAINER_NAME', can_be_
 
 
 
-def is_data_cached(ns: NemascanMapping):
+def is_data_cached(ns: NemascanReport):
   # Check if the file already exists in google storage (matching hash)
   data_exists = get_blob_list(ns.get_bucket_name(), ns.get_data_blob_path())
   if data_exists and len(data_exists) > 0:
@@ -28,7 +28,7 @@ def get_mapping(id):
     If no such report exists, returns None.
   '''
   logger.debug(f'Getting mapping: {id}')
-  return NemascanMapping.get_ds(id)
+  return NemascanReport.get_ds(id)
 
 
 def get_mappings(username=None, filter_errs=False):
@@ -52,17 +52,17 @@ def get_mappings(username=None, filter_errs=False):
     filters = []
 
   # Get list of mappings and filter by date
-  mappings = NemascanMapping.query_ds(safe=not filter_errs, ignore_errs=filter_errs, filters=filters)
-  return NemascanMapping.sort_by_created_date(mappings, reverse=True)
+  mappings = NemascanReport.query_ds(safe=not filter_errs, ignore_errs=filter_errs, filters=filters)
+  return NemascanReport.sort_by_created_date(mappings, reverse=True)
 
 
 
 def update_nemascan_mapping_status(id: str, status: str=None, operation_name: str=None):
   logger.debug(f'update_nemascan_mapping_status: id:{id} status:{status} operation_name:{operation_name}')
 
-  m = NemascanMapping.get_ds(id)
+  m = NemascanReport.get_ds(id)
   if m is None:
-    raise NotFoundError(NemascanMapping, {'id': id})
+    raise NotFoundError(NemascanReport, {'id': id})
 
   if status:
     m.set_properties(status=status)
