@@ -143,4 +143,9 @@ function flash_message(message, full_msg_link=null, full_msg_body=null) {
 
   // Add the new node to the container for alert messages
   document.getElementById('alert-container').appendChild(node);
+
+  // Italicize species name(s) in the alert message
+  {%- for species in species_list.values() %}
+  node.innerHTML = node.innerHTML.replace('{{ species.short_name }}', '<i>{{ species.short_name }}</i>')
+  {%- endfor %}
 }
