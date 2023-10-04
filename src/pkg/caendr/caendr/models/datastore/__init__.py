@@ -17,20 +17,18 @@ from .wormbase import WormbaseVersion, WormbaseProjectNumber
 from .species import Species, SPECIES_LIST
 
 
-def get_entity_by_kind(kind, name):
+def get_class_by_kind(kind):
   '''
-    Get the entity with the given kind & name, cast to the appropriate subclass.
+    Get the Entity subclass that corresponds with the given kind.
 
     Arguments:
       - kind: The kind of the entity.
-      - name: The name of the entity (unique within the given kind).
 
     Returns:
-      An Entity subclass object representing the desired entity.
+      The Entity subclass.
 
     Raises:
       ValueError: Provided kind is not valid.
-      NotFoundError: No entity with the given name + kind exists.
   '''
 
   KIND_MAPPING = {
@@ -51,8 +49,24 @@ def get_entity_by_kind(kind, name):
   }
 
   try:
-    cls = KIND_MAPPING[kind]
+    return KIND_MAPPING[kind]
   except:
     raise ValueError(f"Unrecognized kind: {kind}")
 
-  return cls.get_ds(name, silent=False)
+
+def get_entity_by_kind(kind, name):
+  '''
+    Get the entity with the given kind & name, cast to the appropriate subclass.
+
+    Arguments:
+      - kind: The kind of the entity.
+      - name: The name of the entity (unique within the given kind).
+
+    Returns:
+      An Entity subclass object representing the desired entity.
+
+    Raises:
+      ValueError: Provided kind is not valid.
+      NotFoundError: No entity with the given name + kind exists.
+  '''
+  return get_class_by_kind(kind).get_ds(name, silent=False)
