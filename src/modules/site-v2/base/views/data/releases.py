@@ -54,7 +54,7 @@ def interpret_url_vars(species_name, release_version):
 # ============= #
 
 
-@releases_bp.route('/data-release')
+@releases_bp.route('')
 @cache.memoize(60*60)
 def data_releases():
   '''
@@ -67,8 +67,8 @@ def data_releases():
   })
 
 
-@releases_bp.route('/data-release/<string:species>/latest')
-@releases_bp.route('/data-release/<string:species>/<string:release_version>')
+@releases_bp.route('/<string:species>/latest')
+@releases_bp.route('/<string:species>/<string:release_version>')
 @cache.memoize(60*60)
 def data_release_list(species, release_version=None):
   """
@@ -170,8 +170,8 @@ def data_v01(params, files):
 # ======================= #
 #   Alignment Data Page   #
 # ======================= #
-@releases_bp.route('/data-release/<string:species>/latest/alignment')
-@releases_bp.route('/data-release/<string:species>/<string:release_version>/alignment')
+@releases_bp.route('/<string:species>/latest/alignment')
+@releases_bp.route('/<string:species>/<string:release_version>/alignment')
 @cache.memoize(60*60)
 def alignment_data(species, release_version=None):
 
@@ -212,8 +212,8 @@ def alignment_data(species, release_version=None):
 # =========================== #
 #   Strain Issues Data Page   #
 # =========================== #
-@releases_bp.route('/data-release/<string:species>/latest/strain_issues')
-@releases_bp.route('/data-release/<string:species>/<string:release_version>/strain_issues')
+@releases_bp.route('/<string:species>/latest/strain_issues')
+@releases_bp.route('/<string:species>/<string:release_version>/strain_issues')
 @cache.memoize(60*60)
 def strain_issues(species, release_version=None):
   """

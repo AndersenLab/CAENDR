@@ -197,7 +197,7 @@ def register_blueprints(app):
 
   # Data
   app.register_blueprint(data_bp, url_prefix='/data')
-  app.register_blueprint(releases_bp, url_prefix='/data')
+  app.register_blueprint(releases_bp, url_prefix='/data/data-release')
   app.register_blueprint(data_downloads_bp, url_prefix='/data')
   
   # User
