@@ -78,7 +78,7 @@ def fetch_heritability_report(report):
 
   # Parse data file
   data = download_blob_as_dataframe(data)
-  data['AssayNumber'] = data['AssayNumber'].astype(str)
+  data['AssayNumber'] = data['AssayNumber'].astype(int)
   data['label'] = data.apply(lambda x: f"{x['AssayNumber']}: {x['Value']}", 1)
   data = data.to_dict('records')
 

@@ -10,19 +10,25 @@ const fullScreenAvailable = document.fullscreenEnabled ||
 /* Run any time fullscreen changes */
 function onFullscreenChange() {
 
+  // Update the fullscreen close button
+  closeButton.style.display = (closeButton.style.display === 'block') ? 'none' : 'block';
+
   // Check for an IGV variable and trigger browser(s) to resize
   if (typeof igv !== 'undefined') igv.visibilityChange();
+
+  // Dispatch a unified event, so individual pages can make specific changes
+  window.dispatchEvent(new CustomEvent('fullscreenchangefinished'))
 }
 
 
 if (fullScreenAvailable) {
   function openFullscreen() {
     if (fullscreenBrowser.requestFullscreen) {
-      fullscreenBrowser.requestFullscreen().then(onFullscreenChange);
+      fullscreenBrowser.requestFullscreen();
     } else if (fullscreenBrowser.webkitRequestFullscreen) { /* Safari */
-      fullscreenBrowser.webkitRequestFullscreen().then(onFullscreenChange);
+      fullscreenBrowser.webkitRequestFullscreen();
     } else if (fullscreenBrowser.msRequestFullscreen) { /* IE11 */
-      fullscreenBrowser.msRequestFullscreen().then(onFullscreenChange);
+      fullscreenBrowser.msRequestFullscreen();
     }
   }
 } else {
@@ -32,42 +38,23 @@ if (fullScreenAvailable) {
 
   function closeFullscreen() {
     if (document.exitFullscreen) {
-      document.exitFullscreen().then(onFullscreenChange);
+      document.exitFullscreen();
     } else if (document.webkitExitFullscreen) { /* Safari */
-      document.webkitExitFullscreen().then(onFullscreenChange);
+      document.webkitExitFullscreen();
     } else if (document.msExitFullscreen) { /* IE11 */
-      document.msExitFullscreen().then(onFullscreenChange);
+      document.msExitFullscreen();
     }
   }
 
-document.addEventListener("fullscreenchange", function() {
-  if (closeButton.style.display === "block") {
-    closeButton.style.display = "none";
-  } else {
-    closeButton.style.display = "block";
-  }
-});
-document.addEventListener("mozfullscreenchange", function() {
-  if (closeButton.style.display === "block") {
-    closeButton.style.display = "none";
-  } else {
-    closeButton.style.display = "block";
-  }
-});
+// Attach the listener to change events so it's triggered when exiting fullscreen w Esc button
+document.addEventListener("fullscreenchange",    onFullscreenChange);
+document.addEventListener("mozfullscreenchange", onFullscreenChange);
+document.addEventListener("msfullscreenchange",  onFullscreenChange);
+
+// Additional behavior for webkit browsers
 document.addEventListener("webkitfullscreenchange", function() {
-  if (closeButton.style.display === "block") {
-    closeButton.style.display = "none";
-  } else {
-    closeButton.style.display = "block";
-  }
+  onFullscreenChange();
   if (window.matchMedia("(min-width: 1370px)").matches) {
-         closeButton.classList.display = "none";
-       }
-});
-document.addEventListener("msfullscreenchange", function() {
-  if (closeButton.style.display === "block") {
-    closeButton.style.display = "none";
-  } else {
-    closeButton.style.display = "block";
+    closeButton.classList.display = "none";
   }
 });

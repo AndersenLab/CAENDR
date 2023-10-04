@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify, request
 from caendr.services.logger import logger
 from caendr.utils import monitor
 
-from pipelines.utils import start_job, update_status_safe
+from pipelines.utils import start_job, update_status_safe, load_json_from_request
 
 from caendr.models.error import APIError, APIBadRequestError, APIInternalError, APIUnprocessableEntity
 from caendr.models.task import TaskStatus
@@ -30,10 +30,7 @@ def start_task(task_route):
   logger.info(f"Task: {queue}:{task}")
 
   # Parse request payload
-  try:
-    payload = json.loads(request.data)
-  except:
-    raise APIUnprocessableEntity('Failed to parse request body as valid JSON')
+  payload = load_json_from_request(request)
 
   # Get the task ID from the payload
   op_id = payload.get('id')
@@ -87,11 +84,8 @@ def start_task(task_route):
 def update_task():
 
   # Parse request payload
-  try:
-    payload = json.loads(request.data)
-    logger.info(f"[STATUS] Payload: {payload}")
-  except Exception as ex:
-    raise APIUnprocessableEntity('Failed to parse request body as valid JSON') from ex
+  payload = load_json_from_request(request)
+  logger.info(f"[STATUS] Payload: {payload}")
 
   # Marshall JSON to PubSubStatus object
   # Get the task ID from the payload (raises an error if not provided)

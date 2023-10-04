@@ -197,6 +197,7 @@
         return color;
     }
 
+    var renderPlot;
     var cpal = []
     var loadPlot = function(jj){
         df = [];
@@ -209,14 +210,26 @@
             for (var cc=0; cc<UniqueNames.length; cc++){cpal.push(getRandomColor())};
         }
 
-        width = document.getElementById("svgchartarea").offsetWidth - 100; /* 100px is from the chart legend*/
-        height = 9 * width / 16;
-        console.log(width)
-        var chart = d3.exploding_boxplot(df, {y:'Value', group:'Strain', color:'AssayNumber', label:'TraitName', pal:cpal})
-                      .width(width)
-                      .height(height);
-        document.getElementById("svgchartarea").innerHTML = "";
-        chart('#svgchartarea');
+        // Create & save a function to compute the chart size & re-render it
+        renderPlot = function() {
+
+          // Clear the current chart area
+          // Otherwise chart can't shrink - width computation will always be based on existing size
+          document.getElementById("svgchartarea").innerHTML = "";
+
+          // Take up as much horizontal space as available, keeping a 16:9 ratio
+          width = document.getElementById("svgchartarea").offsetWidth - 100; /* 100px is from the chart legend*/
+          height = 9 * width / 16;
+
+          // Create the chart and render in the page
+          var chart = d3.exploding_boxplot(df, {y:'Value', group:'Strain', color:'AssayNumber', label:'TraitName', pal:cpal})
+                        .width(width)
+                        .height(height);
+          chart('#svgchartarea');
+        }
+
+        // Call the new render plot function
+        renderPlot();
     }
 
     async function drawImg(canvas, image, DOMURL, w, h){
@@ -340,6 +353,11 @@
       $("a[href^='http://'], a[href^='https://'], a[href$='pdf']").attr("target","_blank");
 
     })
+
+    // When fullscreen changes, recompute plot to update size
+    window.addEventListener('fullscreenchangefinished', () => {
+      renderPlot();
+    });
 
 // For viewing tool in fullscreen
 {% include '_scripts/fullscreen.js' %} {#/* fullscreen for tools */#}
