@@ -26,6 +26,7 @@ google-cloud-secret-manager
 google-cloud-storage
 google-cloud-datastore
 google_cloud_logging
+google-cloud-run
 grpcio
 gunicorn
 httplib2==0.18.0
