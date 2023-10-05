@@ -197,7 +197,7 @@ def register_blueprints(app):
 
   # Data
   app.register_blueprint(data_bp, url_prefix='/data')
-  app.register_blueprint(releases_bp, url_prefix='/data')
+  app.register_blueprint(releases_bp, url_prefix='/data/data-release')
   app.register_blueprint(data_downloads_bp, url_prefix='/data')
   
   # User
@@ -331,24 +331,6 @@ def register_errorhandlers(app):
   app.register_error_handler(exc.SQLAlchemyError, handle_db_exceptions)
 
 
-# def close_active_connections(err):
-#   # from sqlalchemy.orm import close_all_sessions
-
-#   # # If the request threw an error, roll back the session
-#   # if err is not None:
-#   #   logger.error(f'Teardown Request Exception: {err}')
-#   #   try:
-#   #     db.session.rollback()
-#   #   except Exception as rollback_err:
-#   #     logger.error(f'Exception rolling back session: {rollback_err}')
-
-#   try:
-#     # close_all_sessions()
-#     db.session.remove()
-#   except Exception as db_err:
-#     logger.error(f'Exception closing sessions: {db_err}')
-
-
 def register_request_handlers(app):
 
   # Redirect all URLs that point to this application to the host value in MODULE_SITE_HOST
@@ -358,13 +340,6 @@ def register_request_handlers(app):
   def handle_redirects():
     if request.host != MODULE_SITE_HOST:
       return redirect(request.scheme + "://" + MODULE_SITE_HOST + request.full_path, code=301)
-
-
-  @app.teardown_appcontext
-  def close_db_connections(error):
-    logger.debug('Closing db session...')
-    db.session.close()
-    db.get_engine(app).dispose()
 
 
 def password_protect_site(app):

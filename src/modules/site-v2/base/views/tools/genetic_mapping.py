@@ -7,7 +7,8 @@ from flask import jsonify
 
 from base.forms import MappingForm
 from base.utils.auth  import get_jwt, jwt_required, admin_required, get_current_user, user_is_admin
-from base.utils.tools import lookup_report, upload_file, try_submit
+from base.utils.tools import get_upload_err_msg, lookup_report, try_submit
+from base.utils.local_file import LocalFile
 from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 from caendr.services.nemascan_mapping import get_mapping, get_mappings
@@ -104,40 +105,32 @@ def submit():
   label   = bleach.clean(request.form.get('label'))
   species = bleach.clean(request.form.get('species'))
 
-  # Save uploaded file to server temporarily, displaying an error message if this fails
+  # Upload input file to server temporarily, and start the job
   try:
-    local_path = upload_file(request, 'file', valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS)
+    with LocalFile(request.files.get('file'), valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS) as filepath:
+
+      # Package submission data together into dict
+      data = { 'label': label, 'species': species, 'filepath': filepath }
+
+      # Try submitting the job & returning a JSON status message
+      response, code = try_submit(NemascanMapping, user, data, no_cache)
+
+      # If there was an error, flash it
+      if code != 200 and int(request.args.get('reloadonerr', 1)):
+        flash(response['message'], 'danger')
+
+      # If the response contains a caching message, flash it
+      elif response.get('message') and response.get('ready', False):
+        flash(response.get('message'), 'success')
+
+      # Return the response
+      return jsonify( response ), code
+
+  # If the file upload failed, display an error message
   except FileUploadError as ex:
-    flash(ex.description, 'danger')
-    return jsonify({ 'message': ex.description }), ex.code
-
-  # Package submission data together into dict
-  data = {
-    'label':    label,
-    'species':  species,
-    'filepath': local_path,
-  }
-
-  # Try submitting the job & returning a JSON status message
-  try:
-    response, code = try_submit(NemascanMapping, user, data, no_cache)
-
-    # If there was an error, flash it
-    if code != 200 and int(request.args.get('reloadonerr', 1)):
-      flash(response['message'], 'danger')
-
-    elif response.get('message') and response.get('ready', False):
-      flash(response.get('message'), 'success')
-
-    # Return the response
-    return jsonify( response ), code
-
-  # Ensure the local file is removed, even if an error is uncaught in the submission process
-  finally:
-    try:
-      os.remove(local_path)
-    except FileNotFoundError:
-      pass
+    message = get_upload_err_msg(ex.code)
+    flash(message, 'danger')
+    return jsonify({ 'message': message }), ex.code
 
 
 @genetic_mapping_bp.route('/all-results', methods=['GET'], endpoint='all_results')

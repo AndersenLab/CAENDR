@@ -1,4 +1,5 @@
 import backoff
+import json
 from googleapiclient.errors import HttpError
 from ssl import SSLEOFError
 
@@ -8,7 +9,7 @@ from caendr.utils.env       import get_env_var
 from pipelines.task_handler import DatabaseOperationTaskHandler, IndelFinderTaskHandler, HeritabilityTaskHandler, NemascanTaskHandler
 
 from caendr.models.datastore             import Species
-from caendr.models.error                 import APIBadRequestError, NotFoundError
+from caendr.models.error                 import APIBadRequestError, APINotFoundError, NotFoundError
 from caendr.services.nemascan_mapping    import update_nemascan_mapping_status
 from caendr.services.database_operation  import update_db_op_status
 from caendr.services.indel_primer        import update_indel_primer_status
@@ -22,6 +23,17 @@ INDEL_PRIMER_TASK_QUEUE_NAME  = get_env_var('INDEL_PRIMER_TASK_QUEUE_NAME')
 HERITABILITY_TASK_QUEUE_NAME  = get_env_var('HERITABILITY_TASK_QUEUE_NAME')
 NEMASCAN_TASK_QUEUE_NAME      = get_env_var('NEMASCAN_TASK_QUEUE_NAME')
 
+
+
+def load_json_from_request(request):
+  '''
+    Loads the request data as JSON.
+    Raises a 400 error if the body is not valid JSON.
+  '''
+  try:
+    return json.loads(request.data)
+  except Exception as ex:
+    raise APIBadRequestError('Failed to parse request body as valid JSON') from ex
 
 
 def log_ssl_backoff(details):
@@ -51,7 +63,7 @@ def get_task_handler(queue_name, *args, **kwargs):
     if ex.kind == Species.kind:
       raise APIBadRequestError(f'{ cls._Entity_Class.kind } task has invalid species value') from ex
     else:
-      raise APIBadRequestError(f'Could not find { cls._Entity_Class.kind } object wih this ID') from ex
+      raise APINotFoundError(f'Could not find { cls._Entity_Class.kind } object wih this ID') from ex
 
 
 
