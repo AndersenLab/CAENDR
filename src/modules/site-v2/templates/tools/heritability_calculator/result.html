@@ -161,18 +161,16 @@
         }
     }
 
-    var trait = "{{ hr.trait }}"
-    var imag
-    var chartJson = {{ data|tojson|safe }};
-    var traits =[];
-    var img, ctx, canvs;
-    var maxP = 1;
-    var minP = 1;
-    var curP = 1;
-    var strn = [];
+    let imag;
+    let chartJson = {{ data|tojson|safe }};
 
-    var sortByProperty = function(property){
-      return function(a,b){
+    let maxP = 1;
+    let minP = 1;
+    let curP = 1;
+    let strn = [];
+
+    function sortByProperty(property) {
+      return function(a,b) {
         if (a[property] > b[property])
           return 1;
         else if (a[property] < b[property])
@@ -181,13 +179,13 @@
       }
     }
 
-    var ppage = function(){
-        curP= (curP===1)? 1:curP-1;
+    function ppage() {
+        curP = (curP === 1) ? 1 : curP-1;
         loadPlot(curP);
     }
 
-    var npage = function(){
-        curP= (curP===maxP)?maxP:curP+1;
+    function npage() {
+        curP = (curP === maxP) ? maxP : curP+1;
         loadPlot(curP);
     }
 
@@ -198,17 +196,17 @@
     }
 
     function getRandomColor() {
-        var letters = '123456789ABCDEF'.split('');
-        var color = '#';
-        for (var i = 0; i < 6; i++ ) {
+        const letters = '123456789ABCDEF'.split('');
+        let color = '#';
+        for (let i = 0; i < 6; i++ ) {
                 color += letters[Math.round(Math.random() * 14)];
         }
         return color;
     }
 
-    var renderPlot;
-    var cpal = []
-    var loadPlot = function(jj){
+    let renderPlot;
+    let cpal = []
+    function loadPlot(jj) {
         df = [];
         ran = range(25*(jj-1), (25*(jj)-1));
         chartJson.forEach(function(d,i){
@@ -220,7 +218,7 @@
         }
 
         // Create & save a function to compute the chart size & re-render it
-        renderPlot = function() {
+        renderPlot = () => {
 
           // Clear the current chart area
           // Otherwise chart can't shrink - width computation will always be based on existing size
@@ -231,9 +229,9 @@
           height = 9 * width / 16;
 
           // Create the chart and render in the page
-          var chart = d3.exploding_boxplot(df, {y:'Value', group:'Strain', color:'AssayNumber', label:'TraitName', pal:cpal})
-                        .width(width)
-                        .height(height);
+          const chart = d3.exploding_boxplot(df, {y:'Value', group:'Strain', color:'AssayNumber', label:'TraitName', pal:cpal})
+                          .width(width)
+                          .height(height);
           chart('#svgchartarea');
         }
 
@@ -241,48 +239,46 @@
         renderPlot();
     }
 
-    async function drawImg(canvas, image, DOMURL, w, h){
+    async function drawImg(canvas, image, DOMURL, w, h) {
         return new Promise(resolve => {
           image.onload = function () {
-            var ctx = canvas.getContext("2d");
+            const ctx = canvas.getContext("2d");
             ctx.fillStyle = "#FFFFFF";
             ctx.fillRect(0, 0, w, h);
             ctx.drawImage(image, 0, 0, w, h);
-            var png = canvas.toDataURL("image/png");
+            const png = canvas.toDataURL("image/png");
             imag = png
-            document.getElementById('png-container').innerHTML = '<img id="img1" src="'+png+'"/>';
+            document.getElementById('png-container').innerHTML = `<img id="img1" src="${png}"/>`;
             DOMURL.revokeObjectURL(png);
-            if (this.complete){
+            if (this.complete) {
               imag = this.src
             }
             resolve('resolved');
           }
         });
-      }
+    }
 
-    var loadCanvas = function(){
-        var svgString = new XMLSerializer().serializeToString(document.querySelector('svg'));
+    function loadCanvas() {
+      const svgString = new XMLSerializer().serializeToString(document.querySelector('svg'));
 
-        var canvas = document.getElementById("canvas");
-        canvas.width = 1000;
-        canvas.height = 480;
-        var ctx = canvas.getContext("2d");
-        var DOMURL = self.URL || self.webkitURL || self;
-        image = document.createElement("IMG");
-        var svg = new Blob([svgString], {type: "image/svg+xml;charset=utf-8"});
-        var url = DOMURL.createObjectURL(svg);
+      const canvas = document.getElementById("canvas");
+      canvas.width = 1000;
+      canvas.height = 480;
+      const DOMURL = self.URL || self.webkitURL || self;
+      const image = document.createElement("IMG");
+      const svg = new Blob([svgString], {type: "image/svg+xml;charset=utf-8"});
+      const url = DOMURL.createObjectURL(svg);
 
-        drawImg(canvas, image, DOMURL, canvas.width, canvas.height).then(() => {
+      drawImg(canvas, image, DOMURL, canvas.width, canvas.height).then(() => {
 
-
-        var source = document.getElementById('dataContainer');
+        const source = document.getElementById('dataContainer');
         const options = {
           orientation: 'landscape',
           format: 'a4',
           unit: 'px',
 
         }
-        var doc = new jsPDF(options);
+        const doc = new jsPDF(options);
 
         margins = {
             top: 60,
@@ -292,7 +288,7 @@
         };
 
         page_height = doc.internal.pageSize.getHeight();
-        page_width = doc.internal.pageSize.getWidth();
+        page_width  = doc.internal.pageSize.getWidth();
         /*doc.addImage(document.getElementById('svg'), 'SVG', 0, 0, page_width, page_height, NaN, 'NONE', 90);*/
         doc.setFontSize(16);
         doc.fromHTML('Trait: {{ hr.trait }}', 120, 10)
@@ -324,22 +320,22 @@
         doc.fromHTML('The broad-sense heritability is the amount of trait variance that comes from genetic differences in the assayed group ', 20, 85, {'align': 'justify', 'maxWidth': doc.internal.pageSize.getWidth()-40},function(){},margins)
         doc.fromHTML('of strains. Generally, it is the ratio of genetic variance to total (genetic plus environmental) variance.', 20, 100, {'align': 'justify', 'maxWidth': doc.internal.pageSize.getWidth()-40},function(){},margins)
 
-        var a = document.createElement('a');
-            var pdfblob = new Blob([ doc.output('blob') ], { type : 'application/pdf'});
-            a.href = window.URL.createObjectURL(pdfblob);
-            a.download = "{{ fname }}.pdf";
-            a.click();
-        })
-        image.src = url;
+        const a = document.createElement('a');
+        const pdfblob = new Blob([ doc.output('blob') ], { type : 'application/pdf'});
+        a.href = window.URL.createObjectURL(pdfblob);
+        a.download = "{{ fname }}.pdf";
+        a.click();
+      })
+      image.src = url;
     }
 
-    var getPDF = function(){
+    function getPDF() {
       loadCanvas();
     }
 
-    $(document).ready(function(){
-      if (chartJson.length != 0){
-        var node= document.getElementById("svgchartarea");
+    $(document).ready(function() {
+      if (chartJson.length != 0) {
+        // var node = document.getElementById("svgchartarea");
         $("#svgchartarea").html("")
         //node.querySelectorAll('*').forEach(n => n.remove());
         newPt = document.createElement("p")
