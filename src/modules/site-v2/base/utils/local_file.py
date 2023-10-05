@@ -1,6 +1,7 @@
 import os
 
 from werkzeug.utils import secure_filename
+from caendr.services.logger import logger
 
 from caendr.models.error import FileUploadError
 from caendr.utils.data import unique_id
@@ -83,6 +84,9 @@ class LocalFile():
       return True
     except FileNotFoundError:
       return False
+    except Exception as e:
+      logger.error(f'Error removing file {self.__local_path}: {e}')
+      return True
 
 
   #
