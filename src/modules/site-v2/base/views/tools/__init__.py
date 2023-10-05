@@ -4,3 +4,4 @@ from .variant_annotation      import variant_annotation_bp
 from .genetic_mapping         import genetic_mapping_bp
 from .pairwise_indel_finder   import pairwise_indel_finder_bp
 from .heritability_calculator import heritability_calculator_bp
+from .phenotype_db            import phenotype_db_bp
