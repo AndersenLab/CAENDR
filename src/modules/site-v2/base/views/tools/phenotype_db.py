@@ -18,13 +18,12 @@ phenotype_db_bp = Blueprint(
 
 @phenotype_db_bp.route('/')
 def phenotype_db():
-  # if data_1 key == data_2 key return data_1 value for the key
-  data_1_keys = data_1.keys()
-  data_2_keys = data_2.keys()
-  overlap_strains = []
-  for k in data_1_keys:
-    if k in data_2_keys:
-      overlap_strains.append(k)
+
+  # Get the list of strains in both datasets by taking the intersection of their key sets
+  # Convert back to a list because sets ~technically~ don't have a defined order -- we want to make sure
+  # the list of strains is the same each time we use it
+  overlap_strains = list( set(data_1.keys()).intersection(data_2.keys()) )
+
   x_arr = []
   y_arr = []
   data_dict = {}
