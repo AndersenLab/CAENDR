@@ -24,20 +24,18 @@ def phenotype_db():
   # the list of strains is the same each time we use it
   overlap_strains = list( set(data_1.keys()).intersection(data_2.keys()) )
 
-  x_arr = []
-  y_arr = []
-  data_dict = {}
-  data_arr = []
-  for s in overlap_strains:
-    x_arr.append(data_1[s])
-    y_arr.append(data_2[s])
-    data_dict[s] = [data_1[s], data_2[s]]
-    data_arr.append([data_1[s], data_2[s], s])
-  x = np.array(x_arr)
-  y = np.array(y_arr)
+  # From each dataset, get a list of trait values for each strain in the overlapping set
+  x = [ data_1[strain] for strain in overlap_strains ]
+  y = [ data_2[strain] for strain in overlap_strains ]
+
+  # Zip the trait values together with the strain names, to get the full dataset array
+  data_arr = list(zip(x, y, overlap_strains))
+
+  # Compute the Spearman Coefficient for the given data
   res = stats.spearmanr(x, y)
   c = res.correlation
   p_value = res.pvalue
+
   return render_template('tools/phenotype_db/phenotype.html', **{
 
     # Page info
@@ -48,9 +46,8 @@ def phenotype_db():
     },
 
     # Data
-    'paraquat': x_arr,
-    'carbaryl': y_arr,
-    'data_dict': data_dict,
+    'paraquat': x,
+    'carbaryl': y,
     'data_arr': data_arr,
     'correlation': c,
     'p_value': p_value
