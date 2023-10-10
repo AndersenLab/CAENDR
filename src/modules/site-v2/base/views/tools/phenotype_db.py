@@ -33,8 +33,6 @@ def phenotype_db():
 
   # Compute the Spearman Coefficient for the given data
   res = stats.spearmanr(x, y)
-  c = res.correlation
-  p_value = res.pvalue
 
   return render_template('tools/phenotype_db/phenotype.html', **{
 
@@ -46,7 +44,7 @@ def phenotype_db():
     },
 
     # Data
-    'data': data,
-    'correlation': c,
-    'p_value': p_value
+    'data':        data,
+    'correlation': res.correlation,
+    'p_value':     res.pvalue,
   })
