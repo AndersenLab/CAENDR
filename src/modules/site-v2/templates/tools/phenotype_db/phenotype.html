@@ -36,11 +36,9 @@
 
 <script>
 
-const traits_arr = {{ data_arr|tojson }}
-const paraquat_x = {{ paraquat|tojson}}
-const carbaryl_y = {{ carbaryl|tojson}}
+const data = {{ data|tojson }};
 
-scatterplot_histograms('#phenotype-chart', traits_arr, {
+scatterplot_histograms('#phenotype-chart', data, {
     hist_height:   60,
     width:         600,
     height:        600,

@@ -29,7 +29,7 @@ def phenotype_db():
   y = [ data_2[strain] for strain in overlap_strains ]
 
   # Zip the trait values together with the strain names, to get the full dataset array
-  data_arr = list(zip(x, y, overlap_strains))
+  data = list(zip(x, y, overlap_strains))
 
   # Compute the Spearman Coefficient for the given data
   res = stats.spearmanr(x, y)
@@ -46,9 +46,7 @@ def phenotype_db():
     },
 
     # Data
-    'paraquat': x,
-    'carbaryl': y,
-    'data_arr': data_arr,
+    'data': data,
     'correlation': c,
     'p_value': p_value
   })
