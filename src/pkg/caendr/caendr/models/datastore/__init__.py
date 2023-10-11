@@ -4,6 +4,8 @@ from .user import User
 from .job_entity import JobEntity
 from .user_owned_entity import UserOwnedEntity
 from .data_job_entity import DataJobEntity
+from .deletable_entity import DeletableEntity
+from .cart import Cart
 from .dataset_release import DatasetRelease
 from .profile import Profile
 from .nemascan_mapping import NemascanMapping
@@ -45,7 +47,7 @@ def get_class_by_kind(kind):
 
     GeneBrowserTracks.kind:  GeneBrowserTracks,
     Markdown.kind:           Markdown,
-    Species.kind:            Species,
+    Species.kind:            Species
   }
 
   try:
