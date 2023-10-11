@@ -27,68 +27,68 @@ def get_delimiter_from_filepath(filepath=None, valid_file_extensions=None):
 
 def validate_file(local_path, columns, delimiter='\t', unique_rows=False):
 
-    num_cols = len(columns)
-    rows = {}
+  num_cols = len(columns)
+  rows = {}
 
-    # Read first line from tsv
-    with open(local_path, 'r', encoding='utf-8-sig') as f:
-      csv_reader = csv.reader(f, delimiter=delimiter)
+  # Read first line from tsv
+  with open(local_path, 'r', encoding='utf-8-sig') as f:
+    csv_reader = csv.reader(f, delimiter=delimiter)
 
-      # Get the header line, throwing an empty file error if not found
-      try:
-        csv_headings  = next(csv_reader)
-      except StopIteration:
-        raise DataFormatError('The file is empty. Please edit the file to include your data.')
+    # Get the header line, throwing an empty file error if not found
+    try:
+      csv_headings  = next(csv_reader)
+    except StopIteration:
+      raise DataFormatError('The file is empty. Please edit the file to include your data.')
 
-      # Check that first line has correct number of columns
-      if len(csv_headings) != num_cols:
-        raise DataFormatError(f'The file contains an incorrect number of columns. Please edit the file to ensure it contains { num_cols } columns.', 1)
+    # Check that first line has correct number of columns
+    if len(csv_headings) != num_cols:
+      raise DataFormatError(f'The file contains an incorrect number of columns. Please edit the file to ensure it contains { num_cols } columns.', 1)
 
-      # Check first line for column headers
-      for col in range(num_cols):
-        target_header = columns[col].get('header')
-        if target_header is None:
-          continue
-        # if isinstance(target_header, str):
-        if csv_headings[col] != target_header:
-          raise DataFormatError(f'The file contains an incorrect column header. Column #{ col + 1 } should be { columns[col]["header"] }.', 1)
-        # else:
-        #   if not target_header['validator'](csv_headings[col]):
-        #     raise DataFormatError(f'The file contains an incorrect column header. { target_header["make_err_msg"]( col + 1, csv_headings[col] ) }', 1)
+    # Check first line for column headers
+    for col in range(num_cols):
+      target_header = columns[col].get('header')
+      if target_header is None:
+        continue
+      # if isinstance(target_header, str):
+      if csv_headings[col] != target_header:
+        raise DataFormatError(f'The file contains an incorrect column header. Column #{ col + 1 } should be { columns[col]["header"] }.', 1)
+      # else:
+      #   if not target_header['validator'](csv_headings[col]):
+      #     raise DataFormatError(f'The file contains an incorrect column header. { target_header["make_err_msg"]( col + 1, csv_headings[col] ) }', 1)
 
-      # Loop through all remaining lines in the file
-      has_data = False
-      for line, csv_row in enumerate(csv_reader, start=2):
+    # Loop through all remaining lines in the file
+    has_data = False
+    for line, csv_row in enumerate(csv_reader, start=2):
 
-        # Check for empty lines
-        if ''.join(csv_row).strip() == '':
-          raise DataFormatError(f'Rows cannot be blank. Please check line #{ line } to ensure valid data have been entered.', line)
+      # Check for empty lines
+      if ''.join(csv_row).strip() == '':
+        raise DataFormatError(f'Rows cannot be blank. Please check line #{ line } to ensure valid data have been entered.', line)
 
-        # Check that line has the correct number of columns
-        if len(csv_row) != num_cols:
-          raise DataFormatError(f'File contains incorrect number of columns. Please edit the file to ensure it contains { num_cols } columns.', line)
+      # Check that line has the correct number of columns
+      if len(csv_row) != num_cols:
+        raise DataFormatError(f'File contains incorrect number of columns. Please edit the file to ensure it contains { num_cols } columns.', line)
 
-        # If desired, check that this row is unique
-        if unique_rows:
-          as_string = '\t'.join(csv_row)
-          prev_line = rows.get(as_string)
-          if prev_line is not None:
-            raise DataFormatError(f'Line #{ line } is a duplicate of line #{ prev_line }. Please ensure that each row contains unique values.')
-          else:
-            rows[as_string] = line
+      # If desired, check that this row is unique
+      if unique_rows:
+        as_string = '\t'.join(csv_row)
+        prev_line = rows.get(as_string)
+        if prev_line is not None:
+          raise DataFormatError(f'Line #{ line } is a duplicate of line #{ prev_line }. Please ensure that each row contains unique values.')
+        else:
+          rows[as_string] = line
 
-        # Check that all columns have valid data
-        for column, value in zip(columns, csv_row):
-          header    = column.get('header')
-          validator = column['validator']
-          validator( header, value.strip(), line )
+      # Check that all columns have valid data
+      for column, value in zip(columns, csv_row):
+        header    = column.get('header')
+        validator = column['validator']
+        validator( header, value.strip(), line )
 
-        # Track that we parsed at least one line of data properly
-        has_data = True
+      # Track that we parsed at least one line of data properly
+      has_data = True
 
-      # Check that the loop ran at least once (i.e. is not just headers)
-      if not has_data:
-        raise DataFormatError('The file is empty. Please edit the file to include your data.')
+    # Check that the loop ran at least once (i.e. is not just headers)
+    if not has_data:
+      raise DataFormatError('The file is empty. Please edit the file to include your data.')
 
 
 

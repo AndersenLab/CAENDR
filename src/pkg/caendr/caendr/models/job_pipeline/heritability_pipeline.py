@@ -9,7 +9,7 @@ from caendr.models.run             import HeritabilityRunner
 # Services
 from caendr.models.datastore       import Species
 from caendr.models.error           import DataFormatError
-from caendr.services.tools.submit  import validate_file, validate_num, validate_strain, validate_trait
+from caendr.services.validate      import validate_file, validate_num, validate_strain, validate_trait
 from caendr.services.cloud.storage import upload_blob_from_file
 from caendr.utils.env              import get_env_var
 from caendr.utils.file             import get_file_hash
