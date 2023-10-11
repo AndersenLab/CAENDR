@@ -385,11 +385,12 @@ class JobPipeline(ABC):
   # Running
   #
 
-  def create_job(self):
-    return self._runner.create_job()
-
-  def run_job(self):
-    return self._runner.run_job()
+  def run(self, *args, **kwargs):
+    '''
+      Run this job using the specified Runner class.
+    '''
+    # Forward run call to Runner object
+    return self._runner.run(*args, **kwargs)
 
 
   #

@@ -1,7 +1,3 @@
-import backoff
-from googleapiclient.errors import HttpError
-from ssl import SSLEOFError
-
 from caendr.services.logger import logger
 from caendr.utils.env       import get_env_var
 
@@ -20,14 +16,6 @@ DB_OPERATIONS_TASK_QUEUE_NAME = get_env_var('MODULE_DB_OPERATIONS_TASK_QUEUE_NAM
 INDEL_PRIMER_TASK_QUEUE_NAME  = get_env_var('INDEL_PRIMER_TASK_QUEUE_NAME')
 HERITABILITY_TASK_QUEUE_NAME  = get_env_var('HERITABILITY_TASK_QUEUE_NAME')
 NEMASCAN_TASK_QUEUE_NAME      = get_env_var('NEMASCAN_TASK_QUEUE_NAME')
-
-
-
-def log_ssl_backoff(details):
-  logger.warn(f'[TASK {details["args"][0].get("id", "no-id")}] Encountered SSLEOFError trying to start job. Trying again in {details["wait"]:00.1f}s...')
-
-def log_ssl_giveup(details):
-  logger.warn(f'[TASK {details["args"][0].get("id", "no-id")}] Encountered SSLEOFError trying to start job. Giving up. Total time elapsed: {details["elapsed"]:00.1f}s.')
 
 
 
@@ -56,70 +44,6 @@ def get_task_handler(queue_name, *args, **kwargs):
       raise APIBadRequestError(f'{ cls.get_kind() } task has invalid species value') from ex
     else:
       raise APIBadRequestError(f'Could not find { cls.get_kind() } object wih this ID') from ex
-
-
-
-@backoff.on_exception(
-    backoff.constant, SSLEOFError, max_tries=3, interval=20, jitter=None, on_backoff=log_ssl_backoff, on_giveup=log_ssl_giveup,
-)
-def start_job(handler, run_if_exists=False):
-  '''
-    Start a job on the given route.
-
-    On encountering an SSL EOF error, will wait 20s and try again, up to 3 times total.
-    This should help ensure the job runs even if an existing connection has gone stale.
-
-    Args:
-      - handler (JobPipeline): A JobPipeline object of the subclass that handles the given task route, initialized with the given payload.
-      - run_if_exists (bool, optional): If True, will still run the job even if the specified job container exists. Default False.
-
-    Returns:
-      A dictionary of responses generated in starting the job:
-        - create: The response to the CloudRun create job request.
-        - run:    The response to the CloudRun run job request.
-
-    Raises:
-      APIBadRequestError: The payload & task route do not identify an existing / valid Entity.
-      HttpError: Forwarded from googleapiclient from create & run requests. If `run_if_exists` is True, ignores status code 409 from create request.
-  '''
-
-  # With exponential backoff, this is approx (2^(n-1))-1 = 127 sec, or a little over 2 minutes
-  max_tries = 8
-
-  def log_backoff(details):
-    logger.warn(f'[TASK {handler.report.id}] Failed to run job on attempt {details["tries"]}/{max_tries}. Trying again in {details["wait"]:00.1f}s...')
-
-  def log_giveup(details):
-    logger.warn(f'[TASK {handler.report.id}] Failed to run job on attempt {details["tries"]}/{max_tries}. Total time elapsed: {details["elapsed"]:00.1f}s.')
-
-  # Local helper function to ensure job is started
-  # There is a delay between when the job "create" request is sent and when the job becomes available for "run",
-  # so we use exponential backoff to wait for the job to finish being created
-  @backoff.on_exception(
-      backoff.expo, HttpError, giveup=lambda ex: ex.status_code != 400, max_tries=max_tries, on_backoff=log_backoff, on_giveup=log_giveup, jitter=None
-  )
-  def _run_job(handler):
-    return handler.run_job()
-
-
-  # Create a CloudRun job for this task
-  try:
-    create_response = handler.create_job()
-
-  # If the job already exists, optionally bail out
-  except HttpError as ex:
-    if run_if_exists and ex.status_code == 409:
-      logger.warn(f'[TASK {handler.report.id}] Encountered HttpError: {ex}')
-      logger.warn(f'[TASK {handler.report.id}] Running job again...')
-      create_response = ex.resp
-    else:
-      raise
-
-  # Run the CloudRun job
-  run_response, pub_sub_id = _run_job(handler)
-
-  # Return the individual responses
-  return { 'create': create_response, 'run': run_response }
 
 
 

@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify, request
 from caendr.services.logger import logger
 from caendr.utils import monitor
 
-from pipelines.utils import start_job, update_status_safe, get_task_handler
+from pipelines.utils import update_status_safe, get_task_handler
 
 from caendr.models.error import APIError, APIBadRequestError, APIInternalError, APIUnprocessableEntity
 from caendr.models.task import TaskStatus
@@ -50,7 +50,7 @@ def start_task(task_route):
 
   # Create & start the job
   try:
-    responses = start_job(handler, run_if_exists=True)
+    responses = handler.run(run_if_exists=True)
     update_status_safe(queue, op_id, status=TaskStatus.RUNNING)
 
   # Intercept API errors to add task ID

@@ -1,16 +1,17 @@
-# Built-in libraries
-from abc import ABC, abstractmethod
+from   abc     import ABC, abstractmethod
+import backoff
+from   ssl     import SSLEOFError
 
-# Logging
+from googleapiclient.errors import HttpError
+
 from caendr.services.logger import logger
+from caendr.utils.env       import get_env_var
 
-# CaeNDR package
 from caendr.models.datastore            import DataJobEntity, Species
 from caendr.models.lifesciences         import ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
 from caendr.services.cloud.cloudrun     import create_job, run_job
 from caendr.services.cloud.lifesciences import start_pipeline
 from caendr.services.cloud.pubsub       import publish_message
-from caendr.utils.env                   import get_env_var
 
 
 
@@ -47,12 +48,20 @@ class Runner(ABC):
   def __init__(self, report):
     self.report = report
 
-  # TODO: Combine into a single run function, using task utils
   @abstractmethod
-  def create_job(self): pass
+  def run(self, run_if_exists=False):
+    '''
+      Start a job on the given route.
 
-  @abstractmethod
-  def run_job(self): pass
+      Args:
+        - run_if_exists (bool, optional): If True, will still run the job even if the specified job container exists. Default False.
+
+      Returns:
+        A dictionary of responses generated in starting the job:
+          - create: The response to the CloudRun create job request.
+          - run:    The response to the CloudRun run job request.
+    '''
+    pass
 
 
   # TODO: This is pretty implementation-specific...
@@ -183,9 +192,92 @@ class GCPCloudRunRunner(GCPRunner):
     that rely on the new abstract methods introduced by GCPRunner.
   '''
 
-  # Creating & Running Job #
+  # Total number of times to try creating & running the CloudRun Job if an SSLEOFError is encountered
+  _MAX_TRIES_TOTAL = 3
 
-  def create_job(self):
+  # Total number of times to try running the CloudRun Job after it has been created
+  # With exponential backoff, this is approx (2^(n-1))-1 = 127 sec, or a little over 2 minutes
+  _MAX_TRIES_RUN   = 8
+
+
+  #
+  # Backoff Logging Functions
+  #
+
+  @staticmethod
+  def _get_id_from_details(details):
+    return details['args'][0].get('report', {}).get('id', 'no-id')
+
+  @staticmethod
+  def _log_ssl_backoff(details):
+    logger.warn(f'[RUN { GCPCloudRunRunner._get_id_from_details(details) }] Encountered SSLEOFError trying to start job. Trying again in {details["wait"]:00.1f}s...')
+
+  @staticmethod
+  def _log_ssl_giveup(details):
+    logger.warn(f'[RUN { GCPCloudRunRunner._get_id_from_details(details) }] Encountered SSLEOFError trying to start job. Giving up. Total time elapsed: {details["elapsed"]:00.1f}s.')
+
+  @staticmethod
+  def _log_backoff(details):
+    logger.warn(f'[RUN { GCPCloudRunRunner._get_id_from_details(details) }] Failed to run job on attempt {details["tries"]}/{GCPCloudRunRunner._MAX_TRIES_RUN}. Trying again in {details["wait"]:00.1f}s...')
+
+  @staticmethod
+  def _log_giveup(details):
+    logger.warn(f'[RUN { GCPCloudRunRunner._get_id_from_details(details) }] Failed to run job on attempt {details["tries"]}/{GCPCloudRunRunner._MAX_TRIES_RUN}. Total time elapsed: {details["elapsed"]:00.1f}s.')
+
+
+  #
+  # Main Run Function
+  #
+
+  @backoff.on_exception(
+      backoff.constant, SSLEOFError, max_tries=_MAX_TRIES_TOTAL, interval=20, jitter=None, on_backoff=_log_ssl_backoff.__func__, on_giveup=_log_ssl_giveup.__func__,
+  )
+  def run(self, run_if_exists=False):
+    '''
+      Start a job on the given route.
+
+      On encountering an SSL EOF error, will wait 20s and try again, up to 3 times total.
+      This should help ensure the job runs even if an existing connection has gone stale.
+
+      Args:
+        - handler (JobPipeline): A JobPipeline object of the subclass that handles the given task route, initialized with the given payload.
+        - run_if_exists (bool, optional): If True, will still run the job even if the specified job container exists. Default False.
+
+      Returns:
+        A dictionary of responses generated in starting the job:
+          - create: The response to the CloudRun create job request.
+          - run:    The response to the CloudRun run job request.
+
+      Raises:
+        APIBadRequestError: The payload & task route do not identify an existing / valid Entity.
+        HttpError: Forwarded from googleapiclient from create & run requests. If `run_if_exists` is True, ignores status code 409 from create request.
+    '''
+
+    # Create a CloudRun job for this task
+    try:
+      create_response = self._create()
+
+    # If the job already exists, optionally bail out
+    except HttpError as ex:
+      if run_if_exists and ex.status_code == 409:
+        logger.warn(f'[TASK {self.report.id}] Encountered HttpError: {ex}')
+        logger.warn(f'[TASK {self.report.id}] Running job again...')
+        create_response = ex.resp
+      else:
+        raise
+
+    # Run the CloudRun job
+    run_response, pub_sub_id = self._run()
+
+    # Return the individual responses
+    return { 'create': create_response, 'run': run_response }
+
+
+  #
+  # Creating & Running CloudRun Job
+  #
+
+  def _create(self):
     '''
       Create a CloudRun Job to run this task.
     '''
@@ -217,7 +309,12 @@ class GCPCloudRunRunner(GCPRunner):
     })
 
 
-  def run_job(self):
+  # There is a delay between when the job "create" request is sent and when the job becomes available for "run",
+  # so we use exponential backoff to wait for the job to finish being created
+  @backoff.on_exception(
+      backoff.expo, HttpError, giveup=lambda ex: ex.status_code != 400, max_tries=_MAX_TRIES_RUN, on_backoff=_log_backoff.__func__, on_giveup=_log_giveup.__func__, jitter=None
+  )
+  def _run(self):
     '''
       Initiate the CloudRun Job associated with this task.
     '''
@@ -245,10 +342,7 @@ class GCPLifesciencesRunner(GCPRunner):
     Deprecated.
   '''
 
-  def create_job(self):
-    pass
-
-  def run_job(self):
+  def run(self, run_if_exists=False):
     '''
       Create and run a VM for this task using Lifesciences.
     '''
