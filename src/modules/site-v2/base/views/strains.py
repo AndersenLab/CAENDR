@@ -21,7 +21,7 @@ from caendr.utils.json import dump_json
 from caendr.utils.data import get_file_format, convert_data_to_download_file
 from caendr.utils.env import get_env_var
 from caendr.models.datastore import Species
-from caendr.models.datastore.cart import Cart
+from caendr.models.datastore import Cart
 from caendr.models.error import NotFoundError
 from caendr.services.dataset_release import get_all_dataset_releases, find_dataset_release, get_latest_dataset_release_version
 
