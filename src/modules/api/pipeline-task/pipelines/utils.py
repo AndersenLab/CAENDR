@@ -11,7 +11,7 @@ from caendr.services.nemascan_mapping    import update_nemascan_mapping_status
 from caendr.services.database_operation  import update_db_op_status
 from caendr.services.indel_primer        import update_indel_primer_status
 from caendr.services.heritability_report import update_heritability_report_status
-from caendr.services.tools               import DatabaseOperationPipeline, IndelFinderPipeline, HeritabilityPipeline, NemascanPipeline
+from caendr.models.job_pipeline          import DatabaseOperationPipeline, IndelFinderPipeline, HeritabilityPipeline, NemascanPipeline
 
 
 
