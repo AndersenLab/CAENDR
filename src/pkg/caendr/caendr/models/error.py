@@ -124,10 +124,10 @@ class CachedDataError(InternalError):
 
 class DuplicateDataError(InternalError):
   description = "This data has already been submitted by the same user"
-  def __init__(self, report):
-    self.report = report
-    if report is not None and hasattr(report, 'data_hash'):
-      self.description = f'This data (hash {getattr(report, "data_hash")}) has already been submitted by the same user'
+  def __init__(self, handler):
+    self.handler = handler
+    if handler is not None and hasattr(handler, 'data_hash'):
+      self.description = f'This data (hash {getattr(getattr(handler, "report"), "data_hash")}) has already been submitted by the same user'
     super().__init__()
 
 class DuplicateTaskError(InternalError):
@@ -258,3 +258,10 @@ class MissingTokenError(InternalError):
       self.description += f' in template "{template}"'
 
     super().__init__()
+
+
+class UnschedulableJobTypeError(InternalError):
+  pass
+
+class JobAlreadyScheduledError(InternalError):
+  pass

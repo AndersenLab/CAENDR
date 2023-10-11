@@ -8,7 +8,6 @@ from caendr.models.error import NotFoundError, EmptyReportDataError, EmptyReport
 from caendr.models.datastore import HeritabilityReport
 
 from caendr.services.cloud.storage import get_blob, download_blob_as_dataframe
-from caendr.services.tools.submit import submit_job
 from caendr.utils.env import get_env_var
 
 

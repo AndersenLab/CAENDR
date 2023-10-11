@@ -47,7 +47,7 @@ def start_pipeline(SERVICE, task_id, pipeline_request):
     raise PipelineRunError(err)
 
 
-def create_pipeline_operation_record(task, response):
+def create_pipeline_operation_record(handler, response):
   if response is None:
     raise PipelineRunError()
 
@@ -67,7 +67,7 @@ def create_pipeline_operation_record(task, response):
   op.set_properties(**{
     'id': id,
     'operation': name,
-    'operation_kind': task.kind,
+    'operation_kind': handler.kind,
     'metadata': metadata,
     'report_path': None,
     'done': False,

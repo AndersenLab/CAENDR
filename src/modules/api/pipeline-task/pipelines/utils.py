@@ -5,14 +5,13 @@ from ssl import SSLEOFError
 from caendr.services.logger import logger
 from caendr.utils.env       import get_env_var
 
-from pipelines.task_handler import DatabaseOperationTaskHandler, IndelFinderTaskHandler, HeritabilityTaskHandler, NemascanTaskHandler
-
 from caendr.models.datastore             import Species
 from caendr.models.error                 import APIBadRequestError, NotFoundError
 from caendr.services.nemascan_mapping    import update_nemascan_mapping_status
 from caendr.services.database_operation  import update_db_op_status
 from caendr.services.indel_primer        import update_indel_primer_status
 from caendr.services.heritability_report import update_heritability_report_status
+from caendr.services.tools               import DatabaseOperationPipeline, IndelFinderPipeline, HeritabilityPipeline, NemascanPipeline
 
 
 
@@ -33,11 +32,16 @@ def log_ssl_giveup(details):
 
 
 def get_task_handler(queue_name, *args, **kwargs):
+  '''
+    Args:
+      - queue_name: The queue to run the job in.
+      - kwargs: The job payload.
+  '''
   mapping = {
-    DB_OPERATIONS_TASK_QUEUE_NAME: DatabaseOperationTaskHandler,
-    INDEL_PRIMER_TASK_QUEUE_NAME:  IndelFinderTaskHandler,
-    HERITABILITY_TASK_QUEUE_NAME:  HeritabilityTaskHandler,
-    NEMASCAN_TASK_QUEUE_NAME:      NemascanTaskHandler,
+    DB_OPERATIONS_TASK_QUEUE_NAME: DatabaseOperationPipeline,
+    INDEL_PRIMER_TASK_QUEUE_NAME:  IndelFinderPipeline,
+    HERITABILITY_TASK_QUEUE_NAME:  HeritabilityPipeline,
+    NEMASCAN_TASK_QUEUE_NAME:      NemascanPipeline,
   }
   cls = mapping.get(queue_name, None)
 
@@ -45,20 +49,20 @@ def get_task_handler(queue_name, *args, **kwargs):
     raise APIBadRequestError(f'Invalid task route {queue_name}')
 
   try:
-    return cls(*args, **kwargs)
+    return cls.lookup(kwargs['id'])
 
   except NotFoundError as ex:
     if ex.kind == Species.kind:
-      raise APIBadRequestError(f'{ cls._Entity_Class.kind } task has invalid species value') from ex
+      raise APIBadRequestError(f'{ cls.get_kind() } task has invalid species value') from ex
     else:
-      raise APIBadRequestError(f'Could not find { cls._Entity_Class.kind } object wih this ID') from ex
+      raise APIBadRequestError(f'Could not find { cls.get_kind() } object wih this ID') from ex
 
 
 
 @backoff.on_exception(
     backoff.constant, SSLEOFError, max_tries=3, interval=20, jitter=None, on_backoff=log_ssl_backoff, on_giveup=log_ssl_giveup,
 )
-def start_job(payload, task_route, run_if_exists=False):
+def start_job(handler, run_if_exists=False):
   '''
     Start a job on the given route.
 
@@ -66,31 +70,27 @@ def start_job(payload, task_route, run_if_exists=False):
     This should help ensure the job runs even if an existing connection has gone stale.
 
     Args:
-      - payload: The job payload.
-      - task_route: The queue to run the job in.
+      - handler (JobPipeline): A JobPipeline object of the subclass that handles the given task route, initialized with the given payload.
       - run_if_exists (bool, optional): If True, will still run the job even if the specified job container exists. Default False.
 
     Returns:
-      - handler (TaskHandler): A TaskHandler object of the subclass that handles the given task route, initialized with the given payload.
-      - create_response: The response to the CloudRun create job request.
-      - run_response:    The response to the CloudRun run job request.
+      A dictionary of responses generated in starting the job:
+        - create: The response to the CloudRun create job request.
+        - run:    The response to the CloudRun run job request.
 
     Raises:
       APIBadRequestError: The payload & task route do not identify an existing / valid Entity.
       HttpError: Forwarded from googleapiclient from create & run requests. If `run_if_exists` is True, ignores status code 409 from create request.
   '''
-  task_id = payload.get('id', 'no-id')
-  logger.info(f"[TASK {task_id}] Starting job in queue { task_route }. Payload: { payload }")
-
 
   # With exponential backoff, this is approx (2^(n-1))-1 = 127 sec, or a little over 2 minutes
   max_tries = 8
 
   def log_backoff(details):
-    logger.warn(f'[TASK {task_id}] Failed to run job on attempt {details["tries"]}/{max_tries}. Trying again in {details["wait"]:00.1f}s...')
+    logger.warn(f'[TASK {handler.report.id}] Failed to run job on attempt {details["tries"]}/{max_tries}. Trying again in {details["wait"]:00.1f}s...')
 
   def log_giveup(details):
-    logger.warn(f'[TASK {task_id}] Failed to run job on attempt {details["tries"]}/{max_tries}. Total time elapsed: {details["elapsed"]:00.1f}s.')
+    logger.warn(f'[TASK {handler.report.id}] Failed to run job on attempt {details["tries"]}/{max_tries}. Total time elapsed: {details["elapsed"]:00.1f}s.')
 
   # Local helper function to ensure job is started
   # There is a delay between when the job "create" request is sent and when the job becomes available for "run",
@@ -102,9 +102,6 @@ def start_job(payload, task_route, run_if_exists=False):
     return handler.run_job()
 
 
-  # Try to create a task handler of the appropriate type
-  handler = get_task_handler(task_route, **payload)
-
   # Create a CloudRun job for this task
   try:
     create_response = handler.create_job()
@@ -112,8 +109,8 @@ def start_job(payload, task_route, run_if_exists=False):
   # If the job already exists, optionally bail out
   except HttpError as ex:
     if run_if_exists and ex.status_code == 409:
-      logger.warn(f'[TASK {task_id}] Encountered HttpError: {ex}')
-      logger.warn(f'[TASK {task_id}] Running job again...')
+      logger.warn(f'[TASK {handler.report.id}] Encountered HttpError: {ex}')
+      logger.warn(f'[TASK {handler.report.id}] Running job again...')
       create_response = ex.resp
     else:
       raise
@@ -121,8 +118,8 @@ def start_job(payload, task_route, run_if_exists=False):
   # Run the CloudRun job
   run_response, pub_sub_id = _run_job(handler)
 
-  # Return all computed values
-  return handler, create_response, run_response
+  # Return the individual responses
+  return { 'create': create_response, 'run': run_response }
 
 
 

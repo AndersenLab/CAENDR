@@ -178,7 +178,7 @@ def submit():
 
   # Try submitting the job & returning a JSON status message
   try:
-    response, code = try_submit(HeritabilityReport, user, data, no_cache)
+    response, code = try_submit(HeritabilityReport.kind, user, data, no_cache)
 
     # If there was an error, flash it
     if not code == 200:
@@ -239,7 +239,7 @@ def report(id):
   # Fetch requested heritability report
   # Ensures the report exists and the user has permission to view it
   try:
-    hr = lookup_report(HeritabilityReport.kind, id, user=user)
+    job = lookup_report(HeritabilityReport.kind, id, user=user)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:
@@ -247,12 +247,12 @@ def report(id):
     abort(ex.code)
 
   # TODO: Is this used?
-  data_hash = hr.data_hash
+  data_hash = job.report.data_hash
 
   # Try getting & parsing the report data file and results
   # If result is None, job hasn't finished computing yet
   try:
-    data, result = fetch_heritability_report(hr)
+    data, result = fetch_heritability_report(job.report)
     ready = result is not None
 
   # If no submission exists, return 404
@@ -264,8 +264,8 @@ def report(id):
   # If result exists, mark as complete
   # TODO: Is this the right place for this?
   if result:
-    hr.status = TaskStatus.COMPLETE
-    hr.save()
+    job.report.status = TaskStatus.COMPLETE
+    job.report.save()
 
   # TODO: Are either of these values used?
   format = '%I:%M %p %m/%d/%Y'
@@ -286,15 +286,15 @@ def report(id):
     # TODO: The HTML file expects a variable called "fnam" -- is that a typo?
     'fname': datetime.today().strftime('%Y%m%d.') + trait,
 
-    'hr': hr,
+    'hr': job.report,
     'data': data,
     'result': result,
 
     'data_hash': data_hash,
-    'operation': hr.get_pipeline_operation(),
+    'operation': job.report.get_pipeline_operation(),
     'error': error,
 
-    'data_url': generate_blob_url(hr.get_bucket_name(), hr.get_data_blob_path()),
+    'data_url': generate_blob_url(job.report.get_bucket_name(), job.report.get_data_blob_path()),
     'logs_url': url_for('heritability_calculator.view_logs', id = id),
 
     'TaskStatus': TaskStatus,

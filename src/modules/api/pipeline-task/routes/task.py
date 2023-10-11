@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify, request
 from caendr.services.logger import logger
 from caendr.utils import monitor
 
-from pipelines.utils import start_job, update_status_safe
+from pipelines.utils import start_job, update_status_safe, get_task_handler
 
 from caendr.models.error import APIError, APIBadRequestError, APIInternalError, APIUnprocessableEntity
 from caendr.models.task import TaskStatus
@@ -36,18 +36,21 @@ def start_task(task_route):
     raise APIUnprocessableEntity('Failed to parse request body as valid JSON')
 
   # Get the task ID from the payload
-  op_id = payload.get('id')
+  op_id = payload.get('id', 'no-id')
   if op_id is None:
     logger.error(f'Request body must define an operation ID. Payload: {payload}')
     raise APIUnprocessableEntity('Request body must define an operation ID')
-  else:
-    call_id = f'TASK {op_id}'
-    logger.info(f'[{ call_id }] Payload: {payload}')
 
+  # Log the start of the task
+  call_id = f'TASK {op_id}'
+  logger.info(f'[{ call_id }] Starting job in queue { task_route }. Payload: {payload}')
+
+  # Try to create a task handler of the appropriate type
+  handler = get_task_handler(task_route, **payload)
 
   # Create & start the job
   try:
-    handler, create_response, run_response = start_job(payload, task_route, run_if_exists=True)
+    responses = start_job(handler, run_if_exists=True)
     update_status_safe(queue, op_id, status=TaskStatus.RUNNING)
 
   # Intercept API errors to add task ID
@@ -64,7 +67,7 @@ def start_task(task_route):
 
   # Create a Pipeline Operation record for the task
   try:
-    op = create_pipeline_operation_record(handler.task, run_response)
+    op = create_pipeline_operation_record(handler, responses['run'])
     update_status_safe(queue, op_id, operation_name=op.operation)
 
   # Intercept API errors to add task ID

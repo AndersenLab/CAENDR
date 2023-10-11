@@ -37,7 +37,8 @@ def job_finish(kind, id, status):
 
   # Fetch requested report, aborting if kind is invalid or report cannot be found
   try:
-    report = lookup_report(kind, id, validate_user=False)
+    job = lookup_report(kind, id, validate_user=False)
+    report = job.report
   except ReportLookupError as ex:
     return ex.msg, ex.code
 

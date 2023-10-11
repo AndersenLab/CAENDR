@@ -16,7 +16,6 @@ from caendr.services.cloud.storage import (
     generate_blob_url,
     get_blob,
 )
-from caendr.services.tools import submit_job
 
 from caendr.utils.constants import CHROM_NUMERIC
 from caendr.utils.env import get_env_var
