@@ -30,3 +30,16 @@ class DatabaseOperationPipeline(JobPipeline):
 
   def upload(self, data_files):
     return
+
+  # Database operations are not cached, so this will always be False
+  # Overrides parent definition
+  def _check_cached_result(self):
+    return False
+
+  # Try injecting the user email as a parameter to the Task init function
+  @classmethod
+  def create_task(cls, *args, **kwargs):
+    try:
+      return super().create_task(*args, email = args[0].get_user_email(), **kwargs)
+    except:
+      return super().create_task(*args, **kwargs)

@@ -167,39 +167,6 @@ def db_op_preflight_check(op, species_list):
   return missing_files
 
 
-def create_new_db_op(op, user, args=None, note=None):
-  logger.debug(f'Creating new Database Operation: op:{op}, user:{user}, args:{args}, note:{note}')
-
-  # Get the DB Operations container from datastoer
-  container = Container.get(MODULE_DB_OPERATIONS_CONTAINER_NAME)
-
-  # Create Database Operation entity & upload to datastore
-  db_op = DatabaseOperation(**{
-    'note':              note,
-    'db_operation':      op,
-    'args':              args,
-  })
-
-  # Set entity's container & user fields
-  db_op.set_container(container)
-  db_op.set_user(user)
-
-  # Upload the new entity to datastore
-  db_op['status'] = TaskStatus.SUBMITTED
-  db_op.save()
-
-  # Schedule mapping in task queue
-  task   = DatabaseOperationTask(db_op, email=db_op.get_user_email())
-  result = task.submit()
-
-  # Update entity status to reflect whether task was submitted successfully
-  db_op.status = TaskStatus.SUBMITTED if result else TaskStatus.ERROR
-  db_op.save()
-
-  # Return resulting Database Operation entity
-  return db_op
-
-
 
 def update_db_op_status(id: str, status: str=None, operation_name: str=None):
   logger.debug(f'update_db_op_status: id:{id} status:{status} operation_name:{operation_name}')

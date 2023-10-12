@@ -8,7 +8,9 @@ from flask import Blueprint, render_template, url_for, request, redirect, flash,
 from base.utils.auth import admin_required, get_jwt, get_jwt_identity, get_current_user
 from base.forms import AdminCreateDatabaseOperationForm
 
-from caendr.services.database_operation import get_all_db_ops, get_all_db_stats, get_etl_op, create_new_db_op, get_db_op_form_options, db_op_preflight_check
+from caendr.services.database_operation import get_all_db_ops, get_all_db_stats, get_etl_op, get_db_op_form_options, db_op_preflight_check
+
+from caendr.models.job_pipeline import DatabaseOperationPipeline
 
 from google.cloud import storage
 
@@ -109,6 +111,9 @@ def create_op():
     flash(Markup(f'Could not submit job. Missing the following files:{files_txt}'), category='danger')
     return redirect(request.url)
 
-  # Create the job and redirect back to the full list
-  create_new_db_op(db_op, user, args=args, note=note)
+  # Create and schedule the job
+  job = DatabaseOperationPipeline.create(user, { 'note': note, 'db_operation': db_op, 'args': args })
+  job.schedule()
+
+  # Redirect back to the full list
   return redirect(url_for("admin_etl_op.admin_etl_op"), code=302)
