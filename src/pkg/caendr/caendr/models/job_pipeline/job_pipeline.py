@@ -279,7 +279,8 @@ class JobPipeline(ABC):
           - files (list): A list of files to upload to cloud storage. These will be handled by the `upload` method. Optional.
 
       Raises:
-        - DataFormatError: Validation of the input failed.
+        - PreflightCheckError: One or more required files were not found in cloud storage.
+        - DataFormatError:     Validation of the input failed.
     '''
     return { 'props': data }
 

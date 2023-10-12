@@ -142,6 +142,12 @@ class DataFormatError(InternalError):
     self.line = line
     super().__init__()
 
+class PreflightCheckError(InternalError):
+  description = "One or more files required for this job were not found"
+  def __init__(self, missing_files: list):
+    self.missing_files = missing_files
+    super().__init__()
+
 class GoogleSheetsParseError(InternalError):
   description = "Unable to parse Google Sheets document"
 

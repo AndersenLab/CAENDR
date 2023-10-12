@@ -25,6 +25,7 @@ from .heritability_report import HeritabilityReport  # Subclasses DataJobEntity
 from .nemascan_mapping    import NemascanReport      # Subclasses DataJobEntity
 
 # Other
+from .database_operation  import DbOp
 from .profile             import Profile
 from .markdown            import Markdown
 
