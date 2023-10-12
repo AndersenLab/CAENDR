@@ -16,7 +16,6 @@ from caendr.models.error      import (
 )
 from caendr.models.run        import Runner
 from caendr.models.task       import TaskStatus, Task
-from caendr.services.validate import get_delimiter_from_filepath
 from caendr.utils.env         import get_env_var
 
 
@@ -162,11 +161,8 @@ class JobPipeline(ABC):
     if container_version is not None:
       logger.warn(f'Container version {container_version} was specified manually - this may not be the most recent version.')
 
-    # Get the file format & delimiter
-    delimiter = get_delimiter_from_filepath(data.get('filepath'), valid_file_extensions=valid_file_extensions)
-
     # Parse the input data
-    parsed_data = cls.parse(data, delimiter=delimiter)
+    parsed_data = cls.parse(data, valid_file_extensions=valid_file_extensions)
 
     # Check if user has already submitted this job, and "return" it in a duplicate data error if so
     if parsed_data.get('hash') and not no_cache:
@@ -266,7 +262,7 @@ class JobPipeline(ABC):
 
   @classmethod
   @abstractmethod
-  def parse(cls, data: dict, delimiter: str = '\t') -> dict:
+  def parse(cls, data: dict, valid_file_extensions = None) -> dict:
     '''
       Parse user input into properties to be stored in the report object (in the cloud).
       If any validation is required, it should be performed here.

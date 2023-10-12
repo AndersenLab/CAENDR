@@ -8,7 +8,7 @@ from caendr.models.run             import NemascanRunner
 
 # Services
 from caendr.models.datastore       import Species
-from caendr.services.validate      import validate_file, validate_num, validate_strain
+from caendr.services.validate      import get_delimiter_from_filepath, validate_file, validate_num, validate_strain
 from caendr.services.cloud.storage import upload_blob_from_file
 from caendr.utils.env              import get_env_var
 from caendr.utils.file             import get_file_hash
@@ -54,13 +54,16 @@ class NemascanPipeline(JobPipeline):
 
 
   @classmethod
-  def parse(cls, data, delimiter='\t'):
+  def parse(cls, data, valid_file_extensions=None):
 
     # Extract local filepath from the data object
     # Note that we don't change the underlying object itself, as this would
     # affect the data dict in calling functions
     local_path = data['filepath']
     data = { k: v for k, v in data.items() if k != 'filepath' }
+
+    # Get the file format & delimiter
+    delimiter = get_delimiter_from_filepath(local_path, valid_file_extensions=valid_file_extensions)
 
     # Validate each line in the file
     # Will raise an error if any problems are found, otherwise silently passes

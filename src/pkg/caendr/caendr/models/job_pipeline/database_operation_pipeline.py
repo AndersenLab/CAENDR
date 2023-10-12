@@ -25,8 +25,8 @@ class DatabaseOperationPipeline(JobPipeline):
   # TODO: The following methods are required by the Abstract parent
 
   @classmethod
-  def parse(cls, data, delimiter='\t'):
-    return super()
+  def parse(cls, data, valid_file_extensions=None):
+    return super().parse(data, valid_file_extensions=valid_file_extensions)
 
   def upload(self, data_files):
     return

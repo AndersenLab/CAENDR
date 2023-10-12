@@ -31,7 +31,7 @@ class IndelFinderPipeline(JobPipeline):
   #
 
   @classmethod
-  def parse(cls, data, delimiter='\t'):
+  def parse(cls, data, valid_file_extensions=None):
     data_file = json.dumps(data)
     data_hash = get_object_hash(data, length=32)
 
