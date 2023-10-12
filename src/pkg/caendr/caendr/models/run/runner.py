@@ -7,7 +7,7 @@ from googleapiclient.errors import HttpError
 from caendr.services.logger import logger
 from caendr.utils.env       import get_env_var
 
-from caendr.models.datastore            import DataJobEntity, Species
+from caendr.models.datastore            import DataJobEntity, Container
 from caendr.models.lifesciences         import ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
 from caendr.services.cloud.cloudrun     import create_job, run_job
 from caendr.services.cloud.lifesciences import start_pipeline
@@ -40,16 +40,40 @@ LOCAL_WORK_PATH = '/workdir'
 class Runner(ABC):
   '''
     Abstract class for running a job.
+
+    As a general rule of thumb, Runner objects should be unique up to kind + data ID.
+    For example, two jobs submitted by different users on the same data should (mostly) have equivalent GCPRunners.
+
+    However, a single runner may represent multiple *executions* of the same job on the same data.
   '''
 
-  # TODO: Abstract away from storing report directly...
-  report: DataJobEntity
+  # String identifying the type of job being run
+  # Should correspond with the report kind
+  kind:    str
 
-  def __init__(self, report):
-    self.report = report
+  # String uniquely identifying the job itself
+  # Runners with the same data_id are considered to be running the same "computation"
+  # Individual runs of this data are available as executions, meaning the execution ID is required
+  # to distinguish between multiple executions with the same data_id
+  data_id: str
+
+
+  def __init__(self, kind: str, data_id: str):
+    '''
+      Arguments:
+        - kind (str):
+            Identifier for the type of job being run.
+            Should correspond with the report kind.
+        - data_id (str):
+            Unique identifier for the job data.
+            Runners with the same data ID are considered to be running the same "computation".
+    '''
+    self.kind    = kind
+    self.data_id = data_id
+
 
   @abstractmethod
-  def run(self, run_if_exists=False):
+  def run(self, report, run_if_exists=False):
     '''
       Start a job on the given route.
 
@@ -62,12 +86,6 @@ class Runner(ABC):
           - run:    The response to the CloudRun run job request.
     '''
     pass
-
-
-  # TODO: This is pretty implementation-specific...
-  @property
-  def latest_release(self):
-    return Species.get(self.report.species)['release_latest']
 
 
 
@@ -83,7 +101,11 @@ class GCPRunner(Runner):
   '''
     Template class for running a job in GCP.
 
-    Introduces new abstract methods for starting a GCP service..
+    Individual GCPRunner objects should be unique up to data ID.
+    For example, two jobs submitted by different users with the same data ID will have equivalent GCPRunners.
+    By default, the data ID is taken to be the data_hash.
+
+    Introduces new abstract methods for starting a GCP service.
   '''
 
   # Machine Parameters #
@@ -101,6 +123,37 @@ class GCPRunner(Runner):
   _MAX_RETRIES   = 1
   _MEMORY_LIMITS = { 'memory': '512Mi', 'cpu': '1' }
 
+  # Container to run
+  _container: Container = None
+
+  # The report field to use as the data ID
+  # Defaults to data hash, but may be overwritten in subclasses
+  _data_id_field: str = 'data_hash'
+
+
+  def __init__(self, report: DataJobEntity = None, kind: str = None, data_id: str = None, container: Container = None):
+
+    # Arguments are mutually exclusive
+    if not ((report is None) ^ (kind is None and data_id is None)):
+      raise ValueError('Either "report" should be provided, or "kind" and "data_id" should be provided.')
+
+    # Container is optional, but may not be defined if report is
+    if report is not None and container is not None:
+      raise ValueError('Cannot provide "container" when "report" is also provided.')
+
+    # If a report is provided, read required arguments from it
+    # Note that, in this case, all other arguments are None
+    if report is not None:
+      self._container = report.get_container()
+      return super().__init__(kind = report.kind, data_id = getattr(report, self._data_id_field))
+
+    # If a container is provided, store it
+    if container is not None:
+      self._container = container
+
+    # Pass along the arguments required by the parent class
+    return super().__init__(kind = kind, data_id = data_id)
+
 
   # Container Properties #
   # TODO: These overlap with JobPipeline -- as part of removing report var, should find a way to rewrite these
@@ -110,34 +163,28 @@ class GCPRunner(Runner):
     '''
       The URI for this job's container image. Used to look up & create the container.
     '''
-    return self.report.get_container().uri()
+    if self._container is None:
+      raise ValueError('No container was specified at initialization')
+    return self._container.uri()
 
   @property
   def image_version(self) -> str:
     '''
       The version of this job's container image.
     '''
-    return self.report.container_version
+    if self._container is None:
+      raise ValueError('No container was specified at initialization')
+    return self._container['container_tag']
 
   @property
   def container_name(self) -> str:
     '''
       A unique name for a container computing this job.
 
-      Unique up to data hash, i.e. JobPipeline objects which represent the same data
-      submitted by different users will have DIFFERENT `container_name`s.
+      Unique up to data ID, i.e. JobPipeline objects which represent the same data
+      submitted by different users will have the SAME container name.
     '''
-    return f'{self.report.kind}-{self.report.id}'.lower().replace('_', '-')
-  
-  @property
-  def job_name(self):
-    '''
-      A unique name for a container computing the results of this job's input data.
-
-      Unique up to data hash, i.e. JobPipeline objects which represent the same data
-      submitted by different users will have the SAME job_name.
-    '''
-    return f'{self.report.kind}-{self.report.data_hash}'.lower().replace('_', '-')
+    return f'{self.kind}-{self.data_id}'.lower().replace('_', '-')
 
 
   # Lookup Function #
@@ -155,16 +202,16 @@ class GCPRunner(Runner):
       "GOOGLE_ZONE":                  GOOGLE_CLOUD_ZONE,
     }
   
-  def get_data_job_vars(self):
+  def get_data_job_vars(self, report: DataJobEntity):
     return {
-      "TRAIT_FILE": f"gs://{ self.report.get_bucket_name() }/{ self.report.get_data_blob_path() }",
-      "WORK_DIR":   f"gs://{ WORK_BUCKET_NAME              }/{ self.report.data_hash }",
-      "DATA_DIR":   self.report.get_data_directory(),
-      "OUTPUT_DIR": f"gs://{ self.report.get_bucket_name() }/{ self.report.get_result_path() }",
+      "TRAIT_FILE": f"gs://{ report.get_bucket_name() }/{ report.get_data_blob_path() }",
+      "WORK_DIR":   f"gs://{ WORK_BUCKET_NAME         }/{ report.data_hash }",
+      "DATA_DIR":   report.get_data_directory(),
+      "OUTPUT_DIR": f"gs://{ report.get_bucket_name() }/{ report.get_result_path() }",
     }
 
   @abstractmethod
-  def construct_environment(self, report) -> dict:
+  def construct_environment(self, report: DataJobEntity) -> dict:
     '''
       Construct the set of environment variables for the container as a dictionary.
       Output should map variable names to values.
@@ -175,7 +222,7 @@ class GCPRunner(Runner):
   # Container Command #
 
   @abstractmethod
-  def construct_command(self, report) -> list:
+  def construct_command(self, report: DataJobEntity) -> list:
     '''
       Construct the command used to start the container functionality.
       Output should be a list of individual terms used in the command line.
@@ -206,7 +253,7 @@ class GCPCloudRunRunner(GCPRunner):
 
   @staticmethod
   def _get_id_from_details(details):
-    return details['args'][0].get('report', {}).get('id', 'no-id')
+    return details['args'][0].container_name
 
   @staticmethod
   def _log_ssl_backoff(details):
@@ -232,7 +279,7 @@ class GCPCloudRunRunner(GCPRunner):
   @backoff.on_exception(
       backoff.constant, SSLEOFError, max_tries=_MAX_TRIES_TOTAL, interval=20, jitter=None, on_backoff=_log_ssl_backoff.__func__, on_giveup=_log_ssl_giveup.__func__,
   )
-  def run(self, run_if_exists=False):
+  def run(self, report, run_if_exists=False):
     '''
       Start a job on the given route.
 
@@ -255,13 +302,13 @@ class GCPCloudRunRunner(GCPRunner):
 
     # Create a CloudRun job for this task
     try:
-      create_response = self._create()
+      create_response = self._create(report)
 
     # If the job already exists, optionally bail out
     except HttpError as ex:
       if run_if_exists and ex.status_code == 409:
-        logger.warn(f'[TASK {self.report.id}] Encountered HttpError: {ex}')
-        logger.warn(f'[TASK {self.report.id}] Running job again...')
+        logger.warn(f'[TASK {self.container_name}] Encountered HttpError: {ex}')
+        logger.warn(f'[TASK {self.container_name}] Running job again...')
         create_response = ex.resp
       else:
         raise
@@ -277,12 +324,12 @@ class GCPCloudRunRunner(GCPRunner):
   # Creating & Running CloudRun Job
   #
 
-  def _create(self):
+  def _create(self, report):
     '''
       Create a CloudRun Job to run this task.
     '''
     return create_job(**{
-      'name':        self.job_name,
+      'name':        self.container_name,
       'task_count':  self.get('TASK_COUNT'),
       'timeout':     self.get('TIMEOUT'),
       'max_retries': self.get('MAX_RETRIES'),
@@ -292,12 +339,12 @@ class GCPCloudRunRunner(GCPRunner):
         'name':      self.container_name, # Name of the container specified as a DNS_LABEL (RFC 1123).
 
         # Startup Command
-        'args':      self.construct_command()[1:],
-        'command':   self.construct_command()[0:1],
+        'args':      self.construct_command(report)[1:],
+        'command':   self.construct_command(report)[0:1],
 
         # Environment
         'env': [
-          { 'name': name, 'value': value } for name, value in self.construct_environment().items()
+          { 'name': name, 'value': value } for name, value in self.construct_environment(report).items()
         ],
 
         # Compute Resources
@@ -318,14 +365,14 @@ class GCPCloudRunRunner(GCPRunner):
     '''
       Initiate the CloudRun Job associated with this task.
     '''
-    response = run_job(self.job_name)
+    response = run_job(self.container_name)
 
     # Publish a Pub/Sub message to periodically check this job's status
     pub_sub_id = None
     try:
       pub_sub_id = publish_message(PUB_SUB_TOPIC_NAME, operation=response['metadata']['name'])
     except Exception as ex:
-      logger.error(f'Could not publish Pub/Sub message for job {self.job_name}: {ex}')
+      logger.error(f'Could not publish Pub/Sub message for job {self.container_name}: {ex}')
 
     return response, pub_sub_id
 
@@ -342,7 +389,7 @@ class GCPLifesciencesRunner(GCPRunner):
     Deprecated.
   '''
 
-  def run(self, run_if_exists=False):
+  def run(self, report, run_if_exists=False):
     '''
       Create and run a VM for this task using Lifesciences.
     '''
@@ -362,12 +409,12 @@ class GCPLifesciencesRunner(GCPRunner):
     action = Action(
       always_run                     = False,
       block_external_network         = False,
-      commands                       = self.construct_command(),
+      commands                       = self.construct_command(report),
       container_name                 = self.container_name,
       disable_image_prefetch         = False,
       disable_standard_error_capture = False,
       enable_fuse                    = False,
-      environment                    = self.construct_environment(),
+      environment                    = self.construct_environment(report),
       ignore_exit_status             = False,
       image_uri                      = self.image_uri,
       publish_exposed_ports          = False,
@@ -380,4 +427,5 @@ class GCPLifesciencesRunner(GCPRunner):
     pipeline_req = Request( pipeline=pipeline, pub_sub_topic=pub_sub_topic )
 
     # Start the pipeline
+    # TODO: We don't have access to the task ID anymore...?
     start_pipeline(self.task.id, pipeline_req)

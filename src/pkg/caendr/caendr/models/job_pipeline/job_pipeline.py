@@ -390,7 +390,7 @@ class JobPipeline(ABC):
       Run this job using the specified Runner class.
     '''
     # Forward run call to Runner object
-    return self._runner.run(*args, **kwargs)
+    return self._runner.run(self.report, *args, **kwargs)
 
 
   #
