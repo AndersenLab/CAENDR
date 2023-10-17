@@ -1,3 +1,5 @@
+from typing import Type
+
 # Base Class
 from .job_pipeline import JobPipeline
 
@@ -20,16 +22,43 @@ for cls_i in pipelineSubclasses:
       f'JobPipeline subclasses {cls_i.__name__} and {cls_j.__name__} both have the kind {cls_i.get_kind()}'
 
 
-def getJobPipelineClass(class_or_kind):
+
+def get_pipeline_class(kind = None, queue: str = None) -> Type[JobPipeline]:
+  '''
+    Get the appropriate JobPipeline subclass using *either* the kind or the queue name.
+
+    Kind is defined by the associated Report (storage) class.
+    Queue name is defined by the Task (scheduler) class.
+  '''
+
+  # Make arguments mutually exclusive
+  if not ((kind is None) ^ (queue is None)):
+    raise ValueError('Exactly one of "kind" and "queue" should be provided when looking up JobPipeline subclass.')
+
+
+  # Lookup by queue name #
+
+  if queue is not None:
+
+    # Loop through the set of JobPipeline subclasses, matching based on queue name
+    for cls in pipelineSubclasses:
+      if cls.get_queue() == queue:
+        return cls
+
+    # If none matched, raise an error
+    raise ValueError()
+
+
+  # Lookup by kind #
 
   # Determine the target kind, accepting both objects with a "kind" field and a straight kind itself
   try:
-      target_kind = class_or_kind.kind
+      target_kind = kind.kind
   except Exception:
     try:
-      target_kind = class_or_kind.get_kind()
+      target_kind = kind.get_kind()
     except Exception:
-      target_kind = class_or_kind
+      target_kind = kind
 
   # Loop through the set of JobPipeline subclasses, matching based on kind
   for cls in pipelineSubclasses:

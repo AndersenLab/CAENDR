@@ -14,7 +14,7 @@ from caendr.models.error import (
     FileUploadError,
     ReportLookupError,
 )
-from caendr.models.job_pipeline import JobPipeline, getJobPipelineClass
+from caendr.models.job_pipeline import JobPipeline, get_pipeline_class
 from caendr.utils.data import unique_id
 from caendr.services.cloud.secret import get_secret
 
@@ -37,7 +37,7 @@ def lookup_report(kind, reportId, user=None, validate_user=True) -> JobPipeline:
 
   # Get & validate the job pipeline class from the provided kind
   try:
-    JobPipelineClass = getJobPipelineClass(kind)
+    JobPipelineClass = get_pipeline_class(kind=kind)
   except Exception as ex:
     logger.error(f'Error getting JobPipeline subclass: unknown kind "{kind}". Exception: {ex}')
     if user_is_admin() or not validate_user:
@@ -117,7 +117,7 @@ def try_submit(kind, user, data, no_cache):
     # Try creating the job
     #   DuplicateDataError -> this user has already submitted this job
     #   DataFormatError    -> there is an error in the input data
-    job = getJobPipelineClass(kind).create(user, data, no_cache=no_cache, valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS)
+    job = get_pipeline_class(kind=kind).create(user, data, no_cache=no_cache, valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS)
 
     # Schedule the job, if applicable
     #   CachedDataError    -> the job already has results

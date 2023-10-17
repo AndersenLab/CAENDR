@@ -223,14 +223,31 @@ class JobPipeline(ABC):
 
   @property
   def kind(self):
+    '''
+      Get the unique kind specified by the associated Report class.
+    '''
     return self._Report_Class.kind
-  
+
   @classmethod
   def get_kind(cls):
     '''
       Class-level method for getting kind.
     '''
     return cls._Report_Class.kind
+
+  @property
+  def queue(self):
+    '''
+      Get the queue name specified by the associated Task class.
+    '''
+    return self._Task_Class.queue
+
+  @classmethod
+  def get_queue(cls):
+    '''
+      Class-level method for getting queue name.
+    '''
+    return cls._Task_Class.queue
 
 
 

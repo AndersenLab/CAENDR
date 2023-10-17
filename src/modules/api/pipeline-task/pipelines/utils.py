@@ -3,11 +3,11 @@ from caendr.utils.env       import get_env_var
 
 from caendr.models.datastore             import Species
 from caendr.models.error                 import APIBadRequestError, NotFoundError
+from caendr.models.job_pipeline          import JobPipeline, get_pipeline_class
 from caendr.services.nemascan_mapping    import update_nemascan_mapping_status
 from caendr.services.database_operation  import update_db_op_status
 from caendr.services.indel_primer        import update_indel_primer_status
 from caendr.services.heritability_report import update_heritability_report_status
-from caendr.models.job_pipeline          import DatabaseOperationPipeline, IndelFinderPipeline, HeritabilityPipeline, NemascanPipeline
 
 
 
@@ -25,15 +25,10 @@ def get_task_handler(queue_name, *args, **kwargs):
       - queue_name: The queue to run the job in.
       - kwargs: The job payload.
   '''
-  mapping = {
-    DB_OPERATIONS_TASK_QUEUE_NAME: DatabaseOperationPipeline,
-    INDEL_PRIMER_TASK_QUEUE_NAME:  IndelFinderPipeline,
-    HERITABILITY_TASK_QUEUE_NAME:  HeritabilityPipeline,
-    NEMASCAN_TASK_QUEUE_NAME:      NemascanPipeline,
-  }
-  cls = mapping.get(queue_name, None)
+  try:
+    cls = get_pipeline_class(queue = queue_name)
 
-  if cls is None:
+  except ValueError:
     raise APIBadRequestError(f'Invalid task route {queue_name}')
 
   try:
