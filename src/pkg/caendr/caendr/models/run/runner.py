@@ -130,40 +130,27 @@ class GCPRunner(Runner):
   _MAX_RETRIES   = 1
   _MEMORY_LIMITS = { 'memory': '512Mi', 'cpu': '1' }
 
-  # Container to run
-  _container: Container = None
-
   # The report field to use as the data ID
   # Defaults to data hash, but may be overwritten in subclasses
   _data_id_field: str = 'data_hash'
 
 
-  def __init__(self, report: DataJobEntity = None, kind: str = None, data_id: str = None, container: Container = None):
+  def __init__(self, report: DataJobEntity = None, kind: str = None, data_id: str = None):
 
     # Arguments are mutually exclusive
     if not ((report is None) ^ (kind is None and data_id is None)):
       raise ValueError('Either "report" should be provided, or "kind" and "data_id" should be provided.')
 
-    # Container is optional, but may not be defined if report is
-    if report is not None and container is not None:
-      raise ValueError('Cannot provide "container" when "report" is also provided.')
-
     # If a report is provided, read required arguments from it
     # Note that, in this case, all other arguments are None
     if report is not None:
-      self._container = report.get_container()
       return super().__init__(kind = report.kind, data_id = getattr(report, self._data_id_field))
-
-    # If a container is provided, store it
-    if container is not None:
-      self._container = container
 
     # Pass along the arguments required by the parent class
     return super().__init__(kind = kind, data_id = data_id)
 
 
-  # Container Properties #
-  # TODO: These overlap with JobPipeline -- as part of removing report var, should find a way to rewrite these
+  # Name Properties #
 
   @property
   @abstractmethod
@@ -172,24 +159,6 @@ class GCPRunner(Runner):
       The name of this job in GCP.
     '''
     return parent_id
-
-  @property
-  def image_uri(self) -> str:
-    '''
-      The URI for this job's container image. Used to look up & create the container.
-    '''
-    if self._container is None:
-      raise ValueError('No container was specified at initialization')
-    return self._container.uri()
-
-  @property
-  def image_version(self) -> str:
-    '''
-      The version of this job's container image.
-    '''
-    if self._container is None:
-      raise ValueError('No container was specified at initialization')
-    return self._container['container_tag']
 
   @property
   def container_name(self) -> str:
@@ -409,7 +378,7 @@ class GCPCloudRunRunner(GCPRunner):
   # Creating & Running CloudRun Job
   #
 
-  def _create(self, report):
+  def _create(self, report: DataJobEntity):
     '''
       Create a CloudRun Job to run this task.
     '''
@@ -420,7 +389,7 @@ class GCPCloudRunRunner(GCPRunner):
       'max_retries': self.get('MAX_RETRIES'),
 
       'container': {
-        'image':     self.image_uri,
+        'image':     report.get_container().uri(),
         'name':      self.container_name, # Name of the container specified as a DNS_LABEL (RFC 1123).
 
         # Startup Command
@@ -501,7 +470,7 @@ class GCPLifesciencesRunner(GCPRunner):
       enable_fuse                    = False,
       environment                    = self.construct_environment(report),
       ignore_exit_status             = False,
-      image_uri                      = self.image_uri,
+      image_uri                      = report.get_container().uri(),
       publish_exposed_ports          = False,
       run_in_background              = False,
       timeout                        = self.get('TIMEOUT'),

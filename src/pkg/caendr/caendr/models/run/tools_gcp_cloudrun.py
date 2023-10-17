@@ -85,7 +85,7 @@ class HeritabilityRunner(GCPCloudRunRunner):
   _TIMEOUT           = '9000s'
 
   def construct_command(self, report):
-    if self.image_version == "v0.1a":
+    if report['container_version'] == "v0.1a":
       return ['python', '/h2/main.py']
     return ["./heritability-nxf.sh"]
 
