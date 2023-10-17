@@ -48,9 +48,9 @@ def start_task(task_route):
   # Try to create a task handler of the appropriate type
   handler = get_task_handler(task_route, **payload)
 
-  # Create & start the job
+  # Run the job
   try:
-    responses = handler.run(run_if_exists=True)
+    exec_id = handler.run(run_if_exists=True)
     update_status_safe(queue, op_id, status=TaskStatus.RUNNING)
 
   # Intercept API errors to add task ID
@@ -62,24 +62,7 @@ def start_task(task_route):
   # Wrap generic exceptions in an Internal Error class
   except Exception as ex:
     update_status_safe(queue, op_id, status=TaskStatus.ERROR)
-    raise APIInternalError('Failed to create job', call_id) from ex
-
-
-  # Create a Pipeline Operation record for the task
-  try:
-    op = create_pipeline_operation_record(handler, responses['run'])
-    update_status_safe(queue, op_id, operation_name=op.operation)
-
-  # Intercept API errors to add task ID
-  except APIError as ex:
-    ex.set_call_id(call_id)
-    raise ex
-
-  # Wrap generic exceptions in an Internal Error class
-  # TODO: Do we need to send anything to the persistent logger?
-  except Exception as ex:
-    # persistent_logger = PersistentLogger(task_route)
-    raise APIInternalError('Could not create pipeline_operation record', call_id) from ex
+    raise APIInternalError('Error occurred while creating job', call_id) from ex
 
   #return jsonify({'operation': op.id}), 200
   return jsonify({}), 200

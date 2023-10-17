@@ -7,7 +7,8 @@ from googleapiclient.errors import HttpError
 from caendr.services.logger import logger
 from caendr.utils.env       import get_env_var
 
-from caendr.models.datastore            import DataJobEntity, Container
+from caendr.models.datastore            import DataJobEntity, PipelineOperation, Container
+from caendr.models.error                import PipelineRunError, NotFoundError
 from caendr.models.lifesciences         import ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
 from caendr.services.cloud.cloudrun     import create_job, run_job
 from caendr.services.cloud.lifesciences import start_pipeline
@@ -35,6 +36,7 @@ SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
 ZONE = 'us-central1-a'
 LOCAL_WORK_PATH = '/workdir'
 
+parent_id = f"projects/{GOOGLE_CLOUD_PROJECT_NUMBER}/locations/{GOOGLE_CLOUD_REGION}"
 
 
 class Runner(ABC):
@@ -45,6 +47,8 @@ class Runner(ABC):
     For example, two jobs submitted by different users on the same data should (mostly) have equivalent GCPRunners.
 
     However, a single runner may represent multiple *executions* of the same job on the same data.
+    In this case:
+      - The `run` function should return a unique identifier for the execution that it started.
   '''
 
   # String identifying the type of job being run
@@ -56,6 +60,9 @@ class Runner(ABC):
   # Individual runs of this data are available as executions, meaning the execution ID is required
   # to distinguish between multiple executions with the same data_id
   data_id: str
+
+  # Storage class to record metadata about an execution
+  _Record_Class: None
 
 
   def __init__(self, kind: str, data_id: str):
@@ -73,17 +80,15 @@ class Runner(ABC):
 
 
   @abstractmethod
-  def run(self, report, run_if_exists=False):
+  def run(self, report: DataJobEntity, run_if_exists: bool = False) -> str:
     '''
-      Start a job on the given route.
+      Start a job to compute the given report.
 
       Args:
         - run_if_exists (bool, optional): If True, will still run the job even if the specified job container exists. Default False.
 
       Returns:
-        A dictionary of responses generated in starting the job:
-          - create: The response to the CloudRun create job request.
-          - run:    The response to the CloudRun run job request.
+        An identifier for the execution that was created.  Will be unique within this Runner object.
     '''
     pass
 
@@ -107,6 +112,8 @@ class GCPRunner(Runner):
 
     Introduces new abstract methods for starting a GCP service.
   '''
+
+  _Record_Class: PipelineOperation
 
   # Machine Parameters #
   # Can be overwritten in subclasses as needed
@@ -157,6 +164,14 @@ class GCPRunner(Runner):
 
   # Container Properties #
   # TODO: These overlap with JobPipeline -- as part of removing report var, should find a way to rewrite these
+
+  @property
+  @abstractmethod
+  def operation_name(self):
+    '''
+      The name of this job in GCP.
+    '''
+    return parent_id
 
   @property
   def image_uri(self) -> str:
@@ -230,6 +245,50 @@ class GCPRunner(Runner):
     pass
 
 
+  def _create_execution_record(self, execution_id, response):
+    '''
+      Create a PipelineOperation record object to track a specific execution of this job.
+    '''
+    if response is None:
+      raise PipelineRunError(f'No response provided for execution {execution_id}')
+
+    # Validate response properties
+    try:
+      name = response.get('response').get('name')
+    except:
+      name = response.get('name')
+    metadata = response.get('metadata')
+    if name is None or metadata is None:
+      raise PipelineRunError(f'Pipeline start response missing expected properties (name = "{name}", metadata = "{metadata}")')
+
+
+    id = f'{ self.container_name }-{ execution_id }'
+    op = self._Record_Class(id)
+    if op._exists:
+      logger.warn(f'[CREATE {id}] Execution record object ({self._Record_Class.kind}) with ID {id} already exists: {dict(op)}')
+
+    op.set_properties(**{
+      'id':             id,
+      'operation':      name,
+      'operation_kind': self.kind,
+      'execution_id':   execution_id,
+      'metadata':       metadata,
+      'report_path':    None,
+      'done':           False,
+      'error':          False,
+    })
+    op.save()
+    return op
+
+
+  def _lookup_execution_record(self, execution_id):
+    id = f'{ self.container_name }-{ execution_id }'
+    op = self._Record_Class(id)
+    if not op._exists:
+      raise NotFoundError(self._Record_Class, {'id': id})
+    return op
+
+
 
 class GCPCloudRunRunner(GCPRunner):
   '''
@@ -245,6 +304,18 @@ class GCPCloudRunRunner(GCPRunner):
   # Total number of times to try running the CloudRun Job after it has been created
   # With exponential backoff, this is approx (2^(n-1))-1 = 127 sec, or a little over 2 minutes
   _MAX_TRIES_RUN   = 8
+
+
+  #
+  # Names
+  #
+
+  @property
+  def operation_name(self):
+    return f'{ super().operation_name }/jobs/{ self.container_name }'
+
+  def _get_execution_name(self, execution_id):
+    return f'{ self.operation_name }/executions/{ self.container_name }-{ execution_id }'
 
 
   #
@@ -291,13 +362,12 @@ class GCPCloudRunRunner(GCPRunner):
         - run_if_exists (bool, optional): If True, will still run the job even if the specified job container exists. Default False.
 
       Returns:
-        A dictionary of responses generated in starting the job:
-          - create: The response to the CloudRun create job request.
-          - run:    The response to the CloudRun run job request.
+        A unique ID for the execution started by this call. This can be used to check the status of that execution.
 
       Raises:
         APIBadRequestError: The payload & task route do not identify an existing / valid Entity.
         HttpError: Forwarded from googleapiclient from create & run requests. If `run_if_exists` is True, ignores status code 409 from create request.
+        PipelineRunError: A PipelineOperation record could not be created for this execution
     '''
 
     # Create a CloudRun job for this task
@@ -316,8 +386,23 @@ class GCPCloudRunRunner(GCPRunner):
     # Run the CloudRun job
     run_response, pub_sub_id = self._run()
 
-    # Return the individual responses
-    return { 'create': create_response, 'run': run_response }
+    # Get the specific execution ID from the response
+    exec_id = run_response['metadata']['name'].rsplit('-')[-1]
+
+    # Create a PipelineOperation record to represent this execution
+    try:
+      self._create_execution_record(exec_id, run_response)
+
+    # If a known error occurred creating the record, raise it as-is
+    except PipelineRunError:
+      raise
+
+    # If a generic exception occurred, wrap it in a PipelineRun error so the caller knows what stage of the function it came from
+    except Exception as ex:
+      raise PipelineRunError(f'Failed to create Pipeline Operation record for execution {exec_id}') from ex
+
+    # Return the ID of the execution that was just started
+    return exec_id
 
 
   #
@@ -428,4 +513,7 @@ class GCPLifesciencesRunner(GCPRunner):
 
     # Start the pipeline
     # TODO: We don't have access to the task ID anymore...?
-    start_pipeline(self.task.id, pipeline_req)
+    response = start_pipeline(self.task.id, pipeline_req)
+
+    # Would have to get an execution ID from the response
+    return None
