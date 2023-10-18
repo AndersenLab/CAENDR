@@ -107,7 +107,7 @@ class JobPipeline(ABC):
 
     # Create a managed Runner object
     # TODO: Better management of Runner object
-    self._runner = self.create_runner(report)
+    self._runner = self.create_runner(report=report)
 
 
   @classmethod

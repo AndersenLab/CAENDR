@@ -1,6 +1,7 @@
 from .runner import GCPCloudRunRunner
 
 from caendr.models.datastore import Species
+from caendr.models.datastore import DatabaseOperation, IndelPrimerReport, HeritabilityReport, NemascanReport
 
 
 #
@@ -11,6 +12,7 @@ class DatabaseOperationRunner(GCPCloudRunRunner):
   # All computations of the same operation are grouped as the same "job"
   _data_id_field = 'db_operation'
 
+  kind = DatabaseOperation.kind
 
   # Properties #
 
@@ -57,6 +59,8 @@ class DatabaseOperationRunner(GCPCloudRunRunner):
 #
 class IndelPrimerRunner(GCPCloudRunRunner):
 
+  kind = IndelPrimerReport.kind
+
   _BOOT_DISK_SIZE_GB = 20
   _TIMEOUT           = '3600s'
 
@@ -80,6 +84,8 @@ class IndelPrimerRunner(GCPCloudRunRunner):
 # Heritability (GCP CloudRun Implementation)
 #
 class HeritabilityRunner(GCPCloudRunRunner):
+
+  kind = HeritabilityReport.kind
 
   _BOOT_DISK_SIZE_GB = 10
   _TIMEOUT           = '9000s'
@@ -107,6 +113,8 @@ class HeritabilityRunner(GCPCloudRunRunner):
 # Nemascan Mapping (GCP CloudRun Implementation)
 #
 class NemascanRunner(GCPCloudRunRunner):
+
+  kind = NemascanReport.kind
 
   _BOOT_DISK_SIZE_GB = 100
   _TIMEOUT           = '86400s'

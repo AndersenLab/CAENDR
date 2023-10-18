@@ -54,7 +54,9 @@ class Runner(ABC):
 
   # String identifying the type of job being run
   # Should correspond with the report kind
-  kind:    str
+  @property
+  @abstractmethod
+  def kind(self) -> str: pass
 
   # String uniquely identifying the job itself
   # Runners with the same data_id are considered to be running the same "computation"
@@ -62,21 +64,47 @@ class Runner(ABC):
   # to distinguish between multiple executions with the same data_id
   data_id: str
 
+  # The report field to use as the data ID
+  # Defaults to data hash, but may be overwritten in subclasses
+  _data_id_field: str = 'data_hash'
+
   # Storage class to record metadata about an execution
   _Record_Class: None
 
 
-  def __init__(self, kind: str, data_id: str):
+  def __init__(self, data_id: str = None, report: DataJobEntity = None):
     '''
+      Create a new Runner object.
+
+      Takes one of two mutually exclusive arguments: the data ID directly, or a job report
+      containing that data ID in the appropriate field.
+
       Arguments:
-        - kind (str):
-            Identifier for the type of job being run.
-            Should correspond with the report kind.
         - data_id (str):
             Unique identifier for the job data.
             Runners with the same data ID are considered to be running the same "computation".
+        - report (DataJobEntity):
+            Job report to initialize the runner from. Must have the same kind as the Runner subclass.
+            Must contain the appropriate data ID field (defaults to "data_hash")
+
+      Raises:
+        - ValueError:
+            The incorrect number of arguments was provided, or the report was invalid.
     '''
-    self.kind    = kind
+
+    # Arguments are mutually exclusive
+    if not ((data_id is None) ^ (report is None)):
+      raise ValueError('Either "data_id" should be provided, or "report" should be provided.')
+
+    # If report provided, validate its kind and extract the data ID from it
+    if report is not None:
+      if report.kind != self.kind:
+        raise ValueError(f'Cannot initialize runner of kind {self.kind} from report with kind {report.kind}')
+      data_id = getattr(report, self._data_id_field)
+      if data_id is None:
+        raise ValueError(f'Cannot initialize runner of kind {self.kind} from report with no "{self._data_id_field}" field')
+
+    # Set the data ID
     self.data_id = data_id
 
 
@@ -130,25 +158,6 @@ class GCPRunner(Runner):
   _TASK_COUNT    = 1
   _MAX_RETRIES   = 1
   _MEMORY_LIMITS = { 'memory': '512Mi', 'cpu': '1' }
-
-  # The report field to use as the data ID
-  # Defaults to data hash, but may be overwritten in subclasses
-  _data_id_field: str = 'data_hash'
-
-
-  def __init__(self, report: DataJobEntity = None, kind: str = None, data_id: str = None):
-
-    # Arguments are mutually exclusive
-    if not ((report is None) ^ (kind is None and data_id is None)):
-      raise ValueError('Either "report" should be provided, or "kind" and "data_id" should be provided.')
-
-    # If a report is provided, read required arguments from it
-    # Note that, in this case, all other arguments are None
-    if report is not None:
-      return super().__init__(kind = report.kind, data_id = getattr(report, self._data_id_field))
-
-    # Pass along the arguments required by the parent class
-    return super().__init__(kind = kind, data_id = data_id)
 
 
   # Name Properties #
