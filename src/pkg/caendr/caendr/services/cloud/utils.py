@@ -24,6 +24,20 @@ NOTIFICATION_LOG_PREFIX = 'EMAIL_NOTIFICATION'
 
 
 
+def make_dns_name_safe(s: str) -> str:
+  '''
+    Convert a string to DNS name format.
+
+    Rules for this format:
+      - May only contain alphanumeric characters & hyphens
+      - Must start with a letter
+      - Must not end with a hyphen
+      - May be at most 64 characters long
+  '''
+  return s.lower().replace('_', '-')
+
+
+
 def get_operation_status(operation_name):
   '''
     Request the operation status from the correct pipeline, based on the service name.

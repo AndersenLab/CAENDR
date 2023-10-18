@@ -13,6 +13,7 @@ from caendr.models.lifesciences         import ServiceAccount, VirtualMachine, R
 from caendr.services.cloud.cloudrun     import create_job, run_job
 from caendr.services.cloud.lifesciences import start_pipeline
 from caendr.services.cloud.pubsub       import publish_message
+from caendr.services.cloud.utils        import make_dns_name_safe
 
 
 
@@ -161,14 +162,21 @@ class GCPRunner(Runner):
     return parent_id
 
   @property
-  def container_name(self) -> str:
+  def job_name(self) -> str:
     '''
-      A unique name for a container computing this job.
+      A unique name for this job, specified as a DNS_LABEL (RFC 1123).
+      Will be used to name any container running this job.
 
       Unique up to data ID, i.e. JobPipeline objects which represent the same data
-      submitted by different users will have the SAME container name.
+      submitted by different users will have the SAME job name.
+
+      The resulting name should comply with the DNS_LABEL name format:
+        - May only contain alphanumeric characters & hyphens
+        - Must start with a letter
+        - Must not end with a hyphen
+        - May be at most 64 characters long
     '''
-    return f'{self.kind}-{self.data_id}'.lower().replace('_', '-')
+    return make_dns_name_safe( f'{self.kind}-{self.data_id}' )
 
 
   # Lookup Function #
@@ -231,7 +239,7 @@ class GCPRunner(Runner):
       raise PipelineRunError(f'Pipeline start response missing expected properties (name = "{name}", metadata = "{metadata}")')
 
 
-    id = f'{ self.container_name }-{ execution_id }'
+    id = f'{ self.job_name }-{ execution_id }'
     op = self._Record_Class(id)
     if op._exists:
       logger.warn(f'[CREATE {id}] Execution record object ({self._Record_Class.kind}) with ID {id} already exists: {dict(op)}')
@@ -251,7 +259,7 @@ class GCPRunner(Runner):
 
 
   def _lookup_execution_record(self, execution_id):
-    id = f'{ self.container_name }-{ execution_id }'
+    id = f'{ self.job_name }-{ execution_id }'
     op = self._Record_Class(id)
     if not op._exists:
       raise NotFoundError(self._Record_Class, {'id': id})
@@ -281,10 +289,10 @@ class GCPCloudRunRunner(GCPRunner):
 
   @property
   def operation_name(self):
-    return f'{ super().operation_name }/jobs/{ self.container_name }'
+    return f'{ super().operation_name }/jobs/{ self.job_name }'
 
   def _get_execution_name(self, execution_id):
-    return f'{ self.operation_name }/executions/{ self.container_name }-{ execution_id }'
+    return f'{ self.operation_name }/executions/{ self.job_name }-{ execution_id }'
 
 
   #
@@ -293,7 +301,7 @@ class GCPCloudRunRunner(GCPRunner):
 
   @staticmethod
   def _get_id_from_details(details):
-    return details['args'][0].container_name
+    return details['args'][0].job_name
 
   @staticmethod
   def _log_ssl_backoff(details):
@@ -346,8 +354,8 @@ class GCPCloudRunRunner(GCPRunner):
     # If the job already exists, optionally bail out
     except HttpError as ex:
       if run_if_exists and ex.status_code == 409:
-        logger.warn(f'[TASK {self.container_name}] Encountered HttpError: {ex}')
-        logger.warn(f'[TASK {self.container_name}] Running job again...')
+        logger.warn(f'[TASK {self.job_name}] Encountered HttpError: {ex}')
+        logger.warn(f'[TASK {self.job_name}] Running job again...')
         create_response = ex.resp
       else:
         raise
@@ -383,14 +391,14 @@ class GCPCloudRunRunner(GCPRunner):
       Create a CloudRun Job to run this task.
     '''
     return create_job(**{
-      'name':        self.container_name,
+      'name':        self.job_name,
       'task_count':  self.get('TASK_COUNT'),
       'timeout':     self.get('TIMEOUT'),
       'max_retries': self.get('MAX_RETRIES'),
 
       'container': {
         'image':     report.get_container().uri(),
-        'name':      self.container_name, # Name of the container specified as a DNS_LABEL (RFC 1123).
+        'name':      self.job_name, # Name of the container specified as a DNS_LABEL (RFC 1123).
 
         # Startup Command
         'args':      self.construct_command(report)[1:],
@@ -419,14 +427,14 @@ class GCPCloudRunRunner(GCPRunner):
     '''
       Initiate the CloudRun Job associated with this task.
     '''
-    response = run_job(self.container_name)
+    response = run_job(self.job_name)
 
     # Publish a Pub/Sub message to periodically check this job's status
     pub_sub_id = None
     try:
       pub_sub_id = publish_message(PUB_SUB_TOPIC_NAME, operation=response['metadata']['name'])
     except Exception as ex:
-      logger.error(f'Could not publish Pub/Sub message for job {self.container_name}: {ex}')
+      logger.error(f'Could not publish Pub/Sub message for job {self.job_name}: {ex}')
 
     return response, pub_sub_id
 
@@ -464,7 +472,7 @@ class GCPLifesciencesRunner(GCPRunner):
       always_run                     = False,
       block_external_network         = False,
       commands                       = self.construct_command(report),
-      container_name                 = self.container_name,
+      job_name                       = self.job_name,
       disable_image_prefetch         = False,
       disable_standard_error_capture = False,
       enable_fuse                    = False,
