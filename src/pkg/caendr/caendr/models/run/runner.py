@@ -164,14 +164,6 @@ class Runner(ABC):
 
 
 
-class LocalRunner(Runner):
-  '''
-    Template class for a job that runs locally, without needing to start a container.
-  '''
-  pass
-
-
-
 class GCPRunner(Runner):
   '''
     Template class for running a job in GCP.
