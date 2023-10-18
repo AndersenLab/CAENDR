@@ -48,6 +48,7 @@ class NemascanPipeline(JobPipeline):
         'validator': validate_strain(Species.from_name(data['species']), force_unique=True, force_unique_msg=duplicate_strain_formatter)
       },
       {
+        # 'header': { 'validator': lambda x: x },
         'validator': validate_num(accept_float=True, accept_na=True),
       },
     ]
