@@ -9,6 +9,7 @@ from caendr.utils.env       import get_env_var
 
 from caendr.models.datastore            import DataJobEntity, PipelineOperation
 from caendr.models.error                import PipelineRunError, NotFoundError
+from caendr.models.status               import JobStatus
 from caendr.models.lifesciences         import ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
 from caendr.services.cloud.cloudrun     import create_job, run_job, get_job_execution_status
 from caendr.services.cloud.lifesciences import start_pipeline, get_pipeline_status
@@ -110,7 +111,7 @@ class Runner(ABC):
 
 
   @abstractmethod
-  def check_status(self, execution_id: str):
+  def check_status(self, execution_id: str) -> JobStatus:
     '''
       Get the status of a specific execution of this job.
     '''
@@ -410,7 +411,7 @@ class GCPCloudRunRunner(GCPRunner):
   # Status
   #
 
-  def check_status(self, execution_id: str):
+  def check_status(self, execution_id: str) -> JobStatus:
     '''
       Get the status of a specific execution of this job.
 
@@ -437,8 +438,14 @@ class GCPCloudRunRunner(GCPRunner):
     except NotFoundError as ex:
       logger.error(f'[UPDATE {self.operation_name}] Could not find pipeline operation record { op_id }: { ex }')
 
-    # Return the status
-    return status
+    # If CloudRun status is error or done, return corresponding JobStatus values
+    if status.get('error'):
+      return JobStatus.ERROR
+    elif status.get('done'):
+      return JobStatus.COMPLETE
+
+    # Otherwise, job is still running
+    return JobStatus.RUNNING
 
 
   #

@@ -78,55 +78,38 @@ def get_operation_status(operation_name):
 
 
 
-def update_all_linked_status_records(kind, operation_name):
+def update_all_linked_status_records(runner, exec_id, status):
   '''
     Update the Status fields of all reports linked to the given job.
     Sends a notification email to linked user(s) as necessary.
   '''
 
-  logger.debug(f'update_all_linked_status_records: kind:{kind} operation_name:{operation_name}')
+  # Log this operation
+  op_id   = f'{ runner.job_name }-{ exec_id }'
+  op_name = runner.get_full_execution_name(exec_id)
+  logger.debug(f'[UPDATE {op_id}] Updating all linked status records with kind = {runner.kind}, operation name = {op_name} to status "{status}"')
 
-  # Get the operation status, plus the parsed service & id values
-  try:
-    status, service, op_id = get_operation_status(operation_name)
-
-  # Operation could not be found
-  except Exception as ex:
-    raise APINotFoundError(f'Operation "{operation_name}" NOT FOUND -- nothing to do') from ex
-
-  # Get task status from operation values
-  done  = status.get('done')
-  error = status.get('error')
-  if error:
-    logger.error(f"[UPDATE {op_id}] Error: Kind: {kind} Operation Name: {operation_name} error: {error}")
-    status = JobStatus.ERROR
-  elif done:
-    logger.debug(f"[UPDATE {op_id}] Complete: Kind: {kind} Operation Name: {operation_name}")
-    status = JobStatus.COMPLETE
-  else:
-    status = JobStatus.RUNNING
-
-  if kind is None:
+  if runner.kind is None:
     logger.warn(f'[UPDATE {op_id}] "kind" is undefined.')
 
-  filters = [("operation_name", "=", operation_name)]
-  ds_entities = query_ds_entities(kind, filters=filters, keys_only=True)
+  filters = [("operation_name", "=", op_name)]
+  ds_entities = query_ds_entities(runner.kind, filters=filters, keys_only=True)
   for entity in ds_entities:
 
     # Retrieve the current status record as an Entity of the correct type
     try:
-      status_record = get_entity_by_kind(kind, entity.key.name)
+      status_record = get_entity_by_kind(runner.kind, entity.key.name)
     except (ValueError, NotFoundError) as ex:
       logger.warn(f'[UPDATE {op_id}] Skipping status record update: {ex}')
 
     # Only send a notification if the report's status has not been updated yet
     # TODO: Should be able to remove kind check if all report notifications merged into one system
     should_send_notification = all([
-      done,
-      status_record['status'] not in [JobStatus.COMPLETE, JobStatus.ERROR],
-      kind in [NemascanReport.kind, HeritabilityReport.kind],
+      status in JobStatus.FINISHED,
+      status_record['status'] not in JobStatus.FINISHED,
+      runner.kind in [NemascanReport.kind, HeritabilityReport.kind],
     ])
-    logger.debug(f'[{NOTIFICATION_LOG_PREFIX}] Should send notification for report {status_record.id}: {should_send_notification}. (done = {done}, kind = {kind}, current status = {status_record["status"]})')
+    logger.debug(f'[{NOTIFICATION_LOG_PREFIX}] Should send notification for report {status_record.id}: {should_send_notification}. (kind = {runner.kind}, current status = {status_record["status"]}, new status = {status})')
 
     # Update the report status
     status_record.set_properties(status=status)

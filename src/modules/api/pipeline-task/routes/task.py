@@ -112,9 +112,8 @@ def update_task():
 
   # Update all linked report entities
   try:
-    op = runner._lookup_execution_record(exec_id)
-    logger.debug(f"[{ call_id }] Updating all linked status records for operation {op}: {dict(op)}")
-    update_all_linked_status_records(op['operation_kind'], op['operation'])
+    logger.debug(f"[{ call_id }] Updating all linked status records to status { status }...")
+    update_all_linked_status_records(runner, exec_id, status)
 
   # Intercept API errors to add task ID
   except APIError as ex:
@@ -129,4 +128,4 @@ def update_task():
   # If the job has finished or errored out, acknowledge the Pub/Sub message
   # If the job is still running, don't acknowledge -- tells Pub/Sub to try the request again
   # Return as bool value to be handled by pubsub_endpoint decorator
-  return op['done'] or op['error']
+  return status in JobStatus.FINISHED
