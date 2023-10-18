@@ -1,5 +1,6 @@
 # Parent classes
-from .runner import Runner, GCPRunner, GCPCloudRunRunner, GCPLifesciencesRunner
+from .base   import Runner
+from .gcp    import GCPRunner, GCPCloudRunRunner, GCPLifesciencesRunner
 from .local  import LocalRunner
 
 # Job-specific subclasses

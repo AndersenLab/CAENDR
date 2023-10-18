@@ -1,4 +1,4 @@
-from .runner import Runner
+from .base import Runner
 
 
 class LocalRunner(Runner):
