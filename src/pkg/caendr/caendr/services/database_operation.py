@@ -80,17 +80,3 @@ def get_etl_op(op_id, keys_only=False, order=None, placeholder=True):
 
 def get_db_op_form_options(): 
   return [ (op_type.value, DbOp.get_title(op_type)) for op_type in DbOp ]
-
-
-
-def update_db_op_status(id: str, status: str=None, operation_name: str=None):
-  logger.debug(f'update_db_op_status: id:{id} status:{status} operation_name:{operation_name}')
-  db_op = DatabaseOperation(id)
-  if status:
-    db_op.set_properties(status=status)
-  if operation_name:
-    db_op.set_properties(operation_name=operation_name)
-    
-  db_op.save()
-  return db_op
-  

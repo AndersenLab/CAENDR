@@ -51,17 +51,17 @@ def start_task(task_route):
   # Run the job
   try:
     exec_id = handler.run(run_if_exists=True)
-    update_status_safe(queue, op_id, status=JobStatus.RUNNING)
+    update_status_safe(handler, JobStatus.RUNNING, call_id)
 
   # Intercept API errors to add task ID
   except APIError as ex:
-    update_status_safe(queue, op_id, status=JobStatus.ERROR)
+    update_status_safe(handler, JobStatus.ERROR, call_id)
     ex.set_call_id(call_id)
     raise ex
 
   # Wrap generic exceptions in an Internal Error class
   except Exception as ex:
-    update_status_safe(queue, op_id, status=JobStatus.ERROR)
+    update_status_safe(handler, JobStatus.ERROR, call_id)
     raise APIInternalError('Error occurred while creating job', call_id) from ex
 
   #return jsonify({'operation': op.id}), 200

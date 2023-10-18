@@ -4,7 +4,7 @@ import pandas as pd
 
 from caendr.services.logger import logger
 
-from caendr.models.error import NotFoundError, EmptyReportDataError, EmptyReportResultsError
+from caendr.models.error import EmptyReportDataError, EmptyReportResultsError
 from caendr.models.datastore import HeritabilityReport
 
 from caendr.services.cloud.storage import get_blob, download_blob_as_dataframe
@@ -46,23 +46,6 @@ def get_heritability_reports(username=None, filter_errs=False):
   # Get list of reports and filter by date
   results = HeritabilityReport.query_ds(safe=not filter_errs, ignore_errs=filter_errs, filters=filters)
   return HeritabilityReport.sort_by_created_date(results, reverse=True)
-
-
-
-def update_heritability_report_status(id: str, status: str=None, operation_name: str=None):
-  logger.debug(f'update_heritability_report_status: id:{id} status:{status} operation_name:{operation_name}')
-
-  h = HeritabilityReport.get_ds(id)
-  if h is None:
-    raise NotFoundError(HeritabilityReport, {'id': id})
-
-  if status:
-    h.set_properties(status=status)
-  if operation_name:
-    h.set_properties(operation_name=operation_name)
-    
-  h.save()
-  return h
 
 
 

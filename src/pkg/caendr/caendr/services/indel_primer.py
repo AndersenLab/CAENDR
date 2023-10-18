@@ -7,7 +7,7 @@ from cyvcf2 import VCF
 from caendr.services.logger import logger
 
 from caendr.models.datastore import IndelPrimerReport, Species
-from caendr.models.error     import NotFoundError, EmptyReportDataError, EmptyReportResultsError
+from caendr.models.error     import EmptyReportDataError, EmptyReportResultsError
 
 from caendr.services.cloud.storage import (
     download_blob_as_dataframe,
@@ -172,23 +172,6 @@ def query_indels_and_mark_overlaps(species, strain_1, strain_2, chromosome, star
     results = [x for x in results if x['overlap'] is False]
     return sorted(results, key=lambda x: (x["START"], x["END"]))
   return []
-
-
-
-def update_indel_primer_status(id: str, status: str=None, operation_name: str=None):
-  logger.debug(f'update_indel_primer_status: id:{id} status:{status} operation_name:{operation_name}')
-
-  m = IndelPrimerReport.get_ds(id)
-  if m is None:
-    raise NotFoundError(IndelPrimerReport, {'id': id})
-
-  if status:
-    m.set_properties(status=status)
-  if operation_name:
-    m.set_properties(operation_name=operation_name)
-
-  m.save()
-  return m
 
 
 

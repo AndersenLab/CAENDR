@@ -3,8 +3,6 @@ import os
 from caendr.services.logger import logger
 
 from caendr.models.datastore import NemascanReport
-from caendr.models.error     import NotFoundError
-from caendr.models.status    import JobStatus
 
 from caendr.services.cloud.storage import get_blob_list
 from caendr.utils.env import get_env_var
@@ -53,27 +51,6 @@ def get_mappings(username=None, filter_errs=False):
   # Get list of mappings and filter by date
   mappings = NemascanReport.query_ds(safe=not filter_errs, ignore_errs=filter_errs, filters=filters)
   return NemascanReport.sort_by_created_date(mappings, reverse=True)
-
-
-
-def update_nemascan_mapping_status(id: str, status: str=None, operation_name: str=None):
-  logger.debug(f'update_nemascan_mapping_status: id:{id} status:{status} operation_name:{operation_name}')
-
-  m = NemascanReport.get_ds(id)
-  if m is None:
-    raise NotFoundError(NemascanReport, {'id': id})
-
-  if status:
-    m.set_properties(status=status)
-  if operation_name:
-    m.set_properties(operation_name=operation_name)
-
-  # Mark job as complete if report output file exists
-  if m.report_path is not None:
-    m['status'] = JobStatus.COMPLETE
-
-  m.save()
-  return m
 
 
 
