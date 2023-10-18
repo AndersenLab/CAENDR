@@ -7,7 +7,7 @@ from .lifesciences import get_pipeline_status
 
 from caendr.models.datastore         import HeritabilityReport, NemascanReport, get_entity_by_kind
 from caendr.models.error             import APINotFoundError, NotFoundError
-from caendr.models.task              import TaskStatus
+from caendr.models.status            import JobStatus
 from caendr.services.email           import send_email
 from caendr.services.cloud.datastore import query_ds_entities
 from caendr.services.cloud.secret    import get_secret
@@ -99,12 +99,12 @@ def update_all_linked_status_records(kind, operation_name):
   error = status.get('error')
   if error:
     logger.error(f"[UPDATE {op_id}] Error: Kind: {kind} Operation Name: {operation_name} error: {error}")
-    status = TaskStatus.ERROR
+    status = JobStatus.ERROR
   elif done:
     logger.debug(f"[UPDATE {op_id}] Complete: Kind: {kind} Operation Name: {operation_name}")
-    status = TaskStatus.COMPLETE
+    status = JobStatus.COMPLETE
   else:
-    status = TaskStatus.RUNNING
+    status = JobStatus.RUNNING
 
   if kind is None:
     logger.warn(f'[UPDATE {op_id}] "kind" is undefined.')
@@ -123,7 +123,7 @@ def update_all_linked_status_records(kind, operation_name):
     # TODO: Should be able to remove kind check if all report notifications merged into one system
     should_send_notification = all([
       done,
-      status_record['status'] not in [TaskStatus.COMPLETE, TaskStatus.ERROR],
+      status_record['status'] not in [JobStatus.COMPLETE, JobStatus.ERROR],
       kind in [NemascanReport.kind, HeritabilityReport.kind],
     ])
     logger.debug(f'[{NOTIFICATION_LOG_PREFIX}] Should send notification for report {status_record.id}: {should_send_notification}. (done = {done}, kind = {kind}, current status = {status_record["status"]})')

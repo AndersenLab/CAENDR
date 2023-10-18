@@ -7,7 +7,7 @@ from caendr.utils import monitor
 from pipelines.utils import update_status_safe, get_task_handler, get_runner_from_operation_name
 
 from caendr.models.error import APIError, APIBadRequestError, APIInternalError, APIUnprocessableEntity
-from caendr.models.task import TaskStatus
+from caendr.models.status import JobStatus
 from caendr.models.pub_sub import PubSubAttributes, PubSubMessage, PubSubStatus
 
 from caendr.services.cloud.task import update_task_status, verify_task_headers
@@ -51,17 +51,17 @@ def start_task(task_route):
   # Run the job
   try:
     exec_id = handler.run(run_if_exists=True)
-    update_status_safe(queue, op_id, status=TaskStatus.RUNNING)
+    update_status_safe(queue, op_id, status=JobStatus.RUNNING)
 
   # Intercept API errors to add task ID
   except APIError as ex:
-    update_status_safe(queue, op_id, status=TaskStatus.ERROR)
+    update_status_safe(queue, op_id, status=JobStatus.ERROR)
     ex.set_call_id(call_id)
     raise ex
 
   # Wrap generic exceptions in an Internal Error class
   except Exception as ex:
-    update_status_safe(queue, op_id, status=TaskStatus.ERROR)
+    update_status_safe(queue, op_id, status=JobStatus.ERROR)
     raise APIInternalError('Error occurred while creating job', call_id) from ex
 
   #return jsonify({'operation': op.id}), 200

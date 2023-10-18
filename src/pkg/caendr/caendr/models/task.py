@@ -16,33 +16,6 @@ API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 
 ## Task Superclass Definition ##
 
-# Define the Status values
-class TaskStatus:
-
-  # Basic TaskStatus values
-  CREATED   = "CREATED"
-  ERROR     = "ERROR"
-  RUNNING   = "RUNNING"
-  COMPLETE  = "COMPLETE"
-  SUBMITTED = "SUBMITTED"
-
-  # Meaningful sets of TaskStatus values
-  FINISHED  = { COMPLETE, ERROR }
-  NOT_ERR   = { SUBMITTED, RUNNING, COMPLETE }
-
-  # Check whether a variable is a valid TaskStatus
-  @staticmethod
-  def is_valid(value):
-    return value in {
-      TaskStatus.CREATED,
-      TaskStatus.ERROR,
-      TaskStatus.RUNNING,
-      TaskStatus.COMPLETE,
-      TaskStatus.SUBMITTED,
-    }
-
-
-
 class Task(object):
 
   # A human readable name for this Task type

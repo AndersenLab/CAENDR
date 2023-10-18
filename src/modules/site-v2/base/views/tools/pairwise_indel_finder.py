@@ -10,7 +10,7 @@ from base.utils.tools import lookup_report, try_submit
 from caendr.models.datastore.browser_track import BrowserTrackDefault
 from caendr.models.datastore import Species, IndelPrimerReport, DatasetRelease
 from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupError, EmptyReportDataError, EmptyReportResultsError
-from caendr.models.task import TaskStatus
+from caendr.models.status import JobStatus
 from caendr.services.cloud.storage import check_blob_exists
 from caendr.services.dataset_release import get_dataset_release
 from caendr.utils.bio import parse_chrom_interval
@@ -196,7 +196,7 @@ def list_results():
     'items': get_indel_primers(None if show_all else user.name, filter_errs),
     'columns': results_columns(),
 
-    'TaskStatus': TaskStatus,
+    'JobStatus': JobStatus,
   })
 
 
@@ -288,7 +288,7 @@ def report(id, file_ext=None):
 
     # Results file exists, but is empty - error
     except EmptyReportResultsError:
-      job.report.status = TaskStatus.ERROR
+      job.report.status = JobStatus.ERROR
       job.report.save()
       return abort(404, description="Pairwise indel finder report not found")
 
@@ -312,8 +312,8 @@ def report(id, file_ext=None):
     # Update indel primer entity
     # TODO: Is this the right time/place for this?
     if ready:
-      if job.report['status'] != TaskStatus.ERROR:
-        job.report['status'] = TaskStatus.COMPLETE
+      if job.report['status'] != JobStatus.ERROR:
+        job.report['status'] = JobStatus.COMPLETE
       job.report.empty = result is None  # TODO: Is this correct? I think empty should actually check if any rows exist in the df
       job.report.save()
 

@@ -17,7 +17,7 @@ from caendr.models.error import (
     FileUploadError,
     ReportLookupError,
 )
-from caendr.models.task import TaskStatus
+from caendr.models.status import JobStatus
 from caendr.utils.env import get_env_var
 
 
@@ -171,7 +171,7 @@ def list_results():
     'items': get_mappings(None if show_all else user.name, filter_errs),
     'columns': results_columns(),
 
-    'TaskStatus': TaskStatus,
+    'JobStatus': JobStatus,
   })
 
 

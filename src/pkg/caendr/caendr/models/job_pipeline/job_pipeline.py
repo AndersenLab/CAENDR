@@ -15,7 +15,8 @@ from caendr.models.error      import (
   JobAlreadyScheduledError
 )
 from caendr.models.run        import Runner
-from caendr.models.task       import TaskStatus, Task
+from caendr.models.status     import JobStatus
+from caendr.models.task       import Task
 from caendr.utils.env         import get_env_var
 
 
@@ -166,7 +167,7 @@ class JobPipeline(ABC):
 
     # Check if user has already submitted this job, and "return" it in a duplicate data error if so
     if parsed_data.get('hash') and not no_cache:
-      cached_report = cls.check_cached_submission(parsed_data['hash'], user.name, container, status=TaskStatus.NOT_ERR)
+      cached_report = cls.check_cached_submission(parsed_data['hash'], user.name, container, status=JobStatus.NOT_ERR)
       if cached_report:
         raise DuplicateDataError(cls.lookup(cached_report.id))
 
@@ -182,7 +183,7 @@ class JobPipeline(ABC):
     report.set_user(user)
 
     # Initialize the report status
-    report['status'] = TaskStatus.CREATED
+    report['status'] = JobStatus.CREATED
 
     # Upload the new report to the cloud storage provider
     report.save()
@@ -347,12 +348,12 @@ class JobPipeline(ABC):
     return self._Task_Class is not None
 
 
-  def schedule(self, no_cache=False, force=False) -> TaskStatus:
+  def schedule(self, no_cache=False, force=False) -> JobStatus:
     '''
       Submit a job to the appropriate queue, using the assigned Task class.
 
       Returns:
-        The new TaskStatus of this job, with one of the following values:
+        The new JobStatus of this job, with one of the following values:
           - SUBMITTED: The task was successfully submitted to the appropriate queue
           - ERROR: There was a problem submitting the task to the appropriate queue
 
@@ -373,7 +374,7 @@ class JobPipeline(ABC):
 
     # Check whether this specific job has already been scheduled
     # If force is True, this check will not be run
-    if not force and self.report['status'] != TaskStatus.CREATED:
+    if not force and self.report['status'] != JobStatus.CREATED:
       raise JobAlreadyScheduledError()
     
     # If using cache, check whether this job already has results and short-circuit the computation if so
@@ -386,7 +387,7 @@ class JobPipeline(ABC):
     result = task.submit()
 
     # Update entity status to reflect whether task was submitted successfully
-    self.report['status'] = TaskStatus.SUBMITTED if result else TaskStatus.ERROR
+    self.report['status'] = JobStatus.SUBMITTED if result else JobStatus.ERROR
     self.report.save()
 
     # Return the status
@@ -416,7 +417,7 @@ class JobPipeline(ABC):
 
     # If cache check returned a status, use it; otherwise, default to "COMPLETE"
     if cached_result:
-      self.report['status'] = cached_result if isinstance(cached_result, str) else TaskStatus.COMPLETE
+      self.report['status'] = cached_result if isinstance(cached_result, str) else JobStatus.COMPLETE
       self.report.save()
 
     return cached_result
@@ -428,7 +429,7 @@ class JobPipeline(ABC):
       Check for results.
 
       Returns:
-        status (TaskStatus): The current status of the job
+        status (JobStatus): The current status of the job
         result: The results if the job is complete, or None if no result exists.
     '''
 
@@ -436,7 +437,7 @@ class JobPipeline(ABC):
     if cached_result:
 
       # If cache check returned a status, use it; otherwise, default to "COMPLETE"
-      self.report['status'] = cached_result if isinstance(cached_result, str) else TaskStatus.COMPLETE
+      self.report['status'] = cached_result if isinstance(cached_result, str) else JobStatus.COMPLETE
       self.report.save()
 
-    return self.report['status'] in TaskStatus.FINISHED
+    return self.report['status'] in JobStatus.FINISHED

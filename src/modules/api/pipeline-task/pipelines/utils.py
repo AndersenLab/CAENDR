@@ -91,7 +91,7 @@ def get_runner_from_operation_name(operation_name: str) -> Tuple[GCPCloudRunRunn
 
 def update_status_safe(queue_name, op_id, call_id='', status=None, **kwargs):
   '''
-    Safely update the TaskStatus of the given Entity.
+    Safely update the JobStatus of the given Entity.
     Logs & ignores errors.
   '''
 

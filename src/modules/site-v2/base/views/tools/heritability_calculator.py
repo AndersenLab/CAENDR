@@ -27,7 +27,7 @@ from caendr.models.error import (
     ReportLookupError,
 )
 from caendr.models.datastore import Species, HeritabilityReport
-from caendr.models.task import TaskStatus
+from caendr.models.status import JobStatus
 from caendr.api.strain import get_strains
 from caendr.services.heritability_report import get_heritability_report, get_heritability_reports, fetch_heritability_report
 from caendr.utils.data import unique_id, get_object_hash
@@ -138,7 +138,7 @@ def list_results():
     'items': get_heritability_reports(None if show_all else user.name, filter_errs),
     'columns': results_columns(),
 
-    'TaskStatus': TaskStatus,
+    'JobStatus': JobStatus,
   })
 
 
@@ -264,7 +264,7 @@ def report(id):
   # If result exists, mark as complete
   # TODO: Is this the right place for this?
   if result:
-    job.report.status = TaskStatus.COMPLETE
+    job.report.status = JobStatus.COMPLETE
     job.report.save()
 
   # TODO: Are either of these values used?
@@ -297,5 +297,5 @@ def report(id):
     'data_url': generate_blob_url(job.report.get_bucket_name(), job.report.get_data_blob_path()),
     'logs_url': url_for('heritability_calculator.view_logs', id = id),
 
-    'TaskStatus': TaskStatus,
+    'JobStatus': JobStatus,
   })

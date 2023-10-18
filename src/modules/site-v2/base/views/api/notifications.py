@@ -5,7 +5,7 @@ from base.views.tools import pairwise_indel_finder_bp, genetic_mapping_bp, herit
 
 from caendr.models.datastore import NemascanReport, HeritabilityReport, IndelPrimerReport
 from caendr.models.error     import ReportLookupError
-from caendr.models.task      import TaskStatus
+from caendr.models.status    import JobStatus
 from caendr.services.email   import REPORT_SUCCESS_EMAIL_TEMPLATE, REPORT_ERROR_EMAIL_TEMPLATE
 from caendr.services.cloud.secret import get_secret
 
@@ -49,12 +49,12 @@ def job_finish(kind, id, status):
     return f'Invalid report type "{kind}"', 400
 
   # Complete message
-  if status == TaskStatus.COMPLETE:
+  if status == JobStatus.COMPLETE:
     template = REPORT_SUCCESS_EMAIL_TEMPLATE.strip('\n')
     link     = url_for(bp + '.report', id=report.id, _external=True)
 
   # Error message
-  elif status == TaskStatus.ERROR:
+  elif status == JobStatus.ERROR:
     template = REPORT_ERROR_EMAIL_TEMPLATE.strip('\n')
     link     = url_for(bp + '.my_results', _external=True)
 
