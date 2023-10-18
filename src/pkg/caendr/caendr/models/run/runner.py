@@ -150,6 +150,17 @@ class Runner(ABC):
       raise ValueError(f'Cannot execute runner of kind {self.kind} on report with mismatching "{self._data_id_field}" field (expected {self.data_id}, got {data_id})')
 
 
+  def get_full_execution_name(self, execution_id: str) -> str:
+    '''
+      Transform execution ID to a full name for storage.
+      By default, returns the execution ID as-is. This behavior may be overwritten in subclasses.
+
+      TODO: Arguably, we should store the execution ID as-is in the report, and look it up later.
+            This would involve changing the 'operation_name' field in the JobEntity class.
+    '''
+    return execution_id
+
+
 
 
 class LocalRunner(Runner):
@@ -383,7 +394,7 @@ class GCPCloudRunRunner(GCPRunner):
   def operation_name(self):
     return f'{ super().operation_name }/jobs/{ self.job_name }'
 
-  def _get_execution_name(self, execution_id):
+  def get_full_execution_name(self, execution_id: str) -> str:
     return f'{ self.operation_name }/executions/{ self.job_name }-{ execution_id }'
 
   def get_execution_id_from_operation_name(self, operation_name):
@@ -407,7 +418,7 @@ class GCPCloudRunRunner(GCPRunner):
     '''
 
     # Check the status of the job in GCP
-    op_id = self._get_execution_name(execution_id)
+    op_id = self.get_full_execution_name(execution_id)
     status = get_job_execution_status(op_id)
 
     # Try looking up and updating the pipeline operation record

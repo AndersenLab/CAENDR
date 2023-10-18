@@ -404,8 +404,20 @@ class JobPipeline(ABC):
     '''
       Run this job using the specified Runner class.
     '''
+
+    # Check if this report is already associated with an operation
+    if self.report['operation_name'] is not None:
+      logger.warn(f'Report {self.report.id} (data hash {self.report.data_hash}) is already associated with operation {self.report["operation_name"]}. Running again...')
+
     # Forward run call to Runner object
-    return self._runner.run(self.report, *args, **kwargs)
+    exec_id = self._runner.run(self.report, *args, **kwargs)
+
+    # Save the full execution name to the report object, so it can be looked up later
+    self.report['operation_name'] = self._runner.get_full_execution_name(exec_id)
+    self.report.save()
+
+    # Return the execution ID
+    return exec_id
 
 
   #
