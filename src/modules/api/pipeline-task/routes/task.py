@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify, request
 from caendr.services.logger import logger
 from caendr.utils import monitor
 
-from pipelines.utils import update_status_safe, get_task_handler
+from pipelines.utils import update_status_safe, get_task_handler, get_runner_from_operation_name
 
 from caendr.models.error import APIError, APIBadRequestError, APIInternalError, APIUnprocessableEntity
 from caendr.models.task import TaskStatus
@@ -12,8 +12,8 @@ from caendr.models.pub_sub import PubSubAttributes, PubSubMessage, PubSubStatus
 
 from caendr.services.cloud.task import update_task_status, verify_task_headers
 from caendr.services.cloud.pubsub import get_attribute, pubsub_endpoint
-from caendr.services.cloud.lifesciences import create_pipeline_operation_record, get_operation_id_from_name
-from caendr.services.cloud.utils import update_pipeline_operation_record, update_all_linked_status_records
+from caendr.services.cloud.lifesciences import get_operation_id_from_name
+from caendr.services.cloud.utils import update_all_linked_status_records
 from caendr.services.persistent_logger import PersistentLogger
 
 
@@ -88,9 +88,9 @@ def update_task():
 
 
   # Update the operation record itself
-  logger.debug(f"[{ call_id }] Updating the pipeline operation record...")
+  logger.debug(f"[{ call_id }] Retrieving the operation...")
   try:
-    op = update_pipeline_operation_record(operation_name)
+    runner, exec_id = get_runner_from_operation_name(operation_name)
 
   # Intercept API errors to add task ID
   except APIError as ex:
@@ -99,11 +99,21 @@ def update_task():
 
   # Wrap generic exceptions in an Internal Error class
   except Exception as ex:
-    raise APIInternalError('Error updating pipeline operation record', call_id) from ex
+    raise APIInternalError('Error getting pipeline runner', call_id) from ex
+
+  # Make sure a job execution is specified
+  if exec_id is None:
+    raise APIBadRequestError('Operation name must specify a job execution.', call_id)
+
+
+  # Get the current status of the job, updating the PipelineOperation record implicitly
+  logger.debug(f"[{ call_id }] Checking the operation status and updating the PipelineOperation record...")
+  status = runner.check_status(exec_id)
 
 
   # Update all linked report entities
   try:
+    op = runner._lookup_execution_record(exec_id)
     logger.debug(f"[{ call_id }] Updating all linked status records for operation {op}: {dict(op)}")
     update_all_linked_status_records(op['operation_kind'], op['operation'])
 

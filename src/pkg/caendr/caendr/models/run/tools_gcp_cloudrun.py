@@ -1,7 +1,9 @@
 from .runner import GCPCloudRunRunner
 
-from caendr.models.datastore import Species
+from caendr.models.datastore import Species, DbOp
 from caendr.models.datastore import DatabaseOperation, IndelPrimerReport, HeritabilityReport, NemascanReport
+
+from caendr.services.cloud.utils import make_dns_name_safe
 
 
 #
@@ -29,6 +31,33 @@ class DatabaseOperationRunner(GCPCloudRunRunner):
     if self.data_id == 'TEST_ECHO':
       return { 'memory': '512Mi', 'cpu': '1' }
     return { 'memory': '32Gi', 'cpu': '8' }
+
+
+  # Names #
+
+  @classmethod
+  def split_job_name(cls, job_name: str) -> (str, str):
+    '''
+      Convert a job name into a kind and data ID.
+
+      Overrides parent method, since Database Operation data IDs can include a hyphen
+      and are part of a fixed set (enum).
+    '''
+
+    # Make sure job name starts with the correct prefix, based on this class's kind
+    target_prefix = make_dns_name_safe(cls.kind) + '-'
+    if not job_name.startswith(target_prefix):
+      raise ValueError(f'Job name { job_name } does not start with the expected kind prefix "{ target_prefix }".')
+
+    # Treat the rest of the job name as the data ID
+    data_id = job_name[ len(target_prefix) :]
+
+    # Loop through valid database operations
+    for op in DbOp:
+      if data_id == make_dns_name_safe(op.name):
+        return cls.kind, op.name
+
+    raise ValueError(f'Job name { job_name } does not match any valid database operations (searching for: "{ data_id }").')
 
 
   # Commands #

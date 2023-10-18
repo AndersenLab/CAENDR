@@ -7,13 +7,13 @@ from googleapiclient.errors import HttpError
 from caendr.services.logger import logger
 from caendr.utils.env       import get_env_var
 
-from caendr.models.datastore            import DataJobEntity, PipelineOperation, Container
+from caendr.models.datastore            import DataJobEntity, PipelineOperation
 from caendr.models.error                import PipelineRunError, NotFoundError
 from caendr.models.lifesciences         import ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
-from caendr.services.cloud.cloudrun     import create_job, run_job
-from caendr.services.cloud.lifesciences import start_pipeline
+from caendr.services.cloud.cloudrun     import create_job, run_job, get_job_execution_status
+from caendr.services.cloud.lifesciences import start_pipeline, get_pipeline_status
 from caendr.services.cloud.pubsub       import publish_message
-from caendr.services.cloud.utils        import make_dns_name_safe
+from caendr.services.cloud.utils        import make_dns_name_safe, parse_operation_name
 
 
 
@@ -50,6 +50,7 @@ class Runner(ABC):
     However, a single runner may represent multiple *executions* of the same job on the same data.
     In this case:
       - The `run` function should return a unique identifier for the execution that it started.
+      - The `check_status` function should accept this identifier to give the status of that specific execution.
   '''
 
   # String identifying the type of job being run
@@ -109,6 +110,14 @@ class Runner(ABC):
 
 
   @abstractmethod
+  def check_status(self, execution_id: str):
+    '''
+      Get the status of a specific execution of this job.
+    '''
+    pass
+
+
+  @abstractmethod
   def run(self, report: DataJobEntity, run_if_exists: bool = False) -> str:
     '''
       Start a job to compute the given report.
@@ -160,6 +169,36 @@ class GCPRunner(Runner):
   _MEMORY_LIMITS = { 'memory': '512Mi', 'cpu': '1' }
 
 
+  # Creation #
+
+  @classmethod
+  def from_operation_name(cls, operation_name: str):
+    '''
+      Create a Runner of this class from the given GCP operation name.
+      Raises an error if the operation name does not specify a job with the same kind as this class.
+
+      Arguments:
+        - operation_name (str): The GCP operation name for the job.
+
+      Returns:
+        A Runner of the given subclass representing this operation.
+
+      Raises:
+        - ValueError: The given operation name is not valid for this subclass.
+    '''
+
+    # Parse the operation name into a dictionary
+    op_name_fields = parse_operation_name(operation_name)
+
+    # Split the job name into the kind and data ID
+    kind, data_id = cls.split_job_name( op_name_fields['jobs'] )
+
+    if kind != cls.kind:
+      raise ValueError(f'Cannot initialize runner subclass {cls.__name__} with kind {cls.kind} from operation with kind {kind} (full name: {operation_name})')
+
+    return cls(data_id)
+
+
   # Name Properties #
 
   @property
@@ -186,6 +225,30 @@ class GCPRunner(Runner):
         - May be at most 64 characters long
     '''
     return make_dns_name_safe( f'{self.kind}-{self.data_id}' )
+
+  @classmethod
+  def split_job_name(cls, job_name) -> (str, str):
+    '''
+      Convert a job name into a kind and data ID.
+
+      NOTE: This implementation assumes that the data ID cannot have any hyphens.
+            If the data ID for a given job type can include hyphens,
+            this function must be overwritten in the appropriate subclass.
+
+      Arguments:
+        - job_name (str): The name of the job to parse
+
+      Returns:
+        - kind (str): The kind of the job specified by the given name
+        - data_id (str): The data ID of the job specified by the given name
+
+      Raises:
+        - ValueError: The given name was not valid for this job type.
+    '''
+    kind, data_id = job_name.rsplit('-', 1)
+    if kind != make_dns_name_safe(cls.kind):
+      raise ValueError(f'Job name { job_name } does not start with the expected kind prefix "{ make_dns_name_safe(cls.kind) }".')
+    return cls.kind, data_id
 
 
   # Lookup Function #
@@ -302,6 +365,49 @@ class GCPCloudRunRunner(GCPRunner):
 
   def _get_execution_name(self, execution_id):
     return f'{ self.operation_name }/executions/{ self.job_name }-{ execution_id }'
+
+  def get_execution_id_from_operation_name(self, operation_name):
+    try:
+      exec_name = parse_operation_name(operation_name)['executions']
+    except KeyError:
+      raise ValueError(f'Operation name "{operation_name}" does not identify an execution')
+
+    return exec_name.split('-')[-1]
+
+
+  #
+  # Status
+  #
+
+  def check_status(self, execution_id: str):
+    '''
+      Get the status of a specific execution of this job.
+
+      Attempts to update the corresponding PipelineOperation record object with the new status.
+    '''
+
+    # Check the status of the job in GCP
+    op_id = self._get_execution_name(execution_id)
+    status = get_job_execution_status(op_id)
+
+    # Try looking up and updating the pipeline operation record
+    try:
+      op = self._lookup_execution_record(execution_id)
+
+      # Update the record object
+      logger.info(f"[UPDATE {self.operation_name}] Done = {status.get('done')}, Error = {status.get('error')}")
+      op.set_properties(**{
+        'done':  status.get('done'),
+        'error': status.get('error'),
+      })
+      op.save()
+
+    # If not found, log and move on
+    except NotFoundError as ex:
+      logger.error(f'[UPDATE {self.operation_name}] Could not find pipeline operation record { op_id }: { ex }')
+
+    # Return the status
+    return status
 
 
   #
@@ -459,6 +565,9 @@ class GCPLifesciencesRunner(GCPRunner):
 
     Deprecated.
   '''
+
+  # def check_status(self):
+  #   return get_pipeline_status(self.operation_name)
 
   def run(self, report, run_if_exists=False):
     '''
