@@ -86,8 +86,7 @@ def update_task():
   # String that identifies this API call, for debugging purposes
   call_id = f'STATUS {get_operation_id_from_name(operation_name)}'
 
-
-  # Update the operation record itself
+  # Get a runner object and execution ID representing this job from the operation name
   logger.debug(f"[{ call_id }] Retrieving the operation...")
   try:
     runner, exec_id = get_runner_from_operation_name(operation_name)

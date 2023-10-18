@@ -436,6 +436,7 @@ class GCPCloudRunRunner(GCPRunner):
 
   @staticmethod
   def _get_id_from_details(details):
+    # Since all backoff logging functions are run on methods, the first argument will be `self`.
     return details['args'][0].job_name
 
   @staticmethod
