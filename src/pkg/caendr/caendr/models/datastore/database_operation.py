@@ -44,6 +44,9 @@ class DatabaseOperation(JobEntity, UserOwnedEntity):
   kind = 'database_operation'
   __bucket_name = MODULE_DB_OPERATIONS_BUCKET_NAME
 
+  __db_operation : DbOp
+
+
   @classmethod
   def get_bucket_name(cls):
     return cls.__bucket_name
@@ -61,6 +64,30 @@ class DatabaseOperation(JobEntity, UserOwnedEntity):
 
 
   ## Special Properties ##
+
+
+  @property
+  def db_operation(self):
+    return self.__db_operation
+
+  @db_operation.setter
+  def db_operation(self, val):
+
+    # Map string to enum val
+    if isinstance(val, str):
+      try:
+        val = DbOp[val]
+      except:
+        raise ValueError(f'Cannot set db_operation of {self.kind} job to string "{val}" (not a valid DbOp value)')
+
+    # Check against enum vals
+    if not val in DbOp:
+      raise TypeError(f'Cannot set db_operation of {self.kind} job to value "{val}" (must be a valid DbOp)')
+
+    # Save as a string value, for easy integration with GCP
+    # TODO: Update Entity .save() to work with enums?
+    self.__db_operation = val.value
+
 
   @property
   def logs(self):
