@@ -12,12 +12,12 @@ from .nemascan_pipeline           import NemascanPipeline
 
 
 # Collect the set of pipeline subclasses
-pipelineSubclasses = { DatabaseOperationPipeline, IndelFinderPipeline, HeritabilityPipeline, NemascanPipeline }
+pipeline_subclasses = frozenset({ DatabaseOperationPipeline, IndelFinderPipeline, HeritabilityPipeline, NemascanPipeline })
 
 # Ensure that all kind values are unique
 # TODO: Can this be a unit test?
-for cls_i in pipelineSubclasses:
-  for cls_j in pipelineSubclasses:
+for cls_i in pipeline_subclasses:
+  for cls_j in pipeline_subclasses:
     assert cls_i == cls_j or cls_i.get_kind() != cls_j.get_kind(), \
       f'JobPipeline subclasses {cls_i.__name__} and {cls_j.__name__} both have the kind {cls_i.get_kind()}'
 
@@ -41,7 +41,7 @@ def get_pipeline_class(kind = None, queue: str = None) -> Type[JobPipeline]:
   if queue is not None:
 
     # Loop through the set of JobPipeline subclasses, matching based on queue name
-    for cls in pipelineSubclasses:
+    for cls in pipeline_subclasses:
       if cls.get_queue() == queue:
         return cls
 
@@ -61,7 +61,7 @@ def get_pipeline_class(kind = None, queue: str = None) -> Type[JobPipeline]:
       target_kind = kind
 
   # Loop through the set of JobPipeline subclasses, matching based on kind
-  for cls in pipelineSubclasses:
+  for cls in pipeline_subclasses:
     if cls.get_kind() == target_kind:
       return cls
 
