@@ -2,7 +2,6 @@ import os
 
 from caendr.services.logger import logger
 
-from caendr.models.datastore import PipelineOperation
 from caendr.models.error import PipelineRunError
 from caendr.services.cloud.service_account import authenticate_google_service
 from caendr.utils.env import get_env_var
@@ -45,36 +44,6 @@ def start_pipeline(SERVICE, task_id, pipeline_request):
   except Exception as err:
     logger.error(f"[TASK {task_id}] Pipeline Error: {err}")
     raise PipelineRunError(err)
-
-
-def create_pipeline_operation_record(handler, response):
-  if response is None:
-    raise PipelineRunError()
-
-  try:
-    name = response.get('response').get('name')
-  except:
-    name = response.get('name')
-  metadata = response.get('metadata')
-  if name is None or metadata is None:
-    raise PipelineRunError(f'Pipeline start response missing expected properties (name = "{name}", metadata = "{metadata}")')
-
-  id = get_operation_id_from_name(name)
-  op = PipelineOperation(id)
-  if op._exists:
-    logger.warn(f'[CREATE {id}] PipelineOperation object with ID {id} already exists: {dict(op)}')
-
-  op.set_properties(**{
-    'id': id,
-    'operation': name,
-    'operation_kind': handler.kind,
-    'metadata': metadata,
-    'report_path': None,
-    'done': False,
-    'error': False
-  })
-  op.save()
-  return op
 
 
 @use_service('lifesciences', 'v2beta')
