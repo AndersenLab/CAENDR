@@ -113,7 +113,7 @@ class GCPRunner(Runner):
     Introduces new abstract methods for starting a GCP service.
   '''
 
-  _Record_Class: PipelineOperation
+  _Record_Class = PipelineOperation
 
   # Machine Parameters #
   # Can be overwritten in subclasses as needed
