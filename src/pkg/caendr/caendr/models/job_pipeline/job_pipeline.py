@@ -400,6 +400,13 @@ class JobPipeline(ABC):
   # Running
   #
 
+  @property
+  def report_data_id(self):
+    '''
+      The data ID for this job's report, as specified in the associated Runner subclass.
+    '''
+    return getattr( self.report, self._Runner_Class._data_id_field )
+
   def run(self, *args, **kwargs):
     '''
       Run this job using the specified Runner class.
@@ -407,7 +414,7 @@ class JobPipeline(ABC):
 
     # Check if this report is already associated with an operation
     if self.report['operation_name'] is not None:
-      logger.warn(f'Report {self.report.id} (data hash {self.report.data_hash}) is already associated with operation {self.report["operation_name"]}. Running again...')
+      logger.warn(f'Report { self.report.id } (data ID { self.report_data_id }) is already associated with operation { self.report["operation_name"] }. Running again...')
 
     # Forward run call to Runner object
     exec_id = self._runner.run(self.report, *args, **kwargs)
