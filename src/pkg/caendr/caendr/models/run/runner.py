@@ -331,7 +331,7 @@ class GCPRunner(Runner):
       Create a PipelineOperation record object to track a specific execution of this job.
     '''
     if response is None:
-      raise PipelineRunError(f'No response provided for execution {execution_id}')
+      raise ValueError(f'No response provided for execution {execution_id}')
 
     # Validate response properties
     try:
@@ -340,7 +340,7 @@ class GCPRunner(Runner):
       name = response.get('name')
     metadata = response.get('metadata')
     if name is None or metadata is None:
-      raise PipelineRunError(f'Pipeline start response missing expected properties (name = "{name}", metadata = "{metadata}")')
+      raise ValueError(f'Pipeline start response missing expected properties (name = "{name}", metadata = "{metadata}")')
 
 
     id = f'{ self.job_name }-{ execution_id }'
@@ -496,9 +496,9 @@ class GCPCloudRunRunner(GCPRunner):
         A unique ID for the execution started by this call. This can be used to check the status of that execution.
 
       Raises:
-        APIBadRequestError: The payload & task route do not identify an existing / valid Entity.
         HttpError: Forwarded from googleapiclient from create & run requests. If `run_if_exists` is True, ignores status code 409 from create request.
-        PipelineRunError: A PipelineOperation record could not be created for this execution
+        PipelineRunError: A PipelineOperation record could not be created for this execution.
+        ValueError: The given report is invalid.
     '''
 
     # Validate that the report has the expected kind and data ID
@@ -526,10 +526,6 @@ class GCPCloudRunRunner(GCPRunner):
     # Create a PipelineOperation record to represent this execution
     try:
       self._create_execution_record(exec_id, run_response)
-
-    # If a known error occurred creating the record, raise it as-is
-    except PipelineRunError:
-      raise
 
     # If a generic exception occurred, wrap it in a PipelineRun error so the caller knows what stage of the function it came from
     except Exception as ex:
