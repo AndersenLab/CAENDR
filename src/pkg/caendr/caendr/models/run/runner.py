@@ -123,12 +123,32 @@ class Runner(ABC):
       Start a job to compute the given report.
 
       Args:
+        - report: The report to read data from to start the new job. The report should have the same kind and data ID as this runner.
         - run_if_exists (bool, optional): If True, will still run the job even if the specified job container exists. Default False.
 
       Returns:
         An identifier for the execution that was created.  Will be unique within this Runner object.
     '''
     pass
+
+
+  def _validate_report(self, report: DataJobEntity):
+    '''
+      Validate that a given report matches this Runner's kind and data ID.
+      Raises a ValueError if the report is invalid.
+    '''
+
+    # Validate kind
+    if report.kind != self.kind:
+      raise ValueError(f'Cannot execute runner of kind {self.kind} on report with kind {report.kind}')
+
+    # Validate data ID
+    data_id = getattr(report, self._data_id_field)
+    if data_id is None:
+      raise ValueError(f'Cannot execute runner of kind {self.kind} on report with no "{self._data_id_field}" field')
+    if data_id != self.data_id:
+      raise ValueError(f'Cannot execute runner of kind {self.kind} on report with mismatching "{self._data_id_field}" field (expected {self.data_id}, got {data_id})')
+
 
 
 
@@ -461,6 +481,9 @@ class GCPCloudRunRunner(GCPRunner):
         HttpError: Forwarded from googleapiclient from create & run requests. If `run_if_exists` is True, ignores status code 409 from create request.
         PipelineRunError: A PipelineOperation record could not be created for this execution
     '''
+
+    # Validate that the report has the expected kind and data ID
+    self._validate_report(report)
 
     # Create a CloudRun job for this task
     try:
