@@ -1,4 +1,4 @@
-from .runner import GCPCloudRunRunner
+from .gcp import GCPCloudRunRunner
 
 from caendr.models.datastore import Species, DbOp
 from caendr.models.datastore import DatabaseOperation, IndelPrimerReport, HeritabilityReport, NemascanReport
