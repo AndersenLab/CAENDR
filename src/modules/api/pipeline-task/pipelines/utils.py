@@ -1,12 +1,29 @@
+import backoff
+import json
+from googleapiclient.errors import HttpError
+from ssl import SSLEOFError
 from typing                 import Tuple, Optional
+
 from caendr.services.logger import logger
 
 from caendr.models.datastore    import Species
 from caendr.models.error        import APIBadRequestError, NotFoundError
+from caendr.models.error        import APIBadRequestError, APINotFoundError, NotFoundError
 from caendr.models.job_pipeline import JobPipeline, get_pipeline_class, pipeline_subclasses
 from caendr.models.status       import JobStatus
 from caendr.models.run          import GCPCloudRunRunner
 
+
+
+def load_json_from_request(request):
+  '''
+    Loads the request data as JSON.
+    Raises a 400 error if the body is not valid JSON.
+  '''
+  try:
+    return json.loads(request.data)
+  except Exception as ex:
+    raise APIBadRequestError('Failed to parse request body as valid JSON') from ex
 
 
 
@@ -29,7 +46,7 @@ def get_task_handler(queue_name, *args, **kwargs):
     if ex.kind == Species.kind:
       raise APIBadRequestError(f'{ cls.get_kind() } task has invalid species value') from ex
     else:
-      raise APIBadRequestError(f'Could not find { cls.get_kind() } object wih this ID') from ex
+      raise APINotFoundError(f'Could not find { cls.get_kind() } object wih this ID') from ex
 
 
 

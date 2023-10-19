@@ -60,7 +60,7 @@ def fetch_heritability_report(report):
 
   # Parse data file
   data = download_blob_as_dataframe(data)
-  data['AssayNumber'] = data['AssayNumber'].astype(str)
+  data['AssayNumber'] = data['AssayNumber'].astype(int)
   data['label'] = data.apply(lambda x: f"{x['AssayNumber']}: {x['Value']}", 1)
   data = data.to_dict('records')
 
@@ -73,7 +73,13 @@ def fetch_heritability_report(report):
     if result is None:
       raise EmptyReportResultsError(report.id)
 
-    result = result.to_dict('records')[0]
+    # Convert to dict, using the 'type' column as the key instead of the index
+    # Should create dictionary with two keys: 'broad-sense' and 'narrow-sense'
+    result = result.to_dict('records')
+    result = {
+      i['type']: { key: val for key, val in i.items() if key != 'type' }
+      for i in result
+    }
 
   # Return parsed data & result
   return data, result
