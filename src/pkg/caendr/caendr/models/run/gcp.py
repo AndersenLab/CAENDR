@@ -58,21 +58,6 @@ class GCPRunner(Runner):
 
   _Record_Class = PipelineOperation
 
-  # Machine Parameters #
-  # Can be overwritten in subclasses as needed
-  _MACHINE_TYPE                  = 'n1-standard-1'
-  _PREEMPTIBLE                   = False
-  _BOOT_IMAGE                    = 'projects/cos-cloud/global/images/family/cos-stable'
-  _BOOT_DISK_SIZE_GB             = 20
-  _ENABLE_STACKDRIVER_MONITORING = True
-  _VOLUME_NAME                   = 'nf-pipeline-work'
-
-  # CloudRun Parameters #
-  # Can be overwritten in subclasses as needed
-  _TASK_COUNT    = 1
-  _MAX_RETRIES   = 1
-  _MEMORY_LIMITS = { 'memory': '512Mi', 'cpu': '1' }
-
 
   # Creation #
 
@@ -258,6 +243,13 @@ class GCPCloudRunRunner(GCPRunner):
   # Total number of times to try running the CloudRun Job after it has been created
   # With exponential backoff, this is approx (2^(n-1))-1 = 127 sec, or a little over 2 minutes
   _MAX_TRIES_RUN   = 8
+
+
+  # CloudRun Parameters #
+  # Can be overwritten in subclasses as needed
+  _TASK_COUNT    = 1
+  _MAX_RETRIES   = 1
+  _MEMORY_LIMITS = { 'memory': '512Mi', 'cpu': '1' }
 
 
   #
@@ -476,6 +468,16 @@ class GCPLifesciencesRunner(GCPRunner):
 
     Deprecated.
   '''
+
+  # Machine Parameters #
+  # Can be overwritten in subclasses as needed
+  _MACHINE_TYPE                  = 'n1-standard-1'
+  _PREEMPTIBLE                   = False
+  _BOOT_IMAGE                    = 'projects/cos-cloud/global/images/family/cos-stable'
+  _BOOT_DISK_SIZE_GB             = 20
+  _ENABLE_STACKDRIVER_MONITORING = True
+  _VOLUME_NAME                   = 'nf-pipeline-work'
+
 
   # def check_status(self):
   #   return get_pipeline_status(self.operation_name)
