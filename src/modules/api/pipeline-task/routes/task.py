@@ -33,7 +33,7 @@ def start_task(task_route):
   payload = load_json_from_request(request)
 
   # Get the task ID from the payload
-  op_id = payload.get('id', 'no-id')
+  op_id = payload.get('id')
   if op_id is None:
     logger.error(f'Request body must define an operation ID. Payload: {payload}')
     raise APIUnprocessableEntity('Request body must define an operation ID')
