@@ -45,12 +45,9 @@ class Cart(DeletableEntity):
       # Run the query and try to find not deleted cart(s) for the user
       carts = cls.query_ds_not_deleted('user', email, required=True)
 
-      if len(carts) == 1:
-        # If only one cart was found, return it
-        return carts[0]
-      else:
-        # If multiple carts were found for user, sort by date modified on and return latest
-        return cls.sort_by_modified_date(carts, reverse=True)[0]
+      # If one cart was found, return it
+      # Or if multiple carts were found, sort by date modified on and return latest
+      return cls.sort_by_modified_date(carts, reverse=True)[0]
 
     # If a user doesn't have a cart, create one
     except NotFoundError:
