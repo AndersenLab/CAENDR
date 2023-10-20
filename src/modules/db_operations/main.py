@@ -15,6 +15,7 @@ load_env('.env')
 
 monitor.init_sentry("db_operations")
 
+from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
 from caendr.services.cloud.postgresql import get_db_conn_uri, get_db_timeout, db, health_database_status
 from caendr.services.cloud.secret import get_secret
 from operations import execute_operation
@@ -41,7 +42,7 @@ def etl_operation_append_log(message = ""):
 
   bucket = client.get_bucket(ETL_LOGS_BUCKET_NAME)
   filepath = f"logs/etl/{OPERATION_ID}/output"
-  uri = f"gs://{ETL_LOGS_BUCKET_NAME}/{filepath}"
+  uri = generate_blob_uri(ETL_LOGS_BUCKET_NAME, filepath, schema=BlobURISchema.GS)
 
   CRLF = "\n"
   blob = bucket.get_blob(filepath)

@@ -10,10 +10,11 @@ from caendr.models.datastore import IndelPrimerReport, Species
 from caendr.models.error     import EmptyReportDataError, EmptyReportResultsError
 
 from caendr.services.cloud.storage import (
+    BlobURISchema,
     download_blob_as_dataframe,
     download_blob_as_json,
     download_blob_to_file,
-    generate_blob_url,
+    generate_blob_uri,
     get_blob,
 )
 
@@ -83,15 +84,15 @@ def get_indel_primers(username=None, filter_errs=False):
 def get_bed_url(species, release = None, secure = True):
   release = release or Species.from_name(species).release_pif
   filename = IndelPrimerReport.get_source_filename(species, release)
-  return generate_blob_url(
-    MODULE_SITE_BUCKET_PRIVATE_NAME, f"{INDEL_PRIMER_TOOL_PATH}/{filename}.bed.gz", secure = secure
+  return generate_blob_uri(
+    MODULE_SITE_BUCKET_PRIVATE_NAME, INDEL_PRIMER_TOOL_PATH, f'{filename}.bed.gz', schema = BlobURISchema.http(secure=secure)
   )
 
 def get_vcf_url(species, release = None, secure = True):
   release = release or Species.from_name(species).release_pif
   filename = IndelPrimerReport.get_source_filename(species, release)
-  return generate_blob_url(
-    MODULE_SITE_BUCKET_PRIVATE_NAME, f"{INDEL_PRIMER_TOOL_PATH}/{filename}.vcf.gz", secure = secure
+  return generate_blob_uri(
+    MODULE_SITE_BUCKET_PRIVATE_NAME, INDEL_PRIMER_TOOL_PATH, f'{filename}.vcf.gz', schema = BlobURISchema.http(secure=secure)
   )
 
 

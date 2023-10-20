@@ -12,7 +12,7 @@ from base.utils.local_file import LocalFile
 from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 from caendr.services.nemascan_mapping import get_mapping, get_mappings
-from caendr.services.cloud.storage import get_blob, generate_blob_url, get_blob_list, check_blob_exists
+from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, get_blob, get_blob_list, check_blob_exists
 from caendr.models.datastore import Species, NemascanReport
 from caendr.models.error import (
     FileUploadError,
@@ -79,7 +79,7 @@ def genetic_mapping():
 
     # Sample data
     'sample_data_urls': {
-      species: generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, NEMASCAN_EXAMPLE_FILE.get_string(SPECIES=species))
+      species: generate_blob_uri(MODULE_SITE_BUCKET_ASSETS_NAME, NEMASCAN_EXAMPLE_FILE.get_string(SPECIES=species), schema=BlobURISchema.HTTPS)
         for species in Species.all().keys()
     },
   })
@@ -182,13 +182,13 @@ def report(id):
 
   # Get a link to download the data, if the file exists
   if check_blob_exists(job.report.get_bucket_name(), job.report.get_data_blob_path()):
-    data_download_url = generate_blob_url(job.report.get_bucket_name(), job.report.get_data_blob_path())
+    data_download_url = generate_blob_uri(job.report.get_bucket_name(), job.report.get_data_blob_path(), schema=BlobURISchema.HTTPS)
   else:
     data_download_url = None
 
   # Get a link to the report files, if they exist
   if job.report.report_path is not None:
-    report_url = generate_blob_url(job.report.get_bucket_name(), job.report.report_path)
+    report_url = generate_blob_uri(job.report.get_bucket_name(), job.report.report_path, schema=BlobURISchema.HTTPS)
   else:
     report_url = None
 
@@ -245,13 +245,13 @@ def report_fullscreen(id):
 @jwt_required()
 def report_status(id):
   mapping = get_mapping(id)
-  data_url = generate_blob_url(mapping.get_bucket_name(), mapping.get_data_blob_path())
+  data_url = generate_blob_uri(mapping.get_bucket_name(), mapping.get_data_blob_path(), schema=BlobURISchema.HTTPS)
 
   # TODO: Definition of report_path has been changed(?) since this was written, is now a property
   #       that automatically searches for the HTML report filename. Is this the intended value here?
   #       Should this be checking mapping.report_path?
   if hasattr(mapping, 'mapping_report_url'):
-    report_url = generate_blob_url(mapping.get_bucket_name(), mapping.report_path)
+    report_url = generate_blob_uri(mapping.get_bucket_name(), mapping.report_path, schema=BlobURISchema.HTTPS)
   else:
     report_url = None
 

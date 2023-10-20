@@ -3,6 +3,7 @@ import os
 import google.auth
 import google.auth.transport.requests as tr_requests
 import datetime
+from enum import Enum
 
 import json
 import pandas as pd
@@ -58,12 +59,72 @@ def get_blob_list(bucket_name, prefix):
 # Generate URIs
 #
 
-def generate_blob_url(bucket_name, blob_name, secure=True):
-  ''' Generates the public https URL for a blob '''
-  if secure:
-    return f"https://storage.googleapis.com/{bucket_name}/{blob_name}" 
-  else:
-    return f"http://storage.googleapis.com/{bucket_name}/{blob_name}" 
+class BlobURISchema(Enum):
+  PATH   = ''
+  HTTP   = 'http://storage.googleapis.com/'
+  HTTPS  = 'https://storage.googleapis.com/'
+  GS     = 'gs://'
+  SIGNED = 'SIGNED'
+
+  @classmethod
+  def http(cls, secure: bool):
+    '''
+      Convenience method to get http(s) based on boolean.
+      If `secure` is True, returns HTTPS, else returns HTTP
+    '''
+    return cls.HTTPS if secure else cls.HTTP
+
+  @classmethod
+  def sign(cls, sign: bool, secure: bool = False):
+    '''
+      Convenience method to get signed URL based on boolean.
+      If `sign` is True, returns SIGNED,
+      Otherwise, if `secure` is True, returns HTTPS, else returns HTTP
+    '''
+    return cls.SIGNED if sign else cls.http(secure=secure)
+
+
+def generate_blob_uri(bucket: str, *path: str, schema: BlobURISchema = BlobURISchema.PATH, credentials=None, expiration=datetime.timedelta(minutes=15)):
+    '''
+      Generate a URI path for a blob.
+
+      Arguments:
+        bucket (`str`):
+          The source bucket for the blob.
+        *path (`str`):
+          Some number of strings comprising the path to the blob within the bucket.
+        schema (`BlobURISchema`):
+          Enum specifier for the format of the URI.
+          Default `BlobURISchema.PATH` -- see Return section below.
+        credentials:
+          If `BlobURISchema.SIGNED` is used, these are the credentials to sign with.
+          See `generate_download_signed_url_v4` for more info.
+        expiration:
+          If `BlobURISchema.SIGNED` is used, this is the expiration time for the URL.
+          See `generate_download_signed_url_v4` for more info.
+
+      Returns:
+        - If `schema` is `BlobURISchema.PATH`, a tuple of strings containing the bucket and the full path within the bucket. (i.e. joins the path).
+        - If any other schema is used, a single string comprising the full URI.
+    '''
+
+    # Use raw 'PATH' by default
+    if schema is None:
+      schema = BlobURISchema.PATH
+
+    # Join all the non-empty entries in the provided path
+    path = '/'.join([ p for p in path if p ])
+
+    # Raw path - return bucket and joined path
+    if schema == BlobURISchema.PATH:
+      return bucket, path
+
+    # Signed URL - forward relevant keyword args
+    if schema == BlobURISchema.SIGNED:
+      return generate_download_signed_url_v4(bucket, path, credentials=credentials, expiration=expiration)
+
+    # Otherwise, use the prefix from the enum
+    return f'{ schema.value }{ bucket }/{ path }'
 
 
 def generate_download_signed_url_v4(bucket_name, blob_name, credentials=None, expiration=datetime.timedelta(minutes=15)):

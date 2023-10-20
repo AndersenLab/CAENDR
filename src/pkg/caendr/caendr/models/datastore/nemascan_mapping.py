@@ -2,7 +2,7 @@ from caendr.services.logger import logger
 
 from caendr.models.datastore import DataJobEntity
 from caendr.models.status import JobStatus
-from caendr.services.cloud.storage import check_blob_exists, get_blob_list
+from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, check_blob_exists, get_blob_list
 
 
 NEMASCAN_REPORT_PATH_PREFIX = 'reports'
@@ -41,7 +41,7 @@ class NemascanReport(DataJobEntity):
     return f'{self.__input_data_path}'
 
   def get_data_directory(self):
-    return f"gs://{ self.get_bucket_name() }/{ self.get_input_data_path() }"
+    return generate_blob_uri( self.get_bucket_name(), self.get_input_data_path(), schema=BlobURISchema.GS )
 
 
   ## Properties List ##

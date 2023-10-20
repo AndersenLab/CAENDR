@@ -33,7 +33,7 @@ from caendr.api.strain import get_strains
 from caendr.services.heritability_report import get_heritability_report, get_heritability_reports, fetch_heritability_report
 from caendr.utils.data import unique_id, get_object_hash
 from caendr.utils.env import get_env_var
-from caendr.services.cloud.storage import get_blob, generate_blob_url
+from caendr.services.cloud.storage import get_blob, generate_blob_uri, BlobURISchema
 from caendr.services.persistent_logger import PersistentLogger
 
 
@@ -83,7 +83,7 @@ def heritability_calculator():
     'strain_list': [],
     'species_list': Species.all(),
     'sample_data_urls': {
-      species: generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, HERITABILITY_EXAMPLE_FILE.get_string(SPECIES=species))
+      species: generate_blob_uri(MODULE_SITE_BUCKET_ASSETS_NAME, HERITABILITY_EXAMPLE_FILE.get_string(SPECIES=species), schema=BlobURISchema.HTTPS)
         for species in Species.all().keys()
     },
   })
@@ -285,7 +285,7 @@ def report(id):
     'operation': job.report.get_pipeline_operation(),
     'error': error,
 
-    'data_url': generate_blob_url(job.report.get_bucket_name(), job.report.get_data_blob_path()),
+    'data_url': generate_blob_uri(job.report.get_bucket_name(), job.report.get_data_blob_path(), schema=BlobURISchema.HTTPS),
     'logs_url': url_for('heritability_calculator.view_logs', id = id),
 
     'JobStatus': JobStatus,

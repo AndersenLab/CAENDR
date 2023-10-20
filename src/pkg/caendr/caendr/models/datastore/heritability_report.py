@@ -1,4 +1,5 @@
 from caendr.models.datastore import DataJobEntity
+from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
 from caendr.utils.env import get_env_var
 
 
@@ -27,7 +28,7 @@ class HeritabilityReport(DataJobEntity):
     return 'heritability'
 
   def get_data_directory(self):
-    return f"gs://{ DATA_BUCKET_NAME }/{ self.get_input_data_path() }"
+    return generate_blob_uri( DATA_BUCKET_NAME, self.get_input_data_path(), schema=BlobURISchema.GS )
 
 
   @classmethod
