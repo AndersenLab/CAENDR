@@ -27,6 +27,10 @@ def get_google_storage_credentials():
   return credentials
 
 
+#
+# Check blobs
+#
+
 def get_blob(bucket_name, blob_name):
   logger.debug(f'get_blob(bucket_name={bucket_name}, blob_name={blob_name})')
   bucket = storageClient.get_bucket(bucket_name)
@@ -50,6 +54,10 @@ def get_blob_list(bucket_name, prefix):
   return list(items)
 
 
+#
+# Generate URIs
+#
+
 def generate_blob_url(bucket_name, blob_name, secure=True):
   ''' Generates the public https URL for a blob '''
   if secure:
@@ -58,16 +66,32 @@ def generate_blob_url(bucket_name, blob_name, secure=True):
     return f"http://storage.googleapis.com/{bucket_name}/{blob_name}" 
 
 
+def generate_download_signed_url_v4(bucket_name, blob_name, credentials=None, expiration=datetime.timedelta(minutes=15)):
+  """Generates a v4 signed URL for downloading a blob. """
+  if credentials is None:
+    credentials = get_google_storage_credentials()
 
-def download_blob_to_file(bucket_name, blob_name, filename):
-  ''' Downloads a blob and saves it locally '''   
   bucket = storageClient.get_bucket(bucket_name)
-  blob = bucket.blob(blob_name)
-  if blob.exists():
-    blob.download_to_file(open(filename, 'wb'))
-    return filename
-  else:
-    raise NotFoundError('blob', {'bucket': bucket_name, 'name': blob_name})
+  try:
+    blob = bucket.blob(blob_name)
+    url = blob.generate_signed_url(
+      expiration=expiration,
+      method="GET",
+      credentials=credentials
+    )
+    return url
+
+  except Exception as inst:
+    logger.error(type(inst))
+    logger.error(inst.args)
+    logger.error(inst)
+    return None
+
+
+
+#
+# Upload
+#
 
 def upload_blob_from_file_object(bucket_name, file, blob_name):
   """Uploads a file to the bucket."""
@@ -141,28 +165,22 @@ def upload_blob_from_file_as_chunks(bucket_name: str, filename: str, blob_name: 
     
     logger.info(json_response)
     return json_response
-  
-  
-def generate_download_signed_url_v4(bucket_name, blob_name, credentials=None, expiration=datetime.timedelta(minutes=15)):
-  """Generates a v4 signed URL for downloading a blob. """
-  if credentials is None:
-    credentials = get_google_storage_credentials()
-    
-  bucket = storageClient.get_bucket(bucket_name)
-  try: 
-    blob = bucket.blob(blob_name)
-    url = blob.generate_signed_url(
-      expiration=expiration,
-      method="GET",
-      credentials=credentials
-    )
-    return url
 
-  except Exception as inst:
-    logger.error(type(inst))
-    logger.error(inst.args)
-    logger.error(inst)
-    return None
+
+
+#
+# Download
+#
+
+def download_blob_to_file(bucket_name, blob_name, filename):
+  ''' Downloads a blob and saves it locally '''
+  bucket = storageClient.get_bucket(bucket_name)
+  blob = bucket.blob(blob_name)
+  if blob.exists():
+    blob.download_to_file(open(filename, 'wb'))
+    return filename
+  else:
+    raise NotFoundError('blob', {'bucket': bucket_name, 'name': blob_name})
 
 
 def download_blob_as_json(blob, enc='utf-8'):
