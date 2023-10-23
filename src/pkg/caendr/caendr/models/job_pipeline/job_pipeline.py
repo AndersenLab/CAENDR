@@ -17,26 +17,6 @@ from caendr.models.error      import (
 from caendr.models.run        import Runner
 from caendr.models.status     import JobStatus
 from caendr.models.task       import Task
-from caendr.utils.env         import get_env_var
-
-
-
-# Project Environment Variables
-GOOGLE_CLOUD_PROJECT_NUMBER = get_env_var('GOOGLE_CLOUD_PROJECT_NUMBER')
-GOOGLE_CLOUD_PROJECT_ID     = get_env_var('GOOGLE_CLOUD_PROJECT_ID')
-GOOGLE_CLOUD_REGION         = get_env_var('GOOGLE_CLOUD_REGION')
-GOOGLE_CLOUD_ZONE           = get_env_var('GOOGLE_CLOUD_ZONE')
-
-# Module Environment Variables
-SERVICE_ACCOUNT_NAME        = get_env_var('MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME')
-PUB_SUB_TOPIC_NAME          = get_env_var('MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME')
-WORK_BUCKET_NAME            = get_env_var("MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME")
-DATA_BUCKET_NAME            = get_env_var("MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME")
-
-# Service Account & Pub/Sub Info
-sa_email = f"{SERVICE_ACCOUNT_NAME}@{GOOGLE_CLOUD_PROJECT_ID}.iam.gserviceaccount.com"
-pub_sub_topic = f'projects/{GOOGLE_CLOUD_PROJECT_ID}/topics/{PUB_SUB_TOPIC_NAME}'
-SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
 
 
 
