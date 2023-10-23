@@ -71,11 +71,11 @@ class JobPipeline(ABC):
 
     # Check that exactly one of the two optional arguments is defined, using XOR
     if not ((job_id is None) ^ (report is None)):
-      raise ValueError('Exactly one of "job_id" and "report" should be provided.')
+      raise ValueError('Either "job_id" or "report" should be provided, but not both.')
 
     # Job ID is defined -- instantiate the report using the Report class
     if report is None:
-      report = self.create_report(job_id)
+      report = self.lookup_report(job_id)
       if not report._exists:
         raise NotFoundError(self._Report_Class, {'id': job_id})
 
@@ -85,10 +85,6 @@ class JobPipeline(ABC):
 
     # Save the report to this object
     self._report = report
-
-    # Create a managed Runner object
-    # TODO: Better management of Runner object
-    self._runner = self.create_runner(report=report)
 
 
   @classmethod
@@ -181,7 +177,11 @@ class JobPipeline(ABC):
 
   @classmethod
   def create_report(cls, *args, **kwargs) -> DataJobEntity:
-    return cls._Report_Class(*args, **kwargs)
+    return cls._Report_Class.create(*args, **kwargs)
+
+  @classmethod
+  def lookup_report(cls, *args, **kwargs) -> DataJobEntity:
+    return cls._Report_Class.lookup(*args, **kwargs)
 
   @classmethod
   def create_task(cls, *args, **kwargs) -> Task:
@@ -199,8 +199,21 @@ class JobPipeline(ABC):
   #
 
   @property
-  def report(self) -> DataJobEntity:
+  def report(self) -> Report:
+    '''
+      Managed Report object.
+    '''
     return self._report
+
+  @property
+  def _runner(self) -> Runner:
+    '''
+      Managed Runner object. Only computed as needed.
+    '''
+    if self.__runner is None:
+      self.__runner = self.create_runner(report=self.report)
+    return self.__runner
+
 
   @property
   def kind(self):
