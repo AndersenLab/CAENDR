@@ -32,209 +32,27 @@
 
 
 {% block script %}
+<script src="{{ url_for('static', filename='js/scatter-histogram.js') }}"></script>
 
 <script>
 
-const traits_data = {{ data_dict|tojson }}
-const traits_arr = {{ data_arr|tojson }}
-const paraquat_x = {{ paraquat|tojson}}
-const carbaryl_y = {{ carbaryl|tojson}}
+const data = {{ data|tojson }};
 
-// set the dimensions and margins of the graph
-var margin = {
-    top: 100,
-    right: 80,
-    bottom: 70,
-    left: 70
-    },
-    width = 700 - margin.left - margin.right,
-    height = 700 - margin.top - margin.bottom;
-    x_min = Math.min(...paraquat_x)
-    x_max = Math.max(...paraquat_x)
-    y_min = Math.min(...carbaryl_y)
-    y_max = Math.max(...carbaryl_y)
-
-var svg = d3.select("#phenotype-chart").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-
-// Add label for x-axis
-svg.append('text')
-    .attr('x', width/2)
-    .attr('y', height + margin.top + 50)
-    .attr('text-anchor', 'middle')
-    .text('Paraquat Length')
-
-// Add label for y-axis
-svg.append('text')
-    .attr('transform', 'rotate(-90)')
-    .attr('x', -height/2)
-    .attr('y', 0)
-    .attr('dy', '.75em')
-    .attr('text-anchor', 'middle')
-    .text('Carbaryl Length')
-
-var g = svg.append("g")
-    .attr("transform",
-    "translate(" + margin.left + "," + margin.top + ")");
-
-var x = d3.scaleLinear().range([0, width]).domain([x_min-5, x_max+5]),
-    y = d3.scaleLinear().range([height, 0]).domain([y_min-5, y_max+5]);
-
-// Add the X Axis
-g.append("g")
-    .attr("transform", "translate(0," + height + ")")
-    .call(d3.axisBottom(x));
-
-// Add the Y Axis
-g.append("g")
-    .call(d3.axisLeft(y));
-
-var dots = g.selectAll(".point")
-            .data(traits_arr)
-            .enter()
-            .append("circle")
-            .attr("cx", function(d) {
-                return x(d[0]);
-            })
-            .attr("cy", function(d) {
-                return y(d[1]);
-            })
-            .attr("r", 7)
-            .style("fill", "steelblue")
-            .style("stroke", "lightgray");
-
-var tooltip = d3.select("#phenotype-chart")
-                .append("div")
-                .attr("class", "tooltip")
-                .style("opacity", 0);
-
-
-
-dots.on('mouseover', function(d) {
-  d3.select(this)
-    .attr('r', 9);
-  
-  // Show the tooltip
-  tooltip.html(`<p><b>Strain: ${d[2]}</b></p>
-                <p>Paraquat length: ${d[0]}</p>
-                <p>Carbaryl length: ${d[1]}</p>`)
-    .style('left', (d3.event.pageX + 10) + 'px') // Position tooltip to the right of the cursor
-    .style('top', (d3.event.pageY - 25) + 'px') // Position tooltip above the cursor
-    .transition()
-    .duration(200)
-    .style('opacity', 1);
-
-
+scatterplot_histograms('#phenotype-chart', data, {
+    hist_height:   60,
+    width:         600,
+    height:        600,
+    fill_color:    '#0719BC',
+    bins_per_tick: 2,
+    x_label:       'Paraquat Length',
+    y_label:       'Carbaryl Length',
+    tooltip_template: (d, labels) => `
+        <p><b>Strain: ${d[2]}</b></p>
+        <p>${labels['x']}: ${d[0]}</p>
+        <p>${labels['y']}: ${d[1]}</p>
+    `,
 });
 
-// Add a mouseout event listener
-dots.on('mouseout', function() {
-  d3.select(this) // Select the dot
-    .attr('r', 7); // Restore the dot's radius (optional)
-
-  // Hide the tooltip
-  tooltip.transition()
-    .duration(300)
-    .style('opacity', 0);
-})
-
-
-
-// top histogram
-var gTop = svg.append("g")
-    .attr("transform",
-    "translate(" + margin.left + "," + 0 + ")");
-
-var xBins = d3.histogram()
-    .domain(x.domain())
-    .thresholds(x.ticks(10))
-    .value(function(d) {
-    return d[0];
-    })(traits_arr);
-
-var xy = d3.scaleLinear()
-    .domain([0, d3.max(xBins, function(d) {
-    return d.length;
-    })])
-    .range([margin.top, 0]);
-
-var xBar = gTop.selectAll(".bar")
-    .data(xBins)
-    .enter().append("g")
-    .attr("class", "bar")
-    .attr("transform", function(d) {
-    return "translate(" + x(d.x0) + "," + xy(d.length) + ")";
-    });
-
-var bWidth = x(xBins[0].x1) - x(xBins[0].x0) - 1;
-xBar.append("rect")
-    .attr("x", 1)
-    .attr("width", bWidth)
-    .attr("height", function(d) {
-    return margin.top - xy(d.length);
-    })
-    .style("fill", "steelblue");
-
-xBar.append("text")
-    .attr("dy", ".75em")
-    .attr("y", 2)
-    .attr("x", bWidth / 2)
-    .attr("text-anchor", "middle")
-    .text(function(d) {
-    return d.length < 4 ? "" : d.length;
-    })
-    .style("fill", "white")
-    .style("font", "9px sans-serif");
-    
-// right histogram
-var gRight = svg.append("g")
-    .attr("transform",
-    "translate(" + (margin.left + width) + "," + margin.top + ")");
-
-var yBins = d3.histogram()
-    .domain(y.domain())
-    .thresholds(y.ticks(10))
-    .value(function(d) {
-    return d[1];
-    })(traits_arr);
-
-var yx = d3.scaleLinear()
-    .domain([0, d3.max(yBins, function(d) {
-    return d.length;
-    })])
-    .range([0, margin.right]);
-
-var yBar = gRight.selectAll(".bar")
-    .data(yBins)
-    .enter().append("g")
-    .attr("class", "bar")
-    .attr("transform", function(d) {
-    return "translate(" + 0 + "," + y(d.x1) + ")";
-    });
-
-var bWidth = y(yBins[0].x0) - y(yBins[0].x1) - 1;
-yBar.append("rect")
-    .attr("y", 1)
-    .attr("width", function(d){
-    return yx(d.length);
-    })
-    .attr("height", bWidth)
-    .style("fill", "steelblue");
-
-yBar.append("text")
-    .attr("dx", "-.75em")
-    .attr("y", bWidth / 2 + 1)
-    .attr("x", function(d){
-    return yx(d.length);
-    })
-    .attr("text-anchor", "middle")
-    .text(function(d) {
-    return d.length < 4 ? "" : d.length;
-    })
-    .style("fill", "white")
-    .style("font", "9px sans-serif");
-    
 </script>
 
 {% endblock %}
