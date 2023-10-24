@@ -1,10 +1,12 @@
 import os
 from enum import Enum
 
-from caendr.models.datastore import JobEntity, UserOwnedEntity
+from caendr.utils.env import get_env_var
+
+from caendr.models.datastore import ReportEntity
 
 
-MODULE_DB_OPERATIONS_BUCKET_NAME = os.environ.get('MODULE_DB_OPERATIONS_BUCKET_NAME')
+MODULE_DB_OPERATIONS_BUCKET_NAME = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
 
 
 class DbOp(Enum):
@@ -40,16 +42,46 @@ class DbOp(Enum):
 
 
 
-class DatabaseOperation(JobEntity, UserOwnedEntity):
+class DatabaseOperation(ReportEntity):
+
+  #
+  # Class Variables
+  #
+
   kind = 'database_operation'
-  __bucket_name = MODULE_DB_OPERATIONS_BUCKET_NAME
 
-  __db_operation : DbOp
+  _report_display_name = 'Database Operation'
+
+  # Identify the operation by its name
+  # This groups executions of the same operation together
+  _data_id_field = 'db_operation'
 
 
-  @classmethod
-  def get_bucket_name(cls):
-    return cls.__bucket_name
+  #
+  # Path
+  #
+
+  _input_filename  = None
+  _output_filename = None
+
+  # TODO: Buckets?
+
+  @property
+  def report_bucket_name(self) -> str:
+    return MODULE_DB_OPERATIONS_BUCKET_NAME
+
+  @property
+  def data_bucket_name(self) -> str:
+    return MODULE_DB_OPERATIONS_BUCKET_NAME
+
+  @property
+  def work_bucket_name(self) -> str:
+    return MODULE_DB_OPERATIONS_BUCKET_NAME
+
+
+  #
+  # Properties
+  #
 
   @classmethod
   def get_props_set(cls):
@@ -62,13 +94,13 @@ class DatabaseOperation(JobEntity, UserOwnedEntity):
     }
 
 
-
-  ## Special Properties ##
-
+  #
+  # Database Operation prop
+  #
 
   @property
   def db_operation(self):
-    return self.__db_operation
+    return self.__dict__.get('db_operation', None)
 
   @db_operation.setter
   def db_operation(self, val):
@@ -86,8 +118,12 @@ class DatabaseOperation(JobEntity, UserOwnedEntity):
 
     # Save as a string value, for easy integration with GCP
     # TODO: Update Entity .save() to work with enums?
-    self.__db_operation = val.value
+    self.__dict__['db_operation'] = val.value
 
+
+  #
+  # Logs prop
+  #
 
   @property
   def logs(self):

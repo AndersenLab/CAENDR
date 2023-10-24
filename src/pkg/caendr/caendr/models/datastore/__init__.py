@@ -13,16 +13,17 @@ from .species             import Species, SPECIES_LIST # Imports WormbaseVersion
 # Intermediate subclasses (primarily for tools)
 from .job_entity          import JobEntity           # Imports Container
 from .user_owned_entity   import UserOwnedEntity     # Imports User
-from .data_job_entity     import DataJobEntity       # Subclasses JobEntity, UserOwnedEntity
+from .hashable_entity     import HashableEntity
+from .report_entity       import ReportEntity        # Subclasses JobEntity, UserOwnedEntity, as well as GCPReport
 
 # Jobs
-from .database_operation  import DatabaseOperation   # Subclasses JobEntity, UserOwnedEntity
+from .database_operation  import DatabaseOperation   # Subclasses ReportEntity
 from .gene_browser_tracks import GeneBrowserTracks   # Subclasses JobEntity  (DEPRECATED)
 
 # Tools
-from .indel_primer        import IndelPrimerReport   # Subclasses DataJobEntity, imports DatasetRelease, Species
-from .heritability_report import HeritabilityReport  # Subclasses DataJobEntity
-from .nemascan_mapping    import NemascanReport      # Subclasses DataJobEntity
+from .indel_primer        import IndelPrimerReport   # Subclasses ReportEntity, HashableEntity; imports DatasetRelease, Species
+from .heritability_report import HeritabilityReport  # Subclasses ReportEntity, HashableEntity
+from .nemascan_mapping    import NemascanReport      # Subclasses ReportEntity, HashableEntity
 
 # Other
 from .database_operation  import DbOp

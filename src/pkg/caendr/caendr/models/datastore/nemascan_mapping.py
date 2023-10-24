@@ -1,47 +1,59 @@
 from caendr.services.logger import logger
 
-from caendr.models.datastore import DataJobEntity
+from caendr.models.datastore import HashableEntity, ReportEntity
 from caendr.models.status import JobStatus
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, check_blob_exists, get_blob_list
 
 
-NEMASCAN_REPORT_PATH_PREFIX = 'reports'
-NEMASCAN_RESULT_PATH_INFIX = 'results'
-INPUT_DATA_PATH = 'tools/nemascan/input_data'
 REPORT_DATA_PREFIX = 'Reports/NemaScan_Report_'
-NEMASCAN_INPUT_FILE = 'data.tsv'
 
 
-class NemascanReport(DataJobEntity):
+
+class NemascanReport(HashableEntity, ReportEntity):
+
+  #
+  # Class Variables
+  #
+
   kind = 'nemascan_mapping'
-  _blob_prefix = NEMASCAN_REPORT_PATH_PREFIX
-  _input_file  = NEMASCAN_INPUT_FILE
 
   _report_display_name = 'Genetic Mapping'
 
-  __result_infix = NEMASCAN_RESULT_PATH_INFIX
-  __input_data_path = INPUT_DATA_PATH
-  __report_path = REPORT_DATA_PREFIX
+  # Identify the report data by the data hash, inherited from the HashableEntity parent class
+  _data_id_field = 'data_hash'
 
 
-  ## Buckets & Paths ##
+  #
+  # Paths
+  #
 
-  # TODO: Overrides function in DataJobEntity parent class which isn't needed in this class.
-  #       Can this be merged with get_result_path for better inheritance?
-  def get_result_blob_path(self):
-    raise TypeError(f'Should not call get_result_blob_path on {self.__class__.__name__}')
+  def _data_prefix(self):
+    return 'tools/nemascan/input_data'
 
-  def get_result_path(self):
-    return f'{self.get_blob_path()}/{self.__result_infix}'
+  def _output_prefix(self):
+    return 'results'
 
-  def get_report_blob_prefix(self):
-    return f'{self.get_result_path()}/{self.__report_path}'
+  def get_data_paths(self, schema: BlobURISchema):
+    return {
+      **super().get_data_paths(schema=schema),
+      'TRAIT_FILE': self.input_filepath(schema=schema),
+    }
 
-  def get_input_data_path(self):
-    return f'{self.__input_data_path}'
 
-  def get_data_directory(self):
-    return generate_blob_uri( self.get_bucket_name(), self.get_input_data_path(), schema=BlobURISchema.GS )
+  #
+  # Input & Output
+  #
+
+  _input_filename  = 'data.tsv'
+
+  @property
+  def _output_filename(self):
+    return self.report_path
+
+  def upload(self, *data_files):
+    if len(data_files) != 1:
+      raise ValueError('Exactly one data file should be uploaded.')
+    return super().upload(*data_files)
 
 
   ## Properties List ##

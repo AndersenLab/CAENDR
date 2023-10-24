@@ -1,11 +1,12 @@
 # Built-in libraries
-from abc import ABC, abstractmethod
+from abc    import ABC, abstractmethod
+from typing import Type
 
 # Logging
 from caendr.services.logger import logger
 
 # CaeNDR package
-from caendr.models.datastore  import User, Container, DataJobEntity
+from caendr.models.datastore  import User, Container
 from caendr.models.error      import (
   NotFoundError,
   CachedDataError,
@@ -14,6 +15,7 @@ from caendr.models.error      import (
   UnschedulableJobTypeError,
   JobAlreadyScheduledError
 )
+from caendr.models.report     import Report
 from caendr.models.run        import Runner
 from caendr.models.status     import JobStatus
 from caendr.models.task       import Task
@@ -31,25 +33,17 @@ class JobPipeline(ABC):
   '''
 
   # Custom class that defines storage
-  # Must define the following methods:
-  #   - check_cached_submission
-  #   - set_container
-  #   - set_user
-  #   - save
-  # Must provide [] access to fields
-  # Must contain fields:
-  #   - status
-  # Must contain prop:
-  #   - data_hash
-  _Report_Class = None
+  # See abstract base class Report for the interface this class must define
+  _Report_Class : Type[Report] = None
 
   # Defines submission of a job from the site to the appropriate queue
   # If left undefined, scheduling of this job type is considered impossible
-  # Must define a method "submit"
-  _Task_Class   = None
+  # See abstract base class Task for the interface this class must define
+  _Task_Class   : Type[Task]   = None
 
   # Defines running a job container in the cloud service provider
-  _Runner_Class = None
+  # See abstract base class Runner for the interface this class must define
+  _Runner_Class : Type[Runner] = None
 
   # Associated data classes
   _Container_Class = Container
@@ -130,11 +124,11 @@ class JobPipeline(ABC):
     '''
 
     # Log the start of the creation process
-    logger.debug(f'Creating new {cls._Report_Class.__name__} job for user "{user.name}".')
+    logger.debug(f'Creating new {cls.__name__} job for user "{user.name}".')
 
     # Load container version info
     container = Container.get(cls._Container_Name, version = container_version)
-    logger.debug(f"Creating {cls._Report_Class.__name__} with Container {container.uri()}")
+    logger.debug(f"Creating {cls.__name__} with Container {container.uri()}")
     if container_version is not None:
       logger.warn(f'Container version {container_version} was specified manually - this may not be the most recent version.')
 
@@ -159,7 +153,7 @@ class JobPipeline(ABC):
     report.set_user(user)
 
     # Initialize the report status
-    report['status'] = JobStatus.CREATED
+    report.set_status(JobStatus.CREATED)
 
     # Upload the new report to the cloud storage provider
     report.save()
@@ -176,11 +170,11 @@ class JobPipeline(ABC):
   #
 
   @classmethod
-  def create_report(cls, *args, **kwargs) -> DataJobEntity:
+  def create_report(cls, *args, **kwargs) -> Report:
     return cls._Report_Class.create(*args, **kwargs)
 
   @classmethod
-  def lookup_report(cls, *args, **kwargs) -> DataJobEntity:
+  def lookup_report(cls, *args, **kwargs) -> Report:
     return cls._Report_Class.lookup(*args, **kwargs)
 
   @classmethod
@@ -220,14 +214,14 @@ class JobPipeline(ABC):
     '''
       Get the unique kind specified by the associated Report class.
     '''
-    return self._Report_Class.kind
+    return self._Report_Class.get_kind()
 
   @classmethod
   def get_kind(cls):
     '''
       Class-level method for getting kind.
     '''
-    return cls._Report_Class.kind
+    return cls._Report_Class.get_kind()
 
   @property
   def queue(self):
@@ -367,7 +361,7 @@ class JobPipeline(ABC):
 
     # Check whether this specific job has already been scheduled
     # If force is True, this check will not be run
-    if not force and self.report['status'] != JobStatus.CREATED:
+    if not force and self.report.get_status() != JobStatus.CREATED:
       raise JobAlreadyScheduledError()
     
     # If using cache, check whether this job already has results and short-circuit the computation if so
@@ -380,12 +374,12 @@ class JobPipeline(ABC):
     result = task.submit()
 
     # Update entity status to reflect whether task was submitted successfully
-    self.report['status'] = JobStatus.SUBMITTED if result else JobStatus.ERROR
+    self.report.set_status( JobStatus.SUBMITTED if result else JobStatus.ERROR )
     self.report.save()
 
     # Return the status
     # TODO: Raise an error if submission fails?
-    return self.report['status']
+    return self.report.get_status()
 
 
 
@@ -394,11 +388,11 @@ class JobPipeline(ABC):
   #
 
   @property
-  def report_data_id(self):
+  def data_id(self):
     '''
-      The data ID for this job's report, as specified in the associated Runner subclass.
+      The data ID for this job's report, as specified in the associated `Report` subclass.
     '''
-    return getattr( self.report, self._Runner_Class._data_id_field )
+    return self.report.get_data_id()
 
   def run(self, *args, **kwargs):
     '''
@@ -407,7 +401,7 @@ class JobPipeline(ABC):
 
     # Check if this report is already associated with an operation
     if self.report['operation_name'] is not None:
-      logger.warn(f'Report { self.report.id } (data ID { self.report_data_id }) is already associated with operation { self.report["operation_name"] }. Running again...')
+      logger.warn(f'Report { self.report.id } (data ID { self.data_id }) is already associated with operation { self.report["operation_name"] }. Running again...')
 
     # Forward run call to Runner object
     exec_id = self._runner.run(self.report, *args, **kwargs)
@@ -429,7 +423,7 @@ class JobPipeline(ABC):
 
     # If cache check returned a status, use it; otherwise, default to "COMPLETE"
     if cached_result:
-      self.report['status'] = cached_result if isinstance(cached_result, str) else JobStatus.COMPLETE
+      self.report.set_status( cached_result if isinstance(cached_result, str) else JobStatus.COMPLETE )
       self.report.save()
 
     return cached_result
@@ -449,7 +443,7 @@ class JobPipeline(ABC):
     if cached_result:
 
       # If cache check returned a status, use it; otherwise, default to "COMPLETE"
-      self.report['status'] = cached_result if isinstance(cached_result, str) else JobStatus.COMPLETE
+      self.report.set_status( cached_result if isinstance(cached_result, str) else JobStatus.COMPLETE )
       self.report.save()
 
-    return self.report['status'] in JobStatus.FINISHED
+    return self.report.get_status() in JobStatus.FINISHED

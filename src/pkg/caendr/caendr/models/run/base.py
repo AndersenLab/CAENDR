@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from caendr.models.datastore import DataJobEntity
+from caendr.models.report    import Report
 from caendr.models.status    import JobStatus
 
 
@@ -38,7 +38,7 @@ class Runner(ABC):
   _Record_Class: None
 
 
-  def __init__(self, data_id: str = None, report: DataJobEntity = None):
+  def __init__(self, data_id: str = None, report: Report = None):
     '''
       Create a new Runner object.
 
@@ -49,7 +49,7 @@ class Runner(ABC):
         - data_id (str):
             Unique identifier for the job data.
             Runners with the same data ID are considered to be running the same "computation".
-        - report (DataJobEntity):
+        - report (Report):
             Job report to initialize the runner from. Must have the same kind as the Runner subclass.
             Must contain the appropriate data ID field (defaults to "data_hash")
 
@@ -83,7 +83,7 @@ class Runner(ABC):
 
 
   @abstractmethod
-  def run(self, report: DataJobEntity, run_if_exists: bool = False) -> str:
+  def run(self, report: Report, run_if_exists: bool = False) -> str:
     '''
       Start a job to compute the given report.
 
@@ -97,7 +97,7 @@ class Runner(ABC):
     pass
 
 
-  def _validate_report(self, report: DataJobEntity):
+  def _validate_report(self, report: Report):
     '''
       Validate that a given report matches this Runner's kind and data ID.
       Raises a ValueError if the report is invalid.

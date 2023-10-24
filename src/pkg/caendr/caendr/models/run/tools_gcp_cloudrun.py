@@ -2,8 +2,10 @@ from .gcp import GCPCloudRunRunner
 
 from caendr.models.datastore import Species, DbOp
 from caendr.models.datastore import DatabaseOperation, IndelPrimerReport, HeritabilityReport, NemascanReport
+from caendr.models.report    import GCPReport
 
-from caendr.services.cloud.utils import make_dns_name_safe
+from caendr.services.cloud.storage import BlobURISchema
+from caendr.services.cloud.utils   import make_dns_name_safe
 
 
 #
@@ -62,14 +64,14 @@ class DatabaseOperationRunner(GCPCloudRunRunner):
 
   # Commands #
 
-  def construct_command(self, report):
+  def construct_command(self, report: GCPReport):
     return ['/db_operations/run.sh']
 
-  def construct_environment(self, report):
+  def construct_environment(self, report: GCPReport):
     environment = report['args']
-    environment['DATABASE_OPERATION'] = self.data_id
-    environment['USERNAME']           = report.get_user_name()
-    environment['EMAIL']              = report.get_user_email()
+    environment['DATABASE_OPERATION'] = report.get_data_id()
+    environment['USERNAME']           = report.get_user()['name']
+    environment['EMAIL']              = report.get_user()['email']
     environment['OPERATION_ID']       = report.id
 
     # TODO: Do we neeed the task ID? If so, how do we obtain it?
@@ -96,15 +98,15 @@ class IndelPrimerRunner(GCPCloudRunRunner):
   def construct_command(self):
     return ['python', '/indel_primer/main.py']
 
-  def construct_environment(self, report):
+  def construct_environment(self, report: GCPReport):
     return {
       "RELEASE":        report['release'],
       "SPECIES":        report['species'],
       "INDEL_STRAIN_1": report['strain_1'],
       "INDEL_STRAIN_2": report['strain_2'],
       "INDEL_SITE":     report['site'],
-      "RESULT_BUCKET":  report.get_bucket_name(),
-      "RESULT_BLOB":    report.get_result_blob_path(),
+      "RESULT_BUCKET":  report.data_bucket_name,
+      "RESULT_BLOB":    report.output_filepath(schema=BlobURISchema.PATH)[1],
     }
 
 
@@ -119,15 +121,15 @@ class HeritabilityRunner(GCPCloudRunRunner):
   _BOOT_DISK_SIZE_GB = 10
   _TIMEOUT           = '9000s'
 
-  def construct_command(self, report):
-    if report['container_version'] == "v0.1a":
+  def construct_command(self, report: GCPReport):
+    if report.get_container()['tag'] == "v0.1a":
       return ['python', '/h2/main.py']
     return ["./heritability-nxf.sh"]
 
   def construct_environment(self, report):
     return {
       **self.get_gcp_vars(),
-      **self.get_data_job_vars(report),
+      **report.get_data_paths(),
 
       "SPECIES":        report['species'],
       "VCF_VERSION":    Species.get(report.species)['release_latest'],
@@ -155,7 +157,7 @@ class NemascanRunner(GCPCloudRunRunner):
   def construct_environment(self, report):
     return {
       **self.get_gcp_vars(),
-      **self.get_data_job_vars(),
+      **report.get_data_paths(),
 
       "SPECIES":     report['species'],
       "VCF_VERSION": Species.get(report.species)['release_latest'],

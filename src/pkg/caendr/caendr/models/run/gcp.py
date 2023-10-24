@@ -10,8 +10,9 @@ from googleapiclient.errors import HttpError
 from caendr.services.logger import logger
 from caendr.utils.env       import get_env_var
 
-from caendr.models.datastore            import DataJobEntity, PipelineOperation
+from caendr.models.datastore            import PipelineOperation
 from caendr.models.error                import PipelineRunError, NotFoundError
+from caendr.models.report               import GCPReport
 from caendr.models.status               import JobStatus
 from caendr.models.lifesciences         import ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
 from caendr.services.cloud.cloudrun     import create_job, run_job, get_job_execution_status
@@ -156,16 +157,16 @@ class GCPRunner(Runner):
       "GOOGLE_ZONE":                  GOOGLE_CLOUD_ZONE,
     }
   
-  def get_data_job_vars(self, report: DataJobEntity):
+  def get_data_job_vars(self, report: GCPReport):
     return {
-      "TRAIT_FILE": f"gs://{ report.get_bucket_name() }/{ report.get_data_blob_path() }",
-      "WORK_DIR":   f"gs://{ WORK_BUCKET_NAME         }/{ report.data_hash }",
-      "DATA_DIR":   report.get_data_directory(),
-      "OUTPUT_DIR": f"gs://{ report.get_bucket_name() }/{ report.get_result_path() }",
+      "TRAIT_FILE": report.input_filepath(as_uri=True),
+      "WORK_DIR":   report.work_directory(as_uri=True),
+      "DATA_DIR":   report.data_directory(as_uri=True),
+      "OUTPUT_DIR": report.output_filepath(as_uri=True),
     }
 
   @abstractmethod
-  def construct_environment(self, report: DataJobEntity) -> dict:
+  def construct_environment(self, report: GCPReport) -> dict:
     '''
       Construct the set of environment variables for the container as a dictionary.
       Output should map variable names to values.
@@ -176,7 +177,7 @@ class GCPRunner(Runner):
   # Container Command #
 
   @abstractmethod
-  def construct_command(self, report: DataJobEntity) -> list:
+  def construct_command(self, report: GCPReport) -> list:
     '''
       Construct the command used to start the container functionality.
       Output should be a list of individual terms used in the command line.
@@ -346,7 +347,7 @@ class GCPCloudRunRunner(GCPRunner):
   @backoff.on_exception(
       backoff.constant, SSLEOFError, max_tries=_MAX_TRIES_TOTAL, interval=20, jitter=None, on_backoff=_log_ssl_backoff.__func__, on_giveup=_log_ssl_giveup.__func__,
   )
-  def run(self, report, run_if_exists=False):
+  def run(self, report: GCPReport, run_if_exists=False):
     '''
       Start a job on the given route.
 
@@ -404,7 +405,7 @@ class GCPCloudRunRunner(GCPRunner):
   # Creating & Running CloudRun Job
   #
 
-  def _create(self, report: DataJobEntity):
+  def _create(self, report: GCPReport):
     '''
       Create a CloudRun Job to run this task.
     '''

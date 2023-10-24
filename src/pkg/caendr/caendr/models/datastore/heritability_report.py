@@ -1,35 +1,63 @@
-from caendr.models.datastore import DataJobEntity
+from caendr.models.datastore import HashableEntity, ReportEntity
+
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
 from caendr.utils.env import get_env_var
 
 
-H2_REPORT_PATH_PREFIX = 'reports'
-H2_INPUT_FILE = 'data.tsv'
-H2_RESULT_FILE = 'heritability_result.tsv'
 
 # TODO: Should this bucket be the data path?
 #       Should Nemascan point here too, or should this point to the Private bucket like Nemascan?
 DATA_BUCKET_NAME = get_env_var("MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME")
 
 
-class HeritabilityReport(DataJobEntity):
+class HeritabilityReport(HashableEntity, ReportEntity):
+
+  #
+  # Class Variables
+  #
+
   kind = 'heritability_report'
-  _blob_prefix = H2_REPORT_PATH_PREFIX
-  _input_file  = H2_INPUT_FILE
-  _result_file = H2_RESULT_FILE
 
   _report_display_name = 'Heritability'
 
+  # Identify the report data by the data hash, inherited from the HashableEntity parent class
+  _data_id_field = 'data_hash'
 
-  def get_result_path(self):
-    return self.get_blob_path()
 
-  def get_input_data_path(self):
+  #
+  # Path
+  #
+
+  @property
+  def data_bucket_name(self) -> str:
+    return DATA_BUCKET_NAME
+
+  def _data_prefix(self):
     return 'heritability'
 
-  def get_data_directory(self):
-    return generate_blob_uri( DATA_BUCKET_NAME, self.get_input_data_path(), schema=BlobURISchema.GS )
+  def get_data_paths(self, schema: BlobURISchema):
+    return {
+      **super().get_data_paths(schema=schema),
+      'TRAIT_FILE': self.input_filepath(schema=schema),
+    }
 
+
+  #
+  # Uploading
+  #
+
+  _input_filename  = 'data.tsv'
+  _output_filename = 'heritability_result.tsv'
+
+  def upload(self, *data_files):
+    if len(data_files) != 1:
+      raise ValueError('Exactly one data file should be uploaded.')
+    return super().upload(*data_files)
+
+
+  #
+  # Properties
+  #
 
   @classmethod
   def get_props_set(cls):
