@@ -63,7 +63,7 @@ def lookup_report(kind, reportId, user=None, validate_user=True) -> JobPipeline:
       raise ReportLookupError('You do not have access to that report.', 401)
 
   # If the user doesn't have permission to view this report, show an error message
-  if validate_user and not (job.report.username == user.name or user_is_admin()):
+  if validate_user and not (job.report.belongs_to_user(user) or user_is_admin()):
     raise ReportLookupError('You do not have access to that report.', 401)
 
   # If all checks passed, return the report entity

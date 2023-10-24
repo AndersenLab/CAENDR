@@ -69,6 +69,9 @@ class UserOwnedEntity(Entity):
     # self['user_id'] = user.name
     self['username'] = user.name
 
+  def belongs_to_user(self, user: User) -> bool:
+    return self.get_user() == user
+
 
   ## User Fields ##
 
