@@ -78,8 +78,9 @@ class ReportEntity(JobEntity, UserOwnedEntity, GCPReport):
   def _report_path_prefix(cls):
     return 'reports'
 
+  @property
   def _report_prefix(self):
-    return '/'.join([ self._report_path_prefix(), self.container_name, self.container_version, super()._report_prefix() ])
+    return '/'.join([ self._report_path_prefix(), self.container_name, self.container_version, super()._report_prefix ])
   
 
   #

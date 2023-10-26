@@ -33,6 +33,7 @@ class IndelPrimerReport(HashableEntity, ReportEntity):
   #
 
   # TODO: Indel primer results currently don't have subdirectories for container versions. Should they?
+  @property
   def _report_prefix(self):
     return '/'.join([ self._report_path_prefix(), self.container_name, self.get_data_id() ])
 

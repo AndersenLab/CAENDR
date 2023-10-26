@@ -67,15 +67,15 @@ class DatabaseOperation(ReportEntity):
   # TODO: Buckets?
 
   @property
-  def report_bucket_name(self) -> str:
+  def _report_bucket(self) -> str:
     return MODULE_DB_OPERATIONS_BUCKET_NAME
 
   @property
-  def data_bucket_name(self) -> str:
+  def _data_bucket_name(self) -> str:
     return MODULE_DB_OPERATIONS_BUCKET_NAME
 
   @property
-  def work_bucket_name(self) -> str:
+  def _work_bucket_name(self) -> str:
     return MODULE_DB_OPERATIONS_BUCKET_NAME
 
 

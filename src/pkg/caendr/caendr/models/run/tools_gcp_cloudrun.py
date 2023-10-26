@@ -99,14 +99,15 @@ class IndelPrimerRunner(GCPCloudRunRunner):
     return ['python', '/indel_primer/main.py']
 
   def construct_environment(self, report: GCPReport):
+    result_bucket, result_blob = report.output_filepath(schema=BlobURISchema.PATH)
     return {
       "RELEASE":        report['release'],
       "SPECIES":        report['species'],
       "INDEL_STRAIN_1": report['strain_1'],
       "INDEL_STRAIN_2": report['strain_2'],
       "INDEL_SITE":     report['site'],
-      "RESULT_BUCKET":  report.data_bucket_name,
-      "RESULT_BLOB":    report.output_filepath(schema=BlobURISchema.PATH)[1],
+      "RESULT_BUCKET":  result_bucket,
+      "RESULT_BLOB":    result_blob,
     }
 
 
@@ -127,6 +128,7 @@ class HeritabilityRunner(GCPCloudRunRunner):
     return ["./heritability-nxf.sh"]
 
   def construct_environment(self, report):
+    data_bucket, data_blob = report.data_directory(schema=BlobURISchema.PATH)
     return {
       **self.get_gcp_vars(),
       **report.get_data_paths(),
@@ -134,8 +136,8 @@ class HeritabilityRunner(GCPCloudRunRunner):
       "SPECIES":        report['species'],
       "VCF_VERSION":    Species.get(report.species)['release_latest'],
       "DATA_HASH":      report.data_hash,
-      "DATA_BUCKET":    report.get_bucket_name(),
-      "DATA_BLOB_PATH": report.get_blob_path(),
+      "DATA_BUCKET":    data_bucket,
+      "DATA_BLOB_PATH": data_blob,
     }
 
 

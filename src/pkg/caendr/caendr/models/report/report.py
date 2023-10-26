@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 
 from caendr.models.status import JobStatus
 
+from caendr.services.cloud.storage import BlobURISchema
+
 
 
 class Report(ABC):
@@ -202,3 +204,55 @@ class Report(ABC):
       Subclasses may perform validation on the number of files.
     '''
     pass
+
+
+
+  #
+  # Directory functions
+  #
+
+
+  def report_directory(self, *path, schema: BlobURISchema = None):
+    '''
+      Get a filepath within the data directory.
+    '''
+    pass
+
+  def data_directory(self, *path, schema: BlobURISchema = None):
+    '''
+      Get a filepath within the tool directory.
+    '''
+    pass
+
+  def work_directory(self, *path, schema: BlobURISchema = None):
+    '''
+      Get a filepath within the work directory.
+    '''
+    pass
+
+  def input_directory(self, *path, schema: BlobURISchema = None):
+    '''
+      Get a filepath within the input directory.
+    '''
+    pass
+
+  def output_directory(self, *path, schema: BlobURISchema = None):
+    '''
+      Get a filepath within the output directory.
+    '''
+    pass
+
+
+
+  #
+  # Data paths
+  # Bundles together a number of paths under common names, to be used in job execution
+  # May be overwritten / added to in subclasses
+  #
+
+  def get_data_paths(self, schema: BlobURISchema):
+    return {
+      'WORK_DIR':   self.work_directory(schema=schema),
+      'DATA_DIR':   self.data_directory(schema=schema),
+      'OUTPUT_DIR': self.output_directory(schema=schema),
+    }

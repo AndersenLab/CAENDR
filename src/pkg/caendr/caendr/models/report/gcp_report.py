@@ -22,39 +22,43 @@ class GCPReport(Report):
     Abstract class for a report storing data in GCP.
 
     Implements the upload method
-    
+
     Partially implements fetch methods -- gets raw blobs.  Subclasses should use super() and fully implement these.
 
-    File structure:
+    Default file structure:
         - `{ report bucket }/{ report prefix }`
             - `{ input prefix }/` ...
             - `{ output prefix }/` ...
         - `{ data bucket }/{ data prefix }/` ...
         - `{ work bucket }/{ work prefix }/` ...
+
+    Note that, by default, the `input` and `output` directories are assumed to live within the `report` directory.
+    This behavior may be overwritten by subclasses.
   '''
 
 
   #
-  # Buckets
-  # These may be overwritten in subclasses
+  # Bucket names
+  # These are used to locate the bucket for each directory.
+  # These may all be overwritten in subclasses
   #
 
   @property
-  def report_bucket_name(self) -> str:
+  def _report_bucket(self) -> str:
     '''
       Bucket where any data specific to report is stored.
     '''
     return MODULE_SITE_BUCKET_PRIVATE_NAME
 
   @property
-  def data_bucket_name(self) -> str:
+  def _data_bucket(self) -> str:
     '''
       Bucket where any data specific to tool but NOT to individual report is stored.
     '''
     return MODULE_SITE_BUCKET_PRIVATE_NAME
 
   @property
-  def work_bucket_name(self) -> str:
+  def _work_bucket(self) -> str:
     '''
       Bucket to use as temp storage for work.
     '''
@@ -68,13 +72,14 @@ class GCPReport(Report):
   # These may all be overwritten in subclasses
   #
 
+  @property
   def _report_prefix(self):
     '''
       The location of this report's input/output data within the data bucket.
     '''
     return self.get_data_id()
-    # return ''
 
+  @property
   def _data_prefix(self):
     '''
       The location of this report's tool data within the tool bucket.
@@ -82,64 +87,49 @@ class GCPReport(Report):
     '''
     return ''
 
+  @property
   def _work_prefix(self):
     '''
       The location of this report's work within the work bucket.
     '''
     return self.get_data_id()
-    # return ''
 
+  @property
   def _input_prefix(self):
     '''
       The location of the report's input data within the data directory.
     '''
     return ''
 
+  @property
   def _output_prefix(self):
     '''
       The location of the report's output data within the data directory.
     '''
     return ''
-  
+
 
 
   #
   # Directory functions
   # These probably should not be overwritten, unless you're sure you know what you're doing.
-  # Instead, look into overwriting the bucket, prefix, etc. functions to customize directory lookups.
+  # Instead, look into overwriting the bucket and prefix functions to customize directory lookups.
   #
 
-
   def report_directory(self, *path, schema: BlobURISchema = None):
-    '''
-      Get a filepath within the data directory.
-    '''
-    return generate_blob_uri( self.report_bucket_name, self._report_prefix(), *path, schema=schema )
-  
+    return generate_blob_uri( self._report_bucket, self._report_prefix, *path, schema=schema )
+
   def data_directory(self, *path, schema: BlobURISchema = None):
-    '''
-      Get a filepath within the tool directory.
-    '''
-    return generate_blob_uri( self.data_bucket_name, self._data_prefix(), *path, schema=schema )
+    return generate_blob_uri( self._data_bucket, self._data_prefix, *path, schema=schema )
 
   def work_directory(self, *path, schema: BlobURISchema = None):
-    '''
-      Get a filepath within the work directory.
-    '''
-    return generate_blob_uri( self.work_bucket_name, self._work_prefix(), *path, schema=schema )
-  
+    return generate_blob_uri( self._work_bucket, self._work_prefix, *path, schema=schema )
+
   def input_directory(self, *path, schema: BlobURISchema = None):
-    '''
-      Get a filepath within the input directory.
-    '''
-    return self.report_directory( self._input_prefix(),  *path,  schema=schema )
+    return self.report_directory( self._input_prefix,  *path,  schema=schema )
 
   def output_directory(self, *path, schema: BlobURISchema = None):
-    '''
-      Get a filepath within the output directory
-    '''
-    return self.report_directory( self._output_prefix(), *path, schema=schema )
-
+    return self.report_directory( self._output_prefix, *path, schema=schema )
 
 
 
@@ -165,21 +155,6 @@ class GCPReport(Report):
     return self.output_directory( self._output_filename(), schema=schema )
 
   
-
-  #
-  # Data paths
-  # Bundles together a number of paths under common names, to be used in job execution
-  # May be overwritten / added to in subclasses
-  #  
-
-  def get_data_paths(self, schema: BlobURISchema):
-    return {
-      'WORK_DIR':   self.work_directory(schema=schema),
-      'DATA_DIR':   self.data_directory(schema=schema),
-      'OUTPUT_DIR': self.output_directory(schema=schema),
-    }
-
-
 
   #
   # Saving data to datastore

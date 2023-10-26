@@ -27,9 +27,11 @@ class NemascanReport(HashableEntity, ReportEntity):
   # Paths
   #
 
+  @property
   def _data_prefix(self):
     return 'tools/nemascan/input_data'
 
+  @property
   def _output_prefix(self):
     return 'results'
 

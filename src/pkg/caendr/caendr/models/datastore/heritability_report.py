@@ -29,9 +29,10 @@ class HeritabilityReport(HashableEntity, ReportEntity):
   #
 
   @property
-  def data_bucket_name(self) -> str:
+  def _data_bucket(self) -> str:
     return DATA_BUCKET_NAME
 
+  @property
   def _data_prefix(self):
     return 'heritability'
 
