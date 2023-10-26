@@ -100,25 +100,11 @@ class DatabaseOperation(ReportEntity):
 
   @property
   def db_operation(self):
-    return self.__dict__.get('db_operation', None)
+    return self._get_enum_prop(DbOp, 'db_operation', None)
 
   @db_operation.setter
   def db_operation(self, val):
-
-    # Map string to enum val
-    if isinstance(val, str):
-      try:
-        val = DbOp[val]
-      except:
-        raise ValueError(f'Cannot set db_operation of {self.kind} job to string "{val}" (not a valid DbOp value)')
-
-    # Check against enum vals
-    if not val in DbOp:
-      raise TypeError(f'Cannot set db_operation of {self.kind} job to value "{val}" (must be a valid DbOp)')
-
-    # Save as a string value, for easy integration with GCP
-    # TODO: Update Entity .save() to work with enums?
-    self.__dict__['db_operation'] = val.value
+    return self._set_enum_prop(DbOp, 'db_operation', val)
 
 
   #

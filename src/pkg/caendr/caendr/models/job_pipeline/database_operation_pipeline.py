@@ -98,7 +98,7 @@ class DatabaseOperationPipeline(JobPipeline):
     # Package the data into report properties
     return {
       'props': {
-        'db_operation':   db_operation.value,
+        'db_operation':   db_operation,
         'note':           data.get('node'),
         'args': {
           'SPECIES_LIST': data.get('species'),
