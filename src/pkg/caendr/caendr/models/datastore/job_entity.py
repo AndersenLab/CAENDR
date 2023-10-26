@@ -1,12 +1,12 @@
 from caendr.services.logger import logger
 
-from caendr.models.datastore import Container, Entity, PipelineOperation
+from caendr.models.datastore import StatusEntity, Container, PipelineOperation
 from caendr.models.status    import JobStatus
 from caendr.utils.data       import unique_id
 
 
 
-class JobEntity(Entity):
+class JobEntity(StatusEntity):
   '''
     Subclass of Entity for pipeline jobs.
 
@@ -25,9 +25,6 @@ class JobEntity(Entity):
     'container_name':     'container_name',
     'container_version':  'container_tag',
   }
-
-  # Status of the job
-  __status = None
 
 
 
@@ -67,9 +64,8 @@ class JobEntity(Entity):
       'container_name',
       'container_version',
 
-      # Other fields
+      # Operation fields
       'operation_name',
-      'status',
     }
 
 
@@ -91,29 +87,6 @@ class JobEntity(Entity):
       This field cannot be set manually; it must be determined at initialization.
     '''
     return self._get_meta_prop('id')
-
-
-
-  ## Status ##
-
-  @property
-  def status(self):
-    return self.__status
-
-  @status.setter
-  def status(self, val):
-    if not JobStatus.is_valid(val):
-      raise TypeError(f'Cannot set status of {self.kind} job to "{val}".')
-
-    self.__status = val
-
-
-  def is_finished(self) -> bool:
-    return self['status'] in JobStatus.FINISHED
-
-
-  def is_not_err(self) -> bool:
-    return self['status'] in JobStatus.NOT_ERR
 
 
 

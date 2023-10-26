@@ -11,7 +11,8 @@ from .wormbase            import WormbaseVersion, WormbaseProjectNumber
 from .species             import Species, SPECIES_LIST # Imports WormbaseVersion, WormbaseProjectNumber
 
 # Intermediate subclasses (primarily for tools)
-from .job_entity          import JobEntity           # Imports Container
+from .status_entity       import StatusEntity
+from .job_entity          import JobEntity           # Subclasses StatusEntity; imports Container
 from .user_owned_entity   import UserOwnedEntity     # Imports User
 from .hashable_entity     import HashableEntity
 from .report_entity       import ReportEntity        # Subclasses JobEntity, UserOwnedEntity, as well as GCPReport
