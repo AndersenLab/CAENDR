@@ -180,18 +180,6 @@ def report(id):
     flash(ex.msg, 'danger')
     abort(ex.code)
 
-  # Get a link to download the data, if the file exists
-  if check_blob_exists(job.report.get_bucket_name(), job.report.get_data_blob_path()):
-    data_download_url = generate_blob_uri(job.report.get_bucket_name(), job.report.get_data_blob_path(), schema=BlobURISchema.HTTPS)
-  else:
-    data_download_url = None
-
-  # Get a link to the report files, if they exist
-  if job.report.report_path is not None:
-    report_url = generate_blob_uri(job.report.get_bucket_name(), job.report.report_path, schema=BlobURISchema.HTTPS)
-  else:
-    report_url = None
-
   # Get the trait name, if it exists
   trait = job.report['trait']
 
@@ -207,10 +195,9 @@ def report(id):
 
     'id': id,
 
-    # URLs
-    'report_url': report_url,
-    'report_status_url': url_for("genetic_mapping.report_status", id=id),
-    'data_download_url': data_download_url,
+    # Links to the input data file and report output files, if they exist
+    'data_download_url': job.report.input_filepath(  schema = BlobURISchema.HTTPS, check_if_exists = True ),
+    'report_url':        job.report.output_filepath( schema = BlobURISchema.HTTPS, check_if_exists = True ),
 
     'fluid_container': True,
   })
@@ -231,11 +218,11 @@ def report_fullscreen(id):
     abort(ex.code)
 
   # Download the report files, if they exist
-  if job.report.report_path is not None:
-    blob = get_blob(job.report.get_bucket_name(), job.report.report_path)
-    report_contents = blob.download_as_text()
-  else:
-    report_contents = None
+  report_contents = job.fetch_output()
+
+  # If report could not be found, return 404 error
+  if report_contents is None:
+    abort(404)
 
   # Return the report
   return report_contents

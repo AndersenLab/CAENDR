@@ -5,7 +5,7 @@ from abc import abstractmethod
 from .bucketed_report import BucketedReport
 
 # Services
-from caendr.services.cloud.storage import get_blob_if_exists, upload_blob_from_string, upload_blob_from_file, BlobURISchema, generate_blob_uri
+from caendr.services.cloud.storage import check_blob_exists, get_blob_if_exists, upload_blob_from_string, upload_blob_from_file, BlobURISchema, generate_blob_uri
 from caendr.utils.env              import get_env_var
 
 
@@ -88,10 +88,14 @@ class GCPReport(BucketedReport):
     pass
 
 
-  def input_filepath(self, schema: BlobURISchema = None):
+  def input_filepath(self, schema: BlobURISchema = None, check_if_exists: bool = False):
+    if check_if_exists and not check_blob_exists(*self.input_directory( self._input_filename, schema=BlobURISchema.PATH )):
+      return None
     return self.input_directory(  self._input_filename,  schema=schema )
 
-  def output_filepath(self, schema: BlobURISchema = None):
+  def output_filepath(self, schema: BlobURISchema = None, check_if_exists: bool = False):
+    if check_if_exists and not check_blob_exists(*self.output_directory( self._output_filename, schema=BlobURISchema.PATH )):
+      return None
     return self.output_directory( self._output_filename, schema=schema )
 
 
@@ -121,7 +125,7 @@ class GCPReport(BucketedReport):
   #
 
   def fetch_input(self):
-    return get_blob_if_exists( *self.report_directory(self._input_filename, schema=BlobURISchema.PATH) )
+    return get_blob_if_exists( *self.input_directory(self._input_filename, schema=BlobURISchema.PATH) )
 
   def fetch_output(self):
-    return get_blob_if_exists( *self.report_directory(self._output_filename, schema=BlobURISchema.PATH) )
+    return get_blob_if_exists( *self.output_directory(self._output_filename, schema=BlobURISchema.PATH) )

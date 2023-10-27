@@ -48,9 +48,14 @@ class NemascanReport(HashableEntity, ReportEntity):
 
   _input_filename  = 'data.tsv'
 
+  # Use report_path property to get the filename of the report within the output directory
   @property
   def _output_filename(self):
-    return self.report_path
+    report_path   = self.report_path
+    report_prefix = self.output_directory(schema=BlobURISchema.PATH)[1]
+    if report_path.startswith(report_prefix):
+      report_path = report_path[len(report_prefix):].lstrip('/')
+    return report_path
 
   def upload(self, *data_files):
     if len(data_files) != 1:
@@ -90,7 +95,7 @@ class NemascanReport(HashableEntity, ReportEntity):
     # Check if this value has been cached already, and if so, make sure the file exists
     path = self._get_meta_prop('report_path')
     if path is not None:
-      if check_blob_exists(self.get_bucket_name(), path):
+      if check_blob_exists(self._report_bucket, path):
         return path
       else:
         logger.warn(f'Genetic Mapping report {self.id} lists its report path as "{path}", but this file does not exist. Recomputing...')

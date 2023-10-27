@@ -100,4 +100,4 @@ class NemascanPipeline(JobPipeline):
   #
 
   def _parse_output(self, blob):
-    pass
+    return blob.download_as_text()
