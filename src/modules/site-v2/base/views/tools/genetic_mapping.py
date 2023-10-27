@@ -277,7 +277,7 @@ def results(id):
       "name": '/'.join( blob.name.rsplit('/', 2)[1:] ),
       "url":  blob.public_url,
     }
-    for blob in get_blob_list(job.report.get_bucket_name(), job.report.get_result_path())
+    for blob in job.report.list_output_blobs()
   ]
 
   return render_template('tools/genetic_mapping/result_files.html', **{

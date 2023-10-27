@@ -5,7 +5,7 @@ from abc import abstractmethod
 from .bucketed_report import BucketedReport
 
 # Services
-from caendr.services.cloud.storage import check_blob_exists, get_blob_if_exists, upload_blob_from_string, upload_blob_from_file, BlobURISchema, generate_blob_uri
+from caendr.services.cloud.storage import check_blob_exists, get_blob_if_exists, get_blob_list, upload_blob_from_string, upload_blob_from_file, BlobURISchema, generate_blob_uri
 from caendr.utils.env              import get_env_var
 
 
@@ -129,3 +129,6 @@ class GCPReport(BucketedReport):
 
   def fetch_output(self):
     return get_blob_if_exists( *self.output_directory(self._output_filename, schema=BlobURISchema.PATH) )
+
+  def list_output_blobs(self):
+    return get_blob_list( *self.output_directory(schema=BlobURISchema.PATH) )
