@@ -2,7 +2,7 @@
 from abc import abstractmethod
 
 # Parent class
-from .report import Report
+from .bucketed_report import BucketedReport
 
 # Services
 from caendr.services.cloud.storage import upload_blob_from_string, upload_blob_from_file, BlobURISchema, generate_blob_uri
@@ -17,7 +17,7 @@ MODULE_API_DATA_BUCKET_NAME     = get_env_var('MODULE_API_PIPELINE_TASK_DATA_BUC
 
 
 
-class GCPReport(Report):
+class GCPReport(BucketedReport):
   '''
     Abstract class for a report storing data in GCP.
 
@@ -38,9 +38,17 @@ class GCPReport(Report):
 
 
   #
+  # Generating URIs
+  #
+
+  @classmethod
+  def _generate_uri(cls, bucket: str, *path: str, schema: BlobURISchema=None):
+    return generate_blob_uri(bucket, *path, schema=schema)
+
+
+  #
   # Bucket names
-  # These are used to locate the bucket for each directory.
-  # These may all be overwritten in subclasses
+  # By default, all use the private GCP bucket.
   #
 
   @property
@@ -65,74 +73,6 @@ class GCPReport(Report):
     return MODULE_SITE_BUCKET_PRIVATE_NAME
 
 
-
-  #
-  # Path prefixes
-  # These are each used to locate the directory for this report within each bucket
-  # These may all be overwritten in subclasses
-  #
-
-  @property
-  def _report_prefix(self):
-    '''
-      The location of this report's input/output data within the data bucket.
-    '''
-    return self.get_data_id()
-
-  @property
-  def _data_prefix(self):
-    '''
-      The location of this report's tool data within the tool bucket.
-      May still depend on the individual report, e.g. if different folders exist for species or for container versions.
-    '''
-    return ''
-
-  @property
-  def _work_prefix(self):
-    '''
-      The location of this report's work within the work bucket.
-    '''
-    return self.get_data_id()
-
-  @property
-  def _input_prefix(self):
-    '''
-      The location of the report's input data within the data directory.
-    '''
-    return ''
-
-  @property
-  def _output_prefix(self):
-    '''
-      The location of the report's output data within the data directory.
-    '''
-    return ''
-
-
-
-  #
-  # Directory functions
-  # These probably should not be overwritten, unless you're sure you know what you're doing.
-  # Instead, look into overwriting the bucket and prefix functions to customize directory lookups.
-  #
-
-  def report_directory(self, *path, schema: BlobURISchema = None):
-    return generate_blob_uri( self._report_bucket, self._report_prefix, *path, schema=schema )
-
-  def data_directory(self, *path, schema: BlobURISchema = None):
-    return generate_blob_uri( self._data_bucket, self._data_prefix, *path, schema=schema )
-
-  def work_directory(self, *path, schema: BlobURISchema = None):
-    return generate_blob_uri( self._work_bucket, self._work_prefix, *path, schema=schema )
-
-  def input_directory(self, *path, schema: BlobURISchema = None):
-    return self.report_directory( self._input_prefix,  *path,  schema=schema )
-
-  def output_directory(self, *path, schema: BlobURISchema = None):
-    return self.report_directory( self._output_prefix, *path, schema=schema )
-
-
-
   #
   # Input/Output
   #
@@ -154,7 +94,7 @@ class GCPReport(Report):
   def output_filepath(self, schema: BlobURISchema = None):
     return self.output_directory( self._output_filename(), schema=schema )
 
-  
+
 
   #
   # Saving data to datastore
