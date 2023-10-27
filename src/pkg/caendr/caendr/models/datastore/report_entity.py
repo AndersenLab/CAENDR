@@ -26,6 +26,10 @@ class ReportEntity(JobEntity, UserOwnedEntity, GCPReport):
     to override the abstract methods from GCPReport correctly.
   '''
 
+  #
+  # Kind
+  #
+
   @classmethod
   def get_kind(cls):
     return cls.kind
@@ -47,10 +51,12 @@ class ReportEntity(JobEntity, UserOwnedEntity, GCPReport):
 
   #
   # Data ID
-  # Each subclass can decide how to get
+  # Subclass can designate a property field to use as the data ID
   #
 
   # The report field to use as the data ID
+  # Subclass should overwrite this abstract property,
+  # then the chosen prop value will be accessible through the getter below
   @property
   @abstractmethod
   def _data_id_field(self) -> str:
@@ -64,6 +70,12 @@ class ReportEntity(JobEntity, UserOwnedEntity, GCPReport):
     return data_id
 
 
+  #
+  # Report Display Name
+  # A human-readable name for a report of this kind, used on the site to reference these reports
+  #
+
+  # Subclass should overwrite this abstract property, which is then accessible through the getter below
   @property
   @abstractmethod
   def _report_display_name(self) -> str:
