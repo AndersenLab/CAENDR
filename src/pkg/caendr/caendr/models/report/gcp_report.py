@@ -89,10 +89,10 @@ class GCPReport(BucketedReport):
 
 
   def input_filepath(self, schema: BlobURISchema = None):
-    return self.input_directory(  self._input_filename(),  schema=schema )
+    return self.input_directory(  self._input_filename,  schema=schema )
 
   def output_filepath(self, schema: BlobURISchema = None):
-    return self.output_directory( self._output_filename(), schema=schema )
+    return self.output_directory( self._output_filename, schema=schema )
 
 
 
