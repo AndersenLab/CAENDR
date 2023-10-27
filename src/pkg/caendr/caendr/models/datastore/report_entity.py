@@ -86,19 +86,7 @@ class ReportEntity(JobEntity, UserOwnedEntity, GCPReport):
   @property
   def _report_prefix(self):
     return '/'.join([ self._report_path_prefix(), self.container_name, self.container_version, super()._report_prefix ])
-  
 
-  #
-  # Status
-  # Route set/get to the status prop
-  #
-
-  def set_status(self, status: JobStatus):
-    self['status'] = status
-
-  def get_status(self) -> JobStatus:
-    return self['status']
-  
 
   #
   # Cache
