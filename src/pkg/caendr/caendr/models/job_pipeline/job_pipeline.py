@@ -56,22 +56,12 @@ class JobPipeline(ABC):
   # Initialization
   #
 
-  def __init__(self, job_id=None, report: DataJobEntity = None):
+  def __init__(self, report: Report):
     '''
       JobPipeline objects should NOT be directly instantiated. Instead, new objects should be created using one of the following class methods:
         - create: Create a new Job, storing it in the cloud
         - lookup: Retrieve an existing Job from the cloud
     '''
-
-    # Check that exactly one of the two optional arguments is defined, using XOR
-    if not ((job_id is None) ^ (report is None)):
-      raise ValueError('Either "job_id" or "report" should be provided, but not both.')
-
-    # Job ID is defined -- instantiate the report using the Report class
-    if report is None:
-      report = self.lookup_report(job_id)
-      if not report._exists:
-        raise NotFoundError(self._Report_Class, {'id': job_id})
 
     # Confirm the report kind and JobPipeline kind match
     if report.kind != self.kind:
@@ -95,7 +85,7 @@ class JobPipeline(ABC):
       Raises:
         ValueError: No job with this ID could be found.
     '''
-    return cls(job_id=job_id)
+    return cls( cls.lookup_report(job_id) )
 
 
   @classmethod
