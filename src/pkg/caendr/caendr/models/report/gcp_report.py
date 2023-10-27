@@ -5,7 +5,7 @@ from abc import abstractmethod
 from .bucketed_report import BucketedReport
 
 # Services
-from caendr.services.cloud.storage import upload_blob_from_string, upload_blob_from_file, BlobURISchema, generate_blob_uri
+from caendr.services.cloud.storage import get_blob_if_exists, upload_blob_from_string, upload_blob_from_file, BlobURISchema, generate_blob_uri
 from caendr.utils.env              import get_env_var
 
 
@@ -74,7 +74,7 @@ class GCPReport(BucketedReport):
 
 
   #
-  # Input/Output
+  # Input & output paths
   #
 
   @property
@@ -112,3 +112,16 @@ class GCPReport(BucketedReport):
         upload_blob_from_string(bucket, df, path)
       else:
         upload_blob_from_file(bucket, df, path)
+
+
+
+  #
+  # Retrieving data from datastore
+  # Implements abstract method(s) from parent class
+  #
+
+  def fetch_input(self):
+    return get_blob_if_exists( *self.report_directory(self._input_filename, schema=BlobURISchema.PATH) )
+
+  def fetch_output(self):
+    return get_blob_if_exists( *self.report_directory(self._output_filename, schema=BlobURISchema.PATH) )

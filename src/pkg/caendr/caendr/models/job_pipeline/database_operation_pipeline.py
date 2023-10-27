@@ -51,6 +51,10 @@ class DatabaseOperationPipeline(JobPipeline):
 
 
 
+  #
+  # Report Creation
+  #
+
   @classmethod
   def parse(cls, data, valid_file_extensions=None):
     '''
@@ -120,3 +124,16 @@ class DatabaseOperationPipeline(JobPipeline):
       return super().create_task(*args, email = args[0].get_user_email(), **kwargs)
     except:
       return super().create_task(*args, **kwargs)
+
+
+
+  #
+  # Parsing Input & Output
+  # DB Operation does not use input or output files, but these methods are required by the template class
+  #
+
+  def _parse_input(self, blob):
+    raise ValueError(f'Job pipeline for kind "{self.kind}" does not produce an input file.')
+
+  def _parse_output(self, blob):
+    raise ValueError(f'Job pipeline for kind "{self.kind}" does not produce an output file.')

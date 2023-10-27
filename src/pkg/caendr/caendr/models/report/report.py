@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from caendr.models.status import JobStatus
 
+from google.cloud.storage.blob     import Blob
 from caendr.services.cloud.storage import BlobURISchema
 
 
@@ -256,3 +258,42 @@ class Report(ABC):
       'DATA_DIR':   self.data_directory(schema=schema),
       'OUTPUT_DIR': self.output_directory(schema=schema),
     }
+
+
+
+  #
+  # Retrieving data from datastore
+  #
+
+
+  def fetch(self):
+    '''
+      Fetch all data for this job from the file storage provider.
+      Equivalent to calling `fetch_input` and `fetch_output` with this object.
+
+      Arguments:
+        - `raw` (`bool`): If `true`, return the raw blob(s); otherwise, parse into a Python object. Default `false`.
+
+      Returns:
+        - `input`: The input file(s)
+        - `output`: The output file(s)
+    '''
+    return self.fetch_input(), self.fetch_output()
+
+
+  @abstractmethod
+  def fetch_input(self) -> Optional[Blob]:
+    '''
+      Fetch the input data from the datastore.
+      This should retrieve any file(s) created / uploaded by the `upload` method.
+    '''
+    pass
+
+
+  @abstractmethod
+  def fetch_output(self) -> Optional[Blob]:
+    '''
+      Fetch the output data from the datastore.
+      This should retrieve any file(s) created / uploaded by the tool execution.
+    '''
+    pass

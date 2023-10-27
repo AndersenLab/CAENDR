@@ -83,3 +83,21 @@ class NemascanPipeline(JobPipeline):
       'hash':  data_hash,
       'files': [local_path],
     }
+
+
+
+  #
+  # Fetching & Parsing Input
+  #
+
+  def _parse_input(self, blob):
+    pass
+
+
+
+  #
+  # Fetching & Parsing Output
+  #
+
+  def _parse_output(self, blob):
+    pass

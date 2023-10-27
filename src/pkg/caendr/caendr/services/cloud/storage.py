@@ -4,6 +4,7 @@ import google.auth
 import google.auth.transport.requests as tr_requests
 import datetime
 from enum import Enum
+from typing import Optional, List
 
 import json
 import pandas as pd
@@ -11,6 +12,7 @@ import pandas as pd
 from google.oauth2 import service_account
 from google.resumable_media.requests import ResumableUpload
 from google.cloud import storage
+from google.cloud.storage.blob import Blob
 from caendr.services.logger import logger
 
 from caendr.models.error import CloudStorageUploadError, NotFoundError
@@ -32,13 +34,13 @@ def get_google_storage_credentials():
 # Check blobs
 #
 
-def get_blob(bucket_name, blob_name):
+def get_blob(bucket_name, blob_name) -> Blob:
   logger.debug(f'get_blob(bucket_name={bucket_name}, blob_name={blob_name})')
   bucket = storageClient.get_bucket(bucket_name)
   return bucket.get_blob(blob_name)
 
 
-def check_blob_exists(bucket_name, blob_name):
+def check_blob_exists(bucket_name, blob_name) -> bool:
   logger.debug(f'check_blob_exists(bucket_name={bucket_name}, blob_name={blob_name})')
   bucket = storageClient.get_bucket(bucket_name)
   blob = bucket.get_blob(blob_name)
@@ -48,7 +50,19 @@ def check_blob_exists(bucket_name, blob_name):
     return False
 
 
-def get_blob_list(bucket_name, prefix):
+def get_blob_if_exists(bucket_name, blob_name, fallback=None) -> Optional[Blob]:
+  '''
+    Get the given blob if it exists, otherwise return the fallback value.
+  '''
+  blob = get_blob(bucket_name, blob_name)
+  try:
+    if blob.exists():
+      return blob
+  except:
+    return fallback
+
+
+def get_blob_list(bucket_name, prefix) -> List[Blob]:
   ''' Returns a list of all blobs with 'prefix' (directory) in 'bucket_name' '''
   bucket = storageClient.get_bucket(bucket_name)
   items = bucket.list_blobs(prefix=prefix)

@@ -1,21 +1,13 @@
 import tabix
-import os
-import io
-import numpy as np
-
 from cyvcf2 import VCF
 from caendr.services.logger import logger
 
 from caendr.models.datastore import IndelPrimerReport, Species
-from caendr.models.error     import EmptyReportDataError, EmptyReportResultsError
 
 from caendr.services.cloud.storage import (
     BlobURISchema,
-    download_blob_as_dataframe,
-    download_blob_as_json,
     download_blob_to_file,
     generate_blob_uri,
-    get_blob,
 )
 
 from caendr.utils.constants import CHROM_NUMERIC
@@ -135,14 +127,6 @@ def overlaps(s1, e1, s2, e2):
   return s1 <= s2 <= e1 or s2 <= s1 <= e2
 
 
-def fetch_ip_data(ip: IndelPrimerReport):
-  return get_blob(ip.get_bucket_name(), ip.get_data_blob_path())
-
-
-def fetch_ip_result(ip: IndelPrimerReport):
-  return get_blob(ip.get_bucket_name(), ip.get_result_blob_path())
-
-
 def query_indels_and_mark_overlaps(species, strain_1, strain_2, chromosome, start, stop):
   results = []
   strain_cmp = [ strain_1, strain_2 ]
@@ -173,94 +157,3 @@ def query_indels_and_mark_overlaps(species, strain_1, strain_2, chromosome, star
     results = [x for x in results if x['overlap'] is False]
     return sorted(results, key=lambda x: (x["START"], x["END"]))
   return []
-
-
-
-def fetch_indel_primer_report(report):
-
-  # Fetch job data (parameters of original query) and results
-  data   = fetch_ip_data(report)
-  result = fetch_ip_result(report)
-
-  # If no indel primer submission exists, return 404
-  if data is None:
-    raise EmptyReportDataError(report.id)
-
-  # Parse submission data into JSON object
-  data = download_blob_as_json(data)
-
-  # If result file exists, download & parse it into a dataframe
-  if result is not None:
-    result = download_blob_as_dataframe(result)
-
-    # Check for empty results file
-    if result is None:
-      raise EmptyReportResultsError(report.id)
-
-  # Return the data & results as Python objects
-  return data, result
-
-
-
-def modify_indel_primer_result(result):
-
-  # If no results, return as None
-  if result is None or result.empty:
-    return None, None
-
-  # Left primer
-  result['left_primer_start'] = result.amplicon_region.apply(lambda x: x.split(":")[1].split("-")[0]).astype(int)
-  result['left_primer_stop']  = result.apply(lambda x: len(x['primer_left']) + x['left_primer_start'], axis=1)
-
-  # Right primer
-  result['right_primer_stop']  = result.amplicon_region.apply(lambda x: x.split(":")[1].split("-")[1]).astype(int)
-  result['right_primer_start'] = result.apply(lambda x:  x['right_primer_stop'] - len(x['primer_right']), axis=1)
-
-  # Output left and right melting temperatures.
-  result[["left_melting_temp", "right_melting_temp"]] = result["melting_temperature"].str.split(",", expand = True)
-
-  # REF Strain and ALT Strain
-  ref_strain = result['0/0'].unique()[0]
-  alt_strain = result['1/1'].unique()[0]
-
-  # Extract chromosome and amplicon start/stop
-  result[[None, "amp_start", "amp_stop"]] = result.amplicon_region.str.split(pat=":|-", expand=True)
-
-  # Convert types
-  result.amp_start = result.amp_start.astype(int)
-  result.amp_stop  = result.amp_stop.astype(int)
-
-  result["N"] = np.arange(len(result)) + 1
-
-  # Associate table column names with the corresponding fields in the result objects
-  columns = [
-
-    # Basic Info
-    ("Primer Set", "N"),
-    ("Chrom", "CHROM"),
-
-    # Left Primer
-    ("Left Primer (LP)", "primer_left"),
-    ("LP Start",         "left_primer_start"),
-    ("LP Stop",          "left_primer_stop"),
-    ("LP Melting Temp",  "left_melting_temp"),
-
-    # Right Primer
-    ("Right Primer (RP)", "primer_right"),
-    ("RP Start",          "right_primer_start"),
-    ("RP Stop",           "right_primer_stop"),
-    ("RP Melting Temp",   "right_melting_temp"),
-
-    # Amplicon
-    (f"{ref_strain} (REF) amplicon size", "REF_product_size"),
-    (f"{alt_strain} (ALT) amplicon size", "ALT_product_size"),
-  ]
-
-  # Convert list of (name, field) tuples to list of names and list of fields
-  column_names, column_fields = zip(*columns)
-
-  # Create table from results & columns
-  format_table = result[list(column_fields)]
-  format_table.columns = column_names
-
-  return result, format_table

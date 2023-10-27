@@ -22,8 +22,6 @@ from caendr.services.indel_primer import (
     query_indels_and_mark_overlaps,
     get_indel_primer,
     get_indel_primers,
-    fetch_indel_primer_report,
-    modify_indel_primer_result,
 )
 
 
@@ -278,7 +276,7 @@ def report(id, file_ext=None):
     # Try getting the report data file and results
     # If result is None, job hasn't finished computing yet
     try:
-      data, result = fetch_indel_primer_report(job.report)
+      data, result = job.fetch()
       ready = result is not None
 
     # Error reading data JSON file
@@ -305,10 +303,6 @@ def report(id, file_ext=None):
       indel_start, indel_stop = None, None
 
 
-    # Update the result object with computed fields and generate a format table
-    # If result is None or empty, does nothing
-    result, format_table = modify_indel_primer_result(result)
-
     # Update indel primer entity
     # TODO: Is this the right time/place for this?
     if ready:
@@ -320,12 +314,15 @@ def report(id, file_ext=None):
     # If a file format was specified, return a downloadable file with the results
     # TODO: Set a better filename?
     if file_format is not None:
-      resp = Response(format_table.to_csv(sep=file_format['sep']), mimetype=file_format['mimetype'])
+      resp = Response(result['format_table'].to_csv(sep=file_format['sep']), mimetype=file_format['mimetype'])
       try:
         resp.headers['Content-Disposition'] = f'filename={job.report["species"]}_{job.report["strain_1"]}_{job.report["strain_2"]}_{data["site"]}.{file_ext}'
       except:
         resp.headers['Content-Disposition'] = f'filename={job.report["id"]}.{file_ext}'
       return resp
+
+    # Extract the dataframe from the results
+    dataframe = result.get('dataframe', None)
 
     # Otherwise, return view page
     return render_template("tools/pairwise_indel_finder/view.html", **{
@@ -340,7 +337,7 @@ def report(id, file_ext=None):
       'id': id,
 
       # Job status
-      'empty': result is None,
+      'empty': result['empty'],
       'ready': ready,
 
       # Data
@@ -350,7 +347,7 @@ def report(id, file_ext=None):
       # 'size': data['size'],
 
       # Results
-      'result': result,
-      'records': result.to_dict('records') if (result is not None) else None,
-      'format_table': format_table,
+      'result':       dataframe,
+      'records':      dataframe.to_dict('records') if (dataframe is not None) else None,
+      'format_table': result.get('format_table'),
     })

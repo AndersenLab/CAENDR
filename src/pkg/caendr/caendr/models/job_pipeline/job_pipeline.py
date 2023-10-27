@@ -2,6 +2,8 @@
 from abc    import ABC, abstractmethod
 from typing import Type
 
+from google.cloud.storage.blob import Blob
+
 # Logging
 from caendr.services.logger import logger
 
@@ -297,8 +299,82 @@ class JobPipeline(ABC):
 
   #
   # File Storage
-  # Uploading & downloading files to/from the cloud storage provider
+  # Fetching & optionally parsing files from the storage provider
   #
+
+  def fetch(self, raw: bool = False):
+    '''
+      Fetch all data for this job from the file storage provider, using the managed `Report` object.
+      Equivalent to calling `fetch_input` and `fetch_output` with this object.
+
+      Arguments:
+        - `raw` (`bool`): If `true`, return the raw blob(s); otherwise, parse into a Python object. Default `false`.
+
+      Returns:
+        - `input` (format specified by `raw`)
+        - `output` (format specified by `raw`)
+    '''
+    return self.fetch_input(raw=raw), self.fetch_output(raw=raw)
+
+
+  def fetch_input(self, raw: bool = False):
+    '''
+      Fetch the input data for this job from the file storage provider, using the managed `Report` object.
+
+      If data file does not (yet) exist, returns `None`.
+      If data file does exist but is empty, should raise `EmptyReportDataError`.
+
+      Arguments:
+        - `raw` (`bool`): If `true`, return the raw blob(s); otherwise, parse into a Python object. Default `false`.
+    '''
+
+    # Use the Report object to fetch the raw input blob
+    blob = self.report.fetch_input()
+
+    # If blob is desired or if no blob exists, return here
+    if raw or blob is None:
+      return blob
+
+    # Delegate parsing to the subclass
+    return self._parse_input(blob)
+
+
+  def fetch_output(self, raw: bool = False):
+    '''
+      Fetch the output data for this job from the file storage provider, using the managed `Report` object.
+
+      If data file does not (yet) exist, returns `None`.
+      If data file does exist but is empty, should raise `EmptyReportResultsError`.
+
+      Arguments:
+        - `raw` (`bool`): If `true`, return the raw blob(s); otherwise, parse into a Python object. Default `false`.
+    '''
+
+    # Use the Report object to fetch the raw output blob
+    blob = self.report.fetch_output()
+
+    # If blob is desired or if no blob exists, return here
+    if raw or blob is None:
+      return blob
+
+    # Delegate parsing to the subclass
+    return self._parse_output(blob)
+
+
+  @abstractmethod
+  def _parse_input(self, blob: Blob):
+    '''
+      Parse the input blob uploaded to the job pipeline into a Python object.
+    '''
+    pass
+
+
+  @abstractmethod
+  def _parse_output(self, blob: Blob):
+    '''
+      Parse the result blob output by the job pipeline into a Python object.
+    '''
+    pass
 
 
 

@@ -8,10 +8,12 @@ from caendr.models.run             import HeritabilityRunner
 
 # Services
 from caendr.models.datastore       import Species
-from caendr.models.error           import DataFormatError
+from caendr.models.error           import DataFormatError, EmptyReportDataError, EmptyReportResultsError
 from caendr.services.validate      import get_delimiter_from_filepath, validate_file, validate_num, validate_strain, validate_trait
 from caendr.utils.env              import get_env_var
 from caendr.utils.file             import get_file_hash
+
+from caendr.services.cloud.storage import download_blob_as_dataframe
 
 
 HERITABILITY_CONTAINER_NAME = get_env_var('HERITABILITY_CONTAINER_NAME')
@@ -89,3 +91,53 @@ class HeritabilityPipeline(JobPipeline):
       'hash':  data_hash,
       'files': [local_path],
     }
+
+
+
+  #
+  # Fetching & Parsing Input
+  #
+
+  def _parse_input(self, blob):
+
+    # Download data
+    data = download_blob_as_dataframe(blob)
+
+    # If data file is empty, raise an error
+    if data is None:
+      raise EmptyReportDataError(self.report.id)
+
+    # Parse data file
+    data['AssayNumber'] = data['AssayNumber'].astype(int)
+    data['label'] = data.apply(lambda x: f"{x['AssayNumber']}: {x['Value']}", 1)
+    data = data.to_dict('records')
+
+    # Return parsed data
+    return data
+
+
+
+  #
+  # Fetching & Parsing Output
+  #
+
+  def _parse_output(self, blob):
+
+    # Download results
+    # TODO: will get_blob always return None if empty?
+    result = download_blob_as_dataframe(blob)
+
+    # If file exists but there are no results, raise an error
+    if result is None:
+      raise EmptyReportResultsError(self.report.id)
+
+    # Convert to dict, using the 'type' column as the key instead of the index
+    # Should create dictionary with two keys: 'broad-sense' and 'narrow-sense'
+    result = result.to_dict('records')
+    result = {
+      i['type']: { key: val for key, val in i.items() if key != 'type' }
+      for i in result
+    }
+
+    # Return parsed result
+    return result

@@ -30,7 +30,7 @@ from caendr.models.error import (
 from caendr.models.datastore import Species, HeritabilityReport
 from caendr.models.status import JobStatus
 from caendr.api.strain import get_strains
-from caendr.services.heritability_report import get_heritability_report, get_heritability_reports, fetch_heritability_report
+from caendr.services.heritability_report import get_heritability_report, get_heritability_reports
 from caendr.utils.data import unique_id, get_object_hash
 from caendr.utils.env import get_env_var
 from caendr.services.cloud.storage import get_blob, generate_blob_uri, BlobURISchema
@@ -243,7 +243,7 @@ def report(id):
   # Try getting & parsing the report data file and results
   # If result is None, job hasn't finished computing yet
   try:
-    data, result = fetch_heritability_report(job.report)
+    data, result = job.fetch()
     ready = result is not None
 
   # If no submission exists, return 404
@@ -255,7 +255,7 @@ def report(id):
   # If result exists, mark as complete
   # TODO: Is this the right place for this?
   if result:
-    job.report.status = JobStatus.COMPLETE
+    job.report.set_status(JobStatus.COMPLETE)
     job.report.save()
 
   # TODO: Are either of these values used?
@@ -282,10 +282,9 @@ def report(id):
     'result': result,
 
     'data_hash': data_hash,
-    'operation': job.report.get_pipeline_operation(),
     'error': error,
 
-    'data_url': generate_blob_uri(job.report.get_bucket_name(), job.report.get_data_blob_path(), schema=BlobURISchema.HTTPS),
+    'data_url': job.report.input_filepath(schema=BlobURISchema.HTTPS),
     'logs_url': url_for('heritability_calculator.view_logs', id = id),
 
     'JobStatus': JobStatus,
