@@ -61,9 +61,6 @@ class DatabaseOperation(ReportEntity):
   # Path
   #
 
-  _input_filename  = None
-  _output_filename = None
-
   # TODO: Buckets?
 
   @property
@@ -77,6 +74,18 @@ class DatabaseOperation(ReportEntity):
   @property
   def _work_bucket_name(self) -> str:
     return MODULE_DB_OPERATIONS_BUCKET_NAME
+
+
+  #
+  # Input & Output
+  #
+
+  _input_filename  = None
+  _output_filename = None
+
+  def upload(self, *data_files):
+    if len(data_files) != 0:
+      raise ValueError(f'No data files should be uploaded for job of type {self.kind}')
 
 
   #

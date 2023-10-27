@@ -160,7 +160,7 @@ class JobPipeline(ABC):
 
     # Wrap the new report in a new JobPipeline object, upload the input data file(s) to data store, and return the new job
     job = cls(report=report)
-    job.upload( *parsed_data.get('files', []) )
+    job.report.upload( *parsed_data.get('files', []) )
     return job
 
 
@@ -309,16 +309,6 @@ class JobPipeline(ABC):
   # File Storage
   # Uploading & downloading files to/from the cloud storage provider
   #
-
-  @abstractmethod
-  def upload(self, data_files: list):
-    '''
-      Upload the data for this job to the cloud.
-
-      Args:
-        - data_files (list): A list of files to upload to cloud storage. May be empty.
-    '''
-    pass
 
 
 

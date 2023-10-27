@@ -108,11 +108,6 @@ class DatabaseOperationPipeline(JobPipeline):
 
 
 
-  def upload(self, data_files):
-    return
-
-
-
   # Database operations are not cached, so this will always be False
   # Overrides parent definition
   def _check_cached_result(self):

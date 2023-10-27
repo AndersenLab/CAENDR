@@ -8,7 +8,6 @@ from caendr.models.task            import IndelPrimerTask
 
 # Services
 from caendr.models.datastore       import Species
-from caendr.services.cloud.storage import upload_blob_from_string
 from caendr.utils.data             import get_object_hash
 from caendr.utils.env              import get_env_var
 
@@ -50,22 +49,3 @@ class IndelFinderPipeline(JobPipeline):
       'hash':  data_hash,
       'files': [data_file],
     }
-
-
-  #
-  # File Storage
-  #
-
-  def upload(self, data_files):
-
-    # Indel Finder only takes one upload file
-    if len(data_files) > 1:
-      raise ValueError('Only one data file should be uploaded.')
-
-    # If no files provided, skip
-    if len(data_files) == 0: return
-
-    # Get the location using the report and upload
-    bucket = self.report.get_bucket_name()
-    blob   = self.report.get_data_blob_path()
-    upload_blob_from_string(bucket, data_files[0], blob)

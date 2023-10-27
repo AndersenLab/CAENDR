@@ -9,7 +9,6 @@ from caendr.models.run             import NemascanRunner
 # Services
 from caendr.models.datastore       import Species
 from caendr.services.validate      import get_delimiter_from_filepath, validate_file, validate_num, validate_strain
-from caendr.services.cloud.storage import upload_blob_from_file
 from caendr.utils.env              import get_env_var
 from caendr.utils.file             import get_file_hash
 
@@ -84,21 +83,3 @@ class NemascanPipeline(JobPipeline):
       'hash':  data_hash,
       'files': [local_path],
     }
-
-
-  #
-  # File Storage
-  #
-
-  def upload(self, data_files):
-
-    # Heritability only takes one upload file
-    if len(data_files) > 1:
-      raise ValueError('Only one data file should be uploaded.')
-
-    # If no files provided, skip
-    if len(data_files) == 0: return
-
-    bucket = self.report.get_bucket_name()
-    blob   = self.report.get_data_blob_path()
-    upload_blob_from_file(bucket, data_files[0], blob)
