@@ -125,10 +125,10 @@ class GCPReport(BucketedReport):
   #
 
   def fetch_input(self):
-    return get_blob_if_exists( *self.input_directory(self._input_filename, schema=BlobURISchema.PATH) )
+    return get_blob_if_exists( *self.input_filepath(schema=BlobURISchema.PATH) )
 
   def fetch_output(self):
-    return get_blob_if_exists( *self.output_directory(self._output_filename, schema=BlobURISchema.PATH) )
+    return get_blob_if_exists( *self.output_filepath(schema=BlobURISchema.PATH) )
 
   def list_output_blobs(self):
     return get_blob_list( *self.output_directory(schema=BlobURISchema.PATH) )
