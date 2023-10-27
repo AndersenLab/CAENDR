@@ -82,7 +82,7 @@ class BucketedReport(Report):
       The location of this report's input/output data within the data bucket.
       By default, uses the data ID as a subfolder.
     '''
-    return self.get_data_id()
+    return self.get_data_id(as_str=True)
 
   @property
   def _data_prefix(self):
@@ -98,7 +98,7 @@ class BucketedReport(Report):
       The location of this report's work within the work bucket.
       By default, uses the data ID as a subfolder.
     '''
-    return self.get_data_id()
+    return self.get_data_id(as_str=True)
 
   @property
   def _input_prefix(self):

@@ -1,5 +1,6 @@
 # Built-ins
 from abc import abstractmethod
+from enum import Enum
 
 # Parent class
 from caendr.models.report    import GCPReport
@@ -55,8 +56,12 @@ class ReportEntity(JobEntity, UserOwnedEntity, GCPReport):
   def _data_id_field(self) -> str:
     pass
 
-  def get_data_id(self):
-    return getattr( self, self._data_id_field )
+  # Get the data ID field value, converting enums to their name values if desired
+  def get_data_id(self, as_str=False):
+    data_id = getattr( self, self._data_id_field )
+    if as_str and isinstance(data_id, Enum):
+      data_id = data_id.name
+    return data_id
 
 
   @property

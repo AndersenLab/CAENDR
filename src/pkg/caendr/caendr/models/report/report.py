@@ -42,7 +42,7 @@ class Report(ABC):
 
 
   @abstractmethod
-  def get_data_id(self) -> str:
+  def get_data_id(self, as_str=False):
     '''
       A string identifying the data held in this report, e.g. a hash. Shared by all jobs computing this same data.
 

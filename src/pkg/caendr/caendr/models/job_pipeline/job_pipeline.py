@@ -160,7 +160,7 @@ class JobPipeline(ABC):
 
     # Wrap the new report in a new JobPipeline object, upload the input data file(s) to data store, and return the new job
     job = cls(report=report)
-    job.upload(parsed_data.get('files', []))
+    job.upload( *parsed_data.get('files', []) )
     return job
 
 
