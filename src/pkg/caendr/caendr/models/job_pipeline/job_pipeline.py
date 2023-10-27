@@ -14,6 +14,7 @@ from caendr.models.error      import (
   CachedDataError,
   DuplicateDataError,
   DataFormatError,
+  EmptyReportResultsError,
   UnschedulableJobTypeError,
   JobAlreadyScheduledError
 )
@@ -313,6 +314,10 @@ class JobPipeline(ABC):
       Returns:
         - `input` (format specified by `raw`)
         - `output` (format specified by `raw`)
+
+      Raises:
+        - EmptyReportDataError:    An input data file exists, but is empty (i.e. invalid)
+        - EmptyReportResultsError: An output data file exists, but is empty (i.e. invalid)
     '''
     return self.fetch_input(raw=raw), self.fetch_output(raw=raw)
 
@@ -326,6 +331,9 @@ class JobPipeline(ABC):
 
       Arguments:
         - `raw` (`bool`): If `true`, return the raw blob(s); otherwise, parse into a Python object. Default `false`.
+
+      Raises:
+        - EmptyReportDataError: An input data file exists, but is empty (i.e. invalid)
     '''
 
     # Use the Report object to fetch the raw input blob
@@ -336,6 +344,7 @@ class JobPipeline(ABC):
       return blob
 
     # Delegate parsing to the subclass
+    # TODO: If this raises an EmptyReportDataError, should we mark the job status as error?
     return self._parse_input(blob)
 
 
@@ -348,6 +357,9 @@ class JobPipeline(ABC):
 
       Arguments:
         - `raw` (`bool`): If `true`, return the raw blob(s); otherwise, parse into a Python object. Default `false`.
+
+      Raises:
+        - EmptyReportResultsError: An output data file exists, but is empty (i.e. invalid)
     '''
 
     # Use the Report object to fetch the raw output blob
@@ -358,7 +370,23 @@ class JobPipeline(ABC):
       return blob
 
     # Delegate parsing to the subclass
-    return self._parse_output(blob)
+    try:
+      result = self._parse_output(blob)
+
+    # If result file is invalid, mark the report status as error
+    except EmptyReportResultsError:
+      self.report.set_status( JobStatus.ERROR )
+      self.report.save()
+      raise
+
+    # If result exists and report status hasn't been updated yet, update it
+    if result is not None:
+      if self.report.get_status() != JobStatus.ERROR:
+        self.report.set_status( JobStatus.COMPLETE )
+        self.report.save()
+
+    # Return the result object
+    return result
 
 
   @abstractmethod

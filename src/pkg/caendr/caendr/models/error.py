@@ -222,13 +222,13 @@ class ReportLookupError(InternalError):
 class EmptyReportDataError(InternalError):
   def __init__(self, report_id):
     self.id = report_id
-    self.description = 'Empty report'
+    self.description = 'Input data file is empty'
     super().__init__()
 
 class EmptyReportResultsError(InternalError):
   def __init__(self, report_id):
     self.id = report_id
-    self.description = 'Empty report'
+    self.description = 'Output report file is empty'
     super().__init__()
 
 

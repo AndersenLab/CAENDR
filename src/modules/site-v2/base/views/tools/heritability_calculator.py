@@ -246,17 +246,23 @@ def report(id):
     data, result = job.fetch()
     ready = result is not None
 
-  # If no submission exists, return 404
-  except EmptyReportDataError:
-    return abort(404, description="Heritability report not found")
+  # Error reading one of the report files
+  except (EmptyReportDataError, EmptyReportResultsError) as ex:
+    logger.error(f'Error fetching Heritability report {ex.id}: {ex.description}')
+    return abort(404, description = ex.description)
+
+  # General error
+  except Exception as ex:
+    logger.error(f'Error fetching Heritability report {id}: {ex}')
+    return abort(400, description = 'Something went wrong')
+
+  # No data file found
+  if data is None:
+    logger.error(f'Error fetching Heritability report {id}: Input data file does not exist')
+    return abort(404)
+
 
   trait = data[0]['TraitName']
-
-  # If result exists, mark as complete
-  # TODO: Is this the right place for this?
-  if result:
-    job.report.set_status(JobStatus.COMPLETE)
-    job.report.save()
 
   # TODO: Are either of these values used?
   format = '%I:%M %p %m/%d/%Y'

@@ -249,7 +249,6 @@ def submit():
 
 
 
-# TODO: Move internals of this to a service function
 @pairwise_indel_finder_bp.route("/report/<id>")
 @pairwise_indel_finder_bp.route("/report/<id>/download/<file_ext>")
 @jwt_required()
@@ -273,26 +272,28 @@ def report(id, file_ext=None):
       flash(ex.msg, 'danger')
       abort(ex.code)
 
+
     # Try getting the report data file and results
     # If result is None, job hasn't finished computing yet
     try:
       data, result = job.fetch()
       ready = result is not None
 
-    # Error reading data JSON file
-    # TODO: Should we mark report status as ERROR here too?
-    except EmptyReportDataError:
-      return abort(404, description="Pairwise indel finder data file not found")
-
-    # Results file exists, but is empty - error
-    except EmptyReportResultsError:
-      job.report.status = JobStatus.ERROR
-      job.report.save()
-      return abort(404, description="Pairwise indel finder report not found")
+    # Error reading one of the report files
+    except (EmptyReportDataError, EmptyReportResultsError) as ex:
+      logger.error(f'Error fetching Indel Finder report {ex.id}: {ex.description}')
+      return abort(404, description = ex.description)
 
     # General error
-    except Exception:
-      return abort(404, description="Something went wrong")
+    except Exception as ex:
+      logger.error(f'Error fetching Indel Finder report {id}: {ex}')
+      return abort(400, description = 'Something went wrong')
+
+    # No data file found
+    if data is None:
+      logger.error(f'Error fetching Indel Finder report {id}: Input data file does not exist')
+      return abort(404)
+
 
     # Get indel interval
     try:
@@ -302,14 +303,14 @@ def report(id, file_ext=None):
       logger.error(f'Invalid interval "{data["site"]}" for Indel Finder report {id}')
       indel_start, indel_stop = None, None
 
+    # Extract the dataframe from the results
+    dataframe = result.get('dataframe', None)
 
-    # Update indel primer entity
-    # TODO: Is this the right time/place for this?
+    # Update indel primer empty status
     if ready:
-      if job.report['status'] != JobStatus.ERROR:
-        job.report['status'] = JobStatus.COMPLETE
-      job.report.empty = result is None  # TODO: Is this correct? I think empty should actually check if any rows exist in the df
+      job.report.empty = result['empty']  # TODO: 'empty' is no longer tracked as a prop. Should it be?
       job.report.save()
+
 
     # If a file format was specified, return a downloadable file with the results
     # TODO: Set a better filename?
@@ -321,8 +322,6 @@ def report(id, file_ext=None):
         resp.headers['Content-Disposition'] = f'filename={job.report["id"]}.{file_ext}'
       return resp
 
-    # Extract the dataframe from the results
-    dataframe = result.get('dataframe', None)
 
     # Otherwise, return view page
     return render_template("tools/pairwise_indel_finder/view.html", **{
