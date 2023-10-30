@@ -21,15 +21,25 @@ NEMASCAN_CONTAINER_NAME = get_env_var('NEMASCAN_NXF_CONTAINER_NAME')
 
 class NemascanPipeline(JobPipeline):
 
+  #
+  # Class variable assignments
+  #
+
+  # Managed class type assignments
   _Report_Class = NemascanReport
   _Task_Class   = NemascanTask
   _Runner_Class = GCPCloudRunRunner
+
+  # Type declarations for managed objects
+  # This clues the type checker in to the specific subclasses we're using in this JobPipeline subclass
+  report: _Report_Class
+  runner: _Runner_Class
 
   _Container_Name = NEMASCAN_CONTAINER_NAME
 
 
   #
-  # Parsing
+  # Parsing Submission
   #
 
   @classmethod
@@ -89,17 +99,11 @@ class NemascanPipeline(JobPipeline):
 
 
   #
-  # Fetching & Parsing Input
+  # Parsing Input & Output
   #
 
   def _parse_input(self, blob):
     pass
-
-
-
-  #
-  # Fetching & Parsing Output
-  #
 
   def _parse_output(self, blob):
     return blob.download_as_text()

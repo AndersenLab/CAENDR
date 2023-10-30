@@ -43,16 +43,26 @@ REQUIRED_FILES = {
 
 class DatabaseOperationPipeline(JobPipeline):
 
+  #
+  # Class variable assignments
+  #
+
+  # Managed class type assignments
   _Report_Class = DatabaseOperation
   _Task_Class   = DatabaseOperationTask
   _Runner_Class = GCPCloudRunRunner
+
+  # Type declarations for managed objects
+  # This clues the type checker in to the specific subclasses we're using in this JobPipeline subclass
+  report: _Report_Class
+  runner: _Runner_Class
 
   _Container_Name = DB_OPERATIONS_CONTAINER_NAME
 
 
 
   #
-  # Report Creation
+  # Parsing Submission
   #
 
   @classmethod

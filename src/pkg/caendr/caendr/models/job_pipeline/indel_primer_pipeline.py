@@ -21,15 +21,25 @@ INDEL_PRIMER_CONTAINER_NAME = get_env_var('INDEL_PRIMER_CONTAINER_NAME')
 
 class IndelFinderPipeline(JobPipeline):
 
+  #
+  # Class variable assignments
+  #
+
+  # Managed class type assignments
   _Report_Class = IndelPrimerReport
   _Task_Class   = IndelPrimerTask
   _Runner_Class = GCPCloudRunRunner
+
+  # Type declarations for managed objects
+  # This clues the type checker in to the specific subclasses we're using in this JobPipeline subclass
+  report: _Report_Class
+  runner: _Runner_Class
 
   _Container_Name = INDEL_PRIMER_CONTAINER_NAME
 
 
   #
-  # Parsing
+  # Parsing Submission
   #
 
   @classmethod
