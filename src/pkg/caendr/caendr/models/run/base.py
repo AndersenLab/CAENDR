@@ -38,7 +38,7 @@ class Runner(ABC):
 
 
   # Storage class to record metadata about an execution
-  _Record_Class: None
+  _Record_Class = None
 
 
   def __init__(self, kind: str, data_id: str):
