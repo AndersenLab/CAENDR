@@ -4,13 +4,13 @@ import numpy as np
 # Parent Class & Models
 from .job_pipeline                 import JobPipeline
 from caendr.models.datastore       import IndelPrimerReport
-from caendr.models.run             import IndelPrimerRunner
+from caendr.models.run             import GCPCloudRunRunner
 from caendr.models.task            import IndelPrimerTask
 
 # Services
 from caendr.models.datastore       import Species
 from caendr.models.error           import EmptyReportDataError, EmptyReportResultsError
-from caendr.services.cloud.storage import download_blob_as_json, download_blob_as_dataframe
+from caendr.services.cloud.storage import download_blob_as_json, download_blob_as_dataframe, BlobURISchema
 from caendr.utils.data             import get_object_hash
 from caendr.utils.env              import get_env_var
 
@@ -23,7 +23,7 @@ class IndelFinderPipeline(JobPipeline):
 
   _Report_Class = IndelPrimerReport
   _Task_Class   = IndelPrimerTask
-  _Runner_Class = IndelPrimerRunner
+  _Runner_Class = GCPCloudRunRunner
 
   _Container_Name = INDEL_PRIMER_CONTAINER_NAME
 
@@ -149,4 +149,33 @@ class IndelFinderPipeline(JobPipeline):
       'empty':        False,
       'dataframe':    result,
       'format_table': format_table,
+    }
+
+
+
+  #
+  # Run Configuration
+  #
+
+  def construct_command(self):
+    return ['python', '/indel_primer/main.py']
+
+  def construct_environment(self):
+    result_bucket, result_blob = self.report.output_filepath(schema=BlobURISchema.PATH)
+    return {
+      **super().construct_environment(),
+      'RELEASE':        self.report['release'],
+      'SPECIES':        self.report['species'],
+      'INDEL_STRAIN_1': self.report['strain_1'],
+      'INDEL_STRAIN_2': self.report['strain_2'],
+      'INDEL_SITE':     self.report['site'],
+      'RESULT_BUCKET':  result_bucket,
+      'RESULT_BLOB':    result_blob,
+    }
+
+  def construct_run_params(self):
+    return {
+      **super().construct_run_params(),
+      'BOOT_DISK_SIZE_GB': 20,
+      'TIMEOUT':           '3600s',
     }

@@ -3,14 +3,16 @@ import csv
 # Parent Class & Models
 from .job_pipeline                 import JobPipeline
 from caendr.models.datastore       import NemascanReport
+from caendr.models.run             import GCPCloudRunRunner
 from caendr.models.task            import NemascanTask
-from caendr.models.run             import NemascanRunner
 
 # Services
 from caendr.models.datastore       import Species
+from caendr.services.cloud.storage import BlobURISchema
 from caendr.services.validate      import get_delimiter_from_filepath, validate_file, validate_num, validate_strain
 from caendr.utils.env              import get_env_var
 from caendr.utils.file             import get_file_hash
+
 
 
 NEMASCAN_CONTAINER_NAME = get_env_var('NEMASCAN_NXF_CONTAINER_NAME')
@@ -21,7 +23,7 @@ class NemascanPipeline(JobPipeline):
 
   _Report_Class = NemascanReport
   _Task_Class   = NemascanTask
-  _Runner_Class = NemascanRunner
+  _Runner_Class = GCPCloudRunRunner
 
   _Container_Name = NEMASCAN_CONTAINER_NAME
 
@@ -101,3 +103,36 @@ class NemascanPipeline(JobPipeline):
 
   def _parse_output(self, blob):
     return blob.download_as_text()
+
+
+
+  #
+  # Run Configuration
+  #
+
+  def construct_command(self):
+    return ['nemascan-nxf.sh']
+
+  def construct_environment(self):
+    return {
+      # Gather any vars from the parent class(es)
+      **super().construct_environment(),
+
+      # Gather vars from managed objects
+      **self.runner.get_gcp_vars(),
+      **self.report.get_data_paths(schema=BlobURISchema.GS),
+
+      # Define vars for this job
+      'SPECIES':     self.report['species'],
+      'VCF_VERSION': Species.get(self.report['species'])['release_latest'],
+      'USERNAME':    self.report['username'],
+      'EMAIL':       self.report['email'],
+    }
+
+  def construct_run_params(self):
+    return {
+      **super().construct_run_params(),
+      'BOOT_DISK_SIZE_GB': 100,
+      'TIMEOUT':           '86400s',
+      'MEMORY_LIMITS':     { 'memory': '4Gi', 'cpu': '1' },
+    }

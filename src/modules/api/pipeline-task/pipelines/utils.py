@@ -68,7 +68,7 @@ def get_runner_from_operation_name(operation_name: str) -> Tuple[GCPCloudRunRunn
   results = []
   for cls in pipeline_subclasses:
     try:
-      results.append( cls._Runner_Class.from_operation_name(operation_name) )
+      results.append( cls._Runner_Class.from_operation_name(cls.get_kind(), operation_name) )
     except:
       pass
 

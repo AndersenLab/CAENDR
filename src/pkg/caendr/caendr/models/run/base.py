@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 
-from caendr.models.report    import Report
-from caendr.models.status    import JobStatus
+from caendr.models.status import JobStatus
 
 
 
@@ -20,58 +19,43 @@ class Runner(ABC):
 
   # String identifying the type of job being run
   # Should correspond with the report kind
+  _kind: str
+
   @property
-  @abstractmethod
-  def kind(self) -> str: pass
+  def kind(self) -> str:
+    return self._kind
+
 
   # String uniquely identifying the job itself
   # Runners with the same data_id are considered to be running the same "computation"
   # Individual runs of this data are available as executions, meaning the execution ID is required
   # to distinguish between multiple executions with the same data_id
-  data_id: str
+  _data_id: str
 
-  # The report field to use as the data ID
-  # Defaults to data hash, but may be overwritten in subclasses
-  _data_id_field: str = 'data_hash'
+  @property
+  def data_id(self):
+    return self._data_id
+
 
   # Storage class to record metadata about an execution
   _Record_Class: None
 
 
-  def __init__(self, data_id: str = None, report: Report = None):
+  def __init__(self, kind: str, data_id: str):
     '''
       Create a new Runner object.
 
-      Takes one of two mutually exclusive arguments: the data ID directly, or a job report
-      containing that data ID in the appropriate field.
-
       Arguments:
+        - kind (str):
+            Unique identifier for the job type.
         - data_id (str):
             Unique identifier for the job data.
             Runners with the same data ID are considered to be running the same "computation".
-        - report (Report):
-            Job report to initialize the runner from. Must have the same kind as the Runner subclass.
-            Must contain the appropriate data ID field (defaults to "data_hash")
-
-      Raises:
-        - ValueError:
-            The incorrect number of arguments was provided, or the report was invalid.
     '''
 
-    # Arguments are mutually exclusive
-    if not ((data_id is None) ^ (report is None)):
-      raise ValueError('Either "data_id" should be provided, or "report" should be provided.')
-
-    # If report provided, validate its kind and extract the data ID from it
-    if report is not None:
-      if report.kind != self.kind:
-        raise ValueError(f'Cannot initialize runner of kind {self.kind} from report with kind {report.kind}')
-      data_id = getattr(report, self._data_id_field)
-      if data_id is None:
-        raise ValueError(f'Cannot initialize runner of kind {self.kind} from report with no "{self._data_id_field}" field')
-
-    # Set the data ID
-    self.data_id = data_id
+    # Set the kind and data ID
+    self._kind    = kind
+    self._data_id = data_id
 
 
   @abstractmethod
@@ -83,7 +67,7 @@ class Runner(ABC):
 
 
   @abstractmethod
-  def run(self, report: Report, run_if_exists: bool = False) -> str:
+  def run(self, command: list, env: dict, container_uri: str, params: dict, run_if_exists: bool = False) -> str:
     '''
       Start a job to compute the given report.
 
@@ -97,24 +81,6 @@ class Runner(ABC):
     pass
 
 
-  def _validate_report(self, report: Report):
-    '''
-      Validate that a given report matches this Runner's kind and data ID.
-      Raises a ValueError if the report is invalid.
-    '''
-
-    # Validate kind
-    if report.kind != self.kind:
-      raise ValueError(f'Cannot execute runner of kind {self.kind} on report with kind {report.kind}')
-
-    # Validate data ID
-    data_id = getattr(report, self._data_id_field)
-    if data_id is None:
-      raise ValueError(f'Cannot execute runner of kind {self.kind} on report with no "{self._data_id_field}" field')
-    if data_id != self.data_id:
-      raise ValueError(f'Cannot execute runner of kind {self.kind} on report with mismatching "{self._data_id_field}" field (expected {self.data_id}, got {data_id})')
-
-
   def get_full_execution_name(self, execution_id: str) -> str:
     '''
       Transform execution ID to a full name for storage.
@@ -124,3 +90,15 @@ class Runner(ABC):
             This would involve changing the 'operation_name' field in the JobEntity class.
     '''
     return execution_id
+
+
+
+  @classmethod
+  @abstractmethod
+  def default_environment(cls):
+    return {}
+
+  @classmethod
+  @abstractmethod
+  def default_run_params(cls):
+    return {}

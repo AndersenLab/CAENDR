@@ -1,6 +1,6 @@
 # Built-in libraries
 from abc    import ABC, abstractmethod
-from typing import Type
+from typing import Type, Any, Dict, List
 
 from google.cloud.storage.blob import Blob
 
@@ -193,13 +193,13 @@ class JobPipeline(ABC):
     return self._report
 
   @property
-  def _runner(self) -> Runner:
+  def runner(self) -> Runner:
     '''
       Managed Runner object. Only computed as needed.
     '''
-    if self.__runner is None:
-      self.__runner = self.create_runner(report=self.report)
-    return self.__runner
+    if getattr(self, '_runner', None) is None:
+      self._runner = self.create_runner( self.report.kind, self.report.get_data_id(as_str=True) )
+    return self._runner
 
 
   @property
@@ -233,23 +233,23 @@ class JobPipeline(ABC):
 
 
   #
-  # Image & Container Properties
-  # Lookup / construct information about the container image & container used to run this job
+  # Container Image Properties
+  # Lookup / construct information about the container used to run this job
   #
 
   @property
-  def image_uri(self) -> str:
+  def container_uri(self) -> str:
     '''
       The URI for this job's container image. Used to look up & create the container.
     '''
     return self.report.get_container().uri()
-  
+
   @property
-  def image_version(self) -> str:
+  def container_version(self) -> str:
     '''
       The version of this job's container image.
     '''
-    return self.report.container_version
+    return self.report.get_container()['tag']
 
 
 
@@ -478,7 +478,8 @@ class JobPipeline(ABC):
     '''
     return self.report.get_data_id()
 
-  def run(self, *args, **kwargs):
+
+  def run(self, **kwargs):
     '''
       Run this job using the specified Runner class.
     '''
@@ -488,14 +489,46 @@ class JobPipeline(ABC):
       logger.warn(f'Report { self.report.id } (data ID { self.data_id }) is already associated with operation { self.report["operation_name"] }. Running again...')
 
     # Forward run call to Runner object
-    exec_id = self._runner.run(self.report, *args, **kwargs)
+    exec_id = self.runner.run( self.construct_command(), self.construct_environment(), self.container_uri, self.construct_run_params(), **kwargs )
 
     # Save the full execution name to the report object, so it can be looked up later
-    self.report['operation_name'] = self._runner.get_full_execution_name(exec_id)
+    self.report['operation_name'] = self.runner.get_full_execution_name(exec_id)
     self.report.save()
 
     # Return the execution ID
     return exec_id
+
+
+  @abstractmethod
+  def construct_command(self) -> List[str]:
+    '''
+      Define the initial command to use to start running the job.
+      Result should be a list of individual terms to be used in the command line.
+    '''
+    return []
+
+
+  @abstractmethod
+  def construct_environment(self) -> Dict[str, Any]:
+    '''
+      Define the environment variables to make available when running the job.
+      Result should map variable names to values.
+    '''
+    return {
+      **self.runner.default_environment(),
+    }
+
+
+  @abstractmethod
+  def construct_run_params(self) -> Dict[str, Any]:
+    '''
+      Define the run parameters to use when constructing the machine to run the job.
+      Result should map parameter names to values.
+    '''
+    return {
+      **self.runner.default_run_params(),
+    }
+
 
 
   #

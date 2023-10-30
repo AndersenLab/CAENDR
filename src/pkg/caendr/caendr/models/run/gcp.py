@@ -10,7 +10,7 @@ from googleapiclient.errors import HttpError
 from caendr.services.logger import logger
 from caendr.utils.env       import get_env_var
 
-from caendr.models.datastore            import PipelineOperation
+from caendr.models.datastore            import PipelineOperation, DbOp, DatabaseOperation
 from caendr.models.error                import PipelineRunError, NotFoundError
 from caendr.models.report               import GCPReport
 from caendr.models.status               import JobStatus
@@ -62,8 +62,9 @@ class GCPRunner(Runner):
 
   # Creation #
 
+  # TODO: Can we make kind optional?
   @classmethod
-  def from_operation_name(cls, operation_name: str):
+  def from_operation_name(cls, kind, operation_name: str):
     '''
       Create a Runner of this class from the given GCP operation name.
       Raises an error if the operation name does not specify a job with the same kind as this class.
@@ -82,12 +83,12 @@ class GCPRunner(Runner):
     op_name_fields = parse_operation_name(operation_name)
 
     # Split the job name into the kind and data ID
-    kind, data_id = cls.split_job_name( op_name_fields['jobs'] )
+    _kind, data_id = cls.split_job_name( kind, op_name_fields['jobs'] )
 
-    if kind != cls.kind:
-      raise ValueError(f'Cannot initialize runner subclass {cls.__name__} with kind {cls.kind} from operation with kind {kind} (full name: {operation_name})')
+    if _kind != kind:
+      raise ValueError(f'Cannot initialize runner subclass {cls.__name__} with kind {kind} from operation with kind {_kind} (full name: {operation_name})')
 
-    return cls(data_id)
+    return cls(kind, data_id)
 
 
   # Name Properties #
@@ -117,8 +118,9 @@ class GCPRunner(Runner):
     '''
     return make_dns_name_safe( f'{self.kind}-{self.data_id}' )
 
+  # TODO: Handle the DbOp case more gracefully
   @classmethod
-  def split_job_name(cls, job_name) -> (str, str):
+  def split_job_name(cls, kind, job_name) -> (str, str):
     '''
       Convert a job name into a kind and data ID.
 
@@ -136,54 +138,41 @@ class GCPRunner(Runner):
       Raises:
         - ValueError: The given name was not valid for this job type.
     '''
-    kind, data_id = job_name.rsplit('-', 1)
-    if kind != make_dns_name_safe(cls.kind):
-      raise ValueError(f'Job name { job_name } does not start with the expected kind prefix "{ make_dns_name_safe(cls.kind) }".')
-    return cls.kind, data_id
 
+    # Make sure job name starts with the correct prefix, based on the provided kind
+    target_prefix = make_dns_name_safe(kind) + '-'
+    if not job_name.startswith(target_prefix):
+      raise ValueError(f'Job name { job_name } does not start with the expected kind prefix "{ target_prefix }".')
 
-  # Lookup Function #
+    if kind != DatabaseOperation.kind:
+      _kind, data_id = job_name.rsplit('-', 1)
+      if _kind != make_dns_name_safe(kind):
+        raise ValueError(f'Job name { job_name } does not start with the expected kind prefix "{ make_dns_name_safe(kind) }".')
+      return _kind, data_id
 
-  def get(self, key, default=None):
-    return getattr(self, f'_{key}', default)
+    # Treat the rest of the job name as the data ID
+    data_id = job_name[ len(target_prefix) :]
+
+    # Loop through valid database operations
+    for op in DbOp:
+      if data_id == make_dns_name_safe(op.name):
+        return _kind, op.name
+
+    raise ValueError(f'Job name { job_name } does not match any valid database operations (searching for: "{ data_id }").')
 
 
   # Container Environment #
 
-  def get_gcp_vars(self):
+  @classmethod
+  def default_environment(cls):
     return {
       "GOOGLE_SERVICE_ACCOUNT_EMAIL": sa_email,
       "GOOGLE_PROJECT":               GOOGLE_CLOUD_PROJECT_ID,
       "GOOGLE_ZONE":                  GOOGLE_CLOUD_ZONE,
     }
-  
-  def get_data_job_vars(self, report: GCPReport):
-    return {
-      "TRAIT_FILE": report.input_filepath(as_uri=True),
-      "WORK_DIR":   report.work_directory(as_uri=True),
-      "DATA_DIR":   report.data_directory(as_uri=True),
-      "OUTPUT_DIR": report.output_filepath(as_uri=True),
-    }
-
-  @abstractmethod
-  def construct_environment(self, report: GCPReport) -> dict:
-    '''
-      Construct the set of environment variables for the container as a dictionary.
-      Output should map variable names to values.
-    '''
-    pass
 
 
-  # Container Command #
-
-  @abstractmethod
-  def construct_command(self, report: GCPReport) -> list:
-    '''
-      Construct the command used to start the container functionality.
-      Output should be a list of individual terms used in the command line.
-    '''
-    pass
-
+  # Execution Record #
 
   def _create_execution_record(self, execution_id, response):
     '''
@@ -248,9 +237,15 @@ class GCPCloudRunRunner(GCPRunner):
 
   # CloudRun Parameters #
   # Can be overwritten in subclasses as needed
-  _TASK_COUNT    = 1
-  _MAX_RETRIES   = 1
-  _MEMORY_LIMITS = { 'memory': '512Mi', 'cpu': '1' }
+
+  @classmethod
+  def default_run_params(cls):
+    return {
+      **super().default_run_params(),
+      'TASK_COUNT':    1,
+      'MAX_RETRIES':   1,
+      'MEMORY_LIMITS': { 'memory': '512Mi', 'cpu': '1' },
+    }
 
 
   #
@@ -347,7 +342,7 @@ class GCPCloudRunRunner(GCPRunner):
   @backoff.on_exception(
       backoff.constant, SSLEOFError, max_tries=_MAX_TRIES_TOTAL, interval=20, jitter=None, on_backoff=_log_ssl_backoff.__func__, on_giveup=_log_ssl_giveup.__func__,
   )
-  def run(self, report: GCPReport, run_if_exists=False):
+  def run(self, command: list, env: dict, container_uri: str, params: dict, run_if_exists: bool = False) -> str:
     '''
       Start a job on the given route.
 
@@ -367,12 +362,9 @@ class GCPCloudRunRunner(GCPRunner):
         ValueError: The given report is invalid.
     '''
 
-    # Validate that the report has the expected kind and data ID
-    self._validate_report(report)
-
     # Create a CloudRun job for this task
     try:
-      create_response = self._create(report)
+      create_response = self._create(command, env, container_uri, params)
 
     # If the job already exists, optionally bail out
     except HttpError as ex:
@@ -405,32 +397,32 @@ class GCPCloudRunRunner(GCPRunner):
   # Creating & Running CloudRun Job
   #
 
-  def _create(self, report: GCPReport):
+  def _create(self, command: list, env: dict, container_uri: str, params: dict):
     '''
       Create a CloudRun Job to run this task.
     '''
     return create_job(**{
       'name':        self.job_name,
-      'task_count':  self.get('TASK_COUNT'),
-      'timeout':     self.get('TIMEOUT'),
-      'max_retries': self.get('MAX_RETRIES'),
+      'task_count':  params.get('TASK_COUNT'),
+      'timeout':     params.get('TIMEOUT'),
+      'max_retries': params.get('MAX_RETRIES'),
 
       'container': {
-        'image':     report.get_container().uri(),
+        'image':     container_uri,
         'name':      self.job_name, # Name of the container specified as a DNS_LABEL (RFC 1123).
 
         # Startup Command
-        'args':      self.construct_command(report)[1:],
-        'command':   self.construct_command(report)[0:1],
+        'args':      command[1:],
+        'command':   command[0:1],
 
         # Environment
         'env': [
-          { 'name': name, 'value': value } for name, value in self.construct_environment(report).items()
+          { 'name': name, 'value': value } for name, value in env.items()
         ],
 
         # Compute Resources
         'resources': {
-          'limits': self.get('MEMORY_LIMITS'),
+          'limits': params.get('MEMORY_LIMITS'),
           'startupCpuBoost': False,
         },
       }

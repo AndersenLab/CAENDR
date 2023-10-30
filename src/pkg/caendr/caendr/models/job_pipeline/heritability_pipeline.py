@@ -3,8 +3,8 @@ import csv
 # Parent Class & Models
 from .job_pipeline                 import JobPipeline
 from caendr.models.datastore       import HeritabilityReport
+from caendr.models.run             import GCPCloudRunRunner
 from caendr.models.task            import HeritabilityTask
-from caendr.models.run             import HeritabilityRunner
 
 # Services
 from caendr.models.datastore       import Species
@@ -13,7 +13,7 @@ from caendr.services.validate      import get_delimiter_from_filepath, validate_
 from caendr.utils.env              import get_env_var
 from caendr.utils.file             import get_file_hash
 
-from caendr.services.cloud.storage import download_blob_as_dataframe
+from caendr.services.cloud.storage import download_blob_as_dataframe, BlobURISchema
 
 
 HERITABILITY_CONTAINER_NAME = get_env_var('HERITABILITY_CONTAINER_NAME')
@@ -24,7 +24,7 @@ class HeritabilityPipeline(JobPipeline):
 
   _Report_Class = HeritabilityReport
   _Task_Class   = HeritabilityTask
-  _Runner_Class = HeritabilityRunner
+  _Runner_Class = GCPCloudRunRunner
 
   _Container_Name = HERITABILITY_CONTAINER_NAME
 
@@ -141,3 +141,41 @@ class HeritabilityPipeline(JobPipeline):
 
     # Return parsed result
     return result
+
+
+
+  #
+  # Run Configuration
+  #
+
+  def construct_command(self):
+    if self.container_version == "v0.1a":
+      return ['python', '/h2/main.py']
+    return ["./heritability-nxf.sh"]
+
+  def construct_environment(self):
+    data_bucket, data_blob = self.report.data_directory(schema=BlobURISchema.PATH)
+    return {
+
+      # Gather any vars from the parent class(es)
+      **super().construct_environment(),
+
+      # Gather vars from managed objects
+      **self.runner.get_gcp_vars(),
+      **self.report.get_data_paths(schema=BlobURISchema.GS),
+
+      # Define vars for this job
+      'SPECIES':        self.report['species'],
+      'VCF_VERSION':    Species.get(self.report['species'])['release_latest'],
+      'DATA_HASH':      self.report.data_hash,
+
+      'DATA_BUCKET':    data_bucket,
+      'DATA_BLOB_PATH': data_blob,
+    }
+
+  def construct_run_params(self):
+    return {
+      **super().construct_run_params(),
+      'BOOT_DISK_SIZE_GB': 10,
+      'TIMEOUT':           '9000s',
+    }

@@ -1,7 +1,7 @@
 # Parent Class & Models
 from .job_pipeline           import JobPipeline
 from caendr.models.datastore import DatabaseOperation
-from caendr.models.run       import DatabaseOperationRunner
+from caendr.models.run       import GCPCloudRunRunner
 from caendr.models.task      import DatabaseOperationTask
 
 # Services
@@ -45,7 +45,7 @@ class DatabaseOperationPipeline(JobPipeline):
 
   _Report_Class = DatabaseOperation
   _Task_Class   = DatabaseOperationTask
-  _Runner_Class = DatabaseOperationRunner
+  _Runner_Class = GCPCloudRunRunner
 
   _Container_Name = DB_OPERATIONS_CONTAINER_NAME
 
@@ -137,3 +137,55 @@ class DatabaseOperationPipeline(JobPipeline):
 
   def _parse_output(self, blob):
     raise ValueError(f'Job pipeline for kind "{self.kind}" does not produce an output file.')
+
+
+
+  #
+  # Run Configuration
+  #
+
+  def construct_command(self):
+    return ['/db_operations/run.sh']
+
+
+  def construct_environment(self):
+
+    # Convert the species list to a semicolon-separated string, defaulting to None if no species provided
+    species_list = ';'.join( self.report['args'].get('SPECIES_LIST', []) ) or None
+
+    # TODO: Do we neeed the task ID? If so, how do we obtain it?
+    # environment['TASK_ID']            = self.task.id
+
+    return {
+      **super().construct_environment(),
+      **self.report['args'],
+      'DATABASE_OPERATION': self.report.get_data_id(as_str=True),
+      'USERNAME':           self.report.get_user_name(),
+      'EMAIL':              self.report.get_user_email(),
+      'OPERATION_ID':       self.report.id,
+      'SPECIES_LIST':       species_list,
+    }
+
+
+  def construct_run_params(self):
+
+    # Use a smaller machine for test echo
+    if self.report.get_data_id() == DbOp.TEST_ECHO:
+      op_specific_params = {
+        'TIMEOUT':         '600s',
+        'MEMORY_LIMITS':   { 'memory': '512Mi', 'cpu': '1' },
+      }
+    else:
+      op_specific_params = {
+        'TIMEOUT':         '86400s',
+        'MEMORY_LIMITS':   { 'memory': '32Gi', 'cpu': '8' },
+      }
+
+    # Compose params into a single dict
+    return {
+      **super().construct_run_params(),
+      **op_specific_params,
+      'MACHINE_TYPE':      'n1-standard-4',
+      'BOOT_DISK_SIZE_GB': 50,
+      'VOLUME_NAME':       'db_op_work',
+    }
