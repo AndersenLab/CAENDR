@@ -1,6 +1,7 @@
 from   abc     import ABC, abstractmethod
 import backoff
 from   ssl     import SSLEOFError
+from   typing  import Optional
 
 # Parent class
 from .base import Runner
@@ -216,6 +217,35 @@ class GCPRunner(Runner):
     if not op._exists:
       raise NotFoundError(self._Record_Class, {'id': id})
     return op
+
+
+  # TODO: This is defined a bit awkwardly for backwards-compatability...
+  #       Older jobs were run in Lifesciences, and do not have an explicit execution ID available in their records
+  #       Maybe the PipelineOperation record needs to track which runner was used? Or maybe we just lookup by operation name by default?
+  #       On the bright side, defining this function at the GCPRunner level lets the Job Pipeline look up the operation record
+  #       without needing to know what Runner was used
+  def get_err_msg(self, execution_id: str = None, operation_name: str = None) -> Optional[str]:
+
+    # Make sure arguments are mutually exclusive
+    if not ((execution_id is None) ^ (operation_name is None)):
+      raise ValueError(f'Exactly one of "execution_id" and "operation_name" should be defined.')
+
+    # Find the record based on execution ID
+    if execution_id is not None:
+
+      # If this execution is not in the ERROR state, return None
+      if self.check_status(execution_id) is not JobStatus.ERROR:
+        return None
+
+      # Lookup the execution record for the given ID
+      record = self._lookup_execution_record(execution_id)
+
+    # Find the record based on operation name
+    else:
+      record = self._Record_Class( operation_name.split('/').pop() )
+
+    # Return the error field from the record object
+    return record['error']
 
 
 

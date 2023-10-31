@@ -1,6 +1,6 @@
 # Built-in libraries
 from abc    import ABC, abstractmethod
-from typing import Type, Any, Dict, List
+from typing import Type, Any, Dict, List, Optional
 
 from google.cloud.storage.blob import Blob
 
@@ -19,7 +19,7 @@ from caendr.models.error      import (
   JobAlreadyScheduledError
 )
 from caendr.models.report     import Report
-from caendr.models.run        import Runner
+from caendr.models.run        import Runner, GCPRunner
 from caendr.models.status     import JobStatus
 from caendr.models.task       import Task
 
@@ -573,3 +573,14 @@ class JobPipeline(ABC):
       self.report.save()
 
     return self.report.get_status() in JobStatus.FINISHED
+
+
+  # TODO: It would be better to rewrite this so it doesn't need to check against Runner subclasses
+  def get_error(self) -> Optional[str]:
+    '''
+      Get the error message associated with this job, if it is in the ERROR state.
+      Returns None if this job does not have an error message (i.e. if it is not in the ERROR state.)
+    '''
+    if isinstance(self.runner, GCPRunner):
+      return self.runner.get_err_msg( operation_name = self.report['operation_name'] )
+    raise NotImplementedError('Getting error message for non-GCP Runner.')

@@ -1,7 +1,6 @@
 import re
 import os
 import datetime
-from caendr.models.datastore.pipeline_operation import PipelineOperation
 
 from flask import (flash,
                    request,
@@ -237,9 +236,6 @@ def report(id):
     flash(ex.msg, 'danger')
     abort(ex.code)
 
-  # TODO: Is this used?
-  data_hash = job.report.data_hash
-
   # Try getting & parsing the report data file and results
   # If result is None, job hasn't finished computing yet
   try:
@@ -264,14 +260,10 @@ def report(id):
 
   trait = data[0]['TraitName']
 
-  # TODO: Are either of these values used?
-  format = '%I:%M %p %m/%d/%Y'
-  now = datetime.now().strftime(format)
-
-  # TODO: Is this used? It looks like the error message(s) come from the entity's PipelineOperation
-  service_name = os.getenv('HERITABILITY_CONTAINER_NAME')
-  persistent_logger = PersistentLogger(service_name)
-  error = persistent_logger.get(id)
+  # # TODO: Is this used? It looks like the error message(s) come from the entity's PipelineOperation
+  # service_name = os.getenv('HERITABILITY_CONTAINER_NAME')
+  # persistent_logger = PersistentLogger(service_name)
+  # error = persistent_logger.get(id)
 
   return render_template("tools/heritability_calculator/result.html", **{
     'title': "Heritability Results",
@@ -280,15 +272,12 @@ def report(id):
 
     'ready': ready,
 
-    # TODO: The HTML file expects a variable called "fnam" -- is that a typo?
     'fname': datetime.today().strftime('%Y%m%d.') + trait,
 
     'hr': job.report,
     'data': data,
     'result': result,
-
-    'data_hash': data_hash,
-    'error': error,
+    'error': job.get_error(),
 
     'data_url': job.report.input_filepath(schema=BlobURISchema.HTTPS),
     'logs_url': url_for('heritability_calculator.view_logs', id = id),

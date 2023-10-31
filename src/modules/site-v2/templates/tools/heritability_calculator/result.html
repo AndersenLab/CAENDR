@@ -48,7 +48,7 @@
     
       {% if hr.status == JobStatus.ERROR %}
       {% if session["is_admin"] %}
-      <p><strong>Error:</strong> <span class="text-danger">{{ operation.error }}</span></p>
+      <p><strong>Error:</strong> <span class="text-danger">(code {{ error.code }}) {{ error.message }}</span></p>
       {% endif %}
       {% endif %}
     </p>

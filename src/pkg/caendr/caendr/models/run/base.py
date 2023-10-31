@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from caendr.models.status import JobStatus
 
@@ -64,6 +65,15 @@ class Runner(ABC):
       Get the status of a specific execution of this job.
     '''
     pass
+
+
+  @abstractmethod
+  def get_err_msg(self, execution_id: str) -> Optional[str]:
+    '''
+      Get the error message associated with the given job execution.
+      If the job is not in the ERROR state, should return None.
+    '''
+    return None
 
 
   @abstractmethod
