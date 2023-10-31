@@ -11,7 +11,6 @@ from caendr.services.logger import logger
 from caendr.models.datastore  import User, Container
 from caendr.models.error      import (
   NotFoundError,
-  CachedDataError,
   DuplicateDataError,
   DataFormatError,
   EmptyReportResultsError,
@@ -111,9 +110,6 @@ class JobPipeline(ABC):
       Raises:
         DuplicateDataError:
           This user has already submitted this data. Contains JobPipeline referencing that report as first argument.
-        CachedDataError:
-          If another user has already submitted this job. Contains new Entity representing this user's
-          submission, linked to the cached results.
     '''
 
     # Log the start of the creation process
@@ -476,7 +472,7 @@ class JobPipeline(ABC):
     return self._Task_Class is not None
 
 
-  def schedule(self, no_cache=False, force=False) -> JobStatus:
+  def schedule(self, no_cache=False) -> JobStatus:
     '''
       Submit a job to the appropriate queue, using the assigned Task class.
 
@@ -489,10 +485,7 @@ class JobPipeline(ABC):
         - UnschedulableJobTypeError:
             This job's subclass does not assign a Task class, i.e. scheduling is impossible.
         - JobAlreadyScheduledError:
-            This specific job has already been scheduled. Will not re-schedule the job.
-            This behavior can be disabled by setting `force` to True. Note that this may re-schedule an existing job.
-        - CachedDataError:
-            Results have already been computed for this job's input data. Will not re-schedule the job.
+            A job to compute this report's data has already been scheduled. Will not re-schedule the job.
             This behavior can be disabled by setting `no_cache` to True. Note that this may re-schedule a job.
     '''
 
@@ -503,8 +496,7 @@ class JobPipeline(ABC):
     # Check whether a job for this data has already been scheduled
     # If no_cache is True, this check will not be run
     if not no_cache and self.report.get_status() != JobStatus.CREATED:
-      # raise JobAlreadyScheduledError()
-      raise CachedDataError( report=None )
+      raise JobAlreadyScheduledError( self.kind, self.data_id )
 
     # Schedule job in task queue
     task   = self.create_task(self.report)

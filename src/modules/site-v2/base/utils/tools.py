@@ -7,9 +7,9 @@ from base.utils.auth import get_current_user, user_is_admin
 from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 from caendr.models.error import (
-    CachedDataError,
     DataFormatError,
     DuplicateDataError,
+    JobAlreadyScheduledError,
     ReportLookupError,
 )
 from caendr.models.job_pipeline import JobPipeline, get_pipeline_class
@@ -79,9 +79,9 @@ def try_submit(kind, user, data, no_cache):
     job = get_pipeline_class(kind=kind).create(user, data, no_cache=no_cache, valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS)
 
     # Schedule the job, if applicable
-    #   CachedDataError    -> the job already has results
+    #   JobAlreadyScheduledError -> a job computing these results has already been scheduled
     if job.is_schedulable:
-      job.schedule()
+      job.schedule(no_cache=no_cache)
       ready = False
 
     # If job is not schedulable, its results are immediately available, i.e. ready now
@@ -114,7 +114,7 @@ def try_submit(kind, user, data, no_cache):
     }, 200
 
   # Duplicate job submission from another user
-  except CachedDataError as ex:
+  except JobAlreadyScheduledError as ex:
 
     # Log the event
     logger.debug(f'(CACHE HIT) User submitted cached {kind} data: id = {job.report.id}, data hash = {job.report.data_hash}, status = {job.report["status"]}')
