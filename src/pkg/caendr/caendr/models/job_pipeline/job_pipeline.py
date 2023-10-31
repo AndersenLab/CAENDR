@@ -110,7 +110,7 @@ class JobPipeline(ABC):
 
       Raises:
         DuplicateDataError:
-          If this user has already submitted this data. Contains existing Entity as first argument.
+          This user has already submitted this data. Contains JobPipeline referencing that report as first argument.
         CachedDataError:
           If another user has already submitted this job. Contains new Entity representing this user's
           submission, linked to the cached results.
@@ -130,8 +130,8 @@ class JobPipeline(ABC):
 
     # Check if user has already submitted this job, and "return" it in a duplicate data error if so
     if parsed_data.get('hash') and not no_cache:
-      cached_report = cls.check_cached_submission(parsed_data['hash'], user.name, container, status=JobStatus.NOT_ERR)
-      if cached_report:
+      cached_report = cls._find_cached_report(parsed_data['hash'], user, container, status=JobStatus.NOT_ERR)
+      if cached_report is not None:
         raise DuplicateDataError(cls.lookup(cached_report.id))
 
     # Create a new report to represent this job, and set data fields based on the parsed input
@@ -273,7 +273,7 @@ class JobPipeline(ABC):
       Returns:
         A dictionary with the following fields:
           - props (dict): A dict of fields to save to the Report object.
-          - hash (str):   A unique hash for this input data. Optional.
+          - hash (str):   A unique hash for this input data. Will be used to check cache if provided. Optional.
           - files (list): A list of files to upload to cloud storage. These will be handled by the `upload` method. Optional.
 
       Raises:
@@ -289,12 +289,21 @@ class JobPipeline(ABC):
   #
 
   @classmethod
-  def check_cached_submission(cls, *args, **kwargs):
+  def _find_cached_submissions(cls, *args, **kwargs):
     '''
       Check whether this user has submitted this job before.
     '''
     # Forward cache check to Report class
-    return cls._Report_Class.check_cached_submission(*args, **kwargs)
+    return cls._Report_Class.find_cached_submissions(*args, **kwargs)
+
+  @classmethod
+  def _find_cached_report(cls, *args, **kwargs):
+
+    # Perform the cache check
+    matches = cls._find_cached_submissions(*args, **kwargs)
+
+    # Return first element if it exists
+    return matches[0] if len(matches) else None
 
 
 
@@ -447,7 +456,7 @@ class JobPipeline(ABC):
     # If force is True, this check will not be run
     if not force and self.report.get_status() != JobStatus.CREATED:
       raise JobAlreadyScheduledError()
-    
+
     # If using cache, check whether this job already has results and short-circuit the computation if so
     # If no_cache is True, this check will not be run
     if not no_cache and self._check_cached_result():

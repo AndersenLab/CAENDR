@@ -297,3 +297,17 @@ class Report(ABC):
       This should retrieve any file(s) created / uploaded by the tool execution.
     '''
     pass
+
+
+
+  #
+  # Cache
+  #
+
+  @classmethod
+  @abstractmethod
+  def find_cached_submissions(cls, data_id, user = None, container = None, status: JobStatus = None) -> list:
+    '''
+      Retrieve all reports with the given data ID, optionally filtering by the user, container, and status.
+    '''
+    return []

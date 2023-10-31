@@ -1,6 +1,7 @@
 # Built-ins
 from abc import abstractmethod
 from enum import Enum
+from typing import Union
 
 # Parent class
 from caendr.models.report    import GCPReport
@@ -8,6 +9,7 @@ from caendr.models.datastore import JobEntity, UserOwnedEntity
 
 # Models
 from caendr.models.status    import JobStatus
+from caendr.models.datastore import Container, User
 
 # Services
 from caendr.services.cloud.storage import check_blob_exists
@@ -105,25 +107,35 @@ class ReportEntity(JobEntity, UserOwnedEntity, GCPReport):
   #
 
   @classmethod
-  def check_cached_submission(cls, data_hash, username, container, status=None):
+  def find_cached_submissions(cls, data_id: Union[str, Enum], user: User = None, container: Container = None, status: JobStatus = None) -> list:
+    '''
+      Retrieve all reports with the given data ID, optionally filtering by the user, container, and status.
+    '''
+
+    # If data ID is an enum, map to name (string value)
+    if isinstance(data_id, Enum):
+      data_id = data_id.name
 
     # Check for reports by this user with a matching data hash
     filters = [
-      ('data_hash', '=', data_hash),
-      ('username',  '=', username),
+      (cls._data_id_field, '=', data_id),
     ]
+
+    # If user provided, add to filter list
+    if user is not None:
+      filters.append(('username', '=', user.name))
 
     # Convert status to iterable (set), if a single value passed
     if status is not None and not hasattr(status, '__iter__'):
       status = {status}
 
-    # Loop through each matching report, sorted newest to oldest
-    # Prefer a match with a date, if one exists
-    for match in cls.sort_by_created_date( cls.query_ds(filters=filters), set_none_max=True ):
-
-      # If containers match and status is correct, return the matching Entity
-      if match.container_equals(container) and (status and match['status'] in status):
-        return match
+    # Loop through each matching report, sorted newest to oldest and prioritizing matches with a date
+    # Filter based on container and/or status, based on which args are provided
+    return [
+      match for match in cls.sort_by_created_date( cls.query_ds(filters=filters), set_none_max=True )
+        if  ( container is not None and match.container_equals(container) )
+        and ( status    is not None and match['status'] in status )
+    ]
 
 
   def check_cached_result(self):
