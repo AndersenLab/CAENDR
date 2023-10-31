@@ -156,9 +156,6 @@ class JobPipeline(ABC):
       job.report.upload( *parsed_data.get('files', []) )
 
     # Check whether output data already exists for this data
-    # TODO: We might want to check for job completion directly after setting this up, just to avoid race conditions
-    #       e.g. a RUNNING job is found, the job finishes and all linked reports are updated to COMPLETE,
-    #       then this report is linked to that "RUNNING" job and never updated
     job._check_existing_job_execution()
 
     # Return the new JobPipeline object
@@ -338,16 +335,32 @@ class JobPipeline(ABC):
     matches = [ match for match in matches if not match.belongs_to_user(user) ]
 
     # Find the matching the report with the "best" status, i.e. the status furthest along in the pipeline
+    # Skip any incomplete reports without an associated operation_name,
+    # since we need an operation name to be visible to the API status update
     best_match = None
     for match in matches:
+      if match.get_status() != JobStatus.COMPLETE and match['operation_name'] is None:
+        continue
       if best_match is None or JobStatus.is_earlier_than(best_match.get_status(), match.get_status()):
         best_match = match
 
+    # If no match was found, nothing to do - this job stays as CREATED
+    if best_match is None:
+      return
+
     # If a match was found, point this new report to the existing job (through its execution record)
-    if best_match is not None:
-      self.report.set_status(best_match.get_status())
-      self.report['operation_name'] = best_match['operation_name']
-      self.report.save()
+    # By setting the operation_name, we make this report visible in the periodic API status check
+    self.report.set_status(best_match.get_status())
+    self.report['operation_name'] = best_match['operation_name']
+    self.report.save()
+
+    # Now that the operation_name has been set, run a manual check using the managed Runner object
+    # This prevents race conditions like the following:
+    #   - The matching report found above is queried while it's RUNNING
+    #   - The associated job finishes, and all reports with the given operation_name are updated to COMPLETE
+    #   - This report's operation_name is set. Because it wasn't set when the update happened, it is still marked as RUNNING
+    #   - This report is never updated
+    self._update_status_directly()
 
 
 
@@ -495,7 +508,10 @@ class JobPipeline(ABC):
 
     # Check whether a job for this data has already been scheduled
     # If no_cache is True, this check will not be run
+    # The direct status check isn't strictly necessary, since it's also run during initialization,
+    # but running it here provides extra assurance that the status is correct
     if not no_cache and self.report.get_status() != JobStatus.CREATED:
+      self._update_status_directly()
       raise JobAlreadyScheduledError( self.kind, self.data_id )
 
     # Schedule job in task queue
@@ -579,6 +595,21 @@ class JobPipeline(ABC):
   #
   # Status
   #
+
+  def _update_status_directly(self):
+    '''
+      Directly check if this job is complete, using the managed Runner object.
+
+      Running this check manually after creating the job makes sure the job status is checked *after* the operation_name is assigned,
+      avoiding any race conditions where an existing job changes status before it's linked to this report.
+    '''
+    try:
+      exec_id = self.runner.get_execution_id_from_operation_name( self.report['operation_name'] )
+      self.report.set_status( self.runner.check_status( exec_id ) )
+      self.report.save()
+    except Exception as ex:
+      logger.debug(f'Failed to manually check job execution status for report {self.report.id}, ignoring: {ex}')
+
 
   def is_finished(self) -> bool:
     '''
