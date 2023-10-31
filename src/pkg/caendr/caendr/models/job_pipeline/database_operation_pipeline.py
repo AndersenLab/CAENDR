@@ -122,10 +122,12 @@ class DatabaseOperationPipeline(JobPipeline):
 
 
 
-  # Database operations are not cached, so this will always be False
+  # Database operations are always linked to unique executions (i.e. not cached),
+  # so this check should always fail to find any matches.
   # Overrides parent definition
-  def _check_cached_result(self):
-    return False
+  def _check_existing_job_execution(self):
+    return
+
 
   # Try injecting the user email as a parameter to the Task init function
   @classmethod

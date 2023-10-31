@@ -301,6 +301,20 @@ class Report(ABC):
 
 
   #
+  # Checking for files in datastore
+  #
+
+  @abstractmethod
+  def check_input_exists(self) -> bool:
+    pass
+
+  @abstractmethod
+  def check_output_exists(self) -> bool:
+    pass
+
+
+
+  #
   # Cache
   #
 

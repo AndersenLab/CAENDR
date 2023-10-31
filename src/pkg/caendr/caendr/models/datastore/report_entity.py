@@ -136,7 +136,3 @@ class ReportEntity(JobEntity, UserOwnedEntity, GCPReport):
         if  ( container is not None and match.container_equals(container) )
         and ( status    is not None and match['status'] in status )
     ]
-
-
-  def check_cached_result(self):
-    return check_blob_exists(self.get_bucket_name(), self.get_result_blob_path())

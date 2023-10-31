@@ -132,3 +132,16 @@ class GCPReport(BucketedReport):
 
   def list_output_blobs(self):
     return get_blob_list( *self.output_directory(schema=BlobURISchema.PATH) )
+
+
+
+  #
+  # Checking for files in datastore
+  # Implements abstract method(s) from parent class
+  #
+
+  def check_input_exists(self) -> bool:
+    return check_blob_exists( *self.input_filepath(schema=BlobURISchema.PATH) )
+
+  def check_output_exists(self) -> bool:
+    return check_blob_exists( *self.output_filepath(schema=BlobURISchema.PATH) )

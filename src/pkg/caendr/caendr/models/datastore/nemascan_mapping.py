@@ -128,33 +128,3 @@ class NemascanReport(HashableEntity, ReportEntity):
     '''
     self['email'] = user['email']
     return super().set_user(user)
-
-
-  ## Cache ##
-
-  # TODO: Is there a better way to check? E.g. look for results?
-  def check_cached_result(self):
-    '''
-      Check whether the results for this data hash have already been cached.
-      Returns "COMPLETE" if any other user's submission is complete, otherwise
-      returns the last found status or None.
-    '''
-
-    # Check for reports with a matching data hash & container version
-    matches = NemascanReport.query_ds( filters = [
-      ('data_hash',         '=', self.data_hash),
-      ('container_version', '=', self['container_version']),
-    ])
-
-    status = None
-
-    # Loop through all submissions by different users
-    for match in matches:
-      if match.username != self.username:
-
-        # Update to match status, keeping 'COMPLETE' if it's found
-        if status != JobStatus.COMPLETE:
-          status = match.status
-
-    # Return the status
-    return status

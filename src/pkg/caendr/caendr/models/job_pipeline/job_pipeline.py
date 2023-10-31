@@ -153,7 +153,19 @@ class JobPipeline(ABC):
 
     # Wrap the new report in a new JobPipeline object, upload the input data file(s) to data store, and return the new job
     job = cls(report=report)
-    job.report.upload( *parsed_data.get('files', []) )
+
+    # Check if input has already been uploaded
+    # This would occur if a different user has uploaded the same data to run the same job
+    if not no_cache and not job.report.check_input_exists():
+      job.report.upload( *parsed_data.get('files', []) )
+
+    # Check whether output data already exists for this data
+    # TODO: We might want to check for job completion directly after setting this up, just to avoid race conditions
+    #       e.g. a RUNNING job is found, the job finishes and all linked reports are updated to COMPLETE,
+    #       then this report is linked to that "RUNNING" job and never updated
+    job._check_existing_job_execution()
+
+    # Return the new JobPipeline object
     return job
 
 
@@ -306,6 +318,42 @@ class JobPipeline(ABC):
     return matches[0] if len(matches) else None
 
 
+  def _check_existing_job_execution(self):
+    '''
+      Look for a job execution computing this report's data, and point the report to it if found.
+    '''
+
+    # Collect the set of Status values to search for
+    # We can only attach to a COMPLETE job if the output file(s) exist, otherwise we can only attach to a job in progress
+    # TODO: We should be able to copy a SUBMITTED job, since we only want to submit the data once.
+    #       However, since the operation_name isn't assigned until the Task is handled, we'd just be assigning it to None here,
+    #       and then it wouldn't be picked up by the status_update check.
+    statuses = { JobStatus.RUNNING }
+    if self.report.check_output_exists():
+      statuses.add(JobStatus.COMPLETE)
+
+    # Get cached submissions based on the container and status value
+    matches = self._find_cached_submissions(
+      self.report.get_data_id(), container = self.report.get_container(), status = statuses
+    )
+
+    # Filter out all matching submissions by this user
+    user = self.report.get_user()
+    matches = [ match for match in matches if not match.belongs_to_user(user) ]
+
+    # Find the matching the report with the "best" status, i.e. the status furthest along in the pipeline
+    best_match = None
+    for match in matches:
+      if best_match is None or JobStatus.is_earlier_than(best_match.get_status(), match.get_status()):
+        best_match = match
+
+    # If a match was found, point this new report to the existing job (through its execution record)
+    if best_match is not None:
+      self.report.set_status(best_match.get_status())
+      self.report['operation_name'] = best_match['operation_name']
+      self.report.save()
+
+
 
   #
   # File Storage
@@ -452,15 +500,11 @@ class JobPipeline(ABC):
     if not self.is_schedulable:
       raise UnschedulableJobTypeError()
 
-    # Check whether this specific job has already been scheduled
-    # If force is True, this check will not be run
-    if not force and self.report.get_status() != JobStatus.CREATED:
-      raise JobAlreadyScheduledError()
-
-    # If using cache, check whether this job already has results and short-circuit the computation if so
+    # Check whether a job for this data has already been scheduled
     # If no_cache is True, this check will not be run
-    if not no_cache and self._check_cached_result():
-      raise CachedDataError()
+    if not no_cache and self.report.get_status() != JobStatus.CREATED:
+      # raise JobAlreadyScheduledError()
+      raise CachedDataError( report=None )
 
     # Schedule job in task queue
     task   = self.create_task(self.report)
@@ -544,18 +588,6 @@ class JobPipeline(ABC):
   # Status
   #
 
-  def _check_cached_result(self):
-    cached_result = self.report.check_cached_result()
-
-    # If cache check returned a status, use it; otherwise, default to "COMPLETE"
-    if cached_result:
-      self.report.set_status( cached_result if isinstance(cached_result, str) else JobStatus.COMPLETE )
-      self.report.save()
-
-    return cached_result
-
-
-# def has_results
   def is_finished(self) -> bool:
     '''
       Check for results.
@@ -564,14 +596,7 @@ class JobPipeline(ABC):
         status (JobStatus): The current status of the job
         result: The results if the job is complete, or None if no result exists.
     '''
-
-    cached_result = self.check_cached_result()
-    if cached_result:
-
-      # If cache check returned a status, use it; otherwise, default to "COMPLETE"
-      self.report.set_status( cached_result if isinstance(cached_result, str) else JobStatus.COMPLETE )
-      self.report.save()
-
+    # Check whether this report's status is FINISHED
     return self.report.get_status() in JobStatus.FINISHED
 
 
