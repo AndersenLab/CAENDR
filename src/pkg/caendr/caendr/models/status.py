@@ -24,8 +24,9 @@ class JobStatus:
   SUBMITTED = "SUBMITTED"
 
   # Meaningful sets of JobStatus values
+  ALL       = { CREATED, SUBMITTED, RUNNING, ERROR, COMPLETE }
   FINISHED  = { COMPLETE, ERROR }
-  NOT_ERR   = { SUBMITTED, RUNNING, COMPLETE }
+  NOT_ERR   = ALL - { ERROR }
 
   # Check whether a variable is a valid JobStatus
   @staticmethod
