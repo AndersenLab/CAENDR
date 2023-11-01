@@ -82,16 +82,11 @@ def try_submit(kind, user, data, no_cache):
     #   JobAlreadyScheduledError -> a job computing these results has already been scheduled
     if job.is_schedulable:
       job.schedule(no_cache=no_cache)
-      ready = False
-
-    # If job is not schedulable, its results are immediately available, i.e. ready now
-    else:
-      ready = True
 
     return {
       'cached':    False,
       'same_user': None,
-      'ready':     ready,
+      'ready':     job.is_finished(),
       'data_hash': job.report.data_hash,
       'id':        job.report.id,
     }, 200
@@ -107,7 +102,7 @@ def try_submit(kind, user, data, no_cache):
     return {
       'cached':    True,
       'same_user': True,
-      'ready':     job.report.is_finished(),
+      'ready':     job.is_finished(),
       'data_hash': job.report.data_hash,
       'id':        job.report.id,
       'message':   'You have already submitted this data file. Here\'s your previously generated report.',
@@ -123,7 +118,7 @@ def try_submit(kind, user, data, no_cache):
     return {
       'cached':    True,
       'same_user': False,
-      'ready':     job.report.is_finished(),
+      'ready':     job.is_finished(),
       'data_hash': job.report.data_hash,
       'id':        job.report.id,
       'message':   'A matching report was found.',
