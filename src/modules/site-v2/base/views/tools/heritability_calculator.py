@@ -17,7 +17,6 @@ import bleach
 from base.forms import HeritabilityForm
 from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user, user_is_admin
 from base.utils.tools import get_upload_err_msg, lookup_report, try_submit
-from base.utils.local_file import LocalFile
 from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 from caendr.models.error import (
@@ -32,6 +31,7 @@ from caendr.api.strain import get_strains
 from caendr.services.heritability_report import get_heritability_report, get_heritability_reports
 from caendr.utils.data import unique_id, get_object_hash
 from caendr.utils.env import get_env_var
+from caendr.utils.local_file import LocalFile
 from caendr.services.cloud.storage import get_blob, generate_blob_uri, BlobURISchema
 from caendr.services.persistent_logger import PersistentLogger
 
@@ -164,10 +164,10 @@ def submit():
 
   # Upload input file to server temporarily, and start the job
   try:
-    with LocalFile(request.files.get('file'), valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS) as filepath:
+    with LocalFile(request.files.get('file'), valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS) as local_file:
 
       # Package submission data together into dict
-      data = { 'label': label, 'species': species, 'filepath': filepath }
+      data = { 'label': label, 'species': species, 'file': local_file }
 
       # Try submitting the job & returning a JSON status message
       response, code = try_submit(HeritabilityReport.kind, user, data, no_cache)

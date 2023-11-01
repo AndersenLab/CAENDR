@@ -12,6 +12,7 @@ from caendr.models.error           import DataFormatError, EmptyReportDataError,
 from caendr.services.validate      import get_delimiter_from_filepath, validate_file, validate_num, validate_strain, validate_trait
 from caendr.utils.env              import get_env_var
 from caendr.utils.file             import get_file_hash
+from caendr.utils.local_file       import LocalFile
 
 from caendr.services.cloud.storage import download_blob_as_dataframe, BlobURISchema
 
@@ -60,24 +61,24 @@ class HeritabilityPipeline(JobPipeline):
   @classmethod
   def parse(cls, data, valid_file_extensions=None):
 
-    # Extract local filepath from the data object
+    # Extract local file from the data object
     # Note that we don't change the underlying object itself, as this would
     # affect the data dict in calling functions
-    local_path = data['filepath']
-    data = { k: v for k, v in data.items() if k != 'filepath' }
+    local_file: LocalFile = data['file']
+    data = { k: v for k, v in data.items() if k != 'file' }
 
     # Get the file format & delimiter
-    delimiter = get_delimiter_from_filepath(local_path, valid_file_extensions=valid_file_extensions)
+    delimiter = get_delimiter_from_filepath(local_file.local_path, valid_file_extensions=valid_file_extensions)
 
     # Validate each line in the file
     # Will raise an error if any problems are found, otherwise silently passes
-    validate_file(local_path, cls.validator_columns(data), delimiter=delimiter, unique_rows=True)
+    validate_file(local_file, cls.validator_columns(data), delimiter=delimiter, unique_rows=True)
 
     # Extra validation - check that five or more unique strains are provided
     unique_strains = set()
 
     # Open the file, skipping the header line
-    with open(local_path, 'r') as f:
+    with open(local_file, 'r') as f:
       csv_reader = csv.reader(f, delimiter=delimiter)
       next(csv_reader)
 
@@ -91,7 +92,7 @@ class HeritabilityPipeline(JobPipeline):
       raise DataFormatError("The heritability data contain fewer than five unique strains. Please be sure to measure trait values for at least five wild strains in at least three independent assays.")
 
     # Compute hash from file
-    data_hash = get_file_hash(local_path, length=32)
+    data_hash = get_file_hash(local_file, length=32)
 
     # Extract trait from table data
     data['trait'] = csv_row[2]
@@ -99,7 +100,7 @@ class HeritabilityPipeline(JobPipeline):
     return {
       'props': data,
       'hash':  data_hash,
-      'files': [local_path],
+      'files': [local_file],
     }
 
 

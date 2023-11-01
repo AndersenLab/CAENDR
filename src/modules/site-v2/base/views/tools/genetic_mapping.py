@@ -8,7 +8,6 @@ from flask import jsonify
 from base.forms import MappingForm
 from base.utils.auth  import get_jwt, jwt_required, admin_required, get_current_user, user_is_admin
 from base.utils.tools import get_upload_err_msg, lookup_report, try_submit
-from base.utils.local_file import LocalFile
 from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 from caendr.services.nemascan_mapping import get_mapping, get_mappings
@@ -20,6 +19,7 @@ from caendr.models.error import (
 )
 from caendr.models.status import JobStatus
 from caendr.utils.env import get_env_var
+from caendr.utils.local_file import LocalFile
 
 
 MODULE_SITE_BUCKET_ASSETS_NAME = get_env_var('MODULE_SITE_BUCKET_ASSETS_NAME')
@@ -107,10 +107,10 @@ def submit():
 
   # Upload input file to server temporarily, and start the job
   try:
-    with LocalFile(request.files.get('file'), valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS) as filepath:
+    with LocalFile(request.files.get('file'), valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS) as file:
 
       # Package submission data together into dict
-      data = { 'label': label, 'species': species, 'filepath': filepath }
+      data = { 'label': label, 'species': species, 'file': file }
 
       # Try submitting the job & returning a JSON status message
       response, code = try_submit(NemascanReport.kind, user, data, no_cache)

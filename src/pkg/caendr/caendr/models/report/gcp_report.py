@@ -7,6 +7,7 @@ from .bucketed_report import BucketedReport
 # Services
 from caendr.services.cloud.storage import check_blob_exists, get_blob_if_exists, get_blob_list, upload_blob_from_string, upload_blob_from_file, BlobURISchema, generate_blob_uri
 from caendr.utils.env              import get_env_var
+from caendr.utils.local_file       import LocalFile
 
 
 
@@ -114,6 +115,8 @@ class GCPReport(BucketedReport):
     for df in data_files:
       if isinstance(df, str):
         upload_blob_from_string(bucket, df, path)
+      elif isinstance(df, LocalFile):
+        upload_blob_from_file(bucket, df.local_path, path)
       else:
         upload_blob_from_file(bucket, df, path)
 

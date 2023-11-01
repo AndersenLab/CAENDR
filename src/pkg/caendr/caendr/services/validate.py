@@ -25,13 +25,13 @@ def get_delimiter_from_filepath(filepath=None, valid_file_extensions=None):
 
 
 
-def validate_file(local_path, columns, delimiter='\t', unique_rows=False):
+def validate_file(local_path_or_file, columns, delimiter='\t', unique_rows=False):
 
   num_cols = len(columns)
   rows = {}
 
   # Read first line from tsv
-  with open(local_path, 'r', encoding='utf-8-sig') as f:
+  with open(local_path_or_file, 'r', encoding='utf-8-sig') as f:
     csv_reader = csv.reader(f, delimiter=delimiter)
 
     # Get the header line, throwing an empty file error if not found

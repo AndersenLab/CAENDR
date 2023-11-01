@@ -12,6 +12,7 @@ from caendr.services.cloud.storage import BlobURISchema
 from caendr.services.validate      import get_delimiter_from_filepath, validate_file, validate_num, validate_strain
 from caendr.utils.env              import get_env_var
 from caendr.utils.file             import get_file_hash
+from caendr.utils.local_file       import LocalFile
 
 
 
@@ -68,24 +69,24 @@ class NemascanPipeline(JobPipeline):
   @classmethod
   def parse(cls, data, valid_file_extensions=None):
 
-    # Extract local filepath from the data object
+    # Extract local file from the data object
     # Note that we don't change the underlying object itself, as this would
     # affect the data dict in calling functions
-    local_path = data['filepath']
+    local_file: LocalFile = data['file']
     data = { k: v for k, v in data.items() if k != 'filepath' }
 
     # Get the file format & delimiter
-    delimiter = get_delimiter_from_filepath(local_path, valid_file_extensions=valid_file_extensions)
+    delimiter = get_delimiter_from_filepath(local_file.local_path, valid_file_extensions=valid_file_extensions)
 
     # Validate each line in the file
     # Will raise an error if any problems are found, otherwise silently passes
-    validate_file(local_path, cls.validator_columns(data), delimiter=delimiter, unique_rows=True)
+    validate_file(local_file, cls.validator_columns(data), delimiter=delimiter, unique_rows=True)
 
     # Compute hash from file
-    data_hash = get_file_hash(local_path, length=32)
+    data_hash = get_file_hash(local_file, length=32)
 
     # Open the file and extract the trait name from the header row
-    with open(local_path, 'r') as f:
+    with open(local_file, 'r') as f:
       csv_reader = csv.reader(f, delimiter=delimiter)
       header_row = next(csv_reader)
       data['trait'] = header_row[1]
@@ -93,7 +94,7 @@ class NemascanPipeline(JobPipeline):
     return {
       'props': data,
       'hash':  data_hash,
-      'files': [local_path],
+      'files': [local_file],
     }
 
 
