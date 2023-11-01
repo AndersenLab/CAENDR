@@ -86,7 +86,7 @@ class GCPRunner(Runner):
     # Split the job name into the kind and data ID
     _kind, data_id = cls.split_job_name( kind, op_name_fields['jobs'] )
 
-    if _kind != kind:
+    if _kind != make_dns_name_safe(kind):
       raise ValueError(f'Cannot initialize runner subclass {cls.__name__} with kind {kind} from operation with kind {_kind} (full name: {operation_name})')
 
     return cls(kind, data_id)
