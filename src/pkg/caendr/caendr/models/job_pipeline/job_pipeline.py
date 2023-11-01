@@ -254,7 +254,7 @@ class JobPipeline(ABC):
     '''
       The version of this job's container image.
     '''
-    return self.report.get_container()['tag']
+    return self.report.get_container()['container_tag']
 
 
 
