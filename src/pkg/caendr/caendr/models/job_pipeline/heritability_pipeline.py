@@ -170,8 +170,7 @@ class HeritabilityPipeline(JobPipeline):
       # Gather any vars from the parent class(es)
       **super().construct_environment(),
 
-      # Gather vars from managed objects
-      **self.runner.get_gcp_vars(),
+      # Gather standard data paths for a report
       **self.report.get_data_paths(schema=BlobURISchema.GS),
 
       # Define vars for this job
