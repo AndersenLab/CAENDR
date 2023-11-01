@@ -115,16 +115,15 @@ class HeritabilityPipeline(JobPipeline):
     data = download_blob_as_dataframe(blob)
 
     # If data file is empty, raise an error
-    if data is None:
+    if data is None or data.empty:
       raise EmptyReportDataError(self.report.id)
 
     # Parse data file
     data['AssayNumber'] = data['AssayNumber'].astype(int)
     data['label'] = data.apply(lambda x: f"{x['AssayNumber']}: {x['Value']}", 1)
-    data = data.to_dict('records')
 
     # Return parsed data
-    return data
+    return data.to_dict('records')
 
 
 
@@ -135,23 +134,18 @@ class HeritabilityPipeline(JobPipeline):
   def _parse_output(self, blob):
 
     # Download results
-    # TODO: will get_blob always return None if empty?
     result = download_blob_as_dataframe(blob)
 
     # If file exists but there are no results, raise an error
-    if result is None:
+    if result is None or result.empty:
       raise EmptyReportResultsError(self.report.id)
 
     # Convert to dict, using the 'type' column as the key instead of the index
     # Should create dictionary with two keys: 'broad-sense' and 'narrow-sense'
-    result = result.to_dict('records')
-    result = {
+    return {
       i['type']: { key: val for key, val in i.items() if key != 'type' }
-      for i in result
+      for i in result.to_dict('records')
     }
-
-    # Return parsed result
-    return result
 
 
 
