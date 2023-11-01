@@ -53,7 +53,7 @@ class NemascanReport(HashableEntity, ReportEntity):
   def _output_filename(self):
     report_path   = self.report_path
     report_prefix = self.output_directory(schema=BlobURISchema.PATH)[1]
-    if report_path.startswith(report_prefix):
+    if report_path and report_path.startswith(report_prefix):
       report_path = report_path[len(report_prefix):].lstrip('/')
     return report_path
 
@@ -107,7 +107,7 @@ class NemascanReport(HashableEntity, ReportEntity):
 
     # Get a list of all files with this report's prefix
     logger.debug(f'Looking for a Genetic Mapping HTML report for ID "{self.id}"')
-    result = list(get_blob_list(self.get_bucket_name(), self.get_report_blob_prefix()))
+    result = get_blob_list( *self.output_directory(REPORT_DATA_PREFIX, schema=BlobURISchema.PATH) )
     logger.debug(result)
 
     # Search the list for an HTML file, and return it if found
