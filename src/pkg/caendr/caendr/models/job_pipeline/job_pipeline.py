@@ -150,10 +150,11 @@ class JobPipeline(ABC):
     # Wrap the new report in a new JobPipeline object, upload the input data file(s) to data store, and return the new job
     job = cls(report=report)
 
-    # Check if input has already been uploaded
-    # This would occur if a different user has uploaded the same data to run the same job
-    if not no_cache and not job.report.check_input_exists():
-      job.report.upload( *parsed_data.get('files', []) )
+    # # Check if input has already been uploaded
+    # # This would occur if a different user has uploaded the same data to run the same job
+    # # TODO: Should we check if the two files are equal? What if there was a bug uploading it the first time?
+    # if not no_cache and not job.report.check_input_exists():
+    job.report.upload( *parsed_data.get('files', []) )
 
     # Check whether output data already exists for this data
     job._check_existing_job_execution()
