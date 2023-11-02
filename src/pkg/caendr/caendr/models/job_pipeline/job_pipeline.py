@@ -446,12 +446,6 @@ class JobPipeline(ABC):
       self.report.save()
       raise
 
-    # If result exists and report status hasn't been updated yet, update it
-    if result is not None:
-      if self.report.get_status() != JobStatus.ERROR:
-        self.report.set_status( JobStatus.COMPLETE )
-        self.report.save()
-
     # Return the result object
     return result
 

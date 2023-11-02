@@ -9,6 +9,7 @@ from caendr.models.task            import HeritabilityTask
 # Services
 from caendr.models.datastore       import Species
 from caendr.models.error           import DataFormatError, EmptyReportDataError, EmptyReportResultsError
+from caendr.models.status          import JobStatus
 from caendr.services.validate      import get_delimiter_from_filepath, validate_file, validate_num, validate_strain, validate_trait
 from caendr.utils.env              import get_env_var
 from caendr.utils.file             import get_file_hash
@@ -130,6 +131,19 @@ class HeritabilityPipeline(JobPipeline):
   #
   # Fetching & Parsing Output
   #
+
+
+  def fetch_output(self, raw: bool = False):
+    result = super().fetch_output(raw=raw)
+
+    # If result exists and report status hasn't been marked as finished yet, update it
+    if result is not None and not self.is_finished():
+      self.report.set_status( JobStatus.COMPLETE )
+      self.report.save()
+
+    # Return the result
+    return result
+
 
   def _parse_output(self, blob):
 

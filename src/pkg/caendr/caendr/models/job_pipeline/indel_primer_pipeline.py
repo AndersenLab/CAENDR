@@ -10,6 +10,7 @@ from caendr.models.task            import IndelPrimerTask
 # Services
 from caendr.models.datastore       import Species
 from caendr.models.error           import EmptyReportDataError, EmptyReportResultsError
+from caendr.models.status          import JobStatus
 from caendr.services.cloud.storage import download_blob_as_json, download_blob_as_dataframe, BlobURISchema
 from caendr.utils.data             import get_object_hash
 from caendr.utils.env              import get_env_var
@@ -84,6 +85,19 @@ class IndelFinderPipeline(JobPipeline):
   #
   # Fetching & Parsing Output
   #
+
+
+  def fetch_output(self, raw: bool = False):
+    result = super().fetch_output(raw=raw)
+
+    # If result exists and report status hasn't been marked as finished yet, update it
+    if result is not None and not self.is_finished():
+      self.report.set_status( JobStatus.COMPLETE )
+      self.report.save()
+
+    # Return the result
+    return result
+
 
   def _parse_output(self, blob):
 
