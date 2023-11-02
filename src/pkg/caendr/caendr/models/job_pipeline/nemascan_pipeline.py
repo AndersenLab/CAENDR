@@ -53,7 +53,7 @@ class NemascanPipeline(JobPipeline):
     # Do this so we can explicitly reference "trait" values for mapping only
     duplicate_strain_formatter = lambda prev_line, curr_line: \
       f'Lines #{ prev_line } and #{ curr_line } contain duplicate trait values for the same strain. Please ensure that only one unique trait value exists per strain.'
-  
+
     return [
       {
         'header': 'strain',
