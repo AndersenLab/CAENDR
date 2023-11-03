@@ -95,7 +95,16 @@ class GCPReport(BucketedReport):
   # Implementing method(s) in parent class
   #
 
+  # The expected number of data files
+  # May be overwritten in subclass to add a length check
+  _num_input_files = None
+
+  # Implement parent method
   def upload(self, *data_files):
+
+    # If this report type expects a specific number of input files, check how many were provided
+    if self._num_input_files is not None and len(data_files) != self._num_input_files:
+      raise ValueError(f'Expected {self._num_input_files} data file(s) to upload for job of type {self.kind}, got {len(data_files)} file(s) instead.')
 
     # Get the location of the input directory
     bucket, path = self.input_filepath(schema = BlobURISchema.PATH)

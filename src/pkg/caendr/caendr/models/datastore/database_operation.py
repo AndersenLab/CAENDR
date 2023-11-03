@@ -80,12 +80,9 @@ class DatabaseOperation(ReportEntity):
   # Input & Output
   #
 
+  _num_input_files = 0
   _input_filename  = None
   _output_filename = None
-
-  def upload(self, *data_files):
-    if len(data_files) != 0:
-      raise ValueError(f'No data files should be uploaded for job of type {self.kind}')
 
 
   #

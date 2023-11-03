@@ -38,13 +38,9 @@ class HeritabilityReport(HashableEntity, ReportEntity):
   # Input & Output
   #
 
+  _num_input_files = 1
   _input_filename  = 'data.tsv'
   _output_filename = 'heritability_result.tsv'
-
-  def upload(self, *data_files):
-    if len(data_files) != 1:
-      raise ValueError(f'Exactly one data file should be uploaded for job of type {self.kind}')
-    return super().upload(*data_files)
 
 
   #

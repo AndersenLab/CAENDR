@@ -54,6 +54,7 @@ class NemascanReport(HashableEntity, ReportEntity):
   # Input & Output
   #
 
+  _num_input_files = 1
   _input_filename  = 'data.tsv'
 
   # Use report_path property to get the filename of the report within the output directory
@@ -64,11 +65,6 @@ class NemascanReport(HashableEntity, ReportEntity):
     if report_path and report_path.startswith(report_prefix):
       report_path = report_path[len(report_prefix):].lstrip('/')
     return report_path
-
-  def upload(self, *data_files):
-    if len(data_files) != 1:
-      raise ValueError(f'Exactly one data file should be uploaded for job of type {self.kind}')
-    return super().upload(*data_files)
 
 
   ## Properties List ##
