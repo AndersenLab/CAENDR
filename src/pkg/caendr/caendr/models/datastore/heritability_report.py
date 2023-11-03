@@ -1,13 +1,7 @@
 from caendr.models.datastore import HashableEntity, ReportEntity
 
-from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
-from caendr.utils.env import get_env_var
+from caendr.services.cloud.storage import BlobURISchema
 
-
-
-# TODO: Should this bucket be the data path?
-#       Should Nemascan point here too, or should this point to the Private bucket like Nemascan?
-DATA_BUCKET_NAME = get_env_var("MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME")
 
 
 class HeritabilityReport(HashableEntity, ReportEntity):
@@ -28,10 +22,7 @@ class HeritabilityReport(HashableEntity, ReportEntity):
   # Path
   #
 
-  @property
-  def _data_bucket(self) -> str:
-    return DATA_BUCKET_NAME
-
+  # TODO: Standardize data prefix for all tools
   @property
   def _data_prefix(self):
     return 'heritability'

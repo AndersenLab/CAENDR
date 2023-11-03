@@ -10,11 +10,10 @@ from caendr.utils.env              import get_env_var
 from caendr.utils.local_file       import LocalFile
 
 
-
-MODULE_SITE_BUCKET_PRIVATE_NAME = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
-MODULE_SITE_BUCKET_PUBLIC_NAME  = get_env_var('MODULE_SITE_BUCKET_PUBLIC_NAME')
-
-MODULE_API_DATA_BUCKET_NAME     = get_env_var('MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME')
+# Bucket names
+PRIVATE_BUCKET_NAME = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
+DATA_BUCKET_NAME    = get_env_var('MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME')
+WORK_BUCKET_NAME    = get_env_var("MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME")
 
 
 
@@ -49,29 +48,19 @@ class GCPReport(BucketedReport):
 
   #
   # Bucket names
-  # By default, all use the private GCP bucket.
   #
 
   @property
   def _report_bucket(self) -> str:
-    '''
-      Bucket where any data specific to report is stored.
-    '''
-    return MODULE_SITE_BUCKET_PRIVATE_NAME
+    return PRIVATE_BUCKET_NAME
 
   @property
   def _data_bucket(self) -> str:
-    '''
-      Bucket where any data specific to tool but NOT to individual report is stored.
-    '''
-    return MODULE_SITE_BUCKET_PRIVATE_NAME
+    return DATA_BUCKET_NAME
 
   @property
   def _work_bucket(self) -> str:
-    '''
-      Bucket to use as temp storage for work.
-    '''
-    return MODULE_SITE_BUCKET_PRIVATE_NAME
+    return WORK_BUCKET_NAME
 
 
   #

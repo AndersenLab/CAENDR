@@ -1,10 +1,12 @@
 from caendr.services.logger import logger
 
-from caendr.models.datastore import HashableEntity, ReportEntity
-from caendr.models.status import JobStatus
-from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, check_blob_exists, get_blob_list
+from caendr.models.datastore       import HashableEntity, ReportEntity
+from caendr.models.status          import JobStatus
+from caendr.services.cloud.storage import BlobURISchema, check_blob_exists, get_blob_list
+from caendr.utils.env              import get_env_var
 
 
+PRIVATE_BUCKET_NAME = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
 REPORT_DATA_PREFIX = 'Reports/NemaScan_Report_'
 
 
@@ -27,6 +29,12 @@ class NemascanReport(HashableEntity, ReportEntity):
   # Paths
   #
 
+  # TODO: Move data files to Data bucket
+  @property
+  def _data_bucket(self) -> str:
+    return PRIVATE_BUCKET_NAME
+
+  # TODO: Standardize data prefix for all tools
   @property
   def _data_prefix(self):
     return 'tools/nemascan/input_data'
