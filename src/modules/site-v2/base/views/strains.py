@@ -225,7 +225,7 @@ def order_page_post():
           return redirect(url_for('request_strains.order_page_index'))
         
         if form.shipping_service.data == 'Flat Rate Shipping':
-          cartItems.append({'name': 'Flat Rate Shipping', 'species': ''})
+          users_cart.add_item({'name': 'Flat Rate Shipping', 'species': ''})
         for item in cartItems:
           item_price = Cart.get_price(item)
           item['price'] = item_price
@@ -342,9 +342,8 @@ def order_confirmation(invoice_hash):
     abort(404)
 
   # Parse the individual items in the order into a list of dicts
-  order_obj["items"] = [ x for x in order_obj['items'].split("\n") ]
   items = []
-  for row in order_obj['items']:
+  for row in order_obj['items'].split("\n"):
     arr = row.split(', ')
     item_dict = {}
     for x in arr:
