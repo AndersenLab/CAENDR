@@ -157,7 +157,8 @@ class JobPipeline(ABC):
     job.report.upload( *parsed_data.get('files', []) )
 
     # Check whether output data already exists for this data
-    job._check_existing_job_execution()
+    if not no_cache:
+      job._check_existing_job_execution()
 
     # Return the new JobPipeline object
     return job
