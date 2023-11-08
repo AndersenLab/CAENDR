@@ -24,6 +24,8 @@ def execute_operation(app, db, DB_OP, species=None):
   elif DB_OP == 'DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS':
     drop_and_populate_strain_annotated_variants(app, db, species)
 
+  # TODO: add clause for DROP_AND_POPULATE_PHENOTYPE_DB
+
   elif DB_OP == 'TEST_ECHO':
     result, message = health_database_status()
     if not result:
@@ -84,6 +86,9 @@ def drop_and_populate_strain_annotated_variants(app, db, species):
   # Fetch and load data using ETL Manager
   logger.info("Loading strain annotated variants...")
   etl_manager.load_strain_annotated_variants(db, species)
+
+
+# TODO: copy one of the above functions to create drop_and_populate_phenotype_db( ... )
 
 
 def drop_and_populate_all_tables(app, db, species):

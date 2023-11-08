@@ -166,3 +166,22 @@ def load_strain_annotated_variants(self, db, species=None):
         fetch_funcs = [ self.dataset_manager.fetch_sva_db ],
         species     = species
     )
+
+
+def load_phenotype_db(self, db, species=None):
+    '''
+      Extracts phenotype database information from GCP file and loads it into the CaeNDR database.
+
+      Args:
+        db (SQLAlchemy): [SQLAlchemy db instance to insert into.]
+    '''
+    logger.info('Loading strain variant annotated csv')
+    self.load_table(
+        db,
+        table       = ...,  # TODO: your SQL table class
+        generator   = ...,  # TODO: your parsing function defined in phenotype_db.py (the one in this folder)
+        fetch_funcs = [     # TODO: list all of your fetch functions defined in _db_internal.py
+            self.dataset_manager.FUNCTION_NAME,
+        ],
+        species     = species
+    )
