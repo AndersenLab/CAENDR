@@ -36,6 +36,7 @@ from .profile             import Profile
 from .markdown            import Markdown
 from .browser_track       import BrowserTrackDefault  # Subclasses FileRecordEntity (from BrowserTrack)
 from .browser_track       import BrowserTrackTemplate # Subclasses FileRecordEntity (from BrowserTrack)
+from .trait_file          import TraitFile            # Subclasses FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEntity
 
 
 def get_class_by_kind(kind):
