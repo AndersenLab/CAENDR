@@ -90,7 +90,7 @@ class DatabaseOperationPipeline(JobPipeline):
 
     # Get list of all filenames in db ops bucket
     all_files = [
-      file.name for file in get_blob_list(DB_OPERATIONS_BUCKET_NAME, '') if not file.name.endswith('/')
+      file.name for file in get_blob_list(DB_OPERATIONS_BUCKET_NAME) if not file.name.endswith('/')
     ]
 
     # Loop through all required files, tracking those that don't appear in the database

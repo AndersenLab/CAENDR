@@ -34,27 +34,37 @@ def get_google_storage_credentials():
 # Check blobs
 #
 
-def get_blob(bucket_name, blob_name) -> Blob:
-  logger.debug(f'get_blob(bucket_name={bucket_name}, blob_name={blob_name})')
-  bucket = storageClient.get_bucket(bucket_name)
-  return bucket.get_blob(blob_name)
+def join_path(*path: str, sep: str = '/'):
+  '''
+    Join a list of path elements into a single path.
+    Filters out empty elements, and strips the separator character (default `/`) before joining to avoid concatenating multiple separators.
+
+    If all elements are empty, results in an empty string.
+  '''
+  return sep.join([ p.strip(sep) for p in path if p ])
 
 
-def check_blob_exists(bucket_name, blob_name) -> bool:
-  logger.debug(f'check_blob_exists(bucket_name={bucket_name}, blob_name={blob_name})')
+def get_blob(bucket_name: str, *path: str) -> Blob:
+  logger.debug(f'get_blob(bucket_name={bucket_name}, path={path})')
   bucket = storageClient.get_bucket(bucket_name)
-  blob = bucket.get_blob(blob_name)
+  return bucket.get_blob( join_path(*path) )
+
+
+def check_blob_exists(bucket_name: str, *path: str) -> bool:
+  logger.debug(f'check_blob_exists(bucket_name={bucket_name}, path={path})')
+  bucket = storageClient.get_bucket(bucket_name)
+  blob = bucket.get_blob( join_path(*path) )
   try:
     return blob.exists()
   except:
     return False
 
 
-def get_blob_if_exists(bucket_name, blob_name, fallback=None) -> Optional[Blob]:
+def get_blob_if_exists(bucket_name: str, *path: str, fallback=None) -> Optional[Blob]:
   '''
     Get the given blob if it exists, otherwise return the fallback value.
   '''
-  blob = get_blob(bucket_name, blob_name)
+  blob = get_blob(bucket_name, *path)
   try:
     if blob.exists():
       return blob
@@ -62,10 +72,13 @@ def get_blob_if_exists(bucket_name, blob_name, fallback=None) -> Optional[Blob]:
     return fallback
 
 
-def get_blob_list(bucket_name, prefix) -> List[Blob]:
-  ''' Returns a list of all blobs with 'prefix' (directory) in 'bucket_name' '''
+def get_blob_list(bucket_name: str, *prefix: str) -> List[Blob]:
+  '''
+    Returns a list of all blobs with `prefix` (directory) in `bucket_name`.
+    If no `prefix` is provided (or all values are empty), lists all blobs in the bucket.
+  '''
   bucket = storageClient.get_bucket(bucket_name)
-  items = bucket.list_blobs(prefix=prefix)
+  items = bucket.list_blobs(prefix=join_path(*prefix))
   return list(items)
 
 
