@@ -12,6 +12,7 @@ from .species             import Species, SPECIES_LIST # Imports WormbaseVersion
 # Abstract template classes (add basic field(s) & functionality)
 from .file_record_entity  import FileRecordEntity
 from .hashable_entity     import HashableEntity
+from .publishable_entity  import PublishableEntity
 from .species_entity      import SpeciesEntity       # Imports Species
 from .status_entity       import StatusEntity
 from .user_owned_entity   import UserOwnedEntity     # Imports User
