@@ -10,19 +10,19 @@ from .dataset_release     import DatasetRelease
 from .wormbase            import WormbaseVersion, WormbaseProjectNumber
 from .species             import Species, SPECIES_LIST # Imports WormbaseVersion, WormbaseProjectNumber
 
-# Intermediate subclasses (primarily for tools)
-from .status_entity       import StatusEntity
-from .job_entity          import JobEntity           # Subclasses StatusEntity; imports Container
-from .user_owned_entity   import UserOwnedEntity     # Imports User
-from .hashable_entity     import HashableEntity
-from .report_entity       import ReportEntity        # Subclasses JobEntity, UserOwnedEntity, as well as GCPReport
+# Abstract template classes (add basic field(s) & functionality)
 from .file_record_entity  import FileRecordEntity
+from .hashable_entity     import HashableEntity
+from .status_entity       import StatusEntity
+from .user_owned_entity   import UserOwnedEntity     # Imports User
+
+# Job template classes
+from .job_entity          import JobEntity           # Subclasses StatusEntity; imports Container
+from .report_entity       import ReportEntity        # Subclasses JobEntity, UserOwnedEntity, as well as GCPReport
 
 # Jobs
 from .database_operation  import DatabaseOperation   # Subclasses ReportEntity
 from .gene_browser_tracks import GeneBrowserTracks   # Subclasses JobEntity  (DEPRECATED)
-
-# Tools
 from .indel_primer        import IndelPrimerReport   # Subclasses ReportEntity, HashableEntity; imports DatasetRelease, Species
 from .heritability_report import HeritabilityReport  # Subclasses ReportEntity, HashableEntity
 from .nemascan_mapping    import NemascanReport      # Subclasses ReportEntity, HashableEntity
