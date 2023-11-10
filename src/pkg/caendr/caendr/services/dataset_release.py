@@ -31,7 +31,7 @@ def get_all_dataset_releases(keys_only=False, order=None, placeholder=True, spec
     return [ _get_placeholder_dataset_release() ]
 
   if species is not None:
-    releases = [ r for r in releases if r['species'] == species]
+    releases = [ r for r in releases if r['species'].name == species]
 
   # Otherwise, return the retrieved releases
   return releases

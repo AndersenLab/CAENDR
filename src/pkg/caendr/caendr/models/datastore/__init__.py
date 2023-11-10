@@ -6,15 +6,17 @@ from .entity              import Entity
 from .container           import Container
 from .user                import User
 from .pipeline_operation  import PipelineOperation
-from .dataset_release     import DatasetRelease
 from .wormbase            import WormbaseVersion, WormbaseProjectNumber
 from .species             import Species, SPECIES_LIST # Imports WormbaseVersion, WormbaseProjectNumber
 
 # Abstract template classes (add basic field(s) & functionality)
 from .file_record_entity  import FileRecordEntity
 from .hashable_entity     import HashableEntity
+from .species_entity      import SpeciesEntity       # Imports Species
 from .status_entity       import StatusEntity
 from .user_owned_entity   import UserOwnedEntity     # Imports User
+
+from .dataset_release     import DatasetRelease      # Subclasses SpeciesSpecificEntity; Imports Species
 
 # Job template classes
 from .job_entity          import JobEntity           # Subclasses StatusEntity; imports Container
