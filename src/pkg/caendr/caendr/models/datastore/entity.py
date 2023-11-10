@@ -157,25 +157,15 @@ class Entity(object):
     '''
     now = datetime.now(timezone.utc)
 
-    # Get dict of all meta properties
-    meta_props = {
-      prop: getattr(self, prop) for prop in self.get_props_set_meta()
-    }
+    # Get serialized dict of all props and meta props
+    props = self.serialize()
 
     # Update timestamps
     if not self._exists:
-      meta_props['created_on'] = now
-    meta_props['modified_on'] = now
+      props['created_on'] = now
+    props['modified_on'] = now
 
-    # Combine props dict with meta properties defined above
-    props = { **dict(self), **meta_props }
-
-    # Map enums to raw strings before saving
-    for key, val in props.items():
-      if isinstance(val, Enum):
-        props[key] = val.name
-
-    # Save the entity in datastore
+    # Save the serialized entity in datastore
     save_ds_entity(self.kind, self.name, exclude_from_indexes=self.exclude_from_indexes, **props)
 
 
@@ -238,6 +228,31 @@ class Entity(object):
     '''
     props = self.get_props_set()
     return ( (k, self[k]) for k in props if self[k] is not None )
+
+
+  def serialize(self, include_meta=True):
+    '''
+      Get a `dict` of all props in the entity, mapped to serializable values.
+
+      Optionally includes meta properties.
+      Ignores `None` values.
+    '''
+
+    # Start with dict of props
+    props = dict(self)
+
+    # Add meta properties, if applicable
+    if include_meta:
+      props.update({
+        prop: getattr(self, prop) for prop in self.get_props_set_meta()
+      })
+
+    # Map non-serializable values to raw strings
+    for key, val in props.items():
+      if isinstance(val, Enum):
+        props[key] = val.name
+
+    return props
 
 
 

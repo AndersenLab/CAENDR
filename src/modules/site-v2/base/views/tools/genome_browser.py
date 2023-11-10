@@ -51,11 +51,11 @@ def get_tracks():
   '''
   return jsonify({
     'default': {
-      track['name']: json.dumps( dict(track) )
+      track['name']: json.dumps( track.serialize() )
         for track in BrowserTrackDefault.query_ds()
     },
     'templates': {
-      track['template_name']: json.dumps( dict(track) )
+      track['template_name']: json.dumps( track.serialize() )
         for track in BrowserTrackTemplate.query_ds()
     },
   })
