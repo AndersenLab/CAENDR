@@ -12,8 +12,7 @@ def get_release_bucket():
 
 
 def get_browser_tracks_path(release_version=None):
-  _, release_path = BrowserTrack.release_path()
-  return release_path
+  return BrowserTrack.release_prefix()
 
 
 # TODO: Does keys_only make sense as a parameter? Seems like it was originally used to limit the ds query

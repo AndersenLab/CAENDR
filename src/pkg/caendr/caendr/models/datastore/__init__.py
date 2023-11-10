@@ -16,6 +16,7 @@ from .job_entity          import JobEntity           # Subclasses StatusEntity; 
 from .user_owned_entity   import UserOwnedEntity     # Imports User
 from .hashable_entity     import HashableEntity
 from .report_entity       import ReportEntity        # Subclasses JobEntity, UserOwnedEntity, as well as GCPReport
+from .file_record_entity  import FileRecordEntity
 
 # Jobs
 from .database_operation  import DatabaseOperation   # Subclasses ReportEntity
@@ -30,6 +31,8 @@ from .nemascan_mapping    import NemascanReport      # Subclasses ReportEntity, 
 from .database_operation  import DbOp
 from .profile             import Profile
 from .markdown            import Markdown
+from .browser_track       import BrowserTrackDefault  # Subclasses FileRecordEntity (from BrowserTrack)
+from .browser_track       import BrowserTrackTemplate # Subclasses FileRecordEntity (from BrowserTrack)
 
 
 def get_class_by_kind(kind):

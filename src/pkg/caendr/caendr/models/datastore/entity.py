@@ -7,6 +7,7 @@ from caendr.services.logger import logger
 
 from caendr.models.error import NonUniqueEntity, NotFoundError
 from caendr.services.cloud.datastore import get_ds_entity, save_ds_entity, query_ds_entities
+from caendr.utils.tokens import TokenizedString
 
 
 
@@ -248,9 +249,13 @@ class Entity(object):
       })
 
     # Map non-serializable values to raw strings
+    # TODO: Can we pull this out somewhere?
+    #       E.g. assigning "types" to props and handling automatically, and/or using _get/_set_raw_prop?
     for key, val in props.items():
       if isinstance(val, Enum):
         props[key] = val.name
+      elif isinstance(val, TokenizedString):
+        props[key] = val.raw_string
 
     return props
 
