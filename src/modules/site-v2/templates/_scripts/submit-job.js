@@ -18,7 +18,11 @@ $.ajaxSetup({
   If defining with `as_form_data` = True, must include `ajax_setup` on the page (defined above).
 #}
 {% macro def_submit_job(tool_name, as_form_data=false, func_name='submit_job') %}
-function {{func_name}}(data, modal_id, new_tab=false, propagate_error=true) {
+function {{func_name}}(data, modal_id, config={}) {
+
+  // Extract configuration settings w default values
+  const new_tab         = config.hasOwnProperty('new_tab')         ? config['new_tab']         : false;
+  const propagate_error = config.hasOwnProperty('propagate_error') ? config['propagate_error'] : true;
 
   // Gather URL variable(s)
   let url_vars = [];

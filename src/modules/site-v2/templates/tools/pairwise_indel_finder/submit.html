@@ -549,7 +549,7 @@ function generate_primers(e) {
   }
 
   // Submit the job, opening results in a new tab if applicable
-  submit_job(data, '#generate-primers-modal', true, false)
+  submit_job(data, '#generate-primers-modal', {'new_tab': true, 'propagate_error': false})
     .done(() => {
       $(this).text("Submitted");
       $(this).prop('onclick', null).off('click');
