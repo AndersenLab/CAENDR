@@ -13,6 +13,7 @@ from .discovery import use_service
 
 
 GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME = get_env_var('GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME')
+GOOGLE_ANALYTICS_PROPERTY_ID = get_env_var('GOOGLE_ANALYTICS_PROPERTY_ID')
 
 
 def get_analytics_credentials():
@@ -27,13 +28,13 @@ def get_analytics_credentials():
 @use_service('analyticsdata', 'v1beta', credentials=get_analytics_credentials)
 def get_weekly_visits_ga4(SERVICE):
   """ Get reports from Google Analytics 4 """
-
-  property_id = '361534565'
-  property = f"properties/{property_id}"
+  
+  GOOGLE_ANALYTICS_V4_START_DATE = "2023-04-01"
+  property = f"properties/{GOOGLE_ANALYTICS_PROPERTY_ID}"
   request = {
     "dateRanges": [
     {
-        "startDate": "2023-04-01",
+        "startDate": GOOGLE_ANALYTICS_V4_START_DATE,
         "endDate": "today"
     }
     ],
