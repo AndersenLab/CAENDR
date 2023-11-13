@@ -52,18 +52,14 @@ class DeletableEntity(Entity):
 
     # If no matching entities found, return None
     if len(matches) == 0:
-      if required:
-        raise NotFoundError(cls.kind, {key: val})
-      else:
-        return None
+      raise NotFoundError(cls.kind, {key: val}) if required else None
 
     # If looking up for unique entity and multiple were found, raise an error
     elif len(matches) > 1 and unique:
       raise NonUniqueEntity( cls.kind, key, val, matches )
     
     # If one or more entities were found and 'unique' is set to False, return all of them
-    else:
-      return matches
+    return matches
 
 
   def soft_delete(self):
