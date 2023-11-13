@@ -18,12 +18,12 @@ $.ajaxSetup({
   If defining with `as_form_data` = True, must include `ajax_setup` on the page (defined above).
 #}
 {% macro def_submit_job(tool_name, as_form_data=false, func_name='submit_job') %}
-function {{func_name}}(data, modal_id, new_tab=false, propagate_err=true) {
+function {{func_name}}(data, modal_id, new_tab=false, propagate_error=true) {
 
   // Gather URL variable(s)
   let url_vars = [];
-  if (propagate_err) {
-    url_vars.push('reloadonerr=0');
+  if (propagate_error) {
+    url_vars.push('reloadonerror=0');
   }
   {%- if session["is_admin"] %}
   if ($('#no_cache_checkbox').prop('checked')) {
@@ -69,7 +69,7 @@ function {{func_name}}(data, modal_id, new_tab=false, propagate_err=true) {
       if (error.responseJSON) {
         const message = error.responseJSON.message;
         if (message) {
-          if (!propagate_err) window.location.reload();
+          if (!propagate_error) window.location.reload();
         } else {
           console.error(error);
         }

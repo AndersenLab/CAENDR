@@ -128,7 +128,7 @@ function flash_message(message, full_msg_link=null, full_msg_body=null) {
     node.firstElementChild.innerText += ' ';
 
     // Create a unique ID to link the trigger & collapse elements
-    const id = `err-dropdown-${(new Date()).getTime()}`;
+    const id = `error-dropdown-${(new Date()).getTime()}`;
 
     // Create a link to open the full message
     const full_msg_link_el = create_node(`<a data-bs-toggle="collapse" href="#${id}" role="button" aria-expanded="false" aria-controls="${id}"></a>`);
