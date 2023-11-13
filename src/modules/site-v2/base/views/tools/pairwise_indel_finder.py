@@ -243,7 +243,7 @@ def submit():
   response, code = try_submit(IndelPrimer, user, data, no_cache)
 
   # If there was an error, flash it
-  if not code == 200:
+  if code != 200 and int(request.args.get('reloadonerror', 1)):
     flash(response['message'], 'danger')
 
   # Return the response
