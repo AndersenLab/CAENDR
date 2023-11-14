@@ -322,7 +322,11 @@ def order_page_index():
   else:
     for item in cartItems:
       item['price'] = Cart.get_price(item)
+      species = item.get('species')
+      item['species_short_name'] = Species.from_name(species).short_name
     totalPrice = sum(item['price'] for item in cartItems)
+
+
 
     return render_template('order/order.html', **{
       'tool_alt_parent_breadcrumb': {"title": "Strain Catalog", "url": url_for('request_strains.request_strains')},
@@ -351,6 +355,11 @@ def order_confirmation(invoice_hash):
       if k == 'price':
         v = float(v)
       item_dict[k] = v
+    species = item_dict.get('species')
+    if species == '':
+      item_dict['species_short_name'] = ''
+    else:
+      item_dict['species_short_name'] = Species.from_name(species).short_name
     items.append(item_dict)
 
   return render_template('order/order_confirm.html', **({
