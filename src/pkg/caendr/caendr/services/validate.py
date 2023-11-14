@@ -58,15 +58,15 @@ def validate_file(local_path, columns, delimiter='\t', unique_rows=False):
       #     raise DataFormatError(f'The file contains an incorrect column header. { target_header["make_err_msg"]( col + 1, csv_headings[col] ) }', 1)
 
     # If one header was incorrect, flag it
-      if len(invalid_headers) == 1:
-        col = invalid_headers[0]
-        raise DataFormatError(f'The file contains an incorrect column header. Column #{ col + 1 } should be { columns[col]["header"] }.', 1)
+    if len(invalid_headers) == 1:
+      col = invalid_headers[0]
+      raise DataFormatError(f'The file contains an incorrect column header. Column #{ col + 1 } should be { columns[col]["header"] }.', 1)
 
-      # If multiple headers were incorrect, flag all of them at once
-      elif len(invalid_headers) > 1:
-        cs = join_commas_and([ f'#{c + 1}' for c in invalid_headers ])
-        hs = join_commas_and([ c["header"] for c in columns ])
-        raise DataFormatError(f'The file contains incorrect headers in columns { cs }. The full set of headers should be: { hs }.', 1)
+    # If multiple headers were incorrect, flag all of them at once
+    elif len(invalid_headers) > 1:
+      cs = join_commas_and([ f'#{c + 1}' for c in invalid_headers ])
+      hs = join_commas_and([ c["header"] for c in columns ])
+      raise DataFormatError(f'The file contains incorrect headers in columns { cs }. The full set of headers should be: { hs }.', 1)
 
     # Loop through all remaining lines in the file
     has_data = False
