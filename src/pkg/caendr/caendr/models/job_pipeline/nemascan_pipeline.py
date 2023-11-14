@@ -8,8 +8,9 @@ from caendr.models.run             import NemascanRunner
 
 # Services
 from caendr.models.datastore       import Species
-from caendr.services.validate      import get_delimiter_from_filepath, validate_file, NumberValidator, StrainValidator
+from caendr.services.validate      import validate_file, NumberValidator, StrainValidator
 from caendr.services.cloud.storage import upload_blob_from_file
+from caendr.utils.data             import get_delimiter_from_filepath
 from caendr.utils.env              import get_env_var
 from caendr.utils.file             import get_file_hash
 

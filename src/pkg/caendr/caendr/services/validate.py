@@ -2,28 +2,10 @@ from abc import ABC, abstractmethod
 import csv
 from typing import Callable, Optional, Union
 
-from caendr.services.logger import logger
-
 from caendr.models.error import DataFormatError
 from caendr.api.strain   import query_strains
 from caendr.api.isotype  import get_distinct_isotypes
-from caendr.utils.data   import get_file_format, join_commas_and
-from caendr.utils.env    import get_env_var
-
-
-
-INDEL_PRIMER_CONTAINER_NAME = get_env_var('INDEL_PRIMER_CONTAINER_NAME')
-HERITABILITY_CONTAINER_NAME = get_env_var('HERITABILITY_CONTAINER_NAME')
-NEMASCAN_NXF_CONTAINER_NAME = get_env_var('NEMASCAN_NXF_CONTAINER_NAME')
-
-
-
-def get_delimiter_from_filepath(filepath=None, valid_file_extensions=None):
-  valid_file_extensions = valid_file_extensions or {'csv'}
-  if filepath:
-    file_format = get_file_format(filepath[-3:], valid_formats=valid_file_extensions)
-    if file_format:
-      return file_format['sep']
+from caendr.utils.data   import join_commas_and
 
 
 
