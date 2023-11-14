@@ -51,7 +51,11 @@ class Cart(DeletableEntity):
 
     # If a user doesn't have a cart, create one
     except NotFoundError:
-      return Cart(**{'user': email, 'items': [], 'version': 0})
+      return Cart.create_for_user(email)
+
+  @classmethod
+  def create_for_user(cls, email):
+    return cls(**{'user': email})
 
 
   @classmethod
