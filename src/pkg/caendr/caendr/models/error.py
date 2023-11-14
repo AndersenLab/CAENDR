@@ -137,9 +137,11 @@ class DuplicateTaskError(InternalError):
 
 class DataFormatError(InternalError):
   description = "Error parsing data with expected format"
-  def __init__(self, msg, line: int=None):
+  def __init__(self, msg, line: int=None, full_msg_body: str=None, full_msg_link: str=None):
     self.msg  = msg.strip()
     self.line = line
+    self.full_msg_body = full_msg_body
+    self.full_msg_link = full_msg_link
     super().__init__()
 
 class PreflightCheckError(InternalError):

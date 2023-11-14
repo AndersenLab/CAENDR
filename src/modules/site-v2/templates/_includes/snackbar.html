@@ -1,6 +1,5 @@
+<div id="alert-container">
 {% for category, msg in get_flashed_messages(with_categories=true) %}
-    <div class="container alert alert-{{ category }} alert-dismissible fade show pt-3 my-5 fw-bold text-center">
-        <p>{{ msg }}</p>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+    {% include '_includes/alert.html' %}
 {% endfor %}
+</div>

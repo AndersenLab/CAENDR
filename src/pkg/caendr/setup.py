@@ -16,6 +16,7 @@ setup(
     'google-api-python-client',
     'google-cloud-datastore',
     'google_cloud_logging',
+    'google-cloud-run',
     'google-cloud-secret-manager',
     'google-cloud-storage',
     'google-cloud-tasks',

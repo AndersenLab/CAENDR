@@ -111,3 +111,42 @@ def get_file_format(file_ext, valid_formats=None):
 
   # If none matched, return None
   return None
+
+
+
+
+def join_with_final(text, sep='', final=None, final_if_two=None):
+  '''
+    Like string join, but with finer control. See arguments for details.
+
+    Arguments:
+      text (list): list of strings to be joined
+      sep (str): The default separator between elements.
+      final (str): The separator between the penultimate and final elements.
+      final_if_two (str): A special separator to use if there are exactly two elements.
+  '''
+  if len(text) == 2 and final_if_two is not None:
+    return final_if_two.join(text)
+  if final:
+    return final.join([ x for x in [sep.join(text[:-1]), *text[-1:]] if x ])
+  return sep.join(text)
+
+
+def join_commas_and(text, truncate=None):
+  '''
+    Join a list like written English, using commas and "and".
+    Supports list truncation, e.g. "x, y, z, and 3 more"
+
+    Cases:
+      - If there is one element, returns that element as-is
+      - If there are 2 elements, returns "x and y"
+      - If there are 3+ elements, returns e.g. "x, y, and z"
+
+    Arguments:
+      text (list): List of strings to be joined
+      truncate (int, optional): The maximum number of elements to spell out in the list.
+          If there are more elements, these are replaced with "and n more"
+  '''
+  if truncate:
+    text = text[:truncate] + ([f'{len(text) - truncate} more'] if len(text) > truncate else [])
+  return join_with_final(text, sep=', ', final=', and ', final_if_two=' and ')

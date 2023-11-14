@@ -39,13 +39,15 @@ class NemascanPipeline(JobPipeline):
 
     # Define a formatting function that customizes the message if duplicate strains are found
     # Do this so we can explicitly reference "trait" values for mapping only
-    duplicate_strain_formatter = lambda prev_line, curr_line: \
-      f'Lines #{ prev_line } and #{ curr_line } contain duplicate trait values for the same strain. Please ensure that only one unique trait value exists per strain.'
-  
+    force_unique_msgs = {
+      'single':  lambda x: f'Multiple lines contain duplicate trait values for the strain { x }. Please ensure that only one unique trait value exists per strain.',
+      'default': lambda x: f'Multiple lines contain duplicate trait values for the same strain. Please ensure that only one unique trait value exists per strain.',
+    }
+
     return [
       {
         'header': 'strain',
-        'validator': validate_strain(Species.from_name(data['species']), force_unique=True, force_unique_msg=duplicate_strain_formatter)
+        'validator': validate_strain(Species.from_name(data['species']), force_unique=True, force_unique_msgs=force_unique_msgs)
       },
       {
         # 'header': { 'validator': lambda x: x },
