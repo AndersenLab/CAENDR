@@ -8,7 +8,7 @@ from caendr.models.run             import NemascanRunner
 
 # Services
 from caendr.models.datastore       import Species
-from caendr.services.validate      import get_delimiter_from_filepath, validate_file, validate_num, validate_strain
+from caendr.services.validate      import get_delimiter_from_filepath, validate_file, NumValidator, StrainValidator
 from caendr.services.cloud.storage import upload_blob_from_file
 from caendr.utils.env              import get_env_var
 from caendr.utils.file             import get_file_hash
@@ -47,11 +47,11 @@ class NemascanPipeline(JobPipeline):
     return [
       {
         'header': 'strain',
-        'validator': validate_strain(Species.from_name(data['species']), force_unique=True, force_unique_msgs=force_unique_msgs)
+        'validator': StrainValidator(Species.from_name(data['species']), force_unique=True, force_unique_msgs=force_unique_msgs)
       },
       {
         # 'header': { 'validator': lambda x: x },
-        'validator': validate_num(accept_float=True, accept_na=True),
+        'validator': NumValidator(accept_float=True, accept_na=True),
       },
     ]
 
