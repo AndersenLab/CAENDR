@@ -9,7 +9,7 @@ from caendr.models.run             import HeritabilityRunner
 # Services
 from caendr.models.datastore       import Species
 from caendr.models.error           import DataFormatError
-from caendr.services.validate      import get_delimiter_from_filepath, validate_file, NumValidator, StrainValidator, TraitValidator
+from caendr.services.validate      import get_delimiter_from_filepath, validate_file, NumberValidator, StrainValidator, TraitValidator
 from caendr.services.cloud.storage import upload_blob_from_file
 from caendr.utils.env              import get_env_var
 from caendr.utils.file             import get_file_hash
@@ -33,16 +33,16 @@ class HeritabilityPipeline(JobPipeline):
   #
 
   @classmethod
-  def validator_columns(cls, data):
+  def column_validators(cls, data):
     '''
-      Define an expected header & a validator function for each column in the file
+      Create a ColumnValidator object for each column in the file
     '''
     return [
-      { 'header': 'AssayNumber', 'validator': NumValidator()                                        },
-      { 'header': 'Strain',      'validator': StrainValidator( Species.from_name(data['species']) ) },
-      { 'header': 'TraitName',   'validator': TraitValidator()                                      },
-      { 'header': 'Replicate',   'validator': NumValidator()                                        },
-      { 'header': 'Value',       'validator': NumValidator(accept_float=True)                       },
+      NumberValidator( 'AssayNumber' ),
+      StrainValidator( 'Strain', species=Species.from_name(data['species']) ),
+      TraitValidator(  'TraitName' ),
+      NumberValidator( 'Replicate' ),
+      NumberValidator( 'Value', accept_float=True ),
     ]
 
 
@@ -60,7 +60,7 @@ class HeritabilityPipeline(JobPipeline):
 
     # Validate each line in the file
     # Will raise an error if any problems are found, otherwise silently passes
-    validate_file(local_path, cls.validator_columns(data), delimiter=delimiter, unique_rows=True)
+    validate_file(local_path, cls.column_validators(data), delimiter=delimiter, unique_rows=True)
 
     # Extra validation - check that five or more unique strains are provided
     unique_strains = set()

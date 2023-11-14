@@ -8,7 +8,7 @@ from caendr.models.run             import NemascanRunner
 
 # Services
 from caendr.models.datastore       import Species
-from caendr.services.validate      import get_delimiter_from_filepath, validate_file, NumValidator, StrainValidator
+from caendr.services.validate      import get_delimiter_from_filepath, validate_file, NumberValidator, StrainValidator
 from caendr.services.cloud.storage import upload_blob_from_file
 from caendr.utils.env              import get_env_var
 from caendr.utils.file             import get_file_hash
@@ -32,9 +32,9 @@ class NemascanPipeline(JobPipeline):
   #
 
   @classmethod
-  def validator_columns(cls, data):
+  def column_validators(cls, data):
     '''
-      Define an expected header & a validator function for each column in the file
+      Create a ColumnValidator object for each column in the file
     '''
 
     # Define a formatting function that customizes the message if duplicate strains are found
@@ -45,14 +45,8 @@ class NemascanPipeline(JobPipeline):
     }
 
     return [
-      {
-        'header': 'strain',
-        'validator': StrainValidator(Species.from_name(data['species']), force_unique=True, force_unique_msgs=force_unique_msgs)
-      },
-      {
-        # 'header': { 'validator': lambda x: x },
-        'validator': NumValidator(accept_float=True, accept_na=True),
-      },
+      StrainValidator( 'strain', species=Species.from_name(data['species']), force_unique=True, force_unique_msgs=force_unique_msgs ),
+      NumberValidator( None,     accept_float=True, accept_na=True ),
     ]
 
 
@@ -70,7 +64,7 @@ class NemascanPipeline(JobPipeline):
 
     # Validate each line in the file
     # Will raise an error if any problems are found, otherwise silently passes
-    validate_file(local_path, cls.validator_columns(data), delimiter=delimiter, unique_rows=True)
+    validate_file(local_path, cls.column_validators(data), delimiter=delimiter, unique_rows=True)
 
     # Compute hash from file
     data_hash = get_file_hash(local_path, length=32)

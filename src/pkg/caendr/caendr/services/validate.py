@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import csv
+from typing import Callable, Optional, Union
 
 from caendr.services.logger import logger
 
@@ -26,9 +27,9 @@ def get_delimiter_from_filepath(filepath=None, valid_file_extensions=None):
 
 
 
-def validate_file(local_path, columns, delimiter='\t', unique_rows=False):
+def validate_file(local_path, validators, delimiter='\t', unique_rows=False):
 
-  num_cols = len(columns)
+  num_cols = len(validators)
   rows = {}
 
   # Read first line from tsv
@@ -47,26 +48,19 @@ def validate_file(local_path, columns, delimiter='\t', unique_rows=False):
 
     # Check first line for column headers
     invalid_headers = []
-    for col in range(num_cols):
-      target_header = columns[col].get('header')
-      if target_header is None:
-        continue
-      # if isinstance(target_header, str):
-      if csv_headings[col] != target_header:
+    for col, (validator, header) in enumerate(zip(validators, csv_headings)):
+      if not validator.read_header(header):
         invalid_headers.append(col)
-      # else:
-      #   if not target_header['validator'](csv_headings[col]):
-      #     raise DataFormatError(f'The file contains an incorrect column header. { target_header["make_err_msg"]( col + 1, csv_headings[col] ) }', 1)
 
     # If one header was incorrect, flag it
     if len(invalid_headers) == 1:
       col = invalid_headers[0]
-      raise DataFormatError(f'The file contains an incorrect column header. Column #{ col + 1 } should be { columns[col]["header"] }.', 1)
+      raise DataFormatError(f'The file contains an incorrect column header. Column #{ col + 1 } should be { validators[col].expected_header }.', 1)
 
     # If multiple headers were incorrect, flag all of them at once
     elif len(invalid_headers) > 1:
       cs = join_commas_and([ f'#{c + 1}' for c in invalid_headers ])
-      hs = join_commas_and([ c["header"] for c in columns ])
+      hs = join_commas_and([ c.expected_header for c in validators ])
       raise DataFormatError(f'The file contains incorrect headers in columns { cs }. The full set of headers should be: { hs }.', 1)
 
     # Loop through all remaining lines in the file
@@ -90,9 +84,9 @@ def validate_file(local_path, columns, delimiter='\t', unique_rows=False):
         else:
           rows[as_string] = line
 
-      # Check that all columns have valid data, using the "step" validator
-      for column, value in zip(columns, csv_row):
-        column['validator'].read_line( column.get('header'), value.strip(), line )
+      # Check that all columns have valid data
+      for validator, value in zip(validators, csv_row):
+        validator.read_line( value.strip(), line )
 
       # Track that we parsed at least one line of data properly
       has_data = True
@@ -101,9 +95,9 @@ def validate_file(local_path, columns, delimiter='\t', unique_rows=False):
     if not has_data:
       raise DataFormatError('The file is empty. Please edit the file to include your data.')
 
-    # Run each validator's "final" function at the end, in case any of the "step" validators were accumulating values
-    for column in columns:
-      column['validator'].finish()
+    # Run each validator's "finish" function at the end, in case any of the "read_line" validators were accumulating values
+    for validator in validators:
+      validator.finish()
 
 
 
@@ -114,14 +108,68 @@ def validate_file(local_path, columns, delimiter='\t', unique_rows=False):
 
 class ColumnValidator(ABC):
 
+  #
+  # Instantiation
+  #
+
+  def __init__(self, valid_header: Optional[Union[str, Callable[[str], bool]]]):
+
+    # Initilize stored header value to None
+    self._header = None
+
+    # If string, create validator function that checks equality
+    if isinstance(valid_header, str):
+      self._validate_header = lambda x: x == valid_header
+      self.expected_header = f'"{valid_header}"'
+
+    # If None, create validator function that always succeeds
+    elif valid_header is None:
+      self._validate_header = lambda _: True
+      self.expected_header = '(any)'
+
+    # If callable, use the value itself as the validator function
+    elif callable(valid_header):
+      self._validate_header = valid_header
+
+    # Otherwise, raise error
+    else:
+      raise ValueError(f'Header argument must be a string, a callable, or None, but received "{valid_header}"')
+
+
+
+  #
+  # Header
+  #
+
+  @property
+  def header(self):
+    '''
+      The validated header value for this column.
+      If no header has been read yet, will be `None`.
+    '''
+    return self._header
+
+  def read_header(self, header):
+    '''
+      Validate and store the header value for this column.
+    '''
+    if not self._validate_header(header):
+      return False
+    self._header = header
+    return True
+
+
+  #
+  # Validators
+  #
+
   @abstractmethod
-  def read_line(self, header, value, line):
+  def read_line(self, value, line):
     '''
       Parse and validate a single line.
       Can raise errors here, or record them to raise all at once in `finish()`.
 
       Arguments:
-        header: The column header.
         value:  The value in the current line, to be validated.
         line:   The index of the current line.
     '''
@@ -139,12 +187,14 @@ class ColumnValidator(ABC):
 # Numeric Values
 #
 
-class NumValidator(ColumnValidator):
+class NumberValidator(ColumnValidator):
   '''
     Validator for numeric values.
   '''
 
-  def __init__(self, accept_float = False, accept_na = False):
+  def __init__(self, *args, accept_float = False, accept_na = False, **kwargs):
+    super().__init__(*args, **kwargs)
+
     self.accept_float = accept_float
     self.accept_na    = accept_na
 
@@ -155,7 +205,7 @@ class NumValidator(ColumnValidator):
     '''
     return 'decimal' if self.accept_float else 'integer'
 
-  def read_line(self, header, value, line):
+  def read_line(self, value, line):
 
     # Try casting the value to the appropriate num type
     try:
@@ -167,7 +217,7 @@ class NumValidator(ColumnValidator):
     # If casting fails, raise an error (with an exception for 'NA', if applicable)
     except:
       if not (self.accept_na and value == 'NA'):
-        raise DataFormatError(f'Column { header } is not a valid { self.data_type }. Please edit { header } to ensure only { self.data_type } values are included.', line)
+        raise DataFormatError(f'Column { self.header } is not a valid { self.data_type }. Please edit { self.header } to ensure only { self.data_type } values are included.', line)
 
 
 
@@ -180,7 +230,8 @@ class StrainValidator(ColumnValidator):
     Check that column is a valid strain name for the desired species.
   '''
 
-  def __init__(self, species, force_unique=False, force_unique_msgs=None):
+  def __init__(self, *args, species, force_unique=False, force_unique_msgs=None, **kwargs):
+    super().__init__(*args, **kwargs)
 
     # Store species value
     self.species = species
@@ -295,7 +346,7 @@ class StrainValidator(ColumnValidator):
 
   # Validator function run on each individual line
   # Keeps track of all errors, which are then run at the end by func_final
-  def read_line(self, header, value, line):
+  def read_line(self, value, line):
 
     # Check for blank strain
     if value == '':
@@ -326,12 +377,14 @@ class TraitValidator(ColumnValidator):
     Check that all values in a column have the same trait name
   '''
 
-  def __init__(self, trait_name: str = None):
+  def __init__(self, *args, trait_name: str = None, **kwargs):
+    super().__init__(*args, **kwargs)
+
     # Initialize var to track the single valid trait name
     self._trait_name = trait_name
 
 
-  def read_line(self, header, value, line):
+  def read_line(self, value, line):
     '''
       Ensure all lines contain the same trait value.
     '''
