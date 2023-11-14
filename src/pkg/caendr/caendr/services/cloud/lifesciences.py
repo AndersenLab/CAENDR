@@ -4,7 +4,6 @@ from caendr.services.logger import logger
 
 from caendr.models.error import PipelineRunError
 from caendr.services.cloud.service_account import authenticate_google_service
-from caendr.services.cloud.utils import get_operation_id_from_name
 from caendr.utils.env import get_env_var
 from caendr.utils.json import get_json_from_class
 
@@ -55,6 +54,8 @@ def get_pipeline_status(SERVICE, operation_name):
       done: true
     }
   """
+  from caendr.services.cloud.utils import get_operation_id_from_name
+
   logger.debug(f'get_pipeline_status: operation_name:{operation_name}')
   request = SERVICE.projects().locations().operations().get(name=operation_name)
   response = request.execute()
