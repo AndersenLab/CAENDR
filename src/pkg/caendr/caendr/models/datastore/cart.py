@@ -26,6 +26,10 @@ class Cart(Entity):
       self['items'] = []
     if not self['version']:
       self['version'] = 0
+
+  # Get the number of items in the cart
+  def __len__(self):
+    return len(self['items'])
   
   ## Properties List ##
 

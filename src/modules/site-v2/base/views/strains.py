@@ -220,7 +220,7 @@ def order_page_post():
         """ submitting the order """
         cartItems = users_cart['items']
          # check the version
-        if int(users_cart['version']) != int(form.version.data) or len(cartItems) == 0:
+        if int(users_cart['version']) != int(form.version.data) or len(users_cart) == 0:
           flash("There was a problem with your order, please try again.", 'warning')
           return redirect(url_for('request_strains.order_page_index'))
         
@@ -303,7 +303,7 @@ def order_page_index():
   flash(Markup("<strong>Please note:</strong> although the site is currently able to accept orders, orders will <u>not ship</u> until Fall 2023."), category="warning")
 
   if not user and not cart_id:
-    cartItems = []
+    users_cart = []
   elif user:
     users_cart = Cart.lookup_by_user(user['email'])
     cartItems = users_cart['items']
@@ -313,7 +313,7 @@ def order_page_index():
     cartItems = users_cart['items']
     form.version.data = users_cart['version']
   
-  if len(cartItems) == 0:
+  if len(users_cart) == 0:
     return render_template('order/order.html', **{
       'tool_alt_parent_breadcrumb': {"title": "Strain Catalog", "url": url_for('request_strains.request_strains')},
       'title': "Order Summary",
