@@ -1,6 +1,7 @@
 from logzero import logger
 
 from caendr.models.sql import WormbaseGeneSummary, WormbaseGene, Homolog, StrainAnnotatedVariant
+from caendr.utils.data import batch_generator
 
 from .wormbase import parse_gene_gtf, parse_gene_gff_summary, parse_orthologs
 from .homologs import parse_homologene
@@ -8,24 +9,6 @@ from .strain_annotated_variants import parse_strain_variant_annotation_data
 
 
 # https://github.com/phil-bergmann/2016_DLRW_brain/blob/3f69c945a40925101c58a3d77c5621286ad8d787/brain/data.py
-
-
-## Util(s) ##
-
-def batch_generator(g, batch_size=1000000):
-    '''
-        Split a generator into a generator of generators, which produce the same sequence when taken together.
-        Useful for managing RAM when bulk inserting mappings into a table.
-    '''
-    def _inner(top):
-        yield top
-        for i, x in enumerate(g, start=1):
-            yield x
-            if i % (batch_size - 1) == 0:
-                return
-
-    for top in g:
-        yield _inner(top)
 
 
 ## Generic Table ##
