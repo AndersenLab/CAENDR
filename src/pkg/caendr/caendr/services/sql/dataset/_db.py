@@ -4,7 +4,7 @@ from logzero import logger
 
 from caendr.models.error import InternalError
 from caendr.services.cloud.storage import download_blob_to_file, generate_blob_uri, BlobURISchema
-from caendr.utils.file import download_file
+from caendr.utils.file import download_file, unzip_gz
 
 from ._env import MODULE_DB_OPERATIONS_BUCKET_NAME
 
@@ -133,8 +133,7 @@ def fetch_db(
 
     # Unzip the downloaded file, if applicable
     if is_zipped and unzip:
-        manager.unzip_gz(filename, keep_zipped_file=False)
-        filename = filename[:-3]
+        filename = unzip_gz(filename, keep_zipped_file=False)
 
     # Return the resulting filename
     return filename

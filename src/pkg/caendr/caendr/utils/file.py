@@ -1,3 +1,4 @@
+import gzip
 import os
 import hashlib
 import urllib.request as request
@@ -47,3 +48,38 @@ def write_string_to_file(data: str, fname: str):
   textfile = open(fname, "w")
   a = textfile.write(data)
   textfile.close()
+
+
+
+def unzip_gz(gz_fname: str, keep_zipped_file: bool = False):
+  '''
+    Unzip a GZIP (`.gz`) file.
+
+    Arguments:
+      - gz_fname (str):
+          The name of the file to unzip.
+      - keep_zipped_file (bool, optional):
+          Whether to keep the original `.gz` file after it has been unzipped (`True`) or remove it (`False`).
+          Defaults to `False`.
+
+    Returns:
+      The name of the unzipped file.
+  '''
+
+  # Generate a name for the unzipped file
+  if gz_fname[-3:] == '.gz':
+    fname = gz_fname[:-3]
+  else:
+    fname = f'{gz_fname}_UNZIPPED'
+
+  # Unzip the .gz file and copy its contents to the new unzipped file
+  with gzip.open(gz_fname, 'rb') as f_in:
+    with open(fname, 'wb') as f_out:
+      shutil.copyfileobj(f_in, f_out)
+
+  # Optionally delete the zipped file
+  if not keep_zipped_file:
+    os.remove(gz_fname)
+
+  # Return the name of the new unzipped file
+  return fname
