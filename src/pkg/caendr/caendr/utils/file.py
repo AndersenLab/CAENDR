@@ -69,8 +69,10 @@ def unzip_gz(gz_fname: str, keep_zipped_file: bool = False):
   # Generate a name for the unzipped file
   if gz_fname[-3:] == '.gz':
     fname = gz_fname[:-3]
+    using_tempname = False
   else:
     fname = f'{gz_fname}_UNZIPPED'
+    using_tempname = True
 
   # Unzip the .gz file and copy its contents to the new unzipped file
   with gzip.open(gz_fname, 'rb') as f_in:
@@ -80,6 +82,12 @@ def unzip_gz(gz_fname: str, keep_zipped_file: bool = False):
   # Optionally delete the zipped file
   if not keep_zipped_file:
     os.remove(gz_fname)
+
+    # If we had to append '_UNZIPPED' to avoid a name collision, but we're only keeping the unzipped file,
+    # we can rename the new unzipped file to keep the original name
+    if using_tempname:
+      os.rename(fname, gz_fname)
+      fname = gz_fname
 
   # Return the name of the new unzipped file
   return fname
