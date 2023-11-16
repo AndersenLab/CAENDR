@@ -277,20 +277,20 @@ def make_secure_filename(*options):
   return secure_filename(unique_id())
 
 
-def download_blob_to_file(bucket_name, *path, filepath='', filename=None):
+def download_blob_to_file(bucket_name, *path, destination='', filename=None):
   '''
     Downloads a blob and saves it locally.
 
     Validates the `filename` argument using Werkzeug `secure_filename`.
-    Does NOT validate `filepath` the same way.
+    Does NOT validate `destination` the same way.
 
-    If you want to download a blob into a specific folder, use `filepath`.
+    If you want to download a blob into a specific folder, use `destination`.
     You'll have to make sure the path is secure.
 
     Arguments:
       - `bucket_name`: The name of the bucket where the blob is located
       - `*path`: The path to the file within the bucket (incl. the filename itself)
-      - `filepath`: The local folder to download the blob to. Optional.
+      - `destination`: The local folder to download the blob to. Optional.
       - `filename`:
           A local name for the downloaded blob. May be changed by Werkzeug `secure_filename`.
           If not provided, uses the name of the file in datastore (i.e. the right-most component of the `path`).
@@ -304,7 +304,7 @@ def download_blob_to_file(bucket_name, *path, filepath='', filename=None):
   '''
 
   # If no filename provided, try using the final component of blob path
-  target_filename = join_path(filepath, make_secure_filename(filename, path[-1].split('/')[-1]))
+  target_filename = join_path(destination, make_secure_filename(filename, path[-1].split('/')[-1]))
 
   # Retrieve the blob, throwing an error if it doesn't exist
   blob = get_blob(bucket_name, *path)
