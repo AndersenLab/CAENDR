@@ -13,7 +13,7 @@ from caendr.models.status          import JobStatus
 from caendr.services.validate      import get_delimiter_from_filepath, validate_file, validate_num, validate_strain, validate_trait
 from caendr.utils.env              import get_env_var
 from caendr.utils.file             import get_file_hash
-from caendr.utils.local_file       import LocalFile
+from caendr.utils.local_files      import LocalUploadFile
 
 from caendr.services.cloud.storage import download_blob_as_dataframe, BlobURISchema
 
@@ -65,7 +65,7 @@ class HeritabilityPipeline(JobPipeline):
     # Extract local file from the data object
     # Note that we don't change the underlying object itself, as this would
     # affect the data dict in calling functions
-    local_file: LocalFile = data['file']
+    local_file: LocalUploadFile = data['file']
     data = { k: v for k, v in data.items() if k != 'file' }
 
     # Get the file format & delimiter

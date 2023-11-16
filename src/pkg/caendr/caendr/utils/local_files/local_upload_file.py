@@ -11,7 +11,7 @@ UPLOAD_DIR = os.path.join('.', 'uploads')
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
-class LocalFile(os.PathLike):
+class LocalUploadFile(os.PathLike):
   def __init__(self, local_file, valid_file_extensions=None):
     '''
       Temporarily upload a Flask `FileStorage` object to the server as a local file.
