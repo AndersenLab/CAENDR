@@ -7,7 +7,7 @@ from caendr.utils.data import unique_id
 
 
 
-UPLOAD_DIR = os.path.join('./', 'uploads')
+UPLOAD_DIR = os.path.join('.', 'uploads')
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 

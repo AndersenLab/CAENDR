@@ -304,7 +304,7 @@ def download_blob_to_file(bucket_name, *path, destination='', filename=None):
   '''
 
   # If no filename provided, try using the final component of blob path
-  target_filename = join_path(destination, make_secure_filename(filename, path[-1].split('/')[-1]))
+  target_filename = os.path.join(destination, make_secure_filename(filename, path[-1].split('/')[-1]))
 
   # Retrieve the blob, throwing an error if it doesn't exist
   blob = get_blob(bucket_name, *path)
