@@ -3,6 +3,7 @@ import os
 import hashlib
 import urllib.request as request
 import shutil
+from typing import Tuple, Optional
 
 from contextlib import closing
 from caendr.services.logger import logger
@@ -49,6 +50,34 @@ def write_string_to_file(data: str, fname: str):
   a = textfile.write(data)
   textfile.close()
 
+
+
+def get_zipped_file_ext(fname: str) -> Tuple[Optional[str], bool]:
+  '''
+    Get the file extension as the last section of the path after a '.', ignoring '.gz'.
+    If there is no file extension (e.g. 'foobar.gz' or just 'foobar'), returns as `None`.
+
+    Returns:
+      - (str)  The file extension, if one exists (ignoring '.gz')
+      - (bool) Whether the file extension is gzipped
+  '''
+
+  # Split the filename
+  fname_parts = fname.split('.')
+
+  # If the filename end in '.gz', remove that part
+  is_zipped = fname_parts[-1] == 'gz'
+  if is_zipped:
+    fname_parts = fname_parts[:-1]
+
+  # If there are at least two parts left in the filename, interpret the last part as the extension
+  if len(fname_parts) >= 2:
+    file_ext = '.' + fname_parts[-1]
+  else:
+    file_ext = None
+
+  # Return the extension and whether the file is gzipped
+  return file_ext, is_zipped
 
 
 def unzip_gz(gz_fname: str, keep_zipped_file: bool = False):

@@ -14,7 +14,7 @@ from caendr.utils.constants import CHROM_NUMERIC
 
 ## Helper Functions ##
 
-def get_gene_ids(species, gene_ids_fname: str):
+def get_gene_ids(species, GENE_IDS: os.PathLike):
   """
       Retrieve mapping between wormbase IDs (WB000...) to locus names.
       Uses the latest IDs by default.
@@ -24,7 +24,7 @@ def get_gene_ids(species, gene_ids_fname: str):
   """
 
   # Read in file, and extract the WormBase ID and locus name from each line
-  results = [ x.split(",")[1:3] for x in gzip.open(gene_ids_fname, 'r').read().decode('utf-8').splitlines() ]
+  results = [ x.split(",")[1:3] for x in gzip.open(GENE_IDS, 'r').read().decode('utf-8').splitlines() ]
 
   # Convert to a dictionary, removing species-specific gene prefix from each value as we do
   return { x[0]: remove_prefix(x[1], species.gene_prefix) for x in results }
@@ -33,14 +33,14 @@ def get_gene_ids(species, gene_ids_fname: str):
 
 ## File Parsing Generator Functions ##
 
-def parse_gene_gtf(species, gtf_fname: str, gene_ids_fname: str, start_idx = 0):
+def parse_gene_gtf(species, GENE_GTF: os.PathLike, GENE_IDS: os.PathLike, start_idx = 0):
   """
       LOADS wormbase_gene
       This function fetches and parses the canonical geneset GTF
       and yields a dictionary for each row.
   """
-  gene_gtf = read_gtf_as_dataframe(gtf_fname)
-  gene_ids = get_gene_ids(species, gene_ids_fname)
+  gene_gtf = read_gtf_as_dataframe(GENE_GTF)
+  gene_ids = get_gene_ids(species, GENE_IDS)
 
   # Rename seqname to chrom
   gene_gtf = gene_gtf.rename({'seqname': 'chrom'}, axis='columns')
@@ -85,7 +85,7 @@ def parse_gene_gtf(species, gtf_fname: str, gene_ids_fname: str, start_idx = 0):
   logger.debug(f"Processed {idx} lines total for {species.name}")
 
 
-def parse_gene_gff_summary(species, gff_fname: str, start_idx = 0):
+def parse_gene_gff_summary(species, GENE_GFF: os.PathLike, start_idx = 0):
   """
       LOADS wormbase_gene_summary
       This function fetches data for wormbase_gene_summary;
@@ -94,7 +94,7 @@ def parse_gene_gff_summary(species, gff_fname: str, start_idx = 0):
   """
   WB_GENE_FIELDSET = ['ID', 'biotype', 'sequence_name', 'chrom', 'start', 'end', 'locus', 'species_name']
 
-  with gzip.open(gff_fname) as f:
+  with gzip.open(GENE_GFF) as f:
 
     # Initialize counter for matching genes
     gene_count = 0

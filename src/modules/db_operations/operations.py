@@ -49,7 +49,7 @@ def drop_and_populate_wormbase_genes(app, db, species):
   logger.info(f'Dropping and populating wormbase genes. Species list: [ {", ".join(spec_strings)} ]')
 
   # Initialize ETL Manager
-  etl_manager = ETLManager(SPECIES_LIST, reload_files=True)
+  etl_manager = ETLManager(db, SPECIES_LIST, reload_files=True)
 
   # Drop relevant tables
   logger.info(f"Dropping tables...")
@@ -61,8 +61,7 @@ def drop_and_populate_wormbase_genes(app, db, species):
 
   # Fetch and load data using ETL Manager
   logger.info("Loading wormbase genes...")
-  etl_manager.load_genes_summary(db, species)
-  etl_manager.load_genes(db, species)
+  etl_manager.load_tables(WormbaseGeneSummary, WormbaseGene, species_list=species)
   # etl_manager.load_homologs(db)
   # etl_manager.load_orthologs(db)
 
@@ -74,7 +73,7 @@ def drop_and_populate_strain_annotated_variants(app, db, species):
   logger.info(f'Dropping and populating strain annotated variants. Species list: [ {", ".join(spec_strings)} ]')
 
   # Initialize ETL Manager
-  etl_manager = ETLManager(SPECIES_LIST, reload_files=True)
+  etl_manager = ETLManager(db, SPECIES_LIST, reload_files=True)
 
   # Drop relevant table
   logger.info(f"Dropping table...")
@@ -83,7 +82,7 @@ def drop_and_populate_strain_annotated_variants(app, db, species):
 
   # Fetch and load data using ETL Manager
   logger.info("Loading strain annotated variants...")
-  etl_manager.load_strain_annotated_variants(db, species)
+  etl_manager.load_tables(StrainAnnotatedVariant, species_list=species)
 
 
 def drop_and_populate_all_tables(app, db, species):
@@ -93,7 +92,7 @@ def drop_and_populate_all_tables(app, db, species):
   logger.info(f'Dropping and populating all tables. Species list: [ {", ".join(spec_strings)} ]')
 
   logger.info("[1/6] Downloading databases...eta ~0:15")
-  etl_manager = ETLManager(SPECIES_LIST, reload_files=True)
+  etl_manager = ETLManager(db, SPECIES_LIST, reload_files=True)
 
   logger.info("[2/6] Dropping tables...eta ~0:01")
   drop_tables(app, db, species=species)
@@ -102,10 +101,10 @@ def drop_and_populate_all_tables(app, db, species):
   load_strains(db, species)
 
   logger.info("[4/6] Load genes summary...eta ~3:15")
-  etl_manager.load_genes_summary(db, species)
+  etl_manager.load_tables(WormbaseGeneSummary, species_list=species)
 
   logger.info("[5/6] Load genes...eta ~12:37")
-  etl_manager.load_genes(db, species)
+  etl_manager.load_tables(WormbaseGene, species_list=species)
 
   # logger.info("[6/8] Load Homologs...eta ~3:10")
   # etl_manager.load_homologs(db)
@@ -114,5 +113,5 @@ def drop_and_populate_all_tables(app, db, species):
   # etl_manager.load_orthologs(db)
 
   logger.info("[6/6] Load Strains Annotated Variants...eta ~26:47")
-  etl_manager.load_strain_annotated_variants(db, species)
+  etl_manager.load_tables(StrainAnnotatedVariant, species_list=species)
   
