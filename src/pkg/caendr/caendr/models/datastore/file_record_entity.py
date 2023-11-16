@@ -111,14 +111,16 @@ class FileRecordEntity(Entity, ABC):
   # Utils
   #
 
-  def check_exists(self, **kwargs):
+  def check_exists(self, **tokens):
     '''
       Check whether the file specified by the given tokens exists in the database.
       Uses the provided keyword arguments to fill out the filepath template, then checks for that filename.
     '''
-    return check_blob_exists( self.bucket, self.prefix.get_string(**kwargs), self['filename'].get_string(**kwargs) )
+    return check_blob_exists( self.bucket, self.prefix.get_string(**tokens), self['filename'].get_string(**tokens) )
   
-  def check_exists_for_species(self, species, **kwargs):
-    prefix = self.prefix.copy_with_tokens().set_tokens_from_species(species).get_string(**kwargs)
-    fname  = self['filename'].copy_with_tokens().set_tokens_from_species(species).get_string(**kwargs)
-    return check_blob_exists( self.bucket, prefix, fname )
+  def check_exists_for_species(self, species, **tokens):
+    return check_blob_exists(
+      self.bucket,
+      self.prefix.get_string( **{**TokenizedString.get_species_tokens(species), **tokens} ),
+      self['filename'].get_string( **{**TokenizedString.get_species_tokens(species), **tokens} )
+    )
