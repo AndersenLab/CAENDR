@@ -175,18 +175,26 @@ def get_bam_bai_download_link(species, strain_name, ext, signed=False):
   return generate_blob_uri( bucket_name, bam_prefix, f'{strain_name}.{ext}', BlobURISchema.sign(signed) )
 
 
-# TODO: This is now out of date, since script name relies on species & release
-def fetch_bam_bai_download_script(reload=False):
-  if reload and os.path.exists(BAM_BAI_DOWNLOAD_SCRIPT_NAME):
-    os.remove(BAM_BAI_DOWNLOAD_SCRIPT_NAME)
-    
-  if not os.path.exists(BAM_BAI_DOWNLOAD_SCRIPT_NAME):
-    bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
-    blob_name = f'{bam_prefix}/{BAM_BAI_DOWNLOAD_SCRIPT_NAME}'
-    logger.debug('Reloading bam/bai download script from: bucket:{bucket_name} blob:{blob_name}')
-    return download_blob_to_file(bucket_name, blob_name, BAM_BAI_DOWNLOAD_SCRIPT_NAME)
+def fetch_bam_bai_download_script(species, release, reload=False):
 
-  return BAM_BAI_DOWNLOAD_SCRIPT_NAME
+  bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
+  bam_prefix  = BAM_BAI_PREFIX.get_string(**{
+    'SPECIES': species.name,
+    'RELEASE': release.version,
+  })
+  script_name = BAM_BAI_DOWNLOAD_SCRIPT_NAME.get_string(**{
+    'SPECIES': species.name,
+    'RELEASE': release.version,
+  })
+
+  if reload and os.path.exists(script_name):
+    os.remove(script_name)
+
+  if not os.path.exists(script_name):
+    logger.debug(f'Reloading bam/bai download script from: bucket:{bucket_name} path:{bam_prefix}/{script_name}')
+    return download_blob_to_file(bucket_name, bam_prefix, script_name)
+
+  return script_name
 
 
 def generate_bam_bai_download_script(species, release, signed=False):
