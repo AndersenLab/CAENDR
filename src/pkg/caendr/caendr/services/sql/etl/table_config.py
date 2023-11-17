@@ -1,3 +1,5 @@
+from typing import Dict
+
 from caendr.utils.env import get_env_var
 
 # Local imports
@@ -6,6 +8,7 @@ from .strain_annotated_variants    import parse_strain_variant_annotation_data
 
 from caendr.models.sql             import WormbaseGeneSummary, WormbaseGene, StrainAnnotatedVariant
 from caendr.utils.local_files      import LocalDatastoreFileTemplate
+from caendr.utils.species_dict     import SpeciesDict
 
 
 
@@ -33,7 +36,7 @@ class TableConfig():
     Bundle together configuration objects / functions for building a single SQL table.
   '''
 
-  def __init__(self, table, parse, files):
+  def __init__(self, table, parse, files: Dict[str, SpeciesDict]):
     self.table = table
     self.parse = parse
     self.files = files
@@ -51,21 +54,12 @@ class TableConfig():
   # Fetching
   #
 
-  def build_files_for_species(self, species):
-    '''
-      Build all the local file objects required to insert this species' data into the SQL table.
-    '''
-    return {
-      file_id: file_template.build(species=species)
-        for file_id, file_template in self.files.items()
-    }
-  
   def fetch_files_for_species(self, species):
     '''
       Fetch all the files required for this species from the database.
     '''
     return {
-      file_id: local_file.fetch() for file_id, local_file in self.build_files_for_species(species).items()
+      file_id: file_template.get_for_species(species) for file_id, file_template in self.files.items()
     }
 
 

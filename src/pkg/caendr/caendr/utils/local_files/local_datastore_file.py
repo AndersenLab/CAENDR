@@ -1,8 +1,10 @@
 import os
 
+from caendr.models.datastore       import Species
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, download_blob_to_file, join_path
 from caendr.utils.tokens           import TokenizedString
 from caendr.utils.file             import unzip_gz, get_zipped_file_ext
+from caendr.utils.species_dict     import SpeciesDict
 
 
 
@@ -114,9 +116,11 @@ class LocalDatastoreFile(os.PathLike):
 
 
 
-class LocalDatastoreFileTemplate():
+class LocalDatastoreFileTemplate(SpeciesDict):
   '''
     Manage a template for building LocalDatabaseFile objects, parameterized by species & other tokens.
+
+    Implements `SpeciesDict`. Returns `LocalDatastoreFile` object for a given species.
   '''
 
   # Default directory to store files locally
@@ -127,6 +131,10 @@ class LocalDatastoreFileTemplate():
     self._bucket  = bucket
     self._path    = path
 
+
+  #
+  # Building
+  #
 
   def _build_path(self, species=None, tokens={}):
     return [
@@ -145,3 +153,13 @@ class LocalDatastoreFileTemplate():
       unzip = False,
       local_path = self._DEFAULT_LOCAL_PATH.get_string( **{**TokenizedString.get_species_tokens(species), **tokens} )
     )
+
+
+  #
+  # SpeciesDict Interface Methods
+  #
+
+  def get_for_species(self, species: Species):
+    local_file = self.build(species)
+    local_file.fetch()
+    return local_file
