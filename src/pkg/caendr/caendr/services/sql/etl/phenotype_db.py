@@ -1,7 +1,5 @@
-import os
 import csv
-import gzip
-import re
+
 
 from caendr.services.logger import logger
 from sqlalchemy.sql.expression import null
@@ -9,6 +7,24 @@ from sqlalchemy.sql.expression import null
 
 
 def parse_phenotypedb_traits_data(species, *fnames: str):
+  """
+    Parsing function for trait files that follow the outlined structure:
+    - row 1 represents the headers of the table, where:
+      - the first value is the header of the first column (expected 'trait_name')
+      - the following values are the strain names (expected 'AB1', 'BRC20263', 'CB4855')
+    - rows 2 - end are the body of the table, where:
+      - first value of each row represents trait names (expected 'length_2_4_D', 'length_Abamectin')
+      - the following values represent trait values for each corresponding strain (expected '25.2394870867178', '7.54101506066384', '7.91667625972722')
+
+    TL;DR 
+    Table structure:
+    [
+      trait_name           AB1                BRC20263            CB4855
+      length_2_4_D         25.2394870867178   7.54101506066384    7.91667625972722
+      length_Abamectin     -91.45616678       101.231626695727    49.9315541104696
+    ]
+  """
+  
   logger.info('Parsing extracted phenotype database TSV file(s)')
 
   # Loop through each line in each TSV file, indexed
