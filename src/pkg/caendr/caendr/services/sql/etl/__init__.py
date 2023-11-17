@@ -1,9 +1,7 @@
 from logzero import logger
 
-from .strains import load_strains
-
 # Local imports
-from .table_config import WormbaseGeneSummaryConfig, WormbaseGeneConfig, StrainAnnotatedVariantConfig
+from .table_config import StrainConfig, WormbaseGeneSummaryConfig, WormbaseGeneConfig, StrainAnnotatedVariantConfig
 
 from caendr.models.datastore     import Species
 from caendr.services.sql.dataset import DatasetManager
@@ -14,6 +12,7 @@ from caendr.utils.data           import batch_generator
 # Gather table configurations into a single dict
 TABLE_CONFIG = {
     config.table_name: config for config in [
+        StrainConfig,
         WormbaseGeneSummaryConfig,
         WormbaseGeneConfig,
         StrainAnnotatedVariantConfig,

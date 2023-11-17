@@ -5,7 +5,7 @@ from caendr.services.logger import logger
 from caendr.models.datastore import SPECIES_LIST
 from caendr.models.sql import WormbaseGene, WormbaseGeneSummary, Strain, StrainAnnotatedVariant
 from caendr.services.sql.db import drop_tables, backup_external_db
-from caendr.services.sql.etl import ETLManager, load_strains
+from caendr.services.sql.etl import ETLManager
 
 
 
@@ -38,8 +38,15 @@ def execute_operation(app, db, DB_OP, species=None):
 
 
 def drop_and_populate_strains(app, db, species):
+
+  # Initialize ETL Manager
+  etl_manager = ETLManager(db, SPECIES_LIST, reload_files=True)
+
+  # Drop relevant tables
   drop_tables(app, db, species=species, tables=[Strain.__table__])
-  load_strains(db, species)
+
+  # Fetch and load data using ETL Manager
+  etl_manager.load_tables( Strain, species_list=species )
 
 
 def drop_and_populate_wormbase_genes(app, db, species):
@@ -98,7 +105,7 @@ def drop_and_populate_all_tables(app, db, species):
   drop_tables(app, db, species=species)
 
   logger.info("[3/6] Load Strains...eta ~0:24")
-  load_strains(db, species)
+  etl_manager.load_tables(Strain, species_list=species)
 
   logger.info("[4/6] Load genes summary...eta ~3:15")
   etl_manager.load_tables(WormbaseGeneSummary, species_list=species)

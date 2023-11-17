@@ -1,13 +1,16 @@
 from typing import Dict
 
-from caendr.utils.env import get_env_var
+from caendr.utils.env              import get_env_var
+from caendr.services.cloud.secret  import get_secret
 
 # Local imports
+from .strains                      import fetch_andersen_strains
 from .wormbase                     import parse_gene_gtf, parse_gene_gff_summary
 from .strain_annotated_variants    import parse_strain_variant_annotation_data
 
-from caendr.models.sql             import WormbaseGeneSummary, WormbaseGene, StrainAnnotatedVariant
-from caendr.utils.local_files      import LocalDatastoreFileTemplate
+from caendr.models.sql             import Strain, WormbaseGeneSummary, WormbaseGene, StrainAnnotatedVariant
+from caendr.models.datastore       import Species
+from caendr.utils.local_files      import LocalDatastoreFileTemplate, GoogleSheetManager
 from caendr.utils.species_dict     import SpeciesDict
 
 
@@ -24,6 +27,14 @@ GENE_GFF_FILENAME = get_env_var('GENE_GFF_FILENAME',  as_template=True)
 GENE_GTF_FILENAME = get_env_var('GENE_GTF_FILENAME',  as_template=True)
 GENE_IDS_FILENAME = get_env_var('GENE_IDS_FILENAME',  as_template=True)
 SVA_FILENAME      = get_env_var('SVA_CSVGZ_FILENAME', as_template=True)
+
+
+# Get list of Google Sheet IDs for each species
+# Expects secret names with prefix "ANDERSEN_LAB_STRAIN_SHEET_" and species ID in all caps
+ANDERSEN_LAB_STRAIN_SHEETS = {
+  species_name: get_secret(f'ANDERSEN_LAB_STRAIN_SHEET_{species_name.upper()}')
+    for species_name in Species.all()
+}
 
 
 
@@ -79,6 +90,14 @@ class TableConfig():
 #
 # Specific table objects
 #
+
+StrainConfig = TableConfig(
+    table = Strain,
+    parse = fetch_andersen_strains,
+    files = {
+      'STRAINS': GoogleSheetManager( ANDERSEN_LAB_STRAIN_SHEETS ),
+    },
+)
 
 WormbaseGeneSummaryConfig = TableConfig(
   table = WormbaseGeneSummary,
