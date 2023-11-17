@@ -1,12 +1,13 @@
+import os
+import shutil
 from logzero import logger
 from itertools import product
 
 # Local imports
 from .table_config import StrainConfig, WormbaseGeneSummaryConfig, WormbaseGeneConfig, StrainAnnotatedVariantConfig
 
-from caendr.models.datastore     import Species
-from caendr.services.sql.dataset import DatasetManager
-from caendr.utils.data           import batch_generator
+from caendr.models.datastore import Species
+from caendr.utils.data       import batch_generator
 
 
 
@@ -24,34 +25,46 @@ TABLE_CONFIG = {
 
 class ETLManager:
 
-    def __init__(self, app, db, species_list, reload_files: bool = False):
+    # The default local directory to store all downloaded files in
+    __DEFAULT_LOCAL_DIR = os.path.join('.', '.download')
+
+
+    def __init__(self, app, db, reload_files: bool = False, local_directory: str = None):
         self.app = app
         self.db  = db
-        self.dataset_manager = DatasetManager(species_list=species_list, reload_files=reload_files)
 
-    def prefetch_all_dbs(self, use_cache: bool = True):
-        self.dataset_manager.prefetch_all_external_dbs(use_cache=use_cache)
-        self.dataset_manager.prefetch_all_internal_dbs(use_cache=use_cache)
+        # Set the local directory
+        self._local_directory = local_directory or self.__DEFAULT_LOCAL_DIR
 
-
-    ## Species ##
-
-    @property
-    def species_list(self):
-        return self.dataset_manager.species_list
-
-    def get_species(self, species_name: str):
-        return self.dataset_manager.get_species(species_name)
+        # Prep the local directory
+        if reload_files:
+            self.reset_directory()
+        self.ensure_directory_exists()
 
 
-    ## Download Path ##
+    #
+    # Local Directory
+    #
 
-    @property
-    def local_download_path(self):
-        return self.dataset_manager.local_download_path
+    def ensure_directory_exists(self):
+        '''
+            Ensures the local download directory exists, along with any relevant subdirectories.
+        '''
+        # Create a folder at the desired path if one does not yet exist
+        os.makedirs(self._local_directory, exist_ok=True)
 
-    def get_download_path(self, species_name):
-        return f"{self.local_download_path}/{species_name}"
+        # Make sure a subfolder exists for each species in the list
+        for species_name in Species.all():
+            os.makedirs( os.path.join(self._local_directory, species_name), exist_ok=True)
+
+
+    def reset_directory(self):
+        '''
+            Deletes the local download directory and all its contents.
+        '''
+        logger.info('Creating empty directory to store downloaded files')
+        if os.path.exists(self._local_directory):
+            shutil.rmtree(self._local_directory)
 
 
     #
