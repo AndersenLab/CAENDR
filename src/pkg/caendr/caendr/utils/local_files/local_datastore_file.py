@@ -1,10 +1,12 @@
 import os
 
+from .foreign_resource_watcher     import ForeignResourceWatcher
+
 from caendr.models.datastore       import Species
-from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, download_blob_to_file, join_path
+from caendr.models.error           import NotFoundError, ForeignResourceMissingError
+from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, download_blob_to_file, join_path, check_blob_exists
 from caendr.utils.tokens           import TokenizedString
 from caendr.utils.file             import unzip_gz, get_zipped_file_ext
-from caendr.utils.species_dict     import SpeciesDict
 
 
 
@@ -55,6 +57,9 @@ class LocalDatastoreFile(os.PathLike):
       Get a path to the file in the datastore.
     '''
     return generate_blob_uri(self._bucket, *self._path, schema=schema)
+
+  def exists_in_ds(self):
+    return check_blob_exists(self._bucket, *self._path)
 
   @property
   def source_is_zipped(self):
@@ -116,7 +121,7 @@ class LocalDatastoreFile(os.PathLike):
 
 
 
-class LocalDatastoreFileTemplate(SpeciesDict):
+class LocalDatastoreFileTemplate(ForeignResourceWatcher):
   '''
     Manage a template for building LocalDatabaseFile objects, parameterized by species & other tokens.
 
@@ -126,10 +131,12 @@ class LocalDatastoreFileTemplate(SpeciesDict):
   # Default directory to store files locally
   _DEFAULT_LOCAL_PATH = TokenizedString(os.path.join(LOCAL_DIR, '${SPECIES}'))
 
-  def __init__(self, file_id: str, bucket: str, *path: TokenizedString):
+  def __init__(self, file_id: str, bucket: str, *path: TokenizedString, exists_for_species=None):
     self._file_id = file_id
     self._bucket  = bucket
     self._path    = path
+
+    self.__exists_for_species = exists_for_species
 
 
   #
@@ -156,10 +163,21 @@ class LocalDatastoreFileTemplate(SpeciesDict):
 
 
   #
-  # SpeciesDict Interface Methods
+  # ForeignResourceWatcher Interface Methods
   #
+
+  def check_exists(self, species: Species) -> bool:
+    return self.build(species).exists_in_ds()
+
+  def has_for_species(self, species: Species):
+    return self.__exists_for_species is None or species in self.__exists_for_species
 
   def get_for_species(self, species: Species):
     local_file = self.build(species)
-    local_file.fetch()
+
+    try:
+      local_file.fetch()
+    except NotFoundError as ex:
+      raise ForeignResourceMissingError('Datastore file', self._file_id, species) from ex
+
     return local_file

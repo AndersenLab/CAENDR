@@ -10,8 +10,7 @@ from .strain_annotated_variants    import parse_strain_variant_annotation_data
 
 from caendr.models.sql             import Strain, WormbaseGeneSummary, WormbaseGene, StrainAnnotatedVariant
 from caendr.models.datastore       import Species
-from caendr.utils.local_files      import LocalDatastoreFileTemplate, GoogleSheetManager
-from caendr.utils.species_dict     import SpeciesDict
+from caendr.utils.local_files      import ForeignResourceWatcher, LocalDatastoreFileTemplate, GoogleSheetManager
 
 
 
@@ -47,7 +46,7 @@ class TableConfig():
     Bundle together configuration objects / functions for building a single SQL table.
   '''
 
-  def __init__(self, table, parse, files: Dict[str, SpeciesDict]):
+  def __init__(self, table, parse, files: Dict[str, ForeignResourceWatcher]):
     self.table = table
     self.parse = parse
     self.files = files
@@ -70,7 +69,9 @@ class TableConfig():
       Fetch all the files required for this species from the database.
     '''
     return {
-      file_id: file_template.get_for_species(species) for file_id, file_template in self.files.items()
+      file_id: file_template.get_for_species(species)
+        for file_id, file_template in self.files.items()
+        if file_template.has_for_species(species)
     }
 
 
@@ -95,7 +96,7 @@ StrainConfig = TableConfig(
     table = Strain,
     parse = fetch_andersen_strains,
     files = {
-      'STRAINS': GoogleSheetManager( ANDERSEN_LAB_STRAIN_SHEETS ),
+      'STRAINS': GoogleSheetManager( 'STRAINS', ANDERSEN_LAB_STRAIN_SHEETS ),
     },
 )
 
