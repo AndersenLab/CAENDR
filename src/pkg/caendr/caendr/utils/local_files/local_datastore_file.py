@@ -176,6 +176,9 @@ class LocalDatastoreFileTemplate(ForeignResourceWatcher):
   # ForeignResourceWatcher Interface Methods
   #
 
+  def get_print_uri(self, species: Species) -> str:
+    return join_path( *self.build(species).get_datastore_uri(schema=BlobURISchema.PATH) )
+
   def check_exists(self, species: Species) -> bool:
     return self.build(species).exists_in_ds()
 

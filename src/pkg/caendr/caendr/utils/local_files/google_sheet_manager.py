@@ -24,6 +24,9 @@ class GoogleSheetManager(ForeignResourceWatcher):
   # Template Methods
   #
 
+  def get_print_uri(self, species: Species) -> str:
+    return f'Google Sheet "{self.__resource_id}" for {species.name}'
+
   def check_exists(self, species: Species) -> bool:
     try:
       get_google_sheet( self.__sheet_ids.get(species.name) )

@@ -12,6 +12,13 @@ class ForeignResourceWatcher(ABC):
   '''
 
   @abstractmethod
+  def get_print_uri(self, species: Species) -> str:
+    '''
+      Get a string representing the foreign resource, for printing.
+    '''
+    pass
+
+  @abstractmethod
   def check_exists(self, species: Species) -> bool:
     '''
       Check whether the foreign resource exists.

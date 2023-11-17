@@ -1,15 +1,19 @@
 from dateutil import parser
 from caendr.services.logger import logger
 
-from caendr.services.elevation import get_elevation
-
 
 
 elevation_cache = {}
 NULL_VALS = ["None", "", "NA", None]
 
 
+# Local get_elevation import because this module is now used in the site
+# (to check required files for database operations),
+# but DiskCache (imported by services.elevation) is not used in the site.
+# TODO: Fix, somehow... Do we even need DiskCache? We're already caching in this file
 def fetch_elevation(lat, lon):
+  from caendr.services.elevation import get_elevation
+
   key = f'{lat}_{lon}'
   elevation = elevation_cache.get(key, None)
   if not elevation:
