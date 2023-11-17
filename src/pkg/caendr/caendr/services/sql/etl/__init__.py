@@ -1,4 +1,5 @@
 from logzero import logger
+from itertools import product
 
 # Local imports
 from .table_config import StrainConfig, WormbaseGeneSummaryConfig, WormbaseGeneConfig, StrainAnnotatedVariantConfig
@@ -23,8 +24,9 @@ TABLE_CONFIG = {
 
 class ETLManager:
 
-    def __init__(self, db, species_list, reload_files: bool = False):
-        self.db = db
+    def __init__(self, app, db, species_list, reload_files: bool = False):
+        self.app = app
+        self.db  = db
         self.dataset_manager = DatasetManager(species_list=species_list, reload_files=reload_files)
 
     def prefetch_all_dbs(self, use_cache: bool = True):
@@ -52,14 +54,33 @@ class ETLManager:
         return f"{self.local_download_path}/{species_name}"
 
 
+    #
+    # Tables
+    #
 
-    ## Loading Tables ##
+    def all_tables(self):
+        return list(self.db.metadata.tables.values())
+
+    @staticmethod
+    def print_tables(*tables):
+        if not len(tables):
+            return 'all tables'
+        return 'tables: ' + ', '.join([ t.__tablename__ for t in tables ])
+
+
+
+    #
+    # Loading Tables
+    #
 
     def load_tables(self, *tables, species_list = None):
         '''
             Load & insert data for one or more SQL tables.
             If no tables are passed, will load data for ALL tables.
         '''
+        if len(tables) == 0:
+            tables = self.all_tables()
+
         for table in tables:
             self.load_table(table, species_list=species_list)
 
@@ -94,3 +115,82 @@ class ETLManager:
         # Print how many entries were added
         total_records = config.table.query.count() - initial_count
         logger.info(f'Inserted {total_records} entries into table {config.table_name}')
+
+
+
+    #
+    # Clearing Tables
+    #
+
+
+    def __drop_all(self, *tables):
+        '''
+            Drop the given tables. If no tables are provided, drops all tables.
+        '''
+        if len(tables) == 0:
+            self.db.drop_all(app=self.app)
+        else:
+            self.db.metadata.drop_all(bind=self.db.engine, checkfirst=True, tables=[ t.__table__ for t in tables ])
+
+    def __create_all(self, *tables):
+        '''
+            Create the given tables. If no tables are provided, creates all tables.
+        '''
+        if len(tables) == 0:
+            self.db.create_all(app=self.app)
+        else:
+            self.db.metadata.create_all(bind=self.db.engine, tables=[ t.__table__ for t in tables ])
+
+    def __drop_species_rows(self, table, species):
+        '''
+            Drops all rows for the given species from the given table.
+        '''
+        del_statement = table.__table__.delete().where(table.__table__.c.species_name == species)
+        self.db.engine.execute(del_statement)
+
+
+    def clear_tables(self, *tables, species_list = None):
+        '''
+            Clear rows from one or more tables in the SQL db.
+
+            Expects tables to be provided in dependency order:
+            E.g., if table B contains a foreign key into table A, they should be provided as [... A, ..., B, ...]
+
+            Args:
+                *tables: List of tables to be cleared. If none are provided, clears all tables.
+                species_list: List of species to clear the rows of. If `None`, clears *all* rows from the given tables.
+        '''
+
+        # If dropping all species, can perform bulk drop/create operations
+        if species_list is None:
+            logger.info(f'Dropping { self.print_tables(*tables) }...')
+            self.__drop_all(*tables)
+            logger.info(f'Creating { self.print_tables(*tables) }...')
+            self.__create_all(*tables)
+
+        # Otherwise, delete individual rows from tables
+        else:
+            logger.info(f'Dropping species [{", ".join(species_list)}] from { self.print_tables(*tables) }...')
+            if tables is None:
+                tables = self.all_tables()
+
+            # Make sure all tables exist
+            self.__create_all(*tables)
+
+            # Loop through tables in reverse order, so rows that depend on earlier tables are dropped first
+            for table, species_name in product(tables[::-1], species_list):
+                self.__drop_species_rows(table, species_name)
+
+        # Commit changes
+        self.db.session.commit()
+
+
+    def clear_table(self, table, species_list = None):
+        '''
+            Clear rows from a table in the SQL db.
+
+            Args:
+                *tables: The table to be cleared.
+                species_list: List of species to clear the rows of. If `None`, clears *all* rows from the given table.
+        '''
+        return self.clear_tables([table], species_list=species_list)

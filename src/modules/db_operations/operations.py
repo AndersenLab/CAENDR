@@ -4,7 +4,7 @@ from caendr.services.logger import logger
 
 from caendr.models.datastore import SPECIES_LIST
 from caendr.models.sql import WormbaseGene, WormbaseGeneSummary, Strain, StrainAnnotatedVariant
-from caendr.services.sql.db import drop_tables, backup_external_db
+from caendr.services.sql.db import backup_external_db
 from caendr.services.sql.etl import ETLManager
 
 
@@ -40,10 +40,10 @@ def execute_operation(app, db, DB_OP, species=None):
 def drop_and_populate_strains(app, db, species):
 
   # Initialize ETL Manager
-  etl_manager = ETLManager(db, SPECIES_LIST, reload_files=True)
+  etl_manager = ETLManager(app, db, SPECIES_LIST, reload_files=True)
 
   # Drop relevant tables
-  drop_tables(app, db, species=species, tables=[Strain.__table__])
+  etl_manager.clear_tables( Strain, species_list=species )
 
   # Fetch and load data using ETL Manager
   etl_manager.load_tables( Strain, species_list=species )
@@ -56,15 +56,11 @@ def drop_and_populate_wormbase_genes(app, db, species):
   logger.info(f'Dropping and populating wormbase genes. Species list: [ {", ".join(spec_strings)} ]')
 
   # Initialize ETL Manager
-  etl_manager = ETLManager(db, SPECIES_LIST, reload_files=True)
+  etl_manager = ETLManager(app, db, SPECIES_LIST, reload_files=True)
 
   # Drop relevant tables
   logger.info(f"Dropping tables...")
-  drop_tables(app, db, species=species, tables=[
-    WormbaseGeneSummary.__table__,
-    WormbaseGene.__table__,
-    # Homolog.__table__,
-  ])
+  etl_manager.clear_tables( WormbaseGeneSummary, WormbaseGene, species_list=species )
 
   # Fetch and load data using ETL Manager
   logger.info("Loading wormbase genes...")
@@ -80,12 +76,11 @@ def drop_and_populate_strain_annotated_variants(app, db, species):
   logger.info(f'Dropping and populating strain annotated variants. Species list: [ {", ".join(spec_strings)} ]')
 
   # Initialize ETL Manager
-  etl_manager = ETLManager(db, SPECIES_LIST, reload_files=True)
+  etl_manager = ETLManager(app, db, SPECIES_LIST, reload_files=True)
 
   # Drop relevant table
   logger.info(f"Dropping table...")
-  db.session.commit()
-  drop_tables(app, db, species=species, tables=[StrainAnnotatedVariant.__table__])
+  etl_manager.clear_tables(StrainAnnotatedVariant, species_list=species)
 
   # Fetch and load data using ETL Manager
   logger.info("Loading strain annotated variants...")
@@ -99,10 +94,10 @@ def drop_and_populate_all_tables(app, db, species):
   logger.info(f'Dropping and populating all tables. Species list: [ {", ".join(spec_strings)} ]')
 
   logger.info("[1/6] Downloading databases...eta ~0:15")
-  etl_manager = ETLManager(db, SPECIES_LIST, reload_files=True)
+  etl_manager = ETLManager(app, db, SPECIES_LIST, reload_files=True)
 
   logger.info("[2/6] Dropping tables...eta ~0:01")
-  drop_tables(app, db, species=species)
+  etl_manager.clear_tables(species_list=species)
 
   logger.info("[3/6] Load Strains...eta ~0:24")
   etl_manager.load_tables(Strain, species_list=species)
