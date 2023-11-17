@@ -39,7 +39,7 @@ def parse_gene_gtf(species, GENE_GTF: os.PathLike, GENE_IDS: os.PathLike, start_
       This function fetches and parses the canonical geneset GTF
       and yields a dictionary for each row.
   """
-  gene_gtf = read_gtf_as_dataframe(GENE_GTF)
+  gene_gtf = read_gtf_as_dataframe(GENE_GTF.__fspath__())
   gene_ids = get_gene_ids(species, GENE_IDS)
 
   # Rename seqname to chrom
