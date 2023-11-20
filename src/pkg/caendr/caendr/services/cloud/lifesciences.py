@@ -23,14 +23,6 @@ parent_id = f"projects/{GOOGLE_CLOUD_PROJECT_NUMBER}/locations/{GOOGLE_CLOUD_REG
 
 
 
-def get_operation_id_from_name(operation_name):
-  try:
-    return operation_name.rsplit('/', 1)[-1]
-  except:
-    logger.warn(f'Could not parse operation ID from operation_name "{operation_name}"')
-    return operation_name
-
-
 @use_service('lifesciences', 'v2beta')
 def start_pipeline(SERVICE, task_id, pipeline_request):
   req_body = get_json_from_class(pipeline_request)
@@ -62,6 +54,8 @@ def get_pipeline_status(SERVICE, operation_name):
       done: true
     }
   """
+  from caendr.services.cloud.utils import get_operation_id_from_name
+
   logger.debug(f'get_pipeline_status: operation_name:{operation_name}')
   request = SERVICE.projects().locations().operations().get(name=operation_name)
   response = request.execute()

@@ -12,8 +12,7 @@ from caendr.models.pub_sub import PubSubAttributes, PubSubMessage, PubSubStatus
 
 from caendr.services.cloud.task import update_task_status, verify_task_headers
 from caendr.services.cloud.pubsub import get_attribute, pubsub_endpoint
-from caendr.services.cloud.lifesciences import get_operation_id_from_name
-from caendr.services.cloud.utils import update_all_linked_status_records
+from caendr.services.cloud.utils import get_operation_id_from_name, update_all_linked_status_records
 from caendr.services.persistent_logger import PersistentLogger
 
 
@@ -63,6 +62,7 @@ def start_task(task_route):
 
   #return jsonify({'operation': op.id}), 200
   return jsonify({}), 200
+
 
 
 @task_handler_bp.route('/status', methods=['POST'])

@@ -172,10 +172,12 @@ def submit():
       # Try submitting the job & returning a JSON status message
       response, code = try_submit(HeritabilityReport.kind, user, data, no_cache)
 
-      # If there is an error or a ready message, flash it
-      if not code == 200:
+      # If there was an error, flash it
+      if code != 200 and int(request.args.get('reloadonerror', 1)):
         flash(response['message'], 'danger')
-      elif response.get('message') and response['ready']:
+
+      # If the response contains a caching message, flash it
+      elif response.get('message') and response.get('ready', False):
         flash(response.get('message'), 'success')
 
       # Return the response
