@@ -83,6 +83,7 @@ db.init_app(app)
 def run():
   start = time.perf_counter()
   use_mock_data = get_env_var('USE_MOCK_DATA', False, var_type=bool)
+  reload_files  = get_env_var('RELOAD_FILES',  True,  var_type=bool)
 
   species = get_env_var('SPECIES_LIST', can_be_none=True)
   if species is not None:
@@ -92,7 +93,7 @@ def run():
   text = ""
 
   try:
-    execute_operation(app, db, DB_OP, species=species)
+    execute_operation(app, db, DB_OP, species=species, reload_files=reload_files)
     text = text + f"\n\nStatus: OK"
     text = text + f"\nOperation: {DB_OP}"
     text = text + f"\nOperation ID: {OPERATION_ID}"
