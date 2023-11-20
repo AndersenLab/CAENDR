@@ -6,7 +6,7 @@ from sqlalchemy.sql.expression import null
 
 
 
-def parse_phenotypedb_traits_data(species, *fnames: str):
+def parse_phenotypedb_traits_data(species, **files):
   """
     Parsing function for trait files that follow the outlined structure:
     - row 1 represents the headers of the table, where:
@@ -27,14 +27,14 @@ def parse_phenotypedb_traits_data(species, *fnames: str):
   
   logger.info('Parsing extracted phenotype database TSV file(s)')
 
-  # Loop through each line in each TSV file, indexed
-  for fname in fnames:
-    with open(fname) as csv_file:
+  # Loop through each line in each file, indexed
+  for file_name, file_path in files.items():
+    with open(file_path) as csv_file:
       for idx, row in enumerate( csv.reader(csv_file, delimiter='\t') ):
 
         # First line is column names - don't interpret as data
         if idx == 0:
-          logger.info(f'Column names in file "{fname}" are: {", ".join(row)}')
+          logger.info(f'Column names in file "{file_name}" are: {", ".join(row)}')
           column_header_map = { name: idx for idx, name in enumerate(row) }
           continue
 
