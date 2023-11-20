@@ -5,9 +5,9 @@ from caendr.services.logger import logger
 from .cloudrun     import get_job_execution_status
 from .lifesciences import get_pipeline_status
 
-from caendr.models.datastore         import PipelineOperation, HeritabilityReport, NemascanMapping, get_entity_by_kind
+from caendr.models.datastore         import HeritabilityReport, NemascanReport, get_entity_by_kind
 from caendr.models.error             import APINotFoundError, NotFoundError
-from caendr.models.task              import TaskStatus
+from caendr.models.status            import JobStatus
 from caendr.services.email           import send_email
 from caendr.services.cloud.datastore import query_ds_entities
 from caendr.services.cloud.secret    import get_secret
@@ -21,6 +21,47 @@ NO_REPLY_EMAIL        = get_secret('NO_REPLY_EMAIL')
 
 
 NOTIFICATION_LOG_PREFIX = 'EMAIL_NOTIFICATION'
+
+
+
+def make_dns_name_safe(s: str) -> str:
+  '''
+    Convert a string to DNS name format.
+
+    Rules for this format:
+      - May only contain alphanumeric characters & hyphens
+      - Must start with a letter
+      - Must not end with a hyphen
+      - May be at most 64 characters long
+  '''
+  return s.lower().replace('_', '-')
+
+
+
+def parse_operation_name(operation_name):
+  '''
+    Parse a GCP operation name into a dictionary of values,
+    where each pair of strings in the name becomes a key:value pair.
+
+    Example:
+      projects/abc/locations/def -> { 'projects': 'abc', 'locations': 'def' }
+  '''
+  split_name = operation_name.split('/')
+  return { split_name[i]: split_name[i+1] for i in range(0, len(split_name), 2) }
+
+
+
+def get_operation_id_from_name(operation_name):
+  '''
+    Parse a GCP operation name into an ID.
+    Attempts to take right-most component of name, and returns full name if this fails.
+  '''
+  try:
+    return operation_name.rsplit('/', 1)[-1]
+  except:
+    logger.warn(f'Could not parse operation ID from operation_name "{operation_name}"')
+    return operation_name
+
 
 
 
@@ -50,83 +91,38 @@ def get_operation_status(operation_name):
 
 
 
-def update_pipeline_operation_record(operation_name):
-  '''
-    Update the status fields (done, error) of a pipeline operation record based on the current status of the pipeline itself.
-  '''
-
-  # Get the operation status, plus the parsed service & id values
-  try:
-    status, service, op_id = get_operation_status(operation_name)
-
-  # Operation could not be found
-  except Exception as ex:
-    raise APINotFoundError(f'Operation "{operation_name}" NOT FOUND -- nothing to do') from ex
-
-  # Try getting the operation record
-  # Raises NotFound error if record doesn't exist
-  op = PipelineOperation.get_ds(op_id, silent=False)
-
-  # Update and return the record object
-  logger.info(f"[UPDATE {op_id}] Done = {status.get('done')}, Error = {status.get('error')}")
-  op.set_properties(**{
-    'done':  status.get('done'),
-    'error': status.get('error'),
-  })
-  op.save()
-  return op
-
-
-
-def update_all_linked_status_records(kind, operation_name):
+def update_all_linked_status_records(runner, exec_id, status):
   '''
     Update the Status fields of all reports linked to the given job.
     Sends a notification email to linked user(s) as necessary.
   '''
 
-  logger.debug(f'update_all_linked_status_records: kind:{kind} operation_name:{operation_name}')
+  # Log this operation
+  op_id   = f'{ runner.job_name }-{ exec_id }'
+  op_name = runner.get_full_execution_name(exec_id)
+  logger.debug(f'[UPDATE {op_id}] Updating all linked status records with kind = {runner.kind}, operation name = {op_name} to status "{status}"')
 
-  # Get the operation status, plus the parsed service & id values
-  try:
-    status, service, op_id = get_operation_status(operation_name)
-
-  # Operation could not be found
-  except Exception as ex:
-    raise APINotFoundError(f'Operation "{operation_name}" NOT FOUND -- nothing to do') from ex
-
-  # Get task status from operation values
-  done  = status.get('done')
-  error = status.get('error')
-  if error:
-    logger.error(f"[UPDATE {op_id}] Error: Kind: {kind} Operation Name: {operation_name} error: {error}")
-    status = TaskStatus.ERROR
-  elif done:
-    logger.debug(f"[UPDATE {op_id}] Complete: Kind: {kind} Operation Name: {operation_name}")
-    status = TaskStatus.COMPLETE
-  else:
-    status = TaskStatus.RUNNING
-
-  if kind is None:
+  if runner.kind is None:
     logger.warn(f'[UPDATE {op_id}] "kind" is undefined.')
 
-  filters = [("operation_name", "=", operation_name)]
-  ds_entities = query_ds_entities(kind, filters=filters, keys_only=True)
+  filters = [("operation_name", "=", op_name)]
+  ds_entities = query_ds_entities(runner.kind, filters=filters, keys_only=True)
   for entity in ds_entities:
 
     # Retrieve the current status record as an Entity of the correct type
     try:
-      status_record = get_entity_by_kind(kind, entity.key.name)
+      status_record = get_entity_by_kind(runner.kind, entity.key.name)
     except (ValueError, NotFoundError) as ex:
       logger.warn(f'[UPDATE {op_id}] Skipping status record update: {ex}')
 
     # Only send a notification if the report's status has not been updated yet
     # TODO: Should be able to remove kind check if all report notifications merged into one system
     should_send_notification = all([
-      done,
-      status_record['status'] not in [TaskStatus.COMPLETE, TaskStatus.ERROR],
-      kind in [NemascanMapping.kind, HeritabilityReport.kind],
+      status in JobStatus.FINISHED,
+      status_record['status'] not in JobStatus.FINISHED,
+      runner.kind in [NemascanReport.kind, HeritabilityReport.kind],
     ])
-    logger.debug(f'[{NOTIFICATION_LOG_PREFIX}] Should send notification for report {status_record.id}: {should_send_notification}. (done = {done}, kind = {kind}, current status = {status_record["status"]})')
+    logger.debug(f'[{NOTIFICATION_LOG_PREFIX}] Should send notification for report {status_record.id}: {should_send_notification}. (kind = {runner.kind}, current status = {status_record["status"]}, new status = {status})')
 
     # Update the report status
     status_record.set_properties(status=status)
