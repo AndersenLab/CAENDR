@@ -20,6 +20,7 @@ MODULE_DB_OPERATIONS_BUCKET_NAME = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME
 # Filepaths
 RELEASE_FILEPATH = get_env_var('MODULE_DB_OPERATIONS_RELEASE_FILEPATH', as_template=True)
 SVA_FILEPATH     = get_env_var('MODULE_DB_OPERATIONS_SVA_FILEPATH',     as_template=True)
+PHENOTYPE_FILEPATH = get_env_var('MODULE_DB_OPERATIONS_PHENOTYPE_FILEPATH', as_template=True)
 
 # Filenames
 GENE_GFF_FILENAME = get_env_var('GENE_GFF_FILENAME',  as_template=True)
@@ -124,3 +125,6 @@ StrainAnnotatedVariantConfig = TableConfig(
     'SVA_CSVGZ': LocalDatastoreFileTemplate( 'SVA_CSVGZ', MODULE_DB_OPERATIONS_BUCKET_NAME, SVA_FILEPATH, SVA_FILENAME ),
   },
 )
+
+# table       = PhenotypeDatabase,
+# generator   = parse_phenotypedb_traits_data,
