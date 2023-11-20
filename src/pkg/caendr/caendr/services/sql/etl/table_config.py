@@ -7,8 +7,11 @@ from caendr.services.cloud.secret  import get_secret
 from .strains                      import fetch_andersen_strains
 from .wormbase                     import parse_gene_gtf, parse_gene_gff_summary
 from .strain_annotated_variants    import parse_strain_variant_annotation_data
+from .phenotype_db                 import parse_phenotypedb_traits_data
 
-from caendr.models.sql             import Strain, WormbaseGeneSummary, WormbaseGene, StrainAnnotatedVariant
+from caendr.models.sql             import Strain, WormbaseGeneSummary, WormbaseGene, StrainAnnotatedVariant, PhenotypeDatabase
+from caendr.models.datastore       import Species, TraitFile
+from caendr.services.cloud.storage import BlobURISchema
 from caendr.models.datastore       import Species
 from caendr.utils.local_files      import ForeignResourceWatcher, LocalDatastoreFileTemplate, GoogleSheetManager
 
@@ -126,5 +129,10 @@ StrainAnnotatedVariantConfig = TableConfig(
   },
 )
 
-# table       = PhenotypeDatabase,
-# generator   = parse_phenotypedb_traits_data,
+PhenotypeDbConfig = TableConfig(
+  table = PhenotypeDatabase,
+  parse = parse_phenotypedb_traits_data,
+  files = {
+    tf.name: LocalDatastoreFileTemplate( tf.name, *tf.get_filepath(schema=BlobURISchema.PATH), exists_for_species={tf['species']} ) for tf in TraitFile.query_ds()
+  },
+)

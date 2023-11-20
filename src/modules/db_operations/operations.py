@@ -97,16 +97,15 @@ def drop_and_populate_phenotype_db(app, db, species):
   logger.info(f'Dropping and populating phenotype database. Species list: [ {", ".join(spec_strings)} ]')
 
   # Initialize ETL Manager
-  etl_manager = ETLManager(SPECIES_LIST, reload_files=True)
+  etl_manager = ETLManager(app, db, reload_files=True)
 
-  # Drop relevant table
+  # # Drop relevant table
   logger.info(f"Dropping table...")
-  db.session.commit()
-  drop_tables(app, db, species=species, tables=[PhenotypeDatabase.__table__])
+  etl_manager.clear_tables(PhenotypeDatabase, species_list=species)
 
   # Fetch and load data using ETL Manager
-  logger.info("Loading phenotype database...")
-  etl_manager.load_phenotype_db(db, species)
+  logger.info("Loading phenotypes...")
+  etl_manager.load_tables(PhenotypeDatabase, species_list=species)
 
 
 def drop_and_populate_all_tables(app, db, species):
