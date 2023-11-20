@@ -1,10 +1,11 @@
 from logzero import logger
 
-from caendr.models.sql import WormbaseGeneSummary, WormbaseGene, Homolog, StrainAnnotatedVariant
+from caendr.models.sql import WormbaseGeneSummary, WormbaseGene, Homolog, StrainAnnotatedVariant, PhenotypeDatabase
 
 from .wormbase import parse_gene_gtf, parse_gene_gff_summary, parse_orthologs
 from .homologs import parse_homologene
 from .strain_annotated_variants import parse_strain_variant_annotation_data
+from .phenotype_db import parse_phenotypedb_traits_data
 
 
 # https://github.com/phil-bergmann/2016_DLRW_brain/blob/3f69c945a40925101c58a3d77c5621286ad8d787/brain/data.py
@@ -175,13 +176,12 @@ def load_phenotype_db(self, db, species=None):
       Args:
         db (SQLAlchemy): [SQLAlchemy db instance to insert into.]
     '''
-    logger.info('Loading strain variant annotated csv')
+    logger.info('Loading trait csv files')
     self.load_table(
         db,
-        table       = ...,  # TODO: your SQL table class
-        generator   = ...,  # TODO: your parsing function defined in phenotype_db.py (the one in this folder)
-        fetch_funcs = [     # TODO: list all of your fetch functions defined in _db_internal.py
-            self.dataset_manager.FUNCTION_NAME,
+        table       = PhenotypeDatabase,             
+        generator   = parse_phenotypedb_traits_data, 
+        fetch_funcs = [                               # TODO: list all of your fetch functions defined in _db_internal.py
         ],
         species     = species
     )
