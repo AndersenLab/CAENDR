@@ -10,7 +10,7 @@ SVA_FILEPATH     = get_env_var('MODULE_DB_OPERATIONS_SVA_FILEPATH',     as_templ
 
 # TODO: filepath for phenotype files, pulled from ENV
 #       in dev env, should point to caendr-dev-db-4objm/trait_files/{ species }
-
+PHENOTYPE_FILEPATH = get_env_var('MODULE_DB_OPERATIONS_PHENOTYPE_FILEPATH')
 
 # Construct URL templates for external DBs (not managed by CaeNDR)
 # TODO: Is this even still necessary?
@@ -31,12 +31,6 @@ internal_db_blob_templates = {
     'GENE_GFF':  f'{RELEASE_FILEPATH.raw_string}/{get_env_var("GENE_GFF_FILENAME")}',
     'GENE_IDS':  f'{RELEASE_FILEPATH.raw_string}/{get_env_var("GENE_IDS_FILENAME")}',
     'SVA_CSVGZ': f'{SVA_FILEPATH.raw_string}/{get_env_var("SVA_CSVGZ_FILENAME", as_template=True).raw_string}',
-
-    # TODO: New phenotype filepath templates:
-    #       In dev env, should add the following:
-    #         - 20230322_all_compounds_traitfile.tsv
-    #         - 20231103_ZhangGeneExpression.tsv
-    #       Here, you can assign them whatever names you'd like
 }
 
 

@@ -96,7 +96,3 @@ def fetch_sva_db(self, species: str, **kwargs):
     return self.fetch_internal_db('SVA_CSVGZ', species, **kwargs)
 
 
-# TODO: make a fetch function for EACH trait file
-#       Template for a single file:
-def fetch_FILENAME_GOES_HERE(self, species: str, **kwargs):
-    return self.fetch_internal_db(FILENAME_GOES_HERE , species, **kwargs)
