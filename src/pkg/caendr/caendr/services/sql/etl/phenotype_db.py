@@ -50,7 +50,7 @@ def parse_phenotypedb_traits_data(species, **files):
           strain_name = header
           trait_value = row[column_header_map[header]]
 
-        # Yield each trait measurement as a new row
+          # Yield each trait measurement as a new row
           yield {
             'trait_name':   trait_name,
             'strain':       strain_name,

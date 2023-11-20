@@ -99,7 +99,7 @@ def drop_and_populate_phenotype_db(app, db, species):
   # Initialize ETL Manager
   etl_manager = ETLManager(app, db, reload_files=True)
 
-  # # Drop relevant table
+  # Drop relevant table
   logger.info(f"Dropping table...")
   etl_manager.clear_tables(PhenotypeDatabase, species_list=species)
 
