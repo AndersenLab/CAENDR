@@ -7,7 +7,7 @@ from caendr.services.cloud.secret  import get_secret
 from .strains                      import fetch_andersen_strains
 from .wormbase                     import parse_gene_gtf, parse_gene_gff_summary
 from .strain_annotated_variants    import parse_strain_variant_annotation_data
-from .phenotype_db                 import parse_phenotypedb_traits_data
+from .phenotype_db                 import parse_phenotypedb_traits_data, parse_phenotypedb_bulk_trait_file
 
 from caendr.models.sql             import Strain, WormbaseGeneSummary, WormbaseGene, StrainAnnotatedVariant, PhenotypeDatabase
 from caendr.models.datastore       import Species, TraitFile
@@ -156,7 +156,7 @@ PhenotypeDatabaseConfig = TableConfig(
 
   # Bulk file(s)
   ParseConfig(
-    parse_phenotypedb_traits_data,  # TODO: Use bulk file parser
+    parse_phenotypedb_bulk_trait_file,
     {
       tf.name: LocalDatastoreFileTemplate( tf.name, *tf.get_filepath(schema=BlobURISchema.PATH), exists_for_species={tf['species']} )
         for tf in TraitFile.query_ds()
@@ -166,7 +166,7 @@ PhenotypeDatabaseConfig = TableConfig(
 
   # Non-bulk files
   ParseConfig(
-    parse_phenotypedb_traits_data,  # TODO: Use non-bulk file parser
+    parse_phenotypedb_traits_data,
     {
       tf.name: LocalDatastoreFileTemplate( tf.name, *tf.get_filepath(schema=BlobURISchema.PATH), exists_for_species={tf['species']} )
         for tf in TraitFile.query_ds()
