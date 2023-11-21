@@ -98,27 +98,27 @@ class LocalDatastoreFile(os.PathLike):
   # Fetch
   #
 
-  def __print_locations(self):
-    return f'{self.get_local_filepath(zipped = True)}  <-  {self.get_datastore_uri(schema=BlobURISchema.HTTPS)}'
+  def __print_locations(self, zipped):
+    return f'{self.get_local_filepath(zipped=zipped)}  <-  {self.get_datastore_uri(schema=BlobURISchema.HTTPS)}'
 
   def fetch( self, use_cache: bool = True ):
 
     # Check if file is already downloaded and unzipped
     if use_cache and self.exists_local(zipped=False):
-      logger.info(f'Already downloaded datastore file [{self._file_id}]:\n\t{ self.__print_locations() }')
+      logger.info(f'Already downloaded datastore file [{self._file_id}]:\n\t{ self.__print_locations(zipped=False) }')
       local_is_zipped = False
 
     # Check if file is already downloaded and zipped
     elif use_cache and self.exists_local(zipped=True):
-      logger.info(f'Already downloaded datastore file [{self._file_id}] (zipped):\n\t{ self.__print_locations() }')
+      logger.info(f'Already downloaded datastore file [{self._file_id}] (zipped):\n\t{ self.__print_locations(zipped=True) }')
       local_is_zipped = True
 
     # Download the external file
     else:
-      logger.info(f'Downloading datastore file [{self._file_id}]:\n\t{ self.__print_locations() }')
+      logger.info(f'Downloading datastore file [{self._file_id}]:\n\t{ self.__print_locations(zipped = self.source_is_zipped) }')
       download_blob_to_file(self._bucket, *self._path, destination=self._LOCAL_PATH, filename=self.get_local_filename(zipped = self.source_is_zipped))
       local_is_zipped = self.source_is_zipped
-      logger.info(f'Completed download of file [{self._file_id}]:\n\t{ self.__print_locations() }')
+      logger.info(f'Completed download of file [{self._file_id}]:\n\t{ self.__print_locations(zipped = self.source_is_zipped) }')
 
     # Unzip the downloaded file, if applicable
     if local_is_zipped and self._unzip:
