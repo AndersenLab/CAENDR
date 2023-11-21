@@ -103,7 +103,7 @@ class DatabaseOperationPipeline(JobPipeline):
     return {
       'props': {
         'db_operation':   db_operation,
-        'note':           data.get('node'),
+        'note':           data.get('note'),
         'args': {
           'SPECIES_LIST': data.get('species'),
         },
