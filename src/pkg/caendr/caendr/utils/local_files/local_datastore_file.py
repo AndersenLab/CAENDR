@@ -91,7 +91,9 @@ class LocalDatastoreFile(os.PathLike):
     return os.path.exists( self.get_local_filepath(zipped=zipped) )
   
   def __fspath__(self):
-    return self.get_local_filepath(zipped = not self._unzip)
+    if not self._unzip and self.exists_local(zipped = True):
+      return self.get_local_filepath(zipped = True)
+    return self.get_local_filepath(zipped = False)
 
 
   #
