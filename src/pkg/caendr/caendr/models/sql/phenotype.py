@@ -5,7 +5,7 @@ class PhenotypeDatabase(DictSerializable, db.Model):
   """
       Table description
   """
-
+  id = db.Column(db.Integer, primary_key=True)
   trait_name = db.Column(db.String())
   strain_name = db.Column(db.String())
   trait_value = db.Column(db.Float())

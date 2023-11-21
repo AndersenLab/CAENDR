@@ -60,3 +60,39 @@ def parse_phenotypedb_traits_data(species, *fnames: str):
 
   # In Python, loop vars maintain their final value after the loop ends
   print(f'Processed {idx} lines total for {species.name}')
+
+
+
+def parse_single_trait_file(species, *fnames: str):
+  """
+    Parsing function for single trait files.
+    The first row of the table serves as the headers (expected: 'Strain', TRAIT_NAME).
+    The following rows are strain names with corresponding trait values
+
+    Expected sample structure of files:
+    [
+      Strain       Carbaryl_length
+      AB1          6.26348038596805
+      BRC20263     -8.24506908772116
+      CB4854       6.03000802518469
+    ]
+  """
+
+  logger.info('Parsing extracted phenotype database TSV file(s)')
+
+  # Loop through each line in each TSV file, indexed
+  for fname in fnames:
+    with open(fname) as csv_file:
+      for idx, row in enumerate( csv.reader(csv_file, delimiter='\t') ):
+
+        # Get trait name from the first line of the table
+        if idx == 0:
+          trait_name = row[1]
+          continue
+
+        #  Yield each row as an object
+        yield {
+          'trait_name': trait_name,
+          'strain': row[0],
+          'trait_value': row[1],
+        }
