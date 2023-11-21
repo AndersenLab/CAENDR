@@ -53,10 +53,10 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
 
     # If published by CaeNDR, go to CaeNDR folder
     if self.from_caendr:
-      return TokenizedString('trait_files/caendr/{SPECIES}')
+      return TokenizedString('trait_files/caendr/${SPECIES}')
 
     # If public user submission, go to user folder
-    return TokenizedString('trait_files/public/{SPECIES}')
+    return TokenizedString('trait_files/public/${SPECIES}')
 
 
   #
@@ -75,7 +75,7 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
   @property
   def is_bulk_file(self):
     return self._get_raw_prop('is_bulk_file', False)
-  
+
   @is_bulk_file.setter
   def is_bulk_file(self, val):
     return self._set_raw_prop('is_bulk_file', bool(val))
