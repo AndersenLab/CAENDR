@@ -74,7 +74,7 @@ class DatasetRelease(SpeciesEntity):
     if release is None:
       raise NotFoundError(DatasetRelease, {'name': release_name})
 
-    if release['species'] != species:
+    if release['species'].name != species_name:
       raise NotFoundError(DatasetRelease, {'name': release_name, 'species': species_name})
 
     return release
