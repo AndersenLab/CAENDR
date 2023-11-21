@@ -56,7 +56,7 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
       return TokenizedString('trait_files/caendr/${SPECIES}')
 
     # If public user submission, go to user folder
-    return TokenizedString('trait_files/public/${SPECIES}')
+    return TokenizedString('trait_files/public/' + self['username'])
 
 
   #
