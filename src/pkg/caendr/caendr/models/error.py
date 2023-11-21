@@ -238,10 +238,6 @@ class FileUploadError(InternalError):
     super().__init__()
 
 
-class SpeciesUrlNameError(InternalError):
-  def __init__(self, species_name):
-    self.species_name = species_name
-
 class InvalidTokenError(InternalError):
   def __init__(self, token, source):
     self.token = token

@@ -8,6 +8,7 @@ from caendr.models.datastore import DatasetRelease, Species
 from caendr.models.error import NotFoundError
 from caendr.services.dataset_release import get_all_dataset_releases, find_dataset_release
 from caendr.utils.env import get_env_var
+from caendr.utils.views import parse_species_and_release
 
 
 BAM_BAI_DOWNLOAD_SCRIPT_NAME = get_env_var('BAM_BAI_DOWNLOAD_SCRIPT_NAME', as_template=True)
@@ -64,14 +65,8 @@ def download_bam_bai_file(species_name='', strain_name='', ext=''):
 
 @data_downloads_bp.route('/download/<string:species_name>/latest/bam-bai-download-script',                   methods=['GET'])
 @data_downloads_bp.route('/download/<string:species_name>/<string:release_version>/bam-bai-download-script', methods=['GET'])
-def download_bam_bai_script(species_name, release_version=None):
-
-  # Parse the species & release from the URL
-  try:
-    species = Species.from_name(species_name, from_url=True)
-    release = DatasetRelease.from_name(release_version, species_name=species.name)
-  except NotFoundError:
-    return abort(404)
+@parse_species_and_release
+def download_bam_bai_script(species: Species, release: DatasetRelease):
 
   # Compute the desired filename from the species & release
   filename = BAM_BAI_DOWNLOAD_SCRIPT_NAME.get_string(**{

@@ -191,7 +191,7 @@ $("#speciesSelect").on('change', function(){
 // Setting up Release Notes link
 $('#nav-linkTwo-tab').click(function() {
     const species = $('#speciesSelect').val()
-    let url = "{{ url_for('data_releases.data_release_list', species='SPECIES') }}";
+    let url = "{{ url_for('data_releases.data_release_list', species_name='SPECIES') }}";
     if (species) {
         url = url.replace("SPECIES", species);
     } else {

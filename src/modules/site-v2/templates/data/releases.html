@@ -9,7 +9,7 @@
     {% for RELEASE in RELEASES %}
       <li class="nav-item">
         <a class="nav-link rounded-0 text-bg-light mx-1 {% if release_version == RELEASE.version %}active fw-bold{% endif %}" {% if RELEASE.disabled %} href="#" disabled {% else %}
-          href="{{ url_for('data_releases.data_release_list', species = species.get_slug(), release_version = RELEASE.version) }}"
+          href="{{ url_for('data_releases.data_release_list', species_name = species.get_slug(), release_version = RELEASE.version) }}"
           {% endif %}>{{ RELEASE.version }}</a>
       </li>
     {% endfor %}

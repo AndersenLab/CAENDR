@@ -25,8 +25,8 @@ from caendr.models.datastore import DatasetRelease, Species
 from caendr.models.sql import Strain, StrainAnnotatedVariant
 from caendr.services.cloud.storage import generate_blob_url, check_blob_exists
 from caendr.services.dataset_release import get_all_dataset_releases, get_browser_tracks_path, get_release_bucket, find_dataset_release
-from caendr.models.error import NotFoundError, SpeciesUrlNameError
 from caendr.utils.env import get_env_var
+from caendr.utils.views import parse_species_and_release
 
 
 BAM_BAI_DOWNLOAD_SCRIPT_NAME = get_env_var('BAM_BAI_DOWNLOAD_SCRIPT_NAME', as_template=True)
@@ -36,17 +36,6 @@ releases_bp = Blueprint(
   'data_releases', __name__, template_folder='templates'
 )
 
-
-def interpret_url_vars(species_name, release_version):
-  species = Species.from_name(species_name, from_url=True)
-
-  if species.get_slug() != species_name:
-    raise SpeciesUrlNameError(species.get_slug())
-
-  releases = get_all_dataset_releases(order='-version', species=species.name)
-  release  = find_dataset_release(releases, release_version)
-
-  return species, releases, release
 
 
 # ============= #
@@ -67,31 +56,20 @@ def data_releases():
   })
 
 
-@releases_bp.route('/<string:species>/latest')
-@releases_bp.route('/<string:species>/<string:release_version>')
+@releases_bp.route('/<string:species_name>/latest')
+@releases_bp.route('/<string:species_name>/<string:release_version>')
 @cache.memoize(60*60)
-def data_release_list(species, release_version=None):
+@parse_species_and_release
+def data_release_list(species: Species, release: DatasetRelease):
   """
     Default data page - lists available releases.
   """
-
-  # Look up the species and release version
-  try:
-    species, releases, release = interpret_url_vars(species, release_version)
-
-  # If species name provided with underscore instead of dash, redirect to dashed version of URL
-  except SpeciesUrlNameError as ex:
-    return redirect(url_for('data_releases.data_release_list', species=ex.species_name, release_version=release_version))
-
-  # If either could not be found, return an error page
-  except NotFoundError:
-    return abort(404)
 
   # Package common params into an object
   params = {
     'species':  species,
     'RELEASE':  release,
-    'RELEASES': releases,
+    'RELEASES': get_all_dataset_releases(order='-version', species=species.name),
     'release_bucket': get_release_bucket(),
     'release_path': release.get_versioned_path_template().get_string(SPECIES = species.name),
     'fasta_path': release.get_fasta_filepath_url() if release.check_fasta_file_exists() else None,
@@ -170,22 +148,11 @@ def data_v01(params, files):
 # ======================= #
 #   Alignment Data Page   #
 # ======================= #
-@releases_bp.route('/<string:species>/latest/alignment')
-@releases_bp.route('/<string:species>/<string:release_version>/alignment')
+@releases_bp.route('/<string:species_name>/latest/alignment')
+@releases_bp.route('/<string:species_name>/<string:release_version>/alignment')
 @cache.memoize(60*60)
-def alignment_data(species, release_version=None):
-
-  # Look up the species and release version
-  try:
-    species, releases, release = interpret_url_vars(species, release_version)
-
-  # If species name provided with underscore instead of dash, redirect to dashed version of URL
-  except SpeciesUrlNameError as ex:
-    return redirect(url_for('data_releases.alignment_data', species=ex.species_name, release_version=release_version))
-
-  # If either could not be found, return an error page
-  except NotFoundError:
-    return abort(404)
+@parse_species_and_release
+def alignment_data(species: Species, release: DatasetRelease):
 
   # Pre-2020 releases don't have data organized the same way
   # TODO: Error page? Redirect to main release page?
@@ -200,9 +167,9 @@ def alignment_data(species, release_version=None):
 
     'species':  species,
     'RELEASE':  release,
-    'RELEASES': releases,
+    'RELEASES': get_all_dataset_releases(order='-version', species=species.name),
 
-    'strain_listing': query_strains(release_version=release_version, species=species.name),
+    'strain_listing': query_strains(release_version=release['version'], species=species.name),
   })
   # DATASET_RELEASE, WORMBASE_VERSION = list(filter(lambda x: x[0] == release_version, RELEASES))[0]
   # REPORTS = ["alignment"]
@@ -212,26 +179,15 @@ def alignment_data(species, release_version=None):
 # =========================== #
 #   Strain Issues Data Page   #
 # =========================== #
-@releases_bp.route('/<string:species>/latest/strain_issues')
-@releases_bp.route('/<string:species>/<string:release_version>/strain_issues')
+@releases_bp.route('/<string:species_name>/latest/strain_issues')
+@releases_bp.route('/<string:species_name>/<string:release_version>/strain_issues')
 @cache.memoize(60*60)
-def strain_issues(species, release_version=None):
+@parse_species_and_release
+def strain_issues(species: Species, release: DatasetRelease):
   """
     Strain Issues page
     Lists all strains with known issues for a given species & release.
   """
-
-  # Look up the species and release version
-  try:
-    species, releases, release = interpret_url_vars(species, release_version)
-
-  # If species name provided with underscore instead of dash, redirect to dashed version of URL
-  except SpeciesUrlNameError as ex:
-    return redirect(url_for('data_releases.strain_issues', species=ex.species_name, release_version=release_version))
-
-  # If either could not be found, return an error page
-  except NotFoundError:
-    return abort(404)
 
   # Pre-2020 releases don't have data organized the same way
   # TODO: Error page? Redirect to main release page?
@@ -246,7 +202,7 @@ def strain_issues(species, release_version=None):
 
     'species':  species,
     'RELEASE':  release,
-    'RELEASES': releases,
+    'RELEASES': get_all_dataset_releases(order='-version', species=species.name),
 
-    'strain_listing_issues': query_strains(release_version=release_version, species=species.name, issues=True),
+    'strain_listing_issues': query_strains(release_version=release['version'], species=species.name, issues=True),
   })

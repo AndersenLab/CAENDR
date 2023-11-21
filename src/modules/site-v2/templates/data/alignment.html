@@ -3,7 +3,7 @@
 {% block content %}
 
 <p>Bolded strains are isotype reference strains, and tabbed non-bold face strains are strains within an isotype group but not the isotype reference strain.</p>
-<p>Only strains with whole-genome sequencing data have BAM files for download. If you do not see a strain, check the <a href="{{ url_for('data_releases.strain_issues', species = species.get_slug(), selected_release = selected_release) }}">Strain Issues</a> page.
+<p>Only strains with whole-genome sequencing data have BAM files for download. If you do not see a strain, check the <a href="{{ url_for('data_releases.strain_issues', species_name = species.get_slug(), selected_release = selected_release) }}">Strain Issues</a> page.
 Some strains have been flagged and removed from distribution and analysis pipelines for a variety of reasons.</p>
 
 {% include('releases/download_tab_strain_v2.html') %}
