@@ -25,7 +25,7 @@ def parse_phenotypedb_traits_data(species, *fnames: str):
     ]
   """
   
-  logger.info('Parsing extracted phenotype database TSV file(s)')
+  logger.info('Parsing extracted phenotype database bulk TSV file(s)')
 
   # Loop through each line in each TSV file, indexed
   for fname in fnames:
@@ -78,7 +78,7 @@ def parse_single_trait_file(species, *fnames: str):
     ]
   """
 
-  logger.info('Parsing extracted phenotype database TSV file(s)')
+  logger.info('Parsing extracted phenotype database single trait TSV file(s)')
 
   # Loop through each line in each TSV file, indexed
   for fname in fnames:
@@ -89,6 +89,10 @@ def parse_single_trait_file(species, *fnames: str):
         if idx == 0:
           trait_name = row[1]
           continue
+        
+        # Progress update
+        if idx % 1000000 == 0:
+          logger.debug(f"Processed {idx} lines")
 
         #  Yield each row as an object
         yield {
