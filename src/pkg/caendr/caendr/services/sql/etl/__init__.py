@@ -4,7 +4,7 @@ from logzero import logger
 from itertools import product
 
 # Local imports
-from .table_config import StrainConfig, WormbaseGeneSummaryConfig, WormbaseGeneConfig, StrainAnnotatedVariantConfig
+from .table_config import StrainConfig, WormbaseGeneSummaryConfig, WormbaseGeneConfig, StrainAnnotatedVariantConfig, PhenotypeDatabaseConfig
 
 from caendr.models.datastore import Species
 from caendr.utils.data       import batch_generator
@@ -18,6 +18,7 @@ TABLE_CONFIG = {
         WormbaseGeneSummaryConfig,
         WormbaseGeneConfig,
         StrainAnnotatedVariantConfig,
+        PhenotypeDatabaseConfig,
     ]
 }
 

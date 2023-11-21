@@ -144,6 +144,7 @@
             "envFile": "${workspaceFolder}/src/modules/db_operations/.env",
             "env": {
                 "DATABASE_OPERATION": "DROP_AND_POPULATE_STRAINS",
+                "RELOAD_FILES": "false",
                 // "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "localhost",
                 "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "file",
                 "MODULE_DB_OPERATIONS_CONNECTION_FILE": "${workspaceFolder}/temp/local.db",
@@ -164,6 +165,7 @@
             "envFile": "${workspaceFolder}/src/modules/db_operations/.env",
             "env": {
                 "DATABASE_OPERATION": "DROP_AND_POPULATE_WORMBASE_GENES",
+                "RELOAD_FILES": "false",
                 // "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "localhost",
                 "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "file",
                 "MODULE_DB_OPERATIONS_CONNECTION_FILE": "${workspaceFolder}/temp/local.db",
@@ -184,6 +186,7 @@
             "envFile": "${workspaceFolder}/src/modules/db_operations/.env",
             "env": {
                 "DATABASE_OPERATION": "DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS",
+                "RELOAD_FILES": "false",
                 // "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "localhost",
                 // "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "memory",
                 "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "file",
@@ -228,6 +231,7 @@
             "envFile": "${workspaceFolder}/src/modules/db_operations/.env",
             "env": {
                 "DATABASE_OPERATION": "DROP_AND_POPULATE_ALL_TABLES",
+                "RELOAD_FILES": "false",
                 "EMAIL": "no-reply@example.com",
                 "USE_MEMOIZATION": "1",
                 // "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "localhost",
