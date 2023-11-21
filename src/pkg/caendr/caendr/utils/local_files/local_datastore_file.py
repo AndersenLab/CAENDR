@@ -155,7 +155,7 @@ class LocalDatastoreFileTemplate(ForeignResourceWatcher):
 
   def _build_path(self, species=None, tokens={}):
     return [
-      ts.get_string( **{**TokenizedString.get_species_tokens(species), **tokens} ) for ts in self._path
+      ts if isinstance(ts, str) else ts.get_string( **{**TokenizedString.get_species_tokens(species), **tokens} ) for ts in self._path
     ]
 
 
