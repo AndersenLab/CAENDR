@@ -33,7 +33,7 @@ def get_gene_ids(species, GENE_IDS: os.PathLike):
 
 ## File Parsing Generator Functions ##
 
-def parse_gene_gtf(species, GENE_GTF: os.PathLike, GENE_IDS: os.PathLike, start_idx = 0):
+def parse_gene_gtf(species, GENE_GTF: os.PathLike, GENE_IDS: os.PathLike):
   """
       LOADS wormbase_gene
       This function fetches and parses the canonical geneset GTF
@@ -85,7 +85,7 @@ def parse_gene_gtf(species, GENE_GTF: os.PathLike, GENE_IDS: os.PathLike, start_
   logger.debug(f"Processed {idx} lines total for {species.name}")
 
 
-def parse_gene_gff_summary(species, GENE_GFF: os.PathLike, start_idx = 0):
+def parse_gene_gff_summary(species, GENE_GFF: os.PathLike):
   """
       LOADS wormbase_gene_summary
       This function fetches data for wormbase_gene_summary;

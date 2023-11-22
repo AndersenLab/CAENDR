@@ -13,7 +13,7 @@ class StrainAnnotatedVariant(DictSerializable, db.Model):
       strains affected, and severity of impact
   """
   id = db.Column(db.Integer, primary_key=True)
-  species_name = db.Column(db.String(20), index=True)
+  species_name = db.Column(db.String(20), index=True, primary_key=True)
   chrom = db.Column(db.String(7), index=True)
   pos = db.Column(db.Integer(), index=True)
   ref_seq = db.Column(db.String(), nullable=True)

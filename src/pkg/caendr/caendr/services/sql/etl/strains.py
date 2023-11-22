@@ -24,7 +24,7 @@ def fetch_elevation(lat, lon):
   return elevation
 
 
-def fetch_andersen_strains(species, STRAINS, start_idx=0):
+def fetch_andersen_strains(species, STRAINS):
   """
     Fetches latest strains from
     google sheet database.
