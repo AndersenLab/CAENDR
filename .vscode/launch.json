@@ -143,6 +143,7 @@
             "envFile": "${workspaceFolder}/src/modules/db_operations/.env",
             "env": {
                 "DATABASE_OPERATION": "DROP_AND_POPULATE_STRAINS",
+                "SPECIES_LIST": "c_elegans;c_briggsae;c_tropicalis",
                 "RELOAD_FILES": "false",
                 // "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "localhost",
                 "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "file",
@@ -164,6 +165,7 @@
             "envFile": "${workspaceFolder}/src/modules/db_operations/.env",
             "env": {
                 "DATABASE_OPERATION": "DROP_AND_POPULATE_WORMBASE_GENES",
+                "SPECIES_LIST": "",
                 "RELOAD_FILES": "false",
                 // "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "localhost",
                 "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "file",
@@ -185,6 +187,7 @@
             "envFile": "${workspaceFolder}/src/modules/db_operations/.env",
             "env": {
                 "DATABASE_OPERATION": "DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS",
+                "SPECIES_LIST": "",
                 "RELOAD_FILES": "false",
                 // "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "localhost",
                 // "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "memory",
@@ -207,6 +210,7 @@
             "envFile": "${workspaceFolder}/src/modules/db_operations/.env",
             "env": {
                 "DATABASE_OPERATION": "DROP_AND_POPULATE_ALL_TABLES",
+                "SPECIES_LIST": "",
                 "RELOAD_FILES": "false",
                 "EMAIL": "no-reply@example.com",
                 "USE_MEMOIZATION": "1",
