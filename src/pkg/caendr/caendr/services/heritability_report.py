@@ -4,11 +4,10 @@ import pandas as pd
 
 from caendr.services.logger import logger
 
-from caendr.models.error import NotFoundError, EmptyReportDataError, EmptyReportResultsError
+from caendr.models.error import EmptyReportDataError, EmptyReportResultsError
 from caendr.models.datastore import HeritabilityReport
 
 from caendr.services.cloud.storage import get_blob, download_blob_as_dataframe
-from caendr.services.tools.submit import submit_job
 from caendr.utils.env import get_env_var
 
 
@@ -50,23 +49,6 @@ def get_heritability_reports(username=None, filter_errs=False):
 
 
 
-def update_heritability_report_status(id: str, status: str=None, operation_name: str=None):
-  logger.debug(f'update_heritability_report_status: id:{id} status:{status} operation_name:{operation_name}')
-
-  h = HeritabilityReport.get_ds(id)
-  if h is None:
-    raise NotFoundError(HeritabilityReport, {'id': id})
-
-  if status:
-    h.set_properties(status=status)
-  if operation_name:
-    h.set_properties(operation_name=operation_name)
-    
-  h.save()
-  return h
-
-
-
 def fetch_heritability_report(report):
 
   data   = get_blob(report.get_bucket_name(), report.get_data_blob_path())
@@ -78,7 +60,7 @@ def fetch_heritability_report(report):
 
   # Parse data file
   data = download_blob_as_dataframe(data)
-  data['AssayNumber'] = data['AssayNumber'].astype(str)
+  data['AssayNumber'] = data['AssayNumber'].astype(int)
   data['label'] = data.apply(lambda x: f"{x['AssayNumber']}: {x['Value']}", 1)
   data = data.to_dict('records')
 
@@ -91,7 +73,13 @@ def fetch_heritability_report(report):
     if result is None:
       raise EmptyReportResultsError(report.id)
 
-    result = result.to_dict('records')[0]
+    # Convert to dict, using the 'type' column as the key instead of the index
+    # Should create dictionary with two keys: 'broad-sense' and 'narrow-sense'
+    result = result.to_dict('records')
+    result = {
+      i['type']: { key: val for key, val in i.items() if key != 'type' }
+      for i in result
+    }
 
   # Return parsed data & result
   return data, result

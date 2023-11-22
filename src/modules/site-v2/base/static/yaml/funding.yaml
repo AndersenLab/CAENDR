@@ -1,10 +1,10 @@
-- name: Northwestern
-  url: https://www.northwestern.edu
-  image: NU.jpeg
+- name: Johns Hopkins Krieger School of Arts & Sciences
+  url: https://krieger.jhu.edu/
+  image: jhu-divisions-krieger.png
 - name: NSF
   url: https://www.nsf.gov
   image: nsf.png
   description: NSF - Collections in Support of Biological Research Grant (1930382)
-- name: Weinberg
-  url: https://www.weinberg.northwestern.edu/
-  image: weinberg.jpeg
+- name: Johns Hopkins Krieger School of Arts & Sciences, Department of Biology
+  url: https://bio.jhu.edu/
+  image: jhu-ksas-biology.png

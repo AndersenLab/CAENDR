@@ -3,7 +3,7 @@ import os
 from caendr.services.logger import logger
 from caendr.utils.env import get_env_var
 
-from caendr.models.datastore import DataJobEntity
+from caendr.models.datastore import DataJobEntity, Species
 from caendr.services.dataset_release import get_dataset_release
 
 
@@ -18,7 +18,7 @@ SOURCE_FILENAME                = get_env_var('INDEL_PRIMER_SOURCE_FILENAME', as_
 
 
 
-class IndelPrimer(DataJobEntity):
+class IndelPrimerReport(DataJobEntity):
   kind = 'indel_primer'
   _blob_prefix = INDEL_REPORT_PATH_PREFIX
   _input_file  = INDEL_INPUT_FILE
@@ -63,7 +63,6 @@ class IndelPrimer(DataJobEntity):
 
       Equivalent to running `get_fasta_filepath_obj` on the appropriate DatasetRelease object.
     '''
-    from caendr.models.datastore import Species
 
     # Lookup desired species object
     species_obj = Species.from_name(species)

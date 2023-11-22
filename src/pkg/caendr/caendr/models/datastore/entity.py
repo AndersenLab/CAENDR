@@ -344,7 +344,7 @@ class Entity(object):
 
       If `ignore_errs` is set to True, filters out any matching Entities that threw an error while constructing.
 
-      Should be called from subclasses, e.g. 'IndelPrimer.query_all( ... )'
+      Should be called from subclasses, e.g. 'IndelPrimerReport.query_all( ... )'
       instead of 'Entity.query_all( ... )'.
     '''
     def construct_safe(e):

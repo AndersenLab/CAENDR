@@ -17,7 +17,7 @@ from base.utils.statistics import cum_sum_strain_isotype, get_strain_collection_
 from caendr.api.isotype import get_isotypes
 from caendr.models.datastore.species import Species
 from caendr.models.datastore.profile import Profile
-from caendr.services.cloud.analytics import get_weekly_visits
+from caendr.services.cloud.google_analytics_4 import get_weekly_visits_ga4
 from caendr.services.publication import get_publications_html_df
 from caendr.utils.data import load_yaml
 
@@ -91,10 +91,11 @@ def people():
 @about_bp.route('/funding')
 @cache.memoize(60*60)
 def funding():
-  title = "Funding"
-  disable_parent_breadcrumb = True
-  funding_set = load_yaml('funding.yaml')
-  return render_template('about/funding.html', **locals())
+  return render_template('about/funding.html', **{
+    'title': 'Funding',
+    'disable_parent_breadcrumb': True,
+    'funding_set': load_yaml('funding.yaml'),
+  })
 
 
 @about_bp.route('/statistics')
@@ -136,7 +137,7 @@ def statistics():
   # Weekly visits plot
   ################################
   try:
-    df = get_weekly_visits()
+    df = get_weekly_visits_ga4()
     weekly_visits_plot = get_weekly_visits_plot(df)
   except Exception as e:
     logger.warn("Unable to fetch weekly visits from Google Analytics")

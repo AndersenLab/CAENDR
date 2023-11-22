@@ -1,8 +1,8 @@
 from caendr.services.logger import logger
 
-from caendr.models.datastore import Container, Entity
-from caendr.models.datastore.pipeline_operation import PipelineOperation
-from caendr.utils.data import unique_id
+from caendr.models.datastore import Container, Entity, PipelineOperation
+from caendr.models.status    import JobStatus
+from caendr.utils.data       import unique_id
 
 
 
@@ -102,22 +102,18 @@ class JobEntity(Entity):
 
   @status.setter
   def status(self, val):
-    from caendr.models.task import TaskStatus # Prevents import error
-
-    if not TaskStatus.is_valid(val):
+    if not JobStatus.is_valid(val):
       raise TypeError(f'Cannot set status of {self.kind} job to "{val}".')
 
     self.__status = val
 
 
   def is_finished(self) -> bool:
-    from caendr.models.task import TaskStatus # Prevents import error
-    return self['status'] in TaskStatus.FINISHED
+    return self['status'] in JobStatus.FINISHED
 
 
   def is_not_err(self) -> bool:
-    from caendr.models.task import TaskStatus # Prevents import error
-    return self['status'] in TaskStatus.NOT_ERR
+    return self['status'] in JobStatus.NOT_ERR
 
 
 
