@@ -66,11 +66,11 @@ class ParseConfig():
     }
 
 
-  def run(self, species, start_idx=0):
+  def run(self, species):
     '''
       Apply this object's parse function to its set of files, yielding the results as a generator.
     '''
-    return self.parse(species, **self.fetch(species), start_idx=start_idx)
+    return self.parse(species, **self.fetch(species))
 
 
 
@@ -102,7 +102,7 @@ class TableConfig():
       yielding from each set in sequence.
     '''
     for config in self._parse_configs:
-      yield from config.run(species, start_idx=self.table.query.count())
+      yield from config.run(species)
 
 
 
