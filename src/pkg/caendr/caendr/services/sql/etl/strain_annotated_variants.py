@@ -34,22 +34,8 @@ def parse_strain_variant_annotation_data(species: Species, SVA_CSVGZ: LocalDatas
   """
   logger.info('Parsing extracted strain variant annotation TSV file')
 
-  column_header_map = {}
-
-  # Loop through each line in the CSV file, indexed
-  for idx, row in enumerate( SVA_CSVGZ ):
-
-      # First line is column names - don't interpret as data
-      # Create dict from header column names to row indices
-      if idx == 0:
-        logger.info(f'Column names in file "{SVA_CSVGZ}" are: {", ".join(row)}')
-        column_header_map = { name: idx for idx, name in enumerate(row) }
-        continue
-
-      # Map row to dict, using file headers as keys
-      row = {
-        header: row[column_header_map[header]] for header in column_header_map
-      }
+  # Loop through each record in the CSV file, using the first line of the file as headers
+  for idx, row in enumerate( SVA_CSVGZ.get_records() ):
 
       target_consequence = None
       consequence = row.get('CONSEQUENCE')
@@ -90,8 +76,6 @@ def parse_strain_variant_annotation_data(species: Species, SVA_CSVGZ: LocalDatas
         'release':            row.get('RELEASE'),
       }
 
-  # In Python, loop vars maintain their final value after the loop ends
-  print(f'Processed {idx} lines total for {species.name}')
 
 
 def get_row(row, key, nullable=False, map=None):

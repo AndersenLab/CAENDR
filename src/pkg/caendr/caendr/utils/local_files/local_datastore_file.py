@@ -161,6 +161,45 @@ class LocalDatastoreFile(os.PathLike, ForeignResource):
         yield from csv.reader(file, delimiter=self._delimiter)
 
 
+  def get_records(self, headers=None):
+    '''
+      Yield the rows in the file as `dict` record objects, mapping header row values to the corresponding row values.
+
+      Uses this object's delimiter character (set at initialization) to split rows into columns.
+    '''
+
+    # Create a reader using this object's __iter__ method
+    reader = self.__iter__()
+
+    # Get the header row, or abort if no rows exist
+    if headers is None:
+      try:
+        header_row = next(reader)
+        logger.info(f'Column names in file "{ self._file_id }" are: {", ".join(header_row)}')
+      except StopIteration:
+        return
+
+    # Use the provided header list
+    else:
+      header_row = headers
+      logger.info(f'Provided column names for file "{ self._file_id }" are: {", ".join(header_row)}')
+
+    # Create the header map
+    column_header_map = { name: idx for idx, name in enumerate(header_row) }
+
+    # Read the remaining lines and yield as dict objects, using the headers
+    for line in reader:
+
+      # If desired, skip comments and pragmas (lines starting with '#' and '##' respectively)
+      if self._skip_comments and line[0].startswith("#"):
+        continue
+
+      # Convert to a record dict using the headers
+      yield {
+        header: line[column_header_map[header]] for header in column_header_map
+      }
+
+
 
   #
   # ForeignResource
