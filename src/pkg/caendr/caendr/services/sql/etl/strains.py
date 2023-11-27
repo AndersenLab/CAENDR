@@ -39,7 +39,7 @@ def fetch_andersen_strains(species: Species, STRAINS: LocalGoogleSheet):
   """
 
   # Get records from Google sheet
-  strain_records = STRAINS.get_all_records()
+  strain_records = STRAINS.fetch_resource().get_all_records()
 
   # Only take records with a release reported
   strain_records = list(filter(lambda x: x.get('release') not in NULL_VALS, strain_records))
