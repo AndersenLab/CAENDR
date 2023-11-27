@@ -158,9 +158,7 @@ PhenotypeDatabaseConfig = TableConfig(
   ParseConfig(
     parse_phenotypedb_bulk_trait_file,
     {
-      tf.name: LocalDatastoreFileTemplate( tf.name, *tf.get_filepath(schema=BlobURISchema.PATH), exists_for_species={tf['species']} )
-        for tf in TraitFile.query_ds()
-        if  tf.is_bulk_file
+      tf.name: LocalDatastoreFileTemplate.from_file_record_entity(tf) for tf in TraitFile.query_ds() if tf.is_bulk_file
     },
   ),
 
@@ -168,9 +166,7 @@ PhenotypeDatabaseConfig = TableConfig(
   ParseConfig(
     parse_phenotypedb_traits_data,
     {
-      tf.name: LocalDatastoreFileTemplate( tf.name, *tf.get_filepath(schema=BlobURISchema.PATH), exists_for_species={tf['species']} )
-        for tf in TraitFile.query_ds()
-        if not tf.is_bulk_file
+      tf.name: LocalDatastoreFileTemplate.from_file_record_entity(tf) for tf in TraitFile.query_ds() if not tf.is_bulk_file
     },
   ),
 )

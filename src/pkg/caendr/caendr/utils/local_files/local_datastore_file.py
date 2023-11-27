@@ -4,7 +4,7 @@ from caendr.services.logger        import logger
 
 from .foreign_resource             import ForeignResource, ForeignResourceTemplate
 
-from caendr.models.datastore       import Species
+from caendr.models.datastore       import Species, FileRecordEntity
 from caendr.models.error           import NotFoundError, ForeignResourceMissingError, ForeignResourceUndefinedError
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, download_blob_to_file, join_path, check_blob_exists
 from caendr.utils.tokens           import TokenizedString
@@ -172,12 +172,30 @@ class LocalDatastoreFileTemplate(ForeignResourceTemplate):
   # Default directory to store files locally
   _DEFAULT_LOCAL_PATH = TokenizedString(os.path.join(LOCAL_DIR, '${SPECIES}'))
 
-  def __init__(self, file_id: str, bucket: str, *path: TokenizedString, exists_for_species=None):
+  def __init__(self, file_id: str, bucket: str, *path: TokenizedString, exists_for_species=None, metadata=None):
     self._file_id = file_id
     self._bucket  = bucket
     self._path    = path
 
     self.__exists_for_species = exists_for_species
+    self.__metadata = metadata or {}
+
+
+  @staticmethod
+  def from_file_record_entity(record: FileRecordEntity):
+    '''
+      Factory method to instantiate a template from a `FileRecordEntity` object.
+      Uses the file as the foreign resource, and the `Entity` as the metadata.
+    '''
+    # Check if the entity tracks a species field
+    try:
+      species = {record['species']}
+    except KeyError:
+      species = None
+
+    # Create the template object
+    return LocalDatastoreFileTemplate( record.name, *record.get_filepath(schema=BlobURISchema.PATH), exists_for_species=species, metadata=record )
+
 
 
   #
@@ -199,7 +217,8 @@ class LocalDatastoreFileTemplate(ForeignResourceTemplate):
       self._bucket,
       *self._build_path(species=species, tokens=tokens),
       unzip = False,
-      local_path = self._DEFAULT_LOCAL_PATH.get_string( **{**TokenizedString.get_species_tokens(species), **tokens} )
+      local_path = self._DEFAULT_LOCAL_PATH.get_string( **{**TokenizedString.get_species_tokens(species), **tokens} ),
+      metadata = self.__metadata,
     )
 
 
