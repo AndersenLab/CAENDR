@@ -18,6 +18,17 @@ class LocalGoogleSheet(ForeignResource):
 
 
   #
+  # Iterable
+  #
+
+  def __iter__(self):
+    '''
+      Iterate through each row in the sheet.
+    '''
+    return ( row for row in self.fetch_resource().get_all_records() )
+
+
+  #
   # ForeignResource
   #
 

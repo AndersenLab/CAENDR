@@ -1,3 +1,5 @@
+import csv
+import gzip
 import os
 
 from caendr.services.logger        import logger
@@ -30,7 +32,16 @@ class LocalDatastoreFile(os.PathLike, ForeignResource):
   # Instantiation
   #
 
-  def __init__(self, file_id: str, bucket: str, *path: str, unzip: bool = False, local_path: str = None, metadata: dict = None, species=None):
+  def __init__(
+      self,
+      file_id: str, bucket: str, *path: str,
+      unzip: bool = False,
+      local_path: str = None,
+      metadata: dict = None,
+      species = None,
+      delimiter: str = '\t',
+      skip_comments: bool = True
+  ):
 
     # Validate path length
     if not len(path):
@@ -41,8 +52,14 @@ class LocalDatastoreFile(os.PathLike, ForeignResource):
     self._bucket  = bucket
     self._path    = path
     self._unzip   = unzip
-    self._metadata  = metadata or {}
-    self._species   = species
+
+    # Metadata vars
+    self._metadata      = metadata or {}
+    self._species       = species
+
+    # Parsing/Reading vars
+    self._delimiter     = delimiter
+    self._skip_comments = bool(skip_comments)
 
     # Get the file extension as the last section of the path after a '.', ignoring '.gz'
     # If there is no file extension (e.g. 'foobar.gz' or just 'foobar'), set to empty string
@@ -103,15 +120,46 @@ class LocalDatastoreFile(os.PathLike, ForeignResource):
     '''
     return os.path.exists( self.get_local_filepath(zipped=zipped) )
 
+  def __local_is_zipped(self):
+    return not self._unzip and self.exists_local(zipped = True)
+
 
   #
   # PathLike
   #
 
   def __fspath__(self):
-    if not self._unzip and self.exists_local(zipped = True):
-      return self.get_local_filepath(zipped = True)
-    return self.get_local_filepath(zipped = False)
+    return self.get_local_filepath(zipped = self.__local_is_zipped())
+
+
+  #
+  # Iterable
+  #
+
+  def __iter__(self):
+    '''
+      Yield the rows in the file, separated by the delimiter character specified on this object.
+    '''
+
+    # Make sure the file exists locally
+    self.fetch_resource(use_cache=True)
+
+    # Choose the open function based on whether local file is zipped
+    _open = gzip.open if self.__local_is_zipped() else open
+
+    # Open the file and yield the rows
+    with _open(self, mode='rt') as file:
+
+      # If desired, skip comments and pragmas (lines starting with '#' and '##' respectively)
+      if self._skip_comments:
+        for line in csv.reader(file, delimiter=self._delimiter):
+          if not line[0].startswith("#"):
+            yield line
+
+      # Otherwise, yield all lines
+      else:
+        yield from csv.reader(file, delimiter=self._delimiter)
+
 
 
   #
@@ -172,17 +220,26 @@ class LocalDatastoreFileTemplate(ForeignResourceTemplate):
   # Default directory to store files locally
   _DEFAULT_LOCAL_PATH = TokenizedString(os.path.join(LOCAL_DIR, '${SPECIES}'))
 
-  def __init__(self, file_id: str, bucket: str, *path: TokenizedString, exists_for_species=None, metadata=None):
+  def __init__(
+      self,
+      file_id: str, bucket: str, *path: TokenizedString,
+      exists_for_species=None,
+      metadata=None,
+      delimiter: str = '\t',
+      skip_comments: bool = True
+  ):
     self._file_id = file_id
     self._bucket  = bucket
     self._path    = path
 
     self.__exists_for_species = exists_for_species
     self.__metadata = metadata or {}
+    self.__delimiter = delimiter
+    self.__skip_comments = skip_comments
 
 
   @staticmethod
-  def from_file_record_entity(record: FileRecordEntity):
+  def from_file_record_entity(record: FileRecordEntity, delimiter: str = '\t', skip_comments: bool = True):
     '''
       Factory method to instantiate a template from a `FileRecordEntity` object.
       Uses the file as the foreign resource, and the `Entity` as the metadata.
@@ -194,7 +251,13 @@ class LocalDatastoreFileTemplate(ForeignResourceTemplate):
       species = None
 
     # Create the template object
-    return LocalDatastoreFileTemplate( record.name, *record.get_filepath(schema=BlobURISchema.PATH), exists_for_species=species, metadata=record )
+    return LocalDatastoreFileTemplate(
+      record.name, *record.get_filepath(schema=BlobURISchema.PATH),
+      exists_for_species = species,
+      metadata           = record,
+      delimiter          = delimiter,
+      skip_comments      = skip_comments,
+    )
 
 
 
@@ -216,9 +279,11 @@ class LocalDatastoreFileTemplate(ForeignResourceTemplate):
       self._file_id,
       self._bucket,
       *self._build_path(species=species, tokens=tokens),
-      unzip = False,
-      local_path = self._DEFAULT_LOCAL_PATH.get_string( **{**TokenizedString.get_species_tokens(species), **tokens} ),
-      metadata = self.__metadata,
+      unzip         = False,
+      local_path    = self._DEFAULT_LOCAL_PATH.get_string( **{**TokenizedString.get_species_tokens(species), **tokens} ),
+      metadata      = self.__metadata,
+      delimiter     = self.__delimiter,
+      skip_comments = self.__skip_comments,
     )
 
 

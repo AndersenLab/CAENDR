@@ -125,7 +125,7 @@ WormbaseGeneSummaryConfig = TableConfig(
   ParseConfig(
     parse_gene_gff_summary,
     {
-      'GENE_GFF': LocalDatastoreFileTemplate( 'GENE_GFF', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_GFF_FILENAME ),
+      'GENE_GFF': LocalDatastoreFileTemplate( 'GENE_GFF', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_GFF_FILENAME, delimiter='\t' ),
     },
   ),
 )
@@ -146,7 +146,7 @@ StrainAnnotatedVariantConfig = TableConfig(
   ParseConfig(
     parse_strain_variant_annotation_data,
     {
-      'SVA_CSVGZ': LocalDatastoreFileTemplate( 'SVA_CSVGZ', MODULE_DB_OPERATIONS_BUCKET_NAME, SVA_FILEPATH, SVA_FILENAME ),
+      'SVA_CSVGZ': LocalDatastoreFileTemplate( 'SVA_CSVGZ', MODULE_DB_OPERATIONS_BUCKET_NAME, SVA_FILEPATH, SVA_FILENAME, delimiter='\t' ),
     },
   ),
 )
@@ -158,7 +158,7 @@ PhenotypeDatabaseConfig = TableConfig(
   ParseConfig(
     parse_phenotypedb_bulk_trait_file,
     {
-      tf.name: LocalDatastoreFileTemplate.from_file_record_entity(tf) for tf in TraitFile.query_ds() if tf.is_bulk_file
+      tf.name: LocalDatastoreFileTemplate.from_file_record_entity(tf, delimiter='\t', skip_comments=False) for tf in TraitFile.query_ds() if tf.is_bulk_file
     },
   ),
 
@@ -166,7 +166,7 @@ PhenotypeDatabaseConfig = TableConfig(
   ParseConfig(
     parse_phenotypedb_traits_data,
     {
-      tf.name: LocalDatastoreFileTemplate.from_file_record_entity(tf) for tf in TraitFile.query_ds() if not tf.is_bulk_file
+      tf.name: LocalDatastoreFileTemplate.from_file_record_entity(tf, delimiter='\t', skip_comments=False) for tf in TraitFile.query_ds() if not tf.is_bulk_file
     },
   ),
 )

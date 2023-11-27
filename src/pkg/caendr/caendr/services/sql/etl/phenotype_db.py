@@ -1,5 +1,3 @@
-import csv
-
 from caendr.services.logger import logger
 
 from caendr.models.datastore  import Species
@@ -25,9 +23,8 @@ def parse_phenotypedb_traits_data(species: Species, **files: LocalDatastoreFile)
   logger.info('Parsing extracted phenotype database TSV file(s)')
 
   # Loop through each line in each file, indexed
-  for file_name, file_path in files.items():
-    with open(file_path) as csv_file:
-      for idx, row in enumerate( csv.reader(csv_file, delimiter='\t') ):
+  for file_name, local_file in files.items():
+    for idx, row in enumerate( local_file ):
 
         # First line is column names - don't interpret as data
         if idx == 0:
@@ -71,9 +68,8 @@ def parse_phenotypedb_bulk_trait_file(species: Species, **files: LocalDatastoreF
   logger.info('Parsing extracted phenotype database bulk TSV file(s)')
 
   # Loop through each line in each file, indexed
-  for file_name, file_path in files.items():
-    with open(file_path) as csv_file:
-      for idx, row in enumerate( csv.reader(csv_file, delimiter='\t') ):
+  for file_name, local_file in files.items():
+    for idx, row in enumerate( local_file ):
 
         # First line is column names - don't interpret as data
         if idx == 0:

@@ -1,6 +1,3 @@
-import os
-import csv
-import gzip
 import re
 
 from caendr.services.logger import logger
@@ -38,8 +35,7 @@ def parse_strain_variant_annotation_data(species: Species, SVA_CSVGZ: LocalDatas
   column_header_map = {}
 
   # Loop through each line in the CSV file, indexed
-  with gzip.open(SVA_CSVGZ, mode='rt') as csv_file:
-    for idx, row in enumerate( csv.reader(csv_file, delimiter='\t') ):
+  for idx, row in enumerate( SVA_CSVGZ ):
 
       # First line is column names - don't interpret as data
       # Create dict from header column names to row indices

@@ -97,25 +97,16 @@ def parse_gene_gff_summary(species: Species, GENE_GFF: LocalDatastoreFile):
   """
   WB_GENE_FIELDSET = ['ID', 'biotype', 'sequence_name', 'chrom', 'start', 'end', 'locus', 'species_name']
 
-  with gzip.open(GENE_GFF) as f:
+  # Initialize counter for matching genes
+  gene_count = 0
 
-    # Initialize counter for matching genes
-    gene_count = 0
-
-    # Loop through each line in the file (indexed)
-    for idx, line in enumerate(f):
+  # Loop through each line in the file (indexed)
+  for idx, line in enumerate(GENE_GFF):
 
       # If testing, finish early
       if os.getenv("USE_MOCK_DATA") and idx > 100:
         logger.warn("USE_MOCK_DATA Early Exit!!!")    
         return
-
-      # Skip comments and pragmas (lines starting with '#' and '##' respectively)
-      if line.decode('utf-8').startswith("#"):
-        continue
-
-      # Convert the line from a tab-separated string into a list
-      line = line.decode('utf-8').strip().split("\t")
 
       # Progress update
       if idx % 1000000 == 0:
@@ -156,7 +147,7 @@ def parse_gene_gff_summary(species: Species, GENE_GFF: LocalDatastoreFile):
           # Yield the gene
           yield gene
 
-    logger.debug(f"Processed {idx} lines; {gene_count} genes total for {species.name}")
+  logger.debug(f"Processed {idx} lines; {gene_count} genes total for {species.name}")
 
 
 def parse_orthologs(species, orthologs_fname: str):

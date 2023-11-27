@@ -38,13 +38,13 @@ def fetch_andersen_strains(species: Species, STRAINS: LocalGoogleSheet):
     - Fetches elevation for each strain
   """
 
-  # Get records from Google sheet
-  strain_records = STRAINS.get_all_records()
+  # Loop through each strain record in the sheet
+  for n, record in enumerate( STRAINS ):
 
-  # Only take records with a release reported
-  strain_records = list(filter(lambda x: x.get('release') not in NULL_VALS, strain_records))
+    # Only take records with a release reported
+    if record.get('release') in NULL_VALS:
+      continue
 
-  for n, record in enumerate(strain_records):
     record = {k.lower(): v for k, v in record.items()}
     for k, v in record.items():
       # Set NA to None

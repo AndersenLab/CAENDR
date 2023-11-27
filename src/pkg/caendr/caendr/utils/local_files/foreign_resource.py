@@ -1,13 +1,17 @@
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 
 from caendr.models.datastore import Species
 
 
 
-class ForeignResource(ABC):
+class ForeignResource(Iterable, ABC):
   '''
     Generic interface for accessing a foreign resource and making it available locally.
     This may be a datastore file, a sheet, etc.
+
+    Should also implement the `Iterable` template as follows:
+      - `__iter__`: yields each "row" from the resource
   '''
 
   @property
