@@ -160,7 +160,7 @@ def data_v01(params, files):
     vcf_summary = None
 
   return {
-    'site_bucket_public_name': config.get('MODULE_SITE_BUCKET_PUBLIC_NAME', 'NONE'),
+    'site_bucket_public_name': config.get('MODULE_SITE_BUCKET_DATASET_RELEASE_NAME', config.get('MODULE_SITE_BUCKET_PUBLIC_NAME', 'NONE')),
     'browser_tracks_path': get_browser_tracks_path().get_string_safe(),
     'vcf_summary_url': vcf_summary_url,
     'vcf_summary': vcf_summary,
