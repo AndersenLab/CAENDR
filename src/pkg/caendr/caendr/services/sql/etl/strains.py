@@ -1,6 +1,9 @@
 from dateutil import parser
 from caendr.services.logger import logger
 
+from caendr.models.datastore  import Species
+from caendr.utils.local_files import LocalGoogleSheet
+
 
 
 elevation_cache = {}
@@ -24,7 +27,7 @@ def fetch_elevation(lat, lon):
   return elevation
 
 
-def fetch_andersen_strains(species, STRAINS):
+def fetch_andersen_strains(species: Species, STRAINS: LocalGoogleSheet):
   """
     Fetches latest strains from
     google sheet database.

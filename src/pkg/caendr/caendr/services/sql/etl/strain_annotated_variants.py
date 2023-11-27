@@ -6,9 +6,12 @@ import re
 from caendr.services.logger import logger
 from sqlalchemy.sql.expression import null
 
+from caendr.models.datastore  import Species
+from caendr.utils.local_files import LocalDatastoreFile
 
 
-def parse_strain_variant_annotation_data(species, SVA_CSVGZ: os.PathLike):
+
+def parse_strain_variant_annotation_data(species: Species, SVA_CSVGZ: LocalDatastoreFile):
   """
       Load strain variant annotation table data:
 

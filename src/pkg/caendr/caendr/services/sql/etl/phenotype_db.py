@@ -1,12 +1,14 @@
 import csv
 
-
 from caendr.services.logger import logger
 from sqlalchemy.sql.expression import null
 
+from caendr.models.datastore  import Species
+from caendr.utils.local_files import LocalDatastoreFile
 
 
-def parse_phenotypedb_traits_data(species, **files):
+
+def parse_phenotypedb_traits_data(species: Species, **files: LocalDatastoreFile):
   """
     Parsing function for trait files that follow the outlined structure:
     - row 1 represents the headers of the table, where:
