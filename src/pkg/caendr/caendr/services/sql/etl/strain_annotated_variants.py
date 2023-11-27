@@ -5,9 +5,11 @@ from sqlalchemy.sql.expression import null
 
 from caendr.models.datastore  import Species
 from caendr.utils.local_files import LocalDatastoreFile
+from caendr.utils.data        import log_status
 
 
 
+@log_status(1000000, mock_data_size=10, val_str=lambda val: f'{val.get("chrom")}:{val.get("pos")}')
 def parse_strain_variant_annotation_data(species: Species, SVA_CSVGZ: LocalDatastoreFile):
   """
       Load strain variant annotation table data:
@@ -43,15 +45,6 @@ def parse_strain_variant_annotation_data(species: Species, SVA_CSVGZ: LocalDatas
         logger.info(f'Column names in file "{SVA_CSVGZ}" are: {", ".join(row)}')
         column_header_map = { name: idx for idx, name in enumerate(row) }
         continue
-
-      # If testing, finish early
-      if os.getenv("USE_MOCK_DATA") and idx > 10:
-        logger.warn("USE_MOCK_DATA Early Return!!!")
-        return
-
-      # Progress update
-      if idx % 1000000 == 0:
-        logger.debug(f"Processed {idx} lines")
 
       # Map row to dict, using file headers as keys
       row = {

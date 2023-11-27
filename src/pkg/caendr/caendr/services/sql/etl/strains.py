@@ -3,6 +3,7 @@ from caendr.services.logger import logger
 
 from caendr.models.datastore  import Species
 from caendr.utils.local_files import LocalGoogleSheet
+from caendr.utils.data        import log_status
 
 
 
@@ -27,6 +28,7 @@ def fetch_elevation(lat, lon):
   return elevation
 
 
+@log_status(50, val_str=lambda val: val.get('strain'))
 def fetch_andersen_strains(species: Species, STRAINS: LocalGoogleSheet):
   """
     Fetches latest strains from
@@ -39,7 +41,7 @@ def fetch_andersen_strains(species: Species, STRAINS: LocalGoogleSheet):
   """
 
   # Loop through each strain record in the sheet
-  for n, record in enumerate( STRAINS ):
+  for record in STRAINS:
 
     # Only take records with a release reported
     if record.get('release') in NULL_VALS:
@@ -59,8 +61,6 @@ def fetch_andersen_strains(species: Species, STRAINS: LocalGoogleSheet):
       elevation = fetch_elevation(record['latitude'], record['longitude'])
       if elevation:
         record['elevation'] = round(elevation)
-    if n % 50 == 0:
-      logger.debug(f"Loaded {n} strains")
 
     # Set issue bools
     record["issues"] = record["issues"] == "TRUE"

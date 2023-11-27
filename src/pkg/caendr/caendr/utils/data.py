@@ -3,11 +3,13 @@ import hashlib
 import uuid
 import string
 import pandas as pd
+from functools import wraps
 
 from collections import Counter
 from caendr.services.logger import logger
 
 from caendr.utils.constants import DEFAULT_BATCH_SIZE
+from caendr.utils.env       import get_env_var
 
 
 
@@ -130,6 +132,53 @@ def batch_generator(g, batch_size=DEFAULT_BATCH_SIZE):
 
   for top in g:
     yield _inner(top)
+
+
+
+def log_status(update_size, mock_data_size=None, val_str=None):
+  '''
+    Wrapper for a generator function.
+
+    Prints a status message after every `update_size` elements.
+    Optionally cuts off the generator after `mock_data_size` elements.
+
+    Arguments:
+      - `update_size`: The number of elements to print a status message after. Required.
+      - `mock_data_size`: The number of elements to cut off after if the environment variable `USE_MOCK_DATA` is `True`.
+      - `val_str`:
+          Optional function for pretty-printing the most recently yielded element in the status update message.
+          Should take a yielded value as input, and return a human-readable string as output.
+          If not provided (or if function raises an exception), will only print the number of lines.
+  '''
+
+  def wrapper(f):
+    USE_MOCK_DATA = get_env_var('USE_MOCK_DATA', False, var_type=bool) and mock_data_size is not None and mock_data_size > 0
+
+    @wraps(f)
+    def decorator(*args, **kwargs):
+      nonlocal USE_MOCK_DATA
+
+      # Loop through the generator function
+      for i, val in enumerate(f(*args, **kwargs)):
+
+        # Status report
+        if i % update_size == 0:
+          try:
+            logger.debug(f'Processed {i} entries (most recent: {val_str(val)})')
+          except:
+            logger.debug(f'Processed {i} entries')
+
+        # If testing, finish early
+        if USE_MOCK_DATA and i > mock_data_size:
+          logger.warn("USE_MOCK_DATA Early Return!!!")
+          return
+
+        # Finally, yield the value itself
+        yield val
+
+    return decorator
+  return wrapper
+
 
 
 def join_with_final(text, sep='', final=None, final_if_two=None):

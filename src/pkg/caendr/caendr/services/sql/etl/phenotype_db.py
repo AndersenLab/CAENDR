@@ -2,9 +2,11 @@ from caendr.services.logger import logger
 
 from caendr.models.datastore  import Species
 from caendr.utils.local_files import LocalDatastoreFile
+from caendr.utils.data        import log_status
 
 
 
+@log_status(1000, mock_data_size=100)
 def parse_phenotypedb_traits_data(species: Species, **files: LocalDatastoreFile):
   """
     Parsing function for trait files that follow the outlined structure:
@@ -32,10 +34,6 @@ def parse_phenotypedb_traits_data(species: Species, **files: LocalDatastoreFile)
           column_header_map = { name: idx for idx, name in enumerate(row) }
           continue
 
-        # Progress update
-        if idx % 1000000 == 0:
-          logger.debug(f"Processed {idx} lines")
-
         # Get trait value for each strain
         strain_name = row[0]
         for header in column_header_map:
@@ -57,6 +55,7 @@ def parse_phenotypedb_traits_data(species: Species, **files: LocalDatastoreFile)
 
 
 
+@log_status(10000, mock_data_size=100)
 def parse_phenotypedb_bulk_trait_file(species: Species, **files: LocalDatastoreFile):
   """
       Parsing function for Zhang Gene Expression traits file. 
@@ -76,10 +75,6 @@ def parse_phenotypedb_bulk_trait_file(species: Species, **files: LocalDatastoreF
           logger.info(f'Column names in file "{file_name}" are: {", ".join(row)}')
           column_header_map = { name: idx for idx, name in enumerate(row) }
           continue
-
-        # Progress update
-        if idx % 1000000 == 0:
-          logger.debug(f"Processed {idx} lines")
 
         # Generate trait_name joining 'transcript', 'WormBaseGeneID' and 'GeneName'
         trait_name = '_'.join(row[:3])

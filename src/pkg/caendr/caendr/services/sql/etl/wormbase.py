@@ -12,6 +12,7 @@ from caendr.utils.constants import CHROM_NUMERIC
 
 from caendr.models.datastore  import Species
 from caendr.utils.local_files import LocalDatastoreFile
+from caendr.utils.data        import log_status
 
 
 
@@ -36,6 +37,7 @@ def get_gene_ids(species: Species, GENE_IDS: LocalDatastoreFile):
 
 ## File Parsing Generator Functions ##
 
+@log_status(10000, mock_data_size=10)
 def parse_gene_gtf(species: Species, GENE_GTF: LocalDatastoreFile, GENE_IDS: LocalDatastoreFile):
   """
       LOADS wormbase_gene
@@ -71,23 +73,11 @@ def parse_gene_gtf(species: Species, GENE_GTF: LocalDatastoreFile, GENE_IDS: Loc
   gene_gtf['species_name'] = species.name
 
   # Loop through and yield all records
-  for idx, row in enumerate(gene_gtf.to_dict('records')):
-
-    # If testing, finish early
-    if os.getenv('USE_MOCK_DATA') and idx > 10:
-      logger.warn("USE_MOCK_DATA Early Return!!!")
-      return
-
-    # Progress update
-    if idx % 10000 == 0:
-      logger.info(f"Processed {idx} lines")
-
-    # Yield the row
-    yield row
-
-  logger.debug(f"Processed {idx} lines total for {species.name}")
+  yield from gene_gtf.to_dict('records')
 
 
+
+@log_status(1000000, mock_data_size=100, val_str=lambda val: val.get('gene_id'))
 def parse_gene_gff_summary(species: Species, GENE_GFF: LocalDatastoreFile):
   """
       LOADS wormbase_gene_summary
@@ -97,20 +87,8 @@ def parse_gene_gff_summary(species: Species, GENE_GFF: LocalDatastoreFile):
   """
   WB_GENE_FIELDSET = ['ID', 'biotype', 'sequence_name', 'chrom', 'start', 'end', 'locus', 'species_name']
 
-  # Initialize counter for matching genes
-  gene_count = 0
-
   # Loop through each line in the file (indexed)
-  for idx, line in enumerate(GENE_GFF):
-
-      # If testing, finish early
-      if os.getenv("USE_MOCK_DATA") and idx > 100:
-        logger.warn("USE_MOCK_DATA Early Exit!!!")    
-        return
-
-      # Progress update
-      if idx % 1000000 == 0:
-        logger.debug(f"Processed {idx} lines;{gene_count} genes; {line[0]}:{line[4]}")
+  for line in GENE_GFF:
 
       # Only parse if line represents a gene from Wormbase
       if ('WormBase' in line[1] or 'AndersenLab' in line[1]) and 'gene' in line[2]:
@@ -138,7 +116,6 @@ def parse_gene_gff_summary(species: Species, GENE_GFF: LocalDatastoreFile):
 
         # If gene has an ID, split the ID into two fields and yield the gene
         if 'id' in gene.keys():
-          gene_count += 1
 
           # Split 'id' into 'gene_id_type' and 'gene_id'
           gene['gene_id_type'], gene['gene_id'] = gene['id'].split(":")
@@ -147,7 +124,6 @@ def parse_gene_gff_summary(species: Species, GENE_GFF: LocalDatastoreFile):
           # Yield the gene
           yield gene
 
-  logger.debug(f"Processed {idx} lines; {gene_count} genes total for {species.name}")
 
 
 def parse_orthologs(species, orthologs_fname: str):
