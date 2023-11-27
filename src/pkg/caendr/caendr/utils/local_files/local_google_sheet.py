@@ -44,12 +44,12 @@ class LocalGoogleSheetTemplate(ForeignResourceTemplate):
 
   __sheet_ids = {}
 
-  def __init__(self, resource_id, sheet_ids):
-    self.__resource_id = resource_id
+  def __init__(self, resource_id: str, sheet_ids):
+    super().__init__(resource_id)
     self.__sheet_ids = sheet_ids
 
   def __repr__(self):
-    return f'Google Sheet Template "{self.__resource_id}"'
+    return f'Google Sheet Template "{self.resource_id}"'
 
 
   #
@@ -57,7 +57,7 @@ class LocalGoogleSheetTemplate(ForeignResourceTemplate):
   #
 
   def get_print_uri(self, species: Species) -> str:
-    return f'Google Sheet "{self.__resource_id}" for {species.name}'
+    return f'Google Sheet "{self.resource_id}" for {species.name}'
 
   def check_exists(self, species: Species) -> bool:
     try:
@@ -75,7 +75,7 @@ class LocalGoogleSheetTemplate(ForeignResourceTemplate):
 
     # Check that species is valid
     if not self.has_for_species(species):
-      raise ForeignResourceUndefinedError('Google Sheet', self.__resource_id, species)
+      raise ForeignResourceUndefinedError('Google Sheet', self.resource_id, species)
 
     # Create new local sheet object
-    return LocalGoogleSheet(self.__sheet_ids[species.name], resource_id=self.__resource_id, species=species)
+    return LocalGoogleSheet(self.__sheet_ids[species.name], resource_id=self.resource_id, species=species)

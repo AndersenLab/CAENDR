@@ -46,6 +46,10 @@ class ForeignResourceTemplate(ABC):
     which follow the same template and are each specific to one species.
   '''
 
+  def __init__(self, resource_id: str):
+    self.resource_id = resource_id
+
+
   @abstractmethod
   def get_print_uri(self, species: Species) -> str:
     '''

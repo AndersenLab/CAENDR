@@ -172,10 +172,10 @@ class LocalDatastoreFileTemplate(ForeignResourceTemplate):
   # Default directory to store files locally
   _DEFAULT_LOCAL_PATH = TokenizedString(os.path.join(LOCAL_DIR, '${SPECIES}'))
 
-  def __init__(self, file_id: str, bucket: str, *path: TokenizedString, exists_for_species=None, metadata=None):
-    self._file_id = file_id
-    self._bucket  = bucket
-    self._path    = path
+  def __init__(self, resource_id: str, bucket: str, *path: TokenizedString, exists_for_species=None, metadata=None):
+    super().__init__(resource_id)
+    self._bucket = bucket
+    self._path   = path
 
     self.__exists_for_species = exists_for_species
     self.__metadata = metadata or {}
@@ -197,6 +197,25 @@ class LocalDatastoreFileTemplate(ForeignResourceTemplate):
     return LocalDatastoreFileTemplate( record.name, *record.get_filepath(schema=BlobURISchema.PATH), exists_for_species=species, metadata=record )
 
 
+  @staticmethod
+  def from_file_record_entities(entity_class, filter = None):
+    '''
+      Factory method to instantiate multiple templates from all Datastore entities of the given class.
+
+      Arguments:
+        - `entity_class`: The `FileRecordEntity` subclass to query and use to instantiate the templates.
+        - `filter`:
+            An optional filtering function.
+            If provided, only creates templates from entities that pass the filter;
+            if omitted, creates a template from all entities of the appropriate kind.
+    '''
+    if filter is None:
+      filter = lambda x: True
+    return [
+      LocalDatastoreFileTemplate.from_file_record_entity(record) for record in entity_class.query_ds() if filter(record)
+    ]
+
+
 
   #
   # Building
@@ -213,7 +232,7 @@ class LocalDatastoreFileTemplate(ForeignResourceTemplate):
       Build a `LocalDatastoreFile` object using this object's template and the provided species & tokens.
     '''
     return LocalDatastoreFile(
-      self._file_id,
+      self.resource_id,
       self._bucket,
       *self._build_path(species=species, tokens=tokens),
       unzip = False,
@@ -239,7 +258,7 @@ class LocalDatastoreFileTemplate(ForeignResourceTemplate):
 
     # Check that species is valid
     if not self.has_for_species(species):
-      raise ForeignResourceUndefinedError('Datastore file', self._file_id, species)
+      raise ForeignResourceUndefinedError('Datastore file', self.resource_id, species)
 
     # Build the template using the given species
     return self.build(species)
