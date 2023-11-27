@@ -60,7 +60,7 @@ def parse_phenotypedb_traits_data(species: Species, **files: LocalDatastoreFile)
 
 
 
-def parse_phenotypedb_bulk_trait_file(species, **files ):
+def parse_phenotypedb_bulk_trait_file(species: Species, **files: LocalDatastoreFile):
   """
       Parsing function for Zhang Gene Expression traits file. 
       The first 3 columns of the first row are expected to be ['transcript', 'WormBaseGeneID', 'GeneName']
@@ -70,7 +70,7 @@ def parse_phenotypedb_bulk_trait_file(species, **files ):
 
   logger.info('Parsing extracted phenotype database bulk TSV file(s)')
 
-    # Loop through each line in each file, indexed
+  # Loop through each line in each file, indexed
   for file_name, file_path in files.items():
     with open(file_path) as csv_file:
       for idx, row in enumerate( csv.reader(csv_file, delimiter='\t') ):
