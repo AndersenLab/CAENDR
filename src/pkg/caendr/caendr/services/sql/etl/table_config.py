@@ -13,7 +13,7 @@ from caendr.models.sql             import Strain, WormbaseGeneSummary, WormbaseG
 from caendr.models.datastore       import Species, TraitFile
 from caendr.services.cloud.storage import BlobURISchema
 from caendr.models.datastore       import Species
-from caendr.utils.local_files      import ForeignResourceWatcher, LocalDatastoreFileTemplate, GoogleSheetManager
+from caendr.utils.local_files      import ForeignResource, ForeignResourceTemplate, LocalDatastoreFileTemplate, LocalGoogleSheetTemplate
 
 
 
@@ -50,27 +50,27 @@ class ParseConfig():
     Helper class to associate a parsing function with a set of files.
   '''
 
-  def __init__(self, parse, files: Dict[str, ForeignResourceWatcher]):
+  def __init__(self, parse, files: Dict[str, ForeignResourceTemplate]):
     self.parse = parse
     self.files = files
 
 
-  def fetch(self, species):
+  def fetch_all(self, species) -> Dict[str, ForeignResource]:
     '''
       Fetch all the files required for this species.
     '''
     return {
-      file_id: file_template.get_for_species(species)
+      file_id: file_template.get_for_species(species).fetch()
         for file_id, file_template in self.files.items()
         if file_template.has_for_species(species)
     }
 
 
-  def run(self, species):
+  def parse_all(self, species):
     '''
       Apply this object's parse function to its set of files, yielding the results as a generator.
     '''
-    return self.parse(species, **self.fetch(species))
+    return self.parse(species, **self.fetch_all(species))
 
 
 
@@ -102,7 +102,7 @@ class TableConfig():
       yielding from each set in sequence.
     '''
     for config in self._parse_configs:
-      yield from config.run(species)
+      yield from config.parse_all(species)
 
 
 
@@ -115,7 +115,7 @@ StrainConfig = TableConfig(
   ParseConfig(
     fetch_andersen_strains,
     {
-      'STRAINS': GoogleSheetManager( 'STRAINS', ANDERSEN_LAB_STRAIN_SHEETS ),
+      'STRAINS': LocalGoogleSheetTemplate( 'STRAINS', ANDERSEN_LAB_STRAIN_SHEETS ),
     },
   ),
 )

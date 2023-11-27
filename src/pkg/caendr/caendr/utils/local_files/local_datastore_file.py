@@ -2,10 +2,10 @@ import os
 
 from caendr.services.logger        import logger
 
-from .foreign_resource_watcher     import ForeignResourceWatcher
+from .foreign_resource             import ForeignResource, ForeignResourceTemplate
 
 from caendr.models.datastore       import Species
-from caendr.models.error           import NotFoundError, ForeignResourceMissingError
+from caendr.models.error           import NotFoundError, ForeignResourceMissingError, ForeignResourceUndefinedError
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, download_blob_to_file, join_path, check_blob_exists
 from caendr.utils.tokens           import TokenizedString
 from caendr.utils.file             import unzip_gz, get_zipped_file_ext
@@ -17,7 +17,7 @@ os.makedirs(LOCAL_DIR, exist_ok=True)
 
 
 
-class LocalDatastoreFile(os.PathLike):
+class LocalDatastoreFile(os.PathLike, ForeignResource):
   '''
     Manage a local copy of a file in the datastore.
   '''
@@ -30,7 +30,7 @@ class LocalDatastoreFile(os.PathLike):
   # Instantiation
   #
 
-  def __init__(self, file_id: str, bucket: str, *path: str, unzip: bool = False, local_path: str = None):
+  def __init__(self, file_id: str, bucket: str, *path: str, unzip: bool = False, local_path: str = None, metadata: dict = None, species=None):
 
     # Validate path length
     if not len(path):
@@ -41,6 +41,8 @@ class LocalDatastoreFile(os.PathLike):
     self._bucket  = bucket
     self._path    = path
     self._unzip   = unzip
+    self._metadata  = metadata or {}
+    self._species   = species
 
     # Get the file extension as the last section of the path after a '.', ignoring '.gz'
     # If there is no file extension (e.g. 'foobar.gz' or just 'foobar'), set to empty string
@@ -48,6 +50,17 @@ class LocalDatastoreFile(os.PathLike):
 
     # Set the local path
     self._LOCAL_PATH = local_path if local_path is not None else self._DEFAULT_LOCAL_PATH
+
+
+  #
+  # Printing
+  #
+
+  def __repr__(self):
+    return 'Datastore File ' + join_path( *self.get_datastore_uri(schema=BlobURISchema.PATH) )
+
+  def __print_locations(self, zipped):
+    return f'{self.get_local_filepath(zipped=zipped)}  <-  {self.get_datastore_uri(schema=BlobURISchema.HTTPS)}'
 
 
   #
@@ -89,7 +102,12 @@ class LocalDatastoreFile(os.PathLike):
       Check whether the file exists locally (i.e. is cached).
     '''
     return os.path.exists( self.get_local_filepath(zipped=zipped) )
-  
+
+
+  #
+  # PathLike
+  #
+
   def __fspath__(self):
     if not self._unzip and self.exists_local(zipped = True):
       return self.get_local_filepath(zipped = True)
@@ -97,13 +115,18 @@ class LocalDatastoreFile(os.PathLike):
 
 
   #
-  # Fetch
+  # ForeignResource
   #
 
-  def __print_locations(self, zipped):
-    return f'{self.get_local_filepath(zipped=zipped)}  <-  {self.get_datastore_uri(schema=BlobURISchema.HTTPS)}'
+  @property
+  def metadata(self):
+    return self._metadata or {}
 
-  def fetch( self, use_cache: bool = True ):
+
+  def fetch_resource( self, use_cache: bool = True ):
+    '''
+      Ensure the file exists locally in the desired format, and return the local filepath.
+    '''
 
     # Check if file is already downloaded and unzipped
     if use_cache and self.exists_local(zipped=False):
@@ -117,23 +140,29 @@ class LocalDatastoreFile(os.PathLike):
 
     # Download the external file
     else:
-      logger.info(f'Downloading datastore file [{self._file_id}]:\n\t{ self.__print_locations(zipped = self.source_is_zipped) }')
-      download_blob_to_file(self._bucket, *self._path, destination=self._LOCAL_PATH, filename=self.get_local_filename(zipped = self.source_is_zipped))
       local_is_zipped = self.source_is_zipped
-      logger.info(f'Completed download of file [{self._file_id}]:\n\t{ self.__print_locations(zipped = self.source_is_zipped) }')
+
+      # Try downloading the blob
+      try:
+        logger.info(f'Downloading datastore file [{self._file_id}]:\n\t{ self.__print_locations(zipped = self.source_is_zipped) }')
+        download_blob_to_file(self._bucket, *self._path, destination=self._LOCAL_PATH, filename=self.get_local_filename(zipped = self.source_is_zipped))
+        logger.info(f'Completed download of file [{self._file_id}]:\n\t{ self.__print_locations(zipped = self.source_is_zipped) }')
+
+      # If not found, wrap error
+      except NotFoundError as ex:
+        raise ForeignResourceMissingError('Datastore file', self._file_id, self._species) from ex
 
     # Unzip the downloaded file, if applicable
     if local_is_zipped and self._unzip:
       logger.info(f'Unzipping {self.get_local_filepath(zipped = True)} ...')
       unzip_gz(self.get_local_filepath(zipped = True), keep_zipped_file=False)
 
-    # Return the resulting filename
-    return self.get_local_filepath(zipped = not self._unzip)
+    # Return the local filepath
+    return self.__fspath__()
 
 
 
-
-class LocalDatastoreFileTemplate(ForeignResourceWatcher):
+class LocalDatastoreFileTemplate(ForeignResourceTemplate):
   '''
     Manage a template for building LocalDatabaseFile objects, parameterized by species & other tokens.
 
@@ -175,7 +204,7 @@ class LocalDatastoreFileTemplate(ForeignResourceWatcher):
 
 
   #
-  # ForeignResourceWatcher Interface Methods
+  # ForeignResourceTemplate
   #
 
   def get_print_uri(self, species: Species) -> str:
@@ -188,11 +217,10 @@ class LocalDatastoreFileTemplate(ForeignResourceWatcher):
     return self.__exists_for_species is None or species in self.__exists_for_species
 
   def get_for_species(self, species: Species):
-    local_file = self.build(species)
 
-    try:
-      local_file.fetch()
-    except NotFoundError as ex:
-      raise ForeignResourceMissingError('Datastore file', self._file_id, species) from ex
+    # Check that species is valid
+    if not self.has_for_species(species):
+      raise ForeignResourceUndefinedError('Datastore file', self._file_id, species)
 
-    return local_file
+    # Build the template using the given species
+    return self.build(species)
