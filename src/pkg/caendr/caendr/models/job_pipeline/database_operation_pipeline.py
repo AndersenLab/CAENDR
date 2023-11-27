@@ -1,4 +1,5 @@
 from itertools import product
+from typing import Dict, List
 
 # Parent Class & Models
 from .job_pipeline           import JobPipeline
@@ -10,6 +11,7 @@ from caendr.models.task      import DatabaseOperationTask
 from caendr.models.datastore import Species, DbOp
 from caendr.models.error     import DataFormatError, PreflightCheckError
 from caendr.services.sql.etl import StrainConfig, WormbaseGeneConfig, WormbaseGeneSummaryConfig, StrainAnnotatedVariantConfig
+from caendr.utils.local_files import ForeignResourceTemplate
 from caendr.utils.env        import get_env_var
 
 
@@ -19,22 +21,22 @@ DB_OPERATIONS_CONTAINER_NAME = get_env_var('MODULE_DB_OPERATIONS_CONTAINER_NAME'
 
 
 # Get lists of required files from TableConfig objects
-REQUIRED_FILES = {
+REQUIRED_RESOURCES: Dict[DbOp, List[ForeignResourceTemplate]] = {
   DbOp.DROP_AND_POPULATE_STRAINS: [
-    *StrainConfig.files.values(),
+    *StrainConfig.all_resources,
   ],
   DbOp.DROP_AND_POPULATE_WORMBASE_GENES: [
-    *WormbaseGeneConfig.files.values(),
-    *WormbaseGeneSummaryConfig.files.values(),
+    *WormbaseGeneConfig.all_resources,
+    *WormbaseGeneSummaryConfig.all_resources,
   ],
   DbOp.DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS: [
-    *StrainAnnotatedVariantConfig.files.values()
+    *StrainAnnotatedVariantConfig.all_resources,
   ],
   DbOp.DROP_AND_POPULATE_ALL_TABLES: [
-    *StrainConfig.files.values(),
-    *WormbaseGeneConfig.files.values(),
-    *WormbaseGeneSummaryConfig.files.values(),
-    *StrainAnnotatedVariantConfig.files.values()
+    *StrainConfig.all_resources,
+    *WormbaseGeneConfig.all_resources,
+    *WormbaseGeneSummaryConfig.all_resources,
+    *StrainAnnotatedVariantConfig.all_resources,
   ],
   DbOp.TEST_ECHO: [],
   DbOp.TEST_MOCK_DATA: [],
@@ -91,9 +93,9 @@ class DatabaseOperationPipeline(JobPipeline):
 
     # Loop through all required files, tracking those that don't appear in the database
     missing_files = []
-    for resource_watcher, species in product(REQUIRED_FILES.get(db_operation, []), species_list):
-      if not resource_watcher.check_exists(species):
-        missing_files.append(f'- { resource_watcher.get_print_uri(species) }')
+    for resource, species in product(REQUIRED_RESOURCES.get(db_operation, []), species_list):
+      if not resource.check_exists(species):
+        missing_files.append(f'- { resource.get_print_uri(species) }')
 
     # If any files were missing, raise them
     if len(missing_files) > 0:

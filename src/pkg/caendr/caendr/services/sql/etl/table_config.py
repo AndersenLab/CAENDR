@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 
 from caendr.utils.env              import get_env_var
 from caendr.services.cloud.secret  import get_secret
@@ -94,6 +94,13 @@ class TableConfig():
       The name of the SQL table.
     '''
     return self.table.__tablename__
+
+  @property
+  def all_resources(self) -> List[ForeignResourceTemplate]:
+    resources = []
+    for config in self._parse_configs:
+      resources += config.files
+    return resources
 
 
   def parse_for_species(self, species):
