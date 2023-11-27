@@ -10,7 +10,7 @@ from caendr.models.task      import DatabaseOperationTask
 # Services
 from caendr.models.datastore import Species, DbOp
 from caendr.models.error     import DataFormatError, PreflightCheckError
-from caendr.services.sql.etl import StrainConfig, WormbaseGeneConfig, WormbaseGeneSummaryConfig, StrainAnnotatedVariantConfig
+from caendr.services.sql.etl import StrainConfig, WormbaseGeneConfig, WormbaseGeneSummaryConfig, StrainAnnotatedVariantConfig, PhenotypeDatabaseConfig
 from caendr.utils.local_files import ForeignResourceTemplate
 from caendr.utils.env        import get_env_var
 
@@ -31,6 +31,10 @@ REQUIRED_RESOURCES: Dict[DbOp, List[ForeignResourceTemplate]] = {
   ],
   DbOp.DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS: [
     *StrainAnnotatedVariantConfig.all_resources,
+  ],
+  DbOp.DROP_AND_POPULATE_PHENOTYPE_DB: [
+    # TODO: Should this actually check for every single file specified in the datastore? Can it flag & skip some files?
+    # *PhenotypeDatabaseConfig.all_resources,
   ],
   DbOp.DROP_AND_POPULATE_ALL_TABLES: [
     *StrainConfig.all_resources,
