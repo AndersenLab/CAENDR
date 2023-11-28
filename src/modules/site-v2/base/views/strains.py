@@ -303,38 +303,32 @@ def order_page_index():
   flash(Markup("<strong>Please note:</strong> although the site is currently able to accept orders, orders will <u>not ship</u> until Fall 2023."), category="warning")
 
   if not user and not cart_id:
-    users_cart = []
+    return render_template('order/order.html', **{
+      'tool_alt_parent_breadcrumb': {"title": "Strain Catalog", "url": url_for('request_strains.request_strains')},
+      'title': "Order Summary",
+      'form': form
+    })
   elif user:
     users_cart = Cart.lookup_by_user(user['email'])
-    cartItems = users_cart['items']
-    form.version.data = users_cart['version']
   else:
     users_cart = Cart(cart_id)
-    cartItems = users_cart['items']
-    form.version.data = users_cart['version']
-  
-  if len(users_cart) == 0:
-    return render_template('order/order.html', **{
-      'tool_alt_parent_breadcrumb': {"title": "Strain Catalog", "url": url_for('request_strains.request_strains')},
-      'title': "Order Summary",
-      'form': form
-    })
-  else:
-    for item in cartItems:
-      item['price'] = Cart.get_price(item)
-      species = item.get('species')
-      item['species_short_name'] = Species.from_name(species).short_name
-    totalPrice = sum(item['price'] for item in cartItems)
 
+  cartItems = users_cart['items']
+  form.version.data = users_cart['version']
 
+  for item in cartItems:
+    item['price'] = Cart.get_price(item)
+    species = item.get('species')
+    item['species_short_name'] = Species.from_name(species).short_name
+  totalPrice = sum(item['price'] for item in cartItems)
 
-    return render_template('order/order.html', **{
-      'tool_alt_parent_breadcrumb': {"title": "Strain Catalog", "url": url_for('request_strains.request_strains')},
-      'title': "Order Summary",
-      'cartItems': cartItems,
-      'totalPrice': totalPrice,
-      'form': form
-    })
+  return render_template('order/order.html', **{
+    'tool_alt_parent_breadcrumb': {"title": "Strain Catalog", "url": url_for('request_strains.request_strains')},
+    'title': "Order Summary",
+    'cartItems': cartItems,
+    'totalPrice': totalPrice,
+    'form': form
+  })
   
 
 @strains_bp.route("/checkout/confirmation/<invoice_hash>", methods=['GET', 'POST'])
