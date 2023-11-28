@@ -13,6 +13,7 @@ class PipelineOperation(Entity):
       'id',
       'operation',
       'operation_kind',
+      'execution_id',
       'data_hash',
       'metadata',
       'report_path',

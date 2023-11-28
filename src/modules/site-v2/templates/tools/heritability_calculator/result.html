@@ -12,7 +12,7 @@
 <script type="text/javascript"
   src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.2/FileSaver.min.js"></script>
 
-{% if not (result or hr.status in [TaskStatus.ERROR, TaskStatus.COMPLETE]) %}
+{% if not (result or hr.status in [JobStatus.ERROR, JobStatus.COMPLETE]) %}
 <meta http-equiv="refresh" content="10; url={{ request.path }}">
 {% endif %}
 
@@ -46,7 +46,7 @@
     <p>
       <strong>Status:</strong>  {{ hr.status }}
     
-      {% if hr.status == TaskStatus.ERROR %} 
+      {% if hr.status == JobStatus.ERROR %}
       {% if session["is_admin"] %}
       <p><strong>Error:</strong> <span class="text-danger">{{ operation.error }}</span></p>
       {% endif %}
@@ -82,7 +82,7 @@
       <div class="ps-3 pt-0"><a href="{{ url_for('heritability_calculator.heritability_calculator') }}"><i class="bi bi-plus-circle" aria-hidden="true"></i> New Calculation</a></div>
       <div class="ps-3 pt-0"><a href="{{ url_for('heritability_calculator.my_results') }}"><i class="bi bi-journal" aria-hidden="true"></i>View All My Heritability Results</a></div>
       {% if data %}
-      {% if hr.status == TaskStatus.COMPLETE %}
+      {% if hr.status == JobStatus.COMPLETE %}
       <div class="ps-3 pt-0"><button class="btn border-0" onclick="openFullscreen();" id="fullscreenButton"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>View Fullscreen</button></div>
       {% endif %}
       {% endif %}
@@ -91,7 +91,7 @@
       <!-- Heritability Results -->
       <div class="col">
         {% if data and not result %}
-        {% if not hr.status in [TaskStatus.COMPLETE, TaskStatus.ERROR] %}
+        {% if not hr.status in [JobStatus.COMPLETE, JobStatus.ERROR] %}
         <p class='text-info text-center'>
           <strong>
             The heritability calculation is currently being run. Please check back in a few minutes for results.
@@ -130,7 +130,7 @@
         {% endif %}
         {% endif %}
 
-        {% if hr.status == TaskStatus.ERROR %}
+        {% if hr.status == JobStatus.ERROR %}
         <div class="col-9 alert alert-danger mt-5 mx-auto animate__animated animate__fadeInDown">
           <p class="fs-2 text-center"><i class="bi bi-exclamation-circle-fill me-2" aria-hidden="true"></i></p>
           <p class="lead">We're sorry but an error occurred while performing this report. Please verify that the data you submitted is correct and matches the expected format.</p>

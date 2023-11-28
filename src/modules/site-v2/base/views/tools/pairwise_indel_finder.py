@@ -8,9 +8,9 @@ from base.utils.auth import jwt_required, admin_required, get_current_user, user
 from base.utils.tools import lookup_report, try_submit
 
 from caendr.models.datastore.browser_track import BrowserTrackDefault
-from caendr.models.datastore import Species, IndelPrimer, DatasetRelease
+from caendr.models.datastore import Species, IndelPrimerReport, DatasetRelease
 from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupError, EmptyReportDataError, EmptyReportResultsError
-from caendr.models.task import TaskStatus
+from caendr.models.status import JobStatus
 from caendr.services.cloud.storage import check_blob_exists
 from caendr.services.dataset_release import get_dataset_release
 from caendr.utils.bio import parse_chrom_interval
@@ -196,7 +196,7 @@ def list_results():
     'items': get_indel_primers(None if show_all else user.name, filter_errs),
     'columns': results_columns(),
 
-    'TaskStatus': TaskStatus,
+    'JobStatus': JobStatus,
   })
 
 
@@ -240,10 +240,10 @@ def submit():
   no_cache = bool(user_is_admin() and request.args.get("nocache", False))
 
   # Try submitting the job & getting a JSON status message
-  response, code = try_submit(IndelPrimer, user, data, no_cache)
+  response, code = try_submit(IndelPrimerReport.kind, user, data, no_cache)
 
   # If there was an error, flash it
-  if not code == 200:
+  if code != 200 and int(request.args.get('reloadonerror', 1)):
     flash(response['message'], 'danger')
 
   # Return the response
@@ -268,7 +268,7 @@ def report(id, file_ext=None):
     # Fetch requested primer report
     # Ensures the report exists and the user has permission to view it
     try:
-      report = lookup_report(IndelPrimer.kind, id)
+      job = lookup_report(IndelPrimerReport.kind, id)
 
     # If the report lookup request is invalid, show an error message
     except ReportLookupError as ex:
@@ -278,7 +278,7 @@ def report(id, file_ext=None):
     # Try getting the report data file and results
     # If result is None, job hasn't finished computing yet
     try:
-      data, result = fetch_indel_primer_report(report)
+      data, result = fetch_indel_primer_report(job.report)
       ready = result is not None
 
     # Error reading data JSON file
@@ -288,8 +288,8 @@ def report(id, file_ext=None):
 
     # Results file exists, but is empty - error
     except EmptyReportResultsError:
-      report.status = TaskStatus.ERROR
-      report.save()
+      job.report.status = JobStatus.ERROR
+      job.report.save()
       return abort(404, description="Pairwise indel finder report not found")
 
     # General error
@@ -312,19 +312,19 @@ def report(id, file_ext=None):
     # Update indel primer entity
     # TODO: Is this the right time/place for this?
     if ready:
-      if report['status'] != TaskStatus.ERROR:
-        report['status'] = TaskStatus.COMPLETE
-      report.empty = result is None  # TODO: Is this correct? I think empty should actually check if any rows exist in the df
-      report.save()
+      if job.report['status'] != JobStatus.ERROR:
+        job.report['status'] = JobStatus.COMPLETE
+      job.report.empty = result is None  # TODO: Is this correct? I think empty should actually check if any rows exist in the df
+      job.report.save()
 
     # If a file format was specified, return a downloadable file with the results
     # TODO: Set a better filename?
     if file_format is not None:
       resp = Response(format_table.to_csv(sep=file_format['sep']), mimetype=file_format['mimetype'])
       try:
-        resp.headers['Content-Disposition'] = f'filename={report["species"]}_{report["strain_1"]}_{report["strain_2"]}_{data["site"]}.{file_ext}'
+        resp.headers['Content-Disposition'] = f'filename={job.report["species"]}_{job.report["strain_1"]}_{job.report["strain_2"]}_{data["site"]}.{file_ext}'
       except:
-        resp.headers['Content-Disposition'] = f'filename={report["id"]}.{file_ext}'
+        resp.headers['Content-Disposition'] = f'filename={job.report["id"]}.{file_ext}'
       return resp
 
     # Otherwise, return view page
@@ -336,7 +336,7 @@ def report(id, file_ext=None):
       'tool_alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools') },
 
       # GCP data info
-      'data_hash': report.data_hash,
+      'data_hash': job.report.data_hash,
       'id': id,
 
       # Job status

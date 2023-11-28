@@ -2,7 +2,6 @@ import os
 
 from caendr.services.logger import logger
 
-from caendr.models.datastore import PipelineOperation
 from caendr.models.error import PipelineRunError
 from caendr.services.cloud.service_account import authenticate_google_service
 from caendr.utils.env import get_env_var
@@ -24,14 +23,6 @@ parent_id = f"projects/{GOOGLE_CLOUD_PROJECT_NUMBER}/locations/{GOOGLE_CLOUD_REG
 
 
 
-def get_operation_id_from_name(operation_name):
-  try:
-    return operation_name.rsplit('/', 1)[-1]
-  except:
-    logger.warn(f'Could not parse operation ID from operation_name "{operation_name}"')
-    return operation_name
-
-
 @use_service('lifesciences', 'v2beta')
 def start_pipeline(SERVICE, task_id, pipeline_request):
   req_body = get_json_from_class(pipeline_request)
@@ -45,36 +36,6 @@ def start_pipeline(SERVICE, task_id, pipeline_request):
   except Exception as err:
     logger.error(f"[TASK {task_id}] Pipeline Error: {err}")
     raise PipelineRunError(err)
-
-
-def create_pipeline_operation_record(task, response):
-  if response is None:
-    raise PipelineRunError()
-
-  try:
-    name = response.get('response').get('name')
-  except:
-    name = response.get('name')
-  metadata = response.get('metadata')
-  if name is None or metadata is None:
-    raise PipelineRunError(f'Pipeline start response missing expected properties (name = "{name}", metadata = "{metadata}")')
-
-  id = get_operation_id_from_name(name)
-  op = PipelineOperation(id)
-  if op._exists:
-    logger.warn(f'[CREATE {id}] PipelineOperation object with ID {id} already exists: {dict(op)}')
-
-  op.set_properties(**{
-    'id': id,
-    'operation': name,
-    'operation_kind': task.kind,
-    'metadata': metadata,
-    'report_path': None,
-    'done': False,
-    'error': False
-  })
-  op.save()
-  return op
 
 
 @use_service('lifesciences', 'v2beta')
@@ -93,6 +54,8 @@ def get_pipeline_status(SERVICE, operation_name):
       done: true
     }
   """
+  from caendr.services.cloud.utils import get_operation_id_from_name
+
   logger.debug(f'get_pipeline_status: operation_name:{operation_name}')
   request = SERVICE.projects().locations().operations().get(name=operation_name)
   response = request.execute()

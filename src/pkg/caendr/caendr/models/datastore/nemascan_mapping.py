@@ -1,6 +1,7 @@
 from caendr.services.logger import logger
 
 from caendr.models.datastore import DataJobEntity
+from caendr.models.status import JobStatus
 from caendr.services.cloud.storage import check_blob_exists, get_blob_list
 
 
@@ -11,7 +12,7 @@ REPORT_DATA_PREFIX = 'Reports/NemaScan_Report_'
 NEMASCAN_INPUT_FILE = 'data.tsv'
 
 
-class NemascanMapping(DataJobEntity):
+class NemascanReport(DataJobEntity):
   kind = 'nemascan_mapping'
   _blob_prefix = NEMASCAN_REPORT_PATH_PREFIX
   _input_file  = NEMASCAN_INPUT_FILE
@@ -71,7 +72,6 @@ class NemascanMapping(DataJobEntity):
 
   @property
   def report_path(self):
-    from caendr.models.task import TaskStatus
 
     # Check if this value has been cached already, and if so, make sure the file exists
     path = self._get_meta_prop('report_path')
@@ -82,7 +82,7 @@ class NemascanMapping(DataJobEntity):
         logger.warn(f'Genetic Mapping report {self.id} lists its report path as "{path}", but this file does not exist. Recomputing...')
 
     # If job threw an error, don't search for report path
-    if self['status'] == TaskStatus.ERROR:
+    if self['status'] == JobStatus.ERROR:
       logger.warn(f'Trying to compute report path for Genetic Mapping report "{self.id}", but job returned an error. Returning None.')
       return None
 
@@ -120,10 +120,9 @@ class NemascanMapping(DataJobEntity):
       Returns "COMPLETE" if any other user's submission is complete, otherwise
       returns the last found status or None.
     '''
-    from caendr.models.task import TaskStatus
 
     # Check for reports with a matching data hash & container version
-    matches = NemascanMapping.query_ds( filters = [
+    matches = NemascanReport.query_ds( filters = [
       ('data_hash',         '=', self.data_hash),
       ('container_version', '=', self['container_version']),
     ])
@@ -135,7 +134,7 @@ class NemascanMapping(DataJobEntity):
       if match.username != self.username:
 
         # Update to match status, keeping 'COMPLETE' if it's found
-        if status != TaskStatus.COMPLETE:
+        if status != JobStatus.COMPLETE:
           status = match.status
 
     # Return the status
