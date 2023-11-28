@@ -113,6 +113,13 @@ def get_file_format(file_ext, valid_formats=None):
   return None
 
 
+def get_delimiter_from_filepath(filepath=None, valid_file_extensions=None):
+  valid_file_extensions = valid_file_extensions or {'csv'}
+  if filepath:
+    file_format = get_file_format(filepath[-3:], valid_formats=valid_file_extensions)
+    if file_format:
+      return file_format['sep']
+
 
 
 def join_with_final(text, sep='', final=None, final_if_two=None):

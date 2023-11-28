@@ -2,7 +2,7 @@ import os
 from caendr.services.cloud.postgresql import health_database_status
 from caendr.services.logger import logger
 
-from caendr.models.datastore import SPECIES_LIST
+from caendr.models.datastore import Species
 from caendr.models.sql import WormbaseGene, WormbaseGeneSummary, Strain, StrainAnnotatedVariant
 from caendr.services.sql.db import drop_tables, backup_external_db
 from caendr.services.sql.etl import ETLManager, load_strains
@@ -38,25 +38,25 @@ def execute_operation(app, db, DB_OP, species=None):
 
 
 def drop_and_populate_strains(app, db, species):
-  drop_tables(app, db, species=species, tables=[Strain.__table__])
+  drop_tables(app, db, species=species, tables=[ Strain ])
   load_strains(db, species)
 
 
 def drop_and_populate_wormbase_genes(app, db, species):
 
   # Print operation & species info
-  spec_strings = [ f'{key} (wb_ver = {val.wb_ver})' for key, val in SPECIES_LIST.items() if (species is None or key in species) ]
+  spec_strings = [ f'{key} (wb_ver = {val.wb_ver})' for key, val in Species.all().items() if (species is None or key in species) ]
   logger.info(f'Dropping and populating wormbase genes. Species list: [ {", ".join(spec_strings)} ]')
 
   # Initialize ETL Manager
-  etl_manager = ETLManager(SPECIES_LIST, reload_files=True)
+  etl_manager = ETLManager(Species.all(), reload_files=True)
 
   # Drop relevant tables
   logger.info(f"Dropping tables...")
   drop_tables(app, db, species=species, tables=[
-    WormbaseGeneSummary.__table__,
-    WormbaseGene.__table__,
-    # Homolog.__table__,
+    WormbaseGeneSummary,
+    WormbaseGene,
+    # Homolog,
   ])
 
   # Fetch and load data using ETL Manager
@@ -70,16 +70,16 @@ def drop_and_populate_wormbase_genes(app, db, species):
 def drop_and_populate_strain_annotated_variants(app, db, species):
 
   # Print operation & species info
-  spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in SPECIES_LIST.items() if (species is None or key in species) ]
+  spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
   logger.info(f'Dropping and populating strain annotated variants. Species list: [ {", ".join(spec_strings)} ]')
 
   # Initialize ETL Manager
-  etl_manager = ETLManager(SPECIES_LIST, reload_files=True)
+  etl_manager = ETLManager(Species.all(), reload_files=True)
 
   # Drop relevant table
   logger.info(f"Dropping table...")
   db.session.commit()
-  drop_tables(app, db, species=species, tables=[StrainAnnotatedVariant.__table__])
+  drop_tables(app, db, species=species, tables=[ StrainAnnotatedVariant ])
 
   # Fetch and load data using ETL Manager
   logger.info("Loading strain annotated variants...")
@@ -89,11 +89,11 @@ def drop_and_populate_strain_annotated_variants(app, db, species):
 def drop_and_populate_all_tables(app, db, species):
 
   # Print operation & species info
-  spec_strings = [ f'{key} (wb_ver = {val.wb_ver}, release_sva = {val.release_sva})' for key, val in SPECIES_LIST.items() if (species is None or key in species) ]
+  spec_strings = [ f'{key} (wb_ver = {val.wb_ver}, release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
   logger.info(f'Dropping and populating all tables. Species list: [ {", ".join(spec_strings)} ]')
 
   logger.info("[1/6] Downloading databases...eta ~0:15")
-  etl_manager = ETLManager(SPECIES_LIST, reload_files=True)
+  etl_manager = ETLManager(Species.all(), reload_files=True)
 
   logger.info("[2/6] Dropping tables...eta ~0:01")
   drop_tables(app, db, species=species)

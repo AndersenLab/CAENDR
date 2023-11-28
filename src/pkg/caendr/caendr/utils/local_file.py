@@ -1,6 +1,7 @@
 import os
 
 from werkzeug.utils import secure_filename
+from caendr.services.logger import logger
 
 from caendr.models.error import FileUploadError
 from caendr.utils.data import unique_id
@@ -90,14 +91,38 @@ class LocalFile(os.PathLike):
     '''
       Ensure the file is deleted from local server storage.
 
+      If attempting to delete the file raises an error, that error will be propagated if the file still exists
+      and suppressed if the file does not exist.
+
       Return:
         removed (bool): Whether the file existed.
     '''
+
+    # Safely check if file exists
+    try:
+      exists = os.path.isfile(self.__local_path)
+    except:
+      exists = False
+
+    # Try removing file directly
     try:
       os.remove(self.__local_path)
       return True
+
+    # Not found - file doesn't exist, so we can return False
     except FileNotFoundError:
       return False
+
+    # Arbitrary exception - check if file exists
+    except Exception as e:
+      logger.error(f'Error removing file {self.__local_path}: {e}')
+
+      # If file still exists, raise the error
+      if os.path.isfile(self.__local_path):
+        raise e
+
+      # If not, ignore it
+      return exists
 
 
   #
