@@ -13,12 +13,12 @@ from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 from caendr.services.nemascan_mapping import get_mapping, get_mappings
 from caendr.services.cloud.storage import get_blob, generate_blob_url, get_blob_list, check_blob_exists
-from caendr.models.datastore import Species, NemascanMapping
+from caendr.models.datastore import Species, NemascanReport
 from caendr.models.error import (
     FileUploadError,
     ReportLookupError,
 )
-from caendr.models.task import TaskStatus
+from caendr.models.status import JobStatus
 from caendr.utils.env import get_env_var
 
 
@@ -113,12 +113,14 @@ def submit():
       data = { 'label': label, 'species': species, 'filepath': filepath }
 
       # Try submitting the job & returning a JSON status message
-      response, code = try_submit(NemascanMapping, user, data, no_cache)
+      response, code = try_submit(NemascanReport.kind, user, data, no_cache)
 
-      # If there is an error or a ready message, flash it
-      if not code == 200:
+      # If there was an error, flash it
+      if code != 200 and int(request.args.get('reloadonerror', 1)):
         flash(response['message'], 'danger')
-      elif response.get('message') and response['ready']:
+
+      # If the response contains a caching message, flash it
+      elif response.get('message') and response.get('ready', False):
         flash(response.get('message'), 'success')
 
       # Return the response
@@ -162,7 +164,7 @@ def list_results():
     'items': get_mappings(None if show_all else user.name, filter_errs),
     'columns': results_columns(),
 
-    'TaskStatus': TaskStatus,
+    'JobStatus': JobStatus,
   })
 
 
@@ -173,7 +175,7 @@ def report(id):
   # Fetch requested mapping report
   # Ensures the report exists and the user has permission to view it
   try:
-    mapping = lookup_report(NemascanMapping.kind, id)
+    job = lookup_report(NemascanReport.kind, id)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:
@@ -181,29 +183,29 @@ def report(id):
     abort(ex.code)
 
   # Get a link to download the data, if the file exists
-  if check_blob_exists(mapping.get_bucket_name(), mapping.get_data_blob_path()):
-    data_download_url = generate_blob_url(mapping.get_bucket_name(), mapping.get_data_blob_path())
+  if check_blob_exists(job.report.get_bucket_name(), job.report.get_data_blob_path()):
+    data_download_url = generate_blob_url(job.report.get_bucket_name(), job.report.get_data_blob_path())
   else:
     data_download_url = None
 
   # Get a link to the report files, if they exist
-  if mapping.report_path is not None:
-    report_url = generate_blob_url(mapping.get_bucket_name(), mapping.report_path)
+  if job.report.report_path is not None:
+    report_url = generate_blob_url(job.report.get_bucket_name(), job.report.report_path)
   else:
     report_url = None
 
   # Get the trait name, if it exists
-  trait = mapping['trait']
+  trait = job.report['trait']
 
   return render_template('tools/genetic_mapping/report.html', **{
 
     # Page info
     'title': 'Genetic Mapping Report',
-    'subtitle': mapping['label'] + (f': {trait}' if trait is not None else ''),
+    'subtitle': job.report['label'] + (f': {trait}' if trait is not None else ''),
     'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
 
     # Job status
-    'mapping_status': mapping['status'],
+    'mapping_status': job.report['status'],
 
     'id': id,
 
@@ -223,7 +225,7 @@ def report_fullscreen(id):
   # Fetch requested mapping report
   # Ensures the report exists and the user has permission to view it
   try:
-    mapping = lookup_report(NemascanMapping.kind, id)
+    job = lookup_report(NemascanReport.kind, id)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:
@@ -231,8 +233,8 @@ def report_fullscreen(id):
     abort(ex.code)
 
   # Download the report files, if they exist
-  if mapping.report_path is not None:
-    blob = get_blob(mapping.get_bucket_name(), mapping.report_path)
+  if job.report.report_path is not None:
+    blob = get_blob(job.report.get_bucket_name(), job.report.report_path)
     report_contents = blob.download_as_text()
   else:
     report_contents = None
@@ -269,7 +271,7 @@ def results(id):
   # Fetch requested mapping report
   # Ensures the report exists and the user has permission to view it
   try:
-    mapping = lookup_report(NemascanMapping.kind, id)
+    job = lookup_report(NemascanReport.kind, id)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:
@@ -277,7 +279,7 @@ def results(id):
     abort(ex.code)
 
   # Get the trait, if it exists
-  trait = mapping['trait']
+  trait = job.report['trait']
 
   # # Old way to compute list of blobs, that was hidden beneath 'return'
   # # Can this be deleted?
@@ -290,12 +292,12 @@ def results(id):
       "name": '/'.join( blob.name.rsplit('/', 2)[1:] ),
       "url":  blob.public_url,
     }
-    for blob in get_blob_list(mapping.get_bucket_name(), mapping.get_result_path())
+    for blob in get_blob_list(job.report.get_bucket_name(), job.report.get_result_path())
   ]
 
   return render_template('tools/genetic_mapping/result_files.html', **{
     'title': 'Genetic Mapping Result Files',
     'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
-    'subtitle': mapping.label + (f': {trait}' if trait else ''),
+    'subtitle': job.report['label'] + (f': {trait}' if trait else ''),
     'file_list': file_list,
   })

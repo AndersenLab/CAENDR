@@ -3,9 +3,9 @@ from flask import jsonify, Blueprint, url_for, abort, request
 from base.utils.tools import lookup_report
 from base.views.tools import pairwise_indel_finder_bp, genetic_mapping_bp, heritability_calculator_bp
 
-from caendr.models.datastore import NemascanMapping, HeritabilityReport, IndelPrimer
+from caendr.models.datastore import NemascanReport, HeritabilityReport, IndelPrimerReport
 from caendr.models.error     import ReportLookupError
-from caendr.models.task      import TaskStatus
+from caendr.models.status    import JobStatus
 from caendr.services.email   import REPORT_SUCCESS_EMAIL_TEMPLATE, REPORT_ERROR_EMAIL_TEMPLATE
 from caendr.services.cloud.secret import get_secret
 
@@ -16,8 +16,8 @@ api_notifications_bp = Blueprint('notifications', __name__)
 
 
 REPORT_BP_MAP = {
-  IndelPrimer.kind:        pairwise_indel_finder_bp.name,
-  NemascanMapping.kind:    genetic_mapping_bp.name,
+  IndelPrimerReport.kind:  pairwise_indel_finder_bp.name,
+  NemascanReport.kind:     genetic_mapping_bp.name,
   HeritabilityReport.kind: heritability_calculator_bp.name,
 }
 
@@ -37,7 +37,8 @@ def job_finish(kind, id, status):
 
   # Fetch requested report, aborting if kind is invalid or report cannot be found
   try:
-    report = lookup_report(kind, id, validate_user=False)
+    job = lookup_report(kind, id, validate_user=False)
+    report = job.report
   except ReportLookupError as ex:
     return ex.msg, ex.code
 
@@ -48,12 +49,12 @@ def job_finish(kind, id, status):
     return f'Invalid report type "{kind}"', 400
 
   # Complete message
-  if status == TaskStatus.COMPLETE:
+  if status == JobStatus.COMPLETE:
     template = REPORT_SUCCESS_EMAIL_TEMPLATE.strip('\n')
     link     = url_for(bp + '.report', id=report.id, _external=True)
 
   # Error message
-  elif status == TaskStatus.ERROR:
+  elif status == JobStatus.ERROR:
     template = REPORT_ERROR_EMAIL_TEMPLATE.strip('\n')
     link     = url_for(bp + '.my_results', _external=True)
 

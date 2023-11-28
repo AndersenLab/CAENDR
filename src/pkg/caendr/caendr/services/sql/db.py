@@ -9,7 +9,7 @@ from caendr.services.logger import logger
 from diskcache import Cache
 
 from caendr.models.error import BadRequestError
-from caendr.models.sql import Homolog, Strain, StrainAnnotatedVariant, WormbaseGene, WormbaseGeneSummary
+from caendr.models.sql import TABLES_LIST
 from caendr.services.cloud.storage import upload_blob_from_file_as_chunks, generate_blob_url, download_blob_to_file
 from caendr.utils.file import download_file
 
@@ -57,32 +57,51 @@ def drop_tables(app, db, species=None, tables=None):
   '''
 
   if species is None:
+
+    # If fully unqualified, just drop & create all tables
     if tables is None:
       logger.info('Dropping all tables...')
       db.drop_all(app=app)
       logger.info('Creating all tables...')
       db.create_all(app=app)
+
+    # If only tables provided, drop & create that set
     else:
-      logger.info(f'Dropping tables: ${tables}')
-      db.metadata.drop_all(bind=db.engine, checkfirst=True, tables=tables)
-      logger.info(f'Creating tables: ${tables}')
-      db.metadata.create_all(bind=db.engine, tables=tables)
+      _tables = [ t.__table__ for t in tables ]
+      table_names = 'tables [' + ', '.join([ t.__tablename__ for t in tables ]) + ']'
+
+      logger.info(f'Dropping {table_names}...')
+      db.metadata.drop_all(bind=db.engine, checkfirst=True, tables=_tables)
+      logger.info(f'Creating {table_names}...')
+      db.metadata.create_all(bind=db.engine, tables=_tables)
 
   else:
-    if tables is None:
-      logger.info(f'Dropping species [{", ".join(species)}] from all tables...')
-      tables = list(db.metadata.tables.values())
-    else:
-      logger.info(f'Dropping species [{", ".join(species)}] from tables: {tables}')
+    species_names = '[' + ', '.join(species) + ']'
 
-    db.metadata.create_all(bind=db.engine, tables=tables)
+    # If no tables specified, use the full list
+    if tables is None:
+      tables = TABLES_LIST
+      table_names = 'all tables'
+    else:
+      table_names = 'tables [' + ', '.join([ t.__tablename__ for t in tables ]) + ']'
+
+    # Log operation
+    logger.info(f'Dropping species {species_names} from {table_names}...')
+
+    # Ensure all tables exist
+    db.metadata.create_all(bind=db.engine, tables=[ t.__table__ for t in tables ])
 
     # Loop through tables in reverse order, so rows that depend on earlier tables are
     # dropped first
     for table in tables[::-1]:
+      logger.info(f'Initial size of table { table.__tablename__ }: { table.query.count() }')
+
       for species_name in species:
-        del_statement = table.delete().where(table.c.species_name == species_name)
+        del_statement = table.__table__.delete().where(table.__table__.c.species_name == species_name)
         db.engine.execute(del_statement)
+
+      # Log size of table after drop
+      logger.info(f'Size of table { table.__tablename__ } after dropping { species_names }: { table.query.count() }')
 
   db.session.commit()
 

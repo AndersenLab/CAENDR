@@ -6,8 +6,8 @@ import numpy as np
 from cyvcf2 import VCF
 from caendr.services.logger import logger
 
-from caendr.models.datastore import IndelPrimer, Species
-from caendr.models.error     import NotFoundError, EmptyReportDataError, EmptyReportResultsError
+from caendr.models.datastore import IndelPrimerReport, Species
+from caendr.models.error     import EmptyReportDataError, EmptyReportResultsError
 
 from caendr.services.cloud.storage import (
     download_blob_as_dataframe,
@@ -16,7 +16,6 @@ from caendr.services.cloud.storage import (
     generate_blob_url,
     get_blob,
 )
-from caendr.services.tools import submit_job
 
 from caendr.utils.constants import CHROM_NUMERIC
 from caendr.utils.env import get_env_var
@@ -54,7 +53,7 @@ def get_indel_primer(id):
     Get the Indel Primer with the given ID.
     If no such submission exists, returns None.
   '''
-  return IndelPrimer.get_ds(id)
+  return IndelPrimerReport.get_ds(id)
 
 
 def get_indel_primers(username=None, filter_errs=False):
@@ -77,27 +76,27 @@ def get_indel_primers(username=None, filter_errs=False):
     filters = []
 
   # Get list of reports and filter by date
-  primers = IndelPrimer.query_ds(safe=not filter_errs, ignore_errs=filter_errs, filters=filters)
-  return IndelPrimer.sort_by_created_date(primers, reverse=True)
+  primers = IndelPrimerReport.query_ds(safe=not filter_errs, ignore_errs=filter_errs, filters=filters)
+  return IndelPrimerReport.sort_by_created_date(primers, reverse=True)
 
 
 def get_bed_url(species, release = None, secure = True):
   release = release or Species.from_name(species).release_pif
-  filename = IndelPrimer.get_source_filename(species, release)
+  filename = IndelPrimerReport.get_source_filename(species, release)
   return generate_blob_url(
     MODULE_SITE_BUCKET_PRIVATE_NAME, f"{INDEL_PRIMER_TOOL_PATH}/{filename}.bed.gz", secure = secure
   )
 
 def get_vcf_url(species, release = None, secure = True):
   release = release or Species.from_name(species).release_pif
-  filename = IndelPrimer.get_source_filename(species, release)
+  filename = IndelPrimerReport.get_source_filename(species, release)
   return generate_blob_url(
     MODULE_SITE_BUCKET_PRIVATE_NAME, f"{INDEL_PRIMER_TOOL_PATH}/{filename}.vcf.gz", secure = secure
   )
 
 
 def download_vcf_index_file(species, release = None):
-  filename = IndelPrimer.get_source_filename(species, release) + '.vcf.gz.csi'
+  filename = IndelPrimerReport.get_source_filename(species, release) + '.vcf.gz.csi'
   download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, f"{INDEL_PRIMER_TOOL_PATH}/{filename}", filename)
 
 
@@ -135,11 +134,11 @@ def overlaps(s1, e1, s2, e2):
   return s1 <= s2 <= e1 or s2 <= s1 <= e2
 
 
-def fetch_ip_data(ip: IndelPrimer):
+def fetch_ip_data(ip: IndelPrimerReport):
   return get_blob(ip.get_bucket_name(), ip.get_data_blob_path())
 
 
-def fetch_ip_result(ip: IndelPrimer):
+def fetch_ip_result(ip: IndelPrimerReport):
   return get_blob(ip.get_bucket_name(), ip.get_result_blob_path())
 
 
@@ -173,23 +172,6 @@ def query_indels_and_mark_overlaps(species, strain_1, strain_2, chromosome, star
     results = [x for x in results if x['overlap'] is False]
     return sorted(results, key=lambda x: (x["START"], x["END"]))
   return []
-
-
-
-def update_indel_primer_status(id: str, status: str=None, operation_name: str=None):
-  logger.debug(f'update_indel_primer_status: id:{id} status:{status} operation_name:{operation_name}')
-
-  m = IndelPrimer.get_ds(id)
-  if m is None:
-    raise NotFoundError(IndelPrimer, {'id': id})
-
-  if status:
-    m.set_properties(status=status)
-  if operation_name:
-    m.set_properties(operation_name=operation_name)
-
-  m.save()
-  return m
 
 
 
