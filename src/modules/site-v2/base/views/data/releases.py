@@ -23,7 +23,7 @@ from caendr.api.strain import query_strains
 from caendr.api.isotype import get_isotypes
 from caendr.models.datastore import DatasetRelease, Species
 from caendr.models.sql import Strain, StrainAnnotatedVariant
-from caendr.services.cloud.storage import generate_blob_url, check_blob_exists
+from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
 from caendr.services.dataset_release import get_all_dataset_releases, get_browser_tracks_path, get_release_bucket, find_dataset_release
 from caendr.models.error import NotFoundError, SpeciesUrlNameError
 from caendr.utils.env import get_env_var
@@ -54,7 +54,7 @@ def interpret_url_vars(species_name, release_version):
 # ============= #
 
 
-@releases_bp.route('/data-release')
+@releases_bp.route('')
 @cache.memoize(60*60)
 def data_releases():
   '''
@@ -67,8 +67,8 @@ def data_releases():
   })
 
 
-@releases_bp.route('/data-release/<string:species>/latest')
-@releases_bp.route('/data-release/<string:species>/<string:release_version>')
+@releases_bp.route('/<string:species>/latest')
+@releases_bp.route('/<string:species>/<string:release_version>')
 @cache.memoize(60*60)
 def data_release_list(species, release_version=None):
   """
@@ -139,7 +139,7 @@ def data_v02(params, files):
   browser_tracks_path = get_browser_tracks_path().get_string_safe()
   return {
     'browser_tracks_path': browser_tracks_path,
-    'browser_tracks_url': generate_blob_url(params['release_bucket'], browser_tracks_path),
+    'browser_tracks_url': generate_blob_uri(params['release_bucket'], browser_tracks_path, schema=BlobURISchema.HTTPS),
 
     'download_bams_name': BAM_BAI_DOWNLOAD_SCRIPT_NAME.get_string(**{
       'SPECIES': params['species'].name,
@@ -170,8 +170,8 @@ def data_v01(params, files):
 # ======================= #
 #   Alignment Data Page   #
 # ======================= #
-@releases_bp.route('/data-release/<string:species>/latest/alignment')
-@releases_bp.route('/data-release/<string:species>/<string:release_version>/alignment')
+@releases_bp.route('/<string:species>/latest/alignment')
+@releases_bp.route('/<string:species>/<string:release_version>/alignment')
 @cache.memoize(60*60)
 def alignment_data(species, release_version=None):
 
@@ -212,8 +212,8 @@ def alignment_data(species, release_version=None):
 # =========================== #
 #   Strain Issues Data Page   #
 # =========================== #
-@releases_bp.route('/data-release/<string:species>/latest/strain_issues')
-@releases_bp.route('/data-release/<string:species>/<string:release_version>/strain_issues')
+@releases_bp.route('/<string:species>/latest/strain_issues')
+@releases_bp.route('/<string:species>/<string:release_version>/strain_issues')
 @cache.memoize(60*60)
 def strain_issues(species, release_version=None):
   """

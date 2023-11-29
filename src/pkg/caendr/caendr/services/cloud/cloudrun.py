@@ -1,4 +1,5 @@
 from googleapiclient.errors import HttpError
+from google.cloud import run
 
 from caendr.services.logger import logger
 from caendr.utils.env import get_env_var
@@ -100,12 +101,17 @@ def get_job_execution_status(SERVICE, name):
   for condition in response['conditions']:
 
     # If the "Completed" condition succeeded, mark as done
-    if condition['type'] == 'Completed' and condition['state'] == 'CONDITION_SUCCEEDED':
+    if condition['type'] == 'Completed' and condition['state'] == run.Condition.State.CONDITION_SUCCEEDED.name:
       done = True
 
     # If any condition failed, mark as done and record error
-    if condition['state'] == 'CONDITION_FAILED':
+    if condition['state'] == run.Condition.State.CONDITION_FAILED.name:
       done = True
       error = condition['message']
 
   return {'done': done, 'error': error, 'response': response}
+
+
+@use_service('run', 'v2')
+def list_job_executions(SERVICE, name):
+  return SERVICE.projects().locations().jobs().executions().list( parent=name ).execute()

@@ -82,7 +82,7 @@ span.bi {
 
             {% for column in columns %}
               <td class="data-{{column.class}}" {% if column.get('data_order') %}data-order="{{column.data_order(item)}}"{% endif %}>
-                {% if column.get('link_to_data', False) and (item.status == TaskStatus.COMPLETE or item.status == TaskStatus.ERROR) %}
+                {% if column.get('link_to_data', False) and (item.status == JobStatus.COMPLETE or item.status == JobStatus.ERROR) %}
                   <a href="{{ url_for(tool_name + '.report', id=item.id) }}">
                     {{ item[column.field] }}
                   </a>
@@ -118,10 +118,11 @@ span.bi {
 <script>
 
   const status_colors = {
-    "{{ TaskStatus.ERROR }}"     : "danger",
-    "{{ TaskStatus.RUNNING }}"   : "primary",
-    "{{ TaskStatus.COMPLETE }}"  : "secondary",
-    "{{ TaskStatus.SUBMITTED }}" : "info",
+    "{{ JobStatus.ERROR }}"     : "danger",
+    "{{ JobStatus.RUNNING }}"   : "primary",
+    "{{ JobStatus.COMPLETE }}"  : "secondary",
+    "{{ JobStatus.SUBMITTED }}" : "info",
+    "{{ JobStatus.CREATED }}"   : "info",
   }
       
   $(document).ready(function(){

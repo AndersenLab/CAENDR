@@ -12,17 +12,19 @@ def get_dir_list_sorted(path):
   return sorted([x for x in os.listdir(path) if not x.startswith(".")], reverse=True)
 
 
-def get_file_hash(filename, length=10):
-  ''' Generates the sha1 hash of a file's contents and returns the first 'length' characters '''
-  logger.debug(filename)
+def get_file_hash(path_or_file: os.PathLike, length=10):
+  '''
+    Generates the sha1 hash of a file's contents and returns the first 'length' characters.
+  '''
+  logger.debug(path_or_file)
   BLOCKSIZE = 65536
   hasher = hashlib.sha1()
-  with open(filename, 'rb') as afile:
+  with open(path_or_file, 'rb') as afile:
     buf = afile.read(BLOCKSIZE)
     while len(buf) > 0:
       hasher.update(buf)
       buf = afile.read(BLOCKSIZE)
-  
+
   return hasher.hexdigest()[0:length]
 
 
