@@ -9,7 +9,8 @@ from caendr.services.logger import logger
 from diskcache import Cache
 
 from caendr.models.error import BadRequestError
-from caendr.models.sql import Homolog, Strain, StrainAnnotatedVariant, WormbaseGene, WormbaseGeneSummary
+
+from caendr.models.sql import TABLES_LIST
 from caendr.services.cloud.storage import upload_blob_from_file_as_chunks, download_blob_to_file
 from caendr.utils.file import download_file
 
