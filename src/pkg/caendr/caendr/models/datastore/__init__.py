@@ -60,7 +60,7 @@ def get_class_by_kind(kind):
 
     GeneBrowserTracks.kind:  GeneBrowserTracks,
     Markdown.kind:           Markdown,
-    Species.kind:            Species,
+    Species.kind:            Species
   }
 
   try:
