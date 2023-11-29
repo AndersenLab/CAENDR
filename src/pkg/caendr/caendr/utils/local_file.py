@@ -1,6 +1,7 @@
 import os
 
 from werkzeug.utils import secure_filename
+from caendr.services.logger import logger
 
 from caendr.models.error import FileUploadError
 from caendr.utils.data import unique_id
@@ -11,18 +12,21 @@ UPLOAD_DIR = os.path.join('./', 'uploads')
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
-class LocalFile():
+class LocalFile(os.PathLike):
   def __init__(self, local_file, valid_file_extensions=None):
     '''
-      Temporarily upload a Flask FileStorage object to the server as a local file.
+      Temporarily upload a Flask `FileStorage` object to the server as a local file.
       Copies and validates the file extension of the uploaded file, if applicable.
 
-      File is uploaded when entering this object's context (i.e. using a "with" block),
+      File is uploaded when entering this object's context (i.e. using a `with` block),
       and deleted when leaving the context.
 
       If more fine-grained control of the file lifecycle is required, the same can be
-      achieved using the create() and remove() methods, respectively.
+      achieved using the `create()` and `remove()` methods, respectively.
       In this case, the file will be deleted when this object is destroyed.
+
+      This class inherits from `os.PathLike`, so standard file descriptor operations
+      (in particular, `open()`) will work on the resulting object.
 
       Args:
         local_file(FileStorage):
@@ -54,6 +58,18 @@ class LocalFile():
 
 
   #
+  # Local Path
+  #
+
+  @property
+  def local_path(self):
+    return self.__local_path
+  
+  def __fspath__(self):
+    return self.__local_path
+
+
+  #
   # Creating (uploading) & removing the file from temporary storage
   #
 
@@ -69,20 +85,44 @@ class LocalFile():
       self.file.save(self.__local_path)
     except Exception as ex:
       raise self._make_save_error() from ex
-    return self.__local_path
+    return self
 
   def remove(self):
     '''
       Ensure the file is deleted from local server storage.
 
+      If attempting to delete the file raises an error, that error will be propagated if the file still exists
+      and suppressed if the file does not exist.
+
       Return:
         removed (bool): Whether the file existed.
     '''
+
+    # Safely check if file exists
+    try:
+      exists = os.path.isfile(self.__local_path)
+    except:
+      exists = False
+
+    # Try removing file directly
     try:
       os.remove(self.__local_path)
       return True
+
+    # Not found - file doesn't exist, so we can return False
     except FileNotFoundError:
       return False
+
+    # Arbitrary exception - check if file exists
+    except Exception as e:
+      logger.error(f'Error removing file {self.__local_path}: {e}')
+
+      # If file still exists, raise the error
+      if os.path.isfile(self.__local_path):
+        raise e
+
+      # If not, ignore it
+      return exists
 
 
   #

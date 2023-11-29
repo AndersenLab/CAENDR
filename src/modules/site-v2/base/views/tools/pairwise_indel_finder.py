@@ -8,9 +8,9 @@ from base.utils.auth import jwt_required, admin_required, get_current_user, user
 from base.utils.tools import lookup_report, try_submit
 
 from caendr.models.datastore.browser_track import BrowserTrackDefault
-from caendr.models.datastore import Species, IndelPrimer, DatasetRelease
+from caendr.models.datastore import Species, IndelPrimerReport, DatasetRelease
 from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupError, EmptyReportDataError, EmptyReportResultsError
-from caendr.models.task import TaskStatus
+from caendr.models.status import JobStatus
 from caendr.services.cloud.storage import check_blob_exists
 from caendr.services.dataset_release import get_dataset_release
 from caendr.utils.bio import parse_chrom_interval
@@ -22,8 +22,6 @@ from caendr.services.indel_primer import (
     query_indels_and_mark_overlaps,
     get_indel_primer,
     get_indel_primers,
-    fetch_indel_primer_report,
-    modify_indel_primer_result,
 )
 
 
@@ -196,7 +194,7 @@ def list_results():
     'items': get_indel_primers(None if show_all else user.name, filter_errs),
     'columns': results_columns(),
 
-    'TaskStatus': TaskStatus,
+    'JobStatus': JobStatus,
   })
 
 
@@ -240,7 +238,7 @@ def submit():
   no_cache = bool(user_is_admin() and request.args.get("nocache", False))
 
   # Try submitting the job & getting a JSON status message
-  response, code = try_submit(IndelPrimer, user, data, no_cache)
+  response, code = try_submit(IndelPrimerReport.kind, user, data, no_cache)
 
   # If there was an error, flash it
   if code != 200 and int(request.args.get('reloadonerror', 1)):
@@ -251,7 +249,6 @@ def submit():
 
 
 
-# TODO: Move internals of this to a service function
 @pairwise_indel_finder_bp.route("/report/<id>")
 @pairwise_indel_finder_bp.route("/report/<id>/download/<file_ext>")
 @jwt_required()
@@ -268,33 +265,35 @@ def report(id, file_ext=None):
     # Fetch requested primer report
     # Ensures the report exists and the user has permission to view it
     try:
-      report = lookup_report(IndelPrimer.kind, id)
+      job = lookup_report(IndelPrimerReport.kind, id)
 
     # If the report lookup request is invalid, show an error message
     except ReportLookupError as ex:
       flash(ex.msg, 'danger')
       abort(ex.code)
 
+
     # Try getting the report data file and results
     # If result is None, job hasn't finished computing yet
     try:
-      data, result = fetch_indel_primer_report(report)
+      data, result = job.fetch()
       ready = result is not None
 
-    # Error reading data JSON file
-    # TODO: Should we mark report status as ERROR here too?
-    except EmptyReportDataError:
-      return abort(404, description="Pairwise indel finder data file not found")
-
-    # Results file exists, but is empty - error
-    except EmptyReportResultsError:
-      report.status = TaskStatus.ERROR
-      report.save()
-      return abort(404, description="Pairwise indel finder report not found")
+    # Error reading one of the report files
+    except (EmptyReportDataError, EmptyReportResultsError) as ex:
+      logger.error(f'Error fetching Indel Finder report {ex.id}: {ex.description}')
+      return abort(404, description = ex.description)
 
     # General error
-    except Exception:
-      return abort(404, description="Something went wrong")
+    except Exception as ex:
+      logger.error(f'Error fetching Indel Finder report {id}: {ex}')
+      return abort(400, description = 'Something went wrong')
+
+    # No data file found
+    if data is None:
+      logger.error(f'Error fetching Indel Finder report {id}: Input data file does not exist')
+      return abort(404)
+
 
     # Get indel interval
     try:
@@ -304,28 +303,25 @@ def report(id, file_ext=None):
       logger.error(f'Invalid interval "{data["site"]}" for Indel Finder report {id}')
       indel_start, indel_stop = None, None
 
+    # Extract the dataframe from the results
+    dataframe = result.get('dataframe', None)
 
-    # Update the result object with computed fields and generate a format table
-    # If result is None or empty, does nothing
-    result, format_table = modify_indel_primer_result(result)
-
-    # Update indel primer entity
-    # TODO: Is this the right time/place for this?
+    # Update indel primer empty status
     if ready:
-      if report['status'] != TaskStatus.ERROR:
-        report['status'] = TaskStatus.COMPLETE
-      report.empty = result is None  # TODO: Is this correct? I think empty should actually check if any rows exist in the df
-      report.save()
+      job.report.empty = result['empty']  # TODO: 'empty' is no longer tracked as a prop. Should it be?
+      job.report.save()
+
 
     # If a file format was specified, return a downloadable file with the results
     # TODO: Set a better filename?
     if file_format is not None:
-      resp = Response(format_table.to_csv(sep=file_format['sep']), mimetype=file_format['mimetype'])
+      resp = Response(result['format_table'].to_csv(sep=file_format['sep']), mimetype=file_format['mimetype'])
       try:
-        resp.headers['Content-Disposition'] = f'filename={report["species"]}_{report["strain_1"]}_{report["strain_2"]}_{data["site"]}.{file_ext}'
+        resp.headers['Content-Disposition'] = f'filename={job.report["species"]}_{job.report["strain_1"]}_{job.report["strain_2"]}_{data["site"]}.{file_ext}'
       except:
-        resp.headers['Content-Disposition'] = f'filename={report["id"]}.{file_ext}'
+        resp.headers['Content-Disposition'] = f'filename={job.report["id"]}.{file_ext}'
       return resp
+
 
     # Otherwise, return view page
     return render_template("tools/pairwise_indel_finder/view.html", **{
@@ -336,11 +332,11 @@ def report(id, file_ext=None):
       'tool_alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools') },
 
       # GCP data info
-      'data_hash': report.data_hash,
+      'data_hash': job.report.data_hash,
       'id': id,
 
       # Job status
-      'empty': result is None,
+      'empty': result['empty'],
       'ready': ready,
 
       # Data
@@ -350,7 +346,7 @@ def report(id, file_ext=None):
       # 'size': data['size'],
 
       # Results
-      'result': result,
-      'records': result.to_dict('records') if (result is not None) else None,
-      'format_table': format_table,
+      'result':       dataframe,
+      'records':      dataframe.to_dict('records') if (dataframe is not None) else None,
+      'format_table': result.get('format_table'),
     })

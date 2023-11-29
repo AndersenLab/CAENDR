@@ -294,6 +294,10 @@ def configure_jinja(app):
     text = text.replace('C. elegans', '<i>C. elegans</i>')
     return text
 
+  @app.template_filter('percent')
+  def _jinja2_filter_percent(n):
+    return f'{round(n * 100, 2)}%'
+
 
 def register_errorhandlers(app):
   def render_error(e="generic"):

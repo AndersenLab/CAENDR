@@ -2,6 +2,7 @@ from caendr.services.logger import logger
 from google.cloud import storage
 import os
 from caendr.models.datastore.entity import Entity
+from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
 
 client = storage.Client()
 
@@ -24,7 +25,7 @@ class PersistentLogger():
 
         bucket = client.get_bucket(ETL_LOGS_BUCKET_NAME)
         filepath = f"logs/{self.service_name}/{operation_id}/output"
-        uri = f"gs://{ETL_LOGS_BUCKET_NAME}/{filepath}"
+        uri = generate_blob_uri(ETL_LOGS_BUCKET_NAME, filepath, schema=BlobURISchema.GS)
 
         CRLF = "\n"
         blob = bucket.get_blob(filepath)
@@ -51,7 +52,7 @@ class PersistentLogger():
         try:
             bucket = client.get_bucket(ETL_LOGS_BUCKET_NAME)
             filepath = f"logs/{self.service_name}/{operation_id}/output"
-            uri = f"gs://{ETL_LOGS_BUCKET_NAME}/{filepath}"
+            uri = generate_blob_uri(ETL_LOGS_BUCKET_NAME, filepath, schema=BlobURISchema.GS)
 
             CRLF = "\n"
             blob = bucket.get_blob(filepath)

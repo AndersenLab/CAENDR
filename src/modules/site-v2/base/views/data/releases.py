@@ -23,7 +23,7 @@ from caendr.api.strain import query_strains
 from caendr.api.isotype import get_isotypes
 from caendr.models.datastore import DatasetRelease, Species
 from caendr.models.sql import Strain, StrainAnnotatedVariant
-from caendr.services.cloud.storage import generate_blob_url, check_blob_exists
+from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
 from caendr.services.dataset_release import get_all_dataset_releases, get_browser_tracks_path, get_release_bucket, find_dataset_release
 from caendr.utils.env import get_env_var
 from caendr.utils.views import parse_species_and_release
@@ -117,7 +117,7 @@ def data_v02(params, files):
   browser_tracks_path = get_browser_tracks_path().get_string_safe()
   return {
     'browser_tracks_path': browser_tracks_path,
-    'browser_tracks_url': generate_blob_url(params['release_bucket'], browser_tracks_path),
+    'browser_tracks_url': generate_blob_uri(params['release_bucket'], browser_tracks_path, schema=BlobURISchema.HTTPS),
 
     'download_bams_name': BAM_BAI_DOWNLOAD_SCRIPT_NAME.get_string(**{
       'SPECIES': params['species'].name,

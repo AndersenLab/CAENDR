@@ -1,8 +1,9 @@
 import os
+from enum import Enum
 
 from caendr.services.logger import logger
 
-from caendr.models.datastore import Entity, DatabaseOperation, HeritabilityReport, IndelPrimer, NemascanMapping
+from caendr.models.datastore import Entity, DatabaseOperation, HeritabilityReport, IndelPrimerReport, NemascanReport
 
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.task   import add_task
@@ -15,31 +16,6 @@ API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 
 
 ## Task Superclass Definition ##
-
-# Define the Status values
-class TaskStatus:
-
-  # Basic TaskStatus values
-  ERROR     = "ERROR"
-  RUNNING   = "RUNNING"
-  COMPLETE  = "COMPLETE"
-  SUBMITTED = "SUBMITTED"
-
-  # Meaningful sets of TaskStatus values
-  FINISHED  = { COMPLETE, ERROR }
-  NOT_ERR   = { SUBMITTED, RUNNING, COMPLETE }
-
-  # Check whether a variable is a valid TaskStatus
-  @staticmethod
-  def is_valid(value):
-    return value in {
-      TaskStatus.ERROR,
-      TaskStatus.RUNNING,
-      TaskStatus.COMPLETE,
-      TaskStatus.SUBMITTED,
-    }
-
-
 
 class Task(object):
 
@@ -91,7 +67,11 @@ class Task(object):
       Only properties specified in get_props_set() will be accepted.
     '''
     props = self.get_props_set()
-    self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
+
+    # Add all kwargs that match the props set, mapping enum values to strings
+    self.__dict__.update(
+      (k, (v.name if isinstance(v, Enum) else v)) for k, v in kwargs.items() if k in props
+    )
 
 
   def __repr__(self):
@@ -211,7 +191,7 @@ class HeritabilityTask(Task):
 class IndelPrimerTask(Task):
   name  = 'indel_primer_task'
   queue = os.environ.get('INDEL_PRIMER_TASK_QUEUE_NAME')
-  kind  = IndelPrimer.kind
+  kind  = IndelPrimerReport.kind
 
   @classmethod
   def get_props_set(cls):
@@ -228,10 +208,10 @@ class IndelPrimerTask(Task):
     }
 
 
-class NemaScanTask(Task):
+class NemascanTask(Task):
   name  = 'nemascan_task'
   queue = os.environ.get('NEMASCAN_TASK_QUEUE_NAME')
-  kind  = NemascanMapping.kind
+  kind  = NemascanReport.kind
 
   @classmethod
   def get_props_set(cls):

@@ -1,18 +1,93 @@
 import os
+from enum import Enum
 
-from caendr.models.datastore import JobEntity, UserOwnedEntity
+from caendr.utils.env import get_env_var
+
+from caendr.models.datastore import ReportEntity
 
 
-MODULE_DB_OPERATIONS_BUCKET_NAME = os.environ.get('MODULE_DB_OPERATIONS_BUCKET_NAME')
+MODULE_DB_OPERATIONS_BUCKET_NAME = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
 
 
-class DatabaseOperation(JobEntity, UserOwnedEntity):
+class DbOp(Enum):
+  '''
+    All possible database operation types.
+  '''
+
+  DROP_AND_POPULATE_STRAINS                   = 'DROP_AND_POPULATE_STRAINS'
+  DROP_AND_POPULATE_WORMBASE_GENES            = 'DROP_AND_POPULATE_WORMBASE_GENES'
+  DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS = 'DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS'
+  DROP_AND_POPULATE_ALL_TABLES                = 'DROP_AND_POPULATE_ALL_TABLES'
+  TEST_ECHO                                   = 'TEST_ECHO'
+  TEST_MOCK_DATA                              = 'TEST_MOCK_DATA'
+
+  def get_title(op):
+    '''
+      Get the display name for a given operation type.
+    '''
+
+    if not op in DbOp:
+      raise ValueError()
+
+    titles = {
+      DbOp.DROP_AND_POPULATE_STRAINS:                   'Rebuild strain table from google sheet',
+      DbOp.DROP_AND_POPULATE_WORMBASE_GENES:            'Rebuild wormbase gene table from external sources',
+      DbOp.DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS: 'Rebuild Strain Annotated Variant table from .csv.gz file',
+      DbOp.DROP_AND_POPULATE_ALL_TABLES:                'Rebuild All Tables',
+      DbOp.TEST_ECHO:                                   'Test ETL - Echo',
+      DbOp.TEST_MOCK_DATA:                              'Test ETL - Mock Data',
+    }
+
+    return titles.get(op, '???')
+
+
+
+class DatabaseOperation(ReportEntity):
+
+  #
+  # Class Variables
+  #
+
   kind = 'database_operation'
-  __bucket_name = MODULE_DB_OPERATIONS_BUCKET_NAME
 
-  @classmethod
-  def get_bucket_name(cls):
-    return cls.__bucket_name
+  _report_display_name = 'Database Operation'
+
+  # Identify the operation by its name
+  # This groups executions of the same operation together
+  _data_id_field = 'db_operation'
+
+
+  #
+  # Path
+  #
+
+  # TODO: Buckets?
+
+  @property
+  def _report_bucket(self) -> str:
+    return MODULE_DB_OPERATIONS_BUCKET_NAME
+
+  @property
+  def _data_bucket_name(self) -> str:
+    return MODULE_DB_OPERATIONS_BUCKET_NAME
+
+  @property
+  def _work_bucket_name(self) -> str:
+    return MODULE_DB_OPERATIONS_BUCKET_NAME
+
+
+  #
+  # Input & Output
+  #
+
+  _num_input_files = 0
+  _input_filename  = None
+  _output_filename = None
+
+
+  #
+  # Properties
+  #
 
   @classmethod
   def get_props_set(cls):
@@ -25,8 +100,22 @@ class DatabaseOperation(JobEntity, UserOwnedEntity):
     }
 
 
+  #
+  # Database Operation prop
+  #
 
-  ## Special Properties ##
+  @property
+  def db_operation(self):
+    return self._get_enum_prop(DbOp, 'db_operation', None)
+
+  @db_operation.setter
+  def db_operation(self, val):
+    return self._set_enum_prop(DbOp, 'db_operation', val)
+
+
+  #
+  # Logs prop
+  #
 
   @property
   def logs(self):

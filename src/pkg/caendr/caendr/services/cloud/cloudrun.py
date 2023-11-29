@@ -110,3 +110,8 @@ def get_job_execution_status(SERVICE, name):
       error = condition['message']
 
   return {'done': done, 'error': error, 'response': response}
+
+
+@use_service('run', 'v2')
+def list_job_executions(SERVICE, name):
+  return SERVICE.projects().locations().jobs().executions().list( parent=name ).execute()

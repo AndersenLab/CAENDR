@@ -111,7 +111,7 @@ Route: /start/{task_route}
 Where `task_route` is one of the following values: 
 
 * `db-ops` - DatabaseOperationTask(payload)
-* `nscalc` - NemaScanTask(payload)
+* `nscalc` - NemascanTask(payload)
 * `ipcalc` - IndelPrimerTask(payload)
 * `h2calc` - HeritabilityTask(payload)
 

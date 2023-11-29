@@ -10,7 +10,7 @@ from caendr.models.datastore import Species
 from caendr.models.error import BadRequestError
 from caendr.models.sql import Strain
 from caendr.services.cloud.postgresql import db, rollback_on_error
-from caendr.services.cloud.storage import get_blob, generate_download_signed_url_v4, download_blob_to_file, upload_blob_from_file, get_google_storage_credentials, generate_blob_url
+from caendr.services.cloud.storage import get_blob, download_blob_to_file, upload_blob_from_file, get_google_storage_credentials, generate_blob_uri, BlobURISchema
 from caendr.utils.data import unique_id
 from caendr.utils.env import get_env_var
 
@@ -170,14 +170,9 @@ def get_bam_bai_download_link(species, strain_name, ext, signed=False):
   '''
 
   bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
-  bam_prefix = BAM_BAI_PREFIX.get_string(SPECIES=species.name)
+  bam_prefix  = BAM_BAI_PREFIX.get_string(SPECIES=species.name)
 
-  blob_name = f'{bam_prefix}/{strain_name}.{ext}'
-
-  if signed:
-    return generate_download_signed_url_v4(bucket_name, blob_name)
-  else:
-    return generate_blob_url(bucket_name, blob_name)
+  return generate_blob_uri( bucket_name, bam_prefix, f'{strain_name}.{ext}', BlobURISchema.sign(signed) )
 
 
 # TODO: This is now out of date, since script name relies on species & release
@@ -207,9 +202,14 @@ def generate_bam_bai_download_script(species, release, signed=False):
       Generator that yields the file line by line.
   '''
 
-  expiration  = timedelta(days=7)
   bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
-  credentials = get_google_storage_credentials()
+
+  # Package keyword args for signing URLs into a dict
+  sign_dict = {
+    'schema':      BlobURISchema.sign(signed),
+    'expiration':  timedelta(days=7),
+    'credentials': get_google_storage_credentials(),
+  }
 
   # Get the location of the BAM files in the bucket for this species/release
   bam_prefix = BAM_BAI_PREFIX.get_string(**{
@@ -228,22 +228,20 @@ def generate_bam_bai_download_script(species, release, signed=False):
   # Add download statements for each strain
   for strain in strain_listing:
     yield f'# Strain: {strain}\n'
-    bam_path = f'{bam_prefix}/{strain}.bam'
-    bai_path = f'{bam_prefix}/{strain}.bam.bai'
+
+    # Generate filenames
+    bam_fname = f'{strain}.bam'
+    bai_fname = f'{strain}.bam.bai'
 
     # Generate download URLs
-    if signed:
-      bam_url = generate_download_signed_url_v4(bucket_name, bam_path, expiration=expiration, credentials=credentials)
-      bai_url = generate_download_signed_url_v4(bucket_name, bai_path, expiration=expiration, credentials=credentials)
-    else:
-      bam_url = generate_blob_url(bucket_name, bam_path)
-      bai_url = generate_blob_url(bucket_name, bai_path)
+    bam_url = generate_blob_uri(bucket_name, bam_prefix, bam_fname, **sign_dict)
+    bai_url = generate_blob_uri(bucket_name, bam_prefix, bai_fname, **sign_dict)
 
     # Add download statements
     if bam_url:
-      yield f'wget -O "{strain}.bam" "{bam_url}"\n'
+      yield f'wget -O "{bam_fname}" "{bam_url}"\n'
     if bai_url:
-      yield f'wget -O "{strain}.bam.bai" "{bai_url}"\n'
+      yield f'wget -O "{bai_fname}" "{bai_url}"\n'
     yield '\n'
 
 
