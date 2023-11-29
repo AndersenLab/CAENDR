@@ -52,7 +52,7 @@
                 {% for item in items %}
                 <tr>
                     <td>{{ loop.index }}</td>
-                    <td>{{ item['strain'] }}</td>
+                    <td>{{ item['name'] }}</td>
                     <td><em>{{ item['species']|capitalize|replace('_', '. ') }}</em></td>
                     <td class="price text-right">${{'%0.2f'| format(item['price'])}}</td>
                 </tr>

@@ -76,14 +76,14 @@ class Cart(DeletableEntity):
 
   def add_item(self, item):
     for cartItem in self['items']:
-      if cartItem['name'] == item['name']:
+      if cartItem['name'] == item['name'] and cartItem['species'] == item['species']:
         return
     self['items'].append(item)
 
 
   def remove_item(self, item):
     for cartItem in self['items']:
-      if cartItem['name'] == item:
+      if cartItem['name'] == item['name'] and cartItem['species'] == item['species']:
         self['items'].remove(cartItem)
 
   def update_version(self):

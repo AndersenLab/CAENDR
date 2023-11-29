@@ -114,20 +114,18 @@ class UnprocessableEntity(InternalError):
 
 
 
-class CachedDataError(InternalError):
-  description = "This data has already been submitted by another user"
-  def __init__(self, report):
-    self.report = report
-    if report is not None and hasattr(report, 'data_hash'):
-      self.description = f'This data (hash {getattr(report, "data_hash")}) has already been submitted by another user'
+class JobAlreadyScheduledError(InternalError):
+  description = "This data has already been submitted"
+  def __init__(self, kind, data_id):
+    self.description = f'This data (kind "{kind}", data ID "{data_id}") has already been submitted'
     super().__init__()
 
 class DuplicateDataError(InternalError):
   description = "This data has already been submitted by the same user"
-  def __init__(self, report):
-    self.report = report
-    if report is not None and hasattr(report, 'data_hash'):
-      self.description = f'This data (hash {getattr(report, "data_hash")}) has already been submitted by the same user'
+  def __init__(self, handler):
+    self.handler = handler
+    if handler is not None and hasattr(handler, 'data_hash'):
+      self.description = f'This data (hash {getattr(getattr(handler, "report"), "data_hash")}) has already been submitted by the same user'
     super().__init__()
 
 class DuplicateTaskError(InternalError):
@@ -137,9 +135,17 @@ class DuplicateTaskError(InternalError):
 
 class DataFormatError(InternalError):
   description = "Error parsing data with expected format"
-  def __init__(self, msg, line: int=None):
+  def __init__(self, msg, line: int=None, full_msg_body: str=None, full_msg_link: str=None):
     self.msg  = msg.strip()
     self.line = line
+    self.full_msg_body = full_msg_body
+    self.full_msg_link = full_msg_link
+    super().__init__()
+
+class PreflightCheckError(InternalError):
+  description = "One or more files required for this job were not found"
+  def __init__(self, missing_files: list):
+    self.missing_files = missing_files
     super().__init__()
 
 class GoogleSheetsParseError(InternalError):
@@ -216,13 +222,13 @@ class ReportLookupError(InternalError):
 class EmptyReportDataError(InternalError):
   def __init__(self, report_id):
     self.id = report_id
-    self.description = 'Empty report'
+    self.description = 'Input data file is empty'
     super().__init__()
 
 class EmptyReportResultsError(InternalError):
   def __init__(self, report_id):
     self.id = report_id
-    self.description = 'Empty report'
+    self.description = 'Output report file is empty'
     super().__init__()
 
 
@@ -258,3 +264,7 @@ class MissingTokenError(InternalError):
       self.description += f' in template "{template}"'
 
     super().__init__()
+
+
+class UnschedulableJobTypeError(InternalError):
+  pass

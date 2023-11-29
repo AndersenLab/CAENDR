@@ -12,7 +12,7 @@
 <script type="text/javascript"
   src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.2/FileSaver.min.js"></script>
 
-{% if not (result or hr.status in [TaskStatus.ERROR, TaskStatus.COMPLETE]) %}
+{% if not (result or hr.status in [JobStatus.ERROR, JobStatus.COMPLETE]) %}
 <meta http-equiv="refresh" content="10; url={{ request.path }}">
 {% endif %}
 
@@ -31,13 +31,13 @@
   <div class="d-flex justify-content-around flex-wrap mt-2">
   <!-- Results Card -->
   <div class="col col-md-6 col-xl-3 text-bg-light mb-5 p-5 rounded-2 shadow-sm overflow-auto" style="max-height:75vh;">
-   <p>
+    <p>
       <strong>Trait:</strong> {{ hr.trait }}
-   </p>
-   <p>
+    </p>
+    <p>
       <strong>Description:</strong> {{ hr.label }}
-   </p>
-   <p>
+    </p>
+    <p>
       <strong>Report ID:</strong> {{ hr.id }}
     </p>
     <p>
@@ -45,34 +45,37 @@
     </p>
     <p>
       <strong>Status:</strong>  {{ hr.status }}
-    
-      {% if hr.status == TaskStatus.ERROR %} 
-      {% if session["is_admin"] %}
-      <p><strong>Error:</strong> <span class="text-danger">{{ operation.error }}</span></p>
-      {% endif %}
-      {% endif %}
     </p>
+
+    {%- if hr.status == JobStatus.ERROR %}
+    {%- if session["is_admin"] %}
+    <p>
+      <strong>Error:</strong> <span class="text-danger">(code {{ error.code }}) {{ error.message }}</span>
+    </p>
+    {%- endif %}
+    {%- endif %}
+
     {%- if result and result['broad-sense'] %}
     <p>
-      <strong>Broad-Sense Heritability (H<sup>2</sup>):</strong> {{ (result['broad-sense']['H2']*100)|round(2) }}%
-      <small>(range {{ (result['broad-sense']['ci_l']*100)|round(2) }}% to {{ (result['broad-sense']['ci_r']*100)|round(2) }}%)</small>
+      <strong>Broad-Sense Heritability (H<sup>2</sup>):</strong> {{ result['broad-sense']['H2'] |percent}}
+      <small>(range {{ result['broad-sense']['ci_l'] |percent }} to {{ result['broad-sense']['ci_r'] |percent }})</small>
     </p>
     {%- endif %}
     {%- if result and result['narrow-sense'] %}
     <p>
-      <strong>Narrow-Sense Heritability (h<sup>2</sup>):</strong> {{ (result['narrow-sense']['H2']*100)|round(2) }}%
-      <small>(range {{ (result['narrow-sense']['ci_l']*100)|round(2) }}% to {{ (result['narrow-sense']['ci_r']*100)|round(2) }}%)</small>
+      <strong>Narrow-Sense Heritability (h<sup>2</sup>):</strong> {{ result['narrow-sense']['H2'] |percent}}
+      <small>(range {{ result['narrow-sense']['ci_l'] |percent}} to {{ result['narrow-sense']['ci_r'] |percent}})</small>
     </p>
     {%- endif %}
-  <div class="mt-5">
-    <div class="d-grid gap-3">
-      <a class="btn btn-secondary text-light" role="button" onClick="getPDF()">Download PDF</a>
-      <a class="btn btn-secondary text-light" role="button" onClick="window.open('{{ data_url }}')">Download TSV</a>
-      {% if session["is_admin"] %}
-      <a class="btn btn-secondary text-light" role="button" href="{{ url_for('heritability_calculator.view_logs', id=hr.id)}}">View Logs</a>
-      {% endif %}
+    <div class="mt-5">
+      <div class="d-grid gap-3">
+        <a class="btn btn-secondary text-light" role="button" onClick="getPDF()">Download PDF</a>
+        <a class="btn btn-secondary text-light" role="button" onClick="window.open('{{ data_url }}')">Download TSV</a>
+        {%- if session["is_admin"] %}
+        <a class="btn btn-secondary text-light" role="button" href="{{ url_for('heritability_calculator.view_logs', id=hr.id)}}">View Logs</a>
+        {%- endif %}
+      </div>
     </div>
-  </div>
   </div>
   <!-- /Input Card -->
   <!-- Tool column -->
@@ -82,7 +85,7 @@
       <div class="ps-3 pt-0"><a href="{{ url_for('heritability_calculator.heritability_calculator') }}"><i class="bi bi-plus-circle" aria-hidden="true"></i> New Calculation</a></div>
       <div class="ps-3 pt-0"><a href="{{ url_for('heritability_calculator.my_results') }}"><i class="bi bi-journal" aria-hidden="true"></i>View All My Heritability Results</a></div>
       {% if data %}
-      {% if hr.status == TaskStatus.COMPLETE %}
+      {% if hr.status == JobStatus.COMPLETE %}
       <div class="ps-3 pt-0"><button class="btn border-0" onclick="openFullscreen();" id="fullscreenButton"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>View Fullscreen</button></div>
       {% endif %}
       {% endif %}
@@ -91,7 +94,7 @@
       <!-- Heritability Results -->
       <div class="col">
         {% if data and not result %}
-        {% if not hr.status in [TaskStatus.COMPLETE, TaskStatus.ERROR] %}
+        {% if not hr.status in [JobStatus.COMPLETE, JobStatus.ERROR] %}
         <p class='text-info text-center'>
           <strong>
             The heritability calculation is currently being run. Please check back in a few minutes for results.
@@ -130,7 +133,7 @@
         {% endif %}
         {% endif %}
 
-        {% if hr.status == TaskStatus.ERROR %}
+        {% if hr.status == JobStatus.ERROR %}
         <div class="col-9 alert alert-danger mt-5 mx-auto animate__animated animate__fadeInDown">
           <p class="fs-2 text-center"><i class="bi bi-exclamation-circle-fill me-2" aria-hidden="true"></i></p>
           <p class="lead">We're sorry but an error occurred while performing this report. Please verify that the data you submitted is correct and matches the expected format.</p>
@@ -146,46 +149,43 @@
 
 {% block script %}
 {% if result  %}
-    <script>
+  <script>
     Element.prototype.remove = function() {
-            this.parentElement.removeChild(this);
-        }
+        this.parentElement.removeChild(this);
+    }
     NodeList.prototype.remove = HTMLCollection.prototype.remove = function() {
-            for(var i = this.length - 1; i >= 0; i--) {
-                if(this[i] && this[i].parentElement) {
-                    this[i].parentElement.removeChild(this[i]);
-                }
+        for(var i = this.length - 1; i >= 0; i--) {
+            if(this[i] && this[i].parentElement) {
+                this[i].parentElement.removeChild(this[i]);
             }
         }
-
-    var trait = "{{ hr.trait }}"
-    var imag
-    var chartJson = {{ data|tojson|safe }};
-    var traits =[];
-    var img, ctx, canvs;
-    var maxP = 1;
-    var minP = 1;
-    var curP = 1;
-    var strn = [];
-
-    var sortByProperty = function(property){
-       return function(a,b){
-          if(a[property] > b[property])
-             return 1;
-          else if(a[property] < b[property])
-             return -1;
-
-          return 0;
-       }
     }
 
-    var ppage = function(){
-        curP= (curP===1)? 1:curP-1;
+    let imag;
+    let chartJson = {{ data|tojson|safe }};
+
+    let maxP = 1;
+    let minP = 1;
+    let curP = 1;
+    let strn = [];
+
+    function sortByProperty(property) {
+      return function(a,b) {
+        if (a[property] > b[property])
+          return 1;
+        else if (a[property] < b[property])
+          return -1;
+        return 0;
+      }
+    }
+
+    function ppage() {
+        curP = (curP === 1) ? 1 : curP-1;
         loadPlot(curP);
     }
 
-    var npage = function(){
-        curP= (curP===maxP)?maxP:curP+1;
+    function npage() {
+        curP = (curP === maxP) ? maxP : curP+1;
         loadPlot(curP);
     }
 
@@ -196,17 +196,17 @@
     }
 
     function getRandomColor() {
-        var letters = '123456789ABCDEF'.split('');
-        var color = '#';
-        for (var i = 0; i < 6; i++ ) {
+        const letters = '123456789ABCDEF'.split('');
+        let color = '#';
+        for (let i = 0; i < 6; i++ ) {
                 color += letters[Math.round(Math.random() * 14)];
         }
         return color;
     }
 
-    var renderPlot;
-    var cpal = []
-    var loadPlot = function(jj){
+    let renderPlot;
+    let cpal = []
+    function loadPlot(jj) {
         df = [];
         ran = range(25*(jj-1), (25*(jj)-1));
         chartJson.forEach(function(d,i){
@@ -218,7 +218,7 @@
         }
 
         // Create & save a function to compute the chart size & re-render it
-        renderPlot = function() {
+        renderPlot = () => {
 
           // Clear the current chart area
           // Otherwise chart can't shrink - width computation will always be based on existing size
@@ -229,9 +229,9 @@
           height = 9 * width / 16;
 
           // Create the chart and render in the page
-          var chart = d3.exploding_boxplot(df, {y:'Value', group:'Strain', color:'AssayNumber', label:'TraitName', pal:cpal})
-                        .width(width)
-                        .height(height);
+          const chart = d3.exploding_boxplot(df, {y:'Value', group:'Strain', color:'AssayNumber', label:'TraitName', pal:cpal})
+                          .width(width)
+                          .height(height);
           chart('#svgchartarea');
         }
 
@@ -239,48 +239,46 @@
         renderPlot();
     }
 
-    async function drawImg(canvas, image, DOMURL, w, h){
+    async function drawImg(canvas, image, DOMURL, w, h) {
         return new Promise(resolve => {
           image.onload = function () {
-            var ctx = canvas.getContext("2d");
+            const ctx = canvas.getContext("2d");
             ctx.fillStyle = "#FFFFFF";
             ctx.fillRect(0, 0, w, h);
             ctx.drawImage(image, 0, 0, w, h);
-            var png = canvas.toDataURL("image/png");
+            const png = canvas.toDataURL("image/png");
             imag = png
-            document.getElementById('png-container').innerHTML = '<img id="img1" src="'+png+'"/>';
+            document.getElementById('png-container').innerHTML = `<img id="img1" src="${png}"/>`;
             DOMURL.revokeObjectURL(png);
-            if (this.complete){
+            if (this.complete) {
               imag = this.src
             }
             resolve('resolved');
           }
         });
-      }
+    }
 
-    var loadCanvas = function(){
-        var svgString = new XMLSerializer().serializeToString(document.querySelector('svg'));
+    function loadCanvas() {
+      const svgString = new XMLSerializer().serializeToString(document.querySelector('svg'));
 
-        var canvas = document.getElementById("canvas");
-        canvas.width = 1000;
-        canvas.height = 480;
-        var ctx = canvas.getContext("2d");
-        var DOMURL = self.URL || self.webkitURL || self;
-        image = document.createElement("IMG");
-        var svg = new Blob([svgString], {type: "image/svg+xml;charset=utf-8"});
-        var url = DOMURL.createObjectURL(svg);
+      const canvas = document.getElementById("canvas");
+      canvas.width = 1000;
+      canvas.height = 480;
+      const DOMURL = self.URL || self.webkitURL || self;
+      const image = document.createElement("IMG");
+      const svg = new Blob([svgString], {type: "image/svg+xml;charset=utf-8"});
+      const url = DOMURL.createObjectURL(svg);
 
-        drawImg(canvas, image, DOMURL, canvas.width, canvas.height).then(() => {
+      drawImg(canvas, image, DOMURL, canvas.width, canvas.height).then(() => {
 
-
-        var source = document.getElementById('dataContainer');
+        const source = document.getElementById('dataContainer');
         const options = {
           orientation: 'landscape',
           format: 'a4',
           unit: 'px',
 
         }
-        var doc = new jsPDF(options);
+        const doc = new jsPDF(options);
 
         margins = {
             top: 60,
@@ -290,7 +288,7 @@
         };
 
         page_height = doc.internal.pageSize.getHeight();
-        page_width = doc.internal.pageSize.getWidth();
+        page_width  = doc.internal.pageSize.getWidth();
         /*doc.addImage(document.getElementById('svg'), 'SVG', 0, 0, page_width, page_height, NaN, 'NONE', 90);*/
         doc.setFontSize(16);
         doc.fromHTML('Trait: {{ hr.trait }}', 120, 10)
@@ -300,7 +298,7 @@
         doc.fromHTML('<i>2</i>', 225, 15)
         doc.setFontSize(10);
         {%- if result['broad-sense'] %}
-        doc.fromHTML(') = {{ (result["broad-sense"]['H2']*100)|round(2) }}% (range {{ (result["broad-sense"]['ci_l']*100)|round(2) }}% to {{ (result["broad-sense"]['ci_r']*100)|round(2) }}%)', 230, 20);
+        doc.fromHTML(') = {{ result["broad-sense"]['H2'] |percent }} (range {{ result["broad-sense"]['ci_l'] |percent }} to {{ result["broad-sense"]['ci_r'] |percent }})', 230, 20);
         {%- endif %}
 
         doc.fromHTML('Narrow-sense heritability (<i> h</i>',  120, 30)
@@ -308,7 +306,7 @@
         doc.fromHTML('<i>2</i>', 225, 25)
         doc.setFontSize(10);
         {%- if result['narrow-sense'] %}
-        doc.fromHTML(') = {{ (result["narrow-sense"]['H2']*100)|round(2) }}% (range {{ (result["narrow-sense"]['ci_l']*100)|round(2) }}% to {{ (result["narrow-sense"]['ci_r']*100)|round(2) }}%)', 230, 30);
+        doc.fromHTML(') = {{ result["narrow-sense"]['H2'] |percent }} (range {{ result["narrow-sense"]['ci_l'] |percent }} to {{ result["narrow-sense"]['ci_r'] |percent }})', 230, 30);
         {%- endif %}
 
         doc.addImage(document.getElementById('img1').src, 'PNG', margins.left, margins.top,
@@ -322,22 +320,22 @@
         doc.fromHTML('The broad-sense heritability is the amount of trait variance that comes from genetic differences in the assayed group ', 20, 85, {'align': 'justify', 'maxWidth': doc.internal.pageSize.getWidth()-40},function(){},margins)
         doc.fromHTML('of strains. Generally, it is the ratio of genetic variance to total (genetic plus environmental) variance.', 20, 100, {'align': 'justify', 'maxWidth': doc.internal.pageSize.getWidth()-40},function(){},margins)
 
-        var a = document.createElement('a');
-            var pdfblob = new Blob([ doc.output('blob') ], { type : 'application/pdf'});
-            a.href = window.URL.createObjectURL(pdfblob);
-            a.download = "{{ fname }}.pdf";
-            a.click();
-        })
-        image.src = url;
+        const a = document.createElement('a');
+        const pdfblob = new Blob([ doc.output('blob') ], { type : 'application/pdf'});
+        a.href = window.URL.createObjectURL(pdfblob);
+        a.download = "{{ fname }}.pdf";
+        a.click();
+      })
+      image.src = url;
     }
 
-    var getPDF = function(){
+    function getPDF() {
       loadCanvas();
     }
 
-    $(document).ready(function(){
-      if (chartJson.length != 0){
-        var node= document.getElementById("svgchartarea");
+    $(document).ready(function() {
+      if (chartJson.length != 0) {
+        // var node = document.getElementById("svgchartarea");
         $("#svgchartarea").html("")
         //node.querySelectorAll('*').forEach(n => n.remove());
         newPt = document.createElement("p")
@@ -375,11 +373,10 @@
       renderPlot();
     });
 
-// For viewing tool in fullscreen
-{% include '_scripts/fullscreen.js' %} {#/* fullscreen for tools */#}
-let fullscreenBrowser = document.getElementById("chartContainer");
-    </script>
+    // For viewing tool in fullscreen
+    {% include '_scripts/fullscreen.js' %} {#/* fullscreen for tools */#}
+    let fullscreenBrowser = document.getElementById("chartContainer");
+
+  </script>
 {% endif %}
-
-
 {% endblock %}

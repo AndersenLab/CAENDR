@@ -8,7 +8,7 @@ from sqlalchemy.sql.expression import null
 
 
 
-def parse_strain_variant_annotation_data(species, sva_fname: str, start_idx = 0):
+def parse_strain_variant_annotation_data(species, sva_fname: str):
   """
       Load strain variant annotation table data:
 
@@ -68,8 +68,11 @@ def parse_strain_variant_annotation_data(species, sva_fname: str, start_idx = 0)
 
       # Yield the row as a dict
       yield {
-        'id':                 start_idx + idx,
+
+        # These two fields form the primary key, i.e. the combination of both must be unique within the table
+        'id':                 idx,
         'species_name':       species.name,
+
         'chrom':              row['CHROM'],
         'pos':                get_row(row, 'POS', map=int),
         'ref_seq':            row.get('REF'),

@@ -1,22 +1,35 @@
-from .entity import Entity
-from .container import Container
-from .user import User
-from .job_entity import JobEntity
-from .user_owned_entity import UserOwnedEntity
-from .data_job_entity import DataJobEntity
-from .deletable_entity import DeletableEntity
-from .cart import Cart
-from .dataset_release import DatasetRelease
-from .profile import Profile
-from .nemascan_mapping import NemascanMapping
-from .pipeline_operation import PipelineOperation
-from .database_operation import DatabaseOperation
-from .indel_primer import IndelPrimer
-from .heritability_report import HeritabilityReport
-from .gene_browser_tracks import GeneBrowserTracks
-from .markdown import Markdown
-from .wormbase import WormbaseVersion, WormbaseProjectNumber
-from .species import Species, SPECIES_LIST
+# Base class
+# Everything else derives from this
+from .entity              import Entity
+
+# Basic data classes
+from .container           import Container
+from .user                import User
+from .pipeline_operation  import PipelineOperation
+from .dataset_release     import DatasetRelease
+from .wormbase            import WormbaseVersion, WormbaseProjectNumber
+from .species             import Species, SPECIES_LIST # Imports WormbaseVersion, WormbaseProjectNumber
+
+# Intermediate subclasses (primarily for tools)
+from .status_entity       import StatusEntity
+from .job_entity          import JobEntity           # Subclasses StatusEntity; imports Container
+from .user_owned_entity   import UserOwnedEntity     # Imports User
+from .hashable_entity     import HashableEntity
+from .report_entity       import ReportEntity        # Subclasses JobEntity, UserOwnedEntity, as well as GCPReport
+
+# Jobs
+from .database_operation  import DatabaseOperation   # Subclasses ReportEntity
+from .gene_browser_tracks import GeneBrowserTracks   # Subclasses JobEntity  (DEPRECATED)
+
+# Tools
+from .indel_primer        import IndelPrimerReport   # Subclasses ReportEntity, HashableEntity; imports DatasetRelease, Species
+from .heritability_report import HeritabilityReport  # Subclasses ReportEntity, HashableEntity
+from .nemascan_mapping    import NemascanReport      # Subclasses ReportEntity, HashableEntity
+
+# Other
+from .database_operation  import DbOp
+from .profile             import Profile
+from .markdown            import Markdown
 
 
 def get_class_by_kind(kind):
@@ -41,9 +54,9 @@ def get_class_by_kind(kind):
     PipelineOperation.kind:  PipelineOperation,
 
     DatabaseOperation.kind:  DatabaseOperation,
-    IndelPrimer.kind:        IndelPrimer,
+    IndelPrimerReport.kind:  IndelPrimerReport,
     HeritabilityReport.kind: HeritabilityReport,
-    NemascanMapping.kind:    NemascanMapping,
+    NemascanReport.kind:     NemascanReport,
 
     GeneBrowserTracks.kind:  GeneBrowserTracks,
     Markdown.kind:           Markdown,

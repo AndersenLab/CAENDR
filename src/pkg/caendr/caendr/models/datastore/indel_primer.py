@@ -3,14 +3,10 @@ import os
 from caendr.services.logger import logger
 from caendr.utils.env import get_env_var
 
-from caendr.models.datastore import DataJobEntity
+from caendr.models.datastore import ReportEntity, HashableEntity, Species
 from caendr.services.dataset_release import get_dataset_release
 
 
-
-INDEL_REPORT_PATH_PREFIX = 'reports'
-INDEL_INPUT_FILE = 'input.json'
-INDEL_RESULT_FILE = 'results.tsv'
 
 # Get environment variables
 MODULE_SITE_BUCKET_PUBLIC_NAME = get_env_var('MODULE_SITE_BUCKET_PUBLIC_NAME')
@@ -18,21 +14,42 @@ SOURCE_FILENAME                = get_env_var('INDEL_PRIMER_SOURCE_FILENAME', as_
 
 
 
-class IndelPrimer(DataJobEntity):
+class IndelPrimerReport(HashableEntity, ReportEntity):
+
+  #
+  # Class variables
+  #
+
   kind = 'indel_primer'
-  _blob_prefix = INDEL_REPORT_PATH_PREFIX
-  _input_file  = INDEL_INPUT_FILE
-  _result_file = INDEL_RESULT_FILE
 
   _report_display_name = 'Primer'
 
+  # Identify the report data by the data hash, inherited from the HashableEntity parent class
+  _data_id_field = 'data_hash'
 
-  ## Bucket ##
+
+  #
+  # Path
+  #
 
   # TODO: Indel primer results currently don't have subdirectories for container versions. Should they?
-  def get_blob_path(self):
-    return f'{self._blob_prefix}/{self.container_name}/{self.data_hash}'
+  @property
+  def _report_prefix(self):
+    return '/'.join([ self._report_path_prefix(), self.container_name, self.get_data_id() ])
 
+
+  #
+  # Input & Output
+  #
+
+  _num_input_files = 1
+  _input_filename  = 'input.json'
+  _output_filename = 'results.tsv'
+
+
+  #
+  # Data Files
+  #
 
   @classmethod
   def get_source_filename(cls, species, release):
@@ -54,7 +71,6 @@ class IndelPrimer(DataJobEntity):
     })
 
 
-
   @staticmethod
   def get_fasta_filepath(species, release = None):
     '''
@@ -63,7 +79,6 @@ class IndelPrimer(DataJobEntity):
 
       Equivalent to running `get_fasta_filepath_obj` on the appropriate DatasetRelease object.
     '''
-    from caendr.models.datastore import Species
 
     # Lookup desired species object
     species_obj = Species.from_name(species)
@@ -77,7 +92,9 @@ class IndelPrimer(DataJobEntity):
     return release_obj.get_fasta_filepath_obj()
 
 
-  ## All Properties ##
+  #
+  # Properties
+  #
 
   @classmethod
   def get_props_set(cls):

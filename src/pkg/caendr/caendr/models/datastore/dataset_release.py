@@ -4,7 +4,7 @@ from caendr.services.logger import logger
 from caendr.api.gene import remove_prefix
 from caendr.models.datastore import Entity
 from caendr.models.error import NotFoundError
-from caendr.services.cloud.storage import generate_blob_url, get_blob_list, check_blob_exists
+from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, get_blob_list, check_blob_exists
 from caendr.utils.tokens import TokenizedString
 
 V1_V2_Cutoff_Date = 20200101
@@ -217,7 +217,7 @@ class DatasetRelease(Entity):
   @staticmethod
   def get_fasta_filepath_url_template():
     obj = DatasetRelease.get_fasta_filepath_obj_template()
-    return TokenizedString( generate_blob_url(obj['bucket'], f'{ obj["path"] }/{ obj["name"] }{ obj["ext"] }') )
+    return TokenizedString.apply( generate_blob_uri, obj['bucket'], obj['path'], obj['name'] + obj['ext'], schema=BlobURISchema.HTTPS )
 
   def get_fasta_filepath_url(self):
     return DatasetRelease.get_fasta_filepath_url_template().get_string(**{
@@ -266,7 +266,7 @@ class DatasetRelease(Entity):
       blob_name = TokenizedString.replace_string(blob_name, **tokens)
 
       if blob_name in available_files:
-        url_map_filtered[key] = generate_blob_url(bucket_name, f'{release_path}/{blob_name}')
+        url_map_filtered[key] = generate_blob_uri(bucket_name, release_path, blob_name, schema=BlobURISchema.HTTPS)
       else:
         logger.warning(f'Blob {bucket_name}/{release_path}/{blob_name} does not exist')
     

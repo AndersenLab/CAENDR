@@ -6,7 +6,8 @@ from caendr.services.logger import logger
 import time
 import json
 from caendr.services.email import send_email
-from caendr.models.datastore.database_operation import DatabaseOperation
+from caendr.models.datastore import DatabaseOperation, Species
+from caendr.models.error import NotFoundError
 from caendr.utils import monitor
 from google.cloud import storage
 
@@ -15,6 +16,7 @@ load_env('.env')
 
 monitor.init_sentry("db_operations")
 
+from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
 from caendr.services.cloud.postgresql import get_db_conn_uri, get_db_timeout, db, health_database_status
 from caendr.services.cloud.secret import get_secret
 from operations import execute_operation
@@ -41,7 +43,7 @@ def etl_operation_append_log(message = ""):
 
   bucket = client.get_bucket(ETL_LOGS_BUCKET_NAME)
   filepath = f"logs/etl/{OPERATION_ID}/output"
-  uri = f"gs://{ETL_LOGS_BUCKET_NAME}/{filepath}"
+  uri = generate_blob_uri(ETL_LOGS_BUCKET_NAME, filepath, schema=BlobURISchema.GS)
 
   CRLF = "\n"
   blob = bucket.get_blob(filepath)
@@ -79,14 +81,32 @@ logger.info('Initializing Flask SQLAlchemy')
 db.init_app(app)
 
 
+def parse_species_list(species_list):
+
+  # If nothing provided, return None
+  if not species_list:
+    return None
+
+  # Split on semicolons, strip whitespace, and validate that each element maps to a Species object
+  try:
+    l = [ s.strip() for s in species_list.split(';') if len(s.strip()) > 0 ]
+    for name in l:
+      Species.from_name(name)
+    return l
+
+  # Intercept Species not found errors to log
+  except NotFoundError as ex:
+    logger.error(f'Invalid species name in SPECIES_LIST: {ex}')
+    raise
+
+
 def run():
   start = time.perf_counter()
   use_mock_data = get_env_var('USE_MOCK_DATA', False, var_type=bool)
 
-  species = get_env_var('SPECIES_LIST', can_be_none=True)
-  if species is not None:
-    species = [ s.strip() for s in species.split(';') if len(s.strip()) > 0 ]
-  species_string = f"[{', '.join(species)}]" if species is not None else 'all'
+  # Parse species list
+  species = parse_species_list( get_env_var('SPECIES_LIST', can_be_none=True) )
+  species_string = '[' + ', '.join(species) + ']' if species else 'all'
 
   text = ""
 

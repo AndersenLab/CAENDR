@@ -1,7 +1,7 @@
 import os
 
 from caendr.models.datastore import Entity, DatasetRelease
-from caendr.services.cloud.storage import generate_blob_url
+from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
 from caendr.utils.tokens import TokenizedString
 
 
@@ -39,7 +39,7 @@ class BrowserTrack(Entity):
 
   def get_url_template(self):
     bucket, path = self.get_path()
-    return path.update_template_string( generate_blob_url(bucket, f'{ path.raw_string }/{ self["filename"] }') )
+    return path.update_template_string( generate_blob_uri(bucket, path.raw_string, self['filename'], schema=BlobURISchema.HTTPS) )
 
 
   ## Props ##

@@ -1,7 +1,6 @@
 import re
 import os
 import datetime
-from caendr.models.datastore.pipeline_operation import PipelineOperation
 
 from flask import (flash,
                    request,
@@ -18,7 +17,6 @@ import bleach
 from base.forms import HeritabilityForm
 from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user, user_is_admin
 from base.utils.tools import get_upload_err_msg, lookup_report, try_submit
-from base.utils.local_file import LocalFile
 from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 from caendr.models.error import (
@@ -28,12 +26,13 @@ from caendr.models.error import (
     ReportLookupError,
 )
 from caendr.models.datastore import Species, HeritabilityReport
-from caendr.models.task import TaskStatus
+from caendr.models.status import JobStatus
 from caendr.api.strain import get_strains
-from caendr.services.heritability_report import get_heritability_report, get_heritability_reports, fetch_heritability_report
+from caendr.services.heritability_report import get_heritability_report, get_heritability_reports
 from caendr.utils.data import unique_id, get_object_hash
 from caendr.utils.env import get_env_var
-from caendr.services.cloud.storage import get_blob, generate_blob_url
+from caendr.utils.local_file import LocalFile
+from caendr.services.cloud.storage import get_blob, generate_blob_uri, BlobURISchema
 from caendr.services.persistent_logger import PersistentLogger
 
 
@@ -83,7 +82,7 @@ def heritability_calculator():
     'strain_list': [],
     'species_list': Species.all(),
     'sample_data_urls': {
-      species: generate_blob_url(MODULE_SITE_BUCKET_ASSETS_NAME, HERITABILITY_EXAMPLE_FILE.get_string(SPECIES=species))
+      species: generate_blob_uri(MODULE_SITE_BUCKET_ASSETS_NAME, HERITABILITY_EXAMPLE_FILE.get_string(SPECIES=species), schema=BlobURISchema.HTTPS)
         for species in Species.all().keys()
     },
   })
@@ -139,7 +138,7 @@ def list_results():
     'items': get_heritability_reports(None if show_all else user.name, filter_errs),
     'columns': results_columns(),
 
-    'TaskStatus': TaskStatus,
+    'JobStatus': JobStatus,
   })
 
 
@@ -165,18 +164,20 @@ def submit():
 
   # Upload input file to server temporarily, and start the job
   try:
-    with LocalFile(request.files.get('file'), valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS) as filepath:
+    with LocalFile(request.files.get('file'), valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS) as local_file:
 
       # Package submission data together into dict
-      data = { 'label': label, 'species': species, 'filepath': filepath }
+      data = { 'label': label, 'species': species, 'file': local_file }
 
       # Try submitting the job & returning a JSON status message
-      response, code = try_submit(HeritabilityReport, user, data, no_cache)
+      response, code = try_submit(HeritabilityReport.kind, user, data, no_cache)
 
-      # If there is an error or a ready message, flash it
-      if not code == 200:
+      # If there was an error, flash it
+      if code != 200 and int(request.args.get('reloadonerror', 1)):
         flash(response['message'], 'danger')
-      elif response.get('message') and response['ready']:
+
+      # If the response contains a caching message, flash it
+      elif response.get('message') and response.get('ready', False):
         flash(response.get('message'), 'success')
 
       # Return the response
@@ -230,42 +231,41 @@ def report(id):
   # Fetch requested heritability report
   # Ensures the report exists and the user has permission to view it
   try:
-    hr = lookup_report(HeritabilityReport.kind, id, user=user)
+    job = lookup_report(HeritabilityReport.kind, id, user=user)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:
     flash(ex.msg, 'danger')
     abort(ex.code)
 
-  # TODO: Is this used?
-  data_hash = hr.data_hash
-
   # Try getting & parsing the report data file and results
   # If result is None, job hasn't finished computing yet
   try:
-    data, result = fetch_heritability_report(hr)
+    data, result = job.fetch()
     ready = result is not None
 
-  # If no submission exists, return 404
-  except EmptyReportDataError:
-    return abort(404, description="Heritability report not found")
+  # Error reading one of the report files
+  except (EmptyReportDataError, EmptyReportResultsError) as ex:
+    logger.error(f'Error fetching Heritability report {ex.id}: {ex.description}')
+    return abort(404, description = ex.description)
+
+  # General error
+  except Exception as ex:
+    logger.error(f'Error fetching Heritability report {id}: {ex}')
+    return abort(400, description = 'Something went wrong')
+
+  # No data file found
+  if data is None:
+    logger.error(f'Error fetching Heritability report {id}: Input data file does not exist')
+    return abort(404)
+
 
   trait = data[0]['TraitName']
 
-  # If result exists, mark as complete
-  # TODO: Is this the right place for this?
-  if result:
-    hr.status = TaskStatus.COMPLETE
-    hr.save()
-
-  # TODO: Are either of these values used?
-  format = '%I:%M %p %m/%d/%Y'
-  now = datetime.now().strftime(format)
-
-  # TODO: Is this used? It looks like the error message(s) come from the entity's PipelineOperation
-  service_name = os.getenv('HERITABILITY_CONTAINER_NAME')
-  persistent_logger = PersistentLogger(service_name)
-  error = persistent_logger.get(id)
+  # # TODO: Is this used? It looks like the error message(s) come from the entity's PipelineOperation
+  # service_name = os.getenv('HERITABILITY_CONTAINER_NAME')
+  # persistent_logger = PersistentLogger(service_name)
+  # error = persistent_logger.get(id)
 
   return render_template("tools/heritability_calculator/result.html", **{
     'title': "Heritability Results",
@@ -274,19 +274,15 @@ def report(id):
 
     'ready': ready,
 
-    # TODO: The HTML file expects a variable called "fnam" -- is that a typo?
     'fname': datetime.today().strftime('%Y%m%d.') + trait,
 
-    'hr': hr,
+    'hr': job.report,
     'data': data,
     'result': result,
+    'error': job.get_error(),
 
-    'data_hash': data_hash,
-    'operation': hr.get_pipeline_operation(),
-    'error': error,
-
-    'data_url': generate_blob_url(hr.get_bucket_name(), hr.get_data_blob_path()),
+    'data_url': job.report.input_filepath(schema=BlobURISchema.HTTPS),
     'logs_url': url_for('heritability_calculator.view_logs', id = id),
 
-    'TaskStatus': TaskStatus,
+    'JobStatus': JobStatus,
   })
