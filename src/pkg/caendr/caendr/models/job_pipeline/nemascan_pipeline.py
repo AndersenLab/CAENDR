@@ -3,16 +3,18 @@ import csv
 # Parent Class & Models
 from .job_pipeline                 import JobPipeline
 from caendr.models.datastore       import NemascanReport
+from caendr.models.run             import GCPCloudRunRunner
 from caendr.models.task            import NemascanTask
-from caendr.models.run             import NemascanRunner
 
 # Services
 from caendr.models.datastore       import Species
+from caendr.services.cloud.storage import BlobURISchema
 from caendr.services.validate      import validate_file, NumberValidator, StrainValidator
-from caendr.services.cloud.storage import upload_blob_from_file
 from caendr.utils.data             import get_delimiter_from_filepath
 from caendr.utils.env              import get_env_var
 from caendr.utils.file             import get_file_hash
+from caendr.utils.local_file       import LocalFile
+
 
 
 NEMASCAN_CONTAINER_NAME = get_env_var('NEMASCAN_NXF_CONTAINER_NAME')
@@ -21,15 +23,25 @@ NEMASCAN_CONTAINER_NAME = get_env_var('NEMASCAN_NXF_CONTAINER_NAME')
 
 class NemascanPipeline(JobPipeline):
 
+  #
+  # Class variable assignments
+  #
+
+  # Managed class type assignments
   _Report_Class = NemascanReport
   _Task_Class   = NemascanTask
-  _Runner_Class = NemascanRunner
+  _Runner_Class = GCPCloudRunRunner
+
+  # Type declarations for managed objects
+  # This clues the type checker in to the specific subclasses we're using in this JobPipeline subclass
+  report: _Report_Class
+  runner: _Runner_Class
 
   _Container_Name = NEMASCAN_CONTAINER_NAME
 
 
   #
-  # Parsing
+  # Parsing Submission
   #
 
   @classmethod
@@ -54,24 +66,24 @@ class NemascanPipeline(JobPipeline):
   @classmethod
   def parse(cls, data, valid_file_extensions=None):
 
-    # Extract local filepath from the data object
+    # Extract local file from the data object
     # Note that we don't change the underlying object itself, as this would
     # affect the data dict in calling functions
-    local_path = data['filepath']
+    local_file: LocalFile = data['file']
     data = { k: v for k, v in data.items() if k != 'filepath' }
 
     # Get the file format & delimiter
-    delimiter = get_delimiter_from_filepath(local_path, valid_file_extensions=valid_file_extensions)
+    delimiter = get_delimiter_from_filepath(local_file.local_path, valid_file_extensions=valid_file_extensions)
 
     # Validate each line in the file
     # Will raise an error if any problems are found, otherwise silently passes
-    validate_file(local_path, cls.column_validators(data), delimiter=delimiter, unique_rows=True)
+    validate_file(local_file, cls.column_validators(data), delimiter=delimiter, unique_rows=True)
 
     # Compute hash from file
-    data_hash = get_file_hash(local_path, length=32)
+    data_hash = get_file_hash(local_file, length=32)
 
     # Open the file and extract the trait name from the header row
-    with open(local_path, 'r') as f:
+    with open(local_file, 'r') as f:
       csv_reader = csv.reader(f, delimiter=delimiter)
       header_row = next(csv_reader)
       data['trait'] = header_row[1]
@@ -79,23 +91,49 @@ class NemascanPipeline(JobPipeline):
     return {
       'props': data,
       'hash':  data_hash,
-      'files': [local_path],
+      'files': [local_file],
     }
 
 
+
   #
-  # File Storage
+  # Parsing Input & Output
   #
 
-  def upload(self, data_files):
+  def _parse_input(self, blob):
+    pass
 
-    # Heritability only takes one upload file
-    if len(data_files) > 1:
-      raise ValueError('Only one data file should be uploaded.')
+  def _parse_output(self, blob):
+    return blob.download_as_text()
 
-    # If no files provided, skip
-    if len(data_files) == 0: return
 
-    bucket = self.report.get_bucket_name()
-    blob   = self.report.get_data_blob_path()
-    upload_blob_from_file(bucket, data_files[0], blob)
+
+  #
+  # Run Configuration
+  #
+
+  def construct_command(self):
+    return ['nemascan-nxf.sh']
+
+  def construct_environment(self):
+    return {
+      # Gather any vars from the parent class(es)
+      **super().construct_environment(),
+
+      # Gather standard data paths for a report
+      **self.report.get_data_paths(schema=BlobURISchema.GS),
+
+      # Define vars for this job
+      'SPECIES':     self.report['species'],
+      'VCF_VERSION': Species.get(self.report['species'])['release_latest'],
+      'USERNAME':    self.report['username'],
+      'EMAIL':       self.report['email'],
+    }
+
+  def construct_run_params(self):
+    return {
+      **super().construct_run_params(),
+      'BOOT_DISK_SIZE_GB': 100,
+      'TIMEOUT':           '86400s',
+      'MEMORY_LIMITS':     { 'memory': '4Gi', 'cpu': '1' },
+    }

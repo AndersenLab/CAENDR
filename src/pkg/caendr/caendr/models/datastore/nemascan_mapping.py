@@ -1,47 +1,70 @@
 from caendr.services.logger import logger
 
-from caendr.models.datastore import DataJobEntity
-from caendr.models.status import JobStatus
-from caendr.services.cloud.storage import check_blob_exists, get_blob_list
+from caendr.models.datastore       import HashableEntity, ReportEntity
+from caendr.models.status          import JobStatus
+from caendr.services.cloud.storage import BlobURISchema, check_blob_exists, get_blob_list
+from caendr.utils.env              import get_env_var
 
 
-NEMASCAN_REPORT_PATH_PREFIX = 'reports'
-NEMASCAN_RESULT_PATH_INFIX = 'results'
-INPUT_DATA_PATH = 'tools/nemascan/input_data'
+PRIVATE_BUCKET_NAME = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
 REPORT_DATA_PREFIX = 'Reports/NemaScan_Report_'
-NEMASCAN_INPUT_FILE = 'data.tsv'
 
 
-class NemascanReport(DataJobEntity):
+
+class NemascanReport(HashableEntity, ReportEntity):
+
+  #
+  # Class Variables
+  #
+
   kind = 'nemascan_mapping'
-  _blob_prefix = NEMASCAN_REPORT_PATH_PREFIX
-  _input_file  = NEMASCAN_INPUT_FILE
 
   _report_display_name = 'Genetic Mapping'
 
-  __result_infix = NEMASCAN_RESULT_PATH_INFIX
-  __input_data_path = INPUT_DATA_PATH
-  __report_path = REPORT_DATA_PREFIX
+  # Identify the report data by the data hash, inherited from the HashableEntity parent class
+  _data_id_field = 'data_hash'
 
 
-  ## Buckets & Paths ##
+  #
+  # Paths
+  #
 
-  # TODO: Overrides function in DataJobEntity parent class which isn't needed in this class.
-  #       Can this be merged with get_result_path for better inheritance?
-  def get_result_blob_path(self):
-    raise TypeError(f'Should not call get_result_blob_path on {self.__class__.__name__}')
+  # TODO: Move data files to Data bucket
+  @property
+  def _data_bucket(self) -> str:
+    return PRIVATE_BUCKET_NAME
 
-  def get_result_path(self):
-    return f'{self.get_blob_path()}/{self.__result_infix}'
+  # TODO: Standardize data prefix for all tools
+  @property
+  def _data_prefix(self):
+    return 'tools/nemascan/input_data'
 
-  def get_report_blob_prefix(self):
-    return f'{self.get_result_path()}/{self.__report_path}'
+  @property
+  def _output_prefix(self):
+    return 'results'
 
-  def get_input_data_path(self):
-    return f'{self.__input_data_path}'
+  def get_data_paths(self, schema: BlobURISchema):
+    return {
+      **super().get_data_paths(schema=schema),
+      'TRAIT_FILE': self.input_filepath(schema=schema),
+    }
 
-  def get_data_directory(self):
-    return f"gs://{ self.get_bucket_name() }/{ self.get_input_data_path() }"
+
+  #
+  # Input & Output
+  #
+
+  _num_input_files = 1
+  _input_filename  = 'data.tsv'
+
+  # Use report_path property to get the filename of the report within the output directory
+  @property
+  def _output_filename(self):
+    report_path   = self.report_path
+    report_prefix = self.output_directory(schema=BlobURISchema.PATH)[1]
+    if report_path and report_path.startswith(report_prefix):
+      report_path = report_path[len(report_prefix):].lstrip('/')
+    return report_path
 
 
   ## Properties List ##
@@ -76,7 +99,7 @@ class NemascanReport(DataJobEntity):
     # Check if this value has been cached already, and if so, make sure the file exists
     path = self._get_meta_prop('report_path')
     if path is not None:
-      if check_blob_exists(self.get_bucket_name(), path):
+      if check_blob_exists(self._report_bucket, path):
         return path
       else:
         logger.warn(f'Genetic Mapping report {self.id} lists its report path as "{path}", but this file does not exist. Recomputing...')
@@ -88,7 +111,7 @@ class NemascanReport(DataJobEntity):
 
     # Get a list of all files with this report's prefix
     logger.debug(f'Looking for a Genetic Mapping HTML report for ID "{self.id}"')
-    result = list(get_blob_list(self.get_bucket_name(), self.get_report_blob_prefix()))
+    result = get_blob_list( *self.output_directory(REPORT_DATA_PREFIX, schema=BlobURISchema.PATH) )
     logger.debug(result)
 
     # Search the list for an HTML file, and return it if found
@@ -109,33 +132,3 @@ class NemascanReport(DataJobEntity):
     '''
     self['email'] = user['email']
     return super().set_user(user)
-
-
-  ## Cache ##
-
-  # TODO: Is there a better way to check? E.g. look for results?
-  def check_cached_result(self):
-    '''
-      Check whether the results for this data hash have already been cached.
-      Returns "COMPLETE" if any other user's submission is complete, otherwise
-      returns the last found status or None.
-    '''
-
-    # Check for reports with a matching data hash & container version
-    matches = NemascanReport.query_ds( filters = [
-      ('data_hash',         '=', self.data_hash),
-      ('container_version', '=', self['container_version']),
-    ])
-
-    status = None
-
-    # Loop through all submissions by different users
-    for match in matches:
-      if match.username != self.username:
-
-        # Update to match status, keeping 'COMPLETE' if it's found
-        if status != JobStatus.COMPLETE:
-          status = match.status
-
-    # Return the status
-    return status

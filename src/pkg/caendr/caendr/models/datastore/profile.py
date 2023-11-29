@@ -3,7 +3,7 @@ import os
 from caendr.services.logger import logger
 
 from caendr.models.datastore import Entity
-from caendr.services.cloud.storage import generate_blob_url
+from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
 
 MODULE_SITE_BUCKET_PUBLIC_NAME = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME')
 PROFILE_PHOTO_PATH_PREFIX = 'profile/photos'
@@ -111,7 +111,7 @@ class Profile(Entity):
       URL for profile image. Constructed from blob path, if one is provided.
     '''
     if self.img_blob_path:
-      return generate_blob_url(Profile.get_bucket_name(), self.img_blob_path)
+      return generate_blob_uri(Profile.get_bucket_name(), self.img_blob_path, schema=BlobURISchema.HTTPS)
 
     return None
 

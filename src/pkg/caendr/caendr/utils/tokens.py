@@ -1,3 +1,4 @@
+from functools import reduce
 from string import Template
 
 from caendr.models.error import InvalidTokenError, MissingTokenError
@@ -73,6 +74,25 @@ class TokenizedString():
     # Other - throw error
     else:
       raise ValueError(f'Cannot replace tokens in non-string value {other}')
+
+
+  def apply(f, *args, **kwargs):
+
+    # Map all arg values to their raw string values
+    raw_args   = [ arg.raw_string      if isinstance(arg, TokenizedString) else arg for arg      in args           ]
+    raw_kwargs = { key: val.raw_string if isinstance(val, TokenizedString) else val for key, val in kwargs.items() }
+
+    # Combine all token sets from all TokenizedString args into a single list, then reduce into a single dict
+    tokens = reduce(
+      lambda a, b: { **a, **b },
+      [
+        *[ arg.tokens for arg in args            if isinstance(arg, TokenizedString) ],
+        *[ val.tokens for val in kwargs.values() if isinstance(val, TokenizedString) ],
+      ]
+    )
+
+    # Run the provided function on the raw arguments, create a TokenizedString from the result, and apply all tokens
+    return TokenizedString( f(*raw_args, **raw_kwargs) ).set_tokens(**tokens)
 
 
 

@@ -9,6 +9,7 @@ from base.utils.auth import admin_required, get_jwt, get_jwt_identity, get_curre
 from base.forms import AdminCreateDatabaseOperationForm
 
 from caendr.services.database_operation import get_all_db_ops, get_all_db_stats, get_etl_op, get_db_op_form_options
+from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
 
 from caendr.models.error        import PreflightCheckError
 from caendr.models.job_pipeline import DatabaseOperationPipeline
@@ -59,8 +60,8 @@ def view_op(id):
   log_contents = ""
   uri = op.get('logs', None)
   if uri is not None:
-    bucket = storage_client.get_bucket(ETL_LOGS_BUCKET_NAME)    
-    filepath = uri.replace(f"gs://{ETL_LOGS_BUCKET_NAME}/", "")
+    bucket = storage_client.get_bucket(ETL_LOGS_BUCKET_NAME)
+    filepath = uri.replace( generate_blob_uri(ETL_LOGS_BUCKET_NAME, schema=BlobURISchema.GS), '' )
     blob = bucket.get_blob(filepath)
     if blob is not None:
       log_contents = blob.download_as_string().decode('utf8')

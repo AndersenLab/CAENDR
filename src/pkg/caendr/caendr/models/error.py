@@ -114,12 +114,10 @@ class UnprocessableEntity(InternalError):
 
 
 
-class CachedDataError(InternalError):
-  description = "This data has already been submitted by another user"
-  def __init__(self, report):
-    self.report = report
-    if report is not None and hasattr(report, 'data_hash'):
-      self.description = f'This data (hash {getattr(report, "data_hash")}) has already been submitted by another user'
+class JobAlreadyScheduledError(InternalError):
+  description = "This data has already been submitted"
+  def __init__(self, kind, data_id):
+    self.description = f'This data (kind "{kind}", data ID "{data_id}") has already been submitted'
     super().__init__()
 
 class DuplicateDataError(InternalError):
@@ -224,13 +222,13 @@ class ReportLookupError(InternalError):
 class EmptyReportDataError(InternalError):
   def __init__(self, report_id):
     self.id = report_id
-    self.description = 'Empty report'
+    self.description = 'Input data file is empty'
     super().__init__()
 
 class EmptyReportResultsError(InternalError):
   def __init__(self, report_id):
     self.id = report_id
-    self.description = 'Empty report'
+    self.description = 'Output report file is empty'
     super().__init__()
 
 
@@ -269,7 +267,4 @@ class MissingTokenError(InternalError):
 
 
 class UnschedulableJobTypeError(InternalError):
-  pass
-
-class JobAlreadyScheduledError(InternalError):
   pass

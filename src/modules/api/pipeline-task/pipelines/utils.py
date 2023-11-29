@@ -1,13 +1,9 @@
-import backoff
 import json
-from googleapiclient.errors import HttpError
-from ssl import SSLEOFError
-from typing                 import Tuple, Optional
+from typing import Tuple, Optional
 
 from caendr.services.logger import logger
 
 from caendr.models.datastore    import Species
-from caendr.models.error        import APIBadRequestError, NotFoundError
 from caendr.models.error        import APIBadRequestError, APINotFoundError, NotFoundError
 from caendr.models.job_pipeline import JobPipeline, get_pipeline_class, pipeline_subclasses
 from caendr.models.status       import JobStatus
@@ -72,7 +68,7 @@ def get_runner_from_operation_name(operation_name: str) -> Tuple[GCPCloudRunRunn
   results = []
   for cls in pipeline_subclasses:
     try:
-      results.append( cls._Runner_Class.from_operation_name(operation_name) )
+      results.append( cls._Runner_Class.from_operation_name(cls.get_kind(), operation_name) )
     except:
       pass
 
