@@ -57,11 +57,11 @@
                 {% for item in cartItems %}
                 <tr class='cartItem'>
                     <td>{{ loop.index }}</td>
-                    <td><em>{{ item.species }}</em></td>
+                    <td><em>{{ item.species|capitalize|replace('_', '. ') }}</em></td>
                     <td>{{ item.name }}</td>
                     <td>${{ item.price }}</td>
                     <td class="delete">
-                        <button type="button" class="btn" info={{ item.name }}>
+                        <button type="button" class="btn" data-value='{"name": "{{ item.name }}", "species": "{{item.species}}" }'>
                             <i class="bi bi-trash-fill text-danger" class="delete-icon" aria-hidden="true"></i>
                             Delete
                         </button>
@@ -214,7 +214,7 @@ $(document).ready(function() {
     })
 
     $(".searchable").on('click', '.cartItem > .delete > button', function() {
-        $('#deleteItem').attr('info', $(this).attr('info'))
+        $('#deleteItem').attr('data-value', $(this).attr('data-value'))
         $('#deleteModal').modal('show')
     })
 
@@ -232,7 +232,7 @@ $(document).ready(function() {
 
     $('#deleteItem').click(function(e){
         e.preventDefault()
-        const data = {csrf_token: $('#csrf_token').val(), itemToRemove: $(this).attr('info')}
+        const data = {csrf_token: $('#csrf_token').val(), itemToRemove: {name: $(this).data('value').name, species: $(this).data('value').species}}
 
         $.ajax({
             type: "PUT",

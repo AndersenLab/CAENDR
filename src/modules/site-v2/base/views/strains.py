@@ -21,7 +21,7 @@ from caendr.utils.json import dump_json
 from caendr.utils.data import get_file_format, convert_data_to_download_file
 from caendr.utils.env import get_env_var
 from caendr.models.datastore import Species
-from caendr.models.datastore.cart import Cart
+from caendr.models.datastore import Cart
 from caendr.models.error import NotFoundError
 from caendr.services.dataset_release import get_all_dataset_releases, find_dataset_release, get_latest_dataset_release_version
 
@@ -225,7 +225,7 @@ def order_page_post():
           return redirect(url_for('request_strains.order_page_index'))
         
         if form.shipping_service.data == 'Flat Rate Shipping':
-          cartItems.append({'name': 'Flat Rate Shipping'})
+          cartItems.append({'name': 'Flat Rate Shipping', 'species': ''})
         for item in cartItems:
           item_price = Cart.get_price(item)
           item['price'] = item_price
@@ -237,7 +237,7 @@ def order_page_post():
                       'is_donation': False}
         order_obj.update(form.data)
         order_obj['phone'] = order_obj['phone'].strip("+")
-        order_obj['items'] = '\n'.join(sorted([f"{item['name']}:{item['price']}" for item in cartItems]))
+        order_obj['items'] = '\n'.join(sorted([f"name: {item['name']}, species: {item['species']}, price: {item['price']}" for item in cartItems]))
         order_obj['invoice_hash'] = str(uuid.uuid4()).split("-")[0]
         order_obj["order_confirmation_link"] = url_for('request_strains.order_confirmation', invoice_hash=order_obj['invoice_hash'], _external=True)
         send_email({
@@ -341,21 +341,18 @@ def order_confirmation(invoice_hash):
   if order_obj is None:
     abort(404)
 
-  # Parse the individual items in the order into (1) a dict {name: price} and (2) a list of dicts
-  order_obj["items"] = {
-    x.split(":")[0]: float(x.split(":")[1]) for x in order_obj['items'].split("\n")
-  }
-  items = [ {'strain': k, 'price': v} for k, v in order_obj["items"].items() ]
-
-  # Add species to each strain, if applicable
-  strains = get_strains()
-  for item in items:
-    for strain in strains:
-      if item['strain'] == strain.isotype:
-        item['species'] = strain.species_name
-        break
-      else:
-        item['species'] = ''
+  # Parse the individual items in the order into a list of dicts
+  order_obj["items"] = [ x for x in order_obj['items'].split("\n") ]
+  items = []
+  for row in order_obj['items']:
+    arr = row.split(', ')
+    item_dict = {}
+    for x in arr:
+      k, v = x.split(': ')
+      if k == 'price':
+        v = float(v)
+      item_dict[k] = v
+    items.append(item_dict)
 
   return render_template('order/order_confirm.html', **({
     'title': "Order Confirmation",
