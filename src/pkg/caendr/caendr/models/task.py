@@ -1,4 +1,5 @@
 import os
+from enum import Enum
 
 from caendr.services.logger import logger
 
@@ -66,7 +67,11 @@ class Task(object):
       Only properties specified in get_props_set() will be accepted.
     '''
     props = self.get_props_set()
-    self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
+
+    # Add all kwargs that match the props set, mapping enum values to strings
+    self.__dict__.update(
+      (k, (v.name if isinstance(v, Enum) else v)) for k, v in kwargs.items() if k in props
+    )
 
 
   def __repr__(self):

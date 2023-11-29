@@ -1,13 +1,7 @@
-import os
-import io
-import pandas as pd
-
 from caendr.services.logger import logger
 
-from caendr.models.error import EmptyReportDataError, EmptyReportResultsError
 from caendr.models.datastore import HeritabilityReport
 
-from caendr.services.cloud.storage import get_blob, download_blob_as_dataframe
 from caendr.utils.env import get_env_var
 
 
@@ -46,40 +40,3 @@ def get_heritability_reports(username=None, filter_errs=False):
   # Get list of reports and filter by date
   results = HeritabilityReport.query_ds(safe=not filter_errs, ignore_errs=filter_errs, filters=filters)
   return HeritabilityReport.sort_by_created_date(results, reverse=True)
-
-
-
-def fetch_heritability_report(report):
-
-  data   = get_blob(report.get_bucket_name(), report.get_data_blob_path())
-  result = get_blob(report.get_bucket_name(), report.get_result_blob_path())
-
-  # If no submission file exists, return error
-  if data is None:
-    raise EmptyReportDataError(report.id)
-
-  # Parse data file
-  data = download_blob_as_dataframe(data)
-  data['AssayNumber'] = data['AssayNumber'].astype(int)
-  data['label'] = data.apply(lambda x: f"{x['AssayNumber']}: {x['Value']}", 1)
-  data = data.to_dict('records')
-
-  # Parse results file, if it exists
-  # If results file doesn't exist (yet), report is unfinished
-  # TODO: will get_blob always return None if empty?
-  if result:
-    result = download_blob_as_dataframe(result)
-
-    if result is None:
-      raise EmptyReportResultsError(report.id)
-
-    # Convert to dict, using the 'type' column as the key instead of the index
-    # Should create dictionary with two keys: 'broad-sense' and 'narrow-sense'
-    result = result.to_dict('records')
-    result = {
-      i['type']: { key: val for key, val in i.items() if key != 'type' }
-      for i in result
-    }
-
-  # Return parsed data & result
-  return data, result

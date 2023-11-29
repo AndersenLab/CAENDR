@@ -1,5 +1,6 @@
 import json
 from datetime import datetime, timezone
+from enum     import Enum
 
 from google.cloud import datastore
 from caendr.services.logger import logger
@@ -169,6 +170,11 @@ class Entity(object):
     # Combine props dict with meta properties defined above
     props = { **dict(self), **meta_props }
 
+    # Map enums to raw strings before saving
+    for key, val in props.items():
+      if isinstance(val, Enum):
+        props[key] = val.name
+
     # Save the entity in datastore
     save_ds_entity(self.kind, self.name, exclude_from_indexes=self.exclude_from_indexes, **props)
 
@@ -310,6 +316,36 @@ class Entity(object):
 
 
 
+  def _get_raw_prop(self, key, fallback=None):
+    return self.__dict__.get(key, fallback)
+
+  def _set_raw_prop(self, key, val):
+    self.__dict__[key] = val
+
+
+  def _get_enum_prop(self, EnumType, key, fallback=None):
+    return self._get_raw_prop(key, fallback)
+    # if val is not None and not isinstance(val, EnumType):
+    #   try:
+    #     return getattr( EnumType, self._get_raw_prop(key) )
+    #   except:
+    #     return fallback
+    # return val
+
+  def _set_enum_prop(self, EnumType, key, val):
+
+    # If passed value is not already an instance of the provided type, try looking it up as an attribute
+    if val is not None and not isinstance(val, EnumType):
+      try:
+        val = getattr( EnumType, val )
+      except:
+        raise TypeError(f'Cannot set property "{key}" of {self.kind} job to "{val}": must be valid member of "{EnumType.__name__}".')
+
+    # Once val is is cast to the provided type, save it
+    self._set_raw_prop(key, val)
+
+
+
   ## Sort Methods ##
 
   @classmethod
@@ -379,29 +415,6 @@ class Entity(object):
     if len(matches) == 0:
       if required:
         raise NotFoundError( cls.kind, {key: val} )
-      else:
-        return None
-
-    # If exactly one entity found, return it
-    elif len(matches) == 1:
-      return matches[0]
-
-    # If more than one entity found, raise an error
-    else:
-      raise NonUniqueEntity( cls.kind, key, val, matches )
-
-
-  @classmethod
-  def query_ds_not_deleted(cls, key, val, required=False):
-
-    # Run query with given key and val
-    matches = cls.query_ds(filters=[(key, '=', val)])
-    matches = [ el for el in matches if not el['is_deleted'] ]
-
-    # If no matching entities found, return None
-    if len(matches) == 0:
-      if required:
-        raise NotFoundError(cls.kind, {key: val})
       else:
         return None
 
