@@ -1,3 +1,7 @@
+from enum import Enum
+
+
+
 class JobStatus:
   '''
     The set of possible values for the status of a job.
@@ -62,3 +66,42 @@ class JobStatus:
     ]
 
     return order.index(a) < order.index(b)
+
+
+
+class PublishStatus(Enum):
+  '''
+    States for an object that can be published on the site by public users or by CaeNDR admins (on behalf of the CaeNDR project).
+  '''
+
+  # Private status values for public users
+  UPLOADED  = 'UPLOADED'   # Owner has not yet submitted for review
+  SUBMITTED = 'SUBMITTED'  # Owner has submitted for review
+  REVISING  = 'REVISING'   # Admin has asked for revisions
+  REJECTED  = 'REJECTED'   # Admin has rejected outright
+
+  # Private status value for CaeNDR admins
+  HIDDEN    = 'HIDDEN'     # Item is submitted by CaeNDR admin, but is kept private
+
+  # Public status value for public users
+  ACCEPTED  = 'ACCEPTED'   # Admin has approved, item is public
+
+  # Public status value for CaeNDR admins
+  CANONICAL = 'CANONICAL'  # Item is submitted by CaeNDR admin, bypassing approval process
+
+
+  @property
+  def is_public(self):
+    return self in { PublishStatus.ACCEPTED, PublishStatus.CANONICAL }
+
+  @property
+  def is_private(self):
+    return not self.is_public
+
+  @property
+  def from_caendr(self):
+    return self in { PublishStatus.HIDDEN, PublishStatus.CANONICAL }
+
+  @property
+  def from_public(self):
+    return not self.from_caendr

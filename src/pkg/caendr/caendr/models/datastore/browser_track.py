@@ -1,45 +1,31 @@
-import os
+from caendr.utils.env              import get_env_var
 
-from caendr.models.datastore import Entity, DatasetRelease
-from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
-from caendr.utils.tokens import TokenizedString
-
-
-MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
-MODULE_SITE_BUCKET_PUBLIC_NAME  = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME')
+from caendr.models.datastore       import FileRecordEntity, DatasetRelease
+from caendr.services.cloud.storage import BlobURISchema
+from caendr.utils.tokens           import TokenizedString
 
 
-
-class BrowserTrack(Entity):
-
-
-  ## Initialization ##
-
-  def __new__(cls, *args, **kwargs):
-    if cls is BrowserTrack:
-      raise TypeError(f"Class '{cls.__name__}' should never be instantiated directly -- subclasses should be used instead.")
-    return super(BrowserTrack, cls).__new__(cls)
+MODULE_SITE_BUCKET_PRIVATE_NAME = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
 
 
-  ## Filepaths ##
+
+class BrowserTrack(FileRecordEntity):
+
+  ## Default Release Path ##
 
   @staticmethod
-  def release_path():
-    return (DatasetRelease.get_bucket_name(), DatasetRelease.get_path_template() + '/browser_tracks')
+  def release_bucket():
+    '''
+      Get the default bucket for the browser track files, determined by dataset release.
+    '''
+    return DatasetRelease.get_bucket_name()
 
   @staticmethod
-  def bam_bai_path():
-    return (MODULE_SITE_BUCKET_PRIVATE_NAME, TokenizedString('bam'))
-
-  def get_path(self):
+  def release_prefix():
     '''
-      Get the path in GCP to this specific Browser Track. Overwritten in subclass(es).
+      Get the default prefix for the browser track files, within a dataset release folder.
     '''
-    return BrowserTrack.release_path()
-
-  def get_url_template(self):
-    bucket, path = self.get_path()
-    return path.update_template_string( generate_blob_uri(bucket, path.raw_string, self['filename'], schema=BlobURISchema.HTTPS) )
+    return DatasetRelease.get_path_template() + '/browser_tracks'
 
 
   ## Props ##
@@ -48,7 +34,6 @@ class BrowserTrack(Entity):
   def get_props_set(cls):
     return {
       *super().get_props_set(),
-      'filename',
       'name',
       'order',
       'params',
@@ -67,7 +52,7 @@ class BrowserTrack(Entity):
       **self.__dict__.get('params', {}),
       'name':  self['name'],
       'order': self['order'],
-      'url':   self.get_url_template().raw_string,
+      'url':   self.get_filepath_template(schema=BlobURISchema.HTTPS).raw_string,
     }
 
     # Add indexURL if defined
@@ -99,6 +84,14 @@ class BrowserTrackDefault(BrowserTrack):
       'checked',
     }
 
+  @property
+  def bucket(self) -> str:
+    return super().release_bucket()
+
+  @property
+  def prefix(self) -> TokenizedString:
+    return super().release_prefix()
+
 
 
 class BrowserTrackTemplate(BrowserTrack):
@@ -113,11 +106,19 @@ class BrowserTrackTemplate(BrowserTrack):
       'is_bam',
     }
 
-  def get_path(self):
+  @property
+  def bucket(self) -> str:
     if self['is_bam']:
-      return BrowserTrack.bam_bai_path()
+      return MODULE_SITE_BUCKET_PRIVATE_NAME
     else:
-      return (DatasetRelease.get_bucket_name(), DatasetRelease.get_path_template())
+      return super().release_bucket()
+
+  @property
+  def prefix(self) -> TokenizedString:
+    if self['is_bam']:
+      return TokenizedString('bam')
+    else:
+      return DatasetRelease.get_path_template()
 
   def __repr__(self):
     return f"<{self.kind}:{getattr(self, 'template_name', 'no-name')}>"
