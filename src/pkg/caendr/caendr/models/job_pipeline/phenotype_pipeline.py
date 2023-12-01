@@ -5,6 +5,7 @@ from .job_pipeline                 import JobPipeline
 from caendr.models.datastore       import PhenotypeReport
 
 # Services
+from caendr.models.status          import JobStatus
 from caendr.utils.data             import dataframe_cols_to_dict
 
 
@@ -23,6 +24,16 @@ class PhenotypePipeline(JobPipeline):
   # Type declarations for managed objects
   # This clues the type checker in to the specific subclasses we're using in this JobPipeline subclass
   report: _Report_Class
+
+
+  # Temporary(?) override to intercept pipeline creation and mark the job as complete
+  @classmethod
+  def create(cls, *args, **kwargs):
+    job = super().create(*args, **kwargs)
+    if job.report.get_status() == JobStatus.CREATED:
+      job.report.set_status(JobStatus.COMPLETE)
+      job.report.save()
+    return job
 
 
   #
