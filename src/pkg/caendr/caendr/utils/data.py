@@ -157,3 +157,13 @@ def join_commas_and(text, truncate=None):
   if truncate:
     text = text[:truncate] + ([f'{len(text) - truncate} more'] if len(text) > truncate else [])
   return join_with_final(text, sep=', ', final=', and ', final_if_two=' and ')
+
+
+
+def dataframe_cols_to_dict(df, key_col, val_col, drop_na=True):
+  key_col_name = df.columns[key_col] if isinstance(key_col, int) else df[key_col]
+  val_col_name = df.columns[val_col] if isinstance(val_col, int) else df[val_col]
+  d = df.set_index(key_col_name)
+  if drop_na:
+    d = d.dropna()
+  return d.to_dict()[val_col_name]
