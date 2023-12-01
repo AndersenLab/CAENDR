@@ -5,8 +5,9 @@ from .job_pipeline                 import JobPipeline
 from caendr.models.datastore       import PhenotypeReport
 
 # Services
+from caendr.models.datastore       import TraitFile
 from caendr.models.status          import JobStatus
-from caendr.utils.data             import dataframe_cols_to_dict
+from caendr.utils.data             import dataframe_cols_to_dict, get_object_hash
 
 
 
@@ -42,7 +43,19 @@ class PhenotypePipeline(JobPipeline):
 
   @classmethod
   def parse(cls, data, valid_file_extensions=None):
-    return super().parse(data, valid_file_extensions=valid_file_extensions)
+
+    # Get both trait files from the datastore, confirming they both exist
+    trait_1 = TraitFile.get_ds(data['trait_1'])
+    trait_2 = TraitFile.get_ds(data['trait_2'])
+
+    # Compute hash from trait file unique IDs
+    # Sort the IDs before combining, so either order will produce the same hash
+    hash = get_object_hash(' '.join(sorted([trait_1.name, trait_2.name])), length=32)
+
+    return {
+      'props': data,
+      'hash':  hash,
+    }
 
 
 
