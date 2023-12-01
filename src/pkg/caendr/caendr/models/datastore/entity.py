@@ -256,6 +256,8 @@ class Entity(object):
         props[key] = val.name
       elif isinstance(val, TokenizedString):
         props[key] = val.raw_string
+      elif isinstance(val, Entity):
+        props[key] = val.name
 
     return props
 
