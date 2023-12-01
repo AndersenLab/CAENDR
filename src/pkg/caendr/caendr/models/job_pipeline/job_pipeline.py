@@ -398,22 +398,25 @@ class JobPipeline(ABC):
       If data file does exist but is empty, should raise `EmptyReportDataError`.
 
       Arguments:
-        - `raw` (`bool`): If `true`, return the raw blob(s); otherwise, parse into a Python object. Default `false`.
+        - `raw` (`bool`):
+          If `true`, return the raw input object(s) as defined by the `Report` class;
+          otherwise, parse into a Python object.
+          Default `false`.
 
       Raises:
         - EmptyReportDataError: An input data file exists, but is empty (i.e. invalid)
     '''
 
-    # Use the Report object to fetch the raw input blob
-    blob = self.report.fetch_input()
+    # Use the Report object to fetch the raw input
+    raw_input = self.report.fetch_input()
 
-    # If blob is desired or if no blob exists, return here
-    if raw or blob is None:
-      return blob
+    # If raw input is desired, or if no input exists, return here
+    if raw or raw_input is None:
+      return raw_input
 
     # Delegate parsing to the subclass
     # TODO: If this raises an EmptyReportDataError, should we mark the job status as error?
-    return self._parse_input(blob)
+    return self._parse_input(raw_input)
 
 
   def fetch_output(self, raw: bool = False):
@@ -424,31 +427,31 @@ class JobPipeline(ABC):
       If data file does exist but is empty, should raise `EmptyReportResultsError`.
 
       Arguments:
-        - `raw` (`bool`): If `true`, return the raw blob(s); otherwise, parse into a Python object. Default `false`.
+        - `raw` (`bool`):
+          If `true`, return the raw output object(s) as defined by the `Report` class;
+          otherwise, parse into a Python object.
+          Default `false`.
 
       Raises:
         - EmptyReportResultsError: An output data file exists, but is empty (i.e. invalid)
     '''
 
-    # Use the Report object to fetch the raw output blob
-    blob = self.report.fetch_output()
+    # Use the Report object to fetch the raw output
+    raw_output = self.report.fetch_output()
 
     # If blob is desired or if no blob exists, return here
-    if raw or blob is None:
-      return blob
+    if raw or raw_output is None:
+      return raw_output
 
-    # Delegate parsing to the subclass
+    # Delegate parsing to the subclass & return the result
     try:
-      result = self._parse_output(blob)
+      return self._parse_output(raw_output)
 
     # If result file is invalid, mark the report status as error
     except EmptyReportResultsError:
       self.report.set_status( JobStatus.ERROR )
       self.report.save()
       raise
-
-    # Return the result object
-    return result
 
 
   @abstractmethod
