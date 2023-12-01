@@ -106,6 +106,9 @@ class GCPReport(BucketedReport):
     if self._num_input_files is not None and len(data_files) != self._num_input_files:
       raise ValueError(f'Expected {self._num_input_files} data file(s) to upload for job of type {self.kind}, got {len(data_files)} file(s) instead.')
 
+    if not len(data_files):
+      return
+
     # Get the location of the input directory
     bucket, path = self.input_filepath(schema = BlobURISchema.PATH)
 
