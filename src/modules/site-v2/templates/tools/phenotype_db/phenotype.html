@@ -23,8 +23,8 @@
 {% block content %}
 
 <div class="container-fluid px-5">
-    <p><i>Spearman Correlation = {{correlation|round(4)}}</i></p>
-    <p><i>P-value = {{p_value|round(4)}}</i></p>
+    <p><i>Spearman Correlation = {{ result.correlation|round(4) }}</i></p>
+    <p><i>P-value = {{ result.p_value|round(4) }}</i></p>
     <div id="phenotype-chart"></div>
 </div>
 
@@ -36,7 +36,7 @@
 
 <script>
 
-const data = {{ data|tojson }};
+const data = {{ data.trait_values|tojson }};
 
 scatterplot_histograms('#phenotype-chart', data, {
     hist_height:   60,
@@ -44,12 +44,12 @@ scatterplot_histograms('#phenotype-chart', data, {
     height:        600,
     fill_color:    '#0719BC',
     bins_per_tick: 2,
-    x_label:       'Paraquat Length',
-    y_label:       'Carbaryl Length',
+    x_label:       '{{ data.trait_names[0] }}',
+    y_label:       '{{ data.trait_names[1] }}',
     tooltip_template: (d, labels) => `
         <p><b>Strain: ${d[2]}</b></p>
-        <p>${labels['x']}: ${d[0]}</p>
-        <p>${labels['y']}: ${d[1]}</p>
+        <p>${labels[0]}: ${d[0]}</p>
+        <p>${labels[1]}: ${d[1]}</p>
     `,
 });
 
