@@ -268,3 +268,6 @@ class MissingTokenError(InternalError):
 
 class UnschedulableJobTypeError(InternalError):
   pass
+
+class UnrunnableJobTypeError(InternalError):
+  pass

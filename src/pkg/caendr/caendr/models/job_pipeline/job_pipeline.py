@@ -15,7 +15,8 @@ from caendr.models.error      import (
   DataFormatError,
   EmptyReportResultsError,
   UnschedulableJobTypeError,
-  JobAlreadyScheduledError
+  JobAlreadyScheduledError,
+  UnrunnableJobTypeError,
 )
 from caendr.models.report     import Report
 from caendr.models.run        import Runner, GCPRunner
@@ -183,6 +184,8 @@ class JobPipeline(ABC):
   
   @classmethod
   def create_runner(cls, *args, **kwargs) -> Runner:
+    if cls._Runner_Class is None:
+      return None
     return cls._Runner_Class(*args, **kwargs)
 
 
@@ -544,6 +547,9 @@ class JobPipeline(ABC):
       Run this job using the specified Runner class.
     '''
 
+    if self.runner is None:
+      raise UnrunnableJobTypeError()
+
     # Check if this report is already associated with an operation
     if self.report['operation_name'] is not None:
       logger.warn(f'Report { self.report.id } (data ID { self.data_id }) is already associated with operation { self.report["operation_name"] }. Running again...')
@@ -574,6 +580,8 @@ class JobPipeline(ABC):
       Define the environment variables to make available when running the job.
       Result should map variable names to values.
     '''
+    if self.runner is None:
+      return {}
     return {
       **self.runner.default_environment(),
     }
@@ -585,6 +593,8 @@ class JobPipeline(ABC):
       Define the run parameters to use when constructing the machine to run the job.
       Result should map parameter names to values.
     '''
+    if self.runner is None:
+      return {}
     return {
       **self.runner.default_run_params(),
     }
@@ -628,6 +638,8 @@ class JobPipeline(ABC):
       Get the error message associated with this job, if it is in the ERROR state.
       Returns None if this job does not have an error message (i.e. if it is not in the ERROR state.)
     '''
+    if self.runner is None:
+      return None
     if isinstance(self.runner, GCPRunner):
       return self.runner.get_err_msg( operation_name = self.report['operation_name'] )
     raise NotImplementedError('Getting error message for non-GCP Runner.')
