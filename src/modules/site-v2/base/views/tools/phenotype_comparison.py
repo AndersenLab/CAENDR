@@ -53,7 +53,7 @@ def report(id):
     logger.error(f'Error fetching Phenotype report {id}: {ex}')
     return abort(400, description = 'Something went wrong')
 
-  return render_template('tools/phenotype_db/phenotype.html', **{
+  return render_template('tools/phenotype/report.html', **{
     'title': "Phenotype Results",
     'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
 
