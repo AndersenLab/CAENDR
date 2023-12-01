@@ -117,10 +117,13 @@ class JobPipeline(ABC):
     logger.debug(f'Creating new {cls.__name__} job for user "{user.name}".')
 
     # Load container version info
-    container = Container.get(cls._Container_Name, version = container_version)
-    logger.debug(f"Creating {cls.__name__} with Container {container.uri()}")
-    if container_version is not None:
-      logger.warn(f'Container version {container_version} was specified manually - this may not be the most recent version.')
+    if cls.is_runnable():
+      container = Container.get(cls._Container_Name, version = container_version)
+      logger.debug(f"Creating {cls.__name__} with Container {container.uri()}")
+      if container_version is not None:
+        logger.warn(f'Container version {container_version} was specified manually - this may not be the most recent version.')
+    else:
+      container = None
 
     # Parse the input data
     parsed_data = cls.parse(data, valid_file_extensions=valid_file_extensions)
@@ -139,7 +142,8 @@ class JobPipeline(ABC):
       report.data_hash = parsed_data['hash']
 
     # Set the new report's container & user
-    report.set_container(container)
+    if cls.is_runnable():
+      report.set_container(container)
     report.set_user(user)
 
     # Initialize the report status
@@ -158,7 +162,7 @@ class JobPipeline(ABC):
     job.report.upload( *parsed_data.get('files', []) )
 
     # Check whether output data already exists for this data
-    if not no_cache:
+    if cls.is_runnable() and not no_cache:
       job._check_existing_job_execution()
 
     # Return the new JobPipeline object
@@ -184,7 +188,7 @@ class JobPipeline(ABC):
   
   @classmethod
   def create_runner(cls, *args, **kwargs) -> Runner:
-    if cls._Runner_Class is None:
+    if not cls.is_runnable():
       return None
     return cls._Runner_Class(*args, **kwargs)
 
@@ -542,12 +546,21 @@ class JobPipeline(ABC):
     return self.report.get_data_id()
 
 
+  @classmethod
+  def is_runnable(cls) -> bool:
+    '''
+      Whether jobs of this type can be run.
+      Checks whether this subclass defines a Runner class.
+    '''
+    return cls._Runner_Class is not None
+
+
   def run(self, **kwargs):
     '''
       Run this job using the specified Runner class.
     '''
 
-    if self.runner is None:
+    if not self.is_runnable():
       raise UnrunnableJobTypeError()
 
     # Check if this report is already associated with an operation
@@ -580,7 +593,7 @@ class JobPipeline(ABC):
       Define the environment variables to make available when running the job.
       Result should map variable names to values.
     '''
-    if self.runner is None:
+    if not self.is_runnable():
       return {}
     return {
       **self.runner.default_environment(),
@@ -593,7 +606,7 @@ class JobPipeline(ABC):
       Define the run parameters to use when constructing the machine to run the job.
       Result should map parameter names to values.
     '''
-    if self.runner is None:
+    if not self.is_runnable():
       return {}
     return {
       **self.runner.default_run_params(),
