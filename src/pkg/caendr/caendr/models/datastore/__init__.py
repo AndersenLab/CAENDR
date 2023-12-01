@@ -17,7 +17,11 @@ from .species_entity      import SpeciesEntity       # Imports Species
 from .status_entity       import StatusEntity
 from .user_owned_entity   import UserOwnedEntity     # Imports User
 
-from .dataset_release     import DatasetRelease      # Subclasses SpeciesSpecificEntity; Imports Species
+# Tracking file(s)
+from .dataset_release     import DatasetRelease       # Subclasses SpeciesSpecificEntity; Imports Species
+from .browser_track       import BrowserTrackDefault  # Subclasses FileRecordEntity (from BrowserTrack)
+from .browser_track       import BrowserTrackTemplate # Subclasses FileRecordEntity (from BrowserTrack)
+from .trait_file          import TraitFile            # Subclasses FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEntity
 
 # Job template classes
 from .job_entity          import JobEntity           # Subclasses StatusEntity; imports Container
@@ -29,14 +33,12 @@ from .gene_browser_tracks import GeneBrowserTracks   # Subclasses JobEntity  (DE
 from .indel_primer        import IndelPrimerReport   # Subclasses ReportEntity, HashableEntity; imports DatasetRelease, Species
 from .heritability_report import HeritabilityReport  # Subclasses ReportEntity, HashableEntity
 from .nemascan_mapping    import NemascanReport      # Subclasses ReportEntity, HashableEntity
+from .phenotype_report    import PhenotypeReport     # Subclasses ReportEntity, HashableEntity; imports TraitFile
 
 # Other
 from .database_operation  import DbOp
 from .profile             import Profile
 from .markdown            import Markdown
-from .browser_track       import BrowserTrackDefault  # Subclasses FileRecordEntity (from BrowserTrack)
-from .browser_track       import BrowserTrackTemplate # Subclasses FileRecordEntity (from BrowserTrack)
-from .trait_file          import TraitFile            # Subclasses FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEntity
 
 
 def get_class_by_kind(kind):
