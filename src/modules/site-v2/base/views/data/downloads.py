@@ -3,12 +3,13 @@ from flask import render_template, Blueprint, url_for, send_file, abort, Respons
 from base.utils.auth import jwt_required
 from extensions import cache
 
+from base.utils.view_decorators import parse_species, parse_species_and_release
+
 from caendr.api.strain import get_bam_bai_download_link, fetch_bam_bai_download_script, generate_bam_bai_download_script
 from caendr.models.datastore import DatasetRelease, Species
 from caendr.models.error import NotFoundError
 from caendr.services.dataset_release import get_all_dataset_releases, find_dataset_release
 from caendr.utils.env import get_env_var
-from caendr.utils.views import parse_species, parse_species_and_release
 
 
 BAM_BAI_DOWNLOAD_SCRIPT_NAME = get_env_var('BAM_BAI_DOWNLOAD_SCRIPT_NAME', as_template=True)

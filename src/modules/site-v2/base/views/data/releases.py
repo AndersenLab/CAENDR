@@ -18,6 +18,7 @@ from config import config
 from extensions import cache
 from base.forms import VBrowserForm
 from base.utils.auth import jwt_required
+from base.utils.view_decorators import parse_species_and_release
 
 from caendr.api.strain import query_strains
 from caendr.api.isotype import get_isotypes
@@ -26,7 +27,6 @@ from caendr.models.sql import Strain, StrainAnnotatedVariant
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
 from caendr.services.dataset_release import get_all_dataset_releases, get_browser_tracks_path, get_release_bucket, find_dataset_release
 from caendr.utils.env import get_env_var
-from caendr.utils.views import parse_species_and_release
 
 
 BAM_BAI_DOWNLOAD_SCRIPT_NAME = get_env_var('BAM_BAI_DOWNLOAD_SCRIPT_NAME', as_template=True)
