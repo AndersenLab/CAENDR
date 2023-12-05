@@ -6,6 +6,7 @@ from caendr.models.datastore       import PhenotypeReport
 
 # Services
 from caendr.models.datastore       import TraitFile
+from caendr.models.error           import EmptyReportDataError, EmptyReportResultsError
 from caendr.models.status          import JobStatus
 from caendr.utils.data             import dataframe_cols_to_dict, get_object_hash
 
@@ -126,6 +127,9 @@ class PhenotypePipeline(JobPipeline):
 
   def _parse_input(self, data):
 
+    if data is None:
+      raise EmptyReportDataError(self.report.id)
+
     # Rename trait value arrays, for convenience
     x, y = data['data_vals'][0], data['data_vals'][1]
 
@@ -140,6 +144,9 @@ class PhenotypePipeline(JobPipeline):
 
 
   def _parse_output(self, data):
+
+    if data is None:
+      raise EmptyReportResultsError(self.report.id)
 
     # Compute the Spearman Coefficient for the given data
     res = stats.spearmanr(data['data_vals'][0], data['data_vals'][1])

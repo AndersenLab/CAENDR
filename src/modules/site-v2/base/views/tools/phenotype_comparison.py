@@ -118,6 +118,11 @@ def report(id):
     logger.error(f'Error fetching Phenotype report {id}: {ex}')
     return abort(400, description = 'Something went wrong')
 
+  # No data file found
+  if data is None:
+    logger.error(f'Error fetching Phenotype report {id}: Input data does not exist')
+    return abort(404)
+
   return render_template('tools/phenotype/report.html', **{
     'title': "Phenotype Results",
     'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
