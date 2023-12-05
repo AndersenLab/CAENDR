@@ -29,7 +29,7 @@ from caendr.services.heritability_report import get_heritability_report, get_her
 from caendr.utils.data import unique_id, get_object_hash
 from caendr.utils.env import get_env_var
 from caendr.utils.local_files import LocalUploadFile
-from caendr.services.cloud.storage import get_blob, generate_blob_uri, BlobURISchema
+from caendr.services.cloud.storage import generate_blob_uri, BlobURISchema
 from caendr.services.persistent_logger import PersistentLogger
 
 
@@ -187,36 +187,24 @@ def submit():
     return jsonify({ 'message': message }), ex.code
 
 
-@heritability_calculator_bp.route("/report/<id>/logs")
+@heritability_calculator_bp.route("/report/<report_id>/logs")
 @jwt_required()
-def view_logs(id):
-  hr = get_heritability_report(id)    
-  # get workflow bucket
-  from google.cloud import storage
-  storage_client = storage.Client()
-  bucket_name = os.getenv('MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME', None)
-  
-  if bucket_name is None:
-    return None
-  prefix = f"{hr.data_hash}"
-  # caendr-nextflow-work-bucket/938f561278fbdd4a546155f37cdaf47f/d4/ed062b62843eb156a22d303e0ce84b/google/logs
+@parse_job_id(HeritabilityPipeline, fetch=False)
+def view_logs(job: HeritabilityPipeline):
 
-  blobs = storage_client.list_blobs(bucket_name, prefix=prefix, delimiter=None)
-  filepaths = [ blob.name for blob in blobs ]
-  log_filepaths = [ filepath for filepath in filepaths if "google/logs/action" in filepath or ".command" in filepath ]
-  
+  # Collect all the log files in this report's work folder
+  blobs = job.report.list_work_directory(
+    filter=lambda blob: 'google/logs/action' in blob.name or '.command' in blob.name
+  )
+
+  # Filter out all empty log files
   logs = []
-  for log_filepath in log_filepaths:
-    data = get_blob(bucket_name, log_filepath).download_as_string().decode('utf-8').strip()
-    if data == "": 
-      continue
-    log = { 
-      'blob_name': log_filepath, 
-      'data': data
-    }
-    logs.append(log)
+  for blob in blobs:
+    data = blob.download_as_string().decode('utf-8').strip()
+    if data != '':
+      logs.append({ 'blob_name': blob.name, 'data': data })
 
-  return render_template("tools/heritability_calculator/logs.html", **locals())
+  return render_template("tools/heritability_calculator/logs.html", logs=logs)
 
 
 @heritability_calculator_bp.route("/report/<report_id>", methods=['GET'])
@@ -247,7 +235,7 @@ def report(job: HeritabilityPipeline, data, result):
     'error': job.get_error(),
 
     'data_url': job.report.input_filepath(schema=BlobURISchema.HTTPS),
-    'logs_url': url_for('heritability_calculator.view_logs', id = job.report.id),
+    'logs_url': url_for('heritability_calculator.view_logs', report_id = job.report.id),
 
     'JobStatus': JobStatus,
   })

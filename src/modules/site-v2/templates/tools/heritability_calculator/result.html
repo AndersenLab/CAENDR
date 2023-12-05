@@ -72,7 +72,7 @@
         <a class="btn btn-secondary text-light" role="button" onClick="getPDF()">Download PDF</a>
         <a class="btn btn-secondary text-light" role="button" onClick="window.open('{{ data_url }}')">Download TSV</a>
         {%- if session["is_admin"] %}
-        <a class="btn btn-secondary text-light" role="button" href="{{ url_for('heritability_calculator.view_logs', id=hr.id)}}">View Logs</a>
+        <a class="btn btn-secondary text-light" role="button" href="{{ url_for('heritability_calculator.view_logs', report_id=hr.id)}}">View Logs</a>
         {%- endif %}
       </div>
     </div>
