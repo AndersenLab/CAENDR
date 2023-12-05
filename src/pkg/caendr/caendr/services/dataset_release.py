@@ -12,8 +12,7 @@ def get_release_bucket():
 
 
 def get_browser_tracks_path(release_version=None):
-  _, release_path = BrowserTrack.release_path()
-  return release_path
+  return BrowserTrack.release_prefix()
 
 
 # TODO: Does keys_only make sense as a parameter? Seems like it was originally used to limit the ds query
@@ -32,7 +31,7 @@ def get_all_dataset_releases(keys_only=False, order=None, placeholder=True, spec
     return [ _get_placeholder_dataset_release() ]
 
   if species is not None:
-    releases = [ r for r in releases if r['species'] == species]
+    releases = [ r for r in releases if r['species'].name == species]
 
   # Otherwise, return the retrieved releases
   return releases

@@ -11,7 +11,6 @@ from caendr.models.datastore.browser_track import BrowserTrackDefault
 from caendr.models.datastore import Species, IndelPrimerReport, DatasetRelease
 from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupError, EmptyReportDataError, EmptyReportResultsError
 from caendr.models.status import JobStatus
-from caendr.services.cloud.storage import check_blob_exists
 from caendr.services.dataset_release import get_dataset_release
 from caendr.utils.bio import parse_chrom_interval
 from caendr.utils.constants import CHROM_NUMERIC
@@ -90,13 +89,7 @@ def get_tracks():
   # If not, return a 404 error
   # If species invalid, ignore (since this is an optional URL variable)
   species = Species.get(request.args.get('species'), from_url=True)
-  if species:
-
-    # Get the bucket and filepath
-    bucket, tkn_path = divergent_track.get_path()
-    tkn_path += '/' + divergent_track["filename"]
-    blob_name = tkn_path.set_tokens_from_species(species).get_string()
-    if not check_blob_exists(bucket, blob_name):
+  if species and not divergent_track.check_exists_for_species(species):
       abort(404)
 
   # Return the track parameters
