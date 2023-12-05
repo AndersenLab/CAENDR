@@ -1,14 +1,5 @@
 {% extends "_layouts/default-nocontainer.html" %}
 
-{% block custom_head %}
-<style>
-  .phenotypeIcon i {
-    font-size: var(--bs-body-font-size);
-}
-
-</style>
-{% endblock %}
-
 
 {% block content %}
 <div class="container px-5 pb-5">
@@ -47,7 +38,21 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                ...
+                <div class="container my-3">
+                    {% include "_includes/phenotype-database-table.html" %}
+                </div>
+                <!-- Offcanvas -->
+                <div class="offcanvas offcanvas-end offcanvasPhenotype" tabindex="-1" id="offcanvas1"
+                    aria-labelledby="offcanvas1Label">
+                    <div class="offcanvas-header">
+                        <h5 id="offcanvas1Label">example_trait_1234</h5>
+                        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="offcanvas-body p-4">
+                        {% include "_includes/phenotype-offcanvas-content.html" %}
+                    </div>
+                </div>
             </div>
         </div>
     </div>
