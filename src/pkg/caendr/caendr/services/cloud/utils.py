@@ -51,6 +51,19 @@ def parse_operation_name(operation_name):
 
 
 
+def get_operation_id_from_name(operation_name):
+  '''
+    Parse a GCP operation name into an ID.
+    Attempts to take right-most component of name, and returns full name if this fails.
+  '''
+  try:
+    return operation_name.rsplit('/', 1)[-1]
+  except:
+    logger.warn(f'Could not parse operation ID from operation_name "{operation_name}"')
+    return operation_name
+
+
+
 
 def get_operation_status(operation_name):
   '''

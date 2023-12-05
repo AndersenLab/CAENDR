@@ -18,7 +18,28 @@ $.ajaxSetup({
   If defining with `as_form_data` = True, must include `ajax_setup` on the page (defined above).
 #}
 {% macro def_submit_job(tool_name, as_form_data=false, func_name='submit_job') %}
-function {{func_name}}(data, modal_id, new_tab=false) {
+function {{func_name}}(data, modal_id, config={}) {
+
+  // Extract configuration settings w default values
+  const new_tab         = config.hasOwnProperty('new_tab')         ? config['new_tab']         : false;
+  const propagate_error = config.hasOwnProperty('propagate_error') ? config['propagate_error'] : true;
+
+  // Gather URL variable(s)
+  let url_vars = [];
+  if (propagate_error) {
+    url_vars.push('reloadonerror=0');
+  }
+  {%- if session["is_admin"] %}
+  if ($('#no_cache_checkbox').prop('checked')) {
+    url_vars.push('nocache=1');
+  }
+  {%- endif %}
+
+  // Create full URL, appending URL vars if any were created
+  let url = "{{ url_for(tool_name + '.submit') }}";
+  if (url_vars.length) {
+    url += '?' + url_vars.join('&');
+  }
 
   return $.ajax({
     type: "POST",
@@ -26,12 +47,7 @@ function {{func_name}}(data, modal_id, new_tab=false) {
     contentType: {% if as_form_data -%} false {%- else -%} "application/json; charset=utf-8" {%- endif -%},
     dataType: 'json',
     data: {% if as_form_data -%} data {%- else -%} JSON.stringify(data) {%- endif -%},
-    url:
-      {%- if session["is_admin"] %}
-        "{{ url_for(tool_name + '.submit') }}" + ($('#no_cache_checkbox').prop('checked') ? "?nocache=1" : ""),
-      {%- else %}
-        "{{ url_for(tool_name + '.submit') }}",
-      {%- endif %}
+    url: url,
   })
     .done((result) => {
       // TODO: Display message based on cache status?
@@ -57,7 +73,7 @@ function {{func_name}}(data, modal_id, new_tab=false) {
       if (error.responseJSON) {
         const message = error.responseJSON.message;
         if (message) {
-          window.location.reload();
+          if (!propagate_error) window.location.reload();
         } else {
           console.error(error);
         }

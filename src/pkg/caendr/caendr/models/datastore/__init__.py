@@ -22,6 +22,7 @@ from .dataset_release     import DatasetRelease      # Subclasses SpeciesSpecifi
 # Job template classes
 from .job_entity          import JobEntity           # Subclasses StatusEntity; imports Container
 from .report_entity       import ReportEntity        # Subclasses JobEntity, UserOwnedEntity, as well as GCPReport
+from .deletable_entity    import DeletableEntity     
 
 # Jobs
 from .database_operation  import DatabaseOperation   # Subclasses ReportEntity
@@ -37,6 +38,7 @@ from .markdown            import Markdown
 from .browser_track       import BrowserTrackDefault  # Subclasses FileRecordEntity (from BrowserTrack)
 from .browser_track       import BrowserTrackTemplate # Subclasses FileRecordEntity (from BrowserTrack)
 from .trait_file          import TraitFile            # Subclasses FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEntity
+from .cart                import Cart                # Subclasses DeletableEntity
 
 
 def get_class_by_kind(kind):
@@ -68,6 +70,7 @@ def get_class_by_kind(kind):
     GeneBrowserTracks.kind:  GeneBrowserTracks,
     Markdown.kind:           Markdown,
     Species.kind:            Species,
+    Cart.kind:               Cart
   }
 
   try:
