@@ -126,6 +126,16 @@ class TokenizedString():
   # Setting Tokens
   #
 
+  @staticmethod
+  def get_species_tokens(species):
+    if species is None: return {}
+    return {
+      'SPECIES': species.name,
+      'RELEASE': species['release_latest'],
+      'PRJ':     species['project_num'],
+      'WB':      species['wb_ver'],
+      'SVA':     species['release_sva'],
+    }
 
   def set_tokens(self, **kwargs):
     for key, val in kwargs.items():
@@ -136,13 +146,7 @@ class TokenizedString():
     return self
 
   def set_tokens_from_species(self, species):
-    return self.set_tokens(**{
-      'SPECIES': species.name,
-      'RELEASE': species['release_latest'],
-      'PRJ':     species['project_num'],
-      'WB':      species['wb_ver'],
-      'SVA':     species['release_sva'],
-    })
+    return self.set_tokens(**TokenizedString.get_species_tokens(species))
 
 
 

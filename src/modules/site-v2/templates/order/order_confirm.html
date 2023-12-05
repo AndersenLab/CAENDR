@@ -53,7 +53,7 @@
                 <tr>
                     <td>{{ loop.index }}</td>
                     <td>{{ item['name'] }}</td>
-                    <td><em>{{ item['species']|capitalize|replace('_', '. ') }}</em></td>
+                    <td><em>{{ item['species_short_name'] }}</em></td>
                     <td class="price text-right">${{'%0.2f'| format(item['price'])}}</td>
                 </tr>
                 {% endfor %}

@@ -31,7 +31,7 @@ from caendr.api.strain import get_strains
 from caendr.services.heritability_report import get_heritability_report, get_heritability_reports
 from caendr.utils.data import unique_id, get_object_hash
 from caendr.utils.env import get_env_var
-from caendr.utils.local_file import LocalFile
+from caendr.utils.local_files import LocalUploadFile
 from caendr.services.cloud.storage import get_blob, generate_blob_uri, BlobURISchema
 from caendr.services.persistent_logger import PersistentLogger
 
@@ -164,7 +164,7 @@ def submit():
 
   # Upload input file to server temporarily, and start the job
   try:
-    with LocalFile(request.files.get('file'), valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS) as local_file:
+    with LocalUploadFile(request.files.get('file'), valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS) as local_file:
 
       # Package submission data together into dict
       data = { 'label': label, 'species': species, 'file': local_file }

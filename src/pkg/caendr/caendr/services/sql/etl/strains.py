@@ -1,39 +1,22 @@
 from dateutil import parser
 from caendr.services.logger import logger
 
-from caendr.services.elevation import get_elevation
-from caendr.services.cloud.sheets import get_google_sheet
-from caendr.services.cloud.secret import get_secret
-from caendr.models.datastore import Species
-from caendr.models.sql import Strain
+from caendr.models.datastore  import Species
+from caendr.utils.local_files import LocalGoogleSheet
 
-# Get list of Google Sheet IDs for each species
-# Expects secret names with prefix "ANDERSEN_LAB_STRAIN_SHEET_"
-# and species ID in all caps
-ANDERSEN_LAB_STRAIN_SHEETS = {
-  species_name: get_secret(f'ANDERSEN_LAB_STRAIN_SHEET_{species_name.upper()}')
-    for species_name in Species.all()
-}
+
 
 elevation_cache = {}
 NULL_VALS = ["None", "", "NA", None]
 
-def load_strains(db, species=None):
-  logger.info('Loading strains...')
 
-  # Filter sheets to match species list, or use all if no list provided
-  sheet_list = [
-    val for key, val in ANDERSEN_LAB_STRAIN_SHEETS.items() if (species is None or key in species)
-  ]
-
-  for sheet_id in sheet_list:
-    andersen_strains = fetch_andersen_strains(sheet_id)
-    db.session.bulk_insert_mappings(Strain, andersen_strains)
-    db.session.commit()
-  logger.info(f"Inserted {Strain.query.count()} strains")
-  
-
+# Local get_elevation import because this module is now used in the site
+# (to check required files for database operations),
+# but DiskCache (imported by services.elevation) is not used in the site.
+# TODO: Fix, somehow... Do we even need DiskCache? We're already caching in this file
 def fetch_elevation(lat, lon):
+  from caendr.services.elevation import get_elevation
+
   key = f'{lat}_{lon}'
   elevation = elevation_cache.get(key, None)
   if not elevation:
@@ -44,7 +27,7 @@ def fetch_elevation(lat, lon):
   return elevation
 
 
-def fetch_andersen_strains(sheet_id: str):
+def fetch_andersen_strains(species: Species, STRAINS: LocalGoogleSheet):
   """
     Fetches latest strains from
     google sheet database.
@@ -56,13 +39,11 @@ def fetch_andersen_strains(sheet_id: str):
   """
 
   # Get records from Google sheet
-  WI = get_google_sheet(sheet_id)
-  strain_records = WI.get_all_records()
+  strain_records = STRAINS.fetch_resource().get_all_records()
 
   # Only take records with a release reported
   strain_records = list(filter(lambda x: x.get('release') not in NULL_VALS, strain_records))
 
-  results = []
   for n, record in enumerate(strain_records):
     record = {k.lower(): v for k, v in record.items()}
     for k, v in record.items():
@@ -103,9 +84,9 @@ def fetch_andersen_strains(sheet_id: str):
     # Remove space after comma delimiter
     if record['previous_names']:
       record['previous_names'] = str(record['previous_names']).replace(", ", ",").strip()
-    results.append(record)
 
-    # Convert species scientific name to species ID string
-    record['species_name'] = f"c_{record['species'].split(' ')[1]}"
+    # Store the species name identifier
+    record['species_name'] = species.name
 
-  return results
+    # Yield the record to be appended to the db
+    yield record

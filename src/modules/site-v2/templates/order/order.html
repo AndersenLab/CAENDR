@@ -57,7 +57,7 @@
                 {% for item in cartItems %}
                 <tr class='cartItem'>
                     <td>{{ loop.index }}</td>
-                    <td><em>{{ item.species|capitalize|replace('_', '. ') }}</em></td>
+                    <td><em>{{ item.species_short_name }}</em></td>
                     <td>{{ item.name }}</td>
                     <td>${{ item.price }}</td>
                     <td class="delete">

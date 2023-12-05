@@ -5,11 +5,14 @@ from caendr.api.gene import remove_prefix
 from caendr.models.datastore import Species, SpeciesEntity
 from caendr.models.error import NotFoundError
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, get_blob_list, check_blob_exists
+from caendr.utils.env import get_env_var_with_fallback
 from caendr.utils.tokens import TokenizedString
+
+
 
 V1_V2_Cutoff_Date = 20200101
 
-MODULE_SITE_BUCKET_PUBLIC_NAME = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME')
+DATASET_RELEASE_BUCKET_NAME = get_env_var_with_fallback('MODULE_SITE_BUCKET_DATASET_RELEASE_NAME', 'MODULE_SITE_BUCKET_PUBLIC_NAME')
 
 
 
@@ -48,7 +51,7 @@ class ReportType():
 
 class DatasetRelease(SpeciesEntity):
   kind = "dataset_release"
-  __bucket_name = MODULE_SITE_BUCKET_PUBLIC_NAME
+  __bucket_name = DATASET_RELEASE_BUCKET_NAME
   __blob_prefix = kind + '/${SPECIES}'
 
 
