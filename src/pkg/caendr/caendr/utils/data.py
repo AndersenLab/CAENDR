@@ -116,23 +116,6 @@ def get_file_format(file_ext, valid_formats=None):
   return None
 
 
-def batch_generator(g, batch_size=DEFAULT_BATCH_SIZE):
-  '''
-    Split a generator into a generator of generators, which produce the same sequence when taken together.
-    Useful for managing RAM when bulk inserting mappings into a table.
-  '''
-  def _inner(top):
-    yield top
-    for i, x in enumerate(g, start=1):
-      yield x
-      if i % (batch_size - 1) == 0:
-        return
-
-  for top in g:
-    yield _inner(top)
-
-
-
 def get_delimiter_from_filepath(filepath=None, valid_file_extensions=None):
   valid_file_extensions = valid_file_extensions or {'csv'}
   if filepath:
@@ -177,3 +160,20 @@ def join_commas_and(text, truncate=None):
   if truncate:
     text = text[:truncate] + ([f'{len(text) - truncate} more'] if len(text) > truncate else [])
   return join_with_final(text, sep=', ', final=', and ', final_if_two=' and ')
+
+
+
+def batch_generator(g, batch_size=DEFAULT_BATCH_SIZE):
+  '''
+    Split a generator into a generator of generators, which produce the same sequence when taken together.
+    Useful for managing RAM when bulk inserting mappings into a table.
+  '''
+  def _inner(top):
+    yield top
+    for i, x in enumerate(g, start=1):
+      yield x
+      if i % (batch_size - 1) == 0:
+        return
+
+  for top in g:
+    yield _inner(top)
