@@ -10,11 +10,14 @@ from caendr.models.sql import WormbaseGeneSummary
 from caendr.utils.bio import arm_or_center
 from caendr.utils.constants import CHROM_NUMERIC
 
+from caendr.models.datastore  import Species
+from caendr.utils.local_files import LocalDatastoreFile
+
 
 
 ## Helper Functions ##
 
-def get_gene_ids(species, GENE_IDS: os.PathLike):
+def get_gene_ids(species: Species, GENE_IDS: LocalDatastoreFile):
   """
       Retrieve mapping between wormbase IDs (WB000...) to locus names.
       Uses the latest IDs by default.
@@ -33,7 +36,7 @@ def get_gene_ids(species, GENE_IDS: os.PathLike):
 
 ## File Parsing Generator Functions ##
 
-def parse_gene_gtf(species, GENE_GTF: os.PathLike, GENE_IDS: os.PathLike, start_idx = 0):
+def parse_gene_gtf(species: Species, GENE_GTF: LocalDatastoreFile, GENE_IDS: LocalDatastoreFile):
   """
       LOADS wormbase_gene
       This function fetches and parses the canonical geneset GTF
@@ -85,7 +88,7 @@ def parse_gene_gtf(species, GENE_GTF: os.PathLike, GENE_IDS: os.PathLike, start_
   logger.debug(f"Processed {idx} lines total for {species.name}")
 
 
-def parse_gene_gff_summary(species, GENE_GFF: os.PathLike, start_idx = 0):
+def parse_gene_gff_summary(species: Species, GENE_GFF: LocalDatastoreFile):
   """
       LOADS wormbase_gene_summary
       This function fetches data for wormbase_gene_summary;

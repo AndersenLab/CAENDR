@@ -1,12 +1,12 @@
 import os
 import shutil
 from logzero import logger
-from itertools import product
 
 # Local imports
-from .table_config import StrainConfig, WormbaseGeneSummaryConfig, WormbaseGeneConfig, StrainAnnotatedVariantConfig
+from .table_config import StrainConfig, WormbaseGeneSummaryConfig, WormbaseGeneConfig, StrainAnnotatedVariantConfig, PhenotypeDatabaseConfig
 
 from caendr.models.datastore import Species
+from caendr.utils.constants  import DEFAULT_BATCH_SIZE
 from caendr.utils.data       import batch_generator
 
 
@@ -18,6 +18,7 @@ TABLE_CONFIG = {
         WormbaseGeneSummaryConfig,
         WormbaseGeneConfig,
         StrainAnnotatedVariantConfig,
+        PhenotypeDatabaseConfig,
     ]
 }
 
@@ -120,10 +121,13 @@ class ETLManager:
             if species_list and species.name not in species_list:
                 continue
 
+            # Load & insert table data in batches, to help reduce local memory footprint
             logger.info(f'Inserting data for {species.name} into table {config.table_name}...')
-            for g in batch_generator( config.parse_for_species(species) ):
+            for i, g in enumerate(batch_generator( config.parse_for_species(species) )):
+                logger.debug(f'Processing {species.name} batch {i} (rows {i * DEFAULT_BATCH_SIZE}-{(i+1) * DEFAULT_BATCH_SIZE})...')
                 self.db.session.bulk_insert_mappings(config.table, g)
                 self.db.session.commit()
+                logger.debug(f'Finished inserting {species.name} batch {i}.')
 
         # Print how many entries were added
         total_records = config.table.query.count() - initial_count
@@ -191,8 +195,14 @@ class ETLManager:
             self.__create_all(*tables)
 
             # Loop through tables in reverse order, so rows that depend on earlier tables are dropped first
-            for table, species_name in product(tables[::-1], species_list):
-                self.__drop_species_rows(table, species_name)
+            for table in tables[::-1]:
+                logger.info(f'Initial size of table { table.__tablename__ }: { table.query.count() }')
+
+                for species_name in species_list:
+                    self.__drop_species_rows(table, species_name)
+
+                # Log size of table after drop
+                logger.info(f'Size of table { table.__tablename__ } after dropping [{", ".join(species_list)}]: { table.query.count() }')
 
         # Commit changes
         self.db.session.commit()

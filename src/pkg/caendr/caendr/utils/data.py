@@ -7,6 +7,9 @@ import pandas as pd
 from collections import Counter
 from caendr.services.logger import logger
 
+from caendr.utils.constants import DEFAULT_BATCH_SIZE
+
+
 
 class AltTemplate(string.Template):
   delimiter = '%'
@@ -160,7 +163,7 @@ def join_commas_and(text, truncate=None):
 
 
 
-def batch_generator(g, batch_size=1000000):
+def batch_generator(g, batch_size=DEFAULT_BATCH_SIZE):
   '''
     Split a generator into a generator of generators, which produce the same sequence when taken together.
     Useful for managing RAM when bulk inserting mappings into a table.

@@ -3,11 +3,4 @@ from .strain_annotated_variant import StrainAnnotatedVariant
 from .strain import Strain
 from .wormbase_gene import WormbaseGene
 from .wormbase_gene_summary import WormbaseGeneSummary
-
-
-TABLES_LIST = [
-  Strain,
-  WormbaseGene,
-  WormbaseGeneSummary,
-  StrainAnnotatedVariant,
-]
+from .phenotype import PhenotypeDatabase

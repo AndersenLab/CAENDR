@@ -1,6 +1,9 @@
 from dateutil import parser
 from caendr.services.logger import logger
 
+from caendr.models.datastore  import Species
+from caendr.utils.local_files import LocalGoogleSheet
+
 
 
 elevation_cache = {}
@@ -24,7 +27,7 @@ def fetch_elevation(lat, lon):
   return elevation
 
 
-def fetch_andersen_strains(species, STRAINS, start_idx=0):
+def fetch_andersen_strains(species: Species, STRAINS: LocalGoogleSheet):
   """
     Fetches latest strains from
     google sheet database.
@@ -36,7 +39,7 @@ def fetch_andersen_strains(species, STRAINS, start_idx=0):
   """
 
   # Get records from Google sheet
-  strain_records = STRAINS.get_all_records()
+  strain_records = STRAINS.fetch_resource().get_all_records()
 
   # Only take records with a release reported
   strain_records = list(filter(lambda x: x.get('release') not in NULL_VALS, strain_records))

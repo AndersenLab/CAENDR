@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 
 from caendr.utils.env              import get_env_var
 from caendr.services.cloud.secret  import get_secret
@@ -7,10 +7,13 @@ from caendr.services.cloud.secret  import get_secret
 from .strains                      import fetch_andersen_strains
 from .wormbase                     import parse_gene_gtf, parse_gene_gff_summary
 from .strain_annotated_variants    import parse_strain_variant_annotation_data
+from .phenotype_db                 import parse_phenotypedb_traits_data, parse_phenotypedb_bulk_trait_file
 
-from caendr.models.sql             import Strain, WormbaseGeneSummary, WormbaseGene, StrainAnnotatedVariant
+from caendr.models.sql             import Strain, WormbaseGeneSummary, WormbaseGene, StrainAnnotatedVariant, PhenotypeDatabase
+from caendr.models.datastore       import Species, TraitFile
+from caendr.services.cloud.storage import BlobURISchema
 from caendr.models.datastore       import Species
-from caendr.utils.local_files      import ForeignResourceWatcher, LocalDatastoreFileTemplate, GoogleSheetManager
+from caendr.utils.local_files      import ForeignResource, ForeignResourceTemplate, LocalDatastoreFileTemplate, LocalGoogleSheetTemplate
 
 
 
@@ -18,8 +21,9 @@ from caendr.utils.local_files      import ForeignResourceWatcher, LocalDatastore
 MODULE_DB_OPERATIONS_BUCKET_NAME = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
 
 # Filepaths
-RELEASE_FILEPATH = get_env_var('MODULE_DB_OPERATIONS_RELEASE_FILEPATH', as_template=True)
-SVA_FILEPATH     = get_env_var('MODULE_DB_OPERATIONS_SVA_FILEPATH',     as_template=True)
+RELEASE_FILEPATH   = get_env_var('MODULE_DB_OPERATIONS_RELEASE_FILEPATH', as_template=True)
+SVA_FILEPATH       = get_env_var('MODULE_DB_OPERATIONS_SVA_FILEPATH',     as_template=True)
+PHENOTYPE_FILEPATH = get_env_var('MODULE_DB_OPERATIONS_PHENOTYPE_FILEPATH', as_template=True)
 
 # Filenames
 GENE_GFF_FILENAME = get_env_var('GENE_GFF_FILENAME',  as_template=True)
@@ -38,7 +42,40 @@ ANDERSEN_LAB_STRAIN_SHEETS = {
 
 
 #
-# Class definition
+# Helper class definition
+#
+
+class ParseConfig():
+  '''
+    Helper class to associate a parsing function with a set of files.
+  '''
+
+  def __init__(self, parse, *files: ForeignResourceTemplate):
+    self.parse = parse
+    self.files = files
+
+
+  def fetch_all(self, species) -> Dict[str, ForeignResource]:
+    '''
+      Fetch all the files required for this species.
+    '''
+    return {
+      file_template.resource_id: file_template.get_for_species(species).fetch()
+        for file_template in self.files
+        if  file_template.has_for_species(species)
+    }
+
+
+  def parse_all(self, species):
+    '''
+      Apply this object's parse function to its set of files, yielding the results as a generator.
+    '''
+    return self.parse(species, **self.fetch_all(species))
+
+
+
+#
+# Primary class definition
 #
 
 class TableConfig():
@@ -46,10 +83,9 @@ class TableConfig():
     Bundle together configuration objects / functions for building a single SQL table.
   '''
 
-  def __init__(self, table, parse, files: Dict[str, ForeignResourceWatcher]):
+  def __init__(self, table, *parse_configs: ParseConfig):
     self.table = table
-    self.parse = parse
-    self.files = files
+    self._parse_configs = parse_configs
 
 
   @property
@@ -59,32 +95,21 @@ class TableConfig():
     '''
     return self.table.__tablename__
 
+  @property
+  def all_resources(self) -> List[ForeignResourceTemplate]:
+    resources = []
+    for config in self._parse_configs:
+      resources += config.files
+    return resources
 
-  #
-  # Fetching
-  #
-
-  def fetch_files_for_species(self, species):
-    '''
-      Fetch all the files required for this species from the database.
-    '''
-    return {
-      file_id: file_template.get_for_species(species)
-        for file_id, file_template in self.files.items()
-        if file_template.has_for_species(species)
-    }
-
-
-  #
-  # Parsing
-  #
 
   def parse_for_species(self, species):
     '''
-      Apply this TableConfig's parse function to its set of files,
-      yielding the results as a generator.
+      Apply all parsing functions in this config to their associated files,
+      yielding from each set in sequence.
     '''
-    return self.parse(species, **self.fetch_files_for_species(species), start_idx=self.table.query.count())
+    for config in self._parse_configs:
+      yield from config.parse_all(species)
 
 
 
@@ -93,34 +118,50 @@ class TableConfig():
 #
 
 StrainConfig = TableConfig(
-    table = Strain,
-    parse = fetch_andersen_strains,
-    files = {
-      'STRAINS': GoogleSheetManager( 'STRAINS', ANDERSEN_LAB_STRAIN_SHEETS ),
-    },
+  Strain,
+  ParseConfig(
+    fetch_andersen_strains,
+    LocalGoogleSheetTemplate( 'STRAINS', ANDERSEN_LAB_STRAIN_SHEETS ),
+  ),
 )
 
 WormbaseGeneSummaryConfig = TableConfig(
-  table = WormbaseGeneSummary,
-  parse = parse_gene_gff_summary,
-  files = {
-    'GENE_GFF': LocalDatastoreFileTemplate( 'GENE_GFF', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_GFF_FILENAME ),
-  },
+  WormbaseGeneSummary,
+  ParseConfig(
+    parse_gene_gff_summary,
+    LocalDatastoreFileTemplate( 'GENE_GFF', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_GFF_FILENAME ),
+  ),
 )
 
 WormbaseGeneConfig = TableConfig(
-  table = WormbaseGene,
-  parse = parse_gene_gtf,
-  files = {
-    'GENE_GTF': LocalDatastoreFileTemplate( 'GENE_GFF', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_GTF_FILENAME ),
-    'GENE_IDS': LocalDatastoreFileTemplate( 'GENE_GFF', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_IDS_FILENAME ),
-  },
+  WormbaseGene,
+  ParseConfig(
+    parse_gene_gtf,
+    LocalDatastoreFileTemplate( 'GENE_GFF', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_GTF_FILENAME ),
+    LocalDatastoreFileTemplate( 'GENE_GFF', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_IDS_FILENAME ),
+  ),
 )
 
 StrainAnnotatedVariantConfig = TableConfig(
-  table = StrainAnnotatedVariant,
-  parse = parse_strain_variant_annotation_data,
-  files = {
-    'SVA_CSVGZ': LocalDatastoreFileTemplate( 'SVA_CSVGZ', MODULE_DB_OPERATIONS_BUCKET_NAME, SVA_FILEPATH, SVA_FILENAME ),
-  },
+  StrainAnnotatedVariant,
+  ParseConfig(
+    parse_strain_variant_annotation_data,
+    LocalDatastoreFileTemplate( 'SVA_CSVGZ', MODULE_DB_OPERATIONS_BUCKET_NAME, SVA_FILEPATH, SVA_FILENAME ),
+  ),
+)
+
+PhenotypeDatabaseConfig = TableConfig(
+  PhenotypeDatabase,
+
+  # Bulk file(s)
+  ParseConfig(
+    parse_phenotypedb_bulk_trait_file,
+    *LocalDatastoreFileTemplate.from_file_record_entities(TraitFile, filter = lambda tf: tf.is_bulk_file),
+  ),
+
+  # Non-bulk files
+  ParseConfig(
+    parse_phenotypedb_traits_data,
+    *LocalDatastoreFileTemplate.from_file_record_entities(TraitFile, filter = lambda tf: not tf.is_bulk_file),
+  ),
 )
