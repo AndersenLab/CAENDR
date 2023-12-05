@@ -6,9 +6,12 @@ import re
 from caendr.services.logger import logger
 from sqlalchemy.sql.expression import null
 
+from caendr.models.datastore  import Species
+from caendr.utils.local_files import LocalDatastoreFile
 
 
-def parse_strain_variant_annotation_data(species, sva_fname: str):
+
+def parse_strain_variant_annotation_data(species: Species, SVA_CSVGZ: LocalDatastoreFile):
   """
       Load strain variant annotation table data:
 
@@ -35,13 +38,13 @@ def parse_strain_variant_annotation_data(species, sva_fname: str):
   column_header_map = {}
 
   # Loop through each line in the CSV file, indexed
-  with gzip.open(sva_fname, mode='rt') as csv_file:
+  with gzip.open(SVA_CSVGZ, mode='rt') as csv_file:
     for idx, row in enumerate( csv.reader(csv_file, delimiter='\t') ):
 
       # First line is column names - don't interpret as data
       # Create dict from header column names to row indices
       if idx == 0:
-        logger.info(f'Column names in file "{sva_fname}" are: {", ".join(row)}')
+        logger.info(f'Column names in file "{SVA_CSVGZ}" are: {", ".join(row)}')
         column_header_map = { name: idx for idx, name in enumerate(row) }
         continue
 

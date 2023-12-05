@@ -6,22 +6,27 @@ from .entity              import Entity
 from .container           import Container
 from .user                import User
 from .pipeline_operation  import PipelineOperation
-from .dataset_release     import DatasetRelease
 from .wormbase            import WormbaseVersion, WormbaseProjectNumber
 from .species             import Species, SPECIES_LIST # Imports WormbaseVersion, WormbaseProjectNumber
 
-# Intermediate subclasses (primarily for tools)
-from .status_entity       import StatusEntity
-from .job_entity          import JobEntity           # Subclasses StatusEntity; imports Container
-from .user_owned_entity   import UserOwnedEntity     # Imports User
+# Abstract template classes (add basic field(s) & functionality)
+from .file_record_entity  import FileRecordEntity
 from .hashable_entity     import HashableEntity
+from .publishable_entity  import PublishableEntity
+from .species_entity      import SpeciesEntity       # Imports Species
+from .status_entity       import StatusEntity
+from .user_owned_entity   import UserOwnedEntity     # Imports User
+
+from .dataset_release     import DatasetRelease      # Subclasses SpeciesSpecificEntity; Imports Species
+
+# Job template classes
+from .job_entity          import JobEntity           # Subclasses StatusEntity; imports Container
 from .report_entity       import ReportEntity        # Subclasses JobEntity, UserOwnedEntity, as well as GCPReport
+from .deletable_entity    import DeletableEntity     
 
 # Jobs
 from .database_operation  import DatabaseOperation   # Subclasses ReportEntity
 from .gene_browser_tracks import GeneBrowserTracks   # Subclasses JobEntity  (DEPRECATED)
-
-# Tools
 from .indel_primer        import IndelPrimerReport   # Subclasses ReportEntity, HashableEntity; imports DatasetRelease, Species
 from .heritability_report import HeritabilityReport  # Subclasses ReportEntity, HashableEntity
 from .nemascan_mapping    import NemascanReport      # Subclasses ReportEntity, HashableEntity
@@ -30,6 +35,10 @@ from .nemascan_mapping    import NemascanReport      # Subclasses ReportEntity, 
 from .database_operation  import DbOp
 from .profile             import Profile
 from .markdown            import Markdown
+from .browser_track       import BrowserTrackDefault  # Subclasses FileRecordEntity (from BrowserTrack)
+from .browser_track       import BrowserTrackTemplate # Subclasses FileRecordEntity (from BrowserTrack)
+from .trait_file          import TraitFile            # Subclasses FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEntity
+from .cart                import Cart                # Subclasses DeletableEntity
 
 
 def get_class_by_kind(kind):
@@ -60,7 +69,8 @@ def get_class_by_kind(kind):
 
     GeneBrowserTracks.kind:  GeneBrowserTracks,
     Markdown.kind:           Markdown,
-    Species.kind:            Species
+    Species.kind:            Species,
+    Cart.kind:               Cart
   }
 
   try:

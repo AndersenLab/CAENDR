@@ -5,6 +5,7 @@ import google.auth.transport.requests as tr_requests
 import datetime
 from enum import Enum
 from typing import Optional, List
+from werkzeug.utils import secure_filename
 
 import json
 import pandas as pd
@@ -18,6 +19,7 @@ from caendr.services.logger import logger
 from caendr.models.error import CloudStorageUploadError, NotFoundError
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.service_account import get_service_account_credentials
+from caendr.utils.data import unique_id
 
 GOOGLE_STORAGE_SERVICE_ACCOUNT_NAME = os.environ.get('GOOGLE_STORAGE_SERVICE_ACCOUNT_NAME')
 
@@ -34,27 +36,37 @@ def get_google_storage_credentials():
 # Check blobs
 #
 
-def get_blob(bucket_name, blob_name) -> Blob:
-  logger.debug(f'get_blob(bucket_name={bucket_name}, blob_name={blob_name})')
-  bucket = storageClient.get_bucket(bucket_name)
-  return bucket.get_blob(blob_name)
+def join_path(*path: str, sep: str = '/'):
+  '''
+    Join a list of path elements into a single path.
+    Filters out empty elements, and strips the separator character (default `/`) before joining to avoid concatenating multiple separators.
+
+    If all elements are empty, results in an empty string.
+  '''
+  return sep.join([ p.strip(sep) for p in path if p ])
 
 
-def check_blob_exists(bucket_name, blob_name) -> bool:
-  logger.debug(f'check_blob_exists(bucket_name={bucket_name}, blob_name={blob_name})')
+def get_blob(bucket_name: str, *path: str) -> Blob:
+  logger.debug(f'get_blob(bucket_name={bucket_name}, path={path})')
   bucket = storageClient.get_bucket(bucket_name)
-  blob = bucket.get_blob(blob_name)
+  return bucket.get_blob( join_path(*path) )
+
+
+def check_blob_exists(bucket_name: str, *path: str) -> bool:
+  logger.debug(f'check_blob_exists(bucket_name={bucket_name}, path={path})')
+  bucket = storageClient.get_bucket(bucket_name)
+  blob = bucket.get_blob( join_path(*path) )
   try:
     return blob.exists()
   except:
     return False
 
 
-def get_blob_if_exists(bucket_name, blob_name, fallback=None) -> Optional[Blob]:
+def get_blob_if_exists(bucket_name: str, *path: str, fallback=None) -> Optional[Blob]:
   '''
     Get the given blob if it exists, otherwise return the fallback value.
   '''
-  blob = get_blob(bucket_name, blob_name)
+  blob = get_blob(bucket_name, *path)
   try:
     if blob.exists():
       return blob
@@ -62,10 +74,13 @@ def get_blob_if_exists(bucket_name, blob_name, fallback=None) -> Optional[Blob]:
     return fallback
 
 
-def get_blob_list(bucket_name, prefix) -> List[Blob]:
-  ''' Returns a list of all blobs with 'prefix' (directory) in 'bucket_name' '''
+def get_blob_list(bucket_name: str, *prefix: str) -> List[Blob]:
+  '''
+    Returns a list of all blobs with `prefix` (directory) in `bucket_name`.
+    If no `prefix` is provided (or all values are empty), lists all blobs in the bucket.
+  '''
   bucket = storageClient.get_bucket(bucket_name)
-  items = bucket.list_blobs(prefix=prefix)
+  items = bucket.list_blobs(prefix=join_path(*prefix))
   return list(items)
 
 
@@ -247,15 +262,58 @@ def upload_blob_from_file_as_chunks(bucket_name: str, filename: str, blob_name: 
 # Download
 #
 
-def download_blob_to_file(bucket_name, blob_name, filename):
-  ''' Downloads a blob and saves it locally '''
-  bucket = storageClient.get_bucket(bucket_name)
-  blob = bucket.blob(blob_name)
-  if blob.exists():
-    blob.download_to_file(open(filename, 'wb'))
-    return filename
-  else:
-    raise NotFoundError('blob', {'bucket': bucket_name, 'name': blob_name})
+def make_secure_filename(*options):
+  '''
+    Loop through a list of possible filenames, returning the first that's safe.
+    If no option in the list is safe, or if no options provided, returns a randomized (safe) string.
+  '''
+  for option in options:
+    try:
+      fname = secure_filename(option)
+      if fname:
+        return fname
+    except:
+      pass
+  return secure_filename(unique_id())
+
+
+def download_blob_to_file(bucket_name, *path, destination='', filename=None):
+  '''
+    Downloads a blob and saves it locally.
+
+    Validates the `filename` argument using Werkzeug `secure_filename`.
+    Does NOT validate `destination` the same way.
+
+    If you want to download a blob into a specific folder, use `destination`.
+    You'll have to make sure the path is secure.
+
+    Arguments:
+      - `bucket_name`: The name of the bucket where the blob is located
+      - `*path`: The path to the file within the bucket (incl. the filename itself)
+      - `destination`: The local folder to download the blob to. Optional.
+      - `filename`:
+          A local name for the downloaded blob. May be changed by Werkzeug `secure_filename`.
+          If not provided, uses the name of the file in datastore (i.e. the right-most component of the `path`).
+
+    Returns:
+      The local filepath / filename for the downloaded blob.
+      Note that this may be different from the passed filename, if that name was not secure.
+
+    Raises:
+      NotFoundError: The desired blob does not exist.
+  '''
+
+  # If no filename provided, try using the final component of blob path
+  target_filename = os.path.join(destination, make_secure_filename(filename, path[-1].split('/')[-1]))
+
+  # Retrieve the blob, throwing an error if it doesn't exist
+  blob = get_blob(bucket_name, *path)
+  if not blob.exists():
+    raise NotFoundError('blob', {'bucket': bucket_name, 'name': join_path(*path)})
+
+  # Download the blob to a file and return the filename
+  blob.download_to_file(open(target_filename, 'wb'))
+  return target_filename
 
 
 def download_blob_as_json(blob, enc='utf-8'):

@@ -40,3 +40,7 @@ CHROM_ARM_CENTER = {'I': (527, 3331, 7182, 3835, 197),
 STRAIN_NAME_REGEX    = "([A-Z]+)([0-9]+)"
 CHROM_INTERVAL_REGEX = "^(I|II|III|IV|V|X|MtDNA):([0-9,]+)-([0-9,]+)$"
 CHROM_POSITION_REGEX = "^(I|II|III|IV|V|X|MtDNA):([0-9,]+)$"
+
+
+# Max number of rows to insert into a SQL table in a single commit
+DEFAULT_BATCH_SIZE = 100000

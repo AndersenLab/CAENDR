@@ -75,17 +75,17 @@ fasta_path = IndelPrimerReport.get_fasta_filepath(SPECIES, RELEASE)
 # TODO: This adds the .gz extension to the end of the file because it's what VCF-Kit looks for,
 #       but this file isn't actually zipped. Does it need to be?
 #       (Can accomplish using `bgzip`.)
-source_fasta_file_name = '/'.join(fasta_path['path']) + '/' + fasta_path['name'] + fasta_path['ext']
-target_fasta_file_name = f'{ genome_directory }/{ fasta_path["name"] }/{ fasta_path["name"] }.fa.gz'
+target_fasta_file_path = f'{ genome_directory }/{ fasta_path["name"] }'
+target_fasta_file_name = f'{ fasta_path["name"] }.fa.gz'
 
 # Create a folder at the desired path if one does not yet exist
-if not os.path.exists(f'{genome_directory}/{fasta_path["name"]}'):
-  os.mkdir(f'{genome_directory}/{fasta_path["name"]}')
+if not os.path.exists(target_fasta_file_path):
+  os.mkdir(target_fasta_file_path)
 
 # Download FASTA file & FASTA index file
-if not os.path.exists(target_fasta_file_name):
-  download_blob_to_file(fasta_path['bucket'], source_fasta_file_name,          target_fasta_file_name)
-  download_blob_to_file(fasta_path['bucket'], source_fasta_file_name + ".fai", target_fasta_file_name + '.fai')
+if not os.path.exists(f'{target_fasta_file_path}/{target_fasta_file_name}'):
+  download_blob_to_file(fasta_path['bucket'], fasta_path['path'], fasta_path['name'] + '.fa',     destination=target_fasta_file_path, filename=target_fasta_file_name)
+  download_blob_to_file(fasta_path['bucket'], fasta_path['path'], fasta_path['name'] + '.fa.fai', destination=target_fasta_file_path, filename=target_fasta_file_name + '.fai')
 
 
 #
@@ -93,17 +93,17 @@ if not os.path.exists(target_fasta_file_name):
 #
 
 # Generate local name for VCF file
-source_vcf_file_name = f'{ INDEL_TOOL_PATH }/{ IndelPrimerReport.get_source_filename(SPECIES, RELEASE) }.vcf.gz'
-target_vcf_file_name = f'{ INDEL_CACHE_DIR }/{ IndelPrimerReport.get_source_filename(SPECIES, RELEASE) }.vcf.gz'
+target_vcf_file_path = INDEL_CACHE_DIR
+target_vcf_file_name = IndelPrimerReport.get_source_filename(SPECIES, RELEASE) + '.vcf.gz'
 
 # Create a folder at the desired path if one does not yet exist
-if not os.path.exists(INDEL_CACHE_DIR):
-  os.mkdir(INDEL_CACHE_DIR)
+if not os.path.exists(target_vcf_file_path):
+  os.mkdir(target_vcf_file_path)
 
 # Download VCF file & VCF Index file
-if not os.path.exists(target_vcf_file_name):
-  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, source_vcf_file_name,          target_vcf_file_name)
-  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, source_vcf_file_name + '.csi', target_vcf_file_name + '.csi')
+if not os.path.exists(f'{target_vcf_file_path}/{target_vcf_file_name}'):
+  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, INDEL_TOOL_PATH, target_vcf_file_name,          destination=target_vcf_file_path)
+  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, INDEL_TOOL_PATH, target_vcf_file_name + '.csi', destination=target_vcf_file_path)
 
 
 #
@@ -125,7 +125,7 @@ cmd = (
   '--samples',     f'{INDEL_STRAIN_1},{INDEL_STRAIN_2}',
 
   # VCF file to run tool on
-  target_vcf_file_name
+  f'{target_vcf_file_path}/{target_vcf_file_name}'
 )
 
 

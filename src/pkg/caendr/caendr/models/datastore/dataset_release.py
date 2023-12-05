@@ -2,14 +2,17 @@ import os
 from caendr.services.logger import logger
 
 from caendr.api.gene import remove_prefix
-from caendr.models.datastore import Entity
+from caendr.models.datastore import Species, SpeciesEntity
 from caendr.models.error import NotFoundError
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, get_blob_list, check_blob_exists
+from caendr.utils.env import get_env_var_with_fallback
 from caendr.utils.tokens import TokenizedString
+
+
 
 V1_V2_Cutoff_Date = 20200101
 
-MODULE_SITE_BUCKET_PUBLIC_NAME = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME')
+DATASET_RELEASE_BUCKET_NAME = get_env_var_with_fallback('MODULE_SITE_BUCKET_DATASET_RELEASE_NAME', 'MODULE_SITE_BUCKET_PUBLIC_NAME')
 
 
 
@@ -46,9 +49,9 @@ class ReportType():
 
 
 
-class DatasetRelease(Entity):
+class DatasetRelease(SpeciesEntity):
   kind = "dataset_release"
-  __bucket_name = MODULE_SITE_BUCKET_PUBLIC_NAME
+  __bucket_name = DATASET_RELEASE_BUCKET_NAME
   __blob_prefix = kind + '/${SPECIES}'
 
 
@@ -65,7 +68,6 @@ class DatasetRelease(Entity):
 
     # If no release name provided, use species name to look up latest release for that species
     if release_name is None:
-      from .species import Species
       species = Species.from_name(species_name)
       release_name = species['release_latest']
 
@@ -75,7 +77,7 @@ class DatasetRelease(Entity):
     if release is None:
       raise NotFoundError(DatasetRelease, {'name': release_name})
 
-    if release['species'] != species_name:
+    if release['species'].name != species_name:
       raise NotFoundError(DatasetRelease, {'name': release_name, 'species': species_name})
 
     return release
@@ -92,7 +94,6 @@ class DatasetRelease(Entity):
       'report_type',
       'disabled',
       'hidden',
-      'species',
       'browser_tracks',      # List of browser tracks supported for this species & release, by name
     }
 
@@ -170,7 +171,7 @@ class DatasetRelease(Entity):
 
   def get_fasta_filename(self, include_extension=True):
     return DatasetRelease.get_fasta_filename_template(include_extension=include_extension).get_string(**{
-      'SPECIES': self['species'],
+      'SPECIES': self['species'].name,
       'RELEASE': self['version'],
       'GENOME':  self['genome'],
     })
@@ -194,7 +195,7 @@ class DatasetRelease(Entity):
 
     # Construct the set of token replacements for this release's file
     params = {
-      'SPECIES': self['species'],
+      'SPECIES': self['species'].name,
       'RELEASE': self['version'],
       'GENOME':  self['genome'],
     }
@@ -221,7 +222,7 @@ class DatasetRelease(Entity):
 
   def get_fasta_filepath_url(self):
     return DatasetRelease.get_fasta_filepath_url_template().get_string(**{
-      'SPECIES': self['species'],
+      'SPECIES': self['species'].name,
       'RELEASE': self['version'],
       'GENOME':  self['genome'],
     })

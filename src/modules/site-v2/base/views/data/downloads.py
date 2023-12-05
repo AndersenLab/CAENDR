@@ -27,13 +27,20 @@ def download_script_strain_v2(release_version):
   return download_script(release_version)
 
 
-@data_downloads_bp.route('/release/<string:release_version>/download/download_isotype_bams.sh')
+@data_downloads_bp.route('/species/<string:species_name>/release/<string:release_version>/download/download_isotype_bams.sh')
 @cache.cached(timeout=60*60*24)
 @jwt_required()
-def download_script(release_version):
-  alt_parent_breadcrumb = {"title": "Data", "url": url_for('data.data')}
+def download_script(species_name, release_version):
+
+  # Parse the species & release from the URL
   try:
-    script_fname = fetch_bam_bai_download_script()
+    species = Species.from_name(species_name, from_url=True)
+    release = DatasetRelease.from_name(release_version, species_name=species.name)
+  except NotFoundError:
+    return abort(404)
+
+  try:
+    script_fname = fetch_bam_bai_download_script(species, release)
     if script_fname and os.path.exists(script_fname):
       return send_file(script_fname, as_attachment=True)
   except:
