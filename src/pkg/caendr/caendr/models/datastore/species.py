@@ -1,4 +1,4 @@
-from typing import Dict
+from collections import OrderedDict
 
 from logzero import logger
 
@@ -134,4 +134,4 @@ class Species(Entity):
 SPECIES_LIST = {
     e.name: e for e in Species.query_ds()
 }
-SPECIES_LIST: Dict[str, Species] = dict(sorted(SPECIES_LIST.items(), key=lambda e: e[1]['order']))
+SPECIES_LIST: 'OrderedDict[str, Species]' = OrderedDict(sorted(SPECIES_LIST.items(), key=lambda e: e[1]['order']))
