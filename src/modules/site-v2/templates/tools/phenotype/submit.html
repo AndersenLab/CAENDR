@@ -22,11 +22,31 @@
 
 
 {% block script %}
-{% from "_scripts/submit-job.js" import def_submit_job %}
+{% from "_includes/strain-listing.html" import unpack_species_list  %}
+{% from "_scripts/submit-job.js"        import def_submit_job       %}
 
 <script>
   {% include '_scripts/utils.js' %} {#/* defines: flash_message */#}
   {{ def_submit_job('phenotype_comparison', true) }}
+
+
+  /* Species */
+  const species_list = {{ unpack_species_list(species_list, species_fields) }};
+  let species;
+
+  /* Traits */
+  let traits;
+
+
+  // Retrieve trait lists
+  fetch_json("{{ url_for('api_trait.query_all', split_by_species=True) }}")
+    .then((data) => {
+      traits = data;
+      console.log('Retrieved trait list.');
+    })
+    .catch((err) => {
+      console.error("Failed to retrieve trait values.", err);
+    });
 
 
   // Submit result
@@ -46,5 +66,6 @@
         }
       })
   });
+
 </script>
 {% endblock %}
