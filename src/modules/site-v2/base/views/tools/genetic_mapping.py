@@ -19,7 +19,7 @@ from caendr.models.error import (
 )
 from caendr.models.status import JobStatus
 from caendr.utils.env import get_env_var
-from caendr.utils.local_file import LocalFile
+from caendr.utils.local_files import LocalUploadFile
 
 
 MODULE_SITE_BUCKET_ASSETS_NAME = get_env_var('MODULE_SITE_BUCKET_ASSETS_NAME')
@@ -107,7 +107,7 @@ def submit():
 
   # Upload input file to server temporarily, and start the job
   try:
-    with LocalFile(request.files.get('file'), valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS) as file:
+    with LocalUploadFile(request.files.get('file'), valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS) as file:
 
       # Package submission data together into dict
       data = { 'label': label, 'species': species, 'file': file }

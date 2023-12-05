@@ -8,7 +8,10 @@ from urllib.request import urlretrieve
 from tempfile import NamedTemporaryFile
 
 from caendr.models.sql import WormbaseGeneSummary
-from caendr.services.sql.dataset import TAXON_ID_URL
+
+
+# We used to have a URL for this, but it's been deprecated
+TAXON_ID_URL = None
 
 
 

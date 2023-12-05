@@ -89,8 +89,11 @@ def get_vcf_url(species, release = None, secure = True):
 
 
 def download_vcf_index_file(species, release = None):
+  '''
+    Download the VCF index file for the indel primer tool, keeping the same name used in datastore.
+  '''
   filename = IndelPrimerReport.get_source_filename(species, release) + '.vcf.gz.csi'
-  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, f"{INDEL_PRIMER_TOOL_PATH}/{filename}", filename)
+  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, INDEL_PRIMER_TOOL_PATH, filename)
 
 
 def get_sv_strains(species, release = None):

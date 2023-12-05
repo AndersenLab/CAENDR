@@ -1,3 +1,5 @@
+from itertools import product
+
 # Parent Class & Models
 from .job_pipeline           import JobPipeline
 from caendr.models.datastore import DatabaseOperation
@@ -7,33 +9,32 @@ from caendr.models.task      import DatabaseOperationTask
 # Services
 from caendr.models.datastore import Species, DbOp
 from caendr.models.error     import DataFormatError, PreflightCheckError
+from caendr.services.sql.etl import StrainConfig, WormbaseGeneConfig, WormbaseGeneSummaryConfig, StrainAnnotatedVariantConfig
 from caendr.utils.env        import get_env_var
-from caendr.utils.tokens     import TokenizedString
-
-from caendr.services.cloud.storage    import get_blob_list
-from caendr.services.sql.dataset._env import internal_db_blob_templates
 
 
-DB_OPERATIONS_BUCKET_NAME    = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
+
 DB_OPERATIONS_CONTAINER_NAME = get_env_var('MODULE_DB_OPERATIONS_CONTAINER_NAME')
 
 
 
+# Get lists of required files from TableConfig objects
 REQUIRED_FILES = {
-  DbOp.DROP_AND_POPULATE_STRAINS: [],
+  DbOp.DROP_AND_POPULATE_STRAINS: [
+    *StrainConfig.files.values(),
+  ],
   DbOp.DROP_AND_POPULATE_WORMBASE_GENES: [
-    internal_db_blob_templates['GENE_GFF'],
-    internal_db_blob_templates['GENE_GTF'],
-    internal_db_blob_templates['GENE_IDS'],
+    *WormbaseGeneConfig.files.values(),
+    *WormbaseGeneSummaryConfig.files.values(),
   ],
   DbOp.DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS: [
-    internal_db_blob_templates['SVA_CSVGZ'],
+    *StrainAnnotatedVariantConfig.files.values()
   ],
   DbOp.DROP_AND_POPULATE_ALL_TABLES: [
-    internal_db_blob_templates['GENE_GFF'],
-    internal_db_blob_templates['GENE_GTF'],
-    internal_db_blob_templates['GENE_IDS'],
-    internal_db_blob_templates['SVA_CSVGZ'],
+    *StrainConfig.files.values(),
+    *WormbaseGeneConfig.files.values(),
+    *WormbaseGeneSummaryConfig.files.values(),
+    *StrainAnnotatedVariantConfig.files.values()
   ],
   DbOp.TEST_ECHO: [],
   DbOp.TEST_MOCK_DATA: [],
@@ -88,22 +89,11 @@ class DatabaseOperationPipeline(JobPipeline):
       species_list = Species.all().keys()
     species_list = [ Species.from_name(key) for key in species_list ]
 
-    # Get list of all filenames in db ops bucket
-    all_files = [
-      file.name for file in get_blob_list(DB_OPERATIONS_BUCKET_NAME) if not file.name.endswith('/')
-    ]
-
     # Loop through all required files, tracking those that don't appear in the database
     missing_files = []
-    for file_template in REQUIRED_FILES.get(db_operation, []):
-      for species in species_list:
-        filepath = TokenizedString.replace_string(file_template, **{
-          'SPECIES': species.name,
-          'RELEASE': species['release_latest'],
-          'SVA':     species['release_sva'],
-        })
-        if filepath not in all_files:
-          missing_files.append(f'- {DB_OPERATIONS_BUCKET_NAME}/{filepath}')
+    for resource_watcher, species in product(REQUIRED_FILES.get(db_operation, []), species_list):
+      if not resource_watcher.check_exists(species):
+        missing_files.append(f'- { resource_watcher.get_print_uri(species) }')
 
     # If any files were missing, raise them
     if len(missing_files) > 0:

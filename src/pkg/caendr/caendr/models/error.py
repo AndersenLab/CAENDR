@@ -274,3 +274,13 @@ class MissingTokenError(InternalError):
 
 class UnschedulableJobTypeError(InternalError):
   pass
+
+
+class ForeignResourceMissingError(InternalError):
+  def __init__(self, resource_type, resource_id, species):
+    try:
+      species_name = species.name
+    except:
+      species_name = species
+    self.description = f'Could not fetch foreign resource {resource_id} ({resource_type}) for species {species_name}'
+    super().__init__()
