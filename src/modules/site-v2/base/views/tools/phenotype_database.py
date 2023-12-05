@@ -23,3 +23,35 @@ def phenotype_database():
     "title": 'Phenotype Database and Analysis',
     "tool_alt_parent_breadcrumb": { "title": "Tools", "url": url_for('tools.tools') },
   })
+
+@phenotype_database_bp.route('/report/')
+def report():
+  return render_template('tools/phenotype_database/report.html', **{
+    # Page info
+    'title': 'Phenotype Analysis Report',
+    'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+  })
+
+@phenotype_database_bp.route('/analysis/stepA')
+def analysisA():
+  return render_template('tools/phenotype_database/phenotypeAnalysisA.html', **{
+    # Page info
+    'title': 'Phenotype Analysis',
+    'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+  })
+
+@phenotype_database_bp.route('/analysis/stepB')
+def analysisB():
+  return render_template('tools/phenotype_database/phenotypeAnalysisB.html', **{
+    # Page info
+    'title': 'Phenotype Analysis',
+    'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+  })
+
+@phenotype_database_bp.route('/analysis/stepC')
+def analysisC():
+  return render_template('tools/phenotype_database/phenotypeAnalysisC.html', **{
+    # Page info
+    'title': 'Phenotype Analysis',
+    'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+  })
