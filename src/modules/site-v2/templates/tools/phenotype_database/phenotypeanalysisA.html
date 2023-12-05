@@ -1,5 +1,28 @@
 {% extends "_layouts/default-nocontainer.html" %}
 {% block content %}
 
+<div class="container px-5 pb-5">
+    <div class="col-12 text-center my-5">
+        <h2 class="text-dark">How many traits do you want to analyze?</h2>
+    </div>
+    <div class="d-flex flex-wrap justify-content-center my-5">
+        <div class="col-8 col-md-3">
+            <div class="card text-bg-light text-center border-0 rounded-2 shadow-sm p-5 me-md-5 mb-5" style="min-height:15em;">
+                <h3 class="pt-5"><a href="#" class="stretched-link text-dark">One trait.</a></h3>
+            </div>
+        </div>
+        <div class="col-8 col-md-3">
+            <div class="card text-bg-light text-center border-0 rounded-2 shadow-sm p-5 me-md-5 mb-5" style="min-height:15em;">
+                <h3 class="pt-5"><a href="#" class="stretched-link text-dark">Two traits.</a></h3>
+            </div>
+        </div>
+    </div>
+    <!-- /flex -->
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <a class="btn btn-dark text-white" role="button" href="#">Start Over</a>
+      </div>
+
+</div> <!-- /Container -->
 
 {% endblock %}

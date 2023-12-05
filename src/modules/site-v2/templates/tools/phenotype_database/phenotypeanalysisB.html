@@ -1,5 +1,74 @@
 {% extends "_layouts/default-nocontainer.html" %}
-{% block content %}
 
+{% block custom_head %}
+<style>
+  .phenotypeIcon i {
+    font-size: var(--bs-body-font-size);
+}
+
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="container px-5 pb-5">
+    <div class="d-flex flex-wrap justify-content-center mt-5">
+        <div class="col-8 col-md-5">
+            <div class="card text-bg-light text-center border-0 rounded-2 shadow-sm p-5 me-md-5 mb-5"
+                style="min-height:15em;">
+                <!-- Phenotype Icon -->
+                <div class="pt-5">
+                    <div class="text-bg-secondary text-white text-center rounded-circle pt-2 phenotypeIcon">
+                        <i class="bi bi-pencil-fill" aria-hidden="true"></i></a>
+                    </div>
+                    <a class="text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#phenotypeDBModal"
+                        href="#">Select a
+                        database trait</a>
+                </div>
+                <!-- /Phenotype Icon -->
+            </div>
+        </div>
+    </div>
+    <!-- /flex -->
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <button class="btn btn-dark text-white" role="button" href="#">Start Over</button>
+        <button class="btn btn-secondary text-white" role="button" data-bs-toggle="modal"
+            data-bs-target="#confirmationModal">Next</button>
+    </div>
+</div> <!-- /Container -->
+
+<!-- Phenotype DB modal -->
+<div class="modal fade" id="phenotypeDBModal" tabindex="-1" aria-labelledby="phenotypeDBModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="phenotypeDBModalLabel">Phenotype Database</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                ...
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Thank You Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModalLabel">Thank you</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Your analysis has been submitted</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary text-white">Go to Report</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
