@@ -1,8 +1,675 @@
 {% extends "_layouts/default-nocontainer.html" %}
 {% block content %}
 
-<div class="container">
-    hello
-</div>
+<div class="container px-5 pb-5">
+    <div class="col mt-3 mb-5">Lorem ipsum dolor sit amet consectetur. Id consectetur aliquet sollicitudin eu pharetra
+        pharetra
+        lectus ut sem. Dictumst scelerisque ut risus suspendisse nulla. Libero mi dictumst ut urna luctus tellus massa.
+        Dictum egestas iaculis pulvinar urna morbi. Eu iaculis feugiat pellentesque ultrices ullamcorper amet placerat
+        nec sodales. Dictum lorem tortor molestie facilisis ultrices porta.</div>
+    <div class="d-flex justify-content-end">
+        <a class="btn btn-secondary rounded-pill text-white" role="button" href="#"><i
+                class="bi bi-arrow-right-circle-fill me-1" aria-hidden="true"></i>Start an Analysis</a>
+    </div>
+    <div class="col mt-5">
+        <div class="table-responsive">
+            <table class="table accordion p-0 text-center" id="tableAccordion">
+                <caption class="visually-hidden">A list of phenotype traits.</caption>
+                <thead class="table-secondary align-middle">
+                    <tr>
+                        <th scope="col" class="col-1 py-4">Species</th>
+                        <th scope="col" class="col-1">Trait</th>
+                        <th scope="col" class="col-1">Short Description</th>
+                        <th scope="col" class="col-1">Source Lab</th>
+                        <th scope="col" class="col-1">Upload Date</th>
+                        <th scope="col" class="col-1">Categories</th>
+                        <th scope="col" class="col-1">Start Analysis</th>
+                    </tr>
+                </thead>
+                <tbody class="table-group-divider align-middle">
+                    <tr class="py-3">
+                        <th>
+                            <a href="#" class="text-dark fw-normal" data-bs-toggle="collapse"
+                                data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne"><i
+                                    class="bi bi-chevron-right" aria-hidden="true"></i><em>C. elegans</em></a>
+                        </th>
+                        <td id="accordionHeading1"><strong>example_trait_1234</strong></td>
+                        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum porttitor.</td>
+                        <td>ECA</td>
+                        <td>01/01/2023</td>
+                        <td>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">...</a>
+                        </td>
+                        <td class="optionsToolbar">
+                            <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Start Analysis</a></div>
+                        </td>
+                    </tr>
+                    <tr id="collapseOne" class="text-start accordion-collapse collapse"
+                        aria-labelledby="accordionHeading1" data-bs-parent="#tableAccordion">
+                        <td colspan="7">
+                            <div class="ps-5 p-3">
+                                <h3 class="h5 text-dark">Full Description</h3>
+                                <p>Lorem ipsum dolor sit amet consectetur. Gravida tincidunt id amet fermentum urna
+                                    egestas. Fermentum mattis pellentesque massa mi id sed. Volutpat duis diam venenatis
+                                    morbi libero et leo natoque lectus. Risus lorem amet cursus aliquam pellentesque
+                                    proin diam natoque. Molestie purus id ornare duis pharetra. Elementum nulla cursus
+                                    maecenas facilisis nunc amet at tellus mattis. Congue molestie pellentesque
+                                    dignissim ac. Arcu sed tristique justo lectus ullamcorper nibh tempor dolor. Tempus
+                                    nisi aliquam eget posuere a. Semper pulvinar id urna mollis habitant scelerisque
+                                    egestas enim. Pretium non nunc ut ac tincidunt et nulla urna. Dignissim egestas
+                                    elementum tellus non. Venenatis urna pharetra non eget. Commodo augue dolor id cum
+                                    in pharetra velit quisque. Eu condimentum dis venenatis neque id pharetra felis id.
+                                    Sed mattis quam hac tellus dolor. Augue cursus.</p>
+                            </div>
+                            <div class="d-flex justify-content-end pe-5 optionsToolbar">
+                                <a data-bs-toggle="offcanvas" data-bs-target="#offcanvas1"
+                                    aria-controls="offcanvas1 href=" #"><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Full Details</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="py-3">
+                        <th>
+                            <a href="#" class="text-dark fw-normal" data-bs-toggle="collapse"
+                                data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo"><i
+                                    class="bi bi-chevron-right" aria-hidden="true"></i><em>C. elegans</em></a>
+                        </th>
+                        <td id="accordionHeading2"><strong>example_trait_1234</strong></td>
+                        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum porttitor.</td>
+                        <td>ECA</td>
+                        <td>01/01/2023</td>
+                        <td>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">...</a>
+                        </td>
+                        <td class="optionsToolbar">
+                            <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Start Analysis</a></div>
+                        </td>
+                    </tr>
+                    <tr id="collapseTwo" class="text-start accordion-collapse collapse"
+                        aria-labelledby="accordionHeading2" data-bs-parent="#tableAccordion">
+                        <td colspan="7">
+                            <div class="ps-5 p-3">
+                                <h3 class="h5 text-dark">Full Description</h3>
+                                <p>Lorem ipsum dolor sit amet consectetur. Gravida tincidunt id amet fermentum urna
+                                    egestas. Fermentum mattis pellentesque massa mi id sed. Volutpat duis diam venenatis
+                                    morbi libero et leo natoque lectus. Risus lorem amet cursus aliquam pellentesque
+                                    proin diam natoque. Molestie purus id ornare duis pharetra. Elementum nulla cursus
+                                    maecenas facilisis nunc amet at tellus mattis. Congue molestie pellentesque
+                                    dignissim ac. Arcu sed tristique justo lectus ullamcorper nibh tempor dolor. Tempus
+                                    nisi aliquam eget posuere a. Semper pulvinar id urna mollis habitant scelerisque
+                                    egestas enim. Pretium non nunc ut ac tincidunt et nulla urna. Dignissim egestas
+                                    elementum tellus non. Venenatis urna pharetra non eget. Commodo augue dolor id cum
+                                    in pharetra velit quisque. Eu condimentum dis venenatis neque id pharetra felis id.
+                                    Sed mattis quam hac tellus dolor. Augue cursus.</p>
+                            </div>
+                            <div class="d-flex justify-content-end pe-5 optionsToolbar">
+                                <a data-bs-toggle="offcanvas" data-bs-target="#offcanvas1"
+                                    aria-controls="offcanvas1 href=" #"><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Full Details</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="py-3">
+                        <th>
+                            <a href="#" class="text-dark fw-normal" data-bs-toggle="collapse"
+                                data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree"><i
+                                    class="bi bi-chevron-right" aria-hidden="true"></i><em>C. elegans</em></a>
+                        </th>
+                        <td id="accordionHeading3"><strong>example_trait_1234</strong></td>
+                        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum porttitor.</td>
+                        <td>ECA</td>
+                        <td>01/01/2023</td>
+                        <td>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">...</a>
+                        </td>
+                        <td class="optionsToolbar">
+                            <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Start Analysis</a></div>
+                        </td>
+                    </tr>
+                    <tr id="collapseThree" class="text-start accordion-collapse collapse"
+                        aria-labelledby="accordionHeading1" data-bs-parent="#tableAccordion">
+                        <td colspan="7">
+                            <div class="ps-5 p-3">
+                                <h3 class="h5 text-dark">Full Description</h3>
+                                <p>Lorem ipsum dolor sit amet consectetur. Gravida tincidunt id amet fermentum urna
+                                    egestas. Fermentum mattis pellentesque massa mi id sed. Volutpat duis diam venenatis
+                                    morbi libero et leo natoque lectus. Risus lorem amet cursus aliquam pellentesque
+                                    proin diam natoque. Molestie purus id ornare duis pharetra. Elementum nulla cursus
+                                    maecenas facilisis nunc amet at tellus mattis. Congue molestie pellentesque
+                                    dignissim ac. Arcu sed tristique justo lectus ullamcorper nibh tempor dolor. Tempus
+                                    nisi aliquam eget posuere a. Semper pulvinar id urna mollis habitant scelerisque
+                                    egestas enim. Pretium non nunc ut ac tincidunt et nulla urna. Dignissim egestas
+                                    elementum tellus non. Venenatis urna pharetra non eget. Commodo augue dolor id cum
+                                    in pharetra velit quisque. Eu condimentum dis venenatis neque id pharetra felis id.
+                                    Sed mattis quam hac tellus dolor. Augue cursus.</p>
+                            </div>
+                            <div class="d-flex justify-content-end pe-5 optionsToolbar">
+                                <a data-bs-toggle="offcanvas" data-bs-target="#offcanvas1"
+                                    aria-controls="offcanvas1 href=" #"><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Full Details</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="py-3">
+                        <th>
+                            <a href="#" class="text-dar fw-normal" data-bs-toggle="collapse"
+                                data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour"><i
+                                    class="bi bi-chevron-right" aria-hidden="true"></i><em>C. elegans</em></a>
+                        </th>
+                        <td id="accordionHeading4"><strong>example_trait_1234</strong></td>
+                        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum porttitor.</td>
+                        <td>ECA</td>
+                        <td>01/01/2023</td>
+                        <td>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">...</a>
+                        </td>
+                        <td class="optionsToolbar">
+                            <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Start Analysis</a></div>
+                        </td>
+                    </tr>
+                    <tr id="collapseFour" class="text-start accordion-collapse collapse"
+                        aria-labelledby="accordionHeading4" data-bs-parent="#tableAccordion">
+                        <td colspan="7">
+                            <div class="ps-5 p-3">
+                                <h3 class="h5 text-dark">Full Description</h3>
+                                <p>Lorem ipsum dolor sit amet consectetur. Gravida tincidunt id amet fermentum urna
+                                    egestas. Fermentum mattis pellentesque massa mi id sed. Volutpat duis diam venenatis
+                                    morbi libero et leo natoque lectus. Risus lorem amet cursus aliquam pellentesque
+                                    proin diam natoque. Molestie purus id ornare duis pharetra. Elementum nulla cursus
+                                    maecenas facilisis nunc amet at tellus mattis. Congue molestie pellentesque
+                                    dignissim ac. Arcu sed tristique justo lectus ullamcorper nibh tempor dolor. Tempus
+                                    nisi aliquam eget posuere a. Semper pulvinar id urna mollis habitant scelerisque
+                                    egestas enim. Pretium non nunc ut ac tincidunt et nulla urna. Dignissim egestas
+                                    elementum tellus non. Venenatis urna pharetra non eget. Commodo augue dolor id cum
+                                    in pharetra velit quisque. Eu condimentum dis venenatis neque id pharetra felis id.
+                                    Sed mattis quam hac tellus dolor. Augue cursus.</p>
+                            </div>
+                            <div class="d-flex justify-content-end pe-5 optionsToolbar">
+                                <a data-bs-toggle="offcanvas" data-bs-target="#offcanvas1"
+                                    aria-controls="offcanvas1 href=" #"><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Full Details</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="py-3">
+                        <th>
+                            <a href="#" class="text-dark fw-normal" data-bs-toggle="collapse"
+                                data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive"><i
+                                    class="bi bi-chevron-right" aria-hidden="true"></i><em>C. elegans</em></a>
+                        </th>
+                        <td id="accordionHeading5"><strong>example_trait_1234</strong></td>
+                        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum porttitor.</td>
+                        <td>ECA</td>
+                        <td>01/01/2023</td>
+                        <td>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">...</a>
+                        </td>
+                        <td class="optionsToolbar">
+                            <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Start Analysis</a></div>
+                        </td>
+                    </tr>
+                    <tr id="collapseFive" class="text-start accordion-collapse collapse"
+                        aria-labelledby="accordionHeading5" data-bs-parent="#tableAccordion">
+                        <td colspan="7">
+                            <div class="ps-5 p-3">
+                                <h3 class="h5 text-dark">Full Description</h3>
+                                <p>Lorem ipsum dolor sit amet consectetur. Gravida tincidunt id amet fermentum urna
+                                    egestas. Fermentum mattis pellentesque massa mi id sed. Volutpat duis diam venenatis
+                                    morbi libero et leo natoque lectus. Risus lorem amet cursus aliquam pellentesque
+                                    proin diam natoque. Molestie purus id ornare duis pharetra. Elementum nulla cursus
+                                    maecenas facilisis nunc amet at tellus mattis. Congue molestie pellentesque
+                                    dignissim ac. Arcu sed tristique justo lectus ullamcorper nibh tempor dolor. Tempus
+                                    nisi aliquam eget posuere a. Semper pulvinar id urna mollis habitant scelerisque
+                                    egestas enim. Pretium non nunc ut ac tincidunt et nulla urna. Dignissim egestas
+                                    elementum tellus non. Venenatis urna pharetra non eget. Commodo augue dolor id cum
+                                    in pharetra velit quisque. Eu condimentum dis venenatis neque id pharetra felis id.
+                                    Sed mattis quam hac tellus dolor. Augue cursus.</p>
+                            </div>
+                            <div class="d-flex justify-content-end pe-5 optionsToolbar">
+                                <a data-bs-toggle="offcanvas" data-bs-target="#offcanvas1"
+                                    aria-controls="offcanvas1 href=" #"><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Full Details</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="py-3">
+                        <th>
+                            <a href="#" class="text-dark fw-normal" data-bs-toggle="collapse"
+                                data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix"><i
+                                    class="bi bi-chevron-right" aria-hidden="true"></i><em>C. elegans</em></a>
+                        </th>
+                        <td id="accordionHeading6"><strong>example_trait_1234</strong></td>
+                        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum porttitor.</td>
+                        <td>ECA</td>
+                        <td>01/01/2023</td>
+                        <td>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">...</a>
+                        </td>
+                        <td class="optionsToolbar">
+                            <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Start Analysis</a></div>
+                        </td>
+                    </tr>
+                    <tr id="collapseSix" class="text-start accordion-collapse collapse"
+                        aria-labelledby="accordionHeading6" data-bs-parent="#tableAccordion">
+                        <td colspan="7">
+                            <div class="ps-5 p-3">
+                                <h3 class="h5 text-dark">Full Description</h3>
+                                <p>Lorem ipsum dolor sit amet consectetur. Gravida tincidunt id amet fermentum urna
+                                    egestas. Fermentum mattis pellentesque massa mi id sed. Volutpat duis diam venenatis
+                                    morbi libero et leo natoque lectus. Risus lorem amet cursus aliquam pellentesque
+                                    proin diam natoque. Molestie purus id ornare duis pharetra. Elementum nulla cursus
+                                    maecenas facilisis nunc amet at tellus mattis. Congue molestie pellentesque
+                                    dignissim ac. Arcu sed tristique justo lectus ullamcorper nibh tempor dolor. Tempus
+                                    nisi aliquam eget posuere a. Semper pulvinar id urna mollis habitant scelerisque
+                                    egestas enim. Pretium non nunc ut ac tincidunt et nulla urna. Dignissim egestas
+                                    elementum tellus non. Venenatis urna pharetra non eget. Commodo augue dolor id cum
+                                    in pharetra velit quisque. Eu condimentum dis venenatis neque id pharetra felis id.
+                                    Sed mattis quam hac tellus dolor. Augue cursus.</p>
+                            </div>
+                            <div class="d-flex justify-content-end pe-5 optionsToolbar">
+                                <a data-bs-toggle="offcanvas" data-bs-target="#offcanvas1"
+                                    aria-controls="offcanvas1 href=" #"><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Full Details</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="py-3">
+                        <th>
+                            <a href="#" class="text-dark fw-normal" data-bs-toggle="collapse"
+                                data-bs-target="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven"><i
+                                    class="bi bi-chevron-right" aria-hidden="true"></i><em>C. elegans</em></a>
+                        </th>
+                        <td id="accordionHeading7"><strong>example_trait_1234</strong></td>
+                        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum porttitor.</td>
+                        <td>ECA</td>
+                        <td>01/01/2023</td>
+                        <td>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">...</a>
+                        </td>
+                        <td class="optionsToolbar">
+                            <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Start Analysis</a></div>
+                        </td>
+                    </tr>
+                    <tr id="collapseSeven" class="text-start accordion-collapse collapse"
+                        aria-labelledby="accordionHeading7" data-bs-parent="#tableAccordion">
+                        <td colspan="7">
+                            <div class="ps-5 p-3">
+                                <h3 class="h5 text-dark">Full Description</h3>
+                                <p>Lorem ipsum dolor sit amet consectetur. Gravida tincidunt id amet fermentum urna
+                                    egestas. Fermentum mattis pellentesque massa mi id sed. Volutpat duis diam venenatis
+                                    morbi libero et leo natoque lectus. Risus lorem amet cursus aliquam pellentesque
+                                    proin diam natoque. Molestie purus id ornare duis pharetra. Elementum nulla cursus
+                                    maecenas facilisis nunc amet at tellus mattis. Congue molestie pellentesque
+                                    dignissim ac. Arcu sed tristique justo lectus ullamcorper nibh tempor dolor. Tempus
+                                    nisi aliquam eget posuere a. Semper pulvinar id urna mollis habitant scelerisque
+                                    egestas enim. Pretium non nunc ut ac tincidunt et nulla urna. Dignissim egestas
+                                    elementum tellus non. Venenatis urna pharetra non eget. Commodo augue dolor id cum
+                                    in pharetra velit quisque. Eu condimentum dis venenatis neque id pharetra felis id.
+                                    Sed mattis quam hac tellus dolor. Augue cursus.</p>
+                            </div>
+                            <div class="d-flex justify-content-end pe-5 optionsToolbar">
+                                <a data-bs-toggle="offcanvas" data-bs-target="#offcanvas1"
+                                    aria-controls="offcanvas1 href=" #"><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Full Details</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="py-3">
+                        <th>
+                            <a href="#" class="text-dark fw-normal" data-bs-toggle="collapse"
+                                data-bs-target="#collapseEight" aria-expanded="false" aria-controls="collapseEight"><i
+                                    class="bi bi-chevron-right" aria-hidden="true"></i><em>C. elegans</em></a>
+                        </th>
+                        <td id="accordionHeading8"><strong>example_trait_1234</strong></td>
+                        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum porttitor.</td>
+                        <td>ECA</td>
+                        <td>01/01/2023</td>
+                        <td>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">...</a>
+                        </td>
+                        <td class="optionsToolbar">
+                            <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Start Analysis</a></div>
+                        </td>
+                    </tr>
+                    <tr id="collapseEight" class="text-start accordion-collapse collapse"
+                        aria-labelledby="accordionHeading8" data-bs-parent="#tableAccordion">
+                        <td colspan="7">
+                            <div class="ps-5 p-3">
+                                <h3 class="h5 text-dark">Full Description</h3>
+                                <p>Lorem ipsum dolor sit amet consectetur. Gravida tincidunt id amet fermentum urna
+                                    egestas. Fermentum mattis pellentesque massa mi id sed. Volutpat duis diam venenatis
+                                    morbi libero et leo natoque lectus. Risus lorem amet cursus aliquam pellentesque
+                                    proin diam natoque. Molestie purus id ornare duis pharetra. Elementum nulla cursus
+                                    maecenas facilisis nunc amet at tellus mattis. Congue molestie pellentesque
+                                    dignissim ac. Arcu sed tristique justo lectus ullamcorper nibh tempor dolor. Tempus
+                                    nisi aliquam eget posuere a. Semper pulvinar id urna mollis habitant scelerisque
+                                    egestas enim. Pretium non nunc ut ac tincidunt et nulla urna. Dignissim egestas
+                                    elementum tellus non. Venenatis urna pharetra non eget. Commodo augue dolor id cum
+                                    in pharetra velit quisque. Eu condimentum dis venenatis neque id pharetra felis id.
+                                    Sed mattis quam hac tellus dolor. Augue cursus.</p>
+                            </div>
+                            <div class="d-flex justify-content-end pe-5 optionsToolbar">
+                                <a data-bs-toggle="offcanvas" data-bs-target="#offcanvas1"
+                                    aria-controls="offcanvas1 href=" #"><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Full Details</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="py-3">
+                        <th>
+                            <a href="#" class="text-dark fw-normal" data-bs-toggle="collapse"
+                                data-bs-target="#collapseNine" aria-expanded="false" aria-controls="collapseNine"><i
+                                    class="bi bi-chevron-right" aria-hidden="true"></i><em>C. elegans</em></a>
+                        </th>
+                        <td id="accordionHeading9"><strong>example_trait_1234</strong></td>
+                        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum porttitor.</td>
+                        <td>ECA</td>
+                        <td>01/01/2023</td>
+                        <td>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">...</a>
+                        </td>
+                        <td class="optionsToolbar">
+                            <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Start Analysis</a></div>
+                        </td>
+                    </tr>
+                    <tr id="collapseNine" class="text-start accordion-collapse collapse"
+                        aria-labelledby="accordionHeading9" data-bs-parent="#tableAccordion">
+                        <td colspan="7">
+                            <div class="ps-5 p-3">
+                                <h3 class="h5 text-dark">Full Description</h3>
+                                <p>Lorem ipsum dolor sit amet consectetur. Gravida tincidunt id amet fermentum urna
+                                    egestas. Fermentum mattis pellentesque massa mi id sed. Volutpat duis diam venenatis
+                                    morbi libero et leo natoque lectus. Risus lorem amet cursus aliquam pellentesque
+                                    proin diam natoque. Molestie purus id ornare duis pharetra. Elementum nulla cursus
+                                    maecenas facilisis nunc amet at tellus mattis. Congue molestie pellentesque
+                                    dignissim ac. Arcu sed tristique justo lectus ullamcorper nibh tempor dolor. Tempus
+                                    nisi aliquam eget posuere a. Semper pulvinar id urna mollis habitant scelerisque
+                                    egestas enim. Pretium non nunc ut ac tincidunt et nulla urna. Dignissim egestas
+                                    elementum tellus non. Venenatis urna pharetra non eget. Commodo augue dolor id cum
+                                    in pharetra velit quisque. Eu condimentum dis venenatis neque id pharetra felis id.
+                                    Sed mattis quam hac tellus dolor. Augue cursus.</p>
+                            </div>
+                            <div class="d-flex justify-content-end pe-5 optionsToolbar">
+                                <a data-bs-toggle="offcanvas" data-bs-target="#offcanvas1"
+                                    aria-controls="offcanvas1 href=" #"><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Full Details</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="py-3">
+                        <th>
+                            <a href="#" class="text-dark fw-normal" data-bs-toggle="collapse"
+                                data-bs-target="#collapseTen" aria-expanded="false" aria-controls="collapseTen"><i
+                                    class="bi bi-chevron-right" aria-hidden="true"></i><em>C. elegans</em></a>
+                        </th>
+                        <td id="accordionHeading10"><strong>example_trait_1234</strong></td>
+                        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum porttitor.</td>
+                        <td>ECA</td>
+                        <td>01/01/2023</td>
+                        <td>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">long tag name</a>
+                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                role="button" href="#">...</a>
+                        </td>
+                        <td class="optionsToolbar">
+                            <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Start Analysis</a></div>
+                        </td>
+                    </tr>
+                    <tr id="collapseTen" class="text-start accordion-collapse collapse"
+                        aria-labelledby="accordionHeading10" data-bs-parent="#tableAccordion">
+                        <td colspan="7">
+                            <div class="ps-5 p-3">
+                                <h3 class="h5 text-dark">Full Description</h3>
+                                <p>Lorem ipsum dolor sit amet consectetur. Gravida tincidunt id amet fermentum urna
+                                    egestas. Fermentum mattis pellentesque massa mi id sed. Volutpat duis diam venenatis
+                                    morbi libero et leo natoque lectus. Risus lorem amet cursus aliquam pellentesque
+                                    proin diam natoque. Molestie purus id ornare duis pharetra. Elementum nulla cursus
+                                    maecenas facilisis nunc amet at tellus mattis. Congue molestie pellentesque
+                                    dignissim ac. Arcu sed tristique justo lectus ullamcorper nibh tempor dolor. Tempus
+                                    nisi aliquam eget posuere a. Semper pulvinar id urna mollis habitant scelerisque
+                                    egestas enim. Pretium non nunc ut ac tincidunt et nulla urna. Dignissim egestas
+                                    elementum tellus non. Venenatis urna pharetra non eget. Commodo augue dolor id cum
+                                    in pharetra velit quisque. Eu condimentum dis venenatis neque id pharetra felis id.
+                                    Sed mattis quam hac tellus dolor. Augue cursus.</p>
+                            </div>
+                            <div class="d-flex justify-content-end pe-5 optionsToolbar">
+                                <a data-bs-toggle="offcanvas" data-bs-target="#offcanvas1"
+                                    aria-controls="offcanvas1 href=" #"><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Full Details</a>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Offcanvas -->
+    <div class="offcanvas offcanvas-end offcanvasPhenotype" tabindex="-1" id="offcanvas1"
+        aria-labelledby="offcanvas1Label">
+        <div class="offcanvas-header">
+            <h5 id="offcanvas1Label">example_trait_1234</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-4">
+            <div class="d-flex justify-content-center">
+                <div class="col-4">
+                    <strong>Capture Date</strong>
+                    <p>01/01/23</p>
+                </div>
+                <div class="col-4">
+                    <strong>Upload Date</strong>
+                    <p>01/01/23</p>
+                </div>
+                <div class="col-4">
+                    <strong>Last Updated</strong>
+                    <p>01/01/23</p>
+                </div>
+            </div>
+            <div>
+                <strong>Species</strong>
+                <p><em>C. elegans</em></p>
+                <strong>Long Name</strong>
+                <p>Lorem ipsum dolor</p>
+                <strong>WormBaseGeneID</strong>
+                <p>N/A</p>
+                <strong>Source Lab</strong>
+                <p>ECA</p>
+                <strong>Submitted By</strong>
+                <p>Username1234</p>
+                <strong>Institution</strong>
+                <p>Johns Hopkins University</p>
+                <strong>Full Description</strong>
+                <p>Lorem ipsum dolor sit amet consectetur. Gravida tincidunt id amet fermentum urna egestas. Fermentum
+                    mattis pellentesque massa mi id sed. Volutpat duis diam venenatis morbi libero et leo natoque
+                    lectus. Risus lorem amet cursus aliquam pellentesque proin diam natoque. Molestie purus id ornare
+                    duis pharetra. Elementum nulla cursus maecenas facilisis nunc amet at tellus mattis. Congue molestie
+                    pellentesque dignissim ac. Arcu sed tristique justo lectus ullamcorper nibh tempor dolor. Tempus
+                    nisi aliquam eget posuere a. Semper pulvinar id urna mollis habitant scelerisque egestas enim.
+                    Pretium non nunc ut ac tincidunt et nulla urna. Dignissim egestas elementum tellus non. Venenatis
+                    urna pharetra non eget. Commodo augue dolor id cum in pharetra velit quisque. Eu condimentum dis
+                    venenatis neque id pharetra felis id. Sed mattis quam hac tellus dolor. Augue cursus.</p>
+                <strong>Protocol</strong>
+                <p><a href="#" target="_blank">https://protocols.io/12345</a></p>
+                <strong>Publication</strong>
+                <p><a href="#" target="_blank">https://exampleurl.com/12345</a></p>
+                <strong>Categories</strong>
+                <div class="d-flex flex-wrap justify-content-start">
+                    <div class="col-4">
+                        <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton" role="button"
+                            href="#">long tag name</a>
+                    </div>
+                    <div class="col-4">
+                        <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton" role="button"
+                            href="#">long tag name</a>
+                    </div>
+                    <div class="col-4">
+                        <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton" role="button"
+                            href="#">long tag name</a>
+                    </div>
+                    <div class="col-4">
+                        <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton" role="button"
+                            href="#">long tag name</a>
+                    </div>
+                </div>
+                <div class="mt-5">
+                    <strong>Values</strong>
+                    <div class="p-3 my-4 border border-1 rounded overflow-auto" style="height:30vh">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Strain</th>
+                                    <th scope="col">Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>ABC123</td>
+                                    <td>12.34567890</td>
+                                </tr>
+                                <tr>
+                                    <td>ABC123</td>
+                                    <td>12.34567890</td>
+                                </tr>
+                                <tr>
+                                    <td>ABC123</td>
+                                    <td>12.34567890</td>
+                                </tr>
+                                <tr>
+                                    <td>ABC123</td>
+                                    <td>12.34567890</td>
+                                </tr>
+                                <tr>
+                                    <td>ABC123</td>
+                                    <td>12.34567890</td>
+                                </tr>
+                                <tr>
+                                    <td>ABC123</td>
+                                    <td>12.34567890</td>
+                                </tr>
+                                <tr>
+                                    <td>ABC123</td>
+                                    <td>12.34567890</td>
+                                </tr>
+                                <tr>
+                                    <td>ABC123</td>
+                                    <td>12.34567890</td>
+                                </tr>
+                                <tr>
+                                    <td>ABC123</td>
+                                    <td>12.34567890</td>
+                                </tr>
+                                <tr>
+                                    <td>ABC123</td>
+                                    <td>12.34567890</td>
+                                </tr>
+                                <tr>
+                                    <td>ABC123</td>
+                                    <td>12.34567890</td>
+                                </tr>
+                                <tr>
+                                    <td>ABC123</td>
+                                    <td>12.34567890</td>
+                                </tr>
+                                <tr>
+                                    <td>ABC123</td>
+                                    <td>12.34567890</td>
+                                </tr>
+                                <tr>
+                                    <td>ABC123</td>
+                                    <td>12.34567890</td>
+                                </tr>
+                                <tr>
+                                    <td>ABC123</td>
+                                    <td>12.34567890</td>
+                                </tr>
+                            </tbody>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div> <!-- /Container -->
 
 {% endblock %}
