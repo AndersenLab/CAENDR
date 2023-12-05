@@ -45,6 +45,10 @@ class GCPReport(BucketedReport):
   def _generate_uri(cls, bucket: str, *path: str, schema: BlobURISchema=None):
     return generate_blob_uri(bucket, *path, schema=schema)
 
+  @classmethod
+  def _list_files(cls, bucket: str, *prefix: str, filter=None):
+    return get_blob_list(bucket, *prefix, filter=filter)
+
 
   #
   # Bucket names
@@ -130,9 +134,6 @@ class GCPReport(BucketedReport):
 
   def fetch_output(self):
     return get_blob_if_exists( *self.output_filepath(schema=BlobURISchema.PATH) )
-
-  def list_output_blobs(self):
-    return get_blob_list( *self.output_directory(schema=BlobURISchema.PATH) )
 
 
 

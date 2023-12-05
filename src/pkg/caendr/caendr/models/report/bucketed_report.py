@@ -36,6 +36,11 @@ class BucketedReport(Report):
   def _generate_uri(cls, bucket: str, *path: str, schema: BlobURISchema=None):
     pass
 
+  @classmethod
+  @abstractmethod
+  def _list_files(cls, bucket: str, *prefix: str, filter=None):
+    pass
+
 
 
   #
@@ -119,7 +124,8 @@ class BucketedReport(Report):
   #
   # Directory functions
   # These probably should not be overwritten, unless you're sure you know what you're doing.
-  # Instead, look into overwriting the bucket and prefix functions to customize directory lookups.
+  # Instead, look into overwriting the bucket functions, prefix functions, and _generate_uri
+  # to customize directory lookups.
   #
 
   def report_directory(self, *path, schema: BlobURISchema = None):
@@ -136,3 +142,32 @@ class BucketedReport(Report):
 
   def output_directory(self, *path, schema: BlobURISchema = None):
     return self.report_directory( self._output_prefix, *path, schema=schema )
+
+
+
+  #
+  # Directory listing functions
+  # Each returns the list of blobs in the given directory, with an optional extra path & filter.
+  #
+  # These probably should not be overwritten, unless you're sure you know what you're doing.
+  # Instead, look into overwriting the bucket functions, prefix functions, and _list_files
+  # to customize directory lookups.
+  #
+
+  def _list_directory(self, f_dir, *path, filter=None):
+    return self._list_files( *f_dir(*path, schema=BlobURISchema.PATH), filter=filter )
+
+  def list_report_directory(self, *path, filter=None):
+    return self._list_directory( self.report_directory, *path, filter=filter )
+
+  def list_data_directory(self, *path, filter=None):
+    return self._list_directory( self.data_directory,   *path, filter=filter )
+
+  def list_work_directory(self, *path, filter=None):
+    return self._list_directory( self.work_directory,   *path, filter=filter )
+
+  def list_input_directory(self, *path, filter=None):
+    return self._list_directory( self.input_directory,  *path, filter=filter )
+
+  def list_output_directory(self, *path, filter=None):
+    return self._list_directory( self.output_directory, *path, filter=filter )

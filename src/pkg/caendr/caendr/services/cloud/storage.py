@@ -74,13 +74,21 @@ def get_blob_if_exists(bucket_name: str, *path: str, fallback=None) -> Optional[
     return fallback
 
 
-def get_blob_list(bucket_name: str, *prefix: str) -> List[Blob]:
+def get_blob_list(bucket_name: str, *prefix: str, filter=None) -> List[Blob]:
   '''
     Returns a list of all blobs with `prefix` (directory) in `bucket_name`.
     If no `prefix` is provided (or all values are empty), lists all blobs in the bucket.
   '''
+
+  # Get all the blobs in the given bucket
   bucket = storageClient.get_bucket(bucket_name)
   items = bucket.list_blobs(prefix=join_path(*prefix))
+
+  # Apply the filter, if one was given
+  if filter is not None:
+    items = [ b for b in items if filter(b) ]
+
+  # Return the items as a list
   return list(items)
 
 

@@ -243,18 +243,13 @@ def results(job: NemascanPipeline):
   # Get the trait, if it exists
   trait = job.report['trait']
 
-  # # Old way to compute list of blobs, that was hidden beneath 'return'
-  # # Can this be deleted?
-  # data_blob = RESULT_BLOB_PATH.format(data_hash=ns.data_hash)
-  # blobs = list_files(data_blob)
-
   # Get the list of files in this report, truncating all names to everything after second-to-last '/'
   file_list = [
     {
       "name": '/'.join( blob.name.rsplit('/', 2)[1:] ),
       "url":  blob.public_url,
     }
-    for blob in job.report.list_output_blobs()
+    for blob in job.report.list_output_directory()
   ]
 
   return render_template('tools/genetic_mapping/result_files.html', **{
