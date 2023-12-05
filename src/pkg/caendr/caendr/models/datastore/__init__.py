@@ -16,6 +16,7 @@ from .job_entity          import JobEntity           # Subclasses StatusEntity; 
 from .user_owned_entity   import UserOwnedEntity     # Imports User
 from .hashable_entity     import HashableEntity
 from .report_entity       import ReportEntity        # Subclasses JobEntity, UserOwnedEntity, as well as GCPReport
+from .deletable_entity    import DeletableEntity     
 
 # Jobs
 from .database_operation  import DatabaseOperation   # Subclasses ReportEntity
@@ -30,6 +31,7 @@ from .nemascan_mapping    import NemascanReport      # Subclasses ReportEntity, 
 from .database_operation  import DbOp
 from .profile             import Profile
 from .markdown            import Markdown
+from .cart                import Cart                # Subclasses DeletableEntity
 
 
 def get_class_by_kind(kind):
@@ -60,7 +62,8 @@ def get_class_by_kind(kind):
 
     GeneBrowserTracks.kind:  GeneBrowserTracks,
     Markdown.kind:           Markdown,
-    Species.kind:            Species
+    Species.kind:            Species,
+    Cart.kind:               Cart
   }
 
   try:
