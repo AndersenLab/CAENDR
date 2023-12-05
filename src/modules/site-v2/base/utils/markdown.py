@@ -20,7 +20,7 @@ def render_markdown(filename, directory="base/static/content/markdown"):
 
 
 def render_ext_markdown(url: str, ignore_err=False, backup_text=None):
-  if url is None:
+  if not url:
     return Markup(markdown.markdown(backup_text or ''))
 
   template = ''
