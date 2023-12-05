@@ -56,9 +56,9 @@ function {{func_name}}(data, modal_id, config={}) {
       // TODO: Redirect modal
       if (result.ready) {
         if (new_tab) {
-          window.open(`{{ url_for(tool_name + '.report', id='') }}${ result.id }`, '_blank');
+          window.open(`{{ url_for(tool_name + '.report', report_id='') }}${ result.id }`, '_blank');
         } else {
-          window.location.href = `{{ url_for(tool_name + '.report', id='') }}${ result.id }`;
+          window.location.href = `{{ url_for(tool_name + '.report', report_id='') }}${ result.id }`;
         }
       }
 

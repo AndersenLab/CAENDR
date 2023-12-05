@@ -7,7 +7,8 @@ from flask import jsonify
 
 from base.forms import MappingForm
 from base.utils.auth  import get_jwt, jwt_required, admin_required, get_current_user, user_is_admin
-from base.utils.tools import get_upload_err_msg, lookup_report, try_submit
+from base.utils.tools import get_upload_err_msg, try_submit
+from base.utils.view_decorators import parse_job_id
 from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 from caendr.services.nemascan_mapping import get_mapping, get_mappings
@@ -17,6 +18,7 @@ from caendr.models.error import (
     FileUploadError,
     ReportLookupError,
 )
+from caendr.models.job_pipeline import NemascanPipeline
 from caendr.models.status import JobStatus
 from caendr.utils.env import get_env_var
 from caendr.utils.local_files import LocalUploadFile
@@ -168,19 +170,10 @@ def list_results():
   })
 
 
-@genetic_mapping_bp.route('/report/<id>', methods=['GET'])
+@genetic_mapping_bp.route('/report/<report_id>', methods=['GET'])
 @jwt_required()
-def report(id):
-
-  # Fetch requested mapping report
-  # Ensures the report exists and the user has permission to view it
-  try:
-    job = lookup_report(NemascanReport.kind, id)
-
-  # If the report lookup request is invalid, show an error message
-  except ReportLookupError as ex:
-    flash(ex.msg, 'danger')
-    abort(ex.code)
+@parse_job_id(NemascanPipeline, fetch=False)
+def report(job: NemascanPipeline):
 
   # Get the trait name, if it exists
   trait = job.report['trait']
@@ -195,7 +188,7 @@ def report(id):
     # Job status
     'mapping_status': job.report['status'],
 
-    'id': id,
+    'report_id': job.report.id,
 
     # Links to the input data file and report output files, if they exist
     'data_download_url': job.report.input_filepath(  schema = BlobURISchema.HTTPS, check_if_exists = True ),
@@ -205,19 +198,10 @@ def report(id):
   })
 
 
-@genetic_mapping_bp.route('/report/<id>/fullscreen', methods=['GET'])
+@genetic_mapping_bp.route('/report/<report_id>/fullscreen', methods=['GET'])
 @jwt_required()
-def report_fullscreen(id):
-
-  # Fetch requested mapping report
-  # Ensures the report exists and the user has permission to view it
-  try:
-    job = lookup_report(NemascanReport.kind, id)
-
-  # If the report lookup request is invalid, show an error message
-  except ReportLookupError as ex:
-    flash(ex.msg, 'danger')
-    abort(ex.code)
+@parse_job_id(NemascanPipeline, fetch=False)
+def report_fullscreen(job: NemascanPipeline):
 
   # Download the report files, if they exist
   report_contents = job.fetch_output()
@@ -251,19 +235,10 @@ def report_status(id):
   return jsonify(payload)
 
 
-@genetic_mapping_bp.route('/report/<id>/results', methods=['GET'])
+@genetic_mapping_bp.route('/report/<report_id>/results', methods=['GET'])
 @jwt_required()
-def results(id):
-
-  # Fetch requested mapping report
-  # Ensures the report exists and the user has permission to view it
-  try:
-    job = lookup_report(NemascanReport.kind, id)
-
-  # If the report lookup request is invalid, show an error message
-  except ReportLookupError as ex:
-    flash(ex.msg, 'danger')
-    abort(ex.code)
+@parse_job_id(NemascanPipeline, fetch=False)
+def results(job: NemascanPipeline):
 
   # Get the trait, if it exists
   trait = job.report['trait']

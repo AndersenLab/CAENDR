@@ -83,7 +83,7 @@ span.bi {
             {% for column in columns %}
               <td class="data-{{column.class}}" {% if column.get('data_order') %}data-order="{{column.data_order(item)}}"{% endif %}>
                 {% if column.get('link_to_data', False) and (item.status == JobStatus.COMPLETE or item.status == JobStatus.ERROR) %}
-                  <a href="{{ url_for(tool_name + '.report', id=item.id) }}">
+                  <a href="{{ url_for(tool_name + '.report', report_id=item.id) }}">
                     {{ item[column.field] }}
                   </a>
                 {% else %}

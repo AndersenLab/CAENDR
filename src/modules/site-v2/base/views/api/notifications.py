@@ -51,7 +51,7 @@ def job_finish(kind, id, status):
   # Complete message
   if status == JobStatus.COMPLETE:
     template = REPORT_SUCCESS_EMAIL_TEMPLATE.strip('\n')
-    link     = url_for(bp + '.report', id=report.id, _external=True)
+    link     = url_for(bp + '.report', report_id=report.id, _external=True)
 
   # Error message
   elif status == JobStatus.ERROR:

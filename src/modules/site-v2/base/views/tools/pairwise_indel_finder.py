@@ -5,11 +5,13 @@ from flask import Response, Blueprint, render_template, request, url_for, jsonif
 
 from base.forms import PairwiseIndelForm
 from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
-from base.utils.tools import lookup_report, try_submit
+from base.utils.tools import try_submit
+from base.utils.view_decorators import parse_job_id
 
 from caendr.models.datastore.browser_track import BrowserTrackDefault
 from caendr.models.datastore import Species, IndelPrimerReport, DatasetRelease
-from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupError, EmptyReportDataError, EmptyReportResultsError
+from caendr.models.error import NotFoundError, NonUniqueEntity
+from caendr.models.job_pipeline import IndelFinderPipeline
 from caendr.models.status import JobStatus
 from caendr.services.dataset_release import get_dataset_release
 from caendr.utils.bio import parse_chrom_interval
@@ -242,10 +244,11 @@ def submit():
 
 
 
-@pairwise_indel_finder_bp.route("/report/<id>")
-@pairwise_indel_finder_bp.route("/report/<id>/download/<file_ext>")
+@pairwise_indel_finder_bp.route("/report/<report_id>",                     methods=['GET'])
+@pairwise_indel_finder_bp.route("/report/<report_id>/download/<file_ext>", methods=['GET'])
 @jwt_required()
-def report(id, file_ext=None):
+@parse_job_id(IndelFinderPipeline)
+def report(job: IndelFinderPipeline, data, result, file_ext=None):
 
     # Validate file extension, if provided
     if file_ext:
@@ -255,38 +258,8 @@ def report(id, file_ext=None):
     else:
       file_format = None
 
-    # Fetch requested primer report
-    # Ensures the report exists and the user has permission to view it
-    try:
-      job = lookup_report(IndelPrimerReport.kind, id)
-
-    # If the report lookup request is invalid, show an error message
-    except ReportLookupError as ex:
-      flash(ex.msg, 'danger')
-      abort(ex.code)
-
-
-    # Try getting the report data file and results
-    # If result is None, job hasn't finished computing yet
-    try:
-      data, result = job.fetch()
-      ready = result is not None
-
-    # Error reading one of the report files
-    except (EmptyReportDataError, EmptyReportResultsError) as ex:
-      logger.error(f'Error fetching Indel Finder report {ex.id}: {ex.description}')
-      return abort(404, description = ex.description)
-
-    # General error
-    except Exception as ex:
-      logger.error(f'Error fetching Indel Finder report {id}: {ex}')
-      return abort(400, description = 'Something went wrong')
-
-    # No data file found
-    if data is None:
-      logger.error(f'Error fetching Indel Finder report {id}: Input data file does not exist')
-      return abort(404)
-
+    # Report is ready if result exists
+    ready = result is not None
 
     # Get indel interval
     try:
@@ -326,7 +299,7 @@ def report(id, file_ext=None):
 
       # GCP data info
       'data_hash': job.report.data_hash,
-      'id': id,
+      'report_id': job.report.id,
 
       # Job status
       'empty': result['empty'],

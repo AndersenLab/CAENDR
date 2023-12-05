@@ -16,17 +16,14 @@ import bleach
 
 from base.forms import HeritabilityForm
 from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user, user_is_admin
-from base.utils.tools import get_upload_err_msg, lookup_report, try_submit
+from base.utils.tools import get_upload_err_msg, try_submit
+from base.utils.view_decorators import parse_job_id
 from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
-from caendr.models.error import (
-    EmptyReportDataError,
-    EmptyReportResultsError,
-    FileUploadError,
-    ReportLookupError,
-)
+from caendr.models.error import FileUploadError
 from caendr.models.datastore import Species, HeritabilityReport
 from caendr.models.status import JobStatus
+from caendr.models.job_pipeline import HeritabilityPipeline
 from caendr.api.strain import get_strains
 from caendr.services.heritability_report import get_heritability_report, get_heritability_reports
 from caendr.utils.data import unique_id, get_object_hash
@@ -222,50 +219,18 @@ def view_logs(id):
   return render_template("tools/heritability_calculator/logs.html", **locals())
 
 
-@heritability_calculator_bp.route("/report/<id>", methods=['GET'])
+@heritability_calculator_bp.route("/report/<report_id>", methods=['GET'])
 @jwt_required()
-def report(id):
+@parse_job_id(HeritabilityPipeline)
+def report(job: HeritabilityPipeline, data, result):
 
-  user = get_current_user()
-
-  # Fetch requested heritability report
-  # Ensures the report exists and the user has permission to view it
-  try:
-    job = lookup_report(HeritabilityReport.kind, id, user=user)
-
-  # If the report lookup request is invalid, show an error message
-  except ReportLookupError as ex:
-    flash(ex.msg, 'danger')
-    abort(ex.code)
-
-  # Try getting & parsing the report data file and results
-  # If result is None, job hasn't finished computing yet
-  try:
-    data, result = job.fetch()
-    ready = result is not None
-
-  # Error reading one of the report files
-  except (EmptyReportDataError, EmptyReportResultsError) as ex:
-    logger.error(f'Error fetching Heritability report {ex.id}: {ex.description}')
-    return abort(404, description = ex.description)
-
-  # General error
-  except Exception as ex:
-    logger.error(f'Error fetching Heritability report {id}: {ex}')
-    return abort(400, description = 'Something went wrong')
-
-  # No data file found
-  if data is None:
-    logger.error(f'Error fetching Heritability report {id}: Input data file does not exist')
-    return abort(404)
-
-
+  ready = result is not None
   trait = data[0]['TraitName']
 
   # # TODO: Is this used? It looks like the error message(s) come from the entity's PipelineOperation
   # service_name = os.getenv('HERITABILITY_CONTAINER_NAME')
   # persistent_logger = PersistentLogger(service_name)
-  # error = persistent_logger.get(id)
+  # error = persistent_logger.get(job.report.id)
 
   return render_template("tools/heritability_calculator/result.html", **{
     'title': "Heritability Results",
@@ -282,7 +247,7 @@ def report(id):
     'error': job.get_error(),
 
     'data_url': job.report.input_filepath(schema=BlobURISchema.HTTPS),
-    'logs_url': url_for('heritability_calculator.view_logs', id = id),
+    'logs_url': url_for('heritability_calculator.view_logs', id = job.report.id),
 
     'JobStatus': JobStatus,
   })
