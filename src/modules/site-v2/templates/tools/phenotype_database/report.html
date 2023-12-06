@@ -1,4 +1,26 @@
 {% extends "_layouts/default-nocontainer.html" %}
+
+{% block custom_head %}
+
+<!-- D3js -->
+<script src="//d3js.org/d3.v4.min.js"></script>
+
+<style>
+    .tooltip {
+        position: absolute;
+        font-size: 12px;
+        width:  auto;
+        height: auto;
+        border: 1px solid black;
+        pointer-events: none;
+        line-height: 1px;
+        background-color: white;
+    }
+</style>
+
+{% endblock %}
+
+
 {% block content %}
 
 <div class="container-fluid px-5 pb-5">
@@ -36,14 +58,15 @@
             <!-- /Options Toolbar -->
             <!-- Widget Placeholder -->
             <div class="col">
-                <svg class="bd-placeholder-img bd-placeholder-img-lg img-fluid border-0" width="100%"
+                <div id="phenotype-chart"></div>
+                <!-- <svg class="bd-placeholder-img bd-placeholder-img-lg img-fluid border-0" width="100%"
                     style="height: 100%" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Widget"
                     preserveAspectRatio="xMidYMid slice" focusable="false">
                     <title>Placeholder</title>
                     <rect width="100%" height="100%" fill="#868e96"></rect><text x="50%" y="50%" fill="#dee2e6"
                         dy=".3em">Widget
                         Placeholder</text>
-                </svg>
+                </svg> -->
             </div>
             <!-- Widget Placeholder -->
         </div>
@@ -51,5 +74,32 @@
     </div>
     <!-- /Flex -->
 </div> <!-- /Container -->
+
+{% endblock %}
+
+
+{% block script %}
+<script src="{{ url_for('static', filename='js/scatter-histogram.js') }}"></script>
+
+<script>
+
+const data = {{ data.trait_values|tojson }};
+
+scatterplot_histograms('#phenotype-chart', data, {
+    hist_height:   60,
+    width:         600,
+    height:        600,
+    fill_color:    '#0719BC',
+    bins_per_tick: 2,
+    x_label:       '{{ data.trait_names[0] }}',
+    y_label:       '{{ data.trait_names[1] }}',
+    tooltip_template: (d, labels) => `
+        <p><b>Strain: ${d[2]}</b></p>
+        <p>${labels[0]}: ${d[0]}</p>
+        <p>${labels[1]}: ${d[1]}</p>
+    `,
+});
+
+</script>
 
 {% endblock %}
