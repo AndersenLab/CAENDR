@@ -237,7 +237,7 @@ def register_blueprints(app):
   app.register_blueprint(genetic_mapping_bp,         url_prefix='/tools/genetic-mapping')
   app.register_blueprint(pairwise_indel_finder_bp,   url_prefix='/tools/pairwise-indel-finder')
   app.register_blueprint(heritability_calculator_bp, url_prefix='/tools/heritability-calculator')
-  app.register_blueprint(phenotype_comparison_bp,    url_prefix='/tools/phenotype-comparison')
+  # app.register_blueprint(phenotype_comparison_bp,    url_prefix='/tools/phenotype-comparison')
   app.register_blueprint(phenotype_database_bp,      url_prefix='/tools/phenotype-database')
 
   '''
