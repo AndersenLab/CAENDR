@@ -12,10 +12,10 @@ from extensions import cache
 
 from caendr.services.logger import logger
 
-from base.utils.auth         import jwt_required, get_current_user
-from base.utils.tools        import lookup_report
+from base.utils.auth         import jwt_required, get_current_user, user_is_admin
+from base.utils.tools        import lookup_report, list_reports
 
-from caendr.models.datastore import PhenotypeReport
+from caendr.models.datastore import PhenotypeReport, Species
 from caendr.models.error     import ReportLookupError, EmptyReportDataError, EmptyReportResultsError
 from caendr.models.status    import JobStatus
 
@@ -24,6 +24,30 @@ from caendr.models.status    import JobStatus
 phenotype_database_bp = Blueprint(
   'phenotype_database', __name__, template_folder='templates'
 )
+
+
+def results_columns():
+  return [
+    {
+      'title': 'Description',
+      'class': 'label',
+      'field': 'label',
+      'width': 0.5,
+      'link_to_data': True,
+    },
+    {
+      'title': 'Trait 1',
+      'class': 's1',
+      'field': 'trait_1_name',
+      'width': 0.25,
+    },
+    {
+      'title': 'Trait 2',
+      'class': 's2',
+      'field': 'trait_2_name',
+      'width': 0.25,
+    },
+  ]
 
 
 
@@ -73,6 +97,44 @@ def analysisC():
 #
 # Results
 #
+
+@phenotype_database_bp.route('/all-results', methods=['GET'], endpoint='all_results')
+@phenotype_database_bp.route('/my-results',  methods=['GET'], endpoint='my_results')
+@jwt_required()
+def list_results():
+  show_all = request.path.endswith('all-results')
+  user = get_current_user()
+
+  # Only show malformed Entities to admin users
+  filter_errs = not user_is_admin()
+
+  # Construct page
+  return render_template('tools/report-list.html', **{
+
+    # Page info
+    'title': ('All' if show_all else 'My') + ' Phenotype Reports',
+    'tool_alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools'), },
+
+    # User info
+    'user':  user,
+
+    # Tool info
+    'tool_name': 'phenotype_database',
+    'all_results': show_all,
+    'button_labels': {
+      'tool': 'New Phenotype Report',
+      'all':  'All User Results',
+      'user': 'My Phenotype Reports',
+    },
+
+    # Table info
+    'species_list': Species.all(),
+    'items': list_reports(PhenotypeReport, user = None if show_all else user, filter_errs=filter_errs),
+    'columns': results_columns(),
+
+    'JobStatus': JobStatus,
+  })
+
 
 @phenotype_database_bp.route("/report/<id>", methods=['GET'])
 @jwt_required()

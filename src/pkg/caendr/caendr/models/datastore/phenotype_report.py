@@ -132,3 +132,15 @@ class PhenotypeReport(ReportEntity, HashableEntity):
     else:
       raise TypeError(f'Cannot set trait_1 to "{ val }"')
 
+
+  #
+  # Trait Names
+  #
+
+  @property
+  def trait_1_name(self) -> str:
+    return self['trait_1']['trait_name']
+
+  @property
+  def trait_2_name(self) -> str:
+    return self['trait_2']['trait_name']
