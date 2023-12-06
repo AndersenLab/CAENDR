@@ -1,0 +1,31 @@
+{% extends "_layouts/default-nocontainer.html" %}
+{% block content %}
+
+<div class="container">
+    <div class="col mt-3 mb-5">Lorem ipsum dolor sit amet consectetur. Id consectetur aliquet sollicitudin eu pharetra
+        pharetra
+        lectus ut sem. Dictumst scelerisque ut risus suspendisse nulla. Libero mi dictumst ut urna luctus tellus massa.
+        Dictum egestas iaculis pulvinar urna morbi. Eu iaculis feugiat pellentesque ultrices ullamcorper amet placerat
+        nec sodales. Dictum lorem tortor molestie facilisis ultrices porta.</div>
+    <div class="d-flex justify-content-end">
+        <a class="btn btn-secondary rounded-pill text-white" role="button" href="#"><i
+                class="bi bi-arrow-right-circle-fill me-1" aria-hidden="true"></i>Start an Analysis</a>
+    </div>
+    <div class="col mt-5">
+        {% include "_includes/phenotype-database-table.html" %}
+    </div>
+
+    <!-- Offcanvas -->
+    <div class="offcanvas offcanvas-end offcanvasPhenotype" tabindex="-1" id="offcanvas1"
+        aria-labelledby="offcanvas1Label">
+        <div class="offcanvas-header">
+            <h5 id="offcanvas1Label">example_trait_1234</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-4">
+            {% include "_includes/phenotype-offcanvas-content.html" %}
+        </div>
+    </div>
+</div> <!-- /Container -->
+
+{% endblock %}
