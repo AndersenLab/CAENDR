@@ -1,14 +1,11 @@
 import bleach
-from caendr.services.logger import logger
 from flask import Response, Blueprint, render_template, request, url_for, jsonify, redirect, flash, abort
 
 from base.forms              import PhenotypeComparisonForm
 from base.utils.auth         import jwt_required, get_current_user, user_is_admin
-from base.utils.tools        import lookup_report, try_submit
+from base.utils.tools        import try_submit
 
 from caendr.models.datastore import Species, PhenotypeReport
-from caendr.models.error     import ReportLookupError, EmptyReportDataError, EmptyReportResultsError
-from caendr.models.status    import JobStatus
 
 
 
@@ -84,55 +81,3 @@ def submit():
 
   # Return the response
   return jsonify( response ), code
-
-
-
-@phenotype_comparison_bp.route("/report/<id>", methods=['GET'])
-@jwt_required()
-def report(id):
-
-  user = get_current_user()
-
-  # Fetch requested phenotype report
-  # Ensures the report exists and the user has permission to view it
-  try:
-    job = lookup_report(PhenotypeReport.kind, id, user=user)
-
-  # If the report lookup request is invalid, show an error message
-  except ReportLookupError as ex:
-    flash(ex.msg, 'danger')
-    abort(ex.code)
-
-  # Try getting & parsing the report data file and results
-  # If result is None, job hasn't finished computing yet
-  try:
-    data, result = job.fetch()
-
-  # Error reading one of the report files
-  except (EmptyReportDataError, EmptyReportResultsError) as ex:
-    logger.error(f'Error fetching Phenotype report {ex.id}: {ex.description}')
-    return abort(404, description = ex.description)
-
-  # General error
-  except Exception as ex:
-    logger.error(f'Error fetching Phenotype report {id}: {ex}')
-    return abort(400, description = 'Something went wrong')
-
-  # No data file found
-  if data is None:
-    logger.error(f'Error fetching Phenotype report {id}: Input data does not exist')
-    return abort(404)
-
-  return render_template('tools/phenotype/report.html', **{
-    'title': "Phenotype Results",
-    'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
-
-    'report': job.report,
-    'data':   data,
-    'result': result,
-    'ready':  True,
-    'error':  job.get_error(),
-
-    'JobStatus': JobStatus,
-  })
-
