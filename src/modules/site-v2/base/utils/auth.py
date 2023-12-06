@@ -172,3 +172,24 @@ def expired_token_callback(_jwt_header, jwt_data):
   resp = make_response(redirect(url_for('auth.refresh')))
   unset_access_cookies(resp)
   return resp, 302
+
+
+
+def access_token_required(token):
+  '''
+    Require a "Bearer" access token in the request.
+  '''
+  def wrapper(fn):
+    @wraps(fn)
+    def decorator(*args, **kwargs):
+
+      # Check for access token in request
+      access_token = request.headers.get('Authorization')
+      if access_token != 'Bearer {}'.format(token):
+        abort(403)
+
+      # Forward to wrapped function
+      return fn(*args, **kwargs)
+
+    return decorator
+  return wrapper

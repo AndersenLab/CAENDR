@@ -1,5 +1,6 @@
 from flask import jsonify, Blueprint, url_for, abort, request
 
+from base.utils.auth  import access_token_required
 from base.utils.tools import lookup_report
 from base.views.tools import pairwise_indel_finder_bp, genetic_mapping_bp, heritability_calculator_bp
 
@@ -28,12 +29,8 @@ def notifications():
 
 
 @api_notifications_bp.route('/job-finish/<kind>/<id>/<status>', methods=['GET'])
+@access_token_required(API_SITE_ACCESS_TOKEN)
 def job_finish(kind, id, status):
-
-  # Validate that this request came from the pipeline API
-  access_token = request.headers.get('Authorization')
-  if access_token != 'Bearer {}'.format(API_SITE_ACCESS_TOKEN):
-    abort(403)
 
   # Fetch requested report, aborting if kind is invalid or report cannot be found
   try:
