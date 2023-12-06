@@ -6,7 +6,7 @@ from flask import Response, Blueprint, render_template, request, url_for, jsonif
 from base.forms import PairwiseIndelForm
 from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
 from base.utils.tools import try_submit
-from base.utils.view_decorators import parse_job_id
+from base.utils.view_decorators import parse_job_id, validate_form
 
 from caendr.models.datastore.browser_track import BrowserTrackDefault
 from caendr.models.datastore import Species, IndelPrimerReport, DatasetRelease
@@ -196,44 +196,25 @@ def list_results():
 
 @pairwise_indel_finder_bp.route("/query-indels", methods=["POST"])
 @jwt_required()
-def query():
+@validate_form(PairwiseIndelForm)
+def query(form_data, no_cache=False):
 
-  # Validate query form
-  form = PairwiseIndelForm()
-  if form.validate_on_submit():
+  # If either of the strains is missing, raise a 422 Unprocessable Entity error
+  if form_data.get('strain_1') is None or form_data.get('strain_2') is None:
+    return {}, 422
 
-    # Extract fields
-    species  = form.data['species']
-    strain_1 = form.data['strain_1']
-    strain_2 = form.data['strain_2']
-    chrom    = form.data['chromosome']
-    start    = form.data['start']
-    stop     = form.data['stop']
-
-    # Run query and return results
-    results = query_indels_and_mark_overlaps(species, strain_1, strain_2, chrom, start, stop)
-    return jsonify({ 'results': results })
-
-  # If form not valid, return errors
-  return jsonify({ 'errors': form.errors })
+  # Pass the form fields to the query function & return the result
+  return jsonify({ 'results': query_indels_and_mark_overlaps(**form_data) })
 
 
 
 @pairwise_indel_finder_bp.route('/submit', methods=["POST"])
 @jwt_required()
-def submit():
-
-  # Get current user
-  user = get_current_user()
-
-  # Get info about data
-  data = request.get_json()
-
-  # If user is admin, allow them to bypass cache with URL variable
-  no_cache = bool(user_is_admin() and request.args.get("nocache", False))
+@validate_form(None, from_json=True)
+def submit(form_data, no_cache=False):
 
   # Try submitting the job & getting a JSON status message
-  response, code = try_submit(IndelPrimerReport.kind, user, data, no_cache)
+  response, code = try_submit(IndelPrimerReport.kind, get_current_user(), form_data, no_cache)
 
   # If there was an error, flash it
   if code != 200 and int(request.args.get('reloadonerror', 1)):

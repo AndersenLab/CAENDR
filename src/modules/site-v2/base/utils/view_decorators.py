@@ -1,14 +1,19 @@
+import bleach
 from functools import wraps
 from typing    import Type
 
-from flask import abort, redirect, request, url_for, flash
+from flask     import abort, redirect, request, url_for, flash, jsonify
+from flask_wtf import FlaskForm
 
-from base.utils.tools           import lookup_report
+from base.utils.auth            import user_is_admin
+from base.utils.tools           import lookup_report, get_upload_err_msg
+from constants                  import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 from caendr.models.datastore    import DatasetRelease, Species
-from caendr.models.error        import NotFoundError, ReportLookupError, EmptyReportDataError, EmptyReportResultsError
+from caendr.models.error        import NotFoundError, ReportLookupError, EmptyReportDataError, EmptyReportResultsError, FileUploadError
 from caendr.models.job_pipeline import JobPipeline
 from caendr.services.logger     import logger
+from caendr.utils.local_files   import LocalUploadFile
 
 
 
@@ -128,6 +133,84 @@ def parse_job_id(pipeline_class: Type[JobPipeline], fetch=True, check_data_exist
 
       # Pass the objects to the function
       return f(*args, job=job, data=data, result=result, **kwargs)
+
+    return decorator
+  return wrapper
+
+
+
+def validate_form(form_class: Type[FlaskForm], from_json: bool = False, err_msg: str = None, flash_err_msg: bool = True):
+  '''
+    Parse the request form into the given form type, validate the fields, and inject the data as a dict.
+
+    Aborts with `400` if form validation fails.
+
+    TODO: What happens with non-None `form_class` and `from_json = True`? Can FlaskForm initialize that way?
+
+    Passes the following args to the wrapped function:
+      - `form_data`: A dict of cleaned / validated fields from the form.
+      - `no_cache`: Whether the user wants to skip caching the form results. Can only be set if user is admin.
+
+    Arguments:
+      - `form_class`: The `FlaskForm` subclass to use for parsing/validation. If `None`, cleans the individual fields but performs no form validation.
+      - `from_json`: If `True`, use the request `.get_json()` as the fields instead.
+      - `err_msg`: An error message to add to the response if validation fails.
+      - `flash_err_msg`: If `True`, flashes the `err_msg` in addition to returning it.
+  '''
+
+  def wrapper(f):
+
+    def _clean_field(value):
+      ''' Helper function: apply bleach.clean to value, if applicable '''
+      try:
+        return bleach.clean(value)
+      except TypeError:
+        return value
+
+    @wraps(f)
+    def decorator(*args, **kwargs):
+
+      # If user is admin, allow them to bypass cache with URL variable
+      no_cache = bool(user_is_admin() and request.args.get("nocache", False))
+
+      # Pull the raw data from either the form or the JSON body
+      raw_data = request.get_json() if from_json else request.form
+
+      # If no form class provided
+      if form_class is None:
+        return f(*args, form_data={ k: _clean_field(v) for k, v in raw_data.items() }, no_cache=no_cache, **kwargs)
+
+      # Construct the Flask form object
+      form = form_class(request.form)
+
+      # Validate form fields
+      if not form.validate_on_submit():
+        if err_msg and flash_err_msg:
+          flash(err_msg, 'danger')
+        return jsonify({ 'message': err_msg, 'errors': form.errors }), 400
+
+      # Read & clean fields from form, excluding CSRF token & file upload(s)
+      form_data = {
+        field.name: _clean_field(field.data) for field in form if field.name in request.form and field.id != 'csrf_token'
+      }
+
+      # If no file(s) uploaded, evaluate here
+      if not len(request.files):
+        return f(*args, form_data=form_data, no_cache=no_cache, **kwargs)
+
+      # Upload input file to server temporarily and add to the list of form fields
+      # TODO: This hardcodes the field name 'file' for a *single* file upload -- generalize whatever file field(s) are present
+      try:
+        with LocalUploadFile(request.files['file'], valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS) as local_file:
+
+          # Pass the objects to the function
+          return f(*args, form_data={**form_data, 'file': local_file}, no_cache=no_cache, **kwargs)
+
+      # If the file upload failed, display an error message
+      except FileUploadError as ex:
+        message = get_upload_err_msg(ex.code)
+        flash(message, 'danger')
+        return jsonify({ 'message': message }), ex.code
 
     return decorator
   return wrapper

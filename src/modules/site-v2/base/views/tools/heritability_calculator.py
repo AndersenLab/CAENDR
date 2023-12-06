@@ -12,15 +12,12 @@ from flask import (flash,
                    abort)
 from caendr.services.logger import logger
 from datetime import datetime
-import bleach
 
 from base.forms import HeritabilityForm
 from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user, user_is_admin
-from base.utils.tools import get_upload_err_msg, try_submit
-from base.utils.view_decorators import parse_job_id
-from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
+from base.utils.tools import try_submit
+from base.utils.view_decorators import parse_job_id, validate_form
 
-from caendr.models.error import FileUploadError
 from caendr.models.datastore import Species, HeritabilityReport
 from caendr.models.status import JobStatus
 from caendr.models.job_pipeline import HeritabilityPipeline
@@ -28,7 +25,6 @@ from caendr.api.strain import get_strains
 from caendr.services.heritability_report import get_heritability_report, get_heritability_reports
 from caendr.utils.data import unique_id, get_object_hash
 from caendr.utils.env import get_env_var
-from caendr.utils.local_files import LocalUploadFile
 from caendr.services.cloud.storage import generate_blob_uri, BlobURISchema
 from caendr.services.persistent_logger import PersistentLogger
 
@@ -141,50 +137,22 @@ def list_results():
 
 @heritability_calculator_bp.route('/submit', methods=["POST"])
 @jwt_required()
-def submit():
-  form = HeritabilityForm(request.form)
-  user = get_current_user()
+@validate_form(HeritabilityForm, err_msg='You must include a description of your data and a CSV file to upload.')
+def submit(form_data, no_cache=False):
 
-  # Validate form fields
-  # Checks that species is in species list & label is not empty
-  if not form.validate_on_submit():
-    msg = "You must include a description of your data and a CSV file to upload."
-    flash(msg, "danger")
-    return jsonify({ 'message': msg }), 400
+  # Try submitting the job & returning a JSON status message
+  response, code = try_submit( HeritabilityReport.kind, get_current_user(), form_data, no_cache=no_cache )
 
-  # If user is admin, allow them to bypass cache with URL variable
-  no_cache = bool(user_is_admin() and request.args.get("nocache", False))
+  # If there was an error, flash it
+  if code != 200 and int(request.args.get('reloadonerror', 1)):
+    flash(response['message'], 'danger')
 
-  # Read fields from form
-  label   = bleach.clean(request.form.get('label'))
-  species = bleach.clean(request.form.get('species'))
+  # If the response contains a caching message, flash it
+  elif response.get('message') and response.get('ready', False):
+    flash(response.get('message'), 'success')
 
-  # Upload input file to server temporarily, and start the job
-  try:
-    with LocalUploadFile(request.files.get('file'), valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS) as local_file:
-
-      # Package submission data together into dict
-      data = { 'label': label, 'species': species, 'file': local_file }
-
-      # Try submitting the job & returning a JSON status message
-      response, code = try_submit(HeritabilityReport.kind, user, data, no_cache)
-
-      # If there was an error, flash it
-      if code != 200 and int(request.args.get('reloadonerror', 1)):
-        flash(response['message'], 'danger')
-
-      # If the response contains a caching message, flash it
-      elif response.get('message') and response.get('ready', False):
-        flash(response.get('message'), 'success')
-
-      # Return the response
-      return jsonify( response ), code
-
-  # If the file upload failed, display an error message
-  except FileUploadError as ex:
-    message = get_upload_err_msg(ex.code)
-    flash(message, 'danger')
-    return jsonify({ 'message': message }), ex.code
+  # Return the response
+  return jsonify( response ), code
 
 
 @heritability_calculator_bp.route("/report/<report_id>/logs")

@@ -2,26 +2,19 @@ import os
 
 from caendr.services.logger import logger
 from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
-import bleach
 from flask import jsonify
 
 from base.forms import MappingForm
 from base.utils.auth  import get_jwt, jwt_required, admin_required, get_current_user, user_is_admin
-from base.utils.tools import get_upload_err_msg, try_submit
-from base.utils.view_decorators import parse_job_id
-from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
+from base.utils.tools import try_submit
+from base.utils.view_decorators import parse_job_id, validate_form
 
 from caendr.services.nemascan_mapping import get_mapping, get_mappings
-from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, get_blob, get_blob_list, check_blob_exists
+from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
 from caendr.models.datastore import Species, NemascanReport
-from caendr.models.error import (
-    FileUploadError,
-    ReportLookupError,
-)
 from caendr.models.job_pipeline import NemascanPipeline
 from caendr.models.status import JobStatus
 from caendr.utils.env import get_env_var
-from caendr.utils.local_files import LocalUploadFile
 
 
 MODULE_SITE_BUCKET_ASSETS_NAME = get_env_var('MODULE_SITE_BUCKET_ASSETS_NAME')
@@ -89,50 +82,22 @@ def genetic_mapping():
 
 @genetic_mapping_bp.route('/submit', methods=['POST'])
 @jwt_required()
-def submit():
-  form = MappingForm(request.form)
-  user = get_current_user()
+@validate_form(MappingForm, err_msg='You must include a description of your data and a CSV file to upload.')
+def submit(form_data, no_cache=False):
 
-  # If user is admin, allow them to bypass cache with URL variable
-  no_cache = bool(user_is_admin() and request.args.get("nocache", False))
+  # Try submitting the job & returning a JSON status message
+  response, code = try_submit(NemascanReport.kind, get_current_user(), form_data, no_cache)
 
-  # Validate form fields
-  # Checks that species is in species list & label is not empty
-  if not form.validate_on_submit():
-    msg = "You must include a description of your data and a CSV file to upload."
-    flash(msg, "danger")
-    return jsonify({ 'message': msg }), 400
+  # If there was an error, flash it
+  if code != 200 and int(request.args.get('reloadonerror', 1)):
+    flash(response['message'], 'danger')
 
-  # Read fields from form
-  label   = bleach.clean(request.form.get('label'))
-  species = bleach.clean(request.form.get('species'))
+  # If the response contains a caching message, flash it
+  elif response.get('message') and response.get('ready', False):
+    flash(response.get('message'), 'success')
 
-  # Upload input file to server temporarily, and start the job
-  try:
-    with LocalUploadFile(request.files.get('file'), valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS) as file:
-
-      # Package submission data together into dict
-      data = { 'label': label, 'species': species, 'file': file }
-
-      # Try submitting the job & returning a JSON status message
-      response, code = try_submit(NemascanReport.kind, user, data, no_cache)
-
-      # If there was an error, flash it
-      if code != 200 and int(request.args.get('reloadonerror', 1)):
-        flash(response['message'], 'danger')
-
-      # If the response contains a caching message, flash it
-      elif response.get('message') and response.get('ready', False):
-        flash(response.get('message'), 'success')
-
-      # Return the response
-      return jsonify( response ), code
-
-  # If the file upload failed, display an error message
-  except FileUploadError as ex:
-    message = get_upload_err_msg(ex.code)
-    flash(message, 'danger')
-    return jsonify({ 'message': message }), ex.code
+  # Return the response
+  return jsonify( response ), code
 
 
 @genetic_mapping_bp.route('/all-results', methods=['GET'], endpoint='all_results')
