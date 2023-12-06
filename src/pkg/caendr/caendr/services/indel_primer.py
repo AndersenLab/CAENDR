@@ -41,36 +41,6 @@ SV_COLUMNS = [
 CHROMOSOME_CHOICES = [(x, x) for x in CHROM_NUMERIC.keys()]
 COLUMNS = ["CHROM", "START", "STOP", "?", "TYPE", "STRAND", ""]
 
-def get_indel_primer(id):
-  '''
-    Get the Indel Primer with the given ID.
-    If no such submission exists, returns None.
-  '''
-  return IndelPrimerReport.get_ds(id)
-
-
-def get_indel_primers(username=None, filter_errs=False):
-  '''
-    Get a list of Indel Finder reports, sorted by most recent.
-
-    Args:
-      username (str | None):
-        If provided, only return reports owned by the given user.
-      filter_errs (bool):
-        If True, skips all entities that throw an error when initializing.
-        If False, populates as many fields of those entities as possible.
-  '''
-  # Filter by username if provided, and log event accordingly
-  if username:
-    logger.debug(f'Getting all indel primers for user: username:{username}')
-    filters = [('username', '=', username)]
-  else:
-    logger.debug(f'Getting all indel primers...')
-    filters = []
-
-  # Get list of reports and filter by date
-  primers = IndelPrimerReport.query_ds(safe=not filter_errs, ignore_errs=filter_errs, filters=filters)
-  return IndelPrimerReport.sort_by_created_date(primers, reverse=True)
 
 
 def get_bed_url(species, release = None, secure = True):
