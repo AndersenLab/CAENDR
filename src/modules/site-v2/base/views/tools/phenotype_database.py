@@ -70,9 +70,9 @@ def phenotype_database():
 # Submission Flow
 #
 
-@phenotype_database_bp.route('/analysis/stepA')
-def analysisA():
-  return render_template('tools/phenotype_database/phenotypeAnalysisA.html', **{
+@phenotype_database_bp.route('/submit/start')
+def submit_start():
+  return render_template('tools/phenotype_database/submit-start.html', **{
     # Page info
     'title': 'Phenotype Analysis',
     'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
