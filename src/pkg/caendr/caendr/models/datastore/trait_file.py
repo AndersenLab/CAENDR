@@ -45,6 +45,7 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
       **super().serialize(include_meta=include_meta),
 
       # Add Python property values & function lookups
+      'name':        self.name,
       'uri':         self.get_filepath(schema=BlobURISchema.HTTPS),
       'submitter':   self.get_user_full_name() if self.from_public else 'CaeNDR',
       'is_public':   self.is_public,

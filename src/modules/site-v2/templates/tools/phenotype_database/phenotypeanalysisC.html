@@ -74,6 +74,7 @@
 {% endblock %}
 
 {% block script %}
+{% from "_includes/select-trait.html"   import select_trait               %}
 {% from "_includes/strain-listing.html" import unpack_species_list        %}
 <script>
 
@@ -81,5 +82,16 @@
     const species_list = {{ unpack_species_list(species_list, species_fields) }};
     let species = 'c_elegans';
 
+
+    /* Test query & select traits */
+    $.getJSON("{{ url_for('api_trait.query_all', split_by_species=true) }}", function(data) {
+        {{ select_trait('trait-1', 'data[species][0]') }}
+        {{ select_trait('trait-2', 'data[species][1]') }}
+    })
+
+
+    function get_trait_id(id) {
+        return document.getElementById(`${id}-selector`).dataset.trait
+    }
 </script>
 {% endblock %}
