@@ -8,12 +8,12 @@
     <div class="d-flex flex-wrap justify-content-center my-5">
         <div class="col-8 col-md-3">
             <div class="card text-bg-light text-center border-0 rounded-2 shadow-sm p-5 me-md-5 mb-5" style="min-height:15em;">
-                <h3 class="pt-5"><a href="{{ url_for('phenotype_database.submit_one') }}" class="stretched-link text-dark">One trait.</a></h3>
+                <h3 class="pt-5"><a href="{{ url_for('phenotype_database.submit_one', trait=initial_trait) }}" class="stretched-link text-dark">One trait.</a></h3>
             </div>
         </div>
         <div class="col-8 col-md-3">
             <div class="card text-bg-light text-center border-0 rounded-2 shadow-sm p-5 me-md-5 mb-5" style="min-height:15em;">
-                <h3 class="pt-5"><a href="{{ url_for('phenotype_database.submit_two') }}" class="stretched-link text-dark">Two traits.</a></h3>
+                <h3 class="pt-5"><a href="{{ url_for('phenotype_database.submit_two', trait=initial_trait) }}" class="stretched-link text-dark">Two traits.</a></h3>
             </div>
         </div>
     </div>

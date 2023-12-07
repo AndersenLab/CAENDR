@@ -16,8 +16,8 @@ from base.forms              import EmptyForm
 from base.utils.auth         import jwt_required, get_current_user, user_is_admin
 from base.utils.tools        import lookup_report, list_reports, try_submit
 
-from caendr.models.datastore import PhenotypeReport, Species
-from caendr.models.error     import ReportLookupError, EmptyReportDataError, EmptyReportResultsError
+from caendr.models.datastore import PhenotypeReport, Species, TraitFile
+from caendr.models.error     import ReportLookupError, EmptyReportDataError, EmptyReportResultsError, NotFoundError
 from caendr.models.status    import JobStatus
 
 
@@ -76,12 +76,24 @@ def submit_start():
     # Page info
     'title': 'Phenotype Analysis',
     'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+    'initial_trait': request.args.get('trait'),
   })
 
 
 @phenotype_database_bp.route('/submit/one', methods=['GET'], endpoint='submit_one')
 @phenotype_database_bp.route('/submit/two', methods=['GET'], endpoint='submit_two')
 def submit_traits():
+
+  # Check for a URL var "trait" and use to lookup an initial trait
+  initial_trait_name = request.args.get('trait')
+  if initial_trait_name:
+    try:
+      initial_trait = TraitFile.get_ds(initial_trait_name, silent=False)
+    except NotFoundError:
+      flash('That trait could not be found.', 'danger')
+      initial_trait = None
+  else:
+    initial_trait = None
 
   # Use the endpoint name (see route decorator above) to pick the correct template name
   template_name = request.endpoint.split('.')[-1].replace('_', '-')
@@ -96,6 +108,8 @@ def submit_traits():
     'species_fields': [
       'name', 'short_name',
     ],
+
+    'initial_trait': initial_trait,
   })
 
 

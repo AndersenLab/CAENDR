@@ -82,20 +82,27 @@
     {{ def_submit_job('phenotype_database') }}
 
 
-    $(document).ready(function(){
-        // Set headers for AJAX requests
-        {{ ajax_setup(form.csrf_token._value()) }}
-    })
-
     /* Species */
     const species_list = {{ unpack_species_list(species_list, species_fields) }};
     let species = 'c_elegans';
 
 
+    /* Initialization */
+    $(document).ready(function(){
+
+        // Set headers for AJAX requests
+        {{ ajax_setup(form.csrf_token._value()) }}
+
+        {%- if initial_trait %}
+        // Set the initial trait
+        {{ select_trait('trait-1', trait_file=initial_trait) }}
+        {%- endif %}
+    })
+
+
     /* Test query & select traits */
     $.getJSON("{{ url_for('api_trait.query_all', split_by_species=true) }}", function(data) {
-        {{ select_trait('trait-1', 'data[species][0]') }}
-        {{ select_trait('trait-2', 'data[species][1]') }}
+        console.log(data)
     })
 
 
