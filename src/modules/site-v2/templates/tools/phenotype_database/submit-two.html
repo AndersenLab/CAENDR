@@ -110,6 +110,23 @@
         return document.getElementById(`${id}-selector`).dataset.trait
     }
 
+    function select_trait(id, trait=null) {
+        if (id == 'trait-1') {
+            if (trait === null) {
+                {{ select_trait('trait-1') }}
+            } else {
+                {{ select_trait('trait-1', 'trait') }}
+            }
+        }
+        else if (id == 'trait-2') {
+            if (trait === null) {
+                {{ select_trait('trait-2') }}
+            } else {
+                {{ select_trait('trait-2', 'trait') }}
+            }
+        }
+    }
+
     function submit() {
         const trait_1 = get_trait_id('trait-1');
         const trait_2 = get_trait_id('trait-2');

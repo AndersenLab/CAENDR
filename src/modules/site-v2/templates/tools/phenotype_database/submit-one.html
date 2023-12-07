@@ -106,6 +106,14 @@
         return document.getElementById(`${id}-selector`).dataset.trait
     }
 
+    function select_trait(trait=null) {
+        if (trait === null) {
+            {{ select_trait('trait-1') }}
+        } else {
+            {{ select_trait('trait-1', 'trait') }}
+        }
+    }
+
     function submit() {
         const trait_1 = get_trait_id('trait-1');
 
