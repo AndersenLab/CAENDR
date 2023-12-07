@@ -78,23 +78,15 @@ def analysisA():
     'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
   })
 
-@phenotype_database_bp.route('/analysis/stepB')
-def analysisB():
-  return render_template('tools/phenotype_database/phenotypeAnalysisB.html', **{
-    # Page info
-    'title': 'Phenotype Analysis',
-    'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
-    'form': EmptyForm(request.form),
 
-    'species_list': Species.all(),
-    'species_fields': [
-      'name', 'short_name',
-    ],
-  })
+@phenotype_database_bp.route('/submit/one', methods=['GET'], endpoint='submit_one')
+@phenotype_database_bp.route('/submit/two', methods=['GET'], endpoint='submit_two')
+def submit_traits():
 
-@phenotype_database_bp.route('/analysis/stepC')
-def analysisC():
-  return render_template('tools/phenotype_database/phenotypeAnalysisC.html', **{
+  # Use the endpoint name (see route decorator above) to pick the correct template name
+  template_name = request.endpoint.split('.')[-1].replace('_', '-')
+
+  return render_template(f'tools/phenotype_database/{template_name}.html', **{
     # Page info
     'title': 'Phenotype Analysis',
     'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
