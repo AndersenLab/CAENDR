@@ -67,3 +67,15 @@
 </div>
 
 {% endblock %}
+
+
+{% block script %}
+{% from "_includes/strain-listing.html" import unpack_species_list        %}
+<script>
+
+    /* Species */
+    const species_list = {{ unpack_species_list(species_list, species_fields) }};
+    let species = 'c_elegans';
+
+</script>
+{% endblock %}

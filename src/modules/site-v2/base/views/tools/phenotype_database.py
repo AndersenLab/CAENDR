@@ -83,6 +83,11 @@ def analysisB():
     # Page info
     'title': 'Phenotype Analysis',
     'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+
+    'species_list': Species.all(),
+    'species_fields': [
+      'name', 'short_name',
+    ],
   })
 
 @phenotype_database_bp.route('/analysis/stepC')
@@ -91,6 +96,11 @@ def analysisC():
     # Page info
     'title': 'Phenotype Analysis',
     'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+
+    'species_list': Species.all(),
+    'species_fields': [
+      'name', 'short_name',
+    ],
   })
 
 
