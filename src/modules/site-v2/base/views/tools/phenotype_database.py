@@ -1,4 +1,4 @@
-import json
+import bleach
 from flask import (render_template,
                     url_for,
                     request,
@@ -12,8 +12,9 @@ from extensions import cache
 
 from caendr.services.logger import logger
 
+from base.forms              import EmptyForm
 from base.utils.auth         import jwt_required, get_current_user, user_is_admin
-from base.utils.tools        import lookup_report, list_reports
+from base.utils.tools        import lookup_report, list_reports, try_submit
 
 from caendr.models.datastore import PhenotypeReport, Species
 from caendr.models.error     import ReportLookupError, EmptyReportDataError, EmptyReportResultsError
@@ -83,6 +84,7 @@ def analysisB():
     # Page info
     'title': 'Phenotype Analysis',
     'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+    'form': EmptyForm(request.form),
 
     'species_list': Species.all(),
     'species_fields': [
@@ -96,12 +98,37 @@ def analysisC():
     # Page info
     'title': 'Phenotype Analysis',
     'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+    'form': EmptyForm(request.form),
 
     'species_list': Species.all(),
     'species_fields': [
       'name', 'short_name',
     ],
   })
+
+
+@phenotype_database_bp.route('/submit', methods=["POST"])
+@jwt_required()
+def submit():
+
+  # Read & clean fields from JSON data
+  data = {
+    field: bleach.clean(request.json.get(field))
+      for field in {'label', 'species', 'trait_1', 'trait_2'}
+  }
+
+  # If user is admin, allow them to bypass cache with URL variable
+  no_cache = bool(user_is_admin() and request.args.get("nocache", False))
+
+  # Try submitting the job & getting a JSON status message
+  response, code = try_submit(PhenotypeReport.kind, get_current_user(), data, no_cache)
+
+  # If there was an error, flash it
+  if code != 200 and int(request.args.get('reloadonerror', 1)):
+    flash(response['message'], 'danger')
+
+  # Return the response
+  return jsonify( response ), code
 
 
 #

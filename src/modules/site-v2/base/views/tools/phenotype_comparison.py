@@ -1,9 +1,6 @@
-import bleach
 from flask import Response, Blueprint, render_template, request, url_for, jsonify, redirect, flash, abort
 
 from base.forms              import PhenotypeComparisonForm
-from base.utils.auth         import jwt_required, get_current_user, user_is_admin
-from base.utils.tools        import try_submit
 
 from caendr.models.datastore import Species, PhenotypeReport
 
@@ -47,37 +44,3 @@ def phenotype_comparison():
     # Misc
     "fluid_container": True,
   })
-
-
-
-@phenotype_comparison_bp.route('/submit', methods=["POST"])
-@jwt_required()
-def submit():
-  form = PhenotypeComparisonForm(request.form)
-  user = get_current_user()
-
-  # Validate form fields
-  # Checks that species is in species list & label is not empty
-  if not form.validate_on_submit():
-    msg = "Invalid submission"
-    flash(msg, "danger")
-    return jsonify({ 'message': msg }), 400
-
-  # Read fields from form
-  data = {
-    field: bleach.clean(request.form.get(field))
-      for field in {'label', 'species', 'trait_1', 'trait_2'}
-  }
-
-  # If user is admin, allow them to bypass cache with URL variable
-  no_cache = bool(user_is_admin() and request.args.get("nocache", False))
-
-  # Try submitting the job & getting a JSON status message
-  response, code = try_submit(PhenotypeReport.kind, user, data, no_cache)
-
-  # If there was an error, flash it
-  if code != 200 and int(request.args.get('reloadonerror', 1)):
-    flash(response['message'], 'danger')
-
-  # Return the response
-  return jsonify( response ), code

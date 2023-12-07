@@ -76,7 +76,16 @@
 {% block script %}
 {% from "_includes/select-trait.html"   import select_trait               %}
 {% from "_includes/strain-listing.html" import unpack_species_list        %}
+{% from "_scripts/submit-job.js"        import ajax_setup, def_submit_job %}
 <script>
+    {% include '_scripts/utils.js' %} {#/* defines: flash_message */#}
+    {{ def_submit_job('phenotype_database') }}
+
+
+    $(document).ready(function(){
+        // Set headers for AJAX requests
+        {{ ajax_setup(form.csrf_token._value()) }}
+    })
 
     /* Species */
     const species_list = {{ unpack_species_list(species_list, species_fields) }};
@@ -92,6 +101,22 @@
 
     function get_trait_id(id) {
         return document.getElementById(`${id}-selector`).dataset.trait
+    }
+
+    function submit() {
+        const trait_1 = get_trait_id('trait-1');
+        const trait_2 = get_trait_id('trait-2');
+
+        if (trait_1 == null || trait_2 == null) {
+            throw Error();
+        }
+
+        data = { 'label': '???', species, trait_1, trait_2 }
+
+        submit_job(data)
+            .done(() => {
+                console.log('Submitted!');
+            });
     }
 </script>
 {% endblock %}
