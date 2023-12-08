@@ -72,7 +72,7 @@ def get_zipped_file_ext(fname: str) -> Tuple[Optional[str], bool]:
 
   # If there are at least two parts left in the filename, interpret the last part as the extension
   if len(fname_parts) >= 2:
-    file_ext = '.' + fname_parts[-1]
+    file_ext = '.' + fname_parts[-1].lower()
   else:
     file_ext = None
 
