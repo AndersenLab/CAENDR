@@ -80,6 +80,10 @@ def get_zipped_file_ext(fname: str) -> Tuple[Optional[str], bool]:
   return file_ext, is_zipped
 
 
+# NOTE: Deprecated, sort of.
+#       If you want to use this, make sure it properly vets files first,
+#       to avoid common attacks such as zip bombs and zipslip.
+#       See https://thesecurityvault.com/attacks-with-zip-files-and-mitigations/
 def unzip_gz(gz_fname: str, keep_zipped_file: bool = False):
   '''
     Unzip a GZIP (`.gz`) file.
