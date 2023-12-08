@@ -24,7 +24,7 @@ TABLE_CONFIG = {
 
 
 
-class ETLManager:
+class DatabaseManager:
 
     # The default local directory to store all downloaded files in
     __DEFAULT_LOCAL_DIR = os.path.join('.', '.download')
