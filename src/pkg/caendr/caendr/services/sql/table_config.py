@@ -1,7 +1,7 @@
-from typing import Dict, List
+from typing import Dict
 
-from caendr.utils.env              import get_env_var
-from caendr.services.cloud.secret  import get_secret
+from caendr.utils.env                 import get_env_var
+from caendr.services.cloud.secret     import get_secret
 
 # Local imports
 from .parse.strains                   import fetch_andersen_strains
@@ -9,11 +9,9 @@ from .parse.wormbase                  import parse_gene_gtf, parse_gene_gff_summ
 from .parse.strain_annotated_variants import parse_strain_variant_annotation_data
 from .parse.phenotype_db              import parse_phenotypedb_traits_data, parse_phenotypedb_bulk_trait_file
 
-from caendr.models.sql             import Strain, WormbaseGeneSummary, WormbaseGene, StrainAnnotatedVariant, PhenotypeDatabase
-from caendr.models.datastore       import Species, TraitFile
-from caendr.services.cloud.storage import BlobURISchema
-from caendr.models.datastore       import Species
-from caendr.utils.local_files      import ForeignResource, ForeignResourceTemplate, LocalDatastoreFileTemplate, LocalGoogleSheetTemplate
+from caendr.models.sql                import Strain, WormbaseGeneSummary, WormbaseGene, StrainAnnotatedVariant, PhenotypeDatabase
+from caendr.models.datastore          import Species, TraitFile
+from caendr.utils.local_files         import ForeignResource, ForeignResourceTemplate, LocalDatastoreFileTemplate, LocalGoogleSheetTemplate
 
 
 
