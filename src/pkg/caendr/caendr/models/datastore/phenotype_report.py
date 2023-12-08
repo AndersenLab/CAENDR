@@ -21,7 +21,6 @@ class PhenotypeReport(ReportEntity, HashableEntity):
   #
   # Input & Output
   #
-  # TODO: Should these be the same, or different?
   # TODO: Return dataframe from SQL table instead of raw file
   # TODO: Accept input files(?) to create a report
   #
@@ -32,10 +31,7 @@ class PhenotypeReport(ReportEntity, HashableEntity):
 
 
   def fetch_input(self):
-    return (
-      download_blob_as_dataframe(self['trait_1'].get_blob(SPECIES=self['species'])),
-      download_blob_as_dataframe(self['trait_2'].get_blob(SPECIES=self['species'])),
-    )
+    return self['trait_1'], self['trait_2']
 
   def fetch_output(self):
     return (

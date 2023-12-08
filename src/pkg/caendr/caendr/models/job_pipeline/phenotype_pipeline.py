@@ -61,40 +61,19 @@ class PhenotypePipeline(JobPipeline):
 
 
   #
-  # Fetching Overwrites
-  #
-  # Rewrite the logic so `fetch` is the source of truth and input/output take slices,
-  # rather than the other way around.
-  #
-  # For the phenotype tool, there are no distinct input/output files,
-  # just the source of trait data -- all "results" are computed here.
-  #
-  # Since input and output both rely on the same parsed data, we factor out that parsing
-  # and have the respective parse functions both act on the *same* data.
-  # The distinction between the two is mostly semantic -- splitting them this way makes a
-  # difference for calling functions, even if under the hood they're largely handled the same
+  # Parsing Input
   #
 
-  def fetch(self, raw: bool = False):
-    raw_data = self.report.fetch_input()
-
-    if raw or raw_data is None:
-      return raw_data, None
-
-    parsed_data = self.__parse_dataframes(raw_data)
-    return self._parse_input(parsed_data), self._parse_output(parsed_data)
-
-
-  def fetch_input(self, raw: bool = False):
-    return self.fetch(raw=raw)[0]
-
-  def fetch_output(self, raw: bool = False):
-    return self.fetch(raw=raw)[1]
+  def _parse_input(self, data):
+    return {
+      'num_traits':  len(data),
+      'trait_names': tuple(map(lambda tf: tf['trait_name'], data)),
+    }
 
 
 
   #
-  # Parsing Input & Output
+  # Parsing Output
   #
 
 
@@ -124,11 +103,13 @@ class PhenotypePipeline(JobPipeline):
     }
 
 
-
-  def _parse_input(self, data):
+  def _parse_output(self, data):
 
     if data is None:
-      raise EmptyReportDataError(self.report.id)
+      raise EmptyReportResultsError(self.report.id)
+
+    # Parse the dataframes
+    data = self.__parse_dataframes(data)
 
     # Rename trait value arrays, for convenience
     x, y = data['data_vals'][0], data['data_vals'][1]
@@ -136,25 +117,14 @@ class PhenotypePipeline(JobPipeline):
     # Zip the trait values together with the strain names, to get the full dataset array
     data_tuples = list(zip(x, y, data['data_keys']))
 
-    # Return trait names and trait values
-    return {
-      'trait_names':  (self.report['trait_1']['trait_name'], self.report['trait_2']['trait_name']),
-      'trait_values': data_tuples,
-    }
-
-
-  def _parse_output(self, data):
-
-    if data is None:
-      raise EmptyReportResultsError(self.report.id)
-
     # Compute the Spearman Coefficient for the given data
     res = stats.spearmanr(data['data_vals'][0], data['data_vals'][1])
-  
+
     # Return the relevant values
     return {
       'correlation': res.correlation,
       'p_value':     res.pvalue,
+      'trait_values': data_tuples,
     }
 
 
