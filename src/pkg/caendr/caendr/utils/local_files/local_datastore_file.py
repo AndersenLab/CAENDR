@@ -30,18 +30,19 @@ class LocalDatastoreFile(os.PathLike, ForeignResource):
   # Instantiation
   #
 
-  def __init__(self, file_id: str, bucket: str, *path: str, local_path: str = None, metadata: dict = None, species=None):
+  def __init__(self, resource_id: str, bucket: str, *path: str, local_path: str = None, metadata: dict = None):
 
     # Validate path length
     if not len(path):
       raise ValueError('Must provide at least one path element')
 
+    # Save resource ID
+    super().__init__(resource_id)
+
     # Save vars locally
-    self._file_id = file_id
-    self._bucket  = bucket
-    self._path    = path
-    self._metadata  = metadata or {}
-    self._species   = species
+    self._bucket   = bucket
+    self._path     = path
+    self._metadata = metadata or {}
 
     # Get the file extension as the last section of the path after a '.', ignoring '.gz'
     # If there is no file extension (e.g. 'foobar.gz' or just 'foobar'), set to empty string
@@ -56,7 +57,7 @@ class LocalDatastoreFile(os.PathLike, ForeignResource):
   #
 
   def __repr__(self):
-    return 'Datastore File ' + join_path( *self.get_datastore_uri(schema=BlobURISchema.PATH) )
+    return f'Datastore file "{self.resource_id}": ' + join_path( *self.get_datastore_uri(schema=BlobURISchema.PATH) )
 
   def __print_locations(self):
     return f'{self.get_local_filepath()}  <-  {self.get_datastore_uri(schema=BlobURISchema.HTTPS)}'
@@ -88,7 +89,7 @@ class LocalDatastoreFile(os.PathLike, ForeignResource):
     '''
       Get a local name for the file once it's been downloaded. No filepath.
     '''
-    return self._file_id + self._file_ext + ('.gz' if self.source_is_zipped else '')
+    return self.resource_id + self._file_ext + ('.gz' if self.source_is_zipped else '')
 
   def get_local_filepath(self):
     '''
@@ -127,18 +128,18 @@ class LocalDatastoreFile(os.PathLike, ForeignResource):
 
     # Check if file has already been downloaded
     if use_cache and self.exists_local():
-      logger.info(f'Already downloaded datastore file [{self._file_id}]:\n\t{ self.__print_locations() }')
+      logger.info(f'Already downloaded datastore file [{self.resource_id}]:\n\t{ self.__print_locations() }')
 
     # Try downloading the file
     else:
       try:
-        logger.info(f'Downloading datastore file [{self._file_id}]:\n\t{ self.__print_locations() }')
+        logger.info(f'Downloading datastore file [{self.resource_id}]:\n\t{ self.__print_locations() }')
         download_blob_to_file(self._bucket, *self._path, destination=self._LOCAL_PATH, filename=self.get_local_filename())
-        logger.info(f'Completed download of file [{self._file_id}]:\n\t{ self.__print_locations() }')
+        logger.info(f'Completed download of file [{self.resource_id}]:\n\t{ self.__print_locations() }')
 
       # If not found, wrap error
       except NotFoundError as ex:
-        raise ForeignResourceMissingError('Datastore file', self._file_id, self._species) from ex
+        raise ForeignResourceMissingError(self) from ex
 
     # # Unzip the downloaded file, if applicable
     # # NOTE: Deprecated -- none of our resources use this, so it just introduces potential vulnerabilities later
