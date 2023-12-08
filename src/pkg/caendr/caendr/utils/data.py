@@ -118,19 +118,19 @@ def get_file_format(file_ext, valid_formats=None):
   return None
 
 
-def batch_generator(g, batch_size=DEFAULT_BATCH_SIZE):
+def batch_generator(generator, batch_size=DEFAULT_BATCH_SIZE):
   '''
     Split a generator into a generator of generators, which produce the same sequence when taken together.
     Useful for managing RAM when bulk inserting mappings into a table.
   '''
   def _inner(top):
     yield top
-    for i, x in enumerate(g, start=1):
+    for i, x in enumerate(generator, start=1):
       yield x
       if i % (batch_size - 1) == 0:
         return
 
-  for top in g:
+  for top in generator:
     yield _inner(top)
 
 
