@@ -84,8 +84,8 @@ class PhenotypePipeline(JobPipeline):
     '''
 
     # Convert dataframes to dicts, mapping strain column to trait value column
-    data_1 = dataframe_cols_to_dict(dataframes[0], 'strain', 1, drop_na=True)
-    data_2 = dataframe_cols_to_dict(dataframes[1], 'strain', 1, drop_na=True)
+    data_1 = dataframe_cols_to_dict(dataframes[0], 'strain_name', 'trait_value', drop_na=True)
+    data_2 = dataframe_cols_to_dict(dataframes[1], 'strain_name', 'trait_value', drop_na=True)
 
     # Get the list of strains in both datasets by taking the intersection of their key sets
     # Convert back to a list because sets ~technically~ don't have a defined order -- we want to make sure

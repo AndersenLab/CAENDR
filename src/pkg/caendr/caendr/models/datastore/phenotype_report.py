@@ -1,5 +1,8 @@
-from caendr.models.datastore       import ReportEntity, HashableEntity, TraitFile
-from caendr.services.cloud.storage import download_blob_as_dataframe
+import pandas as pd
+
+from caendr.models.datastore          import ReportEntity, HashableEntity, TraitFile
+from caendr.models.sql                import PhenotypeDatabase
+from caendr.services.cloud.postgresql import db
 
 
 
@@ -21,7 +24,6 @@ class PhenotypeReport(ReportEntity, HashableEntity):
   #
   # Input & Output
   #
-  # TODO: Return dataframe from SQL table instead of raw file
   # TODO: Accept input files(?) to create a report
   #
 
@@ -34,9 +36,11 @@ class PhenotypeReport(ReportEntity, HashableEntity):
     return self['trait_1'], self['trait_2']
 
   def fetch_output(self):
+    query_1 = PhenotypeDatabase.query.filter( PhenotypeDatabase.trait_name == self['trait_1']['trait_name'] )
+    query_2 = PhenotypeDatabase.query.filter( PhenotypeDatabase.trait_name == self['trait_2']['trait_name'] )
     return (
-      download_blob_as_dataframe(self['trait_1'].get_blob(SPECIES=self['species'])),
-      download_blob_as_dataframe(self['trait_2'].get_blob(SPECIES=self['species'])),
+      pd.read_sql_query(query_1.statement, con=db.engine),
+      pd.read_sql_query(query_2.statement, con=db.engine),
     )
 
 
