@@ -65,8 +65,8 @@ def get_zipped_file_ext(fname: str) -> Tuple[Optional[str], bool]:
   # Split the filename
   fname_parts = fname.split('.')
 
-  # If the filename end in '.gz', remove that part
-  is_zipped = fname_parts[-1] == 'gz'
+  # If the filename ends in '.gz', remove that part
+  is_zipped = fname_parts[-1].lower() == 'gz'
   if is_zipped:
     fname_parts = fname_parts[:-1]
 
