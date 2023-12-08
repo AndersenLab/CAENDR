@@ -8,7 +8,7 @@ from caendr.models.datastore       import PhenotypeReport
 from caendr.models.datastore       import TraitFile
 from caendr.models.error           import EmptyReportDataError, EmptyReportResultsError
 from caendr.models.status          import JobStatus
-from caendr.utils.data             import dataframe_cols_to_dict, get_object_hash
+from caendr.utils.data             import dataframe_cols_to_dict, get_object_hash, keyset_intersection
 
 
 
@@ -84,22 +84,23 @@ class PhenotypePipeline(JobPipeline):
     '''
 
     # Convert dataframes to dicts, mapping strain column to trait value column
-    data_1 = dataframe_cols_to_dict(dataframes[0], 'strain_name', 'trait_value', drop_na=True)
-    data_2 = dataframe_cols_to_dict(dataframes[1], 'strain_name', 'trait_value', drop_na=True)
+    data = tuple(map(
+      lambda df: dataframe_cols_to_dict(df, 'strain_name', 'trait_value', drop_na=True), dataframes
+    ))
 
     # Get the list of strains in both datasets by taking the intersection of their key sets
     # Convert back to a list because sets ~technically~ don't have a defined order -- we want to make sure
     # the list of strains is the same each time we use it
-    overlap_strains = list( set(data_1.keys()).intersection(data_2.keys()) )
+    data_keys = list( keyset_intersection(*data) )
 
-    # From each dataset, get a list of trait values for each strain in the overlapping set
-    x = [ data_1[strain] for strain in overlap_strains ]
-    y = [ data_2[strain] for strain in overlap_strains ]
+    # Filter each dataset down to just the strains in the overlapping set, in the same order computed above
+    data_vals = tuple([
+      [ d[strain] for strain in data_keys ] for d in data
+    ])
 
     return {
-      'dataframes': (data_1, data_2),
-      'data_keys':  overlap_strains,
-      'data_vals':  (x, y),
+      'data_keys': data_keys,
+      'data_vals': data_vals,
     }
 
 
@@ -111,19 +112,19 @@ class PhenotypePipeline(JobPipeline):
     # Parse the dataframes
     data = self.__parse_dataframes(data)
 
-    # Rename trait value arrays, for convenience
-    x, y = data['data_vals'][0], data['data_vals'][1]
-
     # Zip the trait values together with the strain names, to get the full dataset array
-    data_tuples = list(zip(x, y, data['data_keys']))
+    data_tuples = list(zip(*data['data_vals'], data['data_keys']))
 
-    # Compute the Spearman Coefficient for the given data
-    res = stats.spearmanr(data['data_vals'][0], data['data_vals'][1])
+    # Compute the Spearman Coefficient for the given data, if two traits are being compared
+    if len(data['data_vals']) == 2:
+      res = stats.spearmanr(data['data_vals'][0], data['data_vals'][1])
+    else:
+      res = None
 
     # Return the relevant values
     return {
-      'correlation': res.correlation,
-      'p_value':     res.pvalue,
+      'correlation': res.correlation if res else None,
+      'p_value':     res.pvalue      if res else None,
       'trait_values': data_tuples,
     }
 

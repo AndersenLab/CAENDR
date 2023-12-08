@@ -187,3 +187,13 @@ def dataframe_cols_to_dict(df, key_col, val_col, drop_na=True):
   if drop_na:
     d = d.dropna()
   return d.to_dict()[val_col_name]
+
+
+def keyset_intersection(*dicts):
+  '''
+    Get the set of keys present in all provided dicts.
+  '''
+  overlap = set(dicts[0].keys())
+  for d in dicts[1:]:
+    overlap = overlap.intersection(d.keys())
+  return overlap
