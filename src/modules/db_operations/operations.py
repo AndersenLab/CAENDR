@@ -9,23 +9,28 @@ from caendr.services.sql import DatabaseManager
 
 
 
-def execute_operation(app, db, DB_OP, species=None, reload_files=True):
+def execute_operation(db, DB_OP, species=None, reload_files=True):
+  '''
+    Execute a database operation.
+
+    The given database object (`db`) should be initialized with a Flask app object. That app will be used as the context for the db operation(s).
+  '''
   logger.info(f'Executing {DB_OP}...')
 
   if DB_OP == 'DROP_AND_POPULATE_ALL_TABLES':
-    drop_and_populate_all_tables(app, db, species, reload_files=reload_files)
+    drop_and_populate_all_tables(db, species, reload_files=reload_files)
 
   elif DB_OP == 'DROP_AND_POPULATE_STRAINS':
-    drop_and_populate_strains(app, db, species, reload_files=reload_files)
+    drop_and_populate_strains(db, species, reload_files=reload_files)
 
   elif DB_OP == 'DROP_AND_POPULATE_WORMBASE_GENES':
-    drop_and_populate_wormbase_genes(app, db, species, reload_files=reload_files)
+    drop_and_populate_wormbase_genes(db, species, reload_files=reload_files)
 
   elif DB_OP == 'DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS':
-    drop_and_populate_strain_annotated_variants(app, db, species, reload_files=reload_files)
+    drop_and_populate_strain_annotated_variants(db, species, reload_files=reload_files)
 
   elif DB_OP == 'DROP_AND_POPULATE_PHENOTYPE_DB':
-    drop_and_populate_phenotype_db(app, db, species, reload_files=reload_files)
+    drop_and_populate_phenotype_db(db, species, reload_files=reload_files)
 
   elif DB_OP == 'TEST_ECHO':
     result, message = health_database_status()
@@ -36,14 +41,14 @@ def execute_operation(app, db, DB_OP, species=None, reload_files=True):
     os.environ["USE_MOCK_DATA"] = "1"
     os.environ["MODULE_DB_OPERATIONS_CONNECTION_TYPE"] = "memory"
     logger.info("Using MOCK DATA")
-    drop_and_populate_all_tables(app, db, species)
+    drop_and_populate_all_tables(db, species)
 
 
 
-def drop_and_populate_strains(app, db, species, reload_files=True):
+def drop_and_populate_strains(db, species, reload_files=True):
 
   # Initialize ETL Manager
-  db_manager = DatabaseManager(app, db, reload_files=reload_files)
+  db_manager = DatabaseManager(db, reload_files=reload_files)
 
   # Drop relevant tables
   db_manager.clear_tables( Strain, species_list=species )
@@ -52,14 +57,14 @@ def drop_and_populate_strains(app, db, species, reload_files=True):
   db_manager.load_tables( Strain, species_list=species )
 
 
-def drop_and_populate_wormbase_genes(app, db, species, reload_files=True):
+def drop_and_populate_wormbase_genes(db, species, reload_files=True):
 
   # Print operation & species info
   spec_strings = [ f'{key} (wb_ver = {val.wb_ver})' for key, val in Species.all().items() if (species is None or key in species) ]
   logger.info(f'Dropping and populating wormbase genes. Species list: [ {", ".join(spec_strings)} ]')
 
   # Initialize ETL Manager
-  db_manager = DatabaseManager(app, db, reload_files=reload_files)
+  db_manager = DatabaseManager(db, reload_files=reload_files)
 
   # Drop relevant tables
   logger.info(f"Dropping tables...")
@@ -72,14 +77,14 @@ def drop_and_populate_wormbase_genes(app, db, species, reload_files=True):
   # db_manager.load_orthologs(db)
 
 
-def drop_and_populate_strain_annotated_variants(app, db, species, reload_files=True):
+def drop_and_populate_strain_annotated_variants(db, species, reload_files=True):
 
   # Print operation & species info
   spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
   logger.info(f'Dropping and populating strain annotated variants. Species list: [ {", ".join(spec_strings)} ]')
 
   # Initialize ETL Manager
-  db_manager = DatabaseManager(app, db, reload_files=reload_files)
+  db_manager = DatabaseManager(db, reload_files=reload_files)
 
   # Drop relevant table
   logger.info(f"Dropping table...")
@@ -90,14 +95,14 @@ def drop_and_populate_strain_annotated_variants(app, db, species, reload_files=T
   db_manager.load_tables(StrainAnnotatedVariant, species_list=species)
 
 
-def drop_and_populate_phenotype_db(app, db, species, reload_files=True):
+def drop_and_populate_phenotype_db(db, species, reload_files=True):
 
   # Print operation & species info
   spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
   logger.info(f'Dropping and populating phenotype database. Species list: [ {", ".join(spec_strings)} ]')
 
   # Initialize ETL Manager
-  db_manager = DatabaseManager(app, db, reload_files=reload_files)
+  db_manager = DatabaseManager(db, reload_files=reload_files)
 
   # Drop relevant table
   logger.info(f"Dropping table...")
@@ -108,14 +113,14 @@ def drop_and_populate_phenotype_db(app, db, species, reload_files=True):
   db_manager.load_tables(PhenotypeDatabase, species_list=species)
 
 
-def drop_and_populate_all_tables(app, db, species, reload_files=True):
+def drop_and_populate_all_tables(db, species, reload_files=True):
 
   # Print operation & species info
   spec_strings = [ f'{key} (wb_ver = {val.wb_ver}, release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
   logger.info(f'Dropping and populating all tables. Species list: [ {", ".join(spec_strings)} ]')
 
   logger.info("[1/7] Downloading databases...eta ~0:15")
-  db_manager = DatabaseManager(app, db, reload_files=reload_files)
+  db_manager = DatabaseManager(db, reload_files=reload_files)
 
   logger.info("[2/7] Dropping tables...eta ~0:01")
   db_manager.clear_tables(species_list=species)

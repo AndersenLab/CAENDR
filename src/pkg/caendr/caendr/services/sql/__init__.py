@@ -30,9 +30,8 @@ class DatabaseManager:
     __DEFAULT_LOCAL_DIR = os.path.join('.', '.download')
 
 
-    def __init__(self, app, db, reload_files: bool = False, local_directory: str = None):
-        self.app = app
-        self.db  = db
+    def __init__(self, db, reload_files: bool = False, local_directory: str = None):
+        self.db = db
 
         # Set the local directory
         self._local_directory = local_directory or self.__DEFAULT_LOCAL_DIR
@@ -145,7 +144,7 @@ class DatabaseManager:
             Drop the given tables. If no tables are provided, drops all tables.
         '''
         if len(tables) == 0:
-            self.db.drop_all(app=self.app)
+            self.db.drop_all()
         else:
             self.db.metadata.drop_all(bind=self.db.engine, checkfirst=True, tables=[ t.__table__ for t in tables ])
 
@@ -154,7 +153,7 @@ class DatabaseManager:
             Create the given tables. If no tables are provided, creates all tables.
         '''
         if len(tables) == 0:
-            self.db.create_all(app=self.app)
+            self.db.create_all()
         else:
             self.db.metadata.create_all(bind=self.db.engine, tables=[ t.__table__ for t in tables ])
 
