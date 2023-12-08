@@ -9,7 +9,7 @@ from caendr.models.task      import DatabaseOperationTask
 # Services
 from caendr.models.datastore import Species, DbOp
 from caendr.models.error     import DataFormatError, PreflightCheckError
-from caendr.services.sql.etl import StrainConfig, WormbaseGeneConfig, WormbaseGeneSummaryConfig, StrainAnnotatedVariantConfig
+from caendr.services.sql     import StrainConfig, WormbaseGeneConfig, WormbaseGeneSummaryConfig, StrainAnnotatedVariantConfig
 from caendr.utils.env        import get_env_var
 
 
