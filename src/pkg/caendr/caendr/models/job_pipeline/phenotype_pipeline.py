@@ -77,54 +77,42 @@ class PhenotypePipeline(JobPipeline):
   #
 
 
-  def __parse_dataframes(self, dataframes):
+  def _parse_output(self, data):
     '''
-      Pre-parsing for the dataframes fetched by `fetch_input`.
-      The results of this function are used to parse both the "input" and the "output" values.
+      Data should be provided as tuple of Pandas dataframe(s), with columns `strain_name` and `trait_value`.
     '''
 
+    if data is None:
+      raise EmptyReportResultsError(self.report.id)
+
     # Convert dataframes to dicts, mapping strain column to trait value column
-    data = tuple(map(
-      lambda df: dataframe_cols_to_dict(df, 'strain_name', 'trait_value', drop_na=True), dataframes
+    data_dicts = tuple(map(
+      lambda df: dataframe_cols_to_dict(df, 'strain_name', 'trait_value', drop_na=True), data
     ))
 
     # Get the list of strains in both datasets by taking the intersection of their key sets
     # Convert back to a list because sets ~technically~ don't have a defined order -- we want to make sure
     # the list of strains is the same each time we use it
-    data_keys = list( keyset_intersection(*data) )
+    data_keys = list( keyset_intersection(*data_dicts) )
 
     # Filter each dataset down to just the strains in the overlapping set, in the same order computed above
     data_vals = tuple([
-      [ d[strain] for strain in data_keys ] for d in data
+      [ d[strain] for strain in data_keys ] for d in data_dicts
     ])
 
-    return {
-      'data_keys': data_keys,
-      'data_vals': data_vals,
-    }
-
-
-  def _parse_output(self, data):
-
-    if data is None:
-      raise EmptyReportResultsError(self.report.id)
-
-    # Parse the dataframes
-    data = self.__parse_dataframes(data)
-
     # Zip the trait values together with the strain names, to get the full dataset array
-    data_tuples = list(zip(*data['data_vals'], data['data_keys']))
+    data_tuples = list(zip( *data_vals, data_keys ))
 
     # Compute the Spearman Coefficient for the given data, if two traits are being compared
-    if len(data['data_vals']) == 2:
-      res = stats.spearmanr(data['data_vals'][0], data['data_vals'][1])
+    if len(data_vals) == 2:
+      res = stats.spearmanr(data_vals[0], data_vals[1])
     else:
       res = None
 
     # Return the relevant values
     return {
-      'correlation': res.correlation if res else None,
-      'p_value':     res.pvalue      if res else None,
+      'correlation':  res.correlation if res else None,
+      'p_value':      res.pvalue      if res else None,
       'trait_values': data_tuples,
     }
 
