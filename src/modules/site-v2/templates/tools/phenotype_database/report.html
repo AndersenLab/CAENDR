@@ -28,11 +28,16 @@
         <!-- Results Card -->
         <div class="col col-md-6 col-xl-3 text-bg-light mb-5 p-5 rounded-2 shadow-sm">
             <h2 class="h3 text-center mb-5">Trait Information</h2>
+
+            {%- if data.num_traits > 1 %}
             <h3 class="h4 text-dark">Trait 1</h3>
+            {%- endif %}
             <p><strong>Name:</strong></p>
             <p>{{ report['trait_1']['trait_name'] }}</p>
             <p><strong>Description</strong></p>
             <p>{{ report['trait_1']['description_short'] }}</p>
+
+            {%- if data.num_traits > 1 %}
             <h3 class="h4 text-dark">Trait 2</h3>
             <p><strong>Name:</strong></p>
             <p>{{ report['trait_2']['trait_name'] }}</p>
@@ -44,6 +49,7 @@
             <h3 class="h4 text-dark">P-Value</h3>
             <p>{{ result.p_value|round(4) }}</p>
             -->
+            {%- endif %}
         </div>
         <!-- /Input Card -->
         <!-- Tool column -->
@@ -85,6 +91,11 @@
 
 const data = {{ result.trait_values|tojson }};
 
+{%- if data.num_traits == 1 %}
+// Render chart for one trait
+
+{%- else %}
+// Render chart(s) for two traits
 scatterplot_histograms('#phenotype-chart', data, {
     hist_height:   60,
     width:         600,
@@ -99,6 +110,7 @@ scatterplot_histograms('#phenotype-chart', data, {
         <p>${labels[1]}: ${d[1]}</p>
     `,
 });
+{%- endif %}
 
 </script>
 
