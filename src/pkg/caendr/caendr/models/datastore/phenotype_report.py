@@ -1,4 +1,5 @@
 import pandas as pd
+from typing import Tuple
 
 from caendr.models.datastore          import ReportEntity, HashableEntity, TraitFile
 from caendr.models.sql                import PhenotypeDatabase
@@ -33,7 +34,7 @@ class PhenotypeReport(ReportEntity, HashableEntity):
 
 
   def fetch_input(self):
-    return self.trait_files
+    return tuple(self.trait_files)
 
   def fetch_output(self):
     return tuple([
@@ -146,7 +147,7 @@ class PhenotypeReport(ReportEntity, HashableEntity):
     return self['trait_2']['trait_name']
 
   @property
-  def trait_files(self):
+  def trait_files(self) -> Tuple[TraitFile]:
     if self['trait_2'] is None:
-      return self['trait_1']
+      return self['trait_1'],
     return self['trait_1'], self['trait_2']
