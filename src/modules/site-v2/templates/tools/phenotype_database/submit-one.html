@@ -13,7 +13,8 @@
     <!-- /flex -->
 
     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-        <button class="btn btn-dark text-white" role="button" href="#">Start Over</button>
+        <button class="btn btn-dark text-white" role="button"
+            onclick="location.href=`{{ url_for('phenotype_database.phenotype_database') }}`">Start Over</button>
         <button class="btn btn-secondary text-white" role="button" data-bs-toggle="modal"
             data-bs-target="#confirmationModal">Next</button>
     </div>
