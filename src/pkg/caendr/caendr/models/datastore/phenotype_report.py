@@ -70,7 +70,7 @@ class PhenotypeReport(ReportEntity, HashableEntity):
     # Name will always exist if set, so if not found, return None
     if not getattr(self, '_trait_1_name', ''):
       return None
-    
+
     # If the corresponding file object is not cached yet, retrieve it
     if getattr(self, '_trait_1_file', None) is None:
       self._trait_1_file = TraitFile.get_ds(self._trait_1_name)
@@ -130,7 +130,7 @@ class PhenotypeReport(ReportEntity, HashableEntity):
 
     # Otherwise, raise an error
     else:
-      raise TypeError(f'Cannot set trait_1 to "{ val }"')
+      raise TypeError(f'Cannot set trait_2 to "{ val }"')
 
 
   #
