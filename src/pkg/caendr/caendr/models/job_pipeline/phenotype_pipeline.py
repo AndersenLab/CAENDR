@@ -47,15 +47,20 @@ class PhenotypePipeline(JobPipeline):
 
     # Get both trait files from the datastore, confirming they both exist
     trait_1 = TraitFile.get_ds(data['trait_1'])
-    trait_2 = TraitFile.get_ds(data['trait_2'])
 
-    # Compute hash from trait file unique IDs
+    # If a second trait file is provided, retrieve it & compute hash from trait file unique IDs
     # Sort the IDs before combining, so either order will produce the same hash
-    hash = get_object_hash(' '.join(sorted([trait_1.name, trait_2.name])), length=32)
+    if (data.get('trait_2')):
+      trait_2 = TraitFile.get_ds(data['trait_2'])
+      hash_source = ' '.join(sorted([trait_1.name, trait_2.name]))
+
+    # If only one trait file provided, use its unique ID to compute the data hash
+    else:
+      hash_source = trait_1.name
 
     return {
       'props': data,
-      'hash':  hash,
+      'hash':  get_object_hash(hash_source, length=32),
     }
 
 

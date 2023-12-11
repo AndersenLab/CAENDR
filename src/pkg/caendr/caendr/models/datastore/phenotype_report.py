@@ -84,7 +84,7 @@ class PhenotypeReport(ReportEntity, HashableEntity):
   def trait_1(self, val):
 
     # If passing TraitFile entity name, save as-is
-    if isinstance(val, str):
+    if val is None or isinstance(val, str):
       self._trait_1_name = val
       self._trait_1_file = None
 
@@ -120,7 +120,7 @@ class PhenotypeReport(ReportEntity, HashableEntity):
   def trait_2(self, val):
 
     # If passing TraitFile entity name, save as-is
-    if isinstance(val, str):
+    if val is None or isinstance(val, str):
       self._trait_2_name = val
       self._trait_2_file = None
 
@@ -140,10 +140,14 @@ class PhenotypeReport(ReportEntity, HashableEntity):
 
   @property
   def trait_1_name(self) -> str:
+    if self['trait_1'] is None:
+      return None
     return self['trait_1']['trait_name']
 
   @property
   def trait_2_name(self) -> str:
+    if self['trait_2'] is None:
+      return None
     return self['trait_2']['trait_name']
 
   @property

@@ -120,8 +120,11 @@ def submit():
   # Read & clean fields from JSON data
   data = {
     field: bleach.clean(request.json.get(field))
-      for field in {'label', 'species', 'trait_1', 'trait_2'}
+      for field in {'label', 'species', 'trait_1'}
   }
+
+  trait_2 = request.json.get('trait_2')
+  data['trait_2'] = bleach.clean(trait_2) if trait_2 is not None else None
 
   # If user is admin, allow them to bypass cache with URL variable
   no_cache = bool(user_is_admin() and request.args.get("nocache", False))
