@@ -87,7 +87,9 @@ span.bi {
                     {{ item[column.field] }}
                   </a>
                 {% else %}
+                  {%- if item[column.field] %}
                   {{ item[column.field] }}
+                  {%- endif %}
                 {% endif %}
               </td>
             {% endfor %}
