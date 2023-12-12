@@ -207,7 +207,7 @@ function scatterplot_histograms(container_selector, data, config={}) {
       .style('stroke', stroke_color);
 
     // Create tooltip for data point mouseover
-    const tooltip = d3.select("#phenotype-chart")
+    const tooltip = d3.select(container_selector)
       .append("div")
       .attr("class", "tooltip")
       .style("opacity", 0);
