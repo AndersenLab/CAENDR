@@ -93,6 +93,26 @@ const data = {{ result.trait_values|tojson }};
 
 {%- if data.num_traits == 1 %}
 // Render chart for one trait
+render_histogram('#phenotype-chart', data, {
+    width:         1200,
+    height:        300,
+    fill_color:    '#0719BC',
+    bins_per_tick: 4,
+    x_label:       '{{ data.trait_names[0] }}',
+    tooltip_template: (d, labels) => `
+        <p><b>Strain: ${d[2]}</b></p>
+        <p>${labels[0]}: ${d[0]}</p>
+    `,
+});
+render_ranked_barplot('#phenotype-chart', data, {
+    width:         1200,
+    height:        300,
+    fill_color:    '#0719BC',
+    tooltip_template: (d) => `
+        <p>Strain: ${d[1]}</p>
+        <p>Value: ${d[0]}</p>
+    `,
+});
 
 {%- else %}
 // Render chart(s) for two traits
