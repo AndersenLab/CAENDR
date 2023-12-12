@@ -65,14 +65,14 @@ def get_zipped_file_ext(fname: str) -> Tuple[Optional[str], bool]:
   # Split the filename
   fname_parts = fname.split('.')
 
-  # If the filename end in '.gz', remove that part
-  is_zipped = fname_parts[-1] == 'gz'
+  # If the filename ends in '.gz', remove that part
+  is_zipped = fname_parts[-1].lower() == 'gz'
   if is_zipped:
     fname_parts = fname_parts[:-1]
 
   # If there are at least two parts left in the filename, interpret the last part as the extension
   if len(fname_parts) >= 2:
-    file_ext = '.' + fname_parts[-1]
+    file_ext = '.' + fname_parts[-1].lower()
   else:
     file_ext = None
 
@@ -80,6 +80,10 @@ def get_zipped_file_ext(fname: str) -> Tuple[Optional[str], bool]:
   return file_ext, is_zipped
 
 
+# NOTE: Deprecated, sort of.
+#       If you want to use this, make sure it properly vets files first,
+#       to avoid common attacks such as zip bombs and zipslip.
+#       See https://thesecurityvault.com/attacks-with-zip-files-and-mitigations/
 def unzip_gz(gz_fname: str, keep_zipped_file: bool = False):
   '''
     Unzip a GZIP (`.gz`) file.

@@ -280,12 +280,8 @@ class UnrunnableJobTypeError(InternalError):
 
 
 class ForeignResourceMissingError(InternalError):
-  def __init__(self, resource_type, resource_id, species):
-    try:
-      species_name = species.name
-    except:
-      species_name = species
-    self.description = f'Could not fetch foreign resource {resource_id} ({resource_type}) for species {species_name}'
+  def __init__(self, resource):
+    self.description = f'Could not fetch foreign resource: {repr(resource)}'
     super().__init__()
 
 class ForeignResourceUndefinedError(InternalError):
