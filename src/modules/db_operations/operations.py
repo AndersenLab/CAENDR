@@ -3,7 +3,7 @@ from caendr.services.cloud.postgresql import health_database_status
 from caendr.services.logger import logger
 
 from caendr.models.datastore import Species
-from caendr.models.sql import WormbaseGene, WormbaseGeneSummary, Strain, StrainAnnotatedVariant, PhenotypeDatabase
+from caendr.models.sql import WormbaseGene, WormbaseGeneSummary, Strain, StrainAnnotatedVariant, PhenotypeDatabase, PhenotypeMetadata
 from caendr.services.sql.db import backup_external_db
 from caendr.services.sql.etl import ETLManager
 
@@ -26,6 +26,9 @@ def execute_operation(app, db, DB_OP, species=None, reload_files=True):
 
   elif DB_OP == 'DROP_AND_POPULATE_PHENOTYPE_DB':
     drop_and_populate_phenotype_db(app, db, species, reload_files=reload_files)
+
+  elif DB_OP == 'DROP_AND_POPULATE_PHENOTYPE_METADATA':
+    drop_and_populate_phenotype_metadata(app, db, species, reload_files=reload_files)
 
   elif DB_OP == 'TEST_ECHO':
     result, message = health_database_status()
@@ -106,6 +109,23 @@ def drop_and_populate_phenotype_db(app, db, species, reload_files=True):
   # Fetch and load data using ETL Manager
   logger.info("Loading phenotypes...")
   etl_manager.load_tables(PhenotypeDatabase, species_list=species)
+
+def drop_and_populate_phenotype_metadata(app, db, species, reload_files=True):
+
+  # Print operation & species info
+  spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
+  logger.info(f'Dropping and populating phenotype metadata. Species list: [ {", ".join(spec_strings)} ]')
+
+  # Initialize ETL Manager
+  etl_manager = ETLManager(app, db, reload_files=reload_files)
+
+  # Drop relevant table
+  logger.info(f"Dropping table...")
+  etl_manager.clear_tables(PhenotypeMetadata, species_list=species)
+
+  # Fetch and load data using ETL Manager
+  logger.info("Loading phenotypes...")
+  etl_manager.load_tables(PhenotypeMetadata, species_list=species)
 
 
 def drop_and_populate_all_tables(app, db, species, reload_files=True):

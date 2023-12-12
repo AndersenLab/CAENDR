@@ -3,7 +3,7 @@ import shutil
 from logzero import logger
 
 # Local imports
-from .table_config import StrainConfig, WormbaseGeneSummaryConfig, WormbaseGeneConfig, StrainAnnotatedVariantConfig, PhenotypeDatabaseConfig
+from .table_config import StrainConfig, WormbaseGeneSummaryConfig, WormbaseGeneConfig, StrainAnnotatedVariantConfig, PhenotypeDatabaseConfig, PhenotypeMetadataConfig
 
 from caendr.models.datastore import Species
 from caendr.utils.constants  import DEFAULT_BATCH_SIZE
@@ -19,6 +19,7 @@ TABLE_CONFIG = {
         WormbaseGeneConfig,
         StrainAnnotatedVariantConfig,
         PhenotypeDatabaseConfig,
+        PhenotypeMetadataConfig
     ]
 }
 
