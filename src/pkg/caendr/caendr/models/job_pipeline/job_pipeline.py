@@ -15,7 +15,8 @@ from caendr.models.error      import (
   DataFormatError,
   EmptyReportResultsError,
   UnschedulableJobTypeError,
-  JobAlreadyScheduledError
+  JobAlreadyScheduledError,
+  UnrunnableJobTypeError,
 )
 from caendr.models.report     import Report
 from caendr.models.run        import Runner, GCPRunner
@@ -116,10 +117,13 @@ class JobPipeline(ABC):
     logger.debug(f'Creating new {cls.__name__} job for user "{user.name}".')
 
     # Load container version info
-    container = Container.get(cls._Container_Name, version = container_version)
-    logger.debug(f"Creating {cls.__name__} with Container {container.uri()}")
-    if container_version is not None:
-      logger.warn(f'Container version {container_version} was specified manually - this may not be the most recent version.')
+    if cls.is_runnable():
+      container = Container.get(cls._Container_Name, version = container_version)
+      logger.debug(f"Creating {cls.__name__} with Container {container.uri()}")
+      if container_version is not None:
+        logger.warn(f'Container version {container_version} was specified manually - this may not be the most recent version.')
+    else:
+      container = None
 
     # Parse the input data
     parsed_data = cls.parse(data, valid_file_extensions=valid_file_extensions)
@@ -138,7 +142,8 @@ class JobPipeline(ABC):
       report.data_hash = parsed_data['hash']
 
     # Set the new report's container & user
-    report.set_container(container)
+    if cls.is_runnable():
+      report.set_container(container)
     report.set_user(user)
 
     # Initialize the report status
@@ -157,7 +162,7 @@ class JobPipeline(ABC):
     job.report.upload( *parsed_data.get('files', []) )
 
     # Check whether output data already exists for this data
-    if not no_cache:
+    if cls.is_runnable() and not no_cache:
       job._check_existing_job_execution()
 
     # Return the new JobPipeline object
@@ -183,6 +188,8 @@ class JobPipeline(ABC):
   
   @classmethod
   def create_runner(cls, *args, **kwargs) -> Runner:
+    if not cls.is_runnable():
+      return None
     return cls._Runner_Class(*args, **kwargs)
 
 
@@ -398,22 +405,25 @@ class JobPipeline(ABC):
       If data file does exist but is empty, should raise `EmptyReportDataError`.
 
       Arguments:
-        - `raw` (`bool`): If `true`, return the raw blob(s); otherwise, parse into a Python object. Default `false`.
+        - `raw` (`bool`):
+          If `true`, return the raw input object(s) as defined by the `Report` class;
+          otherwise, parse into a Python object.
+          Default `false`.
 
       Raises:
         - EmptyReportDataError: An input data file exists, but is empty (i.e. invalid)
     '''
 
-    # Use the Report object to fetch the raw input blob
-    blob = self.report.fetch_input()
+    # Use the Report object to fetch the raw input
+    raw_input = self.report.fetch_input()
 
-    # If blob is desired or if no blob exists, return here
-    if raw or blob is None:
-      return blob
+    # If raw input is desired, or if no input exists, return here
+    if raw or raw_input is None:
+      return raw_input
 
     # Delegate parsing to the subclass
     # TODO: If this raises an EmptyReportDataError, should we mark the job status as error?
-    return self._parse_input(blob)
+    return self._parse_input(raw_input)
 
 
   def fetch_output(self, raw: bool = False):
@@ -424,31 +434,31 @@ class JobPipeline(ABC):
       If data file does exist but is empty, should raise `EmptyReportResultsError`.
 
       Arguments:
-        - `raw` (`bool`): If `true`, return the raw blob(s); otherwise, parse into a Python object. Default `false`.
+        - `raw` (`bool`):
+          If `true`, return the raw output object(s) as defined by the `Report` class;
+          otherwise, parse into a Python object.
+          Default `false`.
 
       Raises:
         - EmptyReportResultsError: An output data file exists, but is empty (i.e. invalid)
     '''
 
-    # Use the Report object to fetch the raw output blob
-    blob = self.report.fetch_output()
+    # Use the Report object to fetch the raw output
+    raw_output = self.report.fetch_output()
 
     # If blob is desired or if no blob exists, return here
-    if raw or blob is None:
-      return blob
+    if raw or raw_output is None:
+      return raw_output
 
-    # Delegate parsing to the subclass
+    # Delegate parsing to the subclass & return the result
     try:
-      result = self._parse_output(blob)
+      return self._parse_output(raw_output)
 
     # If result file is invalid, mark the report status as error
     except EmptyReportResultsError:
       self.report.set_status( JobStatus.ERROR )
       self.report.save()
       raise
-
-    # Return the result object
-    return result
 
 
   @abstractmethod
@@ -536,10 +546,22 @@ class JobPipeline(ABC):
     return self.report.get_data_id()
 
 
+  @classmethod
+  def is_runnable(cls) -> bool:
+    '''
+      Whether jobs of this type can be run.
+      Checks whether this subclass defines a Runner class.
+    '''
+    return cls._Runner_Class is not None
+
+
   def run(self, **kwargs):
     '''
       Run this job using the specified Runner class.
     '''
+
+    if not self.is_runnable():
+      raise UnrunnableJobTypeError()
 
     # Check if this report is already associated with an operation
     if self.report['operation_name'] is not None:
@@ -571,6 +593,8 @@ class JobPipeline(ABC):
       Define the environment variables to make available when running the job.
       Result should map variable names to values.
     '''
+    if not self.is_runnable():
+      return {}
     return {
       **self.runner.default_environment(),
     }
@@ -582,6 +606,8 @@ class JobPipeline(ABC):
       Define the run parameters to use when constructing the machine to run the job.
       Result should map parameter names to values.
     '''
+    if not self.is_runnable():
+      return {}
     return {
       **self.runner.default_run_params(),
     }
@@ -625,6 +651,8 @@ class JobPipeline(ABC):
       Get the error message associated with this job, if it is in the ERROR state.
       Returns None if this job does not have an error message (i.e. if it is not in the ERROR state.)
     '''
+    if self.runner is None:
+      return None
     if isinstance(self.runner, GCPRunner):
       return self.runner.get_err_msg( operation_name = self.report['operation_name'] )
     raise NotImplementedError('Getting error message for non-GCP Runner.')

@@ -41,6 +41,7 @@ from base.views.tools import variant_annotation_bp
 from base.views.tools import genetic_mapping_bp
 from base.views.tools import pairwise_indel_finder_bp
 from base.views.tools import heritability_calculator_bp
+from base.views.tools import phenotype_comparison_bp
 from base.views.tools import phenotype_database_bp
 
 # About & Get Involved
@@ -48,7 +49,7 @@ from base.views.about        import about_bp
 from base.views.get_involved import get_involved_bp
 
 # API
-from base.views.api import api_gene_bp, api_notifications_bp
+from base.views.api import api_gene_bp, api_notifications_bp, api_trait_bp
 
 # Admin
 from base.views.admin import admin_bp
@@ -220,8 +221,9 @@ def register_blueprints(app):
   app.register_blueprint(check_bp, url_prefix='')
   
   # API
-  app.register_blueprint(api_gene_bp, url_prefix='/api')
+  app.register_blueprint(api_gene_bp,          url_prefix='/api')
   app.register_blueprint(api_notifications_bp, url_prefix='/api/notifications')
+  app.register_blueprint(api_trait_bp,         url_prefix='/api/trait')
 
   
   # Auth
@@ -235,7 +237,8 @@ def register_blueprints(app):
   app.register_blueprint(genetic_mapping_bp,         url_prefix='/tools/genetic-mapping')
   app.register_blueprint(pairwise_indel_finder_bp,   url_prefix='/tools/pairwise-indel-finder')
   app.register_blueprint(heritability_calculator_bp, url_prefix='/tools/heritability-calculator')
-  app.register_blueprint(phenotype_database_bp, url_prefix='/tools/phenotype-database')
+  # app.register_blueprint(phenotype_comparison_bp,    url_prefix='/tools/phenotype-comparison')
+  app.register_blueprint(phenotype_database_bp,      url_prefix='/tools/phenotype-database')
 
   '''
   app.register_blueprint(gene_bp, url_prefix='/gene')

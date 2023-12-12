@@ -159,7 +159,11 @@ class Entity(object):
     now = datetime.now(timezone.utc)
 
     # Get serialized dict of all props and meta props
-    props = self.serialize()
+    props = {
+      k: v
+        for k, v in self.serialize(include_meta=True).items()
+        if k in self.get_props_set() or k in self.get_props_set_meta()
+    }
 
     # Update timestamps
     if not self._exists:
@@ -256,6 +260,8 @@ class Entity(object):
         props[key] = val.name
       elif isinstance(val, TokenizedString):
         props[key] = val.raw_string
+      elif isinstance(val, Entity):
+        props[key] = val.name
 
     return props
 

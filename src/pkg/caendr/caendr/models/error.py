@@ -275,6 +275,9 @@ class MissingTokenError(InternalError):
 class UnschedulableJobTypeError(InternalError):
   pass
 
+class UnrunnableJobTypeError(InternalError):
+  pass
+
 
 class ForeignResourceMissingError(InternalError):
   def __init__(self, resource_type, resource_id, species):

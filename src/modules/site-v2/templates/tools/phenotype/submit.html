@@ -1,0 +1,71 @@
+{% extends "_layouts/default-nocontainer.html" %}
+
+
+{% block content %}
+  {% from "_includes/macros.html" import render_field %}
+
+  <div class="container-fluid px-5">
+    <form id='form-submit' enctype="multipart/form-data" method="POST">
+      {{ form.csrf_token }}
+      <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">
+      <div class='mb-4'>{{ render_field(form.species) }}</div>
+      <div class='mb-4'>{{ render_field(form.label, placeholder="Name your calculation.") }}</div>
+      <div class="mb-4">{{ render_field(form.trait_1) }}</div>
+      <div class="mb-4">{{ render_field(form.trait_2) }}</div>
+      <div class="d-grid">
+          <button type="submit" id="submit-btn" class="btn btn-secondary text-light" aria-label="submit">Submit</button>
+      </div>
+    </form>
+  </div>
+
+{% endblock %}
+
+
+{% block script %}
+{% from "_includes/strain-listing.html" import unpack_species_list  %}
+{% from "_scripts/submit-job.js"        import def_submit_job       %}
+
+<script>
+  {% include '_scripts/utils.js' %} {#/* defines: flash_message */#}
+  {{ def_submit_job('phenotype_comparison', true) }}
+
+
+  /* Species */
+  const species_list = {{ unpack_species_list(species_list, species_fields) }};
+  let species;
+
+  /* Traits */
+  let traits;
+
+
+  // Retrieve trait lists
+  fetch_json("{{ url_for('api_trait.query_all', split_by_species=True) }}")
+    .then((data) => {
+      traits = data;
+      console.log('Retrieved trait list.');
+    })
+    .catch((err) => {
+      console.error("Failed to retrieve trait values.", err);
+    });
+
+
+  // Submit result
+  $("#form-submit").on("submit", function(e) {
+    e.preventDefault();
+
+    // Get form data
+    const data = new FormData($('form#form-submit')[0]);
+
+    submit_job(data, '#submit-modal')
+
+      // If file validation fails, flash the error
+      .fail((error) => {
+        const resp = error.responseJSON
+        if (resp && resp.message) {
+          flash_message(resp.message, resp.full_msg_link, resp.full_msg_body);
+        }
+      })
+  });
+
+</script>
+{% endblock %}

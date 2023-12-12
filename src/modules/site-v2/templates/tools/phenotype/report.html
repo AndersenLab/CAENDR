@@ -1,0 +1,58 @@
+{% extends "_layouts/default-nocontainer.html" %}
+
+{% block custom_head %}
+
+<!-- D3js -->
+<script src="//d3js.org/d3.v4.min.js"></script>
+
+<style>
+    .tooltip {
+        position: absolute;
+        font-size: 12px;
+        width:  auto;
+        height: auto;
+        border: 1px solid black;
+        pointer-events: none;
+        line-height: 1px;
+        background-color: white;
+    }
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid px-5">
+    <p><i>Spearman Correlation = {{ result.correlation|round(4) }}</i></p>
+    <p><i>P-value = {{ result.p_value|round(4) }}</i></p>
+    <div id="phenotype-chart"></div>
+</div>
+
+{% endblock %}
+
+
+{% block script %}
+<script src="{{ url_for('static', filename='js/scatter-histogram.js') }}"></script>
+
+<script>
+
+const data = {{ data.trait_values|tojson }};
+
+scatterplot_histograms('#phenotype-chart', data, {
+    hist_height:   60,
+    width:         600,
+    height:        600,
+    fill_color:    '#0719BC',
+    bins_per_tick: 2,
+    x_label:       '{{ data.trait_names[0] }}',
+    y_label:       '{{ data.trait_names[1] }}',
+    tooltip_template: (d, labels) => `
+        <p><b>Strain: ${d[2]}</b></p>
+        <p>${labels[0]}: ${d[0]}</p>
+        <p>${labels[1]}: ${d[1]}</p>
+    `,
+});
+
+</script>
+
+{% endblock %}
