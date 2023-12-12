@@ -121,7 +121,7 @@ function add_histogram_along_axis(d, axis, data, target, config) {
  *       'x_label'
  *       'y_label'
  */
-function scatterplot_histograms(container_selector, data, config={}) {
+function render_scatterplot_histograms(container_selector, data, config={}) {
 
     // Get histogram heights from config
     const hist_height = config['hist_height'] || 60;

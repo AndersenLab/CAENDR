@@ -96,7 +96,7 @@ const data = {{ result.trait_values|tojson }};
 
 {%- else %}
 // Render chart(s) for two traits
-scatterplot_histograms('#phenotype-chart', data, {
+render_scatterplot_histograms('#phenotype-chart', data, {
     hist_height:   60,
     width:         600,
     height:        600,
