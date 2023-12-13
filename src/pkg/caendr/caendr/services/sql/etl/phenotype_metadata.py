@@ -7,7 +7,10 @@ from caendr.utils.local_files import LocalDatastoreFile
 
 
 def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
-
+  """
+    Parsing function to load PhenotypeMetadata table from datastore.
+    For bulk file ouputs each trait as a new row and replicates metadata for all of them
+  """
   
   logger.info('Parsing function for traits metadata')
   
@@ -17,33 +20,35 @@ def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
     md = fpath._metadata
 
     # If bulk file, open it and yield each trait as a new row with the file's metadata
-    # if md.is_bulk_file:
-    #   with open(fpath) as csv_file:
-    #     for idx, row in enumerate( csv.reader(csv_file, delimiter='\t') ):
-    #       if idx == 0:
-    #         continue
-    #       else:
-    #        trait_name = '_'.join(row[:3])
-    #        yield {
-    #          'trait_name':        trait_name,
-    #          'species':           md._get_raw_prop('species'),
-    #          'description_short': md._get_raw_prop('description_short'),
-    #          'description_long':  md._get_raw_prop('description_long'),
-    #          'units':             md._get_raw_prop('units'),
-    #          'doi':               md._get_raw_prop('doi'),
-    #          'protocols':         md._get_raw_prop('protocols'),
-    #          'source_lab':        md._get_raw_prop('source_lab'),
-    #          'created_on':        md._get_raw_prop('created_on')
-    #         } 
-    # else:
-    yield {
-    'trait_name':        md._get_raw_prop('trait_name'),
-    'species':           md._get_raw_prop('species'),
-    'description_short': md._get_raw_prop('description_short'),
-    'description_long':  md._get_raw_prop('description_long'),
-    'units':             md._get_raw_prop('units'),
-    'doi':               md._get_raw_prop('doi'),
-    'protocols':         md._get_raw_prop('protocols'),
-    'source_lab':        md._get_raw_prop('source_lab'),
-    'created_on':        md._get_raw_prop('created_on')
-    }
+    if md.is_bulk_file:
+      with open(fpath) as csv_file:
+        for idx, row in enumerate( csv.reader(csv_file, delimiter='\t') ):
+          if idx == 0:
+            continue
+          else:
+           trait_name = '_'.join(row[:3])
+           yield {
+             'trait_name':        trait_name,
+             'species':           md._get_raw_prop('species'),
+             'description_short': md._get_raw_prop('description_short'),
+             'description_long':  md._get_raw_prop('description_long'),
+             'units':             md._get_raw_prop('units'),
+             'doi':               md._get_raw_prop('doi'),
+             'protocols':         md._get_raw_prop('protocols'),
+             'source_lab':        md._get_raw_prop('source_lab'),
+             'created_on':        md._get_raw_prop('created_on'),
+             'is_bulk_file':      md._get_raw_prop('is_bulk_file')
+            } 
+    else:
+        yield {
+        'trait_name':        md._get_raw_prop('trait_name'),
+        'species':           md._get_raw_prop('species'),
+        'description_short': md._get_raw_prop('description_short'),
+        'description_long':  md._get_raw_prop('description_long'),
+        'units':             md._get_raw_prop('units'),
+        'doi':               md._get_raw_prop('doi'),
+        'protocols':         md._get_raw_prop('protocols'),
+        'source_lab':        md._get_raw_prop('source_lab'),
+        'created_on':        md._get_raw_prop('created_on'),
+        'is_bulk_file':      md._get_raw_prop('is_bulk_file')
+        }

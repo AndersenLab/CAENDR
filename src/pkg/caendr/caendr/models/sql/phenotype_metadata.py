@@ -16,7 +16,8 @@ class PhenotypeMetadata(DictSerializable, db.Model):
   doi = db.Column(db.String(), nullable=True)
   protocols = db.Column(db.String(), nullable=True)
   source_lab = db.Column(db.String())
-  created_on = db.Column(db.Date())
+  created_on = db.Column(db.Date(), nullable=False)
+  is_bulk_file = db.Column(db.Boolean(), nullable=False)
   phenotype_values = db.relationship('PhenotypeDatabase', backref='phenotype_db', lazy='joined')
 
   __tablename__ = 'phenotype_metadata'
