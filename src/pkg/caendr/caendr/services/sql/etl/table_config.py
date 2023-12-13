@@ -137,8 +137,8 @@ WormbaseGeneConfig = TableConfig(
   WormbaseGene,
   ParseConfig(
     parse_gene_gtf,
-    LocalDatastoreFileTemplate( 'GENE_GFF', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_GTF_FILENAME ),
-    LocalDatastoreFileTemplate( 'GENE_GFF', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_IDS_FILENAME ),
+    LocalDatastoreFileTemplate( 'GENE_GTF', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_GTF_FILENAME ),
+    LocalDatastoreFileTemplate( 'GENE_IDS', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_IDS_FILENAME ),
   ),
 )
 
