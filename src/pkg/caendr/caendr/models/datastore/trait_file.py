@@ -24,7 +24,8 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
       *super().get_props_set(),
 
       # Identifying trait
-      'trait_name',
+      'trait_name_caendr',
+      'trait_name_user',
       'species',
       'is_bulk_file',
 
