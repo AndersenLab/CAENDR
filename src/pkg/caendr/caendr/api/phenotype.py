@@ -21,10 +21,10 @@ def query_phenotype_metadata(is_bulk_file=False, include_values=False, species: 
 
     # Get traits for bulk file
     if is_bulk_file:
-        query = query.filter_by(is_bulk_file=True)
-    
-    # Get traits for non-bulk files
-    query = query.filter_by(is_bulk_file=False)
+      query = query.filter_by(is_bulk_file=True)
+    else:
+      # Get traits for non-bulk files
+      query = query.filter_by(is_bulk_file=False)
 
     # Query by species
     if species is not None:
