@@ -29,26 +29,26 @@ def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
            trait_name = '_'.join(row[:3])
            yield {
              'trait_name':        trait_name,
-             'species':           md._get_raw_prop('species'),
-             'description_short': md._get_raw_prop('description_short'),
-             'description_long':  md._get_raw_prop('description_long'),
-             'units':             md._get_raw_prop('units'),
-             'doi':               md._get_raw_prop('doi'),
-             'protocols':         md._get_raw_prop('protocols'),
-             'source_lab':        md._get_raw_prop('source_lab'),
-             'created_on':        md._get_raw_prop('created_on'),
-             'is_bulk_file':      md._get_raw_prop('is_bulk_file')
+             'species':           md.species.name,
+             'description_short': md['description_short'],
+             'description_long':  md['description_long'],
+             'units':             md['units'],
+             'doi':               md['doi'],
+             'protocols':         md['protocols'],
+             'source_lab':        md['source_lab'],
+             'created_on':        md.created_on,
+             'is_bulk_file':      md['is_bulk_file'],
             } 
     else:
         yield {
-        'trait_name':        md._get_raw_prop('trait_name'),
-        'species':           md._get_raw_prop('species'),
-        'description_short': md._get_raw_prop('description_short'),
-        'description_long':  md._get_raw_prop('description_long'),
-        'units':             md._get_raw_prop('units'),
-        'doi':               md._get_raw_prop('doi'),
-        'protocols':         md._get_raw_prop('protocols'),
-        'source_lab':        md._get_raw_prop('source_lab'),
-        'created_on':        md._get_raw_prop('created_on'),
-        'is_bulk_file':      md._get_raw_prop('is_bulk_file')
+        'trait_name':        md['trait_name'],
+        'species':           md.species.name,
+        'description_short': md['description_short'],
+        'description_long':  md['description_long'],
+        'units':             md['units'],
+        'doi':               md['doi'],
+        'protocols':         md['protocols'],
+        'source_lab':        md['source_lab'],
+        'created_on':        md.created_on,
+        'is_bulk_file':      md['is_bulk_file']
         }
