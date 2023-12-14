@@ -24,7 +24,7 @@ setup(
     'gtfparse==0.0.6',
     'logzero==1.3.1',
     'oauth2client',
-    'numpy',
+    'numpy==1.19.5',
     'pandas',
     'plotly==5.3.0',
     'psycopg2-binary>=2.9.1',
