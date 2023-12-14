@@ -35,7 +35,7 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
       'units',
 
       # Source information
-      'doi',
+      'publication',
       'protocols',
       'source_lab',
     }
