@@ -1,4 +1,5 @@
 import os
+from typing import Type
 
 from caendr.services.logger import logger
 
@@ -10,8 +11,10 @@ from caendr.models.error import (
     DataFormatError,
     DuplicateDataError,
     JobAlreadyScheduledError,
+    NotFoundError,
     ReportLookupError,
 )
+from caendr.models.datastore    import User, ReportEntity
 from caendr.models.job_pipeline import JobPipeline, get_pipeline_class
 from caendr.services.cloud.secret import get_secret
 
@@ -52,11 +55,23 @@ def lookup_report(kind, reportId, user=None, validate_user=True) -> JobPipeline:
     job = JobPipelineClass.lookup(reportId)
 
   # If no such report exists, show an error message
-  except Exception:
+  except NotFoundError:
 
     # Let admins know the report doesn't exist
     if user_is_admin() or not validate_user:
       raise ReportLookupError('This is not a valid report URL.', 404)
+
+    # For all other users, display a default "no access" message
+    else:
+      raise ReportLookupError('You do not have access to that report.', 401)
+
+  # Log all other exceptions and show an error message
+  except Exception as ex:
+    logger.error(f'Error looking up report: {ex}')
+
+    # Let admins know something went wrong
+    if user_is_admin() or not validate_user:
+      raise ReportLookupError('Something went wrong.', 400)
 
     # For all other users, display a default "no access" message
     else:
@@ -155,3 +170,30 @@ def try_submit(kind, user, data, no_cache):
     # Return the error message
     # TODO: Update this wording
     return { 'message': "There was a problem submitting your request." }, 500
+
+
+
+def list_reports(ReportClass: Type[ReportEntity], user: User = None, filter_errs: bool = False):
+  '''
+    Get a list of reports, sorted by most recent.
+
+    Args:
+      - `ReportClass`: The report class type to query for.
+      username (str | None):
+        If provided, only return reports owned by the given user.
+      filter_errs (bool):
+        If True, skips all entities that throw an error when initializing.
+        If False, populates as many fields of those entities as possible.
+  '''
+
+  # Filter by username if provided, and log event accordingly
+  if user:
+    logger.debug(f'Getting all {ReportClass.get_report_display_name()} reports for user "{user.name}"...')
+    filters = [('username', '=', user.name)]
+  else:
+    logger.debug(f'Getting all {ReportClass.get_report_display_name()} reports...')
+    filters = []
+
+  # Get list of reports and filter by date
+  reports = ReportClass.query_ds(safe=not filter_errs, ignore_errs=filter_errs, filters=filters)
+  return ReportClass.sort_by_created_date(reports, reverse=True)

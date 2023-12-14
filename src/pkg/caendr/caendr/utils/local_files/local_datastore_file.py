@@ -1,4 +1,5 @@
 import os
+import pathlib
 
 from caendr.services.logger        import logger
 
@@ -8,11 +9,11 @@ from caendr.models.datastore       import Species, FileRecordEntity
 from caendr.models.error           import NotFoundError, ForeignResourceMissingError, ForeignResourceUndefinedError
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, download_blob_to_file, join_path, check_blob_exists
 from caendr.utils.tokens           import TokenizedString
-from caendr.utils.file             import unzip_gz, get_zipped_file_ext
+from caendr.utils.file             import get_zipped_file_ext
 
 
 
-LOCAL_DIR = os.path.join('.', '.download')
+LOCAL_DIR = pathlib.Path('.', '.download')
 os.makedirs(LOCAL_DIR, exist_ok=True)
 
 
@@ -30,26 +31,28 @@ class LocalDatastoreFile(os.PathLike, ForeignResource):
   # Instantiation
   #
 
-  def __init__(self, file_id: str, bucket: str, *path: str, unzip: bool = False, local_path: str = None, metadata: dict = None, species=None):
+  def __init__(self, resource_id: str, bucket: str, *path: str, local_path: str = None, metadata: dict = None):
 
     # Validate path length
     if not len(path):
       raise ValueError('Must provide at least one path element')
 
+    # Save resource ID
+    super().__init__(resource_id)
+
     # Save vars locally
-    self._file_id = file_id
-    self._bucket  = bucket
-    self._path    = path
-    self._unzip   = unzip
-    self._metadata  = metadata or {}
-    self._species   = species
+    self._bucket   = bucket
+    self._path     = path
+    self._metadata = metadata or {}
 
     # Get the file extension as the last section of the path after a '.', ignoring '.gz'
     # If there is no file extension (e.g. 'foobar.gz' or just 'foobar'), set to empty string
-    self._file_ext = get_zipped_file_ext( path[-1] )[0] or ''
+    self._file_ext, self._is_zipped = get_zipped_file_ext( path[-1] )
+    if self._file_ext is None:
+      self._file_ext = ''
 
     # Set the local path
-    self._LOCAL_PATH = local_path if local_path is not None else self._DEFAULT_LOCAL_PATH
+    self._local_path = pathlib.Path(local_path) if local_path is not None else self._DEFAULT_LOCAL_PATH
 
 
   #
@@ -57,10 +60,27 @@ class LocalDatastoreFile(os.PathLike, ForeignResource):
   #
 
   def __repr__(self):
-    return 'Datastore File ' + join_path( *self.get_datastore_uri(schema=BlobURISchema.PATH) )
+    return f'Datastore file "{self.resource_id}": ' + join_path( *self.get_datastore_uri(schema=BlobURISchema.PATH) )
 
-  def __print_locations(self, zipped):
-    return f'{self.get_local_filepath(zipped=zipped)}  <-  {self.get_datastore_uri(schema=BlobURISchema.HTTPS)}'
+  def __print_locations(self):
+    return f'{self.get_local_filepath()}  <-  {self.get_datastore_uri(schema=BlobURISchema.HTTPS)}'
+
+
+  #
+  # File extension
+  #
+
+  @property
+  def is_zipped(self):
+    return self._is_zipped
+
+  @property
+  def file_ext(self):
+    return self._file_ext
+
+  @property
+  def file_ext_full(self):
+    return self.file_ext + ('.gz' if self.is_zipped else '')
 
 
   #
@@ -76,32 +96,28 @@ class LocalDatastoreFile(os.PathLike, ForeignResource):
   def exists_in_ds(self):
     return check_blob_exists(self._bucket, *self._path)
 
-  @property
-  def source_is_zipped(self):
-    return self._path[-1][-3:] == '.gz'
-
 
   #
   # Local file
   #
 
-  def get_local_filename(self, zipped: bool = True):
+  def get_local_filename(self):
     '''
       Get a local name for the file once it's been downloaded. No filepath.
     '''
-    return self._file_id + self._file_ext + ('.gz' if zipped else '')
+    return self.resource_id + self.file_ext_full
 
-  def get_local_filepath(self, zipped: bool = True):
+  def get_local_filepath(self):
     '''
       Get a local path to the file once it's been downloaded. Full path.
     '''
-    return join_path(self._LOCAL_PATH, self.get_local_filename(zipped=zipped))
+    return os.path.join(self._local_path, self.get_local_filename())
 
-  def exists_local(self, zipped: bool = True):
+  def exists_local(self):
     '''
       Check whether the file exists locally (i.e. is cached).
     '''
-    return os.path.exists( self.get_local_filepath(zipped=zipped) )
+    return os.path.exists( self.get_local_filepath() )
 
 
   #
@@ -109,9 +125,7 @@ class LocalDatastoreFile(os.PathLike, ForeignResource):
   #
 
   def __fspath__(self):
-    if not self._unzip and self.exists_local(zipped = True):
-      return self.get_local_filepath(zipped = True)
-    return self.get_local_filepath(zipped = False)
+    return self.get_local_filepath()
 
 
   #
@@ -128,34 +142,26 @@ class LocalDatastoreFile(os.PathLike, ForeignResource):
       Ensure the file exists locally in the desired format, and return the local filepath.
     '''
 
-    # Check if file is already downloaded and unzipped
-    if use_cache and self.exists_local(zipped=False):
-      logger.info(f'Already downloaded datastore file [{self._file_id}]:\n\t{ self.__print_locations(zipped=False) }')
-      local_is_zipped = False
+    # Check if file has already been downloaded
+    if use_cache and self.exists_local():
+      logger.info(f'Already downloaded datastore file [{self.resource_id}]:\n\t{ self.__print_locations() }')
 
-    # Check if file is already downloaded and zipped
-    elif use_cache and self.exists_local(zipped=True):
-      logger.info(f'Already downloaded datastore file [{self._file_id}] (zipped):\n\t{ self.__print_locations(zipped=True) }')
-      local_is_zipped = True
-
-    # Download the external file
+    # Try downloading the file
     else:
-      local_is_zipped = self.source_is_zipped
-
-      # Try downloading the blob
       try:
-        logger.info(f'Downloading datastore file [{self._file_id}]:\n\t{ self.__print_locations(zipped = self.source_is_zipped) }')
-        download_blob_to_file(self._bucket, *self._path, destination=self._LOCAL_PATH, filename=self.get_local_filename(zipped = self.source_is_zipped))
-        logger.info(f'Completed download of file [{self._file_id}]:\n\t{ self.__print_locations(zipped = self.source_is_zipped) }')
+        logger.info(f'Downloading datastore file [{self.resource_id}]:\n\t{ self.__print_locations() }')
+        download_blob_to_file(self._bucket, *self._path, destination=self._local_path, filename=self.get_local_filename())
+        logger.info(f'Completed download of file [{self.resource_id}]:\n\t{ self.__print_locations() }')
 
       # If not found, wrap error
       except NotFoundError as ex:
-        raise ForeignResourceMissingError('Datastore file', self._file_id, self._species) from ex
+        raise ForeignResourceMissingError(self) from ex
 
-    # Unzip the downloaded file, if applicable
-    if local_is_zipped and self._unzip:
-      logger.info(f'Unzipping {self.get_local_filepath(zipped = True)} ...')
-      unzip_gz(self.get_local_filepath(zipped = True), keep_zipped_file=False)
+    # # Unzip the downloaded file, if applicable
+    # # NOTE: Deprecated -- none of our resources use this, so it just introduces potential vulnerabilities later
+    # if local_is_zipped and self._unzip:
+    #   logger.info(f'Unzipping {self.get_local_filepath(zipped = True)} ...')
+    #   unzip_gz(self.get_local_filepath(zipped = True), keep_zipped_file=False)
 
     # Return the local filepath
     return self.__fspath__()
@@ -235,9 +241,8 @@ class LocalDatastoreFileTemplate(ForeignResourceTemplate):
       self.resource_id,
       self._bucket,
       *self._build_path(species=species, tokens=tokens),
-      unzip = False,
       local_path = self._DEFAULT_LOCAL_PATH.get_string( **{**TokenizedString.get_species_tokens(species), **tokens} ),
-      metadata = self.__metadata,
+      metadata   = self.__metadata,
     )
 
 

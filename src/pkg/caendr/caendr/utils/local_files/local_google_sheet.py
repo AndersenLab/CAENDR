@@ -8,13 +8,17 @@ from caendr.services.cloud.sheets import get_google_sheet
 
 class LocalGoogleSheet(ForeignResource):
 
-  def __init__(self, sheet_id, resource_id = None, species = None):
-    self._sheet_id     = sheet_id
-    self.__resource_id = resource_id or sheet_id
-    self.__species     = species
+  def __init__(self, resource_id: str, sheet_id: str, species = None):
+
+    # Pass resource ID to parent
+    super().__init__(resource_id)
+
+    # Save vars locally
+    self._sheet_id = sheet_id
+    self.__species = species
 
   def __repr__(self):
-    return f'Google Sheet "{self.__resource_id}"' + (f' for {self.__species.name}' if self.__species else '')
+    return f'Google Sheet "{self.resource_id}"' + (f' for {self.__species.name}' if self.__species else '')
 
 
   #
@@ -31,7 +35,7 @@ class LocalGoogleSheet(ForeignResource):
     try:
       return get_google_sheet( self._sheet_id )
     except Exception as ex:
-      raise ForeignResourceMissingError('Google Sheet', self.__resource_id, self.__species) from ex
+      raise ForeignResourceMissingError(self) from ex
 
 
 
@@ -78,4 +82,4 @@ class LocalGoogleSheetTemplate(ForeignResourceTemplate):
       raise ForeignResourceUndefinedError('Google Sheet', self.resource_id, species)
 
     # Create new local sheet object
-    return LocalGoogleSheet(self.__sheet_ids[species.name], resource_id=self.resource_id, species=species)
+    return LocalGoogleSheet(self.resource_id, self.__sheet_ids[species.name], species=species)

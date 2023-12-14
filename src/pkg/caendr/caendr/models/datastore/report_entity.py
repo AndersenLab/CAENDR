@@ -133,6 +133,6 @@ class ReportEntity(JobEntity, UserOwnedEntity, GCPReport):
     # Filter based on container and/or status, based on which args are provided
     return [
       match for match in cls.sort_by_created_date( cls.query_ds(filters=filters), set_none_max=True )
-        if  ( container is not None and match.container_equals(container) )
-        and ( status    is not None and match['status'] in status )
+        if  ( container is None or match.container_equals(container) )
+        and ( status    is None or match['status'] in status )
     ]

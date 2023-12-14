@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from logzero import logger
 
 from caendr.models.datastore import Entity
@@ -132,4 +134,4 @@ class Species(Entity):
 SPECIES_LIST = {
     e.name: e for e in Species.query_ds()
 }
-SPECIES_LIST = dict(sorted(SPECIES_LIST.items(), key=lambda e: e[1]['order']))
+SPECIES_LIST: 'OrderedDict[str, Species]' = OrderedDict(sorted(SPECIES_LIST.items(), key=lambda e: e[1]['order']))

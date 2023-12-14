@@ -16,7 +16,7 @@ import bleach
 
 from base.forms import HeritabilityForm
 from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user, user_is_admin
-from base.utils.tools import get_upload_err_msg, lookup_report, try_submit
+from base.utils.tools import get_upload_err_msg, lookup_report, list_reports, try_submit
 from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 from caendr.models.error import (
@@ -28,7 +28,6 @@ from caendr.models.error import (
 from caendr.models.datastore import Species, HeritabilityReport
 from caendr.models.status import JobStatus
 from caendr.api.strain import get_strains
-from caendr.services.heritability_report import get_heritability_report, get_heritability_reports
 from caendr.utils.data import unique_id, get_object_hash
 from caendr.utils.env import get_env_var
 from caendr.utils.local_files import LocalUploadFile
@@ -135,7 +134,7 @@ def list_results():
 
     # Table info
     'species_list': Species.all(),
-    'items': get_heritability_reports(None if show_all else user.name, filter_errs),
+    'items': list_reports(HeritabilityReport, None if show_all else user, filter_errs),
     'columns': results_columns(),
 
     'JobStatus': JobStatus,
@@ -193,7 +192,7 @@ def submit():
 @heritability_calculator_bp.route("/report/<id>/logs")
 @jwt_required()
 def view_logs(id):
-  hr = get_heritability_report(id)    
+  hr = HeritabilityReport.get_ds(id)
   # get workflow bucket
   from google.cloud import storage
   storage_client = storage.Client()

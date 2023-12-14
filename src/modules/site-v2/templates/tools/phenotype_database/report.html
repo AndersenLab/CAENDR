@@ -1,4 +1,26 @@
 {% extends "_layouts/default-nocontainer.html" %}
+
+{% block custom_head %}
+
+<!-- D3js -->
+<script src="//d3js.org/d3.v4.min.js"></script>
+
+<style>
+    .tooltip {
+        position: absolute;
+        font-size: 12px;
+        width:  auto;
+        height: auto;
+        border: 1px solid black;
+        pointer-events: none;
+        line-height: 1px;
+        background-color: white;
+    }
+</style>
+
+{% endblock %}
+
+
 {% block content %}
 
 <div class="container-fluid px-5 pb-5">
@@ -6,18 +28,28 @@
         <!-- Results Card -->
         <div class="col col-md-6 col-xl-3 text-bg-light mb-5 p-5 rounded-2 shadow-sm">
             <h2 class="h3 text-center mb-5">Trait Information</h2>
+
+            {%- if data.num_traits > 1 %}
             <h3 class="h4 text-dark">Trait 1</h3>
+            {%- endif %}
             <p><strong>Name:</strong></p>
-            <p>Short Name</p>
+            <p>{{ report['trait_1']['trait_name'] }}</p>
             <p><strong>Description</strong></p>
-            <p>The short description of the trait</p>
+            <p>{{ report['trait_1']['description_short'] }}</p>
+
+            {%- if data.num_traits > 1 %}
             <h3 class="h4 text-dark">Trait 2</h3>
             <p><strong>Name:</strong></p>
-            <p>Short Name</p>
+            <p>{{ report['trait_2']['trait_name'] }}</p>
             <p><strong>Description</strong></p>
-            <p>The short description of the trait</p>
+            <p>{{ report['trait_2']['description_short'] }}</p>
             <h3 class="h4 text-dark">Correlation</h3>
-            <p>correlation value</p>
+            <p>{{ result.correlation|round(4) }}</p>
+            <!--
+            <h3 class="h4 text-dark">P-Value</h3>
+            <p>{{ result.p_value|round(4) }}</p>
+            -->
+            {%- endif %}
         </div>
         <!-- /Input Card -->
         <!-- Tool column -->
@@ -32,14 +64,15 @@
             <!-- /Options Toolbar -->
             <!-- Widget Placeholder -->
             <div class="col">
-                <svg class="bd-placeholder-img bd-placeholder-img-lg img-fluid border-0" width="100%"
+                <div id="phenotype-chart"></div>
+                <!-- <svg class="bd-placeholder-img bd-placeholder-img-lg img-fluid border-0" width="100%"
                     style="height: 100%" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Widget"
                     preserveAspectRatio="xMidYMid slice" focusable="false">
                     <title>Placeholder</title>
                     <rect width="100%" height="100%" fill="#868e96"></rect><text x="50%" y="50%" fill="#dee2e6"
                         dy=".3em">Widget
                         Placeholder</text>
-                </svg>
+                </svg> -->
             </div>
             <!-- Widget Placeholder -->
         </div>
@@ -47,5 +80,58 @@
     </div>
     <!-- /Flex -->
 </div> <!-- /Container -->
+
+{% endblock %}
+
+
+{% block script %}
+<script src="{{ url_for('static', filename='js/plot.js') }}"></script>
+
+<script>
+
+const data = {{ result.trait_values|tojson }};
+
+{%- if data.num_traits == 1 %}
+// Render chart for one trait
+render_histogram('#phenotype-chart', data, {
+    width:         1200,
+    height:        300,
+    fill_color:    '#0719BC',
+    bins_per_tick: 4,
+    x_label:       '{{ data.trait_names[0] }}',
+    tooltip_template: (d, labels) => `
+        <p><b>Strain: ${d[2]}</b></p>
+        <p>${labels[0]}: ${d[0]}</p>
+    `,
+});
+render_ranked_barplot('#phenotype-chart', data, {
+    width:         1200,
+    height:        300,
+    fill_color:    '#0719BC',
+    tooltip_template: (d) => `
+        <p>Strain: ${d[1]}</p>
+        <p>Value: ${d[0]}</p>
+    `,
+});
+
+{%- else %}
+// Render chart(s) for two traits
+render_scatterplot_histograms('#phenotype-chart', data, {
+    hist_height:   60,
+    width:         600,
+    height:        600,
+    fill_color:    '#0719BC',
+    bins_per_tick: 2,
+    x_label:       '{{ data.trait_names[0] }}',
+    y_label:       '{{ data.trait_names[1] }}',
+    tooltip_template: (d, labels) => `
+        <p><b>Strain: ${d[2]}</b></p>
+        <p>${labels[0]}: ${d[0]}</p>
+        <p>${labels[1]}: ${d[1]}</p>
+    `,
+});
+{%- endif %}
+
+</script>
 
 {% endblock %}
