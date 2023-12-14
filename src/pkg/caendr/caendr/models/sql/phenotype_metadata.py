@@ -18,7 +18,11 @@ class PhenotypeMetadata(DictSerializable, db.Model):
   source_lab = db.Column(db.String())
   created_on = db.Column(db.Date(), nullable=False)
   is_bulk_file = db.Column(db.Boolean(), nullable=False)
-  phenotype_values = db.relationship('PhenotypeDatabase', backref='phenotype_db', lazy='joined')
+  phenotype_values = db.relationship(
+                      'PhenotypeDatabase', 
+                      backref='phenotype_db.trait_name', 
+                      primaryjoin='PhenotypeMetadata.trait_name==PhenotypeDatabase.trait_name', 
+                      lazy='joined')
 
   __tablename__ = 'phenotype_metadata'
 
