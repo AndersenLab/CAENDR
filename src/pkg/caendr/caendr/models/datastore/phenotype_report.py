@@ -1,5 +1,9 @@
-from caendr.models.datastore       import ReportEntity, HashableEntity, TraitFile
-from caendr.services.cloud.storage import download_blob_as_dataframe
+import pandas as pd
+from typing import Tuple
+
+from caendr.models.datastore          import ReportEntity, HashableEntity, TraitFile
+from caendr.models.sql                import PhenotypeDatabase
+from caendr.services.cloud.postgresql import db
 
 
 
@@ -21,8 +25,6 @@ class PhenotypeReport(ReportEntity, HashableEntity):
   #
   # Input & Output
   #
-  # TODO: Should these be the same, or different?
-  # TODO: Return dataframe from SQL table instead of raw file
   # TODO: Accept input files(?) to create a report
   #
 
@@ -32,16 +34,15 @@ class PhenotypeReport(ReportEntity, HashableEntity):
 
 
   def fetch_input(self):
-    return (
-      download_blob_as_dataframe(self['trait_1'].get_blob(SPECIES=self['species'])),
-      download_blob_as_dataframe(self['trait_2'].get_blob(SPECIES=self['species'])),
-    )
+    return tuple(self.trait_files)
 
   def fetch_output(self):
-    return (
-      download_blob_as_dataframe(self['trait_1'].get_blob(SPECIES=self['species'])),
-      download_blob_as_dataframe(self['trait_2'].get_blob(SPECIES=self['species'])),
-    )
+    return tuple([
+      pd.read_sql_query(
+        PhenotypeDatabase.query.filter( PhenotypeDatabase.trait_name == tf['trait_name'] ).statement, con=db.engine
+      )
+        for tf in self.trait_files
+    ])
 
 
 
@@ -70,7 +71,7 @@ class PhenotypeReport(ReportEntity, HashableEntity):
     # Name will always exist if set, so if not found, return None
     if not getattr(self, '_trait_1_name', ''):
       return None
-    
+
     # If the corresponding file object is not cached yet, retrieve it
     if getattr(self, '_trait_1_file', None) is None:
       self._trait_1_file = TraitFile.get_ds(self._trait_1_name)
@@ -83,7 +84,7 @@ class PhenotypeReport(ReportEntity, HashableEntity):
   def trait_1(self, val):
 
     # If passing TraitFile entity name, save as-is
-    if isinstance(val, str):
+    if val is None or isinstance(val, str):
       self._trait_1_name = val
       self._trait_1_file = None
 
@@ -119,7 +120,7 @@ class PhenotypeReport(ReportEntity, HashableEntity):
   def trait_2(self, val):
 
     # If passing TraitFile entity name, save as-is
-    if isinstance(val, str):
+    if val is None or isinstance(val, str):
       self._trait_2_name = val
       self._trait_2_file = None
 
@@ -130,5 +131,27 @@ class PhenotypeReport(ReportEntity, HashableEntity):
 
     # Otherwise, raise an error
     else:
-      raise TypeError(f'Cannot set trait_1 to "{ val }"')
+      raise TypeError(f'Cannot set trait_2 to "{ val }"')
 
+
+  #
+  # Trait Names
+  #
+
+  @property
+  def trait_1_name(self) -> str:
+    if self['trait_1'] is None:
+      return None
+    return self['trait_1']['trait_name']
+
+  @property
+  def trait_2_name(self) -> str:
+    if self['trait_2'] is None:
+      return None
+    return self['trait_2']['trait_name']
+
+  @property
+  def trait_files(self) -> Tuple[TraitFile]:
+    if self['trait_2'] is None:
+      return self['trait_1'],
+    return self['trait_1'], self['trait_2']

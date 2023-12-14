@@ -121,7 +121,7 @@ function add_histogram_along_axis(d, axis, data, target, config) {
  *       'x_label'
  *       'y_label'
  */
-function scatterplot_histograms(container_selector, data, config={}) {
+function render_scatterplot_histograms(container_selector, data, config={}) {
 
     // Get histogram heights from config
     const hist_height = config['hist_height'] || 60;
@@ -207,7 +207,7 @@ function scatterplot_histograms(container_selector, data, config={}) {
       .style('stroke', stroke_color);
 
     // Create tooltip for data point mouseover
-    const tooltip = d3.select("#phenotype-chart")
+    const tooltip = d3.select(container_selector)
       .append("div")
       .attr("class", "tooltip")
       .style("opacity", 0);
@@ -250,4 +250,180 @@ function scatterplot_histograms(container_selector, data, config={}) {
     // Add the two histograms
     add_histogram_along_axis(0, x, data, svg, {...h_config, position: [margin.left,         margin.top              ]})
     add_histogram_along_axis(1, y, data, svg, {...h_config, position: [margin.left + width, margin.top + hist_height]})
+}
+
+
+
+/* Create a histogram along the x axis.
+ *
+ * Arguments:
+ *   - container_selector: A selector for the element to create the graph in.
+ *   - data: The data to graph.
+ *   - config (dict): A set of optional parameters.  Values include:
+ *       'margin'
+ *       'width'
+ *       'height'
+ *       'bins_per_tick'
+ *       'fill_color'
+ *       'x_label'
+ */
+function render_histogram(container_selector, data, config={}) {
+
+  // Set the dimensions and margins of the graph
+  const margin = config['margin'] || {
+    top:    48,
+    right:  48,
+    bottom: 48,
+    left:   48,
+  };
+  const width  = (config['width']  || 600) - margin.left - margin.right;
+  const height = (config['height'] || 400) - margin.top - margin.bottom;
+
+  // Read values from config, filling in default values when not supplied
+  const bins_per_tick = config['bins_per_tick'] || 1;
+  const fill_color    = config['fill_color']    || 'black';
+
+  // Create the SVG object for the full graphic (scatterplot + histograms + margins)
+  const svg = d3.select(container_selector).append('svg')
+    .attr('width',  width  + margin.left + margin.right)
+    .attr('height', height + margin.top + margin.bottom)
+
+  // Add a graph element for the scatterplot
+  const g = svg.append("g")
+    .attr("transform", `translate(${ margin.left }, ${ margin.top })`);
+
+  // Create mapping functions from data set to coordinates in the scatterplot
+  const x = d3.scaleLinear().domain(d3.extent(data, n => n[0])).range([0, width]).nice();
+
+  // Add the x-axis
+  g.append("g")
+    .attr("transform", `translate(0, ${ height })`)
+    .call(d3.axisBottom(x));
+
+  // Add label for x-axis, if one is provided
+  // Centered on scatterplot graph element
+  if (config['x_label']) {
+    svg.append('text')
+      .attr('x', margin.left + (width / 2))
+      .attr('y', height + margin.top + 36)
+      .attr('text-anchor', 'middle')
+      .text(config['x_label'])
+  }
+
+  // Add the histogram
+  add_histogram_along_axis(0, x, data, svg, {
+    height: height,
+    color: fill_color,
+    bins_per_tick,
+    position: [margin.left, margin.top ],
+  })
+}
+
+
+
+/* Create a ranked bar plot.
+ *
+ * Arguments:
+ *   - container_selector: A selector for the element to create the graph in.
+ *   - data: The data to graph.
+ *   - config (dict): A set of optional parameters.  Values include:
+ *       'margin'
+ *       'width'
+ *       'height'
+ *       'fill_color'
+ *       'x_label'
+ *       'y_label'
+ */
+function render_ranked_barplot(container_selector, data, config={}) {
+
+  // Set the dimensions and margins of the graph
+  const margin = config['margin'] || {
+    top:    48,
+    right:  48,
+    bottom: 48,
+    left:   48,
+  };
+  const width  = (config['width']  || 600) - margin.left - margin.right;
+  const height = (config['height'] || 400) - margin.top - margin.bottom;
+
+  // Read values from config, filling in default values when not supplied
+  const fill_color    = config['fill_color']    || 'black';
+
+  // Create a template function for the tooltip
+  // By default, show label & value for each axis
+  const tooltip_template = config['tooltip_template'] || ((d) => `
+    <p>${d[1]}: ${d[0]}</p>
+  `);
+
+  // Sort data
+  data.sort(function(b, a) {
+    return b[0] - a[0];
+  });
+
+  const data_range = d3.extent(data, d => d[0]);
+
+  // Create the SVG object for the full graphic (scatterplot + histograms + margins)
+  const svg = d3.select(container_selector).append('svg')
+    .attr('width',  width  + margin.left + margin.right)
+    .attr('height', height + margin.top + margin.bottom)
+
+  // Create Y axis (map trait value to y coordinate)
+  const yScale = d3.scaleLinear()
+    .domain( data_range )
+    .range([ height, 0])
+  const yAxis = d3.axisLeft(yScale)
+
+  // Create X axis (map strain name to x coordinate)
+  const xScale = d3.scaleBand()
+    .domain(data.map( (d) => d[1] ))
+    .range([ 0, width ])
+    .padding(0.05)
+  const xAxis = d3.axisBottom(xScale)
+    .tickFormat((d) => '')
+
+  // Add the axes to the graph
+  svg.append("g")
+    .call(yAxis);
+  svg.append("g")
+    .attr("transform", "translate(0," + yScale(0) + ")")
+    .call(xAxis)
+
+  // Map a data point's absolute value to the corresponding bar height
+  const bar_height = d3.scaleLinear()
+    .domain([ 0, data_range[1] - data_range[0] ])
+    .range([ 0, height ]);
+
+  // Bars
+  const bars = svg.selectAll("mybar")
+    .data(data)
+    .enter()
+    .append("rect")
+      .attr("x", (d) => xScale( d[1] ) )
+      .attr("y", (d) => yScale( Math.max(d[0], 0) ) )
+      .attr("width", xScale.bandwidth())
+      .attr("height", (d) => bar_height( Math.abs(d[0]) ))
+      .attr("fill", fill_color)
+
+  // Create tooltip for bar mouseover
+  const tooltip = d3.select(container_selector)
+    .append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
+  // Add mouseover listener for individual bars -- show the tooltip
+  bars.on('mouseover', function(d) {
+    tooltip.html(tooltip_template(d))
+      .style('left', (d3.event.pageX + 10) + 'px') // Position tooltip to the right of the cursor
+      .style('top',  (d3.event.pageY - 25) + 'px') // Position tooltip above the cursor
+      .transition()
+      .duration(200)
+      .style('opacity', 1);
+  });
+
+  // Add mouseout event listener for individual bars -- hide the tooltip
+  bars.on('mouseout', function() {
+    tooltip.transition()
+      .duration(300)
+      .style('opacity', 0);
+  })
 }

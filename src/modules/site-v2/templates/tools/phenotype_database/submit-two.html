@@ -1,54 +1,25 @@
 {% extends "_layouts/default-nocontainer.html" %}
+
+
 {% block content %}
+{% from "_includes/select-trait.html" import render_select_trait %}
 
 <div class="container px-5 pb-5">
     <div class="d-flex flex-wrap justify-content-center mt-5">
         <div class="col-8 col-md-5">
             <h2 class="h3 text-dark text-center">Trait 1</h2>
-            <div class="card text-bg-light border-0 rounded-2 shadow-sm p-3 pe-2 me-md-5 mb-5" style="min-height:15em;">
-                <div class="d-flex justify-content-end">
-                    <div class="d-grid gap-2">
-                        <!-- Phenotype Icon -->
-                        <div>
-                            <div class="text-bg-secondary text-white text-center rounded-circle pt-2 phenotypeIcon">
-                                <i class="bi bi-pencil-fill" aria-hidden="true"></i></a>
-                            </div>
-                            <a class="text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#phenotypeDBModal"
-                                href="#">Select a
-                                database trait</a>
-                        </div>
-                        <!-- /Phenotype Icon -->
-                    </div>
-                </div>
-                <div class="mt-3">
-                    <p><strong>Species:</strong></p>
-                    <p><em>C. elegans</em></p>
-                    <p><strong>Trait Name:</strong></p>
-                    <p>example_trait_1234</p>
-                    <p><strong>Short Description:</strong></p>
-                    <p>A short description</p>
-                </div>
-            </div>
+            {{ render_select_trait('trait-1') }}
         </div>
         <div class="col-8 col-md-5">
             <h2 class="h3 text-dark text-center">Trait 2</h2>
-            <div class="card text-bg-light text-center border-0 rounded-2 shadow-sm p-5 me-md-5 mb-5"
-                style="min-height:15em;">
-                <div class="pt-5">
-                    <div class="text-bg-secondary text-white text-center rounded-circle pt-2 phenotypeIcon">
-                        <i class="bi bi-pencil-fill" aria-hidden="true"></i></a>
-                    </div>
-                    <a class="text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#phenotypeDBModal"
-                        href="#">Select a
-                        database trait</a>
-                </div>
-            </div>
+            {{ render_select_trait('trait-2') }}
         </div>
     </div>
     <!-- /flex -->
 
     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-        <button class="btn btn-dark text-white" role="button" href="#">Start Over</button>
+        <button class="btn btn-dark text-white" role="button"
+            onclick="location.href=`{{ url_for('phenotype_database.phenotype_database') }}`">Start Over</button>
         <button class="btn btn-secondary text-white" role="button" data-bs-toggle="modal"
             data-bs-target="#confirmationModal">Next</button>
     </div>
@@ -101,4 +72,76 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block script %}
+{% from "_includes/select-trait.html"   import select_trait               %}
+{% from "_includes/strain-listing.html" import unpack_species_list        %}
+{% from "_scripts/submit-job.js"        import ajax_setup, def_submit_job %}
+<script>
+    {% include '_scripts/utils.js' %} {#/* defines: flash_message */#}
+    {{ def_submit_job('phenotype_database') }}
+
+
+    /* Species */
+    const species_list = {{ unpack_species_list(species_list, species_fields) }};
+    let species = 'c_elegans';
+
+
+    /* Initialization */
+    $(document).ready(function(){
+
+        // Set headers for AJAX requests
+        {{ ajax_setup(form.csrf_token._value()) }}
+
+        {%- if initial_trait %}
+        // Set the initial trait
+        {{ select_trait('trait-1', trait_file=initial_trait) }}
+        {%- endif %}
+    })
+
+
+    /* Test query & select traits */
+    $.getJSON("{{ url_for('api_trait.query_all', split_by_species=true) }}", function(data) {
+        console.log(data)
+    })
+
+
+    function get_trait_id(id) {
+        return document.getElementById(`${id}-selector`).dataset.trait
+    }
+
+    function select_trait(id, trait=null) {
+        if (id == 'trait-1') {
+            if (trait === null) {
+                {{ select_trait('trait-1') }}
+            } else {
+                {{ select_trait('trait-1', 'trait') }}
+            }
+        }
+        else if (id == 'trait-2') {
+            if (trait === null) {
+                {{ select_trait('trait-2') }}
+            } else {
+                {{ select_trait('trait-2', 'trait') }}
+            }
+        }
+    }
+
+    function submit() {
+        const trait_1 = get_trait_id('trait-1');
+        const trait_2 = get_trait_id('trait-2');
+
+        if (trait_1 == null || trait_2 == null) {
+            throw Error();
+        }
+
+        data = { 'label': '???', species, trait_1, trait_2 }
+
+        submit_job(data)
+            .done(() => {
+                console.log('Submitted!');
+            });
+    }
+</script>
 {% endblock %}
