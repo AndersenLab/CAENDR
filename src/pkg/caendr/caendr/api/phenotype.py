@@ -1,22 +1,21 @@
 import os
 
-from caendr.services.logger import logger
-from sqlalchemy import or_
-from flask import request
-from datetime import timedelta
-
 from caendr.models.datastore import Species
 from caendr.models.error import BadRequestError
-from caendr.models.sql import PhenotypeDatabase, PhenotypeMetadata
-from caendr.services.cloud.postgresql import db, rollback_on_error
+from caendr.models.sql import PhenotypeMetadata
+from caendr.services.cloud.postgresql import rollback_on_error
 
 
 @rollback_on_error
-def query_phenotype_metadata(is_bulk_file=False):
+def query_phenotype_metadata(is_bulk_file=False, include_values=False, species: str = None):
     """
       Returns the list of traits with the corresponding metadata.
-      By default returns data for non-bulk files
-      If 'is_bulk_file' set to True returns traits metadata for Zhang Expression file
+
+      Args:
+      - is_bulk_file:     by default returns data for non-bulk files
+                          if 'is_bulk_file' set to True returns traits metadata for Zhang Expression file
+      - phenotype_values: if True, include phenotype values for each trait
+      - species:          filters by species
     """
     query = PhenotypeMetadata.query
 
@@ -27,4 +26,23 @@ def query_phenotype_metadata(is_bulk_file=False):
     # Get traits for non-bulk files
     query = query.filter_by(is_bulk_file=False)
 
-    return query
+    # Query by species
+    if species is not None:
+      if species in Species.all().keys():
+        query = query.filter_by(species=species)
+      else:
+        raise BadRequestError(f'Unrecognized species ID "{species}".')
+    
+    # Include phenotype values for traits
+    if include_values:
+       query = query.join(PhenotypeMetadata.phenotype_values)
+
+    return query.all()
+
+@rollback_on_error
+def get_all_traits_metadata():
+    """
+      Returns metadata for all traits
+    """
+    return PhenotypeMetadata.query.all()
+
