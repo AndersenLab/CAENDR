@@ -42,6 +42,9 @@ REQUIRED_RESOURCES: Dict[DbOp, List[ForeignResourceTemplate]] = {
     *WormbaseGeneSummaryConfig.all_resources,
     *StrainAnnotatedVariantConfig.all_resources,
   ],
+  DbOp.POPULATE_PHENOTYPES_DATASTORE: [
+    # TODO: Should this actually check for every single file specified in the datastore? Can it flag & skip some files?
+  ],
   DbOp.TEST_ECHO: [],
   DbOp.TEST_MOCK_DATA: [],
 }
