@@ -8,8 +8,9 @@ from caendr.models.run       import GCPCloudRunRunner
 from caendr.models.task      import DatabaseOperationTask
 
 # Services
-from caendr.models.datastore import Species, DbOp
+from caendr.models.datastore import Species
 from caendr.models.error     import DataFormatError, PreflightCheckError
+from caendr.models.sql       import DbOp
 from caendr.services.sql.etl import StrainConfig, WormbaseGeneConfig, WormbaseGeneSummaryConfig, StrainAnnotatedVariantConfig, PhenotypeDatabaseConfig
 from caendr.utils.local_files import ForeignResourceTemplate
 from caendr.utils.env        import get_env_var

@@ -3,7 +3,7 @@ from caendr.services.cloud.postgresql import health_database_status
 from caendr.services.logger import logger
 
 from caendr.models.datastore import Species
-from caendr.models.sql import WormbaseGene, WormbaseGeneSummary, Strain, StrainAnnotatedVariant, PhenotypeDatabase
+from caendr.models.sql import DbOp, WormbaseGene, WormbaseGeneSummary, Strain, StrainAnnotatedVariant, PhenotypeDatabase
 from caendr.services.sql.db import backup_external_db
 from caendr.services.sql.etl import ETLManager
 
@@ -11,33 +11,33 @@ from caendr.services.sql.seed_trait_files import populate_andersenlab_trait_file
 
 
 
-def execute_operation(app, db, DB_OP, species=None, reload_files=True):
-  logger.info(f'Executing {DB_OP}...')
+def execute_operation(app, db, db_op: DbOp, species=None, reload_files=True):
+  logger.info(f'Executing {db_op.name}...')
 
-  if DB_OP == 'DROP_AND_POPULATE_ALL_TABLES':
+  if db_op == DbOp.DROP_AND_POPULATE_ALL_TABLES:
     drop_and_populate_all_tables(app, db, species, reload_files=reload_files)
 
-  elif DB_OP == 'DROP_AND_POPULATE_STRAINS':
+  elif db_op == DbOp.DROP_AND_POPULATE_STRAINS:
     drop_and_populate_strains(app, db, species, reload_files=reload_files)
 
-  elif DB_OP == 'DROP_AND_POPULATE_WORMBASE_GENES':
+  elif db_op == DbOp.DROP_AND_POPULATE_WORMBASE_GENES:
     drop_and_populate_wormbase_genes(app, db, species, reload_files=reload_files)
 
-  elif DB_OP == 'DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS':
+  elif db_op == DbOp.DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS:
     drop_and_populate_strain_annotated_variants(app, db, species, reload_files=reload_files)
 
-  elif DB_OP == 'DROP_AND_POPULATE_PHENOTYPE_DB':
+  elif db_op == DbOp.DROP_AND_POPULATE_PHENOTYPE_DB:
     drop_and_populate_phenotype_db(app, db, species, reload_files=reload_files)
 
-  elif DB_OP == 'TEST_ECHO':
+  elif db_op == DbOp.TEST_ECHO:
     result, message = health_database_status()
     if not result:
       raise Exception(f"DB Connection is: { ('OK' if result else 'ERROR') }. {message}")
 
-  elif DB_OP == 'POPULATE_PHENOTYPES_DATASTORE':
+  elif db_op == DbOp.POPULATE_PHENOTYPES_DATASTORE:
     populate_andersenlab_trait_files()
 
-  elif DB_OP == 'TEST_MOCK_DATA':
+  elif db_op == DbOp.TEST_MOCK_DATA:
     os.environ["USE_MOCK_DATA"] = "1"
     os.environ["MODULE_DB_OPERATIONS_CONNECTION_TYPE"] = "memory"
     logger.info("Using MOCK DATA")
