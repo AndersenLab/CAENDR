@@ -7,7 +7,7 @@ from caendr.models.sql import DbOp, WormbaseGene, WormbaseGeneSummary, Strain, S
 from caendr.services.sql.db import backup_external_db
 from caendr.services.sql.etl import ETLManager
 
-from caendr.services.sql.seed_trait_files import populate_andersenlab_trait_files
+from seed_trait_files import populate_andersenlab_trait_files
 
 
 
@@ -29,13 +29,13 @@ def execute_operation(app, db, db_op: DbOp, species=None, reload_files=True):
   elif db_op == DbOp.DROP_AND_POPULATE_PHENOTYPE_DB:
     drop_and_populate_phenotype_db(app, db, species, reload_files=reload_files)
 
+  elif db_op == DbOp.POPULATE_PHENOTYPES_DATASTORE:
+    populate_andersenlab_trait_files()
+
   elif db_op == DbOp.TEST_ECHO:
     result, message = health_database_status()
     if not result:
       raise Exception(f"DB Connection is: { ('OK' if result else 'ERROR') }. {message}")
-
-  elif db_op == DbOp.POPULATE_PHENOTYPES_DATASTORE:
-    populate_andersenlab_trait_files()
 
   elif db_op == DbOp.TEST_MOCK_DATA:
     os.environ["USE_MOCK_DATA"] = "1"
