@@ -1,7 +1,7 @@
 from caendr.utils.env import get_env_var
 
 from caendr.models.datastore       import FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEntity
-from caendr.services.cloud.storage import BlobURISchema
+from caendr.services.cloud.storage import BlobURISchema, join_path
 from caendr.utils.tokens           import TokenizedString
 
 
@@ -27,6 +27,7 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
       'trait_name_caendr',
       'trait_name_user',
       'is_bulk_file',
+      'dataset',
 
       # About trait
       'description_short',
@@ -63,13 +64,7 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
 
   @property
   def prefix(self):
-
-    # If published by CaeNDR, go to CaeNDR folder
-    if self.from_caendr:
-      return TokenizedString('trait_files/caendr/${SPECIES}')
-
-    # If public user submission, go to user folder
-    return TokenizedString('trait_files/public/' + self['username'])
+    return TokenizedString(join_path('trait_files', self['dataset'], '${SPECIES}'))
 
 
   #
