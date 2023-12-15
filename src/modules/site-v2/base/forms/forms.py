@@ -342,7 +342,7 @@ class StrainListForm(Form):
 class PhenotypeComparisonForm(Form):
   TRAIT_CHOICES = [
     ('', ''),
-    *[ (tf.name, tf['trait_name']) for tf in TraitFile.query_ds() if tf.is_public and not tf.is_bulk_file ],
+    *[ (tf.name, tf['trait_name_caendr']) for tf in TraitFile.query_ds() if tf.is_public and not tf.is_bulk_file ],
   ]
 
   species = SpeciesSelectField(validators=[Required()])
