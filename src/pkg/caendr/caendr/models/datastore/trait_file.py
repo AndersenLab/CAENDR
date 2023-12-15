@@ -33,11 +33,14 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
       'description_short',
       'description_long',
       'units',
+      'tags',
 
       # Source information
       'publication',
       'protocols',
       'source_lab',
+      'institution',
+      'capture_date',
     }
 
 
