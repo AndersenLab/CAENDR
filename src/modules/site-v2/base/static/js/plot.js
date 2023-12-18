@@ -382,19 +382,20 @@ function render_ranked_barplot(container_selector, data, config={}) {
   // Create Y axis (map trait value to y coordinate)
   const yScale = d3.scaleLinear()
     .domain( data_range )
-    .range([ height, 0])
+    .range([ height + margin.top, margin.top])
   const yAxis = d3.axisLeft(yScale)
 
   // Create X axis (map strain name to x coordinate)
   const xScale = d3.scaleBand()
     .domain(data.map( (d) => d[1] ))
-    .range([ 0, width ])
+    .range([ margin.left, margin.left + width ])
     .padding(0.05)
   const xAxis = d3.axisBottom(xScale)
     .tickFormat((d) => '')
 
   // Add the axes to the graph
   svg.append("g")
+    .attr("transform", `translate(${margin.left}, 0)`)
     .call(yAxis);
   svg.append("g")
     .attr("transform", "translate(0," + yScale(0) + ")")
