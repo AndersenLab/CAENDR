@@ -28,27 +28,41 @@ def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
           else:
            trait_name = '_'.join(row[:3])
            yield {
-             'trait_name':        trait_name,
+             'trait_name_caendr': trait_name,
+             'trait_name_user':   md['trait_name_user'],
              'species':           md.species.name,
+             'wbgene_id':         row[1],
              'description_short': md['description_short'],
              'description_long':  md['description_long'],
              'units':             md['units'],
-             'doi':               md['doi'],
+             'publication':       md['publication'],
              'protocols':         md['protocols'],
              'source_lab':        md['source_lab'],
+             'institution':       md['institution'],
+             'tags':              md['tags'],
+             'capture_date':      md['capture_date'],
              'created_on':        md.created_on,
+             'modified_on':       md.modified_on,
+             'dataset':           md['dataset'],
              'is_bulk_file':      md['is_bulk_file'],
             } 
     else:
-        yield {
-        'trait_name':        md['trait_name'],
-        'species':           md.species.name,
-        'description_short': md['description_short'],
-        'description_long':  md['description_long'],
-        'units':             md['units'],
-        'doi':               md['doi'],
-        'protocols':         md['protocols'],
-        'source_lab':        md['source_lab'],
-        'created_on':        md.created_on,
-        'is_bulk_file':      md['is_bulk_file']
-        }
+      yield {
+      'trait_name_caendr': md['trait_name_caendr'],
+      'trait_name_user':   md['trait_name_user'],
+      'species':           md.species.name,
+      'wbgene_id':         'N/A',
+      'description_short': md['description_short'],
+      'description_long':  md['description_long'],
+      'units':             md['units'],
+      'publication':       md['publication'],
+      'protocols':         md['protocols'],
+      'source_lab':        md['source_lab'],
+      'institution':       md['institution'],
+      'tags':              md['tags'],
+      'capture_date':      md['capture_date'],
+      'created_on':        md.created_on,
+      'modified_on':       md.modified_on,
+      'dataset':           md['dataset'],
+      'is_bulk_file':      md['is_bulk_file'],
+      }
