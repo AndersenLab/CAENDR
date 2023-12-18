@@ -123,6 +123,10 @@ function add_histogram_along_axis(d, axis, data, target, config) {
  */
 function render_scatterplot_histograms(container_selector, data, config={}) {
 
+    if (data.length == 0) {
+      throw new Error('No data to plot')
+    }
+
     // Get histogram heights from config
     const hist_height = config['hist_height'] || 60;
 
@@ -269,6 +273,10 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
  */
 function render_histogram(container_selector, data, config={}) {
 
+  if (data.length == 0) {
+    throw new Error('No data to plot')
+  }
+
   // Set the dimensions and margins of the graph
   const margin = config['margin'] || {
     top:    48,
@@ -335,6 +343,10 @@ function render_histogram(container_selector, data, config={}) {
  *       'y_label'
  */
 function render_ranked_barplot(container_selector, data, config={}) {
+
+  if (data.length == 0) {
+    throw new Error('No data to plot')
+  }
 
   // Set the dimensions and margins of the graph
   const margin = config['margin'] || {
