@@ -29,6 +29,9 @@ def execute_operation(app, db, db_op: DbOp, species=None, reload_files=True):
   elif db_op == DbOp.DROP_AND_POPULATE_PHENOTYPE_DB:
     drop_and_populate_phenotype_db(app, db, species, reload_files=reload_files)
 
+  elif db_op == DbOp.DROP_AND_POPULATE_PHENOTYPE_METADATA:
+    drop_and_populate_phenotype_metadata(app, db, species, reload_files=reload_files)
+
   elif db_op == DbOp.POPULATE_PHENOTYPES_DATASTORE:
     populate_andersenlab_trait_files()
 
@@ -136,19 +139,19 @@ def drop_and_populate_all_tables(app, db, species, reload_files=True):
   spec_strings = [ f'{key} (wb_ver = {val.wb_ver}, release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
   logger.info(f'Dropping and populating all tables. Species list: [ {", ".join(spec_strings)} ]')
 
-  logger.info("[1/7] Downloading databases...eta ~0:15")
+  logger.info("[1/8] Downloading databases...eta ~0:15")
   etl_manager = ETLManager(app, db, reload_files=reload_files)
 
-  logger.info("[2/7] Dropping tables...eta ~0:01")
+  logger.info("[2/8] Dropping tables...eta ~0:01")
   etl_manager.clear_tables(species_list=species)
 
-  logger.info("[3/7] Load Strains...eta ~0:24")
+  logger.info("[3/8] Load Strains...eta ~0:24")
   etl_manager.load_tables(Strain, species_list=species)
 
-  logger.info("[4/7] Load genes summary...eta ~3:15")
+  logger.info("[4/8] Load genes summary...eta ~3:15")
   etl_manager.load_tables(WormbaseGeneSummary, species_list=species)
 
-  logger.info("[5/7] Load genes...eta ~12:37")
+  logger.info("[5/8] Load genes...eta ~12:37")
   etl_manager.load_tables(WormbaseGene, species_list=species)
 
   # logger.info("[6/8] Load Homologs...eta ~3:10")
@@ -157,9 +160,13 @@ def drop_and_populate_all_tables(app, db, species, reload_files=True):
   # logger.info("[7/8] Load Horthologs...eta ~17:13")
   # etl_manager.load_orthologs(db)
 
-  logger.info("[6/7] Load Strains Annotated Variants...eta ~26:47")
+  logger.info("[6/8] Load Strains Annotated Variants...eta ~26:47")
   etl_manager.load_tables(StrainAnnotatedVariant, species_list=species)
 
-  logger.info("[7/7] Load Phenotype Database...")
+  logger.info("[7/8] Load Phenotype Database...")
   # etl_manager.load_phenotype_db(db, species)
   etl_manager.load_tables(PhenotypeDatabase, species_list=species)
+
+  logger.info("[8/8] Load Phenotype Metadata...")
+  # etl_manager.load_phenotype_db(db, species)
+  etl_manager.load_tables(PhenotypeMetadata, species_list=species)
