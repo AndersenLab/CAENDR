@@ -100,6 +100,8 @@ function add_histogram_along_axis(d, axis, data, target, config) {
     .attr(relative_width, bin_width)
     .attr(relative_height, n => bin_val_to_height(n.length))
     .style('fill', color);
+
+  return bins;
 }
 
 
@@ -309,7 +311,6 @@ function render_histogram(container_selector, data, config={}) {
     .call(d3.axisBottom(x));
 
   // Add label for x-axis, if one is provided
-  // Centered on scatterplot graph element
   if (config['x_label']) {
     svg.append('text')
       .attr('x', margin.left + (width / 2))
@@ -319,12 +320,27 @@ function render_histogram(container_selector, data, config={}) {
   }
 
   // Add the histogram
-  add_histogram_along_axis(0, x, data, svg, {
+  const bins = add_histogram_along_axis(0, x, data, svg, {
     height: height,
     color: fill_color,
     bins_per_tick,
     position: [margin.left, margin.top ],
-  })
+  });
+
+  // Label the y-axis with "Count"
+  const max_bin_amount = d3.max(bins, n => n.length);
+  const yScale = d3.scaleLinear().domain([0, max_bin_amount]).range([margin.top + height, margin.top]).nice();
+  const yAxis  = d3.axisLeft(yScale)
+  svg.append("g")
+    .attr("transform", `translate(${margin.left}, 0)`)
+    .call(yAxis);
+  svg.append('text')
+    .attr('transform', 'rotate(-90)')
+    .attr('x', -(margin.top + (height / 2)))
+    .attr('y', 0)
+    .attr('dy', '.75em')
+    .attr('text-anchor', 'middle')
+    .text('Count')
 }
 
 
