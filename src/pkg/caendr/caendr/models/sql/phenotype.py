@@ -7,7 +7,7 @@ class PhenotypeDatabase(DictSerializable, db.Model):
       by different strains. Each row represents a specific combination of strain, 
       trait, and the corresponding trait value
   """
-  trait_name = db.Column(db.String(), db.ForeignKey('phenotype_metadata.trait_name'), primary_key=True, nullable=False)
+  trait_name = db.Column(db.String(), db.ForeignKey('phenotype_metadata.trait_name_caendr'), primary_key=True)
   strain_name = db.Column(db.String(), primary_key=True)
   trait_value = db.Column(db.Float())
 
