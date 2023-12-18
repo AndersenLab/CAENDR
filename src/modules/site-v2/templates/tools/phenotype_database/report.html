@@ -92,14 +92,21 @@
 const data = {{ result.trait_values|tojson }};
 
 {%- if data.num_traits == 1 %}
-// Render chart for one trait
+// Render chart(s) for one trait
+
+{%- if report['trait_1']['units'] %}
+const trait_label = "{{ data.trait_names[0] }} ({{ report['trait_1']['units'] }})";
+{%- else %}
+const trait_label = "{{ data.trait_names[0] }}";
+{%- endif %}
+
 try {
     render_histogram('#phenotype-chart', data, {
         width:         1200,
         height:        300,
         fill_color:    '#0719BC',
         bins_per_tick: 4,
-        x_label:       '{{ data.trait_names[0] }}',
+        x_label:       trait_label,
         tooltip_template: (d, labels) => `
             <p><b>Strain: ${d[2]}</b></p>
             <p>${labels[0]}: ${d[0]}</p>
