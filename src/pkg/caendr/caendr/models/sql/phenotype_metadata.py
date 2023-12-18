@@ -20,6 +20,7 @@ class PhenotypeMetadata(DictSerializable, db.Model):
   protocols = db.Column(db.String(), nullable=True)
   source_lab = db.Column(db.String())
   institution = db.Column(db.String())
+  submitted_by = db.Column(db.String())
   tags = db.Column(db.String(), nullable=True)
   capture_date = db.Column(db.Date(), nullable=True)
   created_on = db.Column(db.Date(), nullable=False)
