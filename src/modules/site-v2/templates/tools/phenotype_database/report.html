@@ -131,6 +131,19 @@ try {
 
 {%- else %}
 // Render chart(s) for two traits
+
+{%- if report['trait_1']['units'] %}
+const trait_label_1 = "{{ data.trait_names[0] }} ({{ report['trait_1']['units'] }})";
+{%- else %}
+const trait_label_1 = "{{ data.trait_names[0] }}";
+{%- endif %}
+
+{%- if report['trait_2']['units'] %}
+const trait_label_2 = "{{ data.trait_names[1] }} ({{ report['trait_2']['units'] }})";
+{%- else %}
+const trait_label_2 = "{{ data.trait_names[1] }}";
+{%- endif %}
+
 try {
     render_scatterplot_histograms('#phenotype-chart', data, {
         hist_height:   60,
@@ -138,8 +151,8 @@ try {
         height:        600,
         fill_color:    '#0719BC',
         bins_per_tick: 2,
-        x_label:       '{{ data.trait_names[0] }}',
-        y_label:       '{{ data.trait_names[1] }}',
+        x_label:       trait_label_1,
+        y_label:       trait_label_2,
         tooltip_template: (d, labels) => `
             <p><b>Strain: ${d[2]}</b></p>
             <p>${labels[0]}: ${d[0]}</p>
