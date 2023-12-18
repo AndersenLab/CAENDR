@@ -459,4 +459,15 @@ function render_ranked_barplot(container_selector, data, config={}) {
       .duration(300)
       .style('opacity', 0);
   })
+
+  // Add label for y-axis, if one is provided
+  if (config['y_label']) {
+    svg.append('text')
+      .attr('transform', 'rotate(-90)')
+      .attr('x', -(margin.top + (height / 2)))
+      .attr('y', 0)
+      .attr('dy', '.75em')
+      .attr('text-anchor', 'middle')
+      .text(config['y_label'])
+    }
 }
