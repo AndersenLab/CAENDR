@@ -37,7 +37,6 @@ from .nemascan_mapping    import NemascanReport      # Subclasses ReportEntity, 
 from .phenotype_report    import PhenotypeReport     # Subclasses ReportEntity, HashableEntity; imports TraitFile
 
 # Other
-from .database_operation  import DbOp
 from .profile             import Profile
 from .markdown            import Markdown
 from .cart                import Cart                # Subclasses DeletableEntity

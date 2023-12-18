@@ -1,48 +1,10 @@
-import os
-from enum import Enum
-
 from caendr.utils.env import get_env_var
 
 from caendr.models.datastore import ReportEntity
+from caendr.models.sql       import DbOp
 
 
 MODULE_DB_OPERATIONS_BUCKET_NAME = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
-
-
-class DbOp(Enum):
-  '''
-    All possible database operation types.
-  '''
-
-  DROP_AND_POPULATE_STRAINS                   = 'DROP_AND_POPULATE_STRAINS'
-  DROP_AND_POPULATE_WORMBASE_GENES            = 'DROP_AND_POPULATE_WORMBASE_GENES'
-  DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS = 'DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS'
-  DROP_AND_POPULATE_PHENOTYPE_DB              = 'DROP_AND_POPULATE_PHENOTYPE_DB'
-  DROP_AND_POPULATE_PHENOTYPE_METADATA        = 'DROP_AND_POPULATE_PHENOTYPE_METADATA'
-  DROP_AND_POPULATE_ALL_TABLES                = 'DROP_AND_POPULATE_ALL_TABLES'
-  TEST_ECHO                                   = 'TEST_ECHO'
-  TEST_MOCK_DATA                              = 'TEST_MOCK_DATA'
-
-  def get_title(op):
-    '''
-      Get the display name for a given operation type.
-    '''
-
-    if not op in DbOp:
-      raise ValueError()
-
-    titles = {
-      DbOp.DROP_AND_POPULATE_STRAINS:                   'Rebuild strain table from google sheet',
-      DbOp.DROP_AND_POPULATE_WORMBASE_GENES:            'Rebuild wormbase gene table from external sources',
-      DbOp.DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS: 'Rebuild Strain Annotated Variant table from .csv.gz file',
-      DbOp.DROP_AND_POPULATE_PHENOTYPE_DB:              'Rebuild Phenotype Database table from datastore file records',
-      DbOp.DROP_AND_POPULATE_PHENOTYPE_METADATA:        'Rebuild Phenotype Metadata table from datastore',
-      DbOp.DROP_AND_POPULATE_ALL_TABLES:                'Rebuild All Tables',
-      DbOp.TEST_ECHO:                                   'Test ETL - Echo',
-      DbOp.TEST_MOCK_DATA:                              'Test ETL - Mock Data',
-    }
-
-    return titles.get(op, '???')
 
 
 

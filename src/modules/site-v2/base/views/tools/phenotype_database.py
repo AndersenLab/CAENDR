@@ -33,20 +33,20 @@ def results_columns():
       'title': 'Description',
       'class': 'label',
       'field': 'label',
-      'width': 0.5,
+      'width': 0.2,
       'link_to_data': True,
     },
     {
       'title': 'Trait 1',
       'class': 's1',
       'field': 'trait_1_name',
-      'width': 0.25,
+      'width': 0.4,
     },
     {
       'title': 'Trait 2',
       'class': 's2',
       'field': 'trait_2_name',
-      'width': 0.25,
+      'width': 0.4,
     },
   ]
 

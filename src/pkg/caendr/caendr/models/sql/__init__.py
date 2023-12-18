@@ -1,3 +1,5 @@
+from .database_operation import DbOp
+
 from .homolog import Homolog
 from .strain_annotated_variant import StrainAnnotatedVariant
 from .strain import Strain
