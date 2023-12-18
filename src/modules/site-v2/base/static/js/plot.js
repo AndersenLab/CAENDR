@@ -388,7 +388,11 @@ function render_ranked_barplot(container_selector, data, config={}) {
     return b[0] - a[0];
   });
 
+  // Compute the range of the data
+  // If both values are positive or both negative, set end of range to 0
   const data_range = d3.extent(data, d => d[0]);
+  data_range[0] = Math.min(data_range[0], 0)
+  data_range[1] = Math.max(data_range[1], 0)
 
   // Create the SVG object for the full graphic (scatterplot + histograms + margins)
   const svg = d3.select(container_selector).append('svg')
