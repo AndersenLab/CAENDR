@@ -43,7 +43,7 @@ function buffered_extent(data, buffer, f=null) {
  *   - target: The SVG element to create the histogram in
  *   - config: Optional keyword arguments.
  */
-function add_histogram_along_axis(d, axis, data, target, config) {
+function add_histogram_along_axis(d, axis, data, target, config={}) {
 
   // Validate the dimension parameter
   if (!(d === PlotDimension.x_axis || d === PlotDimension.y_axis)) {
