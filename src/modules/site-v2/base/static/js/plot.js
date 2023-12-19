@@ -6,6 +6,14 @@
 
 
 
+/* Enum type mapping plot dimension names to corresponding indices. */
+const PlotDimension = {
+  'x_axis': 0,
+  'y_axis': 1,
+};
+
+
+
 /* Helper function to compute the extent (the [min, max]) of a set of data,
  * plus a fixed "buffer" amount on either side.
  *
@@ -38,8 +46,8 @@ function buffered_extent(data, buffer, f=null) {
 function add_histogram_along_axis(d, axis, data, target, config) {
 
   // Validate the dimension parameter
-  if (!(d === 0 || d === 1)) {
-    throw new RangeError(`The argument "d" must be 0 or 1, but ${d} was given.`);
+  if (!(d === PlotDimension.x_axis || d === PlotDimension.y_axis)) {
+    throw new RangeError(`The argument "d" must be a PlotDimension, but ${d} was given.`);
   }
 
   // Read values from config, filling in default values when not supplied
@@ -88,10 +96,12 @@ function add_histogram_along_axis(d, axis, data, target, config) {
 
       // D3 draws from top left, so along the x-axis,
       // offset the y-position of the bar based on the white space that should be above it
-      if (d == 0) return `translate(${ axis(n.x0) }, ${ bin_val_to_height(max_bin_amount - n.length) })`;
+      if (d === PlotDimension.x_axis)
+        return `translate(${ axis(n.x0) }, ${ bin_val_to_height(max_bin_amount - n.length) })`;
 
       // Along the y-axis, draw origin aligns with histogram base, so no x transformation necessary
-      if (d == 1) return `translate(${ 0 }, ${ axis(n.x1) })`;
+      if (d === PlotDimension.y_axis)
+        return `translate(${ 0 }, ${ axis(n.x1) })`;
     });
 
   // Create the rectangle for each bar
@@ -254,8 +264,8 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
     }
 
     // Add the two histograms
-    add_histogram_along_axis(0, x, data, svg, {...h_config, position: [margin.left,         margin.top              ]})
-    add_histogram_along_axis(1, y, data, svg, {...h_config, position: [margin.left + width, margin.top + hist_height]})
+    add_histogram_along_axis(PlotDimension.x_axis, x, data, svg, {...h_config, position: [margin.left,         margin.top              ]})
+    add_histogram_along_axis(PlotDimension.y_axis, y, data, svg, {...h_config, position: [margin.left + width, margin.top + hist_height]})
 }
 
 
@@ -320,7 +330,7 @@ function render_histogram(container_selector, data, config={}) {
   }
 
   // Add the histogram
-  const bins = add_histogram_along_axis(0, x, data, svg, {
+  const bins = add_histogram_along_axis(PlotDimension.x_axis, x, data, svg, {
     height: height,
     color: fill_color,
     bins_per_tick,
