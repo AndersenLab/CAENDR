@@ -85,7 +85,7 @@
 {% block script %}
 <script src="{{ url_for('static', filename='js/plot.js') }}"></script>
 
-<script>
+<script type="module">
 
 const data = {{ result.trait_values|tojson }};
 
