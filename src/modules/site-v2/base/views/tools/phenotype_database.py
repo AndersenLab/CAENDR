@@ -117,7 +117,7 @@ def get_zhang_traits_json():
     
     json_data = convert_joined_query_tojson(data)
     
-    total_records = PhenotypeMetadata.query.count()
+    total_records = query.count()
 
     response_data = {
         "draw": draw,
