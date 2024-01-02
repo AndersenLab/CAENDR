@@ -36,7 +36,7 @@ from caendr.services.user import get_user_role_form_options, get_local_user_by_e
 from caendr.services.database_operation import get_db_op_form_options
 from caendr.services.indel_primer import get_indel_primer_chrom_choices
 from caendr.services.markdown import get_content_type_form_options
-from caendr.models.datastore import User, Species, DatasetRelease
+from caendr.models.datastore import User, Species, DatasetRelease, TraitFile
 from caendr.api.strain import query_strains
 from base.forms.validators import (validate_duplicate_strain, 
                                    validate_duplicate_isotype, 
@@ -338,3 +338,14 @@ class StrainListForm(Form):
   species = SpeciesSelectField(validators=[Required()])
 
 
+
+class PhenotypeComparisonForm(Form):
+  TRAIT_CHOICES = [
+    ('', ''),
+    *[ (tf.name, tf['trait_name_caendr']) for tf in TraitFile.query_ds() if tf.is_public and not tf.is_bulk_file ],
+  ]
+
+  species = SpeciesSelectField(validators=[Required()])
+  label   = TextAreaField('Description', [Length(min=0, max=1000)])
+  trait_1 = SelectField('Trait 1', choices=TRAIT_CHOICES, validators=[Required()])
+  trait_2 = SelectField('Trait 2', choices=TRAIT_CHOICES, validators=[Required()])

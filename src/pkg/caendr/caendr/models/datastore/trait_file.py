@@ -1,7 +1,7 @@
 from caendr.utils.env import get_env_var
 
 from caendr.models.datastore       import FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEntity
-from caendr.services.cloud.storage import BlobURISchema
+from caendr.services.cloud.storage import BlobURISchema, join_path
 from caendr.utils.tokens           import TokenizedString
 
 
@@ -24,19 +24,36 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
       *super().get_props_set(),
 
       # Identifying trait
-      'trait_name',
-      'species',
+      'trait_name_caendr',
+      'trait_name_user',
       'is_bulk_file',
+      'dataset',
 
       # About trait
       'description_short',
       'description_long',
       'units',
+      'tags',
 
       # Source information
-      'doi',
+      'publication',
       'protocols',
       'source_lab',
+      'institution',
+      'capture_date',
+    }
+
+
+  def serialize(self, include_meta=True):
+    return {
+      **super().serialize(include_meta=include_meta),
+
+      # Add Python property values & function lookups
+      'name':        self.name,
+      'uri':         self.get_filepath(schema=BlobURISchema.HTTPS),
+      'submitter':   self.get_user_full_name() if self.from_public else 'CaeNDR',
+      'is_public':   self.is_public,
+      'from_caendr': self.from_caendr,
     }
 
 
@@ -50,13 +67,7 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
 
   @property
   def prefix(self):
-
-    # If published by CaeNDR, go to CaeNDR folder
-    if self.from_caendr:
-      return TokenizedString('trait_files/caendr/${SPECIES}')
-
-    # If public user submission, go to user folder
-    return TokenizedString('trait_files/public/' + self['username'])
+    return TokenizedString(join_path('trait_files', self['dataset'], '${SPECIES}'))
 
 
   #

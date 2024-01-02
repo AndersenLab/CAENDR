@@ -1,5 +1,9 @@
+from typing import Union, Iterable
+
 from flask import jsonify
 from caendr.services.logger import logger
+
+from caendr.utils.data import join_commas_and
 
 
 
@@ -178,9 +182,9 @@ class EnvVarError(InternalError):
     Important: This error might be thrown if trying to access *any* environment variable *before* the .env file is loaded.
       This case should normally be covered by EnvNotLoadedError, however.
   '''
-  default_msg = 'is not defined. Please ensure the ".env" file defines this variable, and is loaded before trying to access it.'
+  default_msg = 'Please ensure the ".env" file defines this variable, and is loaded before trying to access it.'
 
-  def __init__(self, var_name: str, msg: str = None):
+  def __init__(self, var_name: Union[str, Iterable[str]], msg: str = None):
     self.var_name = var_name
 
     # Construct a description message from the provided variable name and message
@@ -189,11 +193,13 @@ class EnvVarError(InternalError):
     super().__init__()
 
   @staticmethod
-  def _format_var_name(var_name: str):
-    if var_name:
-      return 'The environment variable ' + var_name
+  def _format_var_name(var_name: Union[str, Iterable[str], None]):
+    if isinstance(var_name, str):
+      return f'The environment variable {var_name} is not defined.'
+    elif var_name is None or len(var_name) == 0:
+      return 'A required environment variable is not defined.'
     else:
-      return 'A required environment variable'
+      return f'None of the environment variables {join_commas_and(var_name)} are defined.'
 
 
 class BasicAuthError(InternalError):
@@ -269,14 +275,13 @@ class MissingTokenError(InternalError):
 class UnschedulableJobTypeError(InternalError):
   pass
 
+class UnrunnableJobTypeError(InternalError):
+  pass
+
 
 class ForeignResourceMissingError(InternalError):
-  def __init__(self, resource_type, resource_id, species):
-    try:
-      species_name = species.name
-    except:
-      species_name = species
-    self.description = f'Could not fetch foreign resource {resource_id} ({resource_type}) for species {species_name}'
+  def __init__(self, resource):
+    self.description = f'Could not fetch foreign resource: {repr(resource)}'
     super().__init__()
 
 class ForeignResourceUndefinedError(InternalError):

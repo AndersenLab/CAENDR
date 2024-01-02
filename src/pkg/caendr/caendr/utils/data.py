@@ -116,23 +116,6 @@ def get_file_format(file_ext, valid_formats=None):
   return None
 
 
-def batch_generator(g, batch_size=DEFAULT_BATCH_SIZE):
-  '''
-    Split a generator into a generator of generators, which produce the same sequence when taken together.
-    Useful for managing RAM when bulk inserting mappings into a table.
-  '''
-  def _inner(top):
-    yield top
-    for i, x in enumerate(g, start=1):
-      yield x
-      if i % (batch_size - 1) == 0:
-        return
-
-  for top in g:
-    yield _inner(top)
-
-
-
 def get_delimiter_from_filepath(filepath=None, valid_file_extensions=None):
   valid_file_extensions = valid_file_extensions or {'csv'}
   if filepath:
@@ -177,3 +160,40 @@ def join_commas_and(text, truncate=None):
   if truncate:
     text = text[:truncate] + ([f'{len(text) - truncate} more'] if len(text) > truncate else [])
   return join_with_final(text, sep=', ', final=', and ', final_if_two=' and ')
+
+
+
+def batch_generator(g, batch_size=DEFAULT_BATCH_SIZE):
+  '''
+    Split a generator into a generator of generators, which produce the same sequence when taken together.
+    Useful for managing RAM when bulk inserting mappings into a table.
+  '''
+  def _inner(top):
+    yield top
+    for i, x in enumerate(g, start=1):
+      yield x
+      if i % (batch_size - 1) == 0:
+        return
+
+  for top in g:
+    yield _inner(top)
+
+
+
+def dataframe_cols_to_dict(df, key_col, val_col, drop_na=True):
+  key_col_name = df.columns[key_col] if isinstance(key_col, int) else key_col
+  val_col_name = df.columns[val_col] if isinstance(val_col, int) else val_col
+  d = df.set_index(key_col_name)
+  if drop_na:
+    d = d.dropna()
+  return d.to_dict()[val_col_name]
+
+
+def keyset_intersection(*dicts):
+  '''
+    Get the set of keys present in all provided dicts.
+  '''
+  overlap = set(dicts[0].keys())
+  for d in dicts[1:]:
+    overlap = overlap.intersection(d.keys())
+  return overlap

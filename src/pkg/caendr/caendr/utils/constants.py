@@ -44,3 +44,6 @@ CHROM_POSITION_REGEX = "^(I|II|III|IV|V|X|MtDNA):([0-9,]+)$"
 
 # Max number of rows to insert into a SQL table in a single commit
 DEFAULT_BATCH_SIZE = 100000
+
+
+GOOGLE_SHEET_NULL_VALUES = { 'None', '', 'NA', 'N/A', None }

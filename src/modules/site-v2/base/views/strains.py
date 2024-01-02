@@ -220,12 +220,12 @@ def order_page_post():
         """ submitting the order """
         cartItems = users_cart['items']
          # check the version
-        if int(users_cart['version']) != int(form.version.data) or len(cartItems) == 0:
+        if int(users_cart['version']) != int(form.version.data) or len(users_cart) == 0:
           flash("There was a problem with your order, please try again.", 'warning')
           return redirect(url_for('request_strains.order_page_index'))
         
         if form.shipping_service.data == 'Flat Rate Shipping':
-          cartItems.append({'name': 'Flat Rate Shipping', 'species': ''})
+          users_cart.add_item({'name': 'Flat Rate Shipping', 'species': ''})
         for item in cartItems:
           item_price = Cart.get_price(item)
           item['price'] = item_price
@@ -303,34 +303,32 @@ def order_page_index():
   flash(Markup("<strong>Please note:</strong> although the site is currently able to accept orders, orders will <u>not ship</u> until Fall 2023."), category="warning")
 
   if not user and not cart_id:
-    cartItems = []
+    return render_template('order/order.html', **{
+      'tool_alt_parent_breadcrumb': {"title": "Strain Catalog", "url": url_for('request_strains.request_strains')},
+      'title': "Order Summary",
+      'form': form
+    })
   elif user:
     users_cart = Cart.lookup_by_user(user['email'])
-    cartItems = users_cart['items']
-    form.version.data = users_cart['version']
   else:
     users_cart = Cart(cart_id)
-    cartItems = users_cart['items']
-    form.version.data = users_cart['version']
-  
-  if len(cartItems) == 0:
-    return render_template('order/order.html', **{
-      'tool_alt_parent_breadcrumb': {"title": "Strain Catalog", "url": url_for('request_strains.request_strains')},
-      'title': "Order Summary",
-      'form': form
-    })
-  else:
-    for item in cartItems:
-      item['price'] = Cart.get_price(item)
-    totalPrice = sum(item['price'] for item in cartItems)
 
-    return render_template('order/order.html', **{
-      'tool_alt_parent_breadcrumb': {"title": "Strain Catalog", "url": url_for('request_strains.request_strains')},
-      'title': "Order Summary",
-      'cartItems': cartItems,
-      'totalPrice': totalPrice,
-      'form': form
-    })
+  cartItems = users_cart['items']
+  form.version.data = users_cart['version']
+
+  for item in cartItems:
+    item['price'] = Cart.get_price(item)
+    species = item.get('species')
+    item['species_short_name'] = Species.from_name(species).short_name
+  totalPrice = sum(item['price'] for item in cartItems)
+
+  return render_template('order/order.html', **{
+    'tool_alt_parent_breadcrumb': {"title": "Strain Catalog", "url": url_for('request_strains.request_strains')},
+    'title': "Order Summary",
+    'cartItems': cartItems,
+    'totalPrice': totalPrice,
+    'form': form
+  })
   
 
 @strains_bp.route("/checkout/confirmation/<invoice_hash>", methods=['GET', 'POST'])
@@ -342,9 +340,8 @@ def order_confirmation(invoice_hash):
     abort(404)
 
   # Parse the individual items in the order into a list of dicts
-  order_obj["items"] = [ x for x in order_obj['items'].split("\n") ]
   items = []
-  for row in order_obj['items']:
+  for row in order_obj['items'].split("\n"):
     arr = row.split(', ')
     item_dict = {}
     for x in arr:
@@ -352,6 +349,11 @@ def order_confirmation(invoice_hash):
       if k == 'price':
         v = float(v)
       item_dict[k] = v
+    species = item_dict.get('species')
+    if species == '':
+      item_dict['species_short_name'] = ''
+    else:
+      item_dict['species_short_name'] = Species.from_name(species).short_name
     items.append(item_dict)
 
   return render_template('order/order_confirm.html', **({

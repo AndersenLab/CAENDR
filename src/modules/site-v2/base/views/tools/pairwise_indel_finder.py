@@ -5,7 +5,7 @@ from flask import Response, Blueprint, render_template, request, url_for, jsonif
 
 from base.forms import PairwiseIndelForm
 from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
-from base.utils.tools import lookup_report, try_submit
+from base.utils.tools import lookup_report, list_reports, try_submit
 
 from caendr.models.datastore.browser_track import BrowserTrackDefault
 from caendr.models.datastore import Species, IndelPrimerReport, DatasetRelease
@@ -19,8 +19,6 @@ from caendr.utils.data import get_file_format
 from caendr.services.indel_primer import (
     get_sv_strains,
     query_indels_and_mark_overlaps,
-    get_indel_primer,
-    get_indel_primers,
 )
 
 
@@ -184,7 +182,7 @@ def list_results():
 
     # Table info
     'species_list': Species.all(),
-    'items': get_indel_primers(None if show_all else user.name, filter_errs),
+    'items': list_reports(IndelPrimerReport, None if show_all else user, filter_errs),
     'columns': results_columns(),
 
     'JobStatus': JobStatus,

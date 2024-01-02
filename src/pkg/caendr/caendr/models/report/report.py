@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Any
 
 from caendr.models.status import JobStatus
 
@@ -282,7 +282,7 @@ class Report(ABC):
 
 
   @abstractmethod
-  def fetch_input(self) -> Optional[Blob]:
+  def fetch_input(self) -> Optional[Any]:
     '''
       Fetch the input data from the datastore.
       This should retrieve any file(s) created / uploaded by the `upload` method.
@@ -291,7 +291,7 @@ class Report(ABC):
 
 
   @abstractmethod
-  def fetch_output(self) -> Optional[Blob]:
+  def fetch_output(self) -> Optional[Any]:
     '''
       Fetch the output data from the datastore.
       This should retrieve any file(s) created / uploaded by the tool execution.
