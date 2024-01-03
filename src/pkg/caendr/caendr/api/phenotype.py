@@ -46,3 +46,11 @@ def get_all_traits_metadata():
     """
     return PhenotypeMetadata.query.all()
 
+
+def get_trait(trait_name, include_values=False):
+   query = PhenotypeMetadata.query.filter_by(trait_name=trait_name)
+
+   if include_values:
+     query = query.join(PhenotypeMetadata.phenotype_values)
+
+   return query.all()
