@@ -1,3 +1,16 @@
+{% block custom_head %}
+<style>
+    #filter {
+        height: 40px;
+        overflow-x: auto;
+    }
+    #filter .btn {
+        font-size: 0.5rem;
+        padding: 0.25rem;
+    }
+
+</style>
+{% endblock %}
 <nav>
     <div class="nav nav-tabs border-0" id="nav-tab" role="tablist">
         <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button"
@@ -8,6 +21,10 @@
 </nav>
 <div class="tab-content py-2" id="nav-tabContent">
     <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+        <div class="py-2">
+            <p><i class="bi bi-filter"></i> Filter:</p>
+            <div class="d-flex m-2 p-1 w-50 border border-dark rounded" id="filter"></div>
+        </div>
         <div class="table-responsive">
             <table class="table accordion p-0 text-center" id="tableAccordion">
                 <caption class="visually-hidden">A list of phenotype traits.</caption>
@@ -24,7 +41,7 @@
                 </thead>
                 <tbody class="table-group-divider align-middle">
                     {% for tr in traits %}
-                    <tr class="py-3">
+                    <tr class="py-3 dislayedRow">
                         <th>
                             <a href="#" class="text-dark fw-normal" data-bs-toggle="collapse"
                                 data-bs-target="#collapse-{{loop.index}}" aria-expanded="false" aria-controls="collapse-{{loop.index}}"><i
@@ -34,16 +51,16 @@
                         <td>{{tr.description_short}}.</td>
                         <td>{{tr.source_lab}}</td>
                         <td>{{tr.created_on}}</td>
-                        <td>
-                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
-                                role="button" href="#">long tag name</a>
-                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
-                                role="button" href="#">long tag name</a>
-                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
-                                role="button" href="#">long tag name</a>
-                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
-                                role="button" href="#">...</a>
-                        </td>
+                        {% if tr.tags is none %}
+                            <td></td>
+                        {% else %}
+                            <td>
+                                {% for tag in tr.tags %}
+                                <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
+                                    id="tag-{{loop.index}}" data-value="{{tag}}" role="button" href="#">{{tag}}</a>
+                                {% endfor %}
+                            </td>
+                        {% endif %}
                         <td class="optionsToolbar">
                             <div class="ps-3 pt-0"><a href="{{url_for("phenotype_database.submit_start", trait=tr.trait_name_caendr)}}"><i class="bi bi-arrow-right-circle-fill"
                                         aria-hidden="true"></i>Analyze</a></div>
@@ -168,7 +185,40 @@
 
     })
 
+    $("[id^='tag']").on('click', function() {
+        const v = $(this).data('value') 
+        $(`[data-value=${v}]`).addClass('disabled')
+        const btn = `<div>
+                        <div class="btn btn-sm btn-primary rounded-pill text-white fw-normal">${v}
+                        <i class="bi bi-x-circle text-white btn p-1 m-0" data-value="${v}" id="remove-${v}"></i>
+                        </div>
+                     </div>`
+        $('#filter').append(btn)
+        filterTable()
+    })
 
+    $(document).on('click', "[id^='remove']", function() {
+        $(this).parent().parent().remove()
+        const v = $(this).data('value') 
+        $(`[data-value=${v}]`).removeClass('disabled')
+        filterTable()
+    })
+
+    function filterTable() {
+        const keywords = $('#filter i').map(function(){
+            return $(this).data('value')
+        }).get()
+        if (!keywords.length) {
+            $('#tableAccordion tbody>.dislayedRow').show()
+        } else {
+            $('#tableAccordion tbody>tr').hide().each(function() {
+            const val = $(this).find('.tagButton').data('value')
+            if (keywords.indexOf(val) !== -1) {
+                $(this).show()
+            }
+            })
+        }
+    }
 
     function fillOutModal(trait) {
         $('#offcanvas1Label').text(trait.trait_name_caendr)
@@ -180,6 +230,8 @@
         $('#institution').text(trait.institution)
         $('#wbgeneID').text(trait.wbgene_id)
         $('#submittedBy').text(trait.submitted_by)
+        $('#tags').epmty()
+        $('#tags').append(display_tags(trait.tags))
         $('#values > tbody').empty()
         $('#values > tbody').append(populate_values(trait.phenotype_values))
     }
@@ -188,6 +240,17 @@
         let result = ''
         for (let i = 0; i < arr.length; i++) {
             result += `<tr><td>${arr[i].strain_name}</td><td>${arr[i].trait_value}</td></tr>`
+        }
+        return result
+    }
+
+    function display_tags(arr) {
+        if (arr == null) return;
+        let result = ''
+        for (tag of arr) {
+            result += `<div class="col-4">
+                        <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton" role="button" href="#">${tag}</a>
+                       </div>`
         }
         return result
     }
