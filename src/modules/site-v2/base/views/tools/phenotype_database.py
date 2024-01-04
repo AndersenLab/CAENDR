@@ -98,6 +98,8 @@ def get_zhang_traits_json():
     search_value = request.args.get('search[value]', '').lower()
 
     query = PhenotypeMetadata.query
+    total_records = query.count()
+    
     if search_value:
       query = query.filter(
         or_(
@@ -117,12 +119,12 @@ def get_zhang_traits_json():
     
     json_data = [ trait.to_json_with_values() for trait in data ]
     
-    total_records = query.count()
+    filtered_records = query.count()
 
     response_data = {
         "draw": draw,
         "recordsTotal": total_records,
-        "recordsFiltered": total_records,
+        "recordsFiltered": filtered_records,
         "data": json_data
     }
 
