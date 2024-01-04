@@ -230,7 +230,7 @@
         $('#institution').text(trait.institution)
         $('#wbgeneID').text(trait.wbgene_id)
         $('#submittedBy').text(trait.submitted_by)
-        $('#tags').epmty()
+        $('#tags').empty()
         $('#tags').append(display_tags(trait.tags))
         $('#values > tbody').empty()
         $('#values > tbody').append(populate_values(trait.phenotype_values))
