@@ -15,14 +15,15 @@ from caendr.api.phenotype import query_phenotype_metadata, get_trait
 
 from caendr.services.logger import logger
 
-from base.forms              import EmptyForm
-from base.utils.auth         import jwt_required, get_current_user, user_is_admin
-from base.utils.tools        import lookup_report, list_reports, try_submit
+from base.forms                 import EmptyForm
+from base.utils.auth            import jwt_required, get_current_user, user_is_admin
+from base.utils.tools           import lookup_report, list_reports, try_submit
 
-from caendr.models.sql       import PhenotypeMetadata
-from caendr.models.datastore import PhenotypeReport, Species, TraitFile
-from caendr.models.error     import ReportLookupError, EmptyReportDataError, EmptyReportResultsError, NotFoundError
-from caendr.models.status    import JobStatus
+from caendr.models.datastore    import PhenotypeReport, Species, TraitFile
+from caendr.models.error        import ReportLookupError, EmptyReportDataError, EmptyReportResultsError, NotFoundError
+from caendr.models.job_pipeline import PhenotypePipeline
+from caendr.models.status       import JobStatus
+from caendr.models.sql          import PhenotypeMetadata
 
 
 
@@ -270,7 +271,7 @@ def report(id):
   # Fetch requested phenotype report
   # Ensures the report exists and the user has permission to view it
   try:
-    job = lookup_report(PhenotypeReport.kind, id)
+    job: PhenotypePipeline = lookup_report(PhenotypeReport.kind, id)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:
