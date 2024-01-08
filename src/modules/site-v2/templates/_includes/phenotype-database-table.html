@@ -147,8 +147,7 @@
                         const d = JSON.stringify(row)
                         return `<td class="optionsToolbar">
                             <a id="details" data-value='${d}' data-bs-toggle="offcanvas" data-bs-target="#offcanvas1" aria-controls="offcanvas1" 
-                            href="
-                                #"><i class="bi bi-list-ul" aria-hidden="true"></i>Full Details</a>
+                            href="#"><i class="bi bi-list-ul" aria-hidden="true"></i>Full Details</a>
                             </td>`
                         }
                 },
@@ -204,6 +203,7 @@
         filterTable()
     })
 
+    // The function filters table by selected tags from "Categories" field
     function filterTable() {
         const keywords = $('#filter i').map(function(){
             return $(this).data('value')
@@ -222,20 +222,36 @@
 
     function fillOutModal(trait) {
         $('#offcanvas1Label').text(trait.trait_name_caendr)
-        $('#captureDate').text(formatDate(trait.capture_date))
-        $('#createdOn').text(formatDate(trait.created_on))
-        $('#modifiedOn').text(formatDate(trait.modified_on))
-        $('#species').text(trait.species.replace('c_', 'C. '))
-        $('#sourceLab').text(trait.source_lab)
-        $('#institution').text(trait.institution)
-        $('#wbgeneID').text(trait.wbgene_id)
-        $('#submittedBy').text(trait.submitted_by)
+        manageVal(trait.capture_date, '#captureDate', true)
+        manageVal(trait.created_on, '#createdOn', true)
+        manageVal(trait.modified_on, '#modifiedOn', true)
+        manageVal(trait.species, '#species')
+        manageVal(trait.wbgene_id, '#wbgeneID')
+        manageVal(trait.source_lab, '#sourceLab')
+        manageVal(trait.institution, '#institution')
+        manageVal(trait.submitted_by, '#submittedBy')
+        manageVal(trait.description_long, '#descriptionLong')
+        manageVal(trait.protocols, '#protocol', false, true)
+        manageVal(trait.publication, '#publication', false, true)
         $('#tags').empty()
-        $('#tags').append(display_tags(trait.tags))
+        if (trait.tags !== null || (trait.tags && trait.tags.length)) {
+            $('#tags').prev().show()
+            $('#tags').append(display_tags(trait.tags))
+        } else {
+            $('#tags').prev().hide()
+        }
         $('#values > tbody').empty()
-        $('#values > tbody').append(populate_values(trait.phenotype_values))
+        if (trait.phenotype_values.length) {
+            $('#values').parent().prev().show()
+            $('#values').parent().show()
+            $('#values > tbody').append(populate_values(trait.phenotype_values))
+        } else {
+            $('#values').parent().prev().hide()
+            $('#values').parent().hide()
+        }
     }
 
+    // The function populates phenotype values in the table inside the side bar.
     function populate_values(arr) {
         let result = ''
         for (let i = 0; i < arr.length; i++) {
@@ -244,6 +260,7 @@
         return result
     }
 
+    // The function populates Categories field in the side bar
     function display_tags(arr) {
         if (arr == null) return;
         let result = ''
@@ -260,5 +277,33 @@
         const date = new Date(d)
         return `${date.getFullYear()}/${date.getMonth()}/${date.getDate()}`
     }
+
+    // The function manages the fields in the side bar. 
+    // If a field has a value the field will be displayed, if not - it will be hidden
+    function manageVal(d, id, isDate=false, isLink=false) {
+        if (id === '#species') {
+            d = d[0].toUpperCase() + '. ' + d.slice(2)
+        }
+        const hasValue = !(d === null || d === 'N/A' || !d.length )
+        if (hasValue && isDate) {
+            $(id).parent().show()
+            $(id).text(formatDate(d))
+        } else if (!hasValue && isDate) {
+            $(id).parent().hide()
+        } else if (hasValue && isLink) {
+            $(id).prev().show()
+            $(`${id} > a`).text(d)
+        } else if (!hasValue && isLink) {
+            $(`${id} > a`).text('')
+            $(id).prev().hide()
+        } else if (hasValue && !isDate && !isLink) {
+            $(id).prev().show()
+            $(id).text(d)
+        } else if (!hasValue && !isDate && !isLink) {
+            $(id).text('')
+            $(id).prev().hide()
+        }
+    }
+
 </script>
 {% endblock %}
