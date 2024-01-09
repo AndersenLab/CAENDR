@@ -122,7 +122,12 @@
     }
 
     function select_trait(id=null, trait=null) {
+
+        // Unless a selector is specifically named,
+        // default to last selector to open the phenotype db modal
         if (id === null) id = current_menu;
+
+        // Select trait 1
         if (id == 'trait-1') {
             if (trait === null) {
                 {{ select_trait('trait-1') }}
@@ -130,6 +135,8 @@
                 {{ select_trait('trait-1', 'trait') }}
             }
         }
+
+        // Select trait 2
         else if (id == 'trait-2') {
             if (trait === null) {
                 {{ select_trait('trait-2') }}
