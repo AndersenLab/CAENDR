@@ -158,7 +158,6 @@ def submit_start():
     # Page info
     'title': 'Phenotype Analysis',
     'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
-    'initial_trait': request.args.get('trait'),
   })
 
 
