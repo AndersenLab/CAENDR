@@ -2,7 +2,7 @@
 
 Please use the citation below.
 
-<div class="card mb-3" style="max-width: 540px;">
+<div class="card mb-3">
   <div class="row g-2">
     <div class="col-md-4">
       <a href="https://andersenlab.org/publications/2016CookOxford.pdf" target="_blank">
