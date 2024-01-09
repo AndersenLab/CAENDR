@@ -1,9 +1,10 @@
-{%- macro render_trait_db_button( target='#phenotypeDBModal' ) %}
+{%- macro render_trait_db_button( id, target='#phenotypeDBModal' ) %}
   <div>
     <div class="text-bg-secondary text-white text-center rounded-circle pt-2 phenotypeIcon">
       <i class="bi bi-pencil-fill" aria-hidden="true"></i></a>
     </div>
     <a class="text-dark fw-bold" data-bs-toggle="modal" data-bs-target="{{ target }}"
+        onclick="this.dispatchEvent(new CustomEvent('phenotype-db-modal-open', { bubbles: true, detail: '{{id}}' }));"
         href="#">Select a database trait</a>
   </div>
 {%- endmacro %}
@@ -15,7 +16,7 @@
   {# Selector Body (Empty) #}
   <div id="{{id}}-container-empty">
     <div class="pt-5 text-center p-5">
-      {{ render_trait_db_button() }}
+      {{ render_trait_db_button(id) }}
     </div>
   </div>
   {# /Selector Body (Empty) #}
@@ -26,7 +27,7 @@
     {# Button(s) #}
     <div class="d-flex justify-content-end">
       <div class="d-grid gap-2">
-        {{ render_trait_db_button() }}
+        {{ render_trait_db_button(id) }}
       </div>
     </div>
     {# /Buttons #}

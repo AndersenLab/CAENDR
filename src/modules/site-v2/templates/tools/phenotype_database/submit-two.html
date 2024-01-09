@@ -88,6 +88,12 @@
     let species = 'c_elegans';
 
 
+    let current_menu = null;
+    document.body.addEventListener('phenotype-db-modal-open', ({detail}) => {
+        current_menu = detail;
+    });
+
+
     /* Initialization */
     $(document).ready(function(){
 
@@ -111,7 +117,8 @@
         return document.getElementById(`${id}-selector`).dataset.trait
     }
 
-    function select_trait(id, trait=null) {
+    function select_trait(id=null, trait=null) {
+        if (id === null) id = current_menu;
         if (id == 'trait-1') {
             if (trait === null) {
                 {{ select_trait('trait-1') }}
