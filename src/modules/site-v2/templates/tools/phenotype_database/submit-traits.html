@@ -7,8 +7,17 @@
 <div class="container px-5 pb-5">
     <div class="d-flex flex-wrap justify-content-center mt-5">
         <div class="col-8 col-md-5">
+            {%- if two_traits %}
+            <h2 class="h3 text-dark text-center">Trait 1</h2>
+            {%- endif %}
             {{ render_select_trait('trait-1') }}
         </div>
+        {%- if two_traits %}
+        <div class="col-8 col-md-5">
+            <h2 class="h3 text-dark text-center">Trait 2</h2>
+            {{ render_select_trait('trait-2') }}
+        </div>
+        {%- endif %}
     </div>
     <!-- /flex -->
 
@@ -69,7 +78,6 @@
 
 {% endblock %}
 
-
 {% block script %}
 {% from "_includes/select-trait.html"   import select_trait               %}
 {% from "_includes/strain-listing.html" import unpack_species_list        %}
@@ -82,6 +90,12 @@
     /* Species */
     const species_list = {{ unpack_species_list(species_list, species_fields) }};
     let species = 'c_elegans';
+
+
+    let current_menu = null;
+    document.body.addEventListener('phenotype-db-modal-open', ({detail}) => {
+        current_menu = detail;
+    });
 
 
     /* Initialization */
@@ -99,7 +113,7 @@
 
     /* Test query & select traits */
     $.getJSON("{{ url_for('api_trait.query_all', split_by_species=true) }}", function(data) {
-        console.log(data);
+        console.log(data)
     })
 
 
@@ -107,24 +121,44 @@
         return document.getElementById(`${id}-selector`).dataset.trait
     }
 
-    function select_trait(trait=null) {
-        if (trait === null) {
-            {{ select_trait('trait-1') }}
-        } else {
-            {{ select_trait('trait-1', 'trait') }}
+    function select_trait(id=null, trait=null) {
+        if (id === null) id = current_menu;
+        if (id == 'trait-1') {
+            if (trait === null) {
+                {{ select_trait('trait-1') }}
+            } else {
+                {{ select_trait('trait-1', 'trait') }}
+            }
+        }
+        else if (id == 'trait-2') {
+            if (trait === null) {
+                {{ select_trait('trait-2') }}
+            } else {
+                {{ select_trait('trait-2', 'trait') }}
+            }
         }
     }
 
     function submit() {
         const trait_1 = get_trait_id('trait-1');
+        {%- if two_traits %}
+        const trait_2 = get_trait_id('trait-2');
+        {%- endif %}
 
-        if (trait_1 == null) {
+        if (trait_1 == null {% if two_traits %} || trait_2 == null {% endif %}) {
             throw Error();
         }
 
-        data = { 'label': '???', species, trait_1 }
+        data = {
+            'label': '???',
+            species,
+            trait_1,
+            {%- if two_traits %}
+            trait_2,
+            {%- endif %}
+        }
 
-        submit_job(data)
+        submit_job(data, false, {'propagate_error': false})
             .done(() => {
                 console.log('Submitted!');
             });

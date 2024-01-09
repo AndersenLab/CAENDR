@@ -177,14 +177,14 @@ def submit_traits():
   else:
     initial_trait = None
 
-  # Use the endpoint name (see route decorator above) to pick the correct template name
-  template_name = request.endpoint.split('.')[-1].replace('_', '-')
-
-  return render_template(f'tools/phenotype_database/{template_name}.html', **{
+  return render_template(f'tools/phenotype_database/submit-traits.html', **{
     # Page info
     'title': 'Phenotype Analysis',
     'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
     'form': EmptyForm(request.form),
+
+    # Use the endpoint name (see route decorator above) to determine how many trait selectors to render
+    'two_traits': request.endpoint.split('.')[-1] == 'submit_two',
 
     'species_list': Species.all(),
     'species_fields': [
