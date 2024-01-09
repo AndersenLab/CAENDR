@@ -145,7 +145,7 @@
 
         data = { 'label': '???', species, trait_1, trait_2 }
 
-        submit_job(data)
+        submit_job(data, false, {'propagate_error': false})
             .done(() => {
                 console.log('Submitted!');
             });

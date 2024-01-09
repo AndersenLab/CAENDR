@@ -6,7 +6,7 @@ from caendr.models.datastore       import PhenotypeReport
 
 # Services
 from caendr.models.datastore       import TraitFile
-from caendr.models.error           import EmptyReportDataError, EmptyReportResultsError
+from caendr.models.error           import DataValidationError, EmptyReportDataError, EmptyReportResultsError
 from caendr.models.status          import JobStatus
 from caendr.utils.data             import dataframe_cols_to_dict, get_object_hash, keyset_intersection
 
@@ -53,6 +53,16 @@ class PhenotypePipeline(JobPipeline):
     if (data.get('trait_2')):
       trait_2 = TraitFile.get_ds(data['trait_2'])
       hash_source = ' '.join(sorted([trait_1.name, trait_2.name]))
+
+      # Check that both traits have the same species
+      # The front-end interface should prevent this, but if a job is somehow submitted with
+      # different species for the two traits, the results will be invalid
+      if trait_1.species != trait_2.species:
+        raise DataValidationError(
+          f'Both traits must belong to the same species,'
+          f' but {trait_1["trait_name_caendr"]} is a {trait_1.species.short_name} trait'
+          f' and {trait_2["trait_name_caendr"]} is a {trait_2.species.short_name} trait.'
+        )
 
     # If only one trait file provided, use its unique ID to compute the data hash
     else:

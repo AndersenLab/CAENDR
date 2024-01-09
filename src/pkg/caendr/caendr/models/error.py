@@ -146,6 +146,12 @@ class DataFormatError(InternalError):
     self.full_msg_link = full_msg_link
     super().__init__()
 
+class DataValidationError(InternalError):
+  description = "Error validating job input data"
+  def __init__(self, msg):
+    self.msg = msg.strip()
+    super().__init__()
+
 class PreflightCheckError(InternalError):
   description = "One or more files required for this job were not found"
   def __init__(self, missing_files: list):

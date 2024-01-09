@@ -292,7 +292,8 @@ class JobPipeline(ABC):
 
       Raises:
         - PreflightCheckError: One or more required files were not found in cloud storage.
-        - DataFormatError:     Validation of the input failed.
+        - DataFormatError:     Validation of the input file(s) failed. Specific to data files.
+        - DataValidationError: Validation of the non-file input fields failed. Does not include file validation.
     '''
     return { 'props': data }
 

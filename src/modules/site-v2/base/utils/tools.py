@@ -9,6 +9,7 @@ from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 from caendr.models.error import (
     DataFormatError,
+    DataValidationError,
     DuplicateDataError,
     JobAlreadyScheduledError,
     NotFoundError,
@@ -157,7 +158,19 @@ def try_submit(kind, user, data, no_cache):
       'full_msg_body': ex.full_msg_body,
     }, 400
 
+  # Validation error with submitted fields (not inside data file)
+  # These are errors that should be visible to the user
+  except DataValidationError as ex:
+    logger.error(f'Data validation error in {kind} submission: {ex.msg}')
+
+    # Construct user-friendly error message with optional line number
+    msg = f'There was an error with your submission. { ex.msg }'
+
+    # Return the error message
+    return { 'message': msg }, 400
+
   # General error
+  # Not displayed to the user, since we don't know the content a priori
   except Exception as ex:
 
     # Get message and description, if they exist
