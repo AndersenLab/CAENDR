@@ -113,12 +113,6 @@
     })
 
 
-    /* Test query & select traits */
-    $.getJSON("{{ url_for('api_trait.query_all', split_by_species=true) }}", function(data) {
-        console.log(data)
-    })
-
-
     function get_trait_id(id) {
         return [
             document.getElementById(`${id}-selector`).dataset.trait,
