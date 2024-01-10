@@ -93,6 +93,11 @@ class PhenotypeReport(ReportEntity, HashableEntity):
       raise TypeError(f'Cannot set trait_1 to "{ val }"')
 
 
+  @property
+  def has_trait_1(self) -> bool:
+    return bool(self._trait_1_id)
+
+
   #
   # Trait File 2
   #
@@ -129,6 +134,11 @@ class PhenotypeReport(ReportEntity, HashableEntity):
       raise TypeError(f'Cannot set trait_2 to "{ val }"')
 
 
+  @property
+  def has_trait_2(self) -> bool:
+    return bool(self._trait_2_id)
+
+
   #
   # Trait Names
   #
@@ -140,7 +150,7 @@ class PhenotypeReport(ReportEntity, HashableEntity):
     local_value = self._get_raw_prop('trait_1_name')
 
     # Look up the value specified in the trait file, if applicable
-    if self['trait_1'] is not None and not self['trait_1']['is_bulk_file']:
+    if self.has_trait_1 and not self['trait_1']['is_bulk_file']:
       trait_file_value = self['trait_1']['trait_name_caendr']
     else:
       trait_file_value = None
@@ -177,11 +187,14 @@ class PhenotypeReport(ReportEntity, HashableEntity):
   @property
   def trait_2_name(self) -> str:
 
+    if not self.has_trait_2:
+      return None
+
     # Retrieve the stored value from this entity
     local_value = self._get_raw_prop('trait_2_name')
 
     # Look up the value specified in the trait file, if applicable
-    if self['trait_2'] is not None and not self['trait_2']['is_bulk_file']:
+    if self.has_trait_2 and not self['trait_2']['is_bulk_file']:
       trait_file_value = self['trait_2']['trait_name_caendr']
     else:
       trait_file_value = None
