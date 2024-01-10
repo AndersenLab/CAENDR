@@ -174,7 +174,12 @@
         {%- endif %}
 
         if (trait_1 == null {% if two_traits %} || trait_2 == null {% endif %}) {
-            throw Error();
+            {%- if two_traits %}
+            flash_message('Please select two traits.');
+            {%- else %}
+            flash_message('Please select a trait.');
+            {%- endif %}
+            throw Error('Submission missing one or more traits.');
         }
 
         data = {
