@@ -1,4 +1,10 @@
+import pandas as pd
+from typing import Optional
+
 from caendr.models.datastore import TraitFile
+from caendr.models.sql       import PhenotypeMetadata, PhenotypeDatabase
+
+from caendr.services.cloud.postgresql import db
 
 
 
@@ -53,3 +59,39 @@ class Trait():
     if dataset and self.file['dataset'] and dataset != self.file['dataset']:
       raise ValueError('Mismatched dataset values')
     self.dataset = self.file['dataset']
+
+
+  #
+  # Constructors
+  #
+
+  @staticmethod
+  def from_dataset(dataset: str, trait_name: Optional[str] = None) -> 'Trait':
+    return Trait( dataset = dataset, trait_name = trait_name )
+
+  @staticmethod
+  def from_datastore(trait_file: TraitFile, trait_name: Optional[str] = None) -> 'Trait':
+    if trait_file['is_bulk_file'] and trait_name is None:
+      raise ValueError()
+    return Trait(
+      dataset    = trait_file['dataset'],
+      trait_name = trait_name if trait_name else trait_file['trait_name_caendr'],
+      trait_file = trait_file,
+    )
+
+  @staticmethod
+  def from_sql(sql_row: PhenotypeMetadata) -> 'Trait':
+    return Trait(
+      dataset    = sql_row.dataset,
+      trait_name = sql_row.trait_name_caendr,
+    )
+
+
+  #
+  # Querying
+  #
+
+  def query_values(self):
+    return pd.read_sql_query(
+      PhenotypeDatabase.query.filter( PhenotypeDatabase.trait_name == self.name ).statement, con=db.engine
+    )

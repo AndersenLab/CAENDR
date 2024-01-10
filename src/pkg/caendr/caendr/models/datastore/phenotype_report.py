@@ -1,9 +1,7 @@
-import pandas as pd
 from typing import Tuple
 
-from caendr.models.datastore          import ReportEntity, HashableEntity, TraitFile
-from caendr.models.sql                import PhenotypeDatabase
-from caendr.services.cloud.postgresql import db
+from caendr.models.datastore import ReportEntity, HashableEntity, TraitFile
+from caendr.models.trait     import Trait
 
 
 
@@ -34,15 +32,10 @@ class PhenotypeReport(ReportEntity, HashableEntity):
 
 
   def fetch_input(self):
-    return tuple(self.trait_files)
+    return tuple(self.traits)
 
   def fetch_output(self):
-    return tuple([
-      pd.read_sql_query(
-        PhenotypeDatabase.query.filter( PhenotypeDatabase.trait_name == tf['trait_name_caendr'] ).statement, con=db.engine
-      )
-        for tf in self.trait_files
-    ])
+    return tuple( trait.query_values() for trait in self.traits )
 
 
 
@@ -226,6 +219,12 @@ class PhenotypeReport(ReportEntity, HashableEntity):
   #
   # Traits grouped
   #
+
+  @property
+  def traits(self) -> Tuple[Trait]:
+    return tuple(
+      Trait.from_datastore(file, name) for file, name in zip(self.trait_files, self.trait_names)
+    )
 
   @property
   def trait_files(self) -> Tuple[TraitFile]:

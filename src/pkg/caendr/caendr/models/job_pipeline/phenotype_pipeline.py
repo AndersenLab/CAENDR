@@ -96,7 +96,7 @@ class PhenotypePipeline(JobPipeline):
   def _parse_input(self, data):
     return {
       'num_traits':  len(data),
-      'trait_names': tuple(map(lambda tf: tf['trait_name_caendr'], data)),
+      'trait_names': tuple(map(lambda trait: trait.name, data)),
     }
 
 
