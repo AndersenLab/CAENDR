@@ -236,7 +236,7 @@
         $('#tags').empty()
         if (trait.tags !== null || (trait.tags && trait.tags.length)) {
             $('#tags').prev().show()
-            $('#tags').append(display_tags(trait.tags))
+            $('#tags').append(displayTags(trait.tags))
         } else {
             $('#tags').prev().hide()
         }
@@ -244,7 +244,7 @@
         if (trait.phenotype_values.length) {
             $('#values').parent().prev().show()
             $('#values').parent().show()
-            $('#values > tbody').append(populate_values(trait.phenotype_values))
+            $('#values > tbody').append(populateValues(trait.phenotype_values))
         } else {
             $('#values').parent().prev().hide()
             $('#values').parent().hide()
@@ -252,7 +252,7 @@
     }
 
     // The function populates phenotype values in the table inside the side bar.
-    function populate_values(arr) {
+    function populateValues(arr) {
         let result = ''
         for (let i = 0; i < arr.length; i++) {
             result += `<tr><td>${arr[i].strain_name}</td><td>${arr[i].trait_value}</td></tr>`
@@ -261,7 +261,7 @@
     }
 
     // The function populates Categories field in the side bar
-    function display_tags(arr) {
+    function displayTags(arr) {
         if (arr == null) return;
         let result = ''
         for (tag of arr) {
