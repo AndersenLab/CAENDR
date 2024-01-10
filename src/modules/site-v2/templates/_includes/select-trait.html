@@ -54,13 +54,16 @@
   document.getElementById("{{id}}-container-selected").classList.toggle('d-none', {{ 'true'  if trait_var == null and trait_file == null else 'false' }});
   {%- if not trait_var and not trait_file %}
   document.getElementById("{{id}}-selector").dataset.trait = null;
+  document.getElementById("{{id}}-selector").dataset.set   = null;
   {%- elif trait_file %}
-  document.getElementById("{{id}}-selector").dataset.trait = "{{trait_file.name}}";
+  document.getElementById("{{id}}-selector").dataset.trait = "{{trait_file.trait_name_caendr}}";
+  document.getElementById("{{id}}-selector").dataset.set   = "{{trait_file.dataset}}";
   document.getElementById("{{id}}-species").innerText      = "{{trait_file.species.short_name}}"
   document.getElementById("{{id}}-trait-name").innerText   = "{{trait_file.trait_name_caendr}}";
   document.getElementById("{{id}}-trait-desc").innerText   = "{{trait_file.description_short}}";
   {%- else %}
-  document.getElementById("{{id}}-selector").dataset.trait = {{trait_var}}.name;
+  document.getElementById("{{id}}-selector").dataset.trait = {{trait_var}}.trait_name_caendr;
+  document.getElementById("{{id}}-selector").dataset.set   = {{trait_var}}.dataset;
   document.getElementById("{{id}}-trait-name").innerText   = {{trait_var}}.trait_name_caendr;
   document.getElementById("{{id}}-trait-desc").innerText   = {{trait_var}}.description_short;
   try {

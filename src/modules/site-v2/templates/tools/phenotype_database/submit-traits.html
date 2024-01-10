@@ -118,10 +118,14 @@
 
 
     function get_trait_id(id) {
-        return document.getElementById(`${id}-selector`).dataset.trait
+        return [
+            document.getElementById(`${id}-selector`).dataset.trait,
+            document.getElementById(`${id}-selector`).dataset.set,
+        ]
     }
 
-    function select_trait(id=null, trait=null) {
+
+    function select_trait(id=null, trait=null, dataset=null) {
 
         // Unless a selector is specifically named,
         // default to last selector to open the phenotype db modal
@@ -150,9 +154,9 @@
     }
 
     function submit() {
-        const trait_1 = get_trait_id('trait-1');
+        const [trait_1, trait_1_dataset] = get_trait_id('trait-1');
         {%- if two_traits %}
-        const trait_2 = get_trait_id('trait-2');
+        const [trait_2, trait_2_dataset] = get_trait_id('trait-2');
         {%- endif %}
 
         if (trait_1 == null {% if two_traits %} || trait_2 == null {% endif %}) {
@@ -162,9 +166,9 @@
         data = {
             'label': '???',
             species,
-            trait_1,
+            trait_1, trait_1_dataset,
             {%- if two_traits %}
-            trait_2,
+            trait_2, trait_2_dataset,
             {%- endif %}
         }
 
