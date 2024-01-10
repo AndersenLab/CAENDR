@@ -181,6 +181,13 @@ def submit_traits():
   else:
     initial_trait = None
 
+  # Get the full list of traits for non-bulk files
+  try:
+    trait_list = query_phenotype_metadata()
+  except Exception as ex:
+    logger.error(f'Failed to retrieve the list of traits: {ex}')
+    abort(500)
+
   return render_template(f'tools/phenotype_database/submit-traits.html', **{
     # Page info
     'title': 'Phenotype Analysis',
@@ -196,6 +203,7 @@ def submit_traits():
     ],
 
     'initial_trait': initial_trait,
+    'traits': trait_list,
   })
 
 
