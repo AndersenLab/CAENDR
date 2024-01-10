@@ -112,7 +112,7 @@
             "columns": [
                 {
                     "data": "Species",
-                    "render": function(data, type, row){
+                    "render": function(data, type, row) {
                         return row.species.replace('c_', 'C. ').italics()
                     }
                 },
@@ -128,12 +128,11 @@
                     "data": "View Full Details",
                     "render": function(data, type, row) {
                         const d = JSON.stringify(row)
-                        return `<td class="optionsToolbar">
+                        return `
                             <a id="details" data-value='${d}' data-bs-toggle="offcanvas" data-bs-target="#offcanvas1" aria-controls="offcanvas1" 
-                            href="
-                                #"><i class="bi bi-list-ul" aria-hidden="true"></i>Full Details</a>
-                            </td>`
-                        }
+                            href="#"><i class="bi bi-list-ul" aria-hidden="true"></i>Full Details</a>`
+                    },
+                    "sClass": "optionsToolbar",
                 },
                 {
                     "data": "Analyze",
@@ -141,11 +140,12 @@
                         const trait_name = row.trait_name_caendr
                         let url = '{{ url_for("phenotype_database.submit_start", trait=trait_name)}}'
                         url += trait_name
-                        return `<td class="optionsToolbar">
-                                <div class="ps-3 pt-0"><a href=${url}><i class="bi bi-arrow-right-circle-fill"
-                                            aria-hidden="true"></i>Analyze</a></div>
-                            </td>`
-                        }
+                        return `
+                            <div class="ps-3 pt-0">
+                                <a href=${url}><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
+                            </div>`
+                    },
+                    "sClass": "optionsToolbar",
                 },
             ]
         });
