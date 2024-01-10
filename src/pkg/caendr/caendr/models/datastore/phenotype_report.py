@@ -69,12 +69,12 @@ class PhenotypeReport(ReportEntity, HashableEntity):
   def trait_1(self) -> TraitFile:
 
     # Name will always exist if set, so if not found, return None
-    if not getattr(self, '_trait_1_name', ''):
+    if not getattr(self, '_trait_1_id', ''):
       return None
 
     # If the corresponding file object is not cached yet, retrieve it
     if getattr(self, '_trait_1_file', None) is None:
-      self._trait_1_file = TraitFile.get_ds(self._trait_1_name)
+      self._trait_1_file = TraitFile.get_ds(self._trait_1_id)
 
     # Return the TraitFile entity object itself
     return self._trait_1_file
@@ -85,12 +85,12 @@ class PhenotypeReport(ReportEntity, HashableEntity):
 
     # If passing TraitFile entity name, save as-is
     if val is None or isinstance(val, str):
-      self._trait_1_name = val
+      self._trait_1_id   = val
       self._trait_1_file = None
 
     # If passing TraitFile object itself, save both name and value
     elif isinstance(val, TraitFile):
-      self._trait_1_name = val.name
+      self._trait_1_id   = val.name
       self._trait_1_file = val
 
     # Otherwise, raise an error
@@ -106,12 +106,12 @@ class PhenotypeReport(ReportEntity, HashableEntity):
   def trait_2(self) -> TraitFile:
 
     # Name will always exist if set, so if not found, return None
-    if not getattr(self, '_trait_2_name', ''):
+    if not getattr(self, '_trait_2_id', ''):
       return None
 
     # If the corresponding file object is not cached yet, retrieve it
     if getattr(self, '_trait_2_file', None) is None:
-      self._trait_2_file = TraitFile.get_ds(self._trait_2_name)
+      self._trait_2_file = TraitFile.get_ds(self._trait_2_id)
 
     # Return the TraitFile entity object itself
     return self._trait_2_file
@@ -121,12 +121,12 @@ class PhenotypeReport(ReportEntity, HashableEntity):
 
     # If passing TraitFile entity name, save as-is
     if val is None or isinstance(val, str):
-      self._trait_2_name = val
+      self._trait_2_id   = val
       self._trait_2_file = None
 
     # If passing TraitFile object itself, save both name and value
     elif isinstance(val, TraitFile):
-      self._trait_2_name = val.name
+      self._trait_2_id   = val.name
       self._trait_2_file = val
 
     # Otherwise, raise an error
