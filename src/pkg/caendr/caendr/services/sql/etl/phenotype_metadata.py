@@ -23,12 +23,12 @@ def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
     if md.is_bulk_file:
       with open(file_object) as csv_file:
         """
-          Read the bulk file to generate the 'trait_name_canedr' and get 'wbgene_id'.
+          Read the bulk file to generate the 'trait_name_caendr' and get 'wbgene_id'.
 
           Expected order of column headers:
           [ transcript    WormBaseGeneID     GeneName    AB1    BRC20067   BRC20263   .... (strains)]
 
-          We're concatenating 'transcript', 'WormBaseGeneID' and 'GeneName' with '_' to generate trait name.
+          Concatenate 'transcript', 'WormBaseGeneID' and 'GeneName' with '_' to generate trait name.
         """
         for idx, row in enumerate( csv.reader(csv_file, delimiter='\t') ):
           if idx == 0:
