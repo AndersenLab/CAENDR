@@ -104,9 +104,9 @@
         // Set headers for AJAX requests
         {{ ajax_setup(form.csrf_token._value()) }}
 
-        {%- if initial_trait %}
+        {%- if initial_trait != null %}
         // Set the initial trait
-        {{ select_trait('trait-1', trait_file=initial_trait) }}
+        {{ select_trait('trait-1', trait_file=initial_trait.file) }}
         {%- endif %}
     })
 

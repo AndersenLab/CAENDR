@@ -19,11 +19,12 @@ from base.forms                 import EmptyForm
 from base.utils.auth            import jwt_required, get_current_user, user_is_admin
 from base.utils.tools           import lookup_report, list_reports, try_submit
 
-from caendr.models.datastore    import PhenotypeReport, Species, TraitFile
+from caendr.models.datastore    import PhenotypeReport, Species
 from caendr.models.error        import ReportLookupError, EmptyReportDataError, EmptyReportResultsError, NotFoundError
 from caendr.models.job_pipeline import PhenotypePipeline
 from caendr.models.status       import JobStatus
 from caendr.models.sql          import PhenotypeMetadata
+from caendr.models.trait        import Trait
 
 
 
@@ -165,11 +166,15 @@ def submit_start():
 @phenotype_database_bp.route('/submit/two', methods=['GET'], endpoint='submit_two')
 def submit_traits():
 
-  # Check for a URL var "trait" and use to lookup an initial trait
+  # Check for URL vars specifying an initial trait
+  # These will be inherited from submit_start
   initial_trait_name = request.args.get('trait')
+  initial_trait_set  = request.args.get('dataset')
+
+  # Try looking up the specified trait
   if initial_trait_name:
     try:
-      initial_trait = TraitFile.get_ds(initial_trait_name, silent=False)
+      initial_trait = Trait(dataset=initial_trait_set, trait_name=initial_trait_name)
     except NotFoundError:
       flash('That trait could not be found.', 'danger')
       initial_trait = None

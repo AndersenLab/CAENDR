@@ -5,9 +5,9 @@ from .job_pipeline                 import JobPipeline
 from caendr.models.datastore       import PhenotypeReport
 
 # Services
-from caendr.models.datastore       import TraitFile
 from caendr.models.error           import DataValidationError, EmptyReportDataError, EmptyReportResultsError
 from caendr.models.status          import JobStatus
+from caendr.models.trait           import Trait
 from caendr.utils.data             import dataframe_cols_to_dict, get_object_hash, keyset_intersection
 
 
@@ -45,23 +45,37 @@ class PhenotypePipeline(JobPipeline):
   @classmethod
   def parse(cls, data, valid_file_extensions=None):
 
-    # Get both trait files from the datastore, confirming they both exist
-    trait_1 = TraitFile.get_ds(data['trait_1'])
+    # Start building props object
+    props = {
+      'label':   data.get('label'),
+      'species': data.get('species'),
+    }
 
-    # If a second trait file is provided, retrieve it & compute hash from trait file unique IDs
-    # Sort the IDs before combining, so either order will produce the same hash
+    # Construct the first trait object and add relevant fields to props
+    trait_1 = Trait(dataset=data['trait_1_dataset'], trait_name=data['trait_1'])
+    props['trait_1'] = trait_1.file
+    if trait_1.file['is_bulk_file']:
+      props['trait_1_name'] = trait_1.name
+
+    # If a second trait file is provided, construct trait object
     if (data.get('trait_2')):
-      trait_2 = TraitFile.get_ds(data['trait_2'])
-      hash_source = ' '.join(sorted([trait_1.name, trait_2.name]))
+      trait_2 = Trait(dataset=data['trait_2_dataset'], trait_name=data['trait_2'])
+      props['trait_2'] = trait_2.file
+      if trait_2.file['is_bulk_file']:
+        props['trait_2_name'] = trait_2.name
+
+      # Compute hash from unique trait names
+      # Sort before combining, so either order will produce the same hash
+      hash_source = ' '.join(sorted([props.get('trait_1_name', trait_1.name), props.get('trait_2_name', trait_2.name)]))
 
       # Check that both traits have the same species
       # The front-end interface should prevent this, but if a job is somehow submitted with
       # different species for the two traits, the results will be invalid
-      if trait_1.species != trait_2.species:
+      if trait_1.file.species != trait_2.file.species:
         raise DataValidationError(
           f'Both traits must belong to the same species,'
-          f' but {trait_1["trait_name_caendr"]} is a {trait_1.species.short_name} trait'
-          f' and {trait_2["trait_name_caendr"]} is a {trait_2.species.short_name} trait.'
+          f' but {trait_1.name} is a {trait_1.file.species.short_name} trait'
+          f' and {trait_2.name} is a {trait_2.file.species.short_name} trait.'
         )
 
     # If only one trait file provided, use its unique ID to compute the data hash
@@ -69,7 +83,7 @@ class PhenotypePipeline(JobPipeline):
       hash_source = trait_1.name
 
     return {
-      'props': data,
+      'props': props,
       'hash':  get_object_hash(hash_source, length=32),
     }
 
