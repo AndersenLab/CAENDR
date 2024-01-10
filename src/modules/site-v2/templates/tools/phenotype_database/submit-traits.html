@@ -108,6 +108,7 @@
         {%- if initial_trait != null %}
         // Set the initial trait
         {{ select_trait('trait-1', trait_file=initial_trait.file) }}
+        // filter_by_species("{{initial_trait.file.species.name}}");
         {%- endif %}
     })
 
@@ -164,7 +165,31 @@
 
         // Close the modal on selection
         $('#phenotypeDBModal').modal('hide');
+
+        {%- if two_traits %}
+        // const otherTrait = get_trait_id(id == 'trait-1' ? 'trait-2' : 'trait-1')[0];
+        // if (otherTrait != null) {
+        //     filter_by_species(trait === null ? null : trait.species);
+        // }
+        {%- endif %}
     }
+
+
+    function filter_by_species(species) {
+        console.log('filtering by species...')
+        if (species === null) {
+            $('#tableAccordion tbody>tr').show()
+        }
+        else {
+            $('#tableAccordion tbody>tr').hide().each(function() {
+                console.log(this.dataset.species, species)
+                if (this.dataset.species == species) {
+                    $(this).show()
+                }
+            });
+        }
+    }
+
 
     function submit() {
         const [trait_1, trait_1_dataset] = get_trait_id('trait-1');

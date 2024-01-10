@@ -24,7 +24,7 @@
                 </thead>
                 <tbody class="table-group-divider align-middle">
                     {% for tr in traits %}
-                    <tr class="py-3">
+                    <tr class="py-3" data-species="{{tr.species}}">
                         <th>
                             <a href="#" class="text-dark fw-normal" data-bs-toggle="collapse"
                                 data-bs-target="#collapse-{{loop.index}}" aria-expanded="false" aria-controls="collapse-{{loop.index}}"><i
