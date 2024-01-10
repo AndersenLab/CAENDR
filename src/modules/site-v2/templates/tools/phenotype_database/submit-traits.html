@@ -190,11 +190,18 @@
             {%- endif %}
         }
 
-        submit_job(data, '#confirmationModal', {'propagate_error': false, 'auto_redirect': false})
+        submit_job(data, '#confirmationModal', {'auto_redirect': false})
             .done((result) => {
                 document.getElementById('goToReportButton').addEventListener('click', () => {
                     window.location.href = `{{ url_for('phenotype_database.report', id='') }}${ result.id }`;
                 })
+            })
+            // If validation fails, just flash the error
+            .fail((error) => {
+                const resp = error.responseJSON
+                if (resp && resp.message) {
+                    flash_message(resp.message, resp.full_msg_link, resp.full_msg_body);
+                }
             })
     }
 </script>
