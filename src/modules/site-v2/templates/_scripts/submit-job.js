@@ -23,6 +23,7 @@ function {{func_name}}(data, modal_id, config={}) {
   // Extract configuration settings w default values
   const new_tab         = config.hasOwnProperty('new_tab')         ? config['new_tab']         : false;
   const propagate_error = config.hasOwnProperty('propagate_error') ? config['propagate_error'] : true;
+  const auto_redirect   = config.hasOwnProperty('auto_redirect')   ? config['auto_redirect']   : true;
 
   // Gather URL variable(s)
   let url_vars = [];
@@ -54,7 +55,7 @@ function {{func_name}}(data, modal_id, config={}) {
 
       // Results are ready to be viewed
       // TODO: Redirect modal
-      if (result.ready) {
+      if (result.ready && auto_redirect) {
         if (new_tab) {
           window.open(`{{ url_for(tool_name + '.report', id='') }}${ result.id }`, '_blank');
         } else {

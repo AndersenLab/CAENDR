@@ -24,8 +24,7 @@
     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
         <button class="btn btn-dark text-white" role="button"
             onclick="location.href=`{{ url_for('phenotype_database.phenotype_database') }}`">Start Over</button>
-        <button class="btn btn-secondary text-white" role="button" data-bs-toggle="modal"
-            data-bs-target="#confirmationModal">Next</button>
+        <button class="btn btn-secondary text-white" role="button" onclick="submit()">Next</button>
     </div>
 </div> <!-- /Container -->
 
@@ -72,7 +71,7 @@
                 <p>Your analysis has been submitted</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary text-white">Go to Report</button>
+                <button id="goToReportButton" type="button" class="btn btn-secondary text-white">Go to Report</button>
             </div>
         </div>
     </div>
@@ -191,10 +190,12 @@
             {%- endif %}
         }
 
-        submit_job(data, false, {'propagate_error': false})
-            .done(() => {
-                console.log('Submitted!');
-            });
+        submit_job(data, '#confirmationModal', {'propagate_error': false, 'auto_redirect': false})
+            .done((result) => {
+                document.getElementById('goToReportButton').addEventListener('click', () => {
+                    window.location.href = `{{ url_for('phenotype_database.report', id='') }}${ result.id }`;
+                })
+            })
     }
 </script>
 {% endblock %}
