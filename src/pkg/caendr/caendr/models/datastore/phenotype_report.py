@@ -142,90 +142,95 @@ class PhenotypeReport(ReportEntity, HashableEntity):
   #
   # Trait Names
   #
+  # TODO: Is there a smarter way to determine when to check the TraitFile object?
+  #       Since we're duplicating the trait name from the TraitFile, it would be nice to validate it,
+  #       but if we do so every time we use the param, we spam the datastore with requests and cause
+  #       certain pages (namely my-results and all-results) to take a long time to load
+  #
 
-  @property
-  def trait_1_name(self) -> str:
+  # @property
+  # def trait_1_name(self) -> str:
 
-    # Retrieve the stored value from this entity
-    local_value = self._get_raw_prop('trait_1_name')
+  #   # Retrieve the stored value from this entity
+  #   local_value = self._get_raw_prop('trait_1_name')
 
-    # Look up the value specified in the trait file, if applicable
-    if self.has_trait_1 and not self['trait_1']['is_bulk_file']:
-      trait_file_value = self['trait_1']['trait_name_caendr']
-    else:
-      trait_file_value = None
+  #   # Look up the value specified in the trait file, if applicable
+  #   if self.has_trait_1 and not self['trait_1']['is_bulk_file']:
+  #     trait_file_value = self['trait_1']['trait_name_caendr']
+  #   else:
+  #     trait_file_value = None
 
-    # If no value is stored but the trait file is bulk, we can't uniquely identify the trait
-    if local_value is None and self['trait_1']['is_bulk_file']:
-      raise LookupError(f'Trait name is ambiguous: trait_1 field references a bulk file, but no specific trait name is given')
+  #   # If no value is stored but the trait file is bulk, we can't uniquely identify the trait
+  #   if local_value is None and self['trait_1']['is_bulk_file']:
+  #     raise LookupError(f'Trait name is ambiguous: trait_1 field references a bulk file, but no specific trait name is given')
 
-    # If no value stored, defer to trait file
-    if local_value is None:
-      local_value = trait_file_value
+  #   # If no value stored, defer to trait file
+  #   if local_value is None:
+  #     local_value = trait_file_value
 
-    # If values don't match, raise an error
-    if trait_file_value is not None and local_value != trait_file_value:
-      raise LookupError(f'Trait name mismatch: trait_1 file has name {trait_file_value}, but Report entity is storing name {local_value}')
+  #   # If values don't match, raise an error
+  #   if trait_file_value is not None and local_value != trait_file_value:
+  #     raise LookupError(f'Trait name mismatch: trait_1 file has name {trait_file_value}, but Report entity is storing name {local_value}')
 
-    # Return the local value
-    return local_value
-
-
-  @trait_1_name.setter
-  def trait_1_name(self, val):
-
-    # If trait file already specifies a name, make sure they match, then ignore the set
-    if self['trait_1'] is not None and not self['trait_1']['is_bulk_file']:
-      if val != self['trait_1']['trait_name_caendr']:
-        raise ValueError(f'Cannot set trait_1 name to {val}: trait file already specifies the name as {self["trait_1"]["trait_name_caendr"]}')
-
-    # Otherwise, add the name
-    else:
-      self._set_raw_prop('trait_1_name', val)
+  #   # Return the local value
+  #   return local_value
 
 
-  @property
-  def trait_2_name(self) -> str:
+  # @trait_1_name.setter
+  # def trait_1_name(self, val):
 
-    if not self.has_trait_2:
-      return None
+  #   # If trait file already specifies a name, make sure they match, then ignore the set
+  #   if self['trait_1'] is not None and not self['trait_1']['is_bulk_file']:
+  #     if val != self['trait_1']['trait_name_caendr']:
+  #       raise ValueError(f'Cannot set trait_1 name to {val}: trait file already specifies the name as {self["trait_1"]["trait_name_caendr"]}')
 
-    # Retrieve the stored value from this entity
-    local_value = self._get_raw_prop('trait_2_name')
-
-    # Look up the value specified in the trait file, if applicable
-    if self.has_trait_2 and not self['trait_2']['is_bulk_file']:
-      trait_file_value = self['trait_2']['trait_name_caendr']
-    else:
-      trait_file_value = None
-
-    # If no value is stored but the trait file is bulk, we can't uniquely identify the trait
-    if local_value is None and self['trait_2']['is_bulk_file']:
-      raise LookupError(f'Trait name is ambiguous: trait_2 field references a bulk file, but no specific trait name is given')
-
-    # If no value stored, defer to trait file
-    if local_value is None:
-      local_value = trait_file_value
-
-    # If values don't match, raise an error
-    if trait_file_value is not None and local_value != trait_file_value:
-      raise LookupError(f'Trait name mismatch: trait_2 file has name {trait_file_value}, but Report entity is storing name {local_value}')
-
-    # Return the local value
-    return local_value
+  #   # Otherwise, add the name
+  #   else:
+  #     self._set_raw_prop('trait_1_name', val)
 
 
-  @trait_2_name.setter
-  def trait_2_name(self, val):
+  # @property
+  # def trait_2_name(self) -> str:
 
-    # If trait file already specifies a name, make sure they match, then ignore the set
-    if self['trait_2'] is not None and not self['trait_2']['is_bulk_file']:
-      if val != self['trait_2']['trait_name_caendr']:
-        raise ValueError(f'Cannot set trait_2 name to {val}: trait file already specifies the name as {self["trait_2"]["trait_name_caendr"]}')
+  #   if not self.has_trait_2:
+  #     return None
 
-    # Otherwise, add the name
-    else:
-      self._set_raw_prop('trait_2_name', val)
+  #   # Retrieve the stored value from this entity
+  #   local_value = self._get_raw_prop('trait_2_name')
+
+  #   # Look up the value specified in the trait file, if applicable
+  #   if self.has_trait_2 and not self['trait_2']['is_bulk_file']:
+  #     trait_file_value = self['trait_2']['trait_name_caendr']
+  #   else:
+  #     trait_file_value = None
+
+  #   # If no value is stored but the trait file is bulk, we can't uniquely identify the trait
+  #   if local_value is None and self['trait_2']['is_bulk_file']:
+  #     raise LookupError(f'Trait name is ambiguous: trait_2 field references a bulk file, but no specific trait name is given')
+
+  #   # If no value stored, defer to trait file
+  #   if local_value is None:
+  #     local_value = trait_file_value
+
+  #   # If values don't match, raise an error
+  #   if trait_file_value is not None and local_value != trait_file_value:
+  #     raise LookupError(f'Trait name mismatch: trait_2 file has name {trait_file_value}, but Report entity is storing name {local_value}')
+
+  #   # Return the local value
+  #   return local_value
+
+
+  # @trait_2_name.setter
+  # def trait_2_name(self, val):
+
+  #   # If trait file already specifies a name, make sure they match, then ignore the set
+  #   if self['trait_2'] is not None and not self['trait_2']['is_bulk_file']:
+  #     if val != self['trait_2']['trait_name_caendr']:
+  #       raise ValueError(f'Cannot set trait_2 name to {val}: trait file already specifies the name as {self["trait_2"]["trait_name_caendr"]}')
+
+  #   # Otherwise, add the name
+  #   else:
+  #     self._set_raw_prop('trait_2_name', val)
 
 
 
