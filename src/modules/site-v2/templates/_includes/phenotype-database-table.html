@@ -44,9 +44,12 @@
                             <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
                                 role="button" href="#">...</a>
                         </td>
-                        <td class="optionsToolbar">
-                            <div class="ps-3 pt-0"><a href="{{url_for("phenotype_database.submit_start", trait=tr.trait_name_caendr)}}"><i class="bi bi-arrow-right-circle-fill"
-                                        aria-hidden="true"></i>Analyze</a></div>
+                        <td id="trait-data-{{tr.trait_name_caendr}}" class="optionsToolbar" data-description="{{tr.description_short}}" data-species="{{tr.species}}">
+                            <div class="ps-3 pt-0">
+                                <a href="{{ analyze_link.replace('TRAIT_NAME', tr.trait_name_caendr).replace('TRAIT_SET', tr.dataset) }}">
+                                    <i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     <tr id="collapse-{{loop.index}}" class="text-start accordion-collapse collapse"
@@ -137,12 +140,11 @@
                 {
                     "data": "Analyze",
                     "render": function(data, type, row) {
-                        const trait_name = row.trait_name_caendr
-                        let url = '{{ url_for("phenotype_database.submit_start", trait=trait_name)}}'
-                        url += trait_name
+                        const trait_name = row.trait_name_caendr;
+                        const url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", trait_name).replace("TRAIT_SET", 'zhang');
                         return `
-                            <div class="ps-3 pt-0">
-                                <a href=${url}><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
+                            <div id="trait-data-${row.trait_name_caendr}" class="ps-3 pt-0" data-description="${row.description_short}" data-species="${row.species}">
+                                <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
                             </div>`
                     },
                     "sClass": "optionsToolbar",

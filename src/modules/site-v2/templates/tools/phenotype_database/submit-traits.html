@@ -39,7 +39,9 @@
             </div>
             <div class="modal-body">
                 <div class="container my-3">
+                    {% with analyze_link = 'javascript:select_trait(null, \"TRAIT_NAME\", \"TRAIT_SET\")' %}
                     {% include "_includes/phenotype-database-table.html" %}
+                    {% endwith %}
                 </div>
                 <!-- Offcanvas -->
                 <div class="offcanvas offcanvas-end offcanvasPhenotype" tabindex="-1" id="offcanvas1"
@@ -130,6 +132,18 @@
         // Unless a selector is specifically named,
         // default to last selector to open the phenotype db modal
         if (id === null) id = current_menu;
+
+        // If trait is passed as a string value, look up its fields in the phenotype table
+        if (trait !== null && typeof trait === 'string') {
+            const el = document.getElementById(`trait-data-${trait}`);
+            trait = {
+                'name':              trait,
+                'dataset':           dataset,
+                'trait_name_caendr': trait,
+                'description_short': el.dataset.description,
+                'species':           el.dataset.species,
+            }
+        }
 
         // Select trait 1
         if (id == 'trait-1') {
