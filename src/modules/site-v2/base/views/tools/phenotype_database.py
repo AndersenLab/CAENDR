@@ -8,7 +8,10 @@ from flask import (render_template,
                     flash,
                     abort,
                     Blueprint)
-from extensions import cache
+from extensions import cache, compress
+from sqlalchemy import or_, func
+
+from caendr.api.phenotype import query_phenotype_metadata, get_trait
 
 from caendr.services.logger import logger
 
@@ -16,6 +19,7 @@ from base.forms              import EmptyForm
 from base.utils.auth         import jwt_required, get_current_user, user_is_admin
 from base.utils.tools        import lookup_report, list_reports, try_submit
 
+from caendr.models.sql       import PhenotypeMetadata
 from caendr.models.datastore import PhenotypeReport, Species, TraitFile
 from caendr.models.error     import ReportLookupError, EmptyReportDataError, EmptyReportResultsError, NotFoundError
 from caendr.models.status    import JobStatus
@@ -33,20 +37,20 @@ def results_columns():
       'title': 'Description',
       'class': 'label',
       'field': 'label',
-      'width': 0.5,
+      'width': 0.2,
       'link_to_data': True,
     },
     {
       'title': 'Trait 1',
       'class': 's1',
       'field': 'trait_1_name',
-      'width': 0.25,
+      'width': 0.4,
     },
     {
       'title': 'Trait 2',
       'class': 's2',
       'field': 'trait_2_name',
-      'width': 0.25,
+      'width': 0.4,
     },
   ]
 
@@ -59,11 +63,89 @@ def results_columns():
 @phenotype_database_bp.route('')
 @cache.memoize(60*60)
 def phenotype_database():
+  """
+    Phenotype Database table (non-bulk)
+  """
+  # Get the list of traits for non-bulk files
+  try:
+    traits_non_bulk = query_phenotype_metadata()
+  except Exception as ex:
+    logger.error(f'Failed to retrieve the list of traits: {ex}')
+    abort(500)
+
   return render_template('tools/phenotype_database/phenotypedb.html', **{
     # Page info
     "title": 'Phenotype Database and Analysis',
     "tool_alt_parent_breadcrumb": { "title": "Tools", "url": url_for('tools.tools') },
+
+    # Data
+    'traits': traits_non_bulk,
   })
+
+@phenotype_database_bp.route('/traits-zhang')
+@cache.memoize(60*60)
+@compress.compressed()
+def get_zhang_traits_json():
+  """
+    Phenotype Database table (bulk)
+    Fetch table content by request for each page and render the data for Datatables()
+  """
+  try:
+    # get parameters for query
+    draw = request.args.get('draw', type=int)
+    start = request.args.get('start', type=int)
+    length = request.args.get('length', type=int)
+    search_value = request.args.get('search[value]', '').lower()
+
+    query = PhenotypeMetadata.query
+    total_records = query.count()
+    
+    if search_value:
+      query = query.filter(
+        or_(
+          func.lower(PhenotypeMetadata.trait_name_caendr.like(f"%{search_value}%")),
+          func.lower(PhenotypeMetadata.trait_name_user.like(f"%{search_value}%")),
+          func.lower(PhenotypeMetadata.description_short.like(f"%{search_value}%")),
+          func.lower(PhenotypeMetadata.description_long.like(f"%{search_value}%")),
+          func.lower(PhenotypeMetadata.source_lab.like(f"%{search_value}%")),
+          func.lower(PhenotypeMetadata.institution.like(f"%{search_value}%")),
+          func.lower(PhenotypeMetadata.submitted_by.like(f"%{search_value}%")),
+        )
+      )
+
+    # Query PhenotypeMetadata (include phenotype values for each trait)
+    data = query.offset(start).limit(length).from_self().\
+      join(PhenotypeMetadata.phenotype_values).all()
+    
+    json_data = [ trait.to_json_with_values() for trait in data ]
+    
+    filtered_records = query.count()
+
+    response_data = {
+        "draw": draw,
+        "recordsTotal": total_records,
+        "recordsFiltered": filtered_records,
+        "data": json_data
+    }
+
+  except Exception as ex:
+    logger.error(f'Failed to retrieve the list of traits: {ex}')
+    response_data = []
+  return jsonify(response_data)
+
+@phenotype_database_bp.route('/traits-list')
+@cache.memoize(60*60)
+@compress.compressed()
+def get_traits_json():
+  """
+    Get traits data for non-bulk files in JSON format (include phenotype values)
+  """
+  try:
+    traits_query = query_phenotype_metadata()
+    traits_json = [ trait.to_json_with_values() for trait in traits_query]
+  except Exception:
+    traits_json = []
+  return jsonify(traits_json)
 
 
 #

@@ -8,8 +8,9 @@ from .strains                      import fetch_andersen_strains
 from .wormbase                     import parse_gene_gtf, parse_gene_gff_summary
 from .strain_annotated_variants    import parse_strain_variant_annotation_data
 from .phenotype_db                 import parse_phenotypedb_traits_data, parse_phenotypedb_bulk_trait_file
+from .phenotype_metadata           import parse_phenotype_metadata
 
-from caendr.models.sql             import Strain, WormbaseGeneSummary, WormbaseGene, StrainAnnotatedVariant, PhenotypeDatabase
+from caendr.models.sql             import Strain, WormbaseGeneSummary, WormbaseGene, StrainAnnotatedVariant, PhenotypeDatabase, PhenotypeMetadata
 from caendr.models.datastore       import Species, TraitFile
 from caendr.services.cloud.storage import BlobURISchema
 from caendr.models.datastore       import Species
@@ -164,4 +165,12 @@ PhenotypeDatabaseConfig = TableConfig(
     parse_phenotypedb_traits_data,
     *LocalDatastoreFileTemplate.from_file_record_entities(TraitFile, filter = lambda tf: not tf.is_bulk_file),
   ),
+)
+
+PhenotypeMetadataConfig = TableConfig(
+  PhenotypeMetadata,
+  ParseConfig(
+    parse_phenotype_metadata,
+    *LocalDatastoreFileTemplate.from_file_record_entities(TraitFile),
+  )
 )

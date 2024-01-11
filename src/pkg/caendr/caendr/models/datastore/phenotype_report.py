@@ -39,7 +39,7 @@ class PhenotypeReport(ReportEntity, HashableEntity):
   def fetch_output(self):
     return tuple([
       pd.read_sql_query(
-        PhenotypeDatabase.query.filter( PhenotypeDatabase.trait_name == tf['trait_name'] ).statement, con=db.engine
+        PhenotypeDatabase.query.filter( PhenotypeDatabase.trait_name == tf['trait_name_caendr'] ).statement, con=db.engine
       )
         for tf in self.trait_files
     ])
@@ -142,13 +142,13 @@ class PhenotypeReport(ReportEntity, HashableEntity):
   def trait_1_name(self) -> str:
     if self['trait_1'] is None:
       return None
-    return self['trait_1']['trait_name']
+    return self['trait_1']['trait_name_caendr']
 
   @property
   def trait_2_name(self) -> str:
     if self['trait_2'] is None:
       return None
-    return self['trait_2']['trait_name']
+    return self['trait_2']['trait_name_caendr']
 
   @property
   def trait_files(self) -> Tuple[TraitFile]:

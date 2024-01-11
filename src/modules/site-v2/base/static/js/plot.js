@@ -6,6 +6,14 @@
 
 
 
+/* Enum type mapping plot dimension names to corresponding indices. */
+const PlotDimension = {
+  'x_axis': 0,
+  'y_axis': 1,
+};
+
+
+
 /* Helper function to compute the extent (the [min, max]) of a set of data,
  * plus a fixed "buffer" amount on either side.
  *
@@ -35,11 +43,11 @@ function buffered_extent(data, buffer, f=null) {
  *   - target: The SVG element to create the histogram in
  *   - config: Optional keyword arguments.
  */
-function add_histogram_along_axis(d, axis, data, target, config) {
+function add_histogram_along_axis(d, axis, data, target, config={}) {
 
   // Validate the dimension parameter
-  if (!(d === 0 || d === 1)) {
-    throw new RangeError(`The argument "d" must be 0 or 1, but ${d} was given.`);
+  if (!(d === PlotDimension.x_axis || d === PlotDimension.y_axis)) {
+    throw new RangeError(`The argument "d" must be a PlotDimension, but ${d} was given.`);
   }
 
   // Read values from config, filling in default values when not supplied
@@ -88,10 +96,12 @@ function add_histogram_along_axis(d, axis, data, target, config) {
 
       // D3 draws from top left, so along the x-axis,
       // offset the y-position of the bar based on the white space that should be above it
-      if (d == 0) return `translate(${ axis(n.x0) }, ${ bin_val_to_height(max_bin_amount - n.length) })`;
+      if (d === PlotDimension.x_axis)
+        return `translate(${ axis(n.x0) }, ${ bin_val_to_height(max_bin_amount - n.length) })`;
 
       // Along the y-axis, draw origin aligns with histogram base, so no x transformation necessary
-      if (d == 1) return `translate(${ 0 }, ${ axis(n.x1) })`;
+      if (d === PlotDimension.y_axis)
+        return `translate(${ 0 }, ${ axis(n.x1) })`;
     });
 
   // Create the rectangle for each bar
@@ -100,6 +110,8 @@ function add_histogram_along_axis(d, axis, data, target, config) {
     .attr(relative_width, bin_width)
     .attr(relative_height, n => bin_val_to_height(n.length))
     .style('fill', color);
+
+  return bins;
 }
 
 
@@ -122,6 +134,10 @@ function add_histogram_along_axis(d, axis, data, target, config) {
  *       'y_label'
  */
 function render_scatterplot_histograms(container_selector, data, config={}) {
+
+    if (data.length == 0) {
+      throw new Error('No data to plot')
+    }
 
     // Get histogram heights from config
     const hist_height = config['hist_height'] || 60;
@@ -248,8 +264,8 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
     }
 
     // Add the two histograms
-    add_histogram_along_axis(0, x, data, svg, {...h_config, position: [margin.left,         margin.top              ]})
-    add_histogram_along_axis(1, y, data, svg, {...h_config, position: [margin.left + width, margin.top + hist_height]})
+    add_histogram_along_axis(PlotDimension.x_axis, x, data, svg, {...h_config, position: [margin.left,         margin.top              ]})
+    add_histogram_along_axis(PlotDimension.y_axis, y, data, svg, {...h_config, position: [margin.left + width, margin.top + hist_height]})
 }
 
 
@@ -268,6 +284,10 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
  *       'x_label'
  */
 function render_histogram(container_selector, data, config={}) {
+
+  if (data.length == 0) {
+    throw new Error('No data to plot')
+  }
 
   // Set the dimensions and margins of the graph
   const margin = config['margin'] || {
@@ -301,7 +321,6 @@ function render_histogram(container_selector, data, config={}) {
     .call(d3.axisBottom(x));
 
   // Add label for x-axis, if one is provided
-  // Centered on scatterplot graph element
   if (config['x_label']) {
     svg.append('text')
       .attr('x', margin.left + (width / 2))
@@ -311,12 +330,27 @@ function render_histogram(container_selector, data, config={}) {
   }
 
   // Add the histogram
-  add_histogram_along_axis(0, x, data, svg, {
+  const bins = add_histogram_along_axis(PlotDimension.x_axis, x, data, svg, {
     height: height,
     color: fill_color,
     bins_per_tick,
     position: [margin.left, margin.top ],
-  })
+  });
+
+  // Label the y-axis with "Count"
+  const max_bin_amount = d3.max(bins, n => n.length);
+  const yScale = d3.scaleLinear().domain([0, max_bin_amount]).range([margin.top + height, margin.top]).nice();
+  const yAxis  = d3.axisLeft(yScale)
+  svg.append("g")
+    .attr("transform", `translate(${margin.left}, 0)`)
+    .call(yAxis);
+  svg.append('text')
+    .attr('transform', 'rotate(-90)')
+    .attr('x', -(margin.top + (height / 2)))
+    .attr('y', 0)
+    .attr('dy', '.75em')
+    .attr('text-anchor', 'middle')
+    .text('Count')
 }
 
 
@@ -335,6 +369,10 @@ function render_histogram(container_selector, data, config={}) {
  *       'y_label'
  */
 function render_ranked_barplot(container_selector, data, config={}) {
+
+  if (data.length == 0) {
+    throw new Error('No data to plot')
+  }
 
   // Set the dimensions and margins of the graph
   const margin = config['margin'] || {
@@ -360,7 +398,11 @@ function render_ranked_barplot(container_selector, data, config={}) {
     return b[0] - a[0];
   });
 
+  // Compute the range of the data
+  // If both values are positive or both negative, set end of range to 0
   const data_range = d3.extent(data, d => d[0]);
+  data_range[0] = Math.min(data_range[0], 0)
+  data_range[1] = Math.max(data_range[1], 0)
 
   // Create the SVG object for the full graphic (scatterplot + histograms + margins)
   const svg = d3.select(container_selector).append('svg')
@@ -370,19 +412,20 @@ function render_ranked_barplot(container_selector, data, config={}) {
   // Create Y axis (map trait value to y coordinate)
   const yScale = d3.scaleLinear()
     .domain( data_range )
-    .range([ height, 0])
+    .range([ height + margin.top, margin.top])
   const yAxis = d3.axisLeft(yScale)
 
   // Create X axis (map strain name to x coordinate)
   const xScale = d3.scaleBand()
     .domain(data.map( (d) => d[1] ))
-    .range([ 0, width ])
+    .range([ margin.left, margin.left + width ])
     .padding(0.05)
   const xAxis = d3.axisBottom(xScale)
     .tickFormat((d) => '')
 
   // Add the axes to the graph
   svg.append("g")
+    .attr("transform", `translate(${margin.left}, 0)`)
     .call(yAxis);
   svg.append("g")
     .attr("transform", "translate(0," + yScale(0) + ")")
@@ -426,4 +469,15 @@ function render_ranked_barplot(container_selector, data, config={}) {
       .duration(300)
       .style('opacity', 0);
   })
+
+  // Add label for y-axis, if one is provided
+  if (config['y_label']) {
+    svg.append('text')
+      .attr('transform', 'rotate(-90)')
+      .attr('x', -(margin.top + (height / 2)))
+      .attr('y', 0)
+      .attr('dy', '.75em')
+      .attr('text-anchor', 'middle')
+      .text(config['y_label'])
+    }
 }

@@ -2,8 +2,8 @@ import os
 from caendr.services.logger import logger
 from sqlalchemy import func 
 
-from caendr.models.datastore import DatabaseOperation, DbOp
-from caendr.models.sql import Homolog, StrainAnnotatedVariant, Strain, WormbaseGene, WormbaseGeneSummary
+from caendr.models.datastore import DatabaseOperation
+from caendr.models.sql import DbOp, Homolog, StrainAnnotatedVariant, Strain, WormbaseGene, WormbaseGeneSummary
 from caendr.services.tool_versions import GCR_REPO_NAME
 from caendr.services.cloud.datastore import get_ds_entity, query_ds_entities
 from caendr.utils.data import unique_id
