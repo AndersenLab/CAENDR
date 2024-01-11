@@ -68,10 +68,13 @@ def phenotype_database():
   """
   # Get the list of traits for non-bulk files
   try:
-    traits_non_bulk = query_phenotype_metadata()
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    query = query_phenotype_metadata()
+    pagination = query.paginate(page=page, per_page=per_page)
   except Exception as ex:
     logger.error(f'Failed to retrieve the list of traits: {ex}')
-    abort(500)
+    abort(500, description='Failed to retrieve the list of traits')
 
   return render_template('tools/phenotype_database/phenotypedb.html', **{
     # Page info
@@ -79,7 +82,9 @@ def phenotype_database():
     "tool_alt_parent_breadcrumb": { "title": "Tools", "url": url_for('tools.tools') },
 
     # Data
-    'traits': traits_non_bulk,
+    'traits': pagination.items,
+    'pagination': pagination,
+    'total_pages': pagination.pages
   })
 
 @phenotype_database_bp.route('/traits-zhang')

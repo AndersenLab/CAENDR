@@ -84,6 +84,39 @@
                 </tbody>
             </table>
         </div>
+        <nav class="d-flex justify-content-end" aria-label="Phenotype database table page navigation">
+            <ul class="pagination">
+                <li class="page-item">
+                    {% if pagination.has_prev %}
+                        <a class="page-link" href="{{ url_for('phenotype_database.phenotype_database', page=pagination.prev_num) }}">Previous</a>
+                    {% else %}
+                    <a class="page-link disabled" href="#" tabindex="-1">Previous</a>
+                </li>
+                {% endif %}
+                {% for page_num in pagination.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num == pagination.page %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">{{ page_num }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('phenotype_database.phenotype_database', page=page_num) }}">{{ page_num }}</a>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="#" tabindex="-1">...</a></li>
+                    {% endif %}
+                {% endfor %}
+                <li class="page-item">
+                {% if pagination.has_next %}
+                    <a class="page-link" href="{{ url_for('phenotype_database.phenotype_database', page=pagination.next_num) }}">Next</a>
+                {% else %}
+                    <a class="page-link disabled" href="#" tabindex="-1">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
     </div>
     <div class="tab-pane fade" id="nav-zheng" role="tabpanel" aria-labelledby="nav-profile-tab">
         <div class="table-responsive">
