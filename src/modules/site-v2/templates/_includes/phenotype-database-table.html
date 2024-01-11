@@ -1,3 +1,16 @@
+{% block custom_head %}
+<style>
+    #filter {
+        height: 40px;
+        overflow-x: auto;
+    }
+    #filter .btn {
+        font-size: 0.5rem;
+        padding: 0.25rem;
+    }
+
+</style>
+{% endblock %}
 <nav>
     <div class="nav nav-tabs border-0" id="nav-tab" role="tablist">
         <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button"
@@ -8,6 +21,10 @@
 </nav>
 <div class="tab-content py-2" id="nav-tabContent">
     <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+        <div class="py-2">
+            <p><i class="bi bi-filter"></i> Filter:</p>
+            <div class="d-flex m-2 p-1 w-50 border border-dark rounded" id="filter"></div>
+        </div>
         <div class="table-responsive">
             <table class="table accordion p-0 text-center" id="tableAccordion">
                 <caption class="visually-hidden">A list of phenotype traits.</caption>
@@ -24,7 +41,7 @@
                 </thead>
                 <tbody class="table-group-divider align-middle">
                     {% for tr in traits %}
-                    <tr class="py-3" data-species="{{tr.species}}">
+                    <tr class="py-3 dislayedRow" data-species="{{tr.species}}">
                         <th>
                             <a href="#" class="text-dark fw-normal" data-bs-toggle="collapse"
                                 data-bs-target="#collapse-{{loop.index}}" aria-expanded="false" aria-controls="collapse-{{loop.index}}"><i
@@ -34,16 +51,16 @@
                         <td>{{tr.description_short}}.</td>
                         <td>{{tr.source_lab}}</td>
                         <td>{{tr.created_on}}</td>
+                        {% if tr.tags is none %}
+                        <td></td>
+                        {% else %}
                         <td>
+                            {% for tag in tr.tags %}
                             <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
-                                role="button" href="#">long tag name</a>
-                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
-                                role="button" href="#">long tag name</a>
-                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
-                                role="button" href="#">long tag name</a>
-                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
-                                role="button" href="#">...</a>
+                                id="tag-{{loop.index}}" data-value="{{tag}}" role="button" href="#">{{tag}}</a>
+                            {% endfor %}
                         </td>
+                        {% endif %}
                         <td id="trait-data-{{tr.trait_name_caendr}}" class="optionsToolbar" data-description="{{tr.description_short}}" data-species="{{tr.species}}">
                             <div class="ps-3 pt-0">
                                 <a href="{{ analyze_link.replace('TRAIT_NAME', tr.trait_name_caendr).replace('TRAIT_SET', tr.dataset) }}">
@@ -170,26 +187,90 @@
 
     })
 
+    $("[id^='tag']").on('click', function() {
+        const v = $(this).data('value') 
+        $(`[data-value=${v}]`).addClass('disabled')
+        const btn = `<div>
+                        <div class="btn btn-sm btn-primary rounded-pill text-white fw-normal">${v}
+                        <i class="bi bi-x-circle text-white btn p-1 m-0" data-value="${v}" id="remove-${v}"></i>
+                        </div>
+                     </div>`
+        $('#filter').append(btn)
+        filterTable()
+    })
 
+    $(document).on('click', "[id^='remove']", function() {
+        $(this).parent().parent().remove()
+        const v = $(this).data('value') 
+        $(`[data-value=${v}]`).removeClass('disabled')
+        filterTable()
+    })
+
+    // The function filters table by selected tags from "Categories" field
+    function filterTable() {
+        const keywords = $('#filter i').map(function(){
+            return $(this).data('value')
+        }).get()
+        if (!keywords.length) {
+            $('#tableAccordion tbody>.dislayedRow').show()
+        } else {
+            $('#tableAccordion tbody>tr').hide().each(function() {
+            const val = $(this).find('.tagButton').data('value')
+            if (keywords.indexOf(val) !== -1) {
+                $(this).show()
+            }
+            })
+        }
+    }
 
     function fillOutModal(trait) {
         $('#offcanvas1Label').text(trait.trait_name_caendr)
-        $('#captureDate').text(formatDate(trait.capture_date))
-        $('#createdOn').text(formatDate(trait.created_on))
-        $('#modifiedOn').text(formatDate(trait.modified_on))
-        $('#species').text(trait.species.replace('c_', 'C. '))
-        $('#sourceLab').text(trait.source_lab)
-        $('#institution').text(trait.institution)
-        $('#wbgeneID').text(trait.wbgene_id)
-        $('#submittedBy').text(trait.submitted_by)
+        manageVal(trait.capture_date, '#captureDate', true)
+        manageVal(trait.created_on, '#createdOn', true)
+        manageVal(trait.modified_on, '#modifiedOn', true)
+        manageVal(trait.species, '#species')
+        manageVal(trait.wbgene_id, '#wbgeneID')
+        manageVal(trait.source_lab, '#sourceLab')
+        manageVal(trait.institution, '#institution')
+        manageVal(trait.submitted_by, '#submittedBy')
+        manageVal(trait.description_long, '#descriptionLong')
+        manageVal(trait.protocols, '#protocol', false, true)
+        manageVal(trait.publication, '#publication', false, true)
+        $('#tags').empty()
+        if (trait.tags !== null || (trait.tags && trait.tags.length)) {
+            $('#tags').prev().show()
+            $('#tags').append(displayTags(trait.tags))
+        } else {
+            $('#tags').prev().hide()
+        }
         $('#values > tbody').empty()
-        $('#values > tbody').append(populate_values(trait.phenotype_values))
+        if (trait.phenotype_values.length) {
+            $('#values').parent().prev().show()
+            $('#values').parent().show()
+            $('#values > tbody').append(populateValues(trait.phenotype_values))
+        } else {
+            $('#values').parent().prev().hide()
+            $('#values').parent().hide()
+        }
     }
 
-    function populate_values(arr) {
+    // The function populates phenotype values in the table inside the side bar.
+    function populateValues(arr) {
         let result = ''
         for (let i = 0; i < arr.length; i++) {
             result += `<tr><td>${arr[i].strain_name}</td><td>${arr[i].trait_value}</td></tr>`
+        }
+        return result
+    }
+
+    // The function populates Categories field in the side bar
+    function displayTags(arr) {
+        if (arr == null) return;
+        let result = ''
+        for (tag of arr) {
+            result += `<div class="col-4">
+                        <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton" role="button" href="#">${tag}</a>
+                       </div>`
         }
         return result
     }
@@ -199,5 +280,33 @@
         const date = new Date(d)
         return `${date.getFullYear()}/${date.getMonth()}/${date.getDate()}`
     }
+
+    // The function manages the fields in the side bar. 
+    // If a field has a value the field will be displayed, if not - it will be hidden
+    function manageVal(d, id, isDate=false, isLink=false) {
+        if (id === '#species') {
+            d = d[0].toUpperCase() + '. ' + d.slice(2)
+        }
+        const hasValue = !(d === null || d === 'N/A' || !d.length )
+        if (hasValue && isDate) {
+            $(id).parent().show()
+            $(id).text(formatDate(d))
+        } else if (!hasValue && isDate) {
+            $(id).parent().hide()
+        } else if (hasValue && isLink) {
+            $(id).prev().show()
+            $(`${id} > a`).text(d)
+        } else if (!hasValue && isLink) {
+            $(`${id} > a`).text('')
+            $(id).prev().hide()
+        } else if (hasValue && !isDate && !isLink) {
+            $(id).prev().show()
+            $(id).text(d)
+        } else if (!hasValue && !isDate && !isLink) {
+            $(id).text('')
+            $(id).prev().hide()
+        }
+    }
+
 </script>
 {% endblock %}
