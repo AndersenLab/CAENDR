@@ -253,5 +253,5 @@ class PhenotypeReport(ReportEntity, HashableEntity):
   @property
   def trait_names(self) -> Tuple[str]:
     if self['trait_2'] is None:
-      return self.trait_1_name,
-    return self.trait_1_name, self.trait_2_name
+      return self['trait_1_name'],
+    return self['trait_1_name'], self['trait_2_name']
