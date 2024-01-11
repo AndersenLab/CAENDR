@@ -98,6 +98,8 @@ def get_zhang_traits_json():
     search_value = request.args.get('search[value]', '').lower()
 
     query = PhenotypeMetadata.query
+    total_records = query.count()
+    
     if search_value:
       query = query.filter(
         or_(
@@ -115,14 +117,14 @@ def get_zhang_traits_json():
     data = query.offset(start).limit(length).from_self().\
       join(PhenotypeMetadata.phenotype_values).all()
     
-    json_data = convert_joined_query_tojson(data)
+    json_data = [ trait.to_json_with_values() for trait in data ]
     
-    total_records = query.count()
+    filtered_records = query.count()
 
     response_data = {
         "draw": draw,
         "recordsTotal": total_records,
-        "recordsFiltered": total_records,
+        "recordsFiltered": filtered_records,
         "data": json_data
     }
 
@@ -140,8 +142,7 @@ def get_traits_json():
   """
   try:
     traits_query = query_phenotype_metadata()
-    traits_json = [ trait.to_json() for trait in traits_query]
-    traits_json = convert_joined_query_tojson(traits_query)
+    traits_json = [ trait.to_json_with_values() for trait in traits_query]
   except Exception:
     traits_json = []
   return jsonify(traits_json)
@@ -309,15 +310,3 @@ def report(id):
 
     'JobStatus': JobStatus,
   })
-
-def convert_joined_query_tojson(q):
-  """
-    Convert PhenotypeMetadata query joined with PhenotypeDatabase to JSON
-  """
-  json_data = []
-  for trait in q:
-    phenotype_values = [ v.to_json() for v in trait.phenotype_values ]
-    json_trait = trait.to_json()
-    json_trait['phenotype_values'] = phenotype_values
-    json_data.append(json_trait)
-  return json_data
