@@ -130,8 +130,8 @@ try {
         y_label:       trait_label,
         tooltip_id:    'tooltip-single-barplot',
         tooltip_template: (d) => `
-            <p class="tooltip-head">Strain: ${d[1]}</p>
-            <p class="tooltip-body">Value: ${d[0]}</p>
+            <p class="tooltip-head"><b>${d[1]}</b></p>
+            <p class="tooltip-body">Value = ${d[0]}</p>
         `,
     });
 } catch (err) {
@@ -173,9 +173,9 @@ try {
         y_label:       `Mean centered ${trait_label_2}`,
         tooltip_id:    'tooltip-double-scatterplot',
         tooltip_template: (d, labels) => `
-            <p class="tooltip-head"><b>Strain: ${d[2]}</b></p>
-            <p class="tooltip-body">${labels[0]} = ${d[0]}</p>
-            <p class="tooltip-body">${labels[1]} = ${d[1]}</p>
+            <p class="tooltip-head"><b>${d[2]}</b></p>
+            <p class="tooltip-body">x = ${d[0]}</p>
+            <p class="tooltip-body">y = ${d[1]}</p>
         `,
     });
 } catch (err) {
