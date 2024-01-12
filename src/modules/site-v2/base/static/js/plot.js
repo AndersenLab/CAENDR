@@ -161,8 +161,8 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
     // Create a template function for the tooltip
     // By default, show label & value for each axis
     const tooltip_template = config['tooltip_template'] || ((d, labels) => `
-      <p>${labels[0]}: ${d[0]}</p>
-      <p>${labels[1]}: ${d[1]}</p>
+      <p class="tooltip-body">${labels[0]}: ${d[0]}</p>
+      <p class="tooltip-body">${labels[1]}: ${d[1]}</p>
     `);
 
     // Create the SVG object for the full graphic (scatterplot + histograms + margins)
@@ -390,7 +390,7 @@ function render_ranked_barplot(container_selector, data, config={}) {
   // Create a template function for the tooltip
   // By default, show label & value for each axis
   const tooltip_template = config['tooltip_template'] || ((d) => `
-    <p>${d[1]}: ${d[0]}</p>
+    <p class="tooltip-body">${d[1]}: ${d[0]}</p>
   `);
 
   // Sort data
