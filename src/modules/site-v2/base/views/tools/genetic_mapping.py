@@ -16,6 +16,7 @@ from caendr.models.error import (
     FileUploadError,
     ReportLookupError,
 )
+from caendr.models.job_pipeline import NemascanPipeline
 from caendr.models.status import JobStatus
 from caendr.utils.env import get_env_var
 from caendr.utils.local_files import LocalUploadFile
@@ -174,7 +175,7 @@ def report(id):
   # Fetch requested mapping report
   # Ensures the report exists and the user has permission to view it
   try:
-    job = lookup_report(NemascanReport.kind, id)
+    job: NemascanPipeline = lookup_report(NemascanReport.kind, id)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:
@@ -211,7 +212,7 @@ def report_fullscreen(id):
   # Fetch requested mapping report
   # Ensures the report exists and the user has permission to view it
   try:
-    job = lookup_report(NemascanReport.kind, id)
+    job: NemascanPipeline = lookup_report(NemascanReport.kind, id)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:
@@ -257,7 +258,7 @@ def results(id):
   # Fetch requested mapping report
   # Ensures the report exists and the user has permission to view it
   try:
-    job = lookup_report(NemascanReport.kind, id)
+    job: NemascanPipeline = lookup_report(NemascanReport.kind, id)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:

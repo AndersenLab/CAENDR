@@ -15,14 +15,16 @@ from caendr.api.phenotype import query_phenotype_metadata, get_trait
 
 from caendr.services.logger import logger
 
-from base.forms              import EmptyForm
-from base.utils.auth         import jwt_required, get_current_user, user_is_admin
-from base.utils.tools        import lookup_report, list_reports, try_submit
+from base.forms                 import EmptyForm
+from base.utils.auth            import jwt_required, get_current_user, user_is_admin
+from base.utils.tools           import lookup_report, list_reports, try_submit
 
-from caendr.models.sql       import PhenotypeMetadata
-from caendr.models.datastore import PhenotypeReport, Species, TraitFile
-from caendr.models.error     import ReportLookupError, EmptyReportDataError, EmptyReportResultsError, NotFoundError
-from caendr.models.status    import JobStatus
+from caendr.models.datastore    import PhenotypeReport, Species
+from caendr.models.error        import ReportLookupError, EmptyReportDataError, EmptyReportResultsError, NotFoundError
+from caendr.models.job_pipeline import PhenotypePipeline
+from caendr.models.status       import JobStatus
+from caendr.models.sql          import PhenotypeMetadata
+from caendr.models.trait        import Trait
 
 
 
@@ -158,7 +160,6 @@ def submit_start():
     # Page info
     'title': 'Phenotype Analysis',
     'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
-    'initial_trait': request.args.get('trait'),
   })
 
 
@@ -166,25 +167,36 @@ def submit_start():
 @phenotype_database_bp.route('/submit/two', methods=['GET'], endpoint='submit_two')
 def submit_traits():
 
-  # Check for a URL var "trait" and use to lookup an initial trait
+  # Check for URL vars specifying an initial trait
+  # These will be inherited from submit_start
   initial_trait_name = request.args.get('trait')
+  initial_trait_set  = request.args.get('dataset')
+
+  # Try looking up the specified trait
   if initial_trait_name:
     try:
-      initial_trait = TraitFile.get_ds(initial_trait_name, silent=False)
+      initial_trait = Trait(dataset=initial_trait_set, trait_name=initial_trait_name)
     except NotFoundError:
       flash('That trait could not be found.', 'danger')
       initial_trait = None
   else:
     initial_trait = None
 
-  # Use the endpoint name (see route decorator above) to pick the correct template name
-  template_name = request.endpoint.split('.')[-1].replace('_', '-')
+  # Get the full list of traits for non-bulk files
+  try:
+    trait_list = query_phenotype_metadata()
+  except Exception as ex:
+    logger.error(f'Failed to retrieve the list of traits: {ex}')
+    abort(500)
 
-  return render_template(f'tools/phenotype_database/{template_name}.html', **{
+  return render_template(f'tools/phenotype_database/submit-traits.html', **{
     # Page info
     'title': 'Phenotype Analysis',
     'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
     'form': EmptyForm(request.form),
+
+    # Use the endpoint name (see route decorator above) to determine how many trait selectors to render
+    'two_traits': request.endpoint.split('.')[-1] == 'submit_two',
 
     'species_list': Species.all(),
     'species_fields': [
@@ -192,6 +204,7 @@ def submit_traits():
     ],
 
     'initial_trait': initial_trait,
+    'traits': trait_list,
   })
 
 
@@ -202,11 +215,14 @@ def submit():
   # Read & clean fields from JSON data
   data = {
     field: bleach.clean(request.json.get(field))
-      for field in {'label', 'species', 'trait_1'}
+      for field in {'label', 'species', 'trait_1', 'trait_1_dataset'}
   }
 
-  trait_2 = request.json.get('trait_2')
-  data['trait_2'] = bleach.clean(trait_2) if trait_2 is not None else None
+  # Read & clean values for trait 2, if given
+  trait_2         = request.json.get('trait_2')
+  trait_2_dataset = request.json.get('trait_2_dataset')
+  data['trait_2']         = bleach.clean(trait_2)         if trait_2         is not None else None
+  data['trait_2_dataset'] = bleach.clean(trait_2_dataset) if trait_2_dataset is not None else None
 
   # If user is admin, allow them to bypass cache with URL variable
   no_cache = bool(user_is_admin() and request.args.get("nocache", False))
@@ -271,7 +287,7 @@ def report(id):
   # Fetch requested phenotype report
   # Ensures the report exists and the user has permission to view it
   try:
-    job = lookup_report(PhenotypeReport.kind, id)
+    job: PhenotypePipeline = lookup_report(PhenotypeReport.kind, id)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:

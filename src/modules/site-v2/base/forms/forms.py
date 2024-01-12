@@ -336,16 +336,3 @@ class MappingSubmissionForm(Form):
 
 class StrainListForm(Form):
   species = SpeciesSelectField(validators=[Required()])
-
-
-
-class PhenotypeComparisonForm(Form):
-  TRAIT_CHOICES = [
-    ('', ''),
-    *[ (tf.name, tf['trait_name_caendr']) for tf in TraitFile.query_ds() if tf.is_public and not tf.is_bulk_file ],
-  ]
-
-  species = SpeciesSelectField(validators=[Required()])
-  label   = TextAreaField('Description', [Length(min=0, max=1000)])
-  trait_1 = SelectField('Trait 1', choices=TRAIT_CHOICES, validators=[Required()])
-  trait_2 = SelectField('Trait 2', choices=TRAIT_CHOICES, validators=[Required()])

@@ -10,6 +10,7 @@ from base.utils.tools import lookup_report, list_reports, try_submit
 from caendr.models.datastore.browser_track import BrowserTrackDefault
 from caendr.models.datastore import Species, IndelPrimerReport, DatasetRelease
 from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupError, EmptyReportDataError, EmptyReportResultsError
+from caendr.models.job_pipeline import IndelFinderPipeline
 from caendr.models.status import JobStatus
 from caendr.services.dataset_release import get_dataset_release
 from caendr.utils.bio import parse_chrom_interval
@@ -256,7 +257,7 @@ def report(id, file_ext=None):
     # Fetch requested primer report
     # Ensures the report exists and the user has permission to view it
     try:
-      job = lookup_report(IndelPrimerReport.kind, id)
+      job: IndelFinderPipeline = lookup_report(IndelPrimerReport.kind, id)
 
     # If the report lookup request is invalid, show an error message
     except ReportLookupError as ex:

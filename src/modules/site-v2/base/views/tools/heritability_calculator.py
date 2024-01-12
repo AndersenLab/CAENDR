@@ -26,6 +26,7 @@ from caendr.models.error import (
     ReportLookupError,
 )
 from caendr.models.datastore import Species, HeritabilityReport
+from caendr.models.job_pipeline import HeritabilityPipeline
 from caendr.models.status import JobStatus
 from caendr.api.strain import get_strains
 from caendr.utils.data import unique_id, get_object_hash
@@ -230,7 +231,7 @@ def report(id):
   # Fetch requested heritability report
   # Ensures the report exists and the user has permission to view it
   try:
-    job = lookup_report(HeritabilityReport.kind, id, user=user)
+    job: HeritabilityPipeline = lookup_report(HeritabilityReport.kind, id, user=user)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:
