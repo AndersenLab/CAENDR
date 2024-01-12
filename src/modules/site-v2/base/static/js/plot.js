@@ -160,6 +160,7 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
 
     // Create a template function for the tooltip
     // By default, show label & value for each axis
+    const tooltip_id       = config['tooltip_id']       || null;
     const tooltip_template = config['tooltip_template'] || ((d, labels) => `
       <p class="tooltip-body">${labels[0]}: ${d[0]}</p>
       <p class="tooltip-body">${labels[1]}: ${d[1]}</p>
@@ -227,6 +228,11 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
       .append("div")
       .attr("class", "tooltip")
       .style("opacity", 0);
+
+    // If an ID is provided for the tooltip, add it
+    if (tooltip_id) {
+      tooltip.attr("id", tooltip_id);
+    }
 
     // Add mouseover listener for individual dots
     dots.on('mouseover', function(d) {
@@ -389,6 +395,7 @@ function render_ranked_barplot(container_selector, data, config={}) {
 
   // Create a template function for the tooltip
   // By default, show label & value for each axis
+  const tooltip_id       = config['tooltip_id']       || null;
   const tooltip_template = config['tooltip_template'] || ((d) => `
     <p class="tooltip-body">${d[1]}: ${d[0]}</p>
   `);
@@ -452,6 +459,11 @@ function render_ranked_barplot(container_selector, data, config={}) {
     .append("div")
     .attr("class", "tooltip")
     .style("opacity", 0);
+
+  // If an ID is provided for the tooltip, add it
+  if (tooltip_id) {
+    tooltip.attr("id", tooltip_id);
+  }
 
   // Add mouseover listener for individual bars -- show the tooltip
   bars.on('mouseover', function(d) {

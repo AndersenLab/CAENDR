@@ -112,6 +112,7 @@ try {
         fill_color:    '#0719BC',
         bins_per_tick: 4,
         x_label:       trait_label,
+        tooltip_id:    'tooltip-single-histogram',
         tooltip_template: (d, labels) => `
             <p class="tooltip-head"><b>Strain: ${d[2]}</b></p>
             <p class="tooltip-body">${labels[0]}: ${d[0]}</p>
@@ -127,6 +128,7 @@ try {
         height:        400,
         fill_color:    '#0719BC',
         y_label:       trait_label,
+        tooltip_id:    'tooltip-single-barplot',
         tooltip_template: (d) => `
             <p class="tooltip-head">Strain: ${d[1]}</p>
             <p class="tooltip-body">Value: ${d[0]}</p>
@@ -167,6 +169,7 @@ try {
         bins_per_tick: 2,
         x_label:       `Mean centered ${trait_label_1}`,
         y_label:       `Mean centered ${trait_label_2}`,
+        tooltip_id:    'tooltip-double-scatterplot',
         tooltip_template: (d, labels) => `
             <p class="tooltip-head"><b>Strain: ${d[2]}</b></p>
             <p class="tooltip-body">${labels[0]} = ${d[0]}</p>
