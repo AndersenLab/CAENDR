@@ -83,6 +83,8 @@
 
 
 {% block script %}
+{% from "_includes/macros.html" import label_string_units %}
+
 <script src="{{ url_for('static', filename='js/plot.js') }}"></script>
 
 <script type="module">
@@ -92,11 +94,7 @@ const data = {{ result.trait_values|tojson }};
 {%- if data.num_traits == 1 %}
 // Render chart(s) for one trait
 
-{%- if report['trait_1']['units'] %}
-const trait_label = "{{ data.trait_names[0] }} ({{ report['trait_1']['units'] }})";
-{%- else %}
-const trait_label = "{{ data.trait_names[0] }}";
-{%- endif %}
+const trait_label = {{ label_string_units(data.trait_names[0], report['trait_1']['units']) }};
 
 try {
     render_histogram('#phenotype-chart', data, {
@@ -132,17 +130,8 @@ try {
 {%- else %}
 // Render chart(s) for two traits
 
-{%- if report['trait_1']['units'] %}
-const trait_label_1 = "{{ data.trait_names[0] }} ({{ report['trait_1']['units'] }})";
-{%- else %}
-const trait_label_1 = "{{ data.trait_names[0] }}";
-{%- endif %}
-
-{%- if report['trait_2']['units'] %}
-const trait_label_2 = "{{ data.trait_names[1] }} ({{ report['trait_2']['units'] }})";
-{%- else %}
-const trait_label_2 = "{{ data.trait_names[1] }}";
-{%- endif %}
+const trait_label_1 = {{ label_string_units(data.trait_names[0], report['trait_1']['units']) }};
+const trait_label_2 = {{ label_string_units(data.trait_names[1], report['trait_2']['units']) }};
 
 // Compute the mean values for each trait
 const trait_1_mean = d3.mean(data.map(d => d[0]))
