@@ -1,12 +1,8 @@
 {% block custom_head %}
 <style>
-    #filter {
+    #traitsFilter {
         height: 40px;
         overflow-x: auto;
-    }
-    #filter .btn {
-        font-size: 0.5rem;
-        padding: 0.25rem;
     }
 
 </style>
@@ -21,9 +17,25 @@
 </nav>
 <div class="tab-content py-2" id="nav-tabContent">
     <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
-        <div class="py-2">
-            <p><i class="bi bi-filter"></i> Filter:</p>
-            <div class="d-flex m-2 p-1 w-50 border border-dark rounded" id="filter"></div>
+        <div class="d-flex justify-content-between">
+            <div class="col-12 col-md-3 mx-1 mb-3">
+                <label for="traitsFilter" class="form-label"><i class="bi bi-filter"></i> Filter:</label>
+                <div class="dropdown">
+                    <div class="border border-dark form-control d-flex justify-content-end" id="traitsFilter" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <form class="dropdown-menu w-100" role="menu">
+                        <div class="dropdown-item form-group">
+                            <input type="checkbox" class="custom-control-input" id="option1">
+                            <label class="custom-check-label" for="option1">Option 1</label>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <form>
+                <label for="traits-search">Search:</label>
+                <input class="form-control" type="text" id="traits-search">
+            </form>
         </div>
         <div class="table-responsive">
             <table class="table accordion p-0 text-center" id="tableAccordion">
@@ -225,7 +237,7 @@
                         <i class="bi bi-x-circle text-white btn p-1 m-0" data-value="${v}" id="remove-${v}"></i>
                         </div>
                      </div>`
-        $('#filter').append(btn)
+        $('#traitsFilter').append(btn)
         filterTable()
     })
 
@@ -238,7 +250,7 @@
 
     // The function filters table by selected tags from "Categories" field
     function filterTable() {
-        const keywords = $('#filter i').map(function(){
+        const keywords = $('#traitsFilter i').map(function(){
             return $(this).data('value')
         }).get()
         if (!keywords.length) {
