@@ -30,6 +30,13 @@
             <h2 class="h3 text-center mb-5">Trait Information</h2>
 
             {%- if data.num_traits > 1 %}
+            <p><i>
+            The data were mean centered and scaled to have a standard deviation of 1.
+            These operations do not affect correlation tests and make the data easier to evaluate in a plot.
+            </i></p>
+            {%- endif %}
+
+            {%- if data.num_traits > 1 %}
             <h3 class="h4 text-dark">Trait 1</h3>
             {%- endif %}
             <p><strong>Name:</strong></p>
@@ -140,8 +147,8 @@ try {
         height:        800,
         fill_color:    '#0719BC',
         bins_per_tick: 2,
-        x_label:       `Mean centered ${trait_label_1}`,
-        y_label:       `Mean centered ${trait_label_2}`,
+        x_label:       `${trait_label_1}`,
+        y_label:       `${trait_label_2}`,
         tooltip_template: (d, labels) => `
             <p><b>Strain: ${d[2]}</b></p>
             <p>${labels[0]}: ${d[0]}</p>
