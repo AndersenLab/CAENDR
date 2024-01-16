@@ -2,6 +2,7 @@ import yaml
 import hashlib
 import uuid
 import string
+import numpy  as np
 import pandas as pd
 
 from collections import Counter
@@ -197,3 +198,13 @@ def keyset_intersection(*dicts):
   for d in dicts[1:]:
     overlap = overlap.intersection(d.keys())
   return overlap
+
+
+def center_and_scale_data(data):
+  '''
+    Mean-center an array of data and scale it by its standard deviation.
+  '''
+  data   = np.array(data)
+  mean   = np.mean(data)
+  stddev = np.std(data)
+  return (data - mean) / stddev

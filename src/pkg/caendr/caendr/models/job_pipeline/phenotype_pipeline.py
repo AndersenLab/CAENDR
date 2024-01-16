@@ -8,7 +8,7 @@ from caendr.models.datastore       import PhenotypeReport
 from caendr.models.error           import DataValidationError, EmptyReportDataError, EmptyReportResultsError
 from caendr.models.status          import JobStatus
 from caendr.models.trait           import Trait
-from caendr.utils.data             import dataframe_cols_to_dict, get_object_hash, keyset_intersection
+from caendr.utils.data             import dataframe_cols_to_dict, get_object_hash, keyset_intersection, center_and_scale_data
 
 
 
@@ -128,6 +128,11 @@ class PhenotypePipeline(JobPipeline):
     data_vals = tuple([
       [ d[strain] for strain in data_keys ] for d in data_dicts
     ])
+
+    # Pre-processing: mean-center and scale the data
+    data_vals = tuple(
+      center_and_scale_data(d) for d in data_vals
+    )
 
     # Zip the trait values together with the strain names, to get the full dataset array
     data_tuples = list(zip( *data_vals, data_keys ))

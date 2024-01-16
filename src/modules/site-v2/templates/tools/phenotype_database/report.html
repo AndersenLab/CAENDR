@@ -133,15 +133,8 @@ try {
 const trait_label_1 = {{ label_string_units(data.trait_names[0], report['trait_1']['units']) }};
 const trait_label_2 = {{ label_string_units(data.trait_names[1], report['trait_2']['units']) }};
 
-// Compute the mean values for each trait
-const trait_1_mean = d3.mean(data.map(d => d[0]))
-const trait_2_mean = d3.mean(data.map(d => d[1]))
-
-// Mean-center the data by subtracting the corresponding mean from each trait value
-const data_mean_centered = data.map( d => [ d[0] - trait_1_mean, d[1] - trait_2_mean, ...d.slice(2) ] )
-
 try {
-    render_scatterplot_histograms('#phenotype-chart', data_mean_centered, {
+    render_scatterplot_histograms('#phenotype-chart', data, {
         hist_height:   60,
         width:         800,
         height:        800,
