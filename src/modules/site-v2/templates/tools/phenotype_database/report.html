@@ -108,7 +108,7 @@ try {
         width:         1200,
         height:        300,
         fill_color:    '#0719BC',
-        bins_per_tick: 4,
+        bins_per_tick: 2,
         x_label:       trait_label,
         tooltip_template: (d, labels) => `
             <p><b>Strain: ${d[2]}</b></p>
@@ -146,7 +146,7 @@ try {
         width:         800,
         height:        800,
         fill_color:    '#0719BC',
-        bins_per_tick: 2,
+        bin_width:     0.2,
         x_label:       `${trait_label_1}`,
         y_label:       `${trait_label_2}`,
         tooltip_template: (d, labels) => `

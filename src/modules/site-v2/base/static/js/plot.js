@@ -54,7 +54,15 @@ function add_histogram_along_axis(d, axis, data, target, config={}) {
   const position     = config['position'] || [0, 0];
   const graph_height = config['height']   || 60;
   const color        = config['color']    || 'black';
-  const num_bins     = config['num_bins'] || ((axis.ticks().length - 1) * (config['bins_per_tick'] || 1));
+
+  // Compute the approximate number of bins there should be
+  let num_bins;
+  if (config['bins_per_tick']) {
+    num_bins = (axis.ticks().length - 1) * config['bins_per_tick']
+  } else {
+    const bin_width = config['bin_width'] || ((axis.ticks().length - 1) * 2)
+    num_bins = (axis.domain()[1] - axis.domain()[0]) / bin_width;
+  }
 
   // Get the x/y value for the provided dimension, plus the relative directions of the histogram
   // In this case, the "width" is along the main axis, and the "height" is the direction of the individual bars
@@ -153,7 +161,6 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
     const height = (config['height'] || 400) - margin.top - margin.bottom;
 
     // Read values from config, filling in default values when not supplied
-    const bins_per_tick = config['bins_per_tick'] || 1;
     const circle_radius = config['circle_radius'] || 4;
     const fill_color    = config['fill_color']    || 'black';
     const stroke_color  = config['stroke_color']  || 'none';
@@ -175,9 +182,12 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
       .attr("transform", `translate(${ margin.left }, ${ margin.top + hist_height })`);
 
     // Create mapping functions from data set to coordinates in the scatterplot
-    // Add a buffer of 5 in either direction so that dots aren't directly on graph edge
-    const x = d3.scaleLinear().domain(buffered_extent(data, 5, n => n[0])).range([0, width]).nice();
-    const y = d3.scaleLinear().domain(buffered_extent(data, 5, n => n[1])).range([height, 0]).nice();
+    // Add a buffer of 0.1 in either direction so that dots aren't directly on graph edge
+    //   The buffer has to be at least 0.1 bc of a quirk of the bin widths:
+    //   the target width is 0.2, but the axis will round its ticks to the nearest 0.5,
+    //   meaning there may be a gap of 0.1 on either end of either axis
+    const x = d3.scaleLinear().domain(buffered_extent(data, 0.1, n => n[0])).range([0, width]).nice();
+    const y = d3.scaleLinear().domain(buffered_extent(data, 0.1, n => n[1])).range([height, 0]).nice();
 
     // Add the x-axis
     g.append("g")
@@ -260,7 +270,8 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
     const h_config = {
       height: hist_height,
       color: fill_color,
-      bins_per_tick,
+      bins_per_tick: config['bins_per_tick'],
+      bin_width:     config['bin_width'],
     }
 
     // Add the two histograms
