@@ -13,8 +13,17 @@
         height: auto;
         border: 1px solid black;
         pointer-events: none;
-        line-height: 1px;
         background-color: white;
+    }
+
+    .tooltip p {
+        margin-bottom: 0;
+    }
+
+    .tooltip .tooltip-head {}
+
+    .tooltip .tooltip-body {
+        padding: 0 4px;
     }
 </style>
 
@@ -105,9 +114,10 @@ try {
         fill_color:    '#0719BC',
         bins_per_tick: 4,
         x_label:       trait_label,
+        tooltip_id:    'tooltip-single-histogram',
         tooltip_template: (d, labels) => `
-            <p><b>Strain: ${d[2]}</b></p>
-            <p>${labels[0]}: ${d[0]}</p>
+            <p class="tooltip-head"><b>Strain: ${d[2]}</b></p>
+            <p class="tooltip-body">${labels[0]}: ${d[0]}</p>
         `,
     });
 } catch (err) {
@@ -120,9 +130,10 @@ try {
         height:        400,
         fill_color:    '#0719BC',
         y_label:       trait_label,
+        tooltip_id:    'tooltip-single-barplot',
         tooltip_template: (d) => `
-            <p>Strain: ${d[1]}</p>
-            <p>Value: ${d[0]}</p>
+            <p class="tooltip-head"><b>${d[1]}</b></p>
+            <p class="tooltip-body">Value = ${d[0]}</p>
         `,
     });
 } catch (err) {
@@ -157,13 +168,16 @@ try {
         width:         800,
         height:        800,
         fill_color:    '#0719BC',
+        opacity:       0.75,
+        opacity_hover: 1,
         bins_per_tick: 2,
         x_label:       `Mean centered ${trait_label_1}`,
         y_label:       `Mean centered ${trait_label_2}`,
+        tooltip_id:    'tooltip-double-scatterplot',
         tooltip_template: (d, labels) => `
-            <p><b>Strain: ${d[2]}</b></p>
-            <p>${labels[0]}: ${d[0]}</p>
-            <p>${labels[1]}: ${d[1]}</p>
+            <p class="tooltip-head"><b>${d[2]}</b></p>
+            <p class="tooltip-body">x = ${d[0]}</p>
+            <p class="tooltip-body">y = ${d[1]}</p>
         `,
     });
 } catch (err) {
