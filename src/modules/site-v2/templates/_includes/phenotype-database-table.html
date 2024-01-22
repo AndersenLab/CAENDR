@@ -56,8 +56,7 @@
                         {% else %}
                         <td>
                             {% for tag in tr.tags %}
-                            <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton"
-                                id="tag-{{loop.index}}" data-value="{{tag}}" role="button" href="#">{{tag}}</a>
+                            <div class="mb-3"><a id="tag-{{loop.index}}" data-value="{{tag}}" href="#">{{tag}}</a></div>
                             {% endfor %}
                         </td>
                         {% endif %}
@@ -191,8 +190,8 @@
         const v = $(this).data('value') 
         $(`[data-value=${v}]`).addClass('disabled')
         const btn = `<div>
-                        <div class="btn btn-sm btn-primary rounded-pill text-white fw-normal">${v}
-                        <i class="bi bi-x-circle text-white btn p-1 m-0" data-value="${v}" id="remove-${v}"></i>
+                        <div>${v}
+                        <i class="bi bi-x-circle-fill text-muted btn p-1 m-0" data-value="${v}" id="remove-${v}"></i>
                         </div>
                      </div>`
         $('#filter').append(btn)
