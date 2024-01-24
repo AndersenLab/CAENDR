@@ -2,7 +2,7 @@
 
 Please use the citation below.
 
-<div class="card mb-3" style="max-width: 540px;">
+<div class="card mb-3">
   <div class="row g-2">
     <div class="col-md-4">
       <a href="https://andersenlab.org/publications/2016CookOxford.pdf" target="_blank">
@@ -11,11 +11,9 @@ Please use the citation below.
     </div>
     <div class="col-md-8 ps-3">
       <div class="card-body">
-        <h3 class="h5 card-title">CeNDR, the <em> Caenorhabditis elegans</em> natural diversity resource</h3>
+        <h3 class="h5 card-title">CaeNDR, the <em>Caenorhabditis</em> Natural Diversity Resource</h3>
         <p class="card-text">
-        Cook DE, Zdraljevic S, Roberts JP, Andersen EC
-                <br>                
-                (2016 Oct 3) <em>Nucleic Acids Research</em> [ <a href="https://nar.oxfordjournals.org/content/early/2016/10/03/nar.gkw893.full">Article on Nucleic Acids Research</a> | <a title="Document Object Identifier; Takes you to the Journal Website" href="https://dx.doi.org/10.1093/nar/gkw893" target="_blank">DOI</a> | <a href="https://www.ncbi.nlm.nih.gov/pubmed/27701074" target="_blank">Pubmed</a> ]
+          {% include "_includes/cite-caendr.html" %}
         </p>
       </div>
     </div>
@@ -23,17 +21,8 @@ Please use the citation below.
 </div>
 Or use this bibtex entry
 <pre><code>
-@article{cook2016cendr,
-  title={CeNDR, the Caenorhabditis elegans Natural Diversity Resource},
-  author={Cook, Daniel E and Zdraljevic, Stefan and Roberts, Joshua P and Andersen, Erik C},
-  journal={Nucleic acids research},
-  volume={45},
-  number={D1},
-  pages={D650--D657},
-  year={2016},
-  publisher={Oxford University Press}
-  </code>
-}</pre>
+{% include "_includes/cite-caendr.bibtex" %}
+</code></pre>
 
 ## What are hyper-divergent regions? How should I use variants that fall within these regions? 
 

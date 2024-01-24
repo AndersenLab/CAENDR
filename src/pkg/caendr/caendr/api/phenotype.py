@@ -6,7 +6,6 @@ from caendr.models.sql import PhenotypeMetadata
 from caendr.services.cloud.postgresql import rollback_on_error
 
 
-@rollback_on_error
 def query_phenotype_metadata(is_bulk_file=False, include_values=False, species: str = None):
     """
       Returns the list of traits with the corresponding metadata.
@@ -39,7 +38,7 @@ def query_phenotype_metadata(is_bulk_file=False, include_values=False, species: 
 
     return query
 
-@rollback_on_error
+
 def get_all_traits_metadata():
     """
       Returns metadata for all traits

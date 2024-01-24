@@ -13,8 +13,17 @@
         height: auto;
         border: 1px solid black;
         pointer-events: none;
-        line-height: 1px;
         background-color: white;
+    }
+
+    .tooltip p {
+        margin-bottom: 0;
+    }
+
+    .tooltip .tooltip-head {}
+
+    .tooltip .tooltip-body {
+        padding: 0 4px;
     }
 </style>
 
@@ -33,22 +42,20 @@
             <h3 class="h4 text-dark">Trait 1</h3>
             {%- endif %}
             <p><strong>Name:</strong></p>
-            <p>{{ report['trait_1']['trait_name_caendr'] }}</p>
+            <p>{{ report['trait_1_name'] }}</p>
             <p><strong>Description</strong></p>
             <p>{{ report['trait_1']['description_short'] }}</p>
 
             {%- if data.num_traits > 1 %}
             <h3 class="h4 text-dark">Trait 2</h3>
             <p><strong>Name:</strong></p>
-            <p>{{ report['trait_2']['trait_name_caendr'] }}</p>
+            <p>{{ report['trait_2_name'] }}</p>
             <p><strong>Description</strong></p>
             <p>{{ report['trait_2']['description_short'] }}</p>
             <h3 class="h4 text-dark">Correlation</h3>
             <p>{{ result.correlation|round(4) }}</p>
-            <!--
             <h3 class="h4 text-dark">P-Value</h3>
             <p>{{ result.p_value|round(4) }}</p>
-            -->
             {%- endif %}
         </div>
         <!-- /Input Card -->
@@ -87,49 +94,95 @@
 {% block script %}
 <script src="{{ url_for('static', filename='js/plot.js') }}"></script>
 
-<script>
+<script type="module">
 
 const data = {{ result.trait_values|tojson }};
 
 {%- if data.num_traits == 1 %}
-// Render chart for one trait
-render_histogram('#phenotype-chart', data, {
-    width:         1200,
-    height:        300,
-    fill_color:    '#0719BC',
-    bins_per_tick: 4,
-    x_label:       '{{ data.trait_names[0] }}',
-    tooltip_template: (d, labels) => `
-        <p><b>Strain: ${d[2]}</b></p>
-        <p>${labels[0]}: ${d[0]}</p>
-    `,
-});
-render_ranked_barplot('#phenotype-chart', data, {
-    width:         1200,
-    height:        300,
-    fill_color:    '#0719BC',
-    tooltip_template: (d) => `
-        <p>Strain: ${d[1]}</p>
-        <p>Value: ${d[0]}</p>
-    `,
-});
+// Render chart(s) for one trait
+
+{%- if report['trait_1']['units'] %}
+const trait_label = "{{ data.trait_names[0] }} ({{ report['trait_1']['units'] }})";
+{%- else %}
+const trait_label = "{{ data.trait_names[0] }}";
+{%- endif %}
+
+try {
+    render_histogram('#phenotype-chart', data, {
+        width:         1200,
+        height:        300,
+        fill_color:    '#0719BC',
+        bins_per_tick: 4,
+        x_label:       trait_label,
+        tooltip_id:    'tooltip-single-histogram',
+        tooltip_template: (d, labels) => `
+            <p class="tooltip-head"><b>Strain: ${d[2]}</b></p>
+            <p class="tooltip-body">${labels[0]}: ${d[0]}</p>
+        `,
+    });
+} catch (err) {
+    console.error(`Could not construct histogram. ${err}`)
+}
+
+try {
+    render_ranked_barplot('#phenotype-chart', data, {
+        width:         1200,
+        height:        400,
+        fill_color:    '#0719BC',
+        y_label:       trait_label,
+        tooltip_id:    'tooltip-single-barplot',
+        tooltip_template: (d) => `
+            <p class="tooltip-head"><b>${d[1]}</b></p>
+            <p class="tooltip-body">Value = ${d[0]}</p>
+        `,
+    });
+} catch (err) {
+    console.error(`Could not construct ranked bar plot. ${err}`)
+}
 
 {%- else %}
 // Render chart(s) for two traits
-render_scatterplot_histograms('#phenotype-chart', data, {
-    hist_height:   60,
-    width:         600,
-    height:        600,
-    fill_color:    '#0719BC',
-    bins_per_tick: 2,
-    x_label:       '{{ data.trait_names[0] }}',
-    y_label:       '{{ data.trait_names[1] }}',
-    tooltip_template: (d, labels) => `
-        <p><b>Strain: ${d[2]}</b></p>
-        <p>${labels[0]}: ${d[0]}</p>
-        <p>${labels[1]}: ${d[1]}</p>
-    `,
-});
+
+{%- if report['trait_1']['units'] %}
+const trait_label_1 = "{{ data.trait_names[0] }} ({{ report['trait_1']['units'] }})";
+{%- else %}
+const trait_label_1 = "{{ data.trait_names[0] }}";
+{%- endif %}
+
+{%- if report['trait_2']['units'] %}
+const trait_label_2 = "{{ data.trait_names[1] }} ({{ report['trait_2']['units'] }})";
+{%- else %}
+const trait_label_2 = "{{ data.trait_names[1] }}";
+{%- endif %}
+
+// Compute the mean values for each trait
+const trait_1_mean = d3.mean(data.map(d => d[0]))
+const trait_2_mean = d3.mean(data.map(d => d[1]))
+
+// Mean-center the data by subtracting the corresponding mean from each trait value
+const data_mean_centered = data.map( d => [ d[0] - trait_1_mean, d[1] - trait_2_mean, ...d.slice(2) ] )
+
+try {
+    render_scatterplot_histograms('#phenotype-chart', data_mean_centered, {
+        hist_height:   60,
+        width:         800,
+        height:        800,
+        fill_color:    '#0719BC',
+        opacity:       0.75,
+        opacity_hover: 1,
+        bins_per_tick: 2,
+        x_label:       `Mean centered ${trait_label_1}`,
+        y_label:       `Mean centered ${trait_label_2}`,
+        tooltip_id:    'tooltip-double-scatterplot',
+        tooltip_template: (d, labels) => `
+            <p class="tooltip-head"><b>${d[2]}</b></p>
+            <p class="tooltip-body">x = ${d[0]}</p>
+            <p class="tooltip-body">y = ${d[1]}</p>
+        `,
+    });
+} catch (err) {
+    console.error(`Could not construct scatterplot. ${err}`)
+}
 {%- endif %}
 
 </script>

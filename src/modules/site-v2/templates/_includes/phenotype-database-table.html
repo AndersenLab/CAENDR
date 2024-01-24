@@ -11,8 +11,8 @@
     <div class="nav nav-tabs border-0" id="nav-tab" role="tablist">
         <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button"
             role="tab" aria-controls="nav-home" aria-selected="true">Traits</button>
-        <button class="nav-link" id="nav-zheng-tab" data-bs-toggle="tab" data-bs-target="#nav-zheng" type="button"
-            role="tab" aria-controls="nav-zheng" aria-selected="false">Zheng et al. Traits</button>
+        <button class="nav-link" id="nav-zhang-tab" data-bs-toggle="tab" data-bs-target="#nav-zhang" type="button"
+            role="tab" aria-controls="nav-zhang" aria-selected="false">Zhang et al. Traits</button>
     </div>
 </nav>
 <div class="tab-content py-2" id="nav-tabContent">
@@ -56,7 +56,7 @@
                 </thead>
                 <tbody class="table-group-divider align-middle">
                     {% for tr in traits %}
-                    <tr class="py-3 dislayedRow">
+                    <tr class="py-3 dislayedRow" data-species="{{tr.species}}">
                         <th>
                             <a href="#" class="text-dark fw-normal" data-bs-toggle="collapse"
                                 data-bs-target="#collapse-{{loop.index}}" aria-expanded="false" aria-controls="collapse-{{loop.index}}"><i
@@ -67,18 +67,21 @@
                         <td>{{tr.source_lab}}</td>
                         <td>{{tr.created_on}}</td>
                         {% if tr.tags is none %}
-                            <td></td>
+                        <td></td>
                         {% else %}
                         {% set categories = tr.tags.split(', ') %}
-                            <td class="d-flex flex-column">
+                            <td>
                                 {% for tag in categories %}
                                 <div class="mb-3"><a id="tag-{{loop.index}}" data-value="{{tag}}" href="#">{{tag|replace('/', ' • ')}}</a></div>
                                 {% endfor %}
                             </td>
                         {% endif %}
-                        <td class="optionsToolbar">
-                            <div class="ps-3 pt-0"><a href="{{url_for("phenotype_database.submit_start", trait=tr.trait_name_caendr)}}"><i class="bi bi-arrow-right-circle-fill"
-                                        aria-hidden="true"></i>Analyze</a></div>
+                        <td id="trait-data-{{tr.trait_name_caendr}}" class="optionsToolbar" data-description="{{tr.description_short}}" data-species="{{tr.species}}">
+                            <div class="ps-3 pt-0">
+                                <a href="{{ analyze_link.replace('TRAIT_NAME', tr.trait_name_caendr).replace('TRAIT_SET', tr.dataset) }}">
+                                    <i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     <tr id="collapse-{{loop.index}}" class="text-start accordion-collapse collapse"
@@ -133,10 +136,10 @@
             </ul>
         </nav>
     </div>
-    <div class="tab-pane fade" id="nav-zheng" role="tabpanel" aria-labelledby="nav-profile-tab">
+    <div class="tab-pane fade" id="nav-zhang" role="tabpanel" aria-labelledby="nav-profile-tab">
         <div class="table-responsive">
-            <table class="table p-0 text-center w-100" id="zhengTraits">
-                <caption class="visually-hidden">A list of Zheng et al. traits.</caption>
+            <table class="table p-0 text-center w-100" id="zhangTraits">
+                <caption class="visually-hidden">A list of Zhang et al. traits.</caption>
                 <thead class="table-secondary align-middle">
                     <tr>
                         <th scope="col" class="py-4 text-center">Species</th>
@@ -169,8 +172,7 @@
 {% block script %}
 <script>
     $(document).ready(function() {
-
-        const zhangTable = $('#zhengTraits').DataTable( {
+        const zhangTable = $('#zhangTraits').DataTable( {
             "processing": true,
             "serverSide": true,
             "ajax": "/tools/phenotype-database/traits-zhang",
@@ -178,7 +180,7 @@
             "columns": [
                 {
                     "data": "Species",
-                    "render": function(data, type, row){
+                    "render": function(data, type, row) {
                         return row.species.replace('c_', 'C. ').italics()
                     }
                 },
@@ -194,23 +196,23 @@
                     "data": "View Full Details",
                     "render": function(data, type, row) {
                         const d = JSON.stringify(row)
-                        return `<td class="optionsToolbar">
+                        return `
                             <a id="details" data-value='${d}' data-bs-toggle="offcanvas" data-bs-target="#offcanvas1" aria-controls="offcanvas1" 
-                            href="#"><i class="bi bi-list-ul" aria-hidden="true"></i>Full Details</a>
-                            </td>`
-                        }
+                            href="#"><i class="bi bi-list-ul" aria-hidden="true"></i>Full Details</a>`
+                    },
+                    "sClass": "optionsToolbar",
                 },
                 {
                     "data": "Analyze",
                     "render": function(data, type, row) {
-                        const trait_name = row.trait_name_caendr
-                        let url = '{{ url_for("phenotype_database.submit_start", trait=trait_name)}}'
-                        url += trait_name
-                        return `<td class="optionsToolbar">
-                                <div class="ps-3 pt-0"><a href=${url}><i class="bi bi-arrow-right-circle-fill"
-                                            aria-hidden="true"></i>Analyze</a></div>
-                            </td>`
-                        }
+                        const trait_name = row.trait_name_caendr;
+                        const url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", trait_name).replace("TRAIT_SET", 'zhang');
+                        return `
+                            <div id="trait-data-${row.trait_name_caendr}" class="ps-3 pt-0" data-description="${row.description_short}" data-species="${row.species}">
+                                <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
+                            </div>`
+                    },
+                    "sClass": "optionsToolbar",
                 },
             ]
         });
