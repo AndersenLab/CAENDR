@@ -8,7 +8,7 @@ from caendr.models.datastore       import PhenotypeReport
 from caendr.models.error           import DataValidationError, EmptyReportDataError, EmptyReportResultsError
 from caendr.models.status          import JobStatus
 from caendr.models.trait           import Trait
-from caendr.utils.data             import dataframe_cols_to_dict, get_object_hash, keyset_intersection
+from caendr.utils.data             import dataframe_cols_to_dict, get_object_hash, keyset_intersection, center_and_scale_data
 
 
 
@@ -78,6 +78,12 @@ class PhenotypePipeline(JobPipeline):
           f' and {trait_2.name} is a {trait_2.file.species.short_name} trait.'
         )
 
+      # Validate number of overlapping strains
+      strains_in_common = keyset_intersection( trait_1.query_values_dict(), trait_2.query_values_dict() )
+      if len(strains_in_common) < 10:
+        raise DataValidationError('CaeNDR requires 10 or more strains to compute correlations between traits.')
+
+
     # If only one trait file provided, use its unique ID to compute the data hash
     else:
       hash_source = trait_1.name
@@ -115,9 +121,7 @@ class PhenotypePipeline(JobPipeline):
       raise EmptyReportResultsError(self.report.id)
 
     # Convert dataframes to dicts, mapping strain column to trait value column
-    data_dicts = tuple(map(
-      lambda df: dataframe_cols_to_dict(df, 'strain_name', 'trait_value', drop_na=True), data
-    ))
+    data_dicts = tuple(map( Trait.dataframe_to_dict, data ))
 
     # Get the list of strains in both datasets by taking the intersection of their key sets
     # Convert back to a list because sets ~technically~ don't have a defined order -- we want to make sure
@@ -128,6 +132,11 @@ class PhenotypePipeline(JobPipeline):
     data_vals = tuple([
       [ d[strain] for strain in data_keys ] for d in data_dicts
     ])
+
+    # Pre-processing: mean-center and scale the data
+    data_vals = tuple(
+      center_and_scale_data(d) for d in data_vals
+    )
 
     # Zip the trait values together with the strain names, to get the full dataset array
     data_tuples = list(zip( *data_vals, data_keys ))
