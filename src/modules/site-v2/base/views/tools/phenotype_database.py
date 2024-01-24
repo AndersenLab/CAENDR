@@ -65,12 +65,19 @@ def results_columns():
 def phenotype_database():
   """
     Phenotype Database table (non-bulk)
-  """
+  """  
   # Get the list of traits for non-bulk files
   try:
     page = request.args.get('page', 1, type=int)
     per_page = 10
     query = query_phenotype_metadata()
+
+    # Get the list of unique tags
+    tags = [ tr.tags.split(', ') for tr in query if tr.tags ]
+    tags_list = [tg for tr_tag in tags for tg in tr_tag]
+    unique_tags = list(set(tags_list))
+
+    # Get the list of traits for the page
     pagination = query.paginate(page=page, per_page=per_page)
   except Exception as ex:
     logger.error(f'Failed to retrieve the list of traits: {ex}')
@@ -84,7 +91,8 @@ def phenotype_database():
     # Data
     'traits': pagination.items,
     'pagination': pagination,
-    'total_pages': pagination.pages
+    'total_pages': pagination.pages,
+    'categories': unique_tags,
   })
 
 @phenotype_database_bp.route('/traits-zhang')
@@ -100,9 +108,9 @@ def get_zhang_traits_json():
     draw = request.args.get('draw', type=int)
     start = request.args.get('start', type=int)
     length = request.args.get('length', type=int)
-    search_value = request.args.get('search[value]', '').lower()
+    search_value = bleach.clean(request.args.get('search[value]', '')).lower()
 
-    query = PhenotypeMetadata.query
+    query = query_phenotype_metadata(is_bulk_file=True)
     total_records = query.count()
     
     if search_value:
