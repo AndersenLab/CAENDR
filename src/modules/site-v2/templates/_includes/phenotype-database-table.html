@@ -69,9 +69,9 @@
                         {% if tr.tags is none %}
                         <td></td>
                         {% else %}
-                        {% set categories = tr.tags.split(', ') %}
+                        {% set trait_categories = tr.tags.split(', ') %}
                             <td>
-                                {% for tag in categories %}
+                                {% for tag in trait_categories %}
                                 <div class="mb-3"><a id="tag-{{loop.index}}" data-value="{{tag}}" href="#">{{tag|replace('/', ' • ')}}</a></div>
                                 {% endfor %}
                             </td>
