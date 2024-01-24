@@ -164,12 +164,15 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
     const circle_radius = config['circle_radius'] || 4;
     const fill_color    = config['fill_color']    || 'black';
     const stroke_color  = config['stroke_color']  || 'none';
+    const opacity       = config['opacity']       || 0;
+    const opacity_hover = config['opacity_hover'] || 0;
 
     // Create a template function for the tooltip
     // By default, show label & value for each axis
+    const tooltip_id       = config['tooltip_id']       || null;
     const tooltip_template = config['tooltip_template'] || ((d, labels) => `
-      <p>${labels[0]}: ${d[0]}</p>
-      <p>${labels[1]}: ${d[1]}</p>
+      <p class="tooltip-body">${labels[0]}: ${d[0]}</p>
+      <p class="tooltip-body">${labels[1]}: ${d[1]}</p>
     `);
 
     // Create the SVG object for the full graphic (scatterplot + histograms + margins)
@@ -229,8 +232,9 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
       .attr("cx", d => x(d[0]) )
       .attr("cy", d => y(d[1]) )
       .attr("r", circle_radius)
-      .style('fill',   fill_color)
-      .style('stroke', stroke_color);
+      .style('fill',    fill_color)
+      .style('stroke',  stroke_color)
+      .style('opacity', opacity)
 
     // Create tooltip for data point mouseover
     const tooltip = d3.select(container_selector)
@@ -238,11 +242,16 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
       .attr("class", "tooltip")
       .style("opacity", 0);
 
+    // If an ID is provided for the tooltip, add it
+    if (tooltip_id) {
+      tooltip.attr("id", tooltip_id);
+    }
+
     // Add mouseover listener for individual dots
     dots.on('mouseover', function(d) {
 
       // Select the dot and grow its radius
-      d3.select(this).attr('r', circle_radius + 2);
+      d3.select(this).attr('r', circle_radius + 2).style('opacity', opacity_hover);
       
       // Show the tooltip
       tooltip.html(tooltip_template(d, [ config['x_label'], config['y_label'] ]))
@@ -257,7 +266,7 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
     dots.on('mouseout', function() {
 
       // Select the dot and restore its original radius
-      d3.select(this).attr('r', circle_radius);
+      d3.select(this).attr('r', circle_radius).style('opacity', opacity);
 
       // Hide the tooltip
       tooltip.transition()
@@ -400,8 +409,9 @@ function render_ranked_barplot(container_selector, data, config={}) {
 
   // Create a template function for the tooltip
   // By default, show label & value for each axis
+  const tooltip_id       = config['tooltip_id']       || null;
   const tooltip_template = config['tooltip_template'] || ((d) => `
-    <p>${d[1]}: ${d[0]}</p>
+    <p class="tooltip-body">${d[1]}: ${d[0]}</p>
   `);
 
   // Sort data
@@ -463,6 +473,11 @@ function render_ranked_barplot(container_selector, data, config={}) {
     .append("div")
     .attr("class", "tooltip")
     .style("opacity", 0);
+
+  // If an ID is provided for the tooltip, add it
+  if (tooltip_id) {
+    tooltip.attr("id", tooltip_id);
+  }
 
   // Add mouseover listener for individual bars -- show the tooltip
   bars.on('mouseover', function(d) {
