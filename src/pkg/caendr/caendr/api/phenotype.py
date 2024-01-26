@@ -28,7 +28,7 @@ def query_phenotype_metadata(is_bulk_file=False, include_values=False, species: 
     # Query by species
     if species is not None:
       if species in Species.all().keys():
-        query = query.filter_by(species=species)
+        query = query.filter_by(species_name=species)
       else:
         raise BadRequestError(f'Unrecognized species ID "{species}".')
     

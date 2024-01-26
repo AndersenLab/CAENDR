@@ -41,11 +41,11 @@
                 </thead>
                 <tbody class="table-group-divider align-middle">
                     {% for tr in traits %}
-                    <tr class="py-3 dislayedRow" data-species="{{tr.species}}">
+                    <tr class="py-3 dislayedRow" data-species="{{tr.species_name}}">
                         <th>
                             <a href="#" class="text-dark fw-normal" data-bs-toggle="collapse"
                                 data-bs-target="#collapse-{{loop.index}}" aria-expanded="false" aria-controls="collapse-{{loop.index}}"><i
-                                    class="bi bi-chevron-right" aria-hidden="true"></i><em>{{tr.species|capitalize|replace('_', '. ')}}</em></a>
+                                    class="bi bi-chevron-right" aria-hidden="true"></i><em>{{tr.species_name|capitalize|replace('_', '. ')}}</em></a>
                         </th>
                         <td id="accordionHeading-{{loop.index}}"><strong>{{tr.trait_name_caendr}}</strong></td>
                         <td>{{tr.description_short}}.</td>
@@ -60,7 +60,7 @@
                             {% endfor %}
                         </td>
                         {% endif %}
-                        <td id="trait-data-{{tr.trait_name_caendr}}" class="optionsToolbar" data-description="{{tr.description_short}}" data-species="{{tr.species}}">
+                        <td id="trait-data-{{tr.trait_name_caendr}}" class="optionsToolbar" data-description="{{tr.description_short}}" data-species="{{tr.species_name}}">
                             <div class="ps-3 pt-0">
                                 <a href="{{ analyze_link.replace('TRAIT_NAME', tr.trait_name_caendr).replace('TRAIT_SET', tr.dataset) }}">
                                     <i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze
@@ -132,7 +132,7 @@
                 {
                     "data": "Species",
                     "render": function(data, type, row) {
-                        return row.species.replace('c_', 'C. ').italics()
+                        return row.species_name.replace('c_', 'C. ').italics()
                     }
                 },
                 {"data": "trait_name_caendr"},
@@ -159,7 +159,7 @@
                         const trait_name = row.trait_name_caendr;
                         const url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", trait_name).replace("TRAIT_SET", 'zhang');
                         return `
-                            <div id="trait-data-${row.trait_name_caendr}" class="ps-3 pt-0" data-description="${row.description_short}" data-species="${row.species}">
+                            <div id="trait-data-${row.trait_name_caendr}" class="ps-3 pt-0" data-description="${row.description_short}" data-species="${row.species_name}">
                                 <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
                             </div>`
                     },
@@ -227,7 +227,7 @@
         manageVal(trait.capture_date, '#captureDate', true)
         manageVal(trait.created_on, '#createdOn', true)
         manageVal(trait.modified_on, '#modifiedOn', true)
-        manageVal(trait.species, '#species')
+        manageVal(trait.species_name, '#species')
         manageVal(trait.wbgene_id, '#wbgeneID')
         manageVal(trait.source_lab, '#sourceLab')
         manageVal(trait.institution, '#institution')
