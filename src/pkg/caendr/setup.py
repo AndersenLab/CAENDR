@@ -25,7 +25,7 @@ setup(
     'logzero==1.3.1',
     'oauth2client',
     'numpy==1.19.5',
-    'pandas==1.0.5',
+    'pandas==1.1.3',
     'plotly==5.3.0',
     'psycopg2-binary>=2.9.1',
     'pg8000',
