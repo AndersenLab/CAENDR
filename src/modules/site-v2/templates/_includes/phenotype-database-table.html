@@ -1,12 +1,8 @@
 {% block custom_head %}
 <style>
-    #filter {
+    #traitsFilter {
         height: 40px;
         overflow-x: auto;
-    }
-    #filter .btn {
-        font-size: 0.5rem;
-        padding: 0.25rem;
     }
 
 </style>
@@ -21,9 +17,28 @@
 </nav>
 <div class="tab-content py-2" id="nav-tabContent">
     <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
-        <div class="py-2">
-            <p><i class="bi bi-filter"></i> Filter:</p>
-            <div class="d-flex m-2 p-1 w-50 border border-dark rounded" id="filter"></div>
+        <div class="d-flex justify-content-between">
+            <form>
+                <label for="traitsSearch" class="form-label"><i class="bi bi-search"></i> Search:</label>
+                <input class="form-control" type="search" name="traitsSearch" id="traitsSearch">
+            </form>
+            <div class="col-12 col-md-3 mx-1 mb-3">
+                <label for="traitsFilter" class="form-label"><i class="bi bi-filter"></i> Filter:</label>
+                <div class="dropdown">
+                    <div class="border border-dark form-control d-flex justify-content-end" id="traitsFilter" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <form class="dropdown-menu w-auto" role="menu" id="tagsFilter">
+                        {% for tag in categories %}
+                        <div class="dropdown-item form-group">
+                            <input type="checkbox" class="custom-control-input" value="{{tag}}" id="{{tag}}">
+                            <label class="custom-check-label" for="{{tag}}">{{tag}}</label>
+                        </div>
+                        {% endfor %}
+                    </form>
+                </div>
+            </div>
+
         </div>
         <div class="table-responsive">
             <table class="table accordion p-0 text-center" id="tableAccordion">
@@ -54,11 +69,12 @@
                         {% if tr.tags is none %}
                         <td></td>
                         {% else %}
-                        <td>
-                            {% for tag in tr.tags %}
-                            <div class="mb-3"><a id="tag-{{loop.index}}" data-value="{{tag}}" href="#">{{tag}}</a></div>
-                            {% endfor %}
-                        </td>
+                        {% set trait_categories = tr.tags.split(', ') %}
+                            <td>
+                                {% for tag in trait_categories %}
+                                <div class="mb-3"><a id="tag-{{loop.index}}" data-value="{{tag}}" href="#">{{tag|replace('/', ' • ')}}</a></div>
+                                {% endfor %}
+                            </td>
                         {% endif %}
                         <td id="trait-data-{{tr.trait_name_caendr}}" class="optionsToolbar" data-description="{{tr.description_short}}" data-species="{{tr.species_name}}">
                             <div class="ps-3 pt-0">
@@ -86,6 +102,39 @@
                 </tbody>
             </table>
         </div>
+        <nav class="d-flex justify-content-end" aria-label="Phenotype database table page navigation">
+            <ul class="pagination">
+                <li class="page-item">
+                    {% if pagination.has_prev %}
+                        <a class="page-link" href="{{ url_for('phenotype_database.phenotype_database', page=pagination.prev_num) }}">Previous</a>
+                    {% else %}
+                    <a class="page-link disabled" href="#" tabindex="-1">Previous</a>
+                </li>
+                {% endif %}
+                {% for page_num in pagination.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num == pagination.page %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">{{ page_num }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('phenotype_database.phenotype_database', page=page_num) }}">{{ page_num }}</a>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="#" tabindex="-1">...</a></li>
+                    {% endif %}
+                {% endfor %}
+                <li class="page-item">
+                {% if pagination.has_next %}
+                    <a class="page-link" href="{{ url_for('phenotype_database.phenotype_database', page=pagination.next_num) }}">Next</a>
+                {% else %}
+                    <a class="page-link disabled" href="#" tabindex="-1">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
     </div>
     <div class="tab-pane fade" id="nav-zhang" role="tabpanel" aria-labelledby="nav-profile-tab">
         <div class="table-responsive">
@@ -186,28 +235,29 @@
 
     })
 
-    $("[id^='tag']").on('click', function() {
-        const v = $(this).data('value') 
-        $(`[data-value=${v}]`).addClass('disabled')
-        const btn = `<div>
-                        <div>${v}
-                        <i class="bi bi-x-circle-fill text-muted btn p-1 m-0" data-value="${v}" id="remove-${v}"></i>
-                        </div>
-                     </div>`
-        $('#filter').append(btn)
-        filterTable()
-    })
 
-    $(document).on('click', "[id^='remove']", function() {
-        $(this).parent().parent().remove()
-        const v = $(this).data('value') 
-        $(`[data-value=${v}]`).removeClass('disabled')
-        filterTable()
-    })
+    // $("[id^='tag']").on('click', function() {
+    //     const v = $(this).data('value') 
+    //     // $(`[data-value=${v}]`).addClass('disabled')
+    //     const btn = `<div>
+    //                     <div>${v}
+    //                     <i class="bi bi-x-circle-fill text-muted btn p-1 m-0" data-value="${v}" id="remove-${v}"></i>
+    //                     </div>
+    //                  </div>`
+    //     $('#traitsFilter').append(btn)
+    //     filterTable()
+    // })
+
+    // $(document).on('click', "[id^='remove']", function() {
+    //     $(this).parent().parent().remove()
+    //     const v = $(this).data('value') 
+    //     $(`[data-value=${v}]`).removeClass('disabled')
+    //     filterTable()
+    // })
 
     // The function filters table by selected tags from "Categories" field
     function filterTable() {
-        const keywords = $('#filter i').map(function(){
+        const keywords = $('#traitsFilter i').map(function(){
             return $(this).data('value')
         }).get()
         if (!keywords.length) {
@@ -238,7 +288,7 @@
         $('#tags').empty()
         if (trait.tags !== null || (trait.tags && trait.tags.length)) {
             $('#tags').prev().show()
-            $('#tags').append(displayTags(trait.tags))
+            $('#tags').append(displayTags(trait.tags.split(', ')))
         } else {
             $('#tags').prev().hide()
         }
@@ -267,7 +317,7 @@
         if (arr == null) return;
         let result = ''
         for (tag of arr) {
-            result += `<div class="col-4">
+            result += `<div class="px-1">
                         <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton" role="button" href="#">${tag}</a>
                        </div>`
         }

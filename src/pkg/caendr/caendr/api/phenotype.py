@@ -36,7 +36,7 @@ def query_phenotype_metadata(is_bulk_file=False, include_values=False, species: 
     if include_values:
        query = query.join(PhenotypeMetadata.phenotype_values)
 
-    return query.all()
+    return query
 
 
 def get_all_traits_metadata():
