@@ -2,6 +2,7 @@ from typing import Dict, List
 
 from caendr.utils.env              import get_env_var
 from caendr.services.cloud.secret  import get_secret
+from caendr.services.logger        import logger
 
 # Local imports
 from .strains                      import fetch_andersen_strains
@@ -15,6 +16,7 @@ from caendr.models.datastore       import Species, TraitFile
 from caendr.services.cloud.storage import BlobURISchema
 from caendr.models.datastore       import Species
 from caendr.utils.local_files      import ForeignResource, ForeignResourceTemplate, LocalDatastoreFileTemplate, LocalGoogleSheetTemplate
+from caendr.models.error           import ForeignResourceMissingError
 
 
 
@@ -60,11 +62,15 @@ class ParseConfig():
     '''
       Fetch all the files required for this species.
     '''
-    return {
-      file_template.resource_id: file_template.get_for_species(species).fetch()
-        for file_template in self.files
-        if  file_template.has_for_species(species)
-    }
+    result = {}
+    for file_template in self.files:
+      try:
+        if file_template.has_for_species(species):
+          result[file_template.resource_id] = file_template.get_for_species(species).fetch()
+      except ForeignResourceMissingError as ex:
+        logger.error(f'Skipping {file_template.get_print_uri(species)}: {ex}')
+    logger.debug(f'Fetched {len(result)} files out of {len(self.files)} requested.')
+    return result
 
 
   def parse_all(self, species):
