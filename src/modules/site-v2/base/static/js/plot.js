@@ -224,6 +224,20 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
 
       }
 
+    // Compute the bounds on the graph for the perfect correlation line, and add it
+    const bottomLeftEdge = Math.max(x.domain()[0], y.domain()[0]);
+    const topRightEdge   = Math.min(x.domain()[1], y.domain()[1]);
+    g
+      .append("line")
+      .attr("x1", x(bottomLeftEdge))
+      .attr("y1", y(bottomLeftEdge))
+      .attr("x2", x(topRightEdge))
+      .attr("y2", y(topRightEdge))
+      .style("stroke", "black")
+      .style("stroke-dasharray", ("5, 5"))
+      .style('opacity', 0.75)
+
+
     // Add the data points
     const dots = g.selectAll(".point")
       .data(data)
