@@ -53,16 +53,14 @@ class PhenotypePipeline(JobPipeline):
 
     # Construct the first trait object and add relevant fields to props
     trait_1 = Trait(dataset=data['trait_1_dataset'], trait_name=data['trait_1'])
-    props['trait_1'] = trait_1.file
-    if trait_1.file['is_bulk_file']:
-      props['trait_1_name'] = trait_1.name
+    props['trait_1']      = trait_1.file
+    props['trait_1_name'] = trait_1.name
 
     # If a second trait file is provided, construct trait object
     if (data.get('trait_2')):
       trait_2 = Trait(dataset=data['trait_2_dataset'], trait_name=data['trait_2'])
-      props['trait_2'] = trait_2.file
-      if trait_2.file['is_bulk_file']:
-        props['trait_2_name'] = trait_2.name
+      props['trait_2']      = trait_2.file
+      props['trait_2_name'] = trait_2.name
 
       # Compute hash from unique trait names
       # Sort before combining, so either order will produce the same hash
