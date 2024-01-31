@@ -72,8 +72,6 @@ def phenotype_database():
   
   # Get the list of traits for non-bulk files
   try:
-    page = request.args.get('page', 1, type=int)
-    per_page = 10
     query = query_phenotype_metadata()
 
     # Get the list of unique tags
@@ -86,7 +84,7 @@ def phenotype_database():
       search_val = request.json.get('search_val', '')
       page = int(request.json.get('page', 1))
       current_page = int(request.json.get('current_page', 1))
-
+      per_page = 10
 
       if search_val and len(search_val):
         query = query.filter(
@@ -118,9 +116,6 @@ def phenotype_database():
       }
       return jsonify({'data': json_data, 'pagination': pagination_data })
         
-
-    # Get the list of traits for the page
-    pagination = query.paginate(page=page, per_page=per_page)
   except Exception as ex:
     logger.error(f'Failed to retrieve the list of traits: {ex}')
     abort(500, description='Failed to retrieve the list of traits')
@@ -131,9 +126,6 @@ def phenotype_database():
     "tool_alt_parent_breadcrumb": { "title": "Tools", "url": url_for('tools.tools') },
 
     # Data
-    'traits': pagination.items,
-    'pagination': pagination,
-    'total_pages': pagination.pages,
     'categories': unique_tags,
     'form': form
   })

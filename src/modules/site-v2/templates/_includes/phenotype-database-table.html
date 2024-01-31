@@ -48,81 +48,11 @@
                     </tr>
                 </thead>
                 <tbody class="table-group-divider align-middle">
-                    {% for tr in traits %}
-                    <tr class="py-3 dislayedRow">
-                        <td>
-                            <a href="#" class="text-dark fw-normal" data-bs-toggle="collapse"
-                                data-bs-target="#collapse-{{loop.index}}" aria-expanded="false" aria-controls="collapse-{{loop.index}}"><i
-                                    class="bi bi-chevron-right" aria-hidden="true"></i><em>{{tr.species|capitalize|replace('_', '. ')}}</em></a>
-                        </td>
-                        <td id="accordionHeading-{{loop.index}}"><strong>{{tr.trait_name_caendr}}</strong></td>
-                        <td>{{tr.description_short}}.</td>
-                        <td>{{tr.source_lab}}</td>
-                        <td>{{tr.created_on}}</td>
-                        {% if tr.tags is none %}
-                            <td></td>
-                        {% else %}
-                        {% set categories = tr.tags.split(', ') %}
-                            <td class="d-flex flex-column" id="tags">
-                                {% for tag in categories %}
-                                <div class="mb-3"><a id="tag-{{loop.index}}" data-value="{{tag}}">{{tag|replace('/', ' • ')}}</a></div>
-                                {% endfor %}
-                            </td>
-                        {% endif %}
-                        <td class="optionsToolbar">
-                            <div class="ps-3 pt-0"><a href="{{url_for("phenotype_database.submit_start", trait=tr.trait_name_caendr)}}"><i class="bi bi-arrow-right-circle-fill"
-                                        aria-hidden="true"></i>Analyze</a></div>
-                        </td>
-                    </tr>
-                    <tr id="collapse-{{loop.index}}" class="text-start accordion-collapse collapse"
-                        aria-labelledby="accordionHeading-{{loop.index}}" data-bs-parent="#tableAccordion">
-                        <td colspan="7">
-                            <div class="ps-5 p-3">
-                                <h3 class="h5 text-dark">Full Description</h3>
-                                <p>{{tr.description_long}}</p>
-                            </div>
-                            <div class="d-flex justify-content-end pe-5 optionsToolbar">
-                                <a data-bs-toggle="offcanvas" id="traitDetails" data-value="{{tr.trait_name_caendr}}" data-bs-target="#offcanvas1"
-                                    aria-controls="offcanvas1" href=" #"><i class="bi bi-list-ul"
-                                        aria-hidden="true"></i>View Full Details</a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
                 </tbody>
             </table>
         </div>
         <nav class="d-flex justify-content-end" aria-label="Phenotype database table page navigation">
-            <ul class="pagination">
-                <li class="page-item">
-                    {% if pagination.has_prev %}
-                        <a class="page-link" role="button" onClick="getResultsForPage({{pagination.prev_num}}, {{pagination.page}})">Previous</a>
-                    {% else %}
-                    <a class="page-link disabled" href="#" tabindex="-1">Previous</a>
-                </li>
-                {% endif %}
-                {% for page_num in pagination.iter_pages() %}
-                    {% if page_num %}
-                        {% if page_num == pagination.page %}
-                            <li class="page-item disabled">
-                                <a class="page-link" href="#" tabindex="-1">{{ page_num }}</a>
-                            </li>
-                        {% else %}
-                            <li class="page-item">
-                                <a class="page-link" role="button" onClick="getResultsForPage({{page_num}}, {{page_num}})">{{ page_num }}</a>
-                            </li>
-                        {% endif %}
-                    {% else %}
-                        <li class="page-item"><a class="page-link" href="#" tabindex="-1">...</a></li>
-                    {% endif %}
-                {% endfor %}
-                <li class="page-item">
-                {% if pagination.has_next %}
-                    <a class="page-link" role="button" onClick="getResultsForPage({{pagination.next_num}}, {{pagination.page}})">Next</a>
-                {% else %}
-                    <a class="page-link disabled" href="#" tabindex="-1">Next</a>
-                </li>
-                {% endif %}
+            <ul class="pagination">   
             </ul>
         </nav>
     </div>
@@ -163,6 +93,17 @@
 <script>
     $(document).ready(function() {
 
+        $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
+                }
+                }
+            });
+
+        // Render Pagination
+        getResultsForPage(1, 1)
+
         // Render Zhang table with Datatables
         const zhangTable = $('#zhangTraits').DataTable( {
             "processing": true,
@@ -197,14 +138,14 @@
                 {
                     "data": "Analyze",
                     "render": function(data, type, row) {
-                        const trait_name = row.trait_name_caendr
-                        let url = '{{ url_for("phenotype_database.submit_start", trait=trait_name)}}'
-                        url += trait_name
-                        return `<td class="optionsToolbar">
-                                <div class="ps-3 pt-0"><a href=${url}><i class="bi bi-arrow-right-circle-fill"
-                                            aria-hidden="true"></i>Analyze</a></div>
-                            </td>`
-                        }
+                        const trait_name = row.trait_name_caendr;
+                        const url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", trait_name).replace("TRAIT_SET", 'zhang');
+                        return `
+                            <div id="trait-data-${row.trait_name_caendr}" class="ps-3 pt-0" data-description="${row.description_short}" data-species="${row.species}">
+                                <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
+                            </div>`
+                    },
+                    "sClass": "optionsToolbar",
                 },
             ]
         });
@@ -226,13 +167,7 @@
 
         })
 
-        $.ajaxSetup({
-                beforeSend: function(xhr, settings) {
-                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
-                    xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
-                }
-                }
-            });
+
         
         // Handle the Categories filter
         $(document).on( "change", "input[type=checkbox]", function () {
@@ -287,9 +222,8 @@
     function filterTable(arr) {
         for (let i = 0; i < arr.length; i++) {
             const speciesName = arr[i].species.charAt(0).toUpperCase() + arr[i].species.replace('_', '. ').slice(1)
-            let url = `{{url_for("phenotype_database.submit_start", trait='TRAIT_NAME')}}`
             const traitName = arr[i].trait_name_caendr
-            url = url.replace('TRAIT_NAME', traitName)
+            let url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", traitName).replace("TRAIT_SET", 'caendr')
             const createdOn = formatDate(arr[i].created_on)
             let tagsHTML = ''
             if (arr[i].tags !== null && arr[i].tags.length) {
@@ -312,7 +246,7 @@
                         <td>${createdOn}</td>
                         <td class="d-flex flex-column" id="tags">${tagsHTML}</td>
                         <td class="optionsToolbar">
-                            <div class="ps-3 pt-0"><a href=${url}><i class="bi bi-arrow-right-circle-fill"
+                            <div class="ps-3 pt-0" id="trait-data-${arr[i].trait_name_caendr}" data-description="${arr[i].description_short}" data-species="${arr[i].species}"><a href='${url}'><i class="bi bi-arrow-right-circle-fill"
                                         aria-hidden="true"></i>Analyze</a></div>
                         </td>
                     </tr>
