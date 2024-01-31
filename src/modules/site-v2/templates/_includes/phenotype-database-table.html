@@ -3,8 +3,8 @@
     <div class="nav nav-tabs border-0" id="nav-tab" role="tablist">
         <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button"
             role="tab" aria-controls="nav-home" aria-selected="true">Traits</button>
-        <button class="nav-link" id="nav-zheng-tab" data-bs-toggle="tab" data-bs-target="#nav-zheng" type="button"
-            role="tab" aria-controls="nav-zheng" aria-selected="false">Zheng et al. Traits</button>
+        <button class="nav-link" id="nav-zhang-tab" data-bs-toggle="tab" data-bs-target="#nav-zhang" type="button"
+            role="tab" aria-controls="nav-zhang" aria-selected="false">Zhang et al. Traits</button>
     </div>
 </nav>
 <div class="tab-content py-2" id="nav-tabContent">
@@ -126,10 +126,10 @@
             </ul>
         </nav>
     </div>
-    <div class="tab-pane fade" id="nav-zheng" role="tabpanel" aria-labelledby="nav-profile-tab">
+    <div class="tab-pane fade" id="nav-zhang" role="tabpanel" aria-labelledby="nav-profile-tab">
         <div class="table-responsive">
-            <table class="table p-0 text-center w-100" id="zhengTraits">
-                <caption class="visually-hidden">A list of Zheng et al. traits.</caption>
+            <table class="table p-0 text-center w-100" id="zhangTraits">
+                <caption class="visually-hidden">A list of Zhang et al. traits.</caption>
                 <thead class="table-secondary align-middle">
                     <tr>
                         <th scope="col" class="py-4 text-center">Species</th>
@@ -164,7 +164,7 @@
     $(document).ready(function() {
 
         // Render Zhang table with Datatables
-        const zhangTable = $('#zhengTraits').DataTable( {
+        const zhangTable = $('#zhangTraits').DataTable( {
             "processing": true,
             "serverSide": true,
             "ajax": "/tools/phenotype-database/traits-zhang",
