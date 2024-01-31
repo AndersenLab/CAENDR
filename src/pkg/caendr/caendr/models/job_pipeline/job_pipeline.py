@@ -184,6 +184,8 @@ class JobPipeline(ABC):
 
   @classmethod
   def create_task(cls, *args, **kwargs) -> Task:
+    if cls._Task_Class is None:
+      raise UnschedulableJobTypeError()
     return cls._Task_Class(*args, **kwargs)
   
   @classmethod
@@ -235,14 +237,14 @@ class JobPipeline(ABC):
     '''
       Get the queue name specified by the associated Task class.
     '''
-    return self._Task_Class.queue
+    return self._Task_Class.queue if self._Task_Class else None
 
   @classmethod
   def get_queue(cls):
     '''
       Class-level method for getting queue name.
     '''
-    return cls._Task_Class.queue
+    return cls._Task_Class.queue if cls._Task_Class else None
 
 
 
