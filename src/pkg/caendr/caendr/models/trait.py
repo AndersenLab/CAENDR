@@ -3,6 +3,7 @@ from typing import Optional
 
 from caendr.models.datastore import TraitFile
 from caendr.models.sql       import PhenotypeMetadata, PhenotypeDatabase
+from caendr.utils.data       import dataframe_cols_to_dict
 
 from caendr.services.cloud.postgresql import db
 
@@ -91,7 +92,25 @@ class Trait():
   # Querying
   #
 
-  def query_values(self):
+  def query_values_dataframe(self):
+    '''
+      Query the measurements of this trait as a Pandas dataframe.
+      Resulting dataframe will have the columns `strain_name` and `trait_value`.
+    '''
     return pd.read_sql_query(
       PhenotypeDatabase.query.filter( PhenotypeDatabase.trait_name == self.name ).statement, con=db.engine
     )
+
+  def query_values_dict(self):
+    '''
+      Query the measurements of this trait as a Python dict, mapping strain name to measured trait value.
+    '''
+    return self.dataframe_to_dict( self.query_values_dataframe() )
+
+  @classmethod
+  def dataframe_to_dict(cls, df):
+    '''
+      Convert a Trait dataframe (as produced by `Trait.query_values_dataframe`) to a Python dict,
+      mapping strain name to measured trait val.
+    '''
+    return dataframe_cols_to_dict(df, 'strain_name', 'trait_value', drop_na=True)

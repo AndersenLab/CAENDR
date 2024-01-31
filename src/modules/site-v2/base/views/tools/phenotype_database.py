@@ -20,7 +20,7 @@ from base.utils.auth            import jwt_required, get_current_user, user_is_a
 from base.utils.tools           import lookup_report, list_reports, try_submit
 
 from caendr.models.datastore    import PhenotypeReport, Species
-from caendr.models.error        import ReportLookupError, EmptyReportDataError, EmptyReportResultsError, NotFoundError
+from caendr.models.error        import ReportLookupError, EmptyReportDataError, EmptyReportResultsError, NotFoundError, DataValidationError
 from caendr.models.job_pipeline import PhenotypePipeline
 from caendr.models.status       import JobStatus
 from caendr.models.sql          import PhenotypeMetadata
@@ -374,6 +374,12 @@ def report(id):
   except (EmptyReportDataError, EmptyReportResultsError) as ex:
     logger.error(f'Error fetching Phenotype report {ex.id}: {ex.description}')
     return abort(404, description = ex.description)
+
+  # Error with the submission data
+  # This should only be possible if a report was somehow created with invalid data, e.g. not enough traits
+  except DataValidationError as ex:
+    flash(ex.msg, 'error')
+    return abort(400, description = ex.msg)
 
   # General error
   except Exception as ex:

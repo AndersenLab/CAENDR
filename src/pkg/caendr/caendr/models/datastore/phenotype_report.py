@@ -35,7 +35,7 @@ class PhenotypeReport(ReportEntity, HashableEntity):
     return tuple(self.traits)
 
   def fetch_output(self):
-    return tuple( trait.query_values() for trait in self.traits )
+    return tuple( trait.query_values_dataframe() for trait in self.traits )
 
 
 
