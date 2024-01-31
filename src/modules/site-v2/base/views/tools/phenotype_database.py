@@ -138,22 +138,6 @@ def phenotype_database():
     'form': form
   })
 
-@phenotype_database_bp.route('/paginate')
-def paginate():
-  try:
-    page = request.args.get('page', 1, type=int)
-    per_page = 10
-    query = query_phenotype_metadata()
-    pagination = query.paginate(page=page, per_page=per_page)
-  except Exception as ex:
-    logger.error(f'Failed to retrieve the list of traits: {ex}')
-    abort(500, description='Failed to retrieve the list of traits')
-  return render_template('_includes/trait_table.html', **{
-    'traits': pagination.items,
-    'pagination': pagination,
-    'total_pages': pagination.pages,
-    })
-
 
 @phenotype_database_bp.route('/traits-zhang')
 @cache.memoize(60*60)
