@@ -158,7 +158,7 @@ class GCPRunner(Runner):
     # Loop through valid database operations
     for op in DbOp:
       if data_id == make_dns_name_safe(op.name):
-        return _kind, op.name
+        return make_dns_name_safe(kind), op.name
 
     raise ValueError(f'Job name { job_name } does not match any valid database operations (searching for: "{ data_id }").')
 
