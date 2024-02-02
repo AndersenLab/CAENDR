@@ -11,7 +11,8 @@ from flask import (render_template,
 from extensions import cache, compress
 from sqlalchemy import or_, func
 
-from caendr.api.phenotype import query_phenotype_metadata, get_trait
+from caendr.api.phenotype import query_phenotype_metadata, get_trait, filter_trait_query_by_text, filter_trait_query_by_tags
+from caendr.services.cloud.postgresql import paginate_safe
 
 from caendr.services.logger import logger
 
@@ -86,25 +87,10 @@ def phenotype_database():
       current_page = int(request.json.get('current_page', 1))
       per_page = 10
 
-      if search_val and len(search_val):
-        query = query.filter(
-           or_(
-          func.lower(PhenotypeMetadata.trait_name_caendr.like(f"%{search_val}%")),
-          func.lower(PhenotypeMetadata.trait_name_user.like(f"%{search_val}%")),
-          func.lower(PhenotypeMetadata.description_short.like(f"%{search_val}%")),
-          func.lower(PhenotypeMetadata.description_long.like(f"%{search_val}%")),
-          func.lower(PhenotypeMetadata.source_lab.like(f"%{search_val}%")),
-          func.lower(PhenotypeMetadata.institution.like(f"%{search_val}%")),
-          func.lower(PhenotypeMetadata.submitted_by.like(f"%{search_val}%")),
-          )
-        )
-      
-      if len(selected_tags):
-        query = query.filter(or_(
-          PhenotypeMetadata.tags.ilike(f"%{bleach.clean(tag)}%") for tag in selected_tags
-          ))
-        
-      pagination = query.paginate(page=page, per_page=per_page)
+      query = filter_trait_query_by_text(query, search_val)
+      query = filter_trait_query_by_tags(query, selected_tags)
+
+      pagination = paginate_safe(query, page=page, per_page=per_page)
       json_data = [ tr.to_json() for tr in pagination.items ]
       pagination_data = {
         'has_next':     pagination.has_next,
