@@ -12,6 +12,7 @@ from extensions import cache, compress
 from sqlalchemy import or_, func
 
 from caendr.api.phenotype import query_phenotype_metadata, get_trait
+from caendr.services.cloud.postgresql import paginate_safe
 
 from caendr.services.logger import logger
 
@@ -104,7 +105,7 @@ def phenotype_database():
           PhenotypeMetadata.tags.ilike(f"%{bleach.clean(tag)}%") for tag in selected_tags
           ))
         
-      pagination = query.paginate(page=page, per_page=per_page)
+      pagination = paginate_safe(query, page=page, per_page=per_page)
       json_data = [ tr.to_json() for tr in pagination.items ]
       pagination_data = {
         'has_next':     pagination.has_next,

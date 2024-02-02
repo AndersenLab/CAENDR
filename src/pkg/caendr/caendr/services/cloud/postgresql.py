@@ -124,3 +124,8 @@ def rollback_on_error(func):
             # Re-raise the original error
             raise
     return inner
+
+
+@rollback_on_error
+def paginate_safe(query, *args, **kwargs):
+    return query.paginate(*args, **kwargs)
