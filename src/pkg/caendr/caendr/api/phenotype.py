@@ -57,15 +57,15 @@ def filter_trait_query_by_text(query, search_val):
   print(search_val)
   if search_val and len(search_val):
     query = query.filter(
-        or_(
-          func.lower(PhenotypeMetadata.trait_name_caendr.like(f"%{search_val}%")),
-          func.lower(PhenotypeMetadata.trait_name_user.like(f"%{search_val}%")),
-          func.lower(PhenotypeMetadata.description_short.like(f"%{search_val}%")),
-          func.lower(PhenotypeMetadata.description_long.like(f"%{search_val}%")),
-          func.lower(PhenotypeMetadata.source_lab.like(f"%{search_val}%")),
-          func.lower(PhenotypeMetadata.institution.like(f"%{search_val}%")),
-          func.lower(PhenotypeMetadata.submitted_by.like(f"%{search_val}%")),
-        )
+      or_(
+        PhenotypeMetadata.trait_name_caendr.ilike(f"%{search_val}%"),
+        PhenotypeMetadata.trait_name_user.ilike(f"%{search_val}%"),
+        PhenotypeMetadata.description_short.ilike(f"%{search_val}%"),
+        PhenotypeMetadata.description_long.ilike(f"%{search_val}%"),
+        PhenotypeMetadata.source_lab.ilike(f"%{search_val}%"),
+        PhenotypeMetadata.institution.ilike(f"%{search_val}%"),
+        PhenotypeMetadata.submitted_by.ilike(f"%{search_val}%"),
+      )
     )
   return query
 
