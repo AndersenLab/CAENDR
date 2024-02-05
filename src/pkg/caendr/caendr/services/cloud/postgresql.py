@@ -159,8 +159,3 @@ def rollback_on_error(func):
         with rollback_on_error_handler():
             return func(*args, **kwargs)
     return inner
-
-
-@rollback_on_error
-def paginate_safe(query, *args, **kwargs):
-    return query.paginate(*args, **kwargs)

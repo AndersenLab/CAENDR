@@ -12,7 +12,7 @@ from extensions import cache, compress
 from sqlalchemy import or_, func
 
 from caendr.api.phenotype import query_phenotype_metadata, get_trait, filter_trait_query_by_text, filter_trait_query_by_tags
-from caendr.services.cloud.postgresql import paginate_safe, rollback_on_error_handler
+from caendr.services.cloud.postgresql import rollback_on_error_handler
 
 from caendr.services.logger import logger
 
@@ -90,7 +90,10 @@ def phenotype_database():
       query = filter_trait_query_by_text(query, search_val)
       query = filter_trait_query_by_tags(query, selected_tags)
 
-      pagination = paginate_safe(query, page=page, per_page=per_page)
+      # Paginate the query, rolling back on error
+      with rollback_on_error_handler():
+        pagination = query.paginate(page=page, per_page=per_page)
+
       json_data = [ tr.to_json() for tr in pagination.items ]
       pagination_data = {
         'has_next':     pagination.has_next,
