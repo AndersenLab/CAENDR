@@ -198,7 +198,7 @@
         })
 
         // Prevent 'enter' key from reloading the page
-        $('#traitsSearch').on('submit', function(e){
+        $('#traitsSearch').closest('form').on('submit', function(e){
             e.preventDefault();
         });
     })
