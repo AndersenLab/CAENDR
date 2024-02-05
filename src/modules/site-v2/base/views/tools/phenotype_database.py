@@ -87,6 +87,7 @@ def phenotype_database():
       current_page = int(request.json.get('current_page', 1))
       per_page = 10
 
+      # Filter by search value and tags, if provided
       query = filter_trait_query_by_text(query, search_val)
       query = filter_trait_query_by_tags(query, selected_tags)
 
@@ -138,18 +139,8 @@ def get_zhang_traits_json():
     query = query_phenotype_metadata(is_bulk_file=True)
     total_records = query.count()
 
-    if search_value:
-      query = query.filter(
-        or_(
-          func.lower(PhenotypeMetadata.trait_name_caendr.like(f"%{search_value}%")),
-          func.lower(PhenotypeMetadata.trait_name_user.like(f"%{search_value}%")),
-          func.lower(PhenotypeMetadata.description_short.like(f"%{search_value}%")),
-          func.lower(PhenotypeMetadata.description_long.like(f"%{search_value}%")),
-          func.lower(PhenotypeMetadata.source_lab.like(f"%{search_value}%")),
-          func.lower(PhenotypeMetadata.institution.like(f"%{search_value}%")),
-          func.lower(PhenotypeMetadata.submitted_by.like(f"%{search_value}%")),
-        )
-      )
+    # Filter by search value, if provided
+    query = filter_trait_query_by_text(query, search_value)
 
     # Query PhenotypeMetadata (include phenotype values for each trait)
     with rollback_on_error_handler():
