@@ -200,6 +200,10 @@
             filterTag.prop('checked', true)
             filterByCategories()
         })
+        // Prevent 'enter' key from reloading the page
+        $('#traitsSearch').closest('form').on('submit', function(e){
+            e.preventDefault();
+        });
     })
 
 
