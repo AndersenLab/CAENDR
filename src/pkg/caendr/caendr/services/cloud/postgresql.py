@@ -1,6 +1,7 @@
 from curses.ascii import alt
 import psycopg2
 import pg8000
+from contextlib import contextmanager
 
 from caendr.services.logger import logger
 from flask_sqlalchemy import SQLAlchemy
@@ -98,31 +99,65 @@ def health_database_status():
     return is_database_working, output
 
 
+
+#
+# Error Handling
+#
+
+
+@contextmanager
+def rollback_on_error_handler():
+    '''
+        Context manager for safe SQLAlchemy database querying.
+        Intercepts `SQLAlchemyError` objects, rolls back the session, then continues error propagation.
+
+        Usage:
+        ```
+            try:
+                # Optionally set up query object
+
+                with rollback_on_error_handler():
+                    # Run unsafe query
+
+                # Optionally process query data
+
+            except Exception as ex:
+                # Handle errors normally
+                # If the transaction was invalid, it has already been rolled back by the context manager
+        ```
+
+        See `rollback_on_error` for example usage.
+    '''
+
+    # Dummy clause: try the code inside the "with" block
+    try: yield
+
+    # Catch & log SQLAlchemy errors
+    except exc.SQLAlchemyError as e:
+        logger.error(f'Caught SQLAlchemy Error: {e}')
+        logger.error('Rolling back session...')
+
+        # Try to rollback the session
+        try:
+            db.session.rollback()
+        except Exception as rollback_err:
+            logger.error(f'Exception rolling back session: {rollback_err}')
+            raise
+
+        # Re-raise the original error
+        raise
+
+
 def rollback_on_error(func):
     '''
         Decorator for functions which access the SQLAlchemy database.
-        Intercepts SQLAlchemyErrors, rolls back the session, then continues propagation.
+        Intercepts `SQLAlchemyError` objects, rolls back the session, then continues propagation.
+
+        Equivalent to running the function within a `rollback_on_error_handler` context manager.
     '''
     def inner(*args, **kwargs):
-
-        # Try running & returning from the decorated function
-        try:
+        with rollback_on_error_handler():
             return func(*args, **kwargs)
-
-        # Catch & log SQLAlchemy errors
-        except exc.SQLAlchemyError as e:
-            logger.error(f'Caught SQLAlchemy Error: {e}')
-            logger.error('Rolling back session...')
-
-            # Try to rollback the session
-            try:
-                db.session.rollback()
-            except Exception as rollback_err:
-                logger.error(f'Exception rolling back session: {rollback_err}')
-                raise
-
-            # Re-raise the original error
-            raise
     return inner
 
 

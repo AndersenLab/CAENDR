@@ -12,7 +12,7 @@ from extensions import cache, compress
 from sqlalchemy import or_, func
 
 from caendr.api.phenotype import query_phenotype_metadata, get_trait, filter_trait_query_by_text, filter_trait_query_by_tags
-from caendr.services.cloud.postgresql import paginate_safe
+from caendr.services.cloud.postgresql import paginate_safe, rollback_on_error_handler
 
 from caendr.services.logger import logger
 
@@ -134,7 +134,7 @@ def get_zhang_traits_json():
 
     query = query_phenotype_metadata(is_bulk_file=True)
     total_records = query.count()
-    
+
     if search_value:
       query = query.filter(
         or_(
@@ -149,11 +149,12 @@ def get_zhang_traits_json():
       )
 
     # Query PhenotypeMetadata (include phenotype values for each trait)
-    data = query.offset(start).limit(length).from_self().\
-      join(PhenotypeMetadata.phenotype_values).all()
-    
+    with rollback_on_error_handler():
+      data = query.offset(start).limit(length).from_self().\
+        join(PhenotypeMetadata.phenotype_values).all()
+
     json_data = [ trait.to_json_with_values() for trait in data ]
-    
+
     filtered_records = query.count()
 
     response_data = {
