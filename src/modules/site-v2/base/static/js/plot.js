@@ -237,8 +237,6 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
       .attr("cy", d => y(d[1]) )
       .attr("r", circle_radius)
       .style('fill',    "#0719BC")
-      // .style('stroke',  "black")
-      // .style('stroke-width',  "1.5")
       .style('opacity', opacity)
 
     // Create tooltip for data point mouseover
@@ -330,8 +328,12 @@ function render_histogram(container_selector, data, config={}) {
 
   // Create the SVG object for the full graphic (scatterplot + histograms + margins)
   const svg = d3.select(container_selector).append('svg')
-    .attr('width',  width  + margin.left + margin.right)
-    .attr('height', height + margin.top + margin.bottom)
+    // .attr('width',  width  + margin.left + margin.right)
+    // .attr('height', height + margin.top + margin.bottom)
+    .attr('width', "100%")
+    .attr('height', "100%")
+    .attr("viewBox", `0 0 1200 400`)
+    .attr('preserveAspectRatio','xMinYMin')
 
   // Add a graph element for the scatterplot
   const g = svg.append("g")
@@ -432,8 +434,12 @@ function render_ranked_barplot(container_selector, data, config={}) {
 
   // Create the SVG object for the full graphic (scatterplot + histograms + margins)
   const svg = d3.select(container_selector).append('svg')
-    .attr('width',  width  + margin.left + margin.right)
-    .attr('height', height + margin.top + margin.bottom)
+    // .attr('width',  width  + margin.left + margin.right)
+    // .attr('height', height + margin.top + margin.bottom)
+    .attr('width', "100%")
+    .attr('height', "100%")
+    .attr("viewBox", `0 -50 1200 500`)  
+    .attr('preserveAspectRatio','xMinYMin')
 
   // Create Y axis (map trait value to y coordinate)
   const yScale = d3.scaleLinear()

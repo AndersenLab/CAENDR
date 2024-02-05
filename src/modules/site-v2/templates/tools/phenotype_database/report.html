@@ -25,6 +25,12 @@
     .tooltip .tooltip-body {
         padding: 0 4px;
     }
+
+    @media screen and (min-width: 768px) {
+  .chart-container {
+    min-height:900px;
+  }
+}
 </style>
 
 {% endblock %}
@@ -70,9 +76,8 @@
             </div> -->
             <!-- /Options Toolbar -->
             <!-- Widget Placeholder -->
-            <div class="col">
-                <div class="text-center mb-5">
-                    <div id="phenotype-chart" class="mb-5"></div>
+            <div class="col chart-container">
+                    <div id="phenotype-chart" class="text-center mb-5"></div>
                     {%- if data.num_traits > 1 %}
                     <div class="col-9 alert alert-info mt-5 mx-auto">
                         <p class="text-small text-center">
@@ -83,7 +88,6 @@
                         </p>
                     </div>
                     {%- endif %}
-                </div>
                 <!-- <svg class="bd-placeholder-img bd-placeholder-img-lg img-fluid border-0" width="100%"
                                 style="height: 100%" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Widget"
                                 preserveAspectRatio="xMidYMid slice" focusable="false">
@@ -119,9 +123,9 @@ const trait_label = {{ label_string_units(data.trait_names[0], report['trait_1']
 
 try {
     render_histogram('#phenotype-chart', data, {
-        width:         1200,
-        height:        300,
-        fill_color:    '#6B977A',
+         width:         1200,
+        // height:        300,
+        fill_color:    '#0719BC',
         bins_per_tick: 2,
         x_label:       trait_label,
         tooltip_id:    'tooltip-single-histogram',
@@ -137,8 +141,8 @@ try {
 try {
     render_ranked_barplot('#phenotype-chart', data, {
         width:         1200,
-        height:        400,
-        fill_color:    '#6B977A',
+        // height:        400,
+        fill_color:    '#0719BC',
         y_label:       trait_label,
         tooltip_id:    'tooltip-single-barplot',
         tooltip_template: (d) => `
