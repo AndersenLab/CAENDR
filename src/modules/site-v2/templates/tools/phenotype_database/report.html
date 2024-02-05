@@ -42,7 +42,7 @@
     <div class="d-flex justify-content-around flex-wrap mt-2">
         <!-- Results Card -->
         <div class="col col-md-6 col-xl-3 text-bg-light mb-5 p-5 rounded-2 shadow-sm overflow-y" style="max-height: 900px;">
-            <h2 class="h3 text-center mb-5">Trait Information</h2>
+            <div><h2 class="h3 text-center mb-5">Trait Information</h2>
 
             {%- if data.num_traits > 1 %}
             <h3 class="h4 text-dark">Trait 1</h3>
@@ -63,17 +63,24 @@
             <h3 class="h4 text-dark">P-Value</h3>
             <p>{{ result.p_value|round(4) }}</p>
             {%- endif %}
+            </div>
+            <div class="my-5">
+                <div class="d-grid gap-3">
+                  <a class="btn btn-secondary text-light" role="button" onClick=""><i class="bi bi-image-fill me-2"></i>Download SVG</a>
+                  <a class="btn btn-secondary text-light" role="button" onClick=""><i class="bi bi-file-earmark-spreadsheet-fill me-2"></i>Download TSV</a>
+                </div>
+              </div>
         </div>
         <!-- /Input Card -->
         <!-- Tool column -->
         <div class="d-flex flex-wrap flex-column col-md-12 col-xl-8">
             <!-- Options Toolbar -->
-            <!-- <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar">
-                <div class="ps-3 pt-0"><a href="#"><i class="bi bi-file-earmark-arrow-down-fill" aria-hidden="true"></i>
-                        Download My Results</a></div>
+            <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar">
+                <div class="ps-3 pt-0"><a href="{{ url_for('phenotype_database.phenotype_database') }}"><i class="bi bi-plus-circle" aria-hidden="true"></i> New Analysis</a></div>
+                <div class="ps-3 pt-0"><a href="{{ url_for('phenotype_database.my_results') }}"><i class="bi bi-journal" aria-hidden="true"></i>View All My Phenotype Results</a></div>
                 <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
                         Fullscreen</a></div>
-            </div> -->
+            </div>
             <!-- /Options Toolbar -->
             <!-- Widget Placeholder -->
             <div class="col chart-container">
