@@ -161,7 +161,7 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
     const height = (config['height'] || 400) - margin.top - margin.bottom;
 
     // Read values from config, filling in default values when not supplied
-    const circle_radius = config['circle_radius'] || 4;
+    const circle_radius = config['circle_radius'] || 8;
     const fill_color    = config['fill_color']    || 'black';
     const stroke_color  = config['stroke_color']  || 'none';
     const opacity       = config['opacity']       || 0;
@@ -177,8 +177,12 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
 
     // Create the SVG object for the full graphic (scatterplot + histograms + margins)
     const svg = d3.select(container_selector).append('svg')
-      .attr('width',  width  + margin.left + margin.right + hist_height)
-      .attr('height', height + margin.top + margin.bottom + hist_height)
+      //  .attr('width',  width  + margin.left + margin.right + hist_height)
+      //  .attr('height', height + margin.top + margin.bottom + hist_height)
+      .attr('width', "60%")
+      .attr('height', "60%")
+      .attr("viewBox", `0 0 800 900`)
+      .attr('preserveAspectRatio','xMinYMin')
 
     // Add a graph element for the scatterplot
     const g = svg.append("g")
@@ -232,8 +236,9 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
       .attr("cx", d => x(d[0]) )
       .attr("cy", d => y(d[1]) )
       .attr("r", circle_radius)
-      .style('fill',    fill_color)
-      .style('stroke',  stroke_color)
+      .style('fill',    "#0719BC")
+      // .style('stroke',  "black")
+      // .style('stroke-width',  "1.5")
       .style('opacity', opacity)
 
     // Create tooltip for data point mouseover

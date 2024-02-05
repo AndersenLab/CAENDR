@@ -35,15 +35,8 @@
 <div class="container-fluid px-5 pb-5">
     <div class="d-flex justify-content-around flex-wrap mt-2">
         <!-- Results Card -->
-        <div class="col col-md-6 col-xl-3 text-bg-light mb-5 p-5 rounded-2 shadow-sm">
+        <div class="col col-md-6 col-xl-3 text-bg-light mb-5 p-5 rounded-2 shadow-sm overflow-y" style="max-height: 900px;">
             <h2 class="h3 text-center mb-5">Trait Information</h2>
-
-            {%- if data.num_traits > 1 %}
-            <p><i>
-            The data were mean centered and scaled to have a standard deviation of 1.
-            These operations do not affect correlation tests and make the data easier to evaluate in a plot.
-            </i></p>
-            {%- endif %}
 
             {%- if data.num_traits > 1 %}
             <h3 class="h4 text-dark">Trait 1</h3>
@@ -78,15 +71,27 @@
             <!-- /Options Toolbar -->
             <!-- Widget Placeholder -->
             <div class="col">
-                <div id="phenotype-chart"></div>
+                <div class="text-center mb-5">
+                    <div id="phenotype-chart" class="mb-5"></div>
+                    {%- if data.num_traits > 1 %}
+                    <div class="col-9 alert alert-info mt-5 mx-auto">
+                        <p class="text-small text-center">
+                            <i class="bi bi-info-circle-fill me-2" aria-hidden="true"></i>
+                            <br>
+                            The data were mean centered and scaled to have a standard deviation of 1. These operations do not affect
+                            correlation tests and make the data easier to evaluate in a plot.
+                        </p>
+                    </div>
+                    {%- endif %}
+                </div>
                 <!-- <svg class="bd-placeholder-img bd-placeholder-img-lg img-fluid border-0" width="100%"
-                    style="height: 100%" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Widget"
-                    preserveAspectRatio="xMidYMid slice" focusable="false">
-                    <title>Placeholder</title>
-                    <rect width="100%" height="100%" fill="#868e96"></rect><text x="50%" y="50%" fill="#dee2e6"
-                        dy=".3em">Widget
-                        Placeholder</text>
-                </svg> -->
+                                style="height: 100%" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Widget"
+                                preserveAspectRatio="xMidYMid slice" focusable="false">
+                                <title>Placeholder</title>
+                                <rect width="100%" height="100%" fill="#868e96"></rect><text x="50%" y="50%" fill="#dee2e6"
+                                    dy=".3em">Widget
+                                    Placeholder</text>
+                            </svg> -->
             </div>
             <!-- Widget Placeholder -->
         </div>
@@ -116,7 +121,7 @@ try {
     render_histogram('#phenotype-chart', data, {
         width:         1200,
         height:        300,
-        fill_color:    '#0719BC',
+        fill_color:    '#6B977A',
         bins_per_tick: 2,
         x_label:       trait_label,
         tooltip_id:    'tooltip-single-histogram',
@@ -133,7 +138,7 @@ try {
     render_ranked_barplot('#phenotype-chart', data, {
         width:         1200,
         height:        400,
-        fill_color:    '#0719BC',
+        fill_color:    '#6B977A',
         y_label:       trait_label,
         tooltip_id:    'tooltip-single-barplot',
         tooltip_template: (d) => `
@@ -160,7 +165,7 @@ try {
         bin_width:     0.2,
         x_label:       `${trait_label_1}`,
         y_label:       `${trait_label_2}`,
-        opacity:       0.75,
+        opacity:       0.5,
         opacity_hover: 1,
         tooltip_id:    'tooltip-double-scatterplot',
         tooltip_template: (d, labels) => `
