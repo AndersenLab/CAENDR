@@ -196,6 +196,11 @@
             const data = {csrf_token: $('#csrf_token').val(), search_val: searchVal}
             sendPostRequest(data)
         })
+
+        // Prevent 'enter' key from reloading the page
+        $('#traitsSearch').closest('form').on('submit', function(e){
+            e.preventDefault();
+        });
     })
 
 
