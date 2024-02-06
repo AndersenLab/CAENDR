@@ -181,7 +181,7 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
       //  .attr('height', height + margin.top + margin.bottom + hist_height)
       .attr('width', "100%")
       .attr('height', "100%")
-      .attr("viewBox", `-70 0 900 900`)
+      .attr("viewBox", `-25 -50 900 1000`)
       .attr('preserveAspectRatio','xMinYMin')
 
     // Add a graph element for the scatterplot
@@ -258,8 +258,8 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
       
       // Show the tooltip
       tooltip.html(tooltip_template(d, [ config['x_label'], config['y_label'] ]))
-        .style('left', (d3.event.pageX + 10) + 'px') // Position tooltip to the right of the cursor
-        .style('top',  (d3.event.pageY - 25) + 'px') // Position tooltip above the cursor
+        //.style('left', (d3.event.pageX + 10) + 'px') // Position tooltip to the right of the cursor
+        //.style('top',  (d3.event.pageY - 25) + 'px') // Position tooltip above the cursor
         .transition()
         .duration(200)
         .style('opacity', 1);
@@ -493,8 +493,8 @@ function render_ranked_barplot(container_selector, data, config={}) {
   // Add mouseover listener for individual bars -- show the tooltip
   bars.on('mouseover', function(d) {
     tooltip.html(tooltip_template(d))
-      .style('left', (d3.event.pageX + 10) + 'px') // Position tooltip to the right of the cursor
-      .style('top',  (d3.event.pageY - 25) + 'px') // Position tooltip above the cursor
+      //.style('left', (d3.event.pageX + 10) + 'px') // Position tooltip to the right of the cursor
+      //.style('top',  (d3.event.pageY - 25) + 'px') // Position tooltip above the cursor
       .transition()
       .duration(200)
       .style('opacity', 1);

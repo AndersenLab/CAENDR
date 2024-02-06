@@ -8,12 +8,23 @@
 <style>
     .tooltip {
         position: absolute;
-        font-size: 12px;
+        font-size: 8px !important;
+        color: red;
         width:  auto;
         height: auto;
         border: 1px solid black;
         pointer-events: none;
         background-color: white;
+    }
+
+    #phenotype-chart .tooltip {
+        left: 30%;
+        top:95%;
+    }
+
+    #phenotype-chart-ranked-bar .tooltip {
+        right: 25px;
+        top: -25px;
     }
 
     .tooltip p {
@@ -34,15 +45,28 @@
         background-color: #FEFCFB;
     }
 
+    #phenotype-chart-ranked-bar {
+        min-height: 25vh;
+    }
+
     @media screen and (min-width: 768px) {
   #chartContainer {
-    min-height:900px;
+    min-height:100vh;
   }
 
   #phenotype-chart svg {
     width: 65%;
     height: 65%;
   }
+
+  #phenotype-chart-ranked-bar .tooltip {
+    top: 0px;
+  }
+
+  #phenotype-chart .tooltip {
+    left: 75%;
+    top:15%;
+    }
 }
 </style>
 
@@ -51,7 +75,7 @@
 
 {% block content %}
 
-<div class="container-fluid px-md-5 pb-5">
+<div class="container-fluid px-0 pb-5">
     <div class="d-flex justify-content-around flex-wrap mt-2">
         <!-- Results Card -->
         <div class="col col-md-6 col-xl-3 text-bg-light mb-5 p-5 rounded-2 shadow-sm overflow-auto" style="max-height: 145vh;">
@@ -96,13 +120,14 @@
             <!-- /Options Toolbar -->
             <!-- Widget Placeholder -->
             <div class="row">
-            <div class="col overflow-auto" id="chartContainer">
+            <div class="col overflow-auto px-0" id="chartContainer">
                 <div>
                     <button class="btn btn-danger text-light p-2 my-5 mx-auto" onclick="closeFullscreen();" id="closeButton"><i
                         class="bi bi-fullscreen-exit text-light" aria-hidden="true"></i> Close Fullscreen</button>
                   </div>
-                    <div id="phenotype-chart" class="text-center mb-5"></div>
-                    <div id="phenotype-chart-single-trait" class="text-center mb-5"></div>
+                    <div id="phenotype-chart" class="text-center mb-5 position-relative"></div>
+                    <div id="phenotype-chart-histogram" class="text-center mb-5 position-relative"></div>
+                    <div id="phenotype-chart-ranked-bar" class="text-center mb-5 position-relative"></div>
                     {%- if data.num_traits > 1 %}
                     <div class="col-9 alert alert-info mt-5 mx-auto">
                         <p class="text-small text-center">
@@ -153,7 +178,7 @@ const data = {{ result.trait_values|tojson }};
 const trait_label = {{ label_string_units(data.trait_names[0], report['trait_1']['units']) }};
 
 try {
-    render_histogram('#phenotype-chart-single-trait', data, {
+    render_histogram('#phenotype-chart-histogram', data, {
          width:         1200,
         // height:        300,
         fill_color:    '#0719BC',
@@ -170,7 +195,7 @@ try {
 }
 
 try {
-    render_ranked_barplot('#phenotype-chart-single-trait', data, {
+    render_ranked_barplot('#phenotype-chart-ranked-bar', data, {
         width:         1200,
         // height:        400,
         fill_color:    '#0719BC',
