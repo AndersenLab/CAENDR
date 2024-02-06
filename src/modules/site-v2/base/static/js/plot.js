@@ -179,9 +179,9 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
     const svg = d3.select(container_selector).append('svg')
       //  .attr('width',  width  + margin.left + margin.right + hist_height)
       //  .attr('height', height + margin.top + margin.bottom + hist_height)
-      .attr('width', "60%")
-      .attr('height', "60%")
-      .attr("viewBox", `0 0 800 900`)
+      .attr('width', "100%")
+      .attr('height', "100%")
+      .attr("viewBox", `-70 0 900 900`)
       .attr('preserveAspectRatio','xMinYMin')
 
     // Add a graph element for the scatterplot
@@ -254,7 +254,7 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
     dots.on('mouseover', function(d) {
 
       // Select the dot and grow its radius
-      d3.select(this).attr('r', circle_radius + 2).style('opacity', opacity_hover);
+      d3.select(this).attr('r', circle_radius + 3).style('opacity', opacity_hover);
       
       // Show the tooltip
       tooltip.html(tooltip_template(d, [ config['x_label'], config['y_label'] ]))
