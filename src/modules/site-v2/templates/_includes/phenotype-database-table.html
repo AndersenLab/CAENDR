@@ -1,16 +1,4 @@
-{% block custom_head %}
-<style>
-    #filter {
-        height: 40px;
-        overflow-x: auto;
-    }
-    #filter .btn {
-        font-size: 0.5rem;
-        padding: 0.25rem;
-    }
 
-</style>
-{% endblock %}
 <nav>
     <div class="nav nav-tabs border-0" id="nav-tab" role="tablist">
         <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button"
@@ -21,9 +9,29 @@
 </nav>
 <div class="tab-content py-2" id="nav-tabContent">
     <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
-        <div class="py-2">
-            <p><i class="bi bi-filter"></i> Filter:</p>
-            <div class="d-flex m-2 p-1 w-50 border border-dark rounded" id="filter"></div>
+        <div class="d-flex my-3 justify-content-between">
+            <form>
+                <label for="traitsSearch" class="form-label"><i class="bi bi-search"></i> Search:</label>
+                <input class="form-control" type="text" name="traitsSearch" id="traitsSearch">
+            </form>
+            <div class="col-12 col-md-3 mx-1 align-self-end mb-0">
+                <div class="dropdown">
+                    <button class="btn btn-secondary text-white dropdown-toggle w-100" id="traitsFilter" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-filter"></i> Filter</button>
+                    <div class="dropdown-menu w-auto" role="menu" id="tagsFilter">
+                        <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}" />
+                        <div class="dropdown-item">
+                            <input type="checkbox" class="custom-control-input" id="selectAll">
+                            <label class="custom-check-label" for="selectAll">Select All</label>
+                        </div>
+                        {% for tag in categories %}
+                        <div class="dropdown-item">
+                            <input type="checkbox" class="custom-control-input filterCheckbox" value="{{tag}}" id="{{tag}}">
+                            <label class="custom-check-label" for="{{tag}}">{{tag|replace('/', ' • ')}}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>       
+            </div>
         </div>
         <div class="table-responsive">
             <table class="table accordion p-0 text-center" id="tableAccordion">
@@ -40,52 +48,13 @@
                     </tr>
                 </thead>
                 <tbody class="table-group-divider align-middle">
-                    {% for tr in traits %}
-                    <tr class="py-3 dislayedRow" data-species="{{tr.species_name}}">
-                        <th>
-                            <a href="#" class="text-dark fw-normal" data-bs-toggle="collapse"
-                                data-bs-target="#collapse-{{loop.index}}" aria-expanded="false" aria-controls="collapse-{{loop.index}}"><i
-                                    class="bi bi-chevron-right" aria-hidden="true"></i><em>{{tr.species_name|capitalize|replace('_', '. ')}}</em></a>
-                        </th>
-                        <td id="accordionHeading-{{loop.index}}"><strong>{{tr.trait_name_caendr}}</strong></td>
-                        <td>{{tr.description_short}}.</td>
-                        <td>{{tr.source_lab}}</td>
-                        <td>{{tr.created_on}}</td>
-                        {% if tr.tags is none %}
-                        <td></td>
-                        {% else %}
-                        <td>
-                            {% for tag in tr.tags %}
-                            <div class="mb-3"><a id="tag-{{loop.index}}" data-value="{{tag}}" href="#">{{tag}}</a></div>
-                            {% endfor %}
-                        </td>
-                        {% endif %}
-                        <td id="trait-data-{{tr.trait_name_caendr}}" class="optionsToolbar" data-description="{{tr.description_short}}" data-species="{{tr.species_name}}">
-                            <div class="ps-3 pt-0">
-                                <a href="{{ analyze_link.replace('TRAIT_NAME', tr.trait_name_caendr).replace('TRAIT_SET', tr.dataset) }}">
-                                    <i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr id="collapse-{{loop.index}}" class="text-start accordion-collapse collapse"
-                        aria-labelledby="accordionHeading-{{loop.index}}" data-bs-parent="#tableAccordion">
-                        <td colspan="7">
-                            <div class="ps-5 p-3">
-                                <h3 class="h5 text-dark">Full Description</h3>
-                                <p>{{tr.description_long}}</p>
-                            </div>
-                            <div class="d-flex justify-content-end pe-5 optionsToolbar">
-                                <a data-bs-toggle="offcanvas" id="traitDetails" data-value="{{tr.trait_name_caendr}}" data-bs-target="#offcanvas1"
-                                    aria-controls="offcanvas1" href=" #"><i class="bi bi-list-ul"
-                                        aria-hidden="true"></i>View Full Details</a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
                 </tbody>
             </table>
         </div>
+        <nav class="d-flex justify-content-end" aria-label="Phenotype database table page navigation">
+            <ul class="pagination">   
+            </ul>
+        </nav>
     </div>
     <div class="tab-pane fade" id="nav-zhang" role="tabpanel" aria-labelledby="nav-profile-tab">
         <div class="table-responsive">
@@ -123,6 +92,19 @@
 {% block script %}
 <script>
     $(document).ready(function() {
+
+        $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
+                }
+                }
+            });
+
+        // Render Pagination
+        getResultsForPage(1, 1)
+
+        // Render Zhang table with Datatables
         const zhangTable = $('#zhangTraits').DataTable( {
             "processing": true,
             "serverSide": true,
@@ -147,11 +129,11 @@
                     "data": "View Full Details",
                     "render": function(data, type, row) {
                         const d = JSON.stringify(row)
-                        return `
+                        return `<td class="optionsToolbar">
                             <a id="details" data-value='${d}' data-bs-toggle="offcanvas" data-bs-target="#offcanvas1" aria-controls="offcanvas1" 
-                            href="#"><i class="bi bi-list-ul" aria-hidden="true"></i>Full Details</a>`
-                    },
-                    "sClass": "optionsToolbar",
+                            href="#"><i class="bi bi-list-ul" aria-hidden="true"></i>Full Details</a>
+                            </td>`
+                        }
                 },
                 {
                     "data": "Analyze",
@@ -167,59 +149,174 @@
                 },
             ]
         });
-    })
 
-
-    $(document).on('click','#details', function() {
-        const trait = $(this).data('value')
-        fillOutModal(trait)
-    })
-
-
-    $(document).on('click','#traitDetails', function() {
-        const traitName = $(this).data('value')
-
-        $.getJSON('/tools/phenotype-database/traits-list', function(data) {
-            const traitObj = data.find(t => t.trait_name_caendr === traitName)
-            fillOutModal(traitObj)
+        // Fill out side bar for Zhang traits
+        $(document).on('click','#details', function() {
+            const trait = $(this).data('value')
+            fillOutModal(trait)
         })
 
-    })
+        // Fill out side bar for non-bulk traits
+        $(document).on('click','#traitDetails', function() {
+            const traitName = $(this).data('value')
 
-    $("[id^='tag']").on('click', function() {
-        const v = $(this).data('value') 
-        $(`[data-value=${v}]`).addClass('disabled')
-        const btn = `<div>
-                        <div>${v}
-                        <i class="bi bi-x-circle-fill text-muted btn p-1 m-0" data-value="${v}" id="remove-${v}"></i>
-                        </div>
-                     </div>`
-        $('#filter').append(btn)
-        filterTable()
-    })
-
-    $(document).on('click', "[id^='remove']", function() {
-        $(this).parent().parent().remove()
-        const v = $(this).data('value') 
-        $(`[data-value=${v}]`).removeClass('disabled')
-        filterTable()
-    })
-
-    // The function filters table by selected tags from "Categories" field
-    function filterTable() {
-        const keywords = $('#filter i').map(function(){
-            return $(this).data('value')
-        }).get()
-        if (!keywords.length) {
-            $('#tableAccordion tbody>.dislayedRow').show()
-        } else {
-            $('#tableAccordion tbody>tr').hide().each(function() {
-            const val = $(this).find('.tagButton').data('value')
-            if (keywords.indexOf(val) !== -1) {
-                $(this).show()
-            }
+            $.getJSON('/tools/phenotype-database/traits-list', function(data) {
+                const traitObj = data.find(t => t.trait_name_caendr === traitName)
+                fillOutModal(traitObj)
             })
+
+        })
+
+
+        
+        // Handle the Categories filter
+        $(document).on( "change", "input[type=checkbox]", function () {
+            $("#traitsSearch").val('')
+            if ($(this).attr('id') !== 'selectAll') {
+                $('#selectAll').prop('checked', false)
+            }
+            const selectedTags = $(".filterCheckbox:checked").map(function() {
+                return $(this).val()
+            }).get()
+            const data = {csrf_token: $('#csrf_token').val(), selected_tags: selectedTags}
+            sendPostRequest(data)
+        })
+
+        $('#selectAll').on('change', function() {
+            if ($(this).is(':checked')) {
+                $('.filterCheckbox').prop('checked', true)
+            } else {
+                $('.filterCheckbox').prop('checked', false)
+            }
+        })
+
+        $("#traitsSearch").on('keyup', function(){
+            $("input[type=checkbox]").prop('checked', false)
+            const searchVal = $(this).val()
+            const data = {csrf_token: $('#csrf_token').val(), search_val: searchVal}
+            sendPostRequest(data)
+        })
+    })
+
+
+
+    function sendPostRequest(data) {
+        $.ajax({
+                type: "POST",
+                url: "{{ url_for('phenotype_database.phenotype_database') }}",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function(response) {
+                    $('#tableAccordion tbody').empty()
+                    filterTable(response.data)
+                    $('.pagination').empty()
+                    updatePagination(response.pagination)
+                },
+                error: function(error){
+                    console.log('something went wrong', error)
+                }
+            })
+    }
+
+    function filterTable(arr) {
+        for (let i = 0; i < arr.length; i++) {
+            const speciesName = arr[i].species.charAt(0).toUpperCase() + arr[i].species.replace('_', '. ').slice(1)
+            const traitName = arr[i].trait_name_caendr
+            let url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", traitName).replace("TRAIT_SET", 'caendr')
+            const createdOn = formatDate(arr[i].created_on)
+            let tagsHTML = ''
+            if (arr[i].tags !== null && arr[i].tags.length) {
+                const tags = arr[i].tags.split(', ')
+                for (let j = 0; j < tags.length; j++) {
+                    tagsHTML += `<div class="mb-3"><a id="tag-${j+1}" data-value="${tags[j]}">${tags[j].replaceAll('/', ' • ')}</a></div>`
+                }
+            }
+            
+            let html = `
+                    <tr class="py-3 dislayedRow">
+                        <td>
+                            <a href="#" class="text-dark fw-normal" data-bs-toggle="collapse"
+                                data-bs-target="#collapse-${i+1}" aria-expanded="false" aria-controls="collapse-${i+1}"><i
+                                    class="bi bi-chevron-right" aria-hidden="true"></i><em>${speciesName}</em></a>
+                        </td>
+                        <td id="accordionHeading-${i+1}"><strong>${arr[i].trait_name_caendr}</strong></td>
+                        <td>${arr[i].description_short}.</td>
+                        <td>${arr[i].source_lab}</td>
+                        <td>${createdOn}</td>
+                        <td class="d-flex flex-column" id="tags">${tagsHTML}</td>
+                        <td class="optionsToolbar">
+                            <div class="ps-3 pt-0" id="trait-data-${arr[i].trait_name_caendr}" data-description="${arr[i].description_short}" data-species="${arr[i].species}"><a href='${url}'><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Analyze</a></div>
+                        </td>
+                    </tr>
+                    <tr id="collapse-${i+1}" class="text-start accordion-collapse collapse"
+                        aria-labelledby="accordionHeading-${i+1}" data-bs-parent="#tableAccordion">
+                        <td colspan="7">
+                            <div class="ps-5 p-3">
+                                <h3 class="h5 text-dark">Full Description</h3>
+                                <p>${arr[i].description_long}</p>
+                            </div>
+                            <div class="d-flex justify-content-end pe-5 optionsToolbar">
+                                <a data-bs-toggle="offcanvas" id="traitDetails" data-value="${arr[i].trait_name_caendr}" data-bs-target="#offcanvas1"
+                                    aria-controls="offcanvas1" href=" #"><i class="bi bi-list-ul"
+                                        aria-hidden="true"></i>View Full Details</a>
+                            </div>
+                        </td>
+                    </tr>
+            `
+            
+            $('#tableAccordion tbody').append(html)
         }
+    }
+
+    function updatePagination(p) {
+        let html = ''
+       
+        let prev = ''
+        if(p.has_prev) {
+            prev += `<a class="page-link" role="button" onClick="getResultsForPage(${p.prev_num}, ${p.current_page})">Previous</a>`
+        } else {
+            prev +=  '<a class="page-link disabled" href="#" tabindex="-1">Previous</a>'
+        }
+        html +=  `<li class="page-item">${prev}</li>`
+        for (let i = 0; i < p.total_pages; i++) {
+            const pageNum = i + 1
+            let iterPages = ''
+            if (pageNum == p.current_page) {
+                iterPages += `<li class="page-item disabled">
+                                  <a class="page-link" href="#" tabindex="-1">${pageNum}</a>
+                              </li>`
+            } else {
+                iterPages += `<li class="page-item">
+                                  <a class="page-link" role="button" onClick="getResultsForPage(${pageNum}, ${pageNum})">${pageNum}</a>
+                              </li>`
+            }
+            html += iterPages
+        }
+        let next = ''
+        if (p.has_next) {
+            next += `<a class="page-link" role="button" onClick="getResultsForPage(${p.next_num}, ${p.current_page})">Next</a>`
+        } else {
+            next += '<a class="page-link disabled" href="#" tabindex="-1">Next</a>'
+        }
+        html += `<li class="page-item">${next}</li>`
+        $('.pagination').append(html)
+
+    }
+
+    function getResultsForPage(page, currentPage) {
+        const selectedTags = $(".filterCheckbox:checked").map(function() {
+                return $(this).val()
+            }).get()
+        const data = {
+            csrf_token: $('#csrf_token').val(), 
+            page: page, 
+            current_page: currentPage,
+            search_val: $("#traitsSearch").val(),
+            selected_tags: selectedTags
+        }
+        sendPostRequest(data)
     }
 
     function fillOutModal(trait) {
@@ -235,12 +332,12 @@
         manageVal(trait.description_long, '#descriptionLong')
         manageVal(trait.protocols, '#protocol', false, true)
         manageVal(trait.publication, '#publication', false, true)
-        $('#tags').empty()
+        $('#offcanvas1 #tags').empty()
         if (trait.tags !== null || (trait.tags && trait.tags.length)) {
-            $('#tags').prev().show()
-            $('#tags').append(displayTags(trait.tags))
+            $('#offcanvas1 #tags').prev().show()
+            $('#offcanvas1 #tags').append(displayTags(trait.tags.split(', ')))
         } else {
-            $('#tags').prev().hide()
+            $('#offcanvas1 #tags').prev().hide()
         }
         $('#values > tbody').empty()
         if (trait.phenotype_values.length) {
@@ -267,9 +364,7 @@
         if (arr == null) return;
         let result = ''
         for (tag of arr) {
-            result += `<div class="col-4">
-                        <a class="btn btn-primary rounded-pill text-white fw-normal p-1 my-1 tagButton" role="button" href="#">${tag}</a>
-                       </div>`
+            result += `<div class="mb-3">${tag.replaceAll('/', ' • ')}</div>`
         }
         return result
     }
@@ -277,7 +372,9 @@
     function formatDate(d) {
         if(d === null) return 'N/A'
         const date = new Date(d)
-        return `${date.getFullYear()}/${date.getMonth()}/${date.getDate()}`
+        const month = (date.getMonth()+1).toString().padStart(2, '0')
+        const day = date.getDate().toString().padStart(2, '0')
+        return `${date.getFullYear()}-${month}-${day}`
     }
 
     // The function manages the fields in the side bar. 
