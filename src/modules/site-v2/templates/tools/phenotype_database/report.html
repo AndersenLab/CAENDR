@@ -8,12 +8,26 @@
 <style>
     .tooltip {
         position: absolute;
-        font-size: 12px;
+        /* font-size: 8px !important; */
         width:  auto;
         height: auto;
-        border: 1px solid black;
+        padding:1.25em;
+        /* border: 1px solid black; */
         pointer-events: none;
-        background-color: white;
+        background-color: #F8F9FA;
+        border-radius: 5px;
+        box-shadow:0 .125rem .25rem rgba(0, 0, 0, .075);
+             
+    }
+
+    #phenotype-chart .tooltip {
+        left: 30%;
+        top:95%;
+    }
+
+    #phenotype-chart-ranked-bar .tooltip {
+        right: 25px;
+        top: -25px;
     }
 
     .tooltip p {
@@ -25,6 +39,35 @@
     .tooltip .tooltip-body {
         padding: 0 4px;
     }
+
+    #closeButton {
+    display:none;
+  }
+
+    #chartContainer {
+        background-color: #FEFCFB;
+    }
+
+
+    @media screen and (min-width: 768px) {
+  #chartContainer {
+    min-height:100vh;
+  }
+
+  #phenotype-chart svg {
+    width: 65%;
+    height: 65%;
+  }
+
+  #phenotype-chart-ranked-bar .tooltip {
+    top: 0px;
+  }
+
+  #phenotype-chart .tooltip {
+    left: 75%;
+    top:15%;
+    }
+}
 </style>
 
 {% endblock %}
@@ -32,18 +75,11 @@
 
 {% block content %}
 
-<div class="container-fluid px-5 pb-5">
+<div class="container-fluid px-0 pb-5">
     <div class="d-flex justify-content-around flex-wrap mt-2">
         <!-- Results Card -->
-        <div class="col col-md-6 col-xl-3 text-bg-light mb-5 p-5 rounded-2 shadow-sm">
-            <h2 class="h3 text-center mb-5">Trait Information</h2>
-
-            {%- if data.num_traits > 1 %}
-            <p><i>
-            The data were mean centered and scaled to have a standard deviation of 1.
-            These operations do not affect correlation tests and make the data easier to evaluate in a plot.
-            </i></p>
-            {%- endif %}
+        <div class="col col-md-6 col-xl-3 text-bg-light mb-5 p-5 rounded-2 shadow-sm overflow-auto" style="max-height: 145vh;">
+            <div><h2 class="h3 text-center mb-5">Trait Information</h2>
 
             {%- if data.num_traits > 1 %}
             <h3 class="h4 text-dark">Trait 1</h3>
@@ -64,30 +100,55 @@
             <h3 class="h4 text-dark">P-Value</h3>
             <p>{{ result.p_value|round(4) }}</p>
             {%- endif %}
+            </div>
+            <!-- Download Buttons when those features are ready -->
+            <!-- <div class="my-5">
+                <div class="d-grid gap-3">
+                  <a class="btn btn-secondary text-light" role="button" onClick=""><i class="bi bi-image-fill me-2"></i>Download SVG</a>
+                  <a class="btn btn-secondary text-light" role="button" onClick=""><i class="bi bi-file-earmark-spreadsheet-fill me-2"></i>Download TSV</a>
+                </div>
+              </div> -->
         </div>
         <!-- /Input Card -->
         <!-- Tool column -->
         <div class="d-flex flex-wrap flex-column col-md-12 col-xl-8">
             <!-- Options Toolbar -->
-            <!-- <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar">
-                <div class="ps-3 pt-0"><a href="#"><i class="bi bi-file-earmark-arrow-down-fill" aria-hidden="true"></i>
-                        Download My Results</a></div>
-                <div class="ps-3 pt-0"><a href="#"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
-                        Fullscreen</a></div>
-            </div> -->
+            <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar">
+                <div class="ps-3 pt-0"><a href="{{ url_for('phenotype_database.phenotype_database') }}"><i class="bi bi-plus-circle" aria-hidden="true"></i> New Analysis</a></div>
+                <div class="ps-3 pt-0"><a href="{{ url_for('phenotype_database.my_results') }}"><i class="bi bi-journal" aria-hidden="true"></i>View All My Phenotype Results</a></div>
+                <div class="ps-3 pt-0"><button class="btn border-0" onclick="openFullscreen();" id="fullscreenButton"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>View Fullscreen</button></div>
+            </div>
             <!-- /Options Toolbar -->
             <!-- Widget Placeholder -->
-            <div class="col">
-                <div id="phenotype-chart"></div>
+            <div class="row">
+            <div class="col overflow-auto px-0" id="chartContainer">
+                <div>
+                    <button class="btn btn-danger text-light p-2 my-5 mx-auto" onclick="closeFullscreen();" id="closeButton"><i
+                        class="bi bi-fullscreen-exit text-light" aria-hidden="true"></i> Close Fullscreen</button>
+                  </div>
+                    <div id="phenotype-chart" class="text-center mb-5 position-relative"></div>
+                    <div id="phenotype-chart-histogram" class="text-center mb-5 position-relative"></div>
+                    <div id="phenotype-chart-ranked-bar" class="text-center mb-5 position-relative"></div>
+                    {%- if data.num_traits > 1 %}
+                    <div class="col-9 alert alert-info mt-5 mx-auto">
+                        <p class="text-small text-center">
+                            <i class="bi bi-info-circle-fill me-2" aria-hidden="true"></i>
+                            <br>
+                            The data were mean centered and scaled to have a standard deviation of 1. These operations do not affect
+                            correlation tests and make the data easier to evaluate in a plot.
+                        </p>
+                    </div>
+                    {%- endif %}
                 <!-- <svg class="bd-placeholder-img bd-placeholder-img-lg img-fluid border-0" width="100%"
-                    style="height: 100%" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Widget"
-                    preserveAspectRatio="xMidYMid slice" focusable="false">
-                    <title>Placeholder</title>
-                    <rect width="100%" height="100%" fill="#868e96"></rect><text x="50%" y="50%" fill="#dee2e6"
-                        dy=".3em">Widget
-                        Placeholder</text>
-                </svg> -->
+                                style="height: 100%" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Widget"
+                                preserveAspectRatio="xMidYMid slice" focusable="false">
+                                <title>Placeholder</title>
+                                <rect width="100%" height="100%" fill="#868e96"></rect><text x="50%" y="50%" fill="#dee2e6"
+                                    dy=".3em">Widget
+                                    Placeholder</text>
+                            </svg> -->
             </div>
+        </div>
             <!-- Widget Placeholder -->
         </div>
         <!-- /Tool Column -->
@@ -101,6 +162,11 @@
 {% block script %}
 {% from "_includes/macros.html" import label_string_units %}
 
+<script type="text/javascript">
+     // For viewing tool in fullscreen
+ {% include '_scripts/fullscreen.js' %}
+</script>
+
 <script src="{{ url_for('static', filename='js/plot.js') }}"></script>
 
 <script type="module">
@@ -113,9 +179,9 @@ const data = {{ result.trait_values|tojson }};
 const trait_label = {{ label_string_units(data.trait_names[0], report['trait_1']['units']) }};
 
 try {
-    render_histogram('#phenotype-chart', data, {
-        width:         1200,
-        height:        300,
+    render_histogram('#phenotype-chart-histogram', data, {
+         width:         1200,
+        // height:        300,
         fill_color:    '#0719BC',
         bins_per_tick: 2,
         x_label:       trait_label,
@@ -130,9 +196,9 @@ try {
 }
 
 try {
-    render_ranked_barplot('#phenotype-chart', data, {
+    render_ranked_barplot('#phenotype-chart-ranked-bar', data, {
         width:         1200,
-        height:        400,
+        // height:        400,
         fill_color:    '#0719BC',
         y_label:       trait_label,
         tooltip_id:    'tooltip-single-barplot',
@@ -160,7 +226,7 @@ try {
         bin_width:     0.2,
         x_label:       `${trait_label_1}`,
         y_label:       `${trait_label_2}`,
-        opacity:       0.75,
+        opacity:       0.5,
         opacity_hover: 1,
         tooltip_id:    'tooltip-double-scatterplot',
         tooltip_template: (d, labels) => `
@@ -174,6 +240,9 @@ try {
 }
 {%- endif %}
 
+</script>
+<script>
+    let fullscreenBrowser = document.getElementById("chartContainer");
 </script>
 
 {% endblock %}
