@@ -171,15 +171,10 @@
         
         // Handle the Categories filter
         $(document).on( "change", "input[type=checkbox]", function () {
-            $("#traitsSearch").val('')
             if ($(this).attr('id') !== 'selectAll') {
                 $('#selectAll').prop('checked', false)
             }
-            const selectedTags = $(".filterCheckbox:checked").map(function() {
-                return $(this).val()
-            }).get()
-            const data = {csrf_token: $('#csrf_token').val(), selected_tags: selectedTags}
-            sendPostRequest(data)
+            filterByCategories()
         })
 
         $('#selectAll').on('change', function() {
@@ -197,6 +192,14 @@
             sendPostRequest(data)
         })
 
+        $(document).on('click', '[id^="tagLink"]', function() {
+            const tagVal = $(this).data('value')
+            const filterTag = $("input[type=checkbox]").filter(function(){
+                return $(this).attr('value') === tagVal
+            })
+            filterTag.prop('checked', true)
+            filterByCategories()
+        })
         // Prevent 'enter' key from reloading the page
         $('#traitsSearch').closest('form').on('submit', function(e){
             e.preventDefault();
@@ -204,6 +207,14 @@
     })
 
 
+    function filterByCategories() {
+        $("#traitsSearch").val('')
+        const selectedTags = $(".filterCheckbox:checked").map(function() {
+            return $(this).val()
+        }).get()
+        const data = {csrf_token: $('#csrf_token').val(), selected_tags: selectedTags}
+        sendPostRequest(data)
+    }
 
     function sendPostRequest(data) {
         $.ajax({
@@ -234,7 +245,7 @@
             if (arr[i].tags !== null && arr[i].tags.length) {
                 const tags = arr[i].tags.split(', ')
                 for (let j = 0; j < tags.length; j++) {
-                    tagsHTML += `<div class="mb-3"><a id="tag-${j+1}" data-value="${tags[j]}">${tags[j].replaceAll('/', ' • ')}</a></div>`
+                    tagsHTML += `<div class="mb-3"><a role="button" class="btn btn-link" id="tagLink-${j+1}" data-value="${tags[j]}">${tags[j].replaceAll('/', ' • ')}</a></div>`
                 }
             }
             
