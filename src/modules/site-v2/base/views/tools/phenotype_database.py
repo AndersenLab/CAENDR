@@ -62,18 +62,63 @@ def results_columns():
 # Main Endpoint
 #
 
-@phenotype_database_bp.route('')
+@phenotype_database_bp.route('', methods=['GET', 'POST'])
 @cache.memoize(60*60)
 def phenotype_database():
   """
     Phenotype Database table (non-bulk)
   """
+  form = EmptyForm()
+  
   # Get the list of traits for non-bulk files
   try:
-    traits_non_bulk = query_phenotype_metadata()
+    query = query_phenotype_metadata()
+
+    # Get the list of unique tags
+    tags = [ tr.tags.split(', ') for tr in query if tr.tags ]
+    tags_list = [tg for tr_tag in tags for tg in tr_tag]
+    unique_tags = list(set(tags_list))
+
+    if request.method == 'POST':
+      selected_tags = request.json.get('selected_tags', [])
+      search_val = request.json.get('search_val', '')
+      page = int(request.json.get('page', 1))
+      current_page = int(request.json.get('current_page', 1))
+      per_page = 10
+
+      if search_val and len(search_val):
+        query = query.filter(
+           or_(
+          func.lower(PhenotypeMetadata.trait_name_caendr.like(f"%{search_val}%")),
+          func.lower(PhenotypeMetadata.trait_name_user.like(f"%{search_val}%")),
+          func.lower(PhenotypeMetadata.description_short.like(f"%{search_val}%")),
+          func.lower(PhenotypeMetadata.description_long.like(f"%{search_val}%")),
+          func.lower(PhenotypeMetadata.source_lab.like(f"%{search_val}%")),
+          func.lower(PhenotypeMetadata.institution.like(f"%{search_val}%")),
+          func.lower(PhenotypeMetadata.submitted_by.like(f"%{search_val}%")),
+          )
+        )
+      
+      if len(selected_tags):
+        query = query.filter(or_(
+          PhenotypeMetadata.tags.ilike(f"%{bleach.clean(tag)}%") for tag in selected_tags
+          ))
+        
+      pagination = query.paginate(page=page, per_page=per_page)
+      json_data = [ tr.to_json() for tr in pagination.items ]
+      pagination_data = {
+        'has_next':     pagination.has_next,
+        'has_prev':     pagination.has_prev,
+        'prev_num':     pagination.prev_num,
+        'next_num':     pagination.next_num,
+        'total_pages':  pagination.pages,
+        'current_page': current_page
+      }
+      return jsonify({'data': json_data, 'pagination': pagination_data })
+        
   except Exception as ex:
     logger.error(f'Failed to retrieve the list of traits: {ex}')
-    abort(500)
+    abort(500, description='Failed to retrieve the list of traits')
 
   return render_template('tools/phenotype_database/phenotypedb.html', **{
     # Page info
@@ -81,8 +126,10 @@ def phenotype_database():
     "tool_alt_parent_breadcrumb": { "title": "Tools", "url": url_for('tools.tools') },
 
     # Data
-    'traits': traits_non_bulk,
+    'categories': unique_tags,
+    'form': form
   })
+
 
 @phenotype_database_bp.route('/traits-zhang')
 @cache.memoize(60*60)
@@ -97,9 +144,9 @@ def get_zhang_traits_json():
     draw = request.args.get('draw', type=int)
     start = request.args.get('start', type=int)
     length = request.args.get('length', type=int)
-    search_value = request.args.get('search[value]', '').lower()
+    search_value = bleach.clean(request.args.get('search[value]', '')).lower()
 
-    query = PhenotypeMetadata.query
+    query = query_phenotype_metadata(is_bulk_file=True)
     total_records = query.count()
     
     if search_value:
