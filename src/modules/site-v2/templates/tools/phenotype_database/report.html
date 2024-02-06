@@ -8,13 +8,16 @@
 <style>
     .tooltip {
         position: absolute;
-        font-size: 8px !important;
-        color: red;
+        /* font-size: 8px !important; */
         width:  auto;
         height: auto;
-        border: 1px solid black;
+        padding:1.25em;
+        /* border: 1px solid black; */
         pointer-events: none;
-        background-color: white;
+        background-color: #F8F9FA;
+        border-radius: 5px;
+        box-shadow:0 .125rem .25rem rgba(0, 0, 0, .075);
+             
     }
 
     #phenotype-chart .tooltip {
@@ -45,9 +48,6 @@
         background-color: #FEFCFB;
     }
 
-    #phenotype-chart-ranked-bar {
-        min-height: 25vh;
-    }
 
     @media screen and (min-width: 768px) {
   #chartContainer {
@@ -101,12 +101,13 @@
             <p>{{ result.p_value|round(4) }}</p>
             {%- endif %}
             </div>
-            <div class="my-5">
+            <!-- Download Buttons when those features are ready -->
+            <!-- <div class="my-5">
                 <div class="d-grid gap-3">
                   <a class="btn btn-secondary text-light" role="button" onClick=""><i class="bi bi-image-fill me-2"></i>Download SVG</a>
                   <a class="btn btn-secondary text-light" role="button" onClick=""><i class="bi bi-file-earmark-spreadsheet-fill me-2"></i>Download TSV</a>
                 </div>
-              </div>
+              </div> -->
         </div>
         <!-- /Input Card -->
         <!-- Tool column -->
