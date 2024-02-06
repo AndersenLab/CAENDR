@@ -94,6 +94,18 @@ class User(Entity):
 
 
 
+  ## Equality ##
+
+  def __eq__(self, other):
+    '''
+      Two `User` objects are considered equal if their datastore IDs match.
+    '''
+    if not isinstance(other, User):
+      return False
+    return self.name == other.name
+
+
+
   ## Other ##
 
   def reports(self):
