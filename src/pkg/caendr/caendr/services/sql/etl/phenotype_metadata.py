@@ -40,7 +40,7 @@ def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
            yield {
              'trait_name_caendr': trait_name,
              'trait_name_user':   md['trait_name_user'],
-             'species':           md.species.name,
+             'species_name':      md.species.name,
              'wbgene_id':         wbgene_id,
              'description_short': md['description_short'],
              'description_long':  md['description_long'],
@@ -61,7 +61,7 @@ def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
       yield {
       'trait_name_caendr': md['trait_name_caendr'],
       'trait_name_user':   md['trait_name_user'],
-      'species':           md.species.name,
+      'species_name':      md.species.name,
       'wbgene_id':         'N/A',
       'description_short': md['description_short'],
       'description_long':  md['description_long'],

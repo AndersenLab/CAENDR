@@ -47,6 +47,11 @@ def parse_phenotypedb_traits_data(species: Species, **files: LocalDatastoreFile)
           trait_name = header
           trait_value = row[column_header_map[header]]
 
+          # NOTE: If no trait name is provided within the file, this falls back to the entity metadata value
+          #       This might not be necessary, if we enforce a stricter file format (trait name inside file)
+          if trait_name == 'trait_name':
+            trait_name = file_path.metadata['trait_name_caendr']
+
           # Skip the rows with "NA" trait values
           if trait_value == 'NA':
             continue
