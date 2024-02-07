@@ -204,7 +204,7 @@ try {
         tooltip_id:    'tooltip-single-barplot',
         tooltip_template: (d) => `
             <p class="tooltip-head"><b>${d[1]}</b></p>
-            <p class="tooltip-body">Value = ${d[0]}</p>
+            <p class="tooltip-body">Value = ${d[0].toFixed(4)}</p>
         `,
     });
 } catch (err) {
@@ -231,8 +231,8 @@ try {
         tooltip_id:    'tooltip-double-scatterplot',
         tooltip_template: (d, labels) => `
             <p class="tooltip-head"><b>${d[2]}</b></p>
-            <p class="tooltip-body">x = ${d[0]}</p>
-            <p class="tooltip-body">y = ${d[1]}</p>
+            <p class="tooltip-body">x = ${d[0].toFixed(4)}</p>
+            <p class="tooltip-body">y = ${d[1].toFixed(4)}</p>
         `,
     });
 } catch (err) {
