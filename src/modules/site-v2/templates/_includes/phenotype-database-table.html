@@ -206,7 +206,7 @@
             sendPostRequest(data)
         })
 
-        $(document).on('click', '[id^="tagLink"]', function() {
+        $('#tableAccordion').on('click', '[id^="tagLink"]', function() {
             const tagVal = $(this).data('value')
             const filterTag = $("input[type=checkbox]").filter(function(){
                 return $(this).attr('value') === tagVal
@@ -302,7 +302,6 @@
 
     function updatePagination(p) {
         let html = ''
-       
         let prev = ''
         if(p.has_prev) {
             prev += `<a class="page-link" role="button" onClick="getResultsForPage(${p.prev_num}, ${p.current_page})">Previous</a>`
