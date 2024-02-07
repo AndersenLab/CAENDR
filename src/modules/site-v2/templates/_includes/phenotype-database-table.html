@@ -239,7 +239,7 @@
 
     function filterTable(arr) {
         for (let i = 0; i < arr.length; i++) {
-            const speciesName = arr[i].species.charAt(0).toUpperCase() + arr[i].species.replace('_', '. ').slice(1)
+            const speciesName = arr[i].species_name.charAt(0).toUpperCase() + arr[i].species_name.replace('_', '. ').slice(1)
             const traitName = arr[i].trait_name_caendr
             let url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", traitName).replace("TRAIT_SET", 'caendr')
             const createdOn = formatDate(arr[i].created_on)
@@ -264,7 +264,7 @@
                         <td>${createdOn}</td>
                         <td class="d-flex flex-column" id="tags">${tagsHTML}</td>
                         <td class="optionsToolbar">
-                            <div class="ps-3 pt-0" id="trait-data-${arr[i].trait_name_caendr}" data-description="${arr[i].description_short}" data-species="${arr[i].species}"><a href='${url}'><i class="bi bi-arrow-right-circle-fill"
+                            <div class="ps-3 pt-0" id="trait-data-${arr[i].trait_name_caendr}" data-description="${arr[i].description_short}" data-species="${arr[i].species_name}"><a href='${url}'><i class="bi bi-arrow-right-circle-fill"
                                         aria-hidden="true"></i>Analyze</a></div>
                         </td>
                     </tr>
