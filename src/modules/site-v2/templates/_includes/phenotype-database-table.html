@@ -211,6 +211,14 @@
             sendPostRequest(data)
         })
 
+        $('#tableAccordion').on('click', '[id^="tagLink"]', function() {
+            const tagVal = $(this).data('value')
+            const filterTag = $("input[type=checkbox]").filter(function(){
+                return $(this).attr('value') === tagVal
+            })
+            filterTag.prop('checked', true)
+            filterByCategories()
+        })
         // Prevent 'enter' key from reloading the page
         $('#traitsSearch').closest('form').on('submit', function(e){
             e.preventDefault();
@@ -291,7 +299,6 @@
 
     function updatePagination(p) {
         let html = ''
-       
         let prev = ''
         if(p.has_prev) {
             prev += `<a class="page-link" role="button" onClick="getResultsForPage(${p.prev_num}, ${p.current_page})">Previous</a>`
