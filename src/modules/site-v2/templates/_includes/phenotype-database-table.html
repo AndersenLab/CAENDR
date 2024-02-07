@@ -51,7 +51,7 @@
                 </tbody>
             </table>
         </div>
-        <nav class="d-flex justify-content-end" aria-label="Phenotype database table page navigation">
+        <nav class="d-flex justify-content-end" aria-label="Phenotype database table page navigation" id="tablePagination">
             <ul class="pagination">   
             </ul>
         </nav>
@@ -240,7 +240,7 @@
                 success: function(response) {
                     $('#tableAccordion tbody').empty()
                     filterTable(response.data)
-                    $('.pagination').empty()
+                    $('#tablePagination .pagination').empty()
                     updatePagination(response.pagination)
                 },
                 error: function(error){
@@ -330,7 +330,7 @@
             next += '<a class="page-link disabled" href="#" tabindex="-1">Next</a>'
         }
         html += `<li class="page-item">${next}</li>`
-        $('.pagination').append(html)
+        $('#tablePagination .pagination').append(html)
 
     }
 
