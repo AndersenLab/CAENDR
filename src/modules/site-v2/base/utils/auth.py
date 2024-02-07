@@ -142,7 +142,7 @@ def user_lookup_callback(_jwt_header, jwt_data):
 
 @jwt.unauthorized_loader
 def unauthorized_callback(reason):
-  requested_route = request.path or None
+  requested_route = request.full_path or None
   ''' Invalid auth header, redirect to login'''
   return redirect(url_for('auth.choose_login', next=requested_route)), 302
     
@@ -168,7 +168,7 @@ def expired_token_callback(_jwt_header, jwt_data):
     return redirect(url_for('auth.choose_login'))
 
   logger.info("Expired Token.")
-  session['login_referrer'] = request.base_url
+  session['login_referrer'] = request.url
   resp = make_response(redirect(url_for('auth.refresh')))
   unset_access_cookies(resp)
   return resp, 302
