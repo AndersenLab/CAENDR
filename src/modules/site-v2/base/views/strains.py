@@ -53,6 +53,7 @@ MODULE_SITE_BUCKET_PRIVATE_NAME = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
 
 STRAIN_SUBMISSION_URL = get_env_var('MODULE_SITE_STRAIN_SUBMISSION_URL')
 NO_REPLY_EMAIL = get_secret('NO_REPLY_EMAIL')
+EULA_FILE_NAME = get_env_var('EULA_FILE_NAME')
 
 
 
@@ -313,22 +314,22 @@ def order_page_index():
   else:
     users_cart = Cart(cart_id)
 
-  cartItems = users_cart['items']
+  cart_items = users_cart['items']
   form.version.data = users_cart['version']
 
-  for item in cartItems:
+  for item in cart_items:
     item['price'] = Cart.get_price(item)
     species = item.get('species')
     item['species_short_name'] = Species.from_name(species).short_name
-  totalPrice = sum(item['price'] for item in cartItems)
+  totalPrice = sum(item['price'] for item in cart_items)
 
   return render_template('order/order.html', **{
     'tool_alt_parent_breadcrumb': {"title": "Strain Catalog", "url": url_for('request_strains.request_strains')},
     'title': "Order Summary",
-    'cartItems': cartItems,
-    'totalPrice': totalPrice,
+    'cart_items': cart_items,
+    'total_price': totalPrice,
     'form': form,
-    'EULA_url': get_blob(MODULE_SITE_BUCKET_PRIVATE_NAME, 'EULA_for_CaeNDR_website_Dr_Andersen_1-25-24.md').public_url
+    'EULA_url': get_blob(MODULE_SITE_BUCKET_PRIVATE_NAME, EULA_FILE_NAME).public_url
   })
   
 

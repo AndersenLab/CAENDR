@@ -37,7 +37,7 @@
 {% endblock %}
 
 {% block content %}
-    {% if len(cartItems) %}
+    {% if len(cart_items) %}
     <div class="table-responsive col-12 col-md-9 p-5 mb-5 mx-auto  rounded shadow-sm text-bg-light">
         <table class="table table-striped" id="orderTable">
             <caption class="visually-hidden">A list of items included in your shopping cart.</caption>
@@ -51,7 +51,7 @@
                 </tr>
             </thead>
             <tbody class="searchable">
-                {% for item in cartItems %}
+                {% for item in cart_items %}
                 <tr class='cartItem'>
                     <td>{{ loop.index }}</td>
                     <td><em>{{ item.species_short_name }}</em></td>
@@ -67,7 +67,7 @@
                 {% endfor %}
                 <tr id="total">
                     <td colspan="3"><strong>Total:</strong></td>
-                    <td colspan="2" class="totalPrice"><strong>${{ totalPrice }}</strong></td>
+                    <td colspan="2" class="totalPrice"><strong>${{ total_price }}</strong></td>
                 </tr>
             </tbody>
         </table>
