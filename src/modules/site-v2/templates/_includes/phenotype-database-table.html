@@ -32,7 +32,7 @@ position: relative;
             </form>
             <div class="col-12 col-md-3 mx-1 align-self-end mb-0">
                 <div class="dropdown">
-                    <button class="btn btn-secondary text-white dropdown-toggle w-100" id="traitsFilter" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-filter"></i> Filter</button>
+                    <button class="btn btn-secondary text-white dropdown-toggle w-100" id="traitsFilter" type="button" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false"><i class="bi bi-filter"></i> Filter</button>
                     <div class="dropdown-menu w-auto" role="menu" id="tagsFilter">
                         <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}" />
                         <div class="dropdown-item">
@@ -45,6 +45,9 @@ position: relative;
                             <label class="custom-check-label" for="{{tag}}">{{tag|replace('/', ' • ')}}</label>
                         </div>
                         {% endfor %}
+                        <div class="d-flex justify-content-end">
+                            <button class="btn btn-secondary text-white right-0 m-2" type="button" id="clearAll">Clear All Filters</button>
+                        </div>
                     </div>
                 </div>       
             </div>
@@ -213,6 +216,11 @@ position: relative;
             } else {
                 $('.filterCheckbox').prop('checked', false)
             }
+        })
+
+        $("#clearAll").on('click', function() {
+            $('input[type=checkbox]').prop('checked', false)
+            search()
         })
 
         $("#traitsSearch").on('keyup', function(){
