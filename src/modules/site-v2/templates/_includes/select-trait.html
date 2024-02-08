@@ -56,11 +56,11 @@
   document.getElementById("{{id}}-selector").removeAttribute('data-trait');
   document.getElementById("{{id}}-selector").removeAttribute('data-set');
   {%- elif trait_obj %}
-  document.getElementById("{{id}}-selector").dataset.trait = "{{trait_obj.trait_name_caendr}}";
+  document.getElementById("{{id}}-selector").dataset.trait = "{{trait_obj.name}}";
   document.getElementById("{{id}}-selector").dataset.set   = "{{trait_obj.dataset}}";
-  document.getElementById("{{id}}-species").innerText      = "{{trait_obj.species.short_name}}"
-  document.getElementById("{{id}}-trait-name").innerText   = "{{trait_obj.trait_name_caendr}}";
-  document.getElementById("{{id}}-trait-desc").innerText   = "{{trait_obj.description_short}}";
+  document.getElementById("{{id}}-species").innerText      = "{{trait_obj.file.species.short_name}}"
+  document.getElementById("{{id}}-trait-name").innerText   = "{{trait_obj.name}}";
+  document.getElementById("{{id}}-trait-desc").innerText   = "{{trait_obj.file.description_short or trait_obj.file.description_long}}";
   {%- else %}
   document.getElementById("{{id}}-selector").dataset.trait = {{trait_var}}.trait_name_caendr;
   document.getElementById("{{id}}-selector").dataset.set   = {{trait_var}}.dataset;
