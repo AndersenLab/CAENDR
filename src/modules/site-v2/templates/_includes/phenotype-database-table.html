@@ -1,3 +1,16 @@
+{% block custom_head %}
+<style>
+.input-wrapper {
+position: relative;
+}
+.input-wrapper i {
+  position: absolute;
+  top: 20%;
+  right: 5px;
+  color: grey
+}
+</style>
+{% endblock %}
 
 <nav>
     <div class="nav nav-tabs border-0" id="nav-tab" role="tablist">
@@ -12,7 +25,10 @@
         <div class="d-flex my-3 justify-content-between">
             <form>
                 <label for="traitsSearch" class="form-label"><i class="bi bi-search"></i> Search:</label>
-                <input class="form-control" type="text" name="traitsSearch" id="traitsSearch">
+                <div class="input-wrapper">
+                    <input type="text" class="form-control" name="traitsSearch" id="traitsSearch">
+                    <i class="bi bi-x-circle-fill" id="clearSearch"></i>
+                </div>
             </form>
             <div class="col-12 col-md-3 mx-1 align-self-end mb-0">
                 <div class="dropdown">
@@ -203,6 +219,12 @@
             $("input[type=checkbox]").prop('checked', false)
             const searchVal = $(this).val()
             const data = {csrf_token: $('#csrf_token').val(), search_val: searchVal}
+            sendPostRequest(data)
+        })
+
+        $("#clearSearch").on('click', function() {
+            $("#traitsSearch").val('')
+            const data = {csrf_token: $('#csrf_token').val(), search_val: ''}
             sendPostRequest(data)
         })
 
