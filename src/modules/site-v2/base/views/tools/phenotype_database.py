@@ -183,6 +183,7 @@ def get_traits_json():
 #
 
 @phenotype_database_bp.route('/submit/start')
+@jwt_required()
 def submit_start():
   return render_template('tools/phenotype_database/submit-start.html', **{
     # Page info
@@ -193,6 +194,7 @@ def submit_start():
 
 @phenotype_database_bp.route('/submit/one', methods=['GET'], endpoint='submit_one')
 @phenotype_database_bp.route('/submit/two', methods=['GET'], endpoint='submit_two')
+@jwt_required()
 def submit_traits():
 
   # Check for URL vars specifying an initial trait
