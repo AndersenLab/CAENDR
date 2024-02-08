@@ -216,26 +216,6 @@ def submit_traits():
   else:
     initial_trait = None
 
-  # Get the full list of traits for non-bulk files
-  # NOTE: Temporary solution, will use DataTables to request this from a different endpoint
-  page = request.args.get('page', 1, type=int)
-  per_page = 10
-  try:
-    query = query_phenotype_metadata()
-    pagination = query.paginate(page=page, per_page=per_page)
-  except Exception as ex:
-    logger.error(f'Failed to retrieve the list of traits: {ex}')
-    abort(500)
-
-  # Get the list of unique tags
-  # NOTE: Temporary solution, should pull from the same endpoint as above
-  try:
-    tags = [ tr.tags.split(', ') for tr in query if tr.tags ]
-    tags_list = [tg for tr_tag in tags for tg in tr_tag]
-    unique_tags = list(set(tags_list))
-  except Exception as ex:
-    unique_tags = []
-
   return render_template(f'tools/phenotype_database/submit-traits.html', **{
     # Page info
     'title': 'Phenotype Analysis',
@@ -251,12 +231,6 @@ def submit_traits():
     ],
 
     'initial_trait': initial_trait,
-
-    # NOTE: Temporary solution, see above
-    'traits': pagination.items,
-    'pagination': pagination,
-    'total_pages': pagination.pages,
-    'categories': unique_tags,
   })
 
 

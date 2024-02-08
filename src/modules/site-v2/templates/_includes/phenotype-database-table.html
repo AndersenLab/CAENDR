@@ -143,7 +143,7 @@
                         const trait_name = row.trait_name_caendr;
                         const url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", trait_name).replace("TRAIT_SET", 'zhang');
                         return `
-                            <div id="trait-data-${row.trait_name_caendr}" class="ps-3 pt-0" data-description="${row.description_short}" data-species="${row.species_name}">
+                            <div id="trait-data-${row.trait_name_caendr}" class="ps-3 pt-0" data-description="${row.description_short || row.description_long}" data-species="${row.species_name}">
                                 <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
                             </div>`
                     },
@@ -185,15 +185,10 @@
         
         // Handle the Categories filter
         $(document).on( "change", "input[type=checkbox]", function () {
-            $("#traitsSearch").val('')
             if ($(this).attr('id') !== 'selectAll') {
                 $('#selectAll').prop('checked', false)
             }
-            const selectedTags = $(".filterCheckbox:checked").map(function() {
-                return $(this).val()
-            }).get()
-            const data = {csrf_token: $('#csrf_token').val(), selected_tags: selectedTags}
-            sendPostRequest(data)
+            filterByCategories()
         })
 
         $('#selectAll').on('change', function() {
@@ -226,6 +221,15 @@
     })
 
 
+    function filterByCategories() {
+        $("#traitsSearch").val('')
+        const selectedTags = $(".filterCheckbox:checked").map(function() {
+            return $(this).val()
+        }).get()
+        const data = {csrf_token: $('#csrf_token').val(), selected_tags: selectedTags}
+        sendPostRequest(data)
+    }
+
 
     function sendPostRequest(data) {
         $.ajax({
@@ -248,7 +252,7 @@
 
     function filterTable(arr) {
         for (let i = 0; i < arr.length; i++) {
-            const speciesName = arr[i].species.charAt(0).toUpperCase() + arr[i].species.replace('_', '. ').slice(1)
+            const speciesName = arr[i].species_name.charAt(0).toUpperCase() + arr[i].species_name.replace('_', '. ').slice(1)
             const traitName = arr[i].trait_name_caendr
             let url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", traitName).replace("TRAIT_SET", 'caendr')
             const createdOn = formatDate(arr[i].created_on)
@@ -256,7 +260,7 @@
             if (arr[i].tags !== null && arr[i].tags.length) {
                 const tags = arr[i].tags.split(', ')
                 for (let j = 0; j < tags.length; j++) {
-                    tagsHTML += `<div class="mb-3"><a id="tag-${j+1}" data-value="${tags[j]}">${tags[j].replaceAll('/', ' • ')}</a></div>`
+                    tagsHTML += `<div class="mb-3"><a role="button" class="btn btn-link" id="tagLink-${j+1}" data-value="${tags[j]}">${tags[j].replaceAll('/', ' • ')}</a></div>`
                 }
             }
             
@@ -273,7 +277,7 @@
                         <td>${createdOn}</td>
                         <td class="d-flex flex-column" id="tags">${tagsHTML}</td>
                         <td class="optionsToolbar">
-                            <div class="ps-3 pt-0" id="trait-data-${arr[i].trait_name_caendr}" data-description="${arr[i].description_short}" data-species="${arr[i].species}"><a href='${url}'><i class="bi bi-arrow-right-circle-fill"
+                            <div class="ps-3 pt-0" id="trait-data-${arr[i].trait_name_caendr}" data-description="${arr[i].description_short || arr[i].description_long}" data-species="${arr[i].species_name}"><a href='${url}'><i class="bi bi-arrow-right-circle-fill"
                                         aria-hidden="true"></i>Analyze</a></div>
                         </td>
                     </tr>
