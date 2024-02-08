@@ -18,6 +18,7 @@ def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
 
     # Get metadata for the file 
     md = file_object.metadata
+    tags = ', '.join(md['tags']) if md['tags'] is not None else None
 
     # If bulk file, open it and yield each trait as a new row with the file's metadata
     if md.is_bulk_file:
@@ -39,7 +40,7 @@ def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
            yield {
              'trait_name_caendr': trait_name,
              'trait_name_user':   md['trait_name_user'],
-             'species':           md.species.name,
+             'species_name':      md.species.name,
              'wbgene_id':         wbgene_id,
              'description_short': md['description_short'],
              'description_long':  md['description_long'],
@@ -49,7 +50,7 @@ def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
              'source_lab':        md['source_lab'],
              'institution':       md['institution'],
              'submitted_by':      md.get_user().full_name,
-             'tags':              md['tags'],
+             'tags':              tags,
              'capture_date':      md['capture_date'],
              'created_on':        md.created_on,
              'modified_on':       md.modified_on,
@@ -60,7 +61,7 @@ def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
       yield {
       'trait_name_caendr': md['trait_name_caendr'],
       'trait_name_user':   md['trait_name_user'],
-      'species':           md.species.name,
+      'species_name':      md.species.name,
       'wbgene_id':         'N/A',
       'description_short': md['description_short'],
       'description_long':  md['description_long'],
@@ -70,7 +71,7 @@ def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
       'source_lab':        md['source_lab'],
       'institution':       md['institution'],
       'submitted_by':      md.get_user().full_name,
-      'tags':              md['tags'],
+      'tags':              tags,
       'capture_date':      md['capture_date'],
       'created_on':        md.created_on,
       'modified_on':       md.modified_on,

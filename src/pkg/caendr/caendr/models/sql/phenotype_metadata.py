@@ -11,7 +11,7 @@ class PhenotypeMetadata(DictSerializable, db.Model):
 
   trait_name_caendr = db.Column(db.String(), unique=True, primary_key=True)
   trait_name_user = db.Column(db.String(), nullable=True)
-  species = db.Column(db.String())
+  species_name = db.Column(db.String())
   wbgene_id = db.Column(db.String(), nullable=True)
   description_short = db.Column(db.String(), nullable=True)
   description_long = db.Column(db.Text(), nullable=True)

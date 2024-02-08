@@ -1,4 +1,7 @@
+import bleach
 import os
+
+from sqlalchemy import or_, func
 
 from caendr.models.datastore import Species
 from caendr.models.error import BadRequestError
@@ -28,7 +31,7 @@ def query_phenotype_metadata(is_bulk_file=False, include_values=False, species: 
     # Query by species
     if species is not None:
       if species in Species.all().keys():
-        query = query.filter_by(species=species)
+        query = query.filter_by(species_name=species)
       else:
         raise BadRequestError(f'Unrecognized species ID "{species}".')
     
@@ -36,7 +39,7 @@ def query_phenotype_metadata(is_bulk_file=False, include_values=False, species: 
     if include_values:
        query = query.join(PhenotypeMetadata.phenotype_values)
 
-    return query.all()
+    return query
 
 
 def get_all_traits_metadata():
@@ -48,3 +51,28 @@ def get_all_traits_metadata():
 
 def get_trait(trait_name):
    return PhenotypeMetadata.query.get(trait_name)
+
+
+def filter_trait_query_by_text(query, search_val):
+  print(search_val)
+  if search_val and len(search_val):
+    query = query.filter(
+      or_(
+        PhenotypeMetadata.trait_name_caendr.ilike(f"%{search_val}%"),
+        PhenotypeMetadata.trait_name_user.ilike(f"%{search_val}%"),
+        PhenotypeMetadata.description_short.ilike(f"%{search_val}%"),
+        PhenotypeMetadata.description_long.ilike(f"%{search_val}%"),
+        PhenotypeMetadata.source_lab.ilike(f"%{search_val}%"),
+        PhenotypeMetadata.institution.ilike(f"%{search_val}%"),
+        PhenotypeMetadata.submitted_by.ilike(f"%{search_val}%"),
+      )
+    )
+  return query
+
+
+def filter_trait_query_by_tags(query, tags):
+  if len(tags):
+    query = query.filter(or_(
+      PhenotypeMetadata.tags.ilike(f"%{bleach.clean(tag)}%") for tag in tags
+    ))
+  return query

@@ -32,6 +32,9 @@ def execute_operation(app, db, db_op: DbOp, species=None, reload_files=True):
   elif db_op == DbOp.DROP_AND_POPULATE_PHENOTYPE_METADATA:
     drop_and_populate_phenotype_metadata(app, db, species, reload_files=reload_files)
 
+  elif db_op == DbOp.DROP_AND_POPULATE_PHENOTYPES:
+    drop_and_populate_phenotypes(app, db, species, reload_files=reload_files)
+
   elif db_op == DbOp.POPULATE_PHENOTYPES_DATASTORE:
     populate_andersenlab_trait_files()
 
@@ -131,6 +134,23 @@ def drop_and_populate_phenotype_metadata(app, db, species, reload_files=True):
   # Fetch and load data using ETL Manager
   logger.info("Loading phenotypes...")
   etl_manager.load_tables(PhenotypeMetadata, species_list=species)
+
+def drop_and_populate_phenotypes(app, db, species, reload_files=True):
+
+  # Print operation & species info
+  spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
+  logger.info(f'Dropping and populating phenotypes. Species list: [ {", ".join(spec_strings)} ]')
+
+  # Initialize ETL Manager
+  etl_manager = ETLManager(app, db, reload_files=reload_files)
+
+  # Drop relevant table
+  logger.info(f"Dropping table...")
+  etl_manager.clear_tables(PhenotypeMetadata, PhenotypeDatabase, species_list=species)
+
+  # Fetch and load data using ETL Manager
+  logger.info("Loading phenotypes...")
+  etl_manager.load_tables(PhenotypeMetadata, PhenotypeDatabase, species_list=species)
 
 
 def drop_and_populate_all_tables(app, db, species, reload_files=True):

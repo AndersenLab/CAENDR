@@ -45,12 +45,15 @@ from caendr.utils.env import get_env_var
 from caendr.services.email import send_email, ORDER_SUBMISSION_EMAIL_TEMPLATE
 from caendr.services.cloud.sheets import add_to_order_ws, lookup_order
 from caendr.services.cloud.secret import get_secret
+from caendr.services.cloud.storage import get_blob
 
 MODULE_SITE_CART_COOKIE_NAME = get_env_var('MODULE_SITE_CART_COOKIE_NAME')
 MODULE_SITE_CART_COOKIE_AGE_SECONDS = get_env_var('MODULE_SITE_CART_COOKIE_AGE_SECONDS', var_type=int)
-STRAIN_SUBMISSION_URL = get_env_var('MODULE_SITE_STRAIN_SUBMISSION_URL')
+MODULE_SITE_BUCKET_PRIVATE_NAME = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
 
+STRAIN_SUBMISSION_URL = get_env_var('MODULE_SITE_STRAIN_SUBMISSION_URL')
 NO_REPLY_EMAIL = get_secret('NO_REPLY_EMAIL')
+
 
 
 strains_bp = Blueprint('request_strains',
@@ -324,7 +327,8 @@ def order_page_index():
     'title': "Order Summary",
     'cartItems': cartItems,
     'totalPrice': totalPrice,
-    'form': form
+    'form': form,
+    'EULA_url': get_blob(MODULE_SITE_BUCKET_PRIVATE_NAME, 'EULA_for_CaeNDR_website_Dr_Andersen_1-25-24.md').public_url
   })
   
 
