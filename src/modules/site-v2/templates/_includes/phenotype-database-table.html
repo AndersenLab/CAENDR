@@ -91,6 +91,8 @@
 
 {% block script %}
 <script>
+    {% include '_scripts/utils.js' %} {#/* defines: flash_message */#}
+
     $(document).ready(function() {
 
         $.ajaxSetup({
@@ -158,13 +160,25 @@
 
         // Fill out side bar for non-bulk traits
         $(document).on('click','#traitDetails', function() {
-            const traitName = $(this).data('value')
-
-            $.getJSON('/tools/phenotype-database/traits-list', function(data) {
-                const traitObj = data.find(t => t.trait_name_caendr === traitName)
-                fillOutModal(traitObj)
+            const data = {csrf_token: $('#csrf_token').val(), trait_name: $(this).data('value')}
+            $.ajax({
+                type: "POST",
+                url: "{{ url_for('phenotype_database.get_traits_json') }}",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function(response) {
+                    fillOutModal(response)
+                },
+                error: function(error){
+                    console.error(error)
+                    $('#offcanvas1 .btn-close').click()
+                    window.scrollTo(0, 0)
+                    if (error.responseJSON && error.responseJSON.message) {
+                        flash_message(error.responseJSON.message)
+                    }      
+                }
             })
-
         })
 
 
@@ -192,7 +206,7 @@
             sendPostRequest(data)
         })
 
-        $(document).on('click', '[id^="tagLink"]', function() {
+        $('#tableAccordion').on('click', '[id^="tagLink"]', function() {
             const tagVal = $(this).data('value')
             const filterTag = $("input[type=checkbox]").filter(function(){
                 return $(this).attr('value') === tagVal
@@ -200,7 +214,6 @@
             filterTag.prop('checked', true)
             filterByCategories()
         })
-
         // Prevent 'enter' key from reloading the page
         $('#traitsSearch').closest('form').on('submit', function(e){
             e.preventDefault();
@@ -290,7 +303,6 @@
 
     function updatePagination(p) {
         let html = ''
-       
         let prev = ''
         if(p.has_prev) {
             prev += `<a class="page-link" role="button" onClick="getResultsForPage(${p.prev_num}, ${p.current_page})">Previous</a>`
