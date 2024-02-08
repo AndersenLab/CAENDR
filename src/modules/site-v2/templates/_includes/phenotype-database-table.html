@@ -191,11 +191,7 @@ position: relative;
             if ($(this).attr('id') !== 'selectAll') {
                 $('#selectAll').prop('checked', false)
             }
-            const selectedTags = $(".filterCheckbox:checked").map(function() {
-                return $(this).val()
-            }).get()
-            const data = {csrf_token: $('#csrf_token').val(), selected_tags: selectedTags}
-            sendPostRequest(data)
+            search()
         })
 
         $('#selectAll').on('change', function() {
@@ -207,16 +203,12 @@ position: relative;
         })
 
         $("#traitsSearch").on('keyup', function(){
-            $("input[type=checkbox]").prop('checked', false)
-            const searchVal = $(this).val()
-            const data = {csrf_token: $('#csrf_token').val(), search_val: searchVal}
-            sendPostRequest(data)
+            search()
         })
 
         $("#clearSearch").on('click', function() {
             $("#traitsSearch").val('')
-            const data = {csrf_token: $('#csrf_token').val(), search_val: ''}
-            sendPostRequest(data)
+            search()
         })
 
         $('#tableAccordion').on('click', '[id^="tagLink"]', function() {
@@ -225,8 +217,9 @@ position: relative;
                 return $(this).attr('value') === tagVal
             })
             filterTag.prop('checked', true)
-            filterByCategories()
+            search()
         })
+
         // Prevent 'enter' key from reloading the page
         $('#traitsSearch').closest('form').on('submit', function(e){
             e.preventDefault();
@@ -234,9 +227,20 @@ position: relative;
     })
 
 
+    function search() {
+        const checkedTagsSelector = $(".filterCheckbox:checked")
+        let selectedTags = []
+        if (checkedTagsSelector.length) {
+            selectedTags = $(".filterCheckbox:checked").map(function() {
+                return $(this).val()
+            }).get()
+        }
+        const data = {csrf_token: $('#csrf_token').val(), search_val: $("#traitsSearch").val(), selected_tags: selectedTags}
+        sendPostRequest(data)
+    }
 
     function sendPostRequest(data) {
-        $.ajax({
+                $.ajax({
                 type: "POST",
                 url: "{{ url_for('phenotype_database.phenotype_database') }}",
                 data: JSON.stringify(data),
@@ -341,9 +345,13 @@ position: relative;
     }
 
     function getResultsForPage(page, currentPage) {
-        const selectedTags = $(".filterCheckbox:checked").map(function() {
+        const checkedTagsSelector = $(".filterCheckbox:checked")
+        let selectedTags = []
+        if (checkedTagsSelector.length) {
+            selectedTags = $(".filterCheckbox:checked").map(function() {
                 return $(this).val()
             }).get()
+        }
         const data = {
             csrf_token: $('#csrf_token').val(), 
             page: page, 
