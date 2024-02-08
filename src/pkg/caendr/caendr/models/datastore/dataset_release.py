@@ -5,7 +5,7 @@ from caendr.api.gene import remove_prefix
 from caendr.models.datastore import Species, SpeciesEntity
 from caendr.models.error import NotFoundError
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, get_blob_list, check_blob_exists
-from caendr.utils.env import get_env_var_with_fallback
+from caendr.utils.env import get_env_var, get_env_var_with_fallback
 from caendr.utils.tokens import TokenizedString
 
 
@@ -13,6 +13,10 @@ from caendr.utils.tokens import TokenizedString
 V1_V2_Cutoff_Date = 20200101
 
 DATASET_RELEASE_BUCKET_NAME = get_env_var_with_fallback('MODULE_SITE_BUCKET_DATASET_RELEASE_NAME', 'MODULE_SITE_BUCKET_PUBLIC_NAME')
+
+FASTA_FILENAME_TEMPLATE = get_env_var('FASTA_FILENAME_TEMPLATE', as_template=True)
+FASTA_EXTENSION_FILE    = get_env_var('FASTA_EXTENSION_FILE')
+FASTA_EXTENSION_INDEX   = get_env_var('FASTA_EXTENSION_INDEX')
 
 
 
@@ -167,7 +171,7 @@ class DatasetRelease(SpeciesEntity):
 
   @staticmethod
   def get_fasta_filename_template(include_extension=True):
-    return TokenizedString('${RELEASE}_${SPECIES}_${GENOME}.genome' + ('.fa' if include_extension else ''))
+    return FASTA_FILENAME_TEMPLATE + (FASTA_EXTENSION_FILE if include_extension else '')
 
   def get_fasta_filename(self, include_extension=True):
     return DatasetRelease.get_fasta_filename_template(include_extension=include_extension).get_string(**{
@@ -184,10 +188,11 @@ class DatasetRelease(SpeciesEntity):
   @staticmethod
   def get_fasta_filepath_obj_template():
     return {
-      'bucket': DatasetRelease.get_bucket_name(),
-      'path':   DatasetRelease.get_path_template(),
-      'name':   DatasetRelease.get_fasta_filename_template(include_extension=False),
-      'ext':    '.fa',
+      'bucket':  DatasetRelease.get_bucket_name(),
+      'path':    DatasetRelease.get_path_template(),
+      'name':    DatasetRelease.get_fasta_filename_template(include_extension=False),
+      'ext':     FASTA_EXTENSION_FILE,
+      'ext_idx': FASTA_EXTENSION_INDEX,
     }
 
 

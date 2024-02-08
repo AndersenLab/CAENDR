@@ -76,7 +76,7 @@ fasta_path = IndelPrimerReport.get_fasta_filepath(SPECIES, RELEASE)
 #       but this file isn't actually zipped. Does it need to be?
 #       (Can accomplish using `bgzip`.)
 target_fasta_file_path = f'{ genome_directory }/{ fasta_path["name"] }'
-target_fasta_file_name = f'{ fasta_path["name"] }.fa.gz'
+target_fasta_file_name = f'{ fasta_path["name"] }{ fasta_path["ext"] }.gz'
 
 # Create a folder at the desired path if one does not yet exist
 if not os.path.exists(target_fasta_file_path):
@@ -84,8 +84,8 @@ if not os.path.exists(target_fasta_file_path):
 
 # Download FASTA file & FASTA index file
 if not os.path.exists(f'{target_fasta_file_path}/{target_fasta_file_name}'):
-  download_blob_to_file(fasta_path['bucket'], fasta_path['path'], fasta_path['name'] + '.fa',     destination=target_fasta_file_path, filename=target_fasta_file_name)
-  download_blob_to_file(fasta_path['bucket'], fasta_path['path'], fasta_path['name'] + '.fa.fai', destination=target_fasta_file_path, filename=target_fasta_file_name + '.fai')
+  download_blob_to_file(fasta_path['bucket'], fasta_path['path'], fasta_path['name'] + fasta_path["ext"],     destination=target_fasta_file_path, filename=target_fasta_file_name)
+  download_blob_to_file(fasta_path['bucket'], fasta_path['path'], fasta_path['name'] + fasta_path["ext_idx"], destination=target_fasta_file_path, filename=target_fasta_file_name + '.fai')
 
 
 #
