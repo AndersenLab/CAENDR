@@ -286,6 +286,9 @@ def report(id, file_ext=None):
       logger.error(f'Error fetching Indel Finder report {id}: Input data file does not exist')
       return abort(404)
 
+    # If the result is empty, make it an empty dict, for more straightforward field access in the rest of the function
+    if not ready:
+      result = {}
 
     # Get indel interval
     try:
@@ -307,6 +310,8 @@ def report(id, file_ext=None):
     # If a file format was specified, return a downloadable file with the results
     # TODO: Set a better filename?
     if file_format is not None:
+      if not ready:
+        abort(404)
       resp = Response(result['format_table'].to_csv(sep=file_format['sep']), mimetype=file_format['mimetype'])
       try:
         resp.headers['Content-Disposition'] = f'filename={job.report["species"]}_{job.report["strain_1"]}_{job.report["strain_2"]}_{data["site"]}.{file_ext}'
@@ -328,7 +333,7 @@ def report(id, file_ext=None):
       'id': id,
 
       # Job status
-      'empty': result['empty'],
+      'empty': result.get('empty'),
       'ready': ready,
 
       # Data
