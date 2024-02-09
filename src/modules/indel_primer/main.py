@@ -13,7 +13,7 @@ from caendr.services.logger import logger
 
 from caendr.utils import monitor
 from caendr.models.datastore import IndelPrimerReport
-from caendr.services.cloud.storage import download_blob_to_file, upload_blob_from_file
+from caendr.services.cloud.storage import download_blob_to_file, upload_blob_from_file, BlobURISchema
 from caendr.utils.env import get_env_var, env_log_string
 
 from vcfkit.utils.reference import get_genome_directory
@@ -69,14 +69,15 @@ logger.info( f'Indel Primer: { env_log_string(vars(), _env_vars) }' )
 genome_directory = get_genome_directory()
 
 # Construct FASTA file path
-fasta_path = IndelPrimerReport.get_fasta_filepath(SPECIES, RELEASE)
+fasta_bucket, fasta_path = IndelPrimerReport.get_fasta_filepath(SPECIES, RELEASE, schema=BlobURISchema.PATH)
+fasta_file_name = IndelPrimerReport.get_fasta_filename(SPECIES, RELEASE, include_extension=True)
 
 # Define the source and target filenames
 # TODO: This adds the .gz extension to the end of the file because it's what VCF-Kit looks for,
 #       but this file isn't actually zipped. Does it need to be?
 #       (Can accomplish using `bgzip`.)
-target_fasta_file_path = os.path.join( genome_directory, fasta_path["name"] )
-target_fasta_file_name = f'{ fasta_path["name"] }{ fasta_path["ext"] }.gz'
+target_fasta_file_path = os.path.join( genome_directory, fasta_file_name )
+target_fasta_file_name = fasta_file_name + '.gz'
 
 # Create a folder at the desired path if one does not yet exist
 # NOTE: This will only create one folder down, i.e. genome_directory must already exist and the target path must only be one directory deep.
@@ -85,8 +86,8 @@ if not os.path.exists(target_fasta_file_path):
 
 # Download FASTA file & FASTA index file
 if not os.path.exists(os.path.join( target_fasta_file_path, target_fasta_file_name )):
-  download_blob_to_file(fasta_path['bucket'], fasta_path['path'], fasta_path['name'] + fasta_path["ext"],     destination=target_fasta_file_path, filename=target_fasta_file_name)
-  download_blob_to_file(fasta_path['bucket'], fasta_path['path'], fasta_path['name'] + fasta_path["ext_idx"], destination=target_fasta_file_path, filename=target_fasta_file_name + '.fai')
+  download_blob_to_file(fasta_bucket, fasta_path,          destination=target_fasta_file_path, filename=target_fasta_file_name)
+  download_blob_to_file(fasta_bucket, fasta_path + '.fai', destination=target_fasta_file_path, filename=target_fasta_file_name + '.fai')
 
 
 #
