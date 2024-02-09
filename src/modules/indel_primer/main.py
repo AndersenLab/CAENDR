@@ -75,15 +75,16 @@ fasta_path = IndelPrimerReport.get_fasta_filepath(SPECIES, RELEASE)
 # TODO: This adds the .gz extension to the end of the file because it's what VCF-Kit looks for,
 #       but this file isn't actually zipped. Does it need to be?
 #       (Can accomplish using `bgzip`.)
-target_fasta_file_path = f'{ genome_directory }/{ fasta_path["name"] }'
+target_fasta_file_path = os.path.join( genome_directory, fasta_path["name"] )
 target_fasta_file_name = f'{ fasta_path["name"] }{ fasta_path["ext"] }.gz'
 
 # Create a folder at the desired path if one does not yet exist
+# NOTE: This will only create one folder down, i.e. genome_directory must already exist and the target path must only be one directory deep.
 if not os.path.exists(target_fasta_file_path):
   os.mkdir(target_fasta_file_path)
 
 # Download FASTA file & FASTA index file
-if not os.path.exists(f'{target_fasta_file_path}/{target_fasta_file_name}'):
+if not os.path.exists(os.path.join( target_fasta_file_path, target_fasta_file_name )):
   download_blob_to_file(fasta_path['bucket'], fasta_path['path'], fasta_path['name'] + fasta_path["ext"],     destination=target_fasta_file_path, filename=target_fasta_file_name)
   download_blob_to_file(fasta_path['bucket'], fasta_path['path'], fasta_path['name'] + fasta_path["ext_idx"], destination=target_fasta_file_path, filename=target_fasta_file_name + '.fai')
 
@@ -101,7 +102,7 @@ if not os.path.exists(target_vcf_file_path):
   os.mkdir(target_vcf_file_path)
 
 # Download VCF file & VCF Index file
-if not os.path.exists(f'{target_vcf_file_path}/{target_vcf_file_name}'):
+if not os.path.exists(os.path.join( target_vcf_file_path, target_vcf_file_name )):
   download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, INDEL_TOOL_PATH, target_vcf_file_name,          destination=target_vcf_file_path)
   download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, INDEL_TOOL_PATH, target_vcf_file_name + '.csi', destination=target_vcf_file_path)
 
