@@ -69,10 +69,10 @@
     {%- endif %}
     <div class="mt-5">
       <div class="d-grid gap-3">
-        <a class="btn btn-secondary text-light" role="button" onClick="getPDF()">Download PDF</a>
-        <a class="btn btn-secondary text-light" role="button" onClick="window.open('{{ data_url }}')">Download TSV</a>
+        <a class="btn btn-secondary text-light" role="button" onClick="getPDF()"><i class="bi bi-file-earmark-pdf-fill me-2"></i>Download PDF</a>
+        <a class="btn btn-secondary text-light" role="button" onClick="window.open('{{ data_url }}')"><i class="bi bi-file-earmark-spreadsheet-fill me-2"></i>Download TSV</a>
         {%- if session["is_admin"] %}
-        <a class="btn btn-secondary text-light" role="button" href="{{ url_for('heritability_calculator.view_logs', id=hr.id)}}">View Logs</a>
+        <a class="btn btn-secondary text-light" role="button" href="{{ url_for('heritability_calculator.view_logs', id=hr.id)}}"><i class="bi bi-archive-fill me-2"></i>View Logs</a>
         {%- endif %}
       </div>
     </div>

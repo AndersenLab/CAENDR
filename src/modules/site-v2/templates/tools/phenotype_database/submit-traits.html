@@ -24,7 +24,7 @@
     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
         <button class="btn btn-dark text-white" role="button"
             onclick="location.href=`{{ url_for('phenotype_database.phenotype_database') }}`">Start Over</button>
-        <button class="btn btn-secondary text-white" role="button" onclick="submit()">Next</button>
+        <button id="submit-button" class="btn btn-secondary text-white" role="button" onclick="submit()">Next</button>
     </div>
 </div> <!-- /Container -->
 
@@ -109,6 +109,8 @@
         // Set the initial trait
         {{ select_trait('trait-1', trait_obj=initial_trait) }}
         {%- endif %}
+
+        updateSubmitButton();
     })
 
 
@@ -165,6 +167,8 @@
         //     filter_by_species(trait === null ? null : trait.species);
         // }
         {%- endif %}
+
+        updateSubmitButton();
     }
 
 
@@ -181,6 +185,16 @@
                 }
             });
         }
+    }
+
+
+    function updateSubmitButton() {
+        const [trait_1, trait_1_dataset] = get_trait_id('trait-1');
+        {%- if two_traits %}
+        const [trait_2, trait_2_dataset] = get_trait_id('trait-2');
+        {%- endif %}
+        const canSubmit = trait_1 != null {% if two_traits %} && trait_2 != null{% endif %};
+        document.getElementById('submit-button').classList.toggle('disabled', !canSubmit);
     }
 
 

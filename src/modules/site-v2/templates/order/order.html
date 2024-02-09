@@ -37,7 +37,7 @@
 {% endblock %}
 
 {% block content %}
-    {% if len(cartItems) %}
+    {% if len(cart_items) %}
     <div class="table-responsive col-12 col-md-9 p-5 mb-5 mx-auto  rounded shadow-sm text-bg-light">
         <table class="table table-striped" id="orderTable">
             <caption class="visually-hidden">A list of items included in your shopping cart.</caption>
@@ -51,7 +51,7 @@
                 </tr>
             </thead>
             <tbody class="searchable">
-                {% for item in cartItems %}
+                {% for item in cart_items %}
                 <tr class='cartItem'>
                     <td>{{ loop.index }}</td>
                     <td><em>{{ item.species_short_name }}</em></td>
@@ -67,7 +67,7 @@
                 {% endfor %}
                 <tr id="total">
                     <td colspan="3"><strong>Total:</strong></td>
-                    <td colspan="2" class="totalPrice"><strong>${{ totalPrice }}</strong></td>
+                    <td colspan="2" class="totalPrice"><strong>${{ total_price }}</strong></td>
                 </tr>
             </tbody>
         </table>
@@ -112,6 +112,10 @@
                         {{ form.payment(class="form-control") }}
                     </div>
                     {{ render_field(form.comments) }}
+                    <div class="form-check my-4">
+                        <input class="form-check-input" type="checkbox" id="eula" name="eula" />
+                        <label class="form-check-label text-md" for="eula">I confirm that I read and agree to CaeNDR's <a role="button" class="btn-link" id="EULABtn"  data-toggle="modal" data-target="#EULAModal" aria-label="End User License Agreement">condition's of use</a> </label>
+                    </div>
                 </div>
             </div>
             <button value="Checkout" type='submit' name="order_form" class="btn btn-secondary" id="checkout" disabled aria-disabled="true">
@@ -156,6 +160,21 @@
                         Yes, delete it.
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="EULAModal" tabindex="-1" role="dialog" aria-labelledby="EULAModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="EULAModalTitle">End User License Agreement For The Caenorhabditis Natural Diversity Resource (CaeNDR)</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>{{ render_ext_markdown(EULA_url) }}</p>
             </div>
         </div>
     </div>
@@ -246,19 +265,28 @@ $(document).ready(function() {
         })
     })
 
-    $('#shipping_service').on('change', function() {
+    $('#shipping_service, #eula').on('change', function() {
         if(formFilled()) {
             $('#checkout').prop('disabled', false)
         } else {
             $('#checkout').prop('disabled', true)
         }
     })
+
+    $("#EULABtn").on('click', function() {
+        $('#EULAModal').modal('show')
+    })
+
+    $('#EULAModal .close').on('click', function() {
+        $('#EULAModal').modal('hide')
+    })
+
 })
 
 function formFilled() {
     let filled = true;
     $('#name, #email, #phone, #address').each(function() {
-        if ($(this).val() == '') {
+        if ($(this).val() == '' || !$('#eula').is(':checked')) {
             filled = false
         } else if ($(this).val() != '' && $('#shipping_service').val() != 'Flat Rate Shipping') {
             if($('#shipping_account').val() != '') {
