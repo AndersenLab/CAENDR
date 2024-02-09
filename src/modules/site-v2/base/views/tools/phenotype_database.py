@@ -15,6 +15,7 @@ from caendr.api.phenotype import query_phenotype_metadata, get_trait, filter_tra
 from caendr.services.cloud.postgresql import rollback_on_error_handler
 
 from caendr.services.logger import logger
+from caendr.utils.env       import get_env_var
 
 from base.forms                 import EmptyForm
 from base.utils.auth            import jwt_required, get_current_user, user_is_admin
@@ -32,6 +33,13 @@ from caendr.models.trait        import Trait
 phenotype_database_bp = Blueprint(
   'phenotype_database', __name__, template_folder='templates'
 )
+
+
+@phenotype_database_bp.before_request
+def check_bp_enabled():
+  if not (get_env_var('PHENOTYPE_DB_ENABLED', var_type=bool, can_be_none=True) or user_is_admin()):
+    abort(404)
+
 
 
 def results_columns():
