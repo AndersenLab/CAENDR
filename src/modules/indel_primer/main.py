@@ -13,7 +13,7 @@ from caendr.services.logger import logger
 
 from caendr.utils import monitor
 from caendr.models.datastore import IndelPrimerReport
-from caendr.services.cloud.storage import download_blob_to_file, upload_blob_from_file, BlobURISchema
+from caendr.services.cloud.storage import download_blob_to_file, upload_blob_from_file, BlobURISchema, make_secure_filename
 from caendr.utils.env import get_env_var, env_log_string
 
 from vcfkit.utils.reference import get_genome_directory
@@ -70,7 +70,7 @@ genome_directory = get_genome_directory()
 
 # Construct FASTA file path
 fasta_bucket, fasta_path = IndelPrimerReport.get_fasta_filepath(SPECIES, RELEASE, schema=BlobURISchema.PATH)
-fasta_file_name = IndelPrimerReport.get_fasta_filename(SPECIES, RELEASE, include_extension=True)
+fasta_file_name = make_secure_filename( IndelPrimerReport.get_fasta_filename(SPECIES, RELEASE, include_extension=True) )
 
 # Define the source and target filenames
 # TODO: This adds the .gz extension to the end of the file because it's what VCF-Kit looks for,
