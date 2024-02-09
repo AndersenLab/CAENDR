@@ -122,7 +122,7 @@ position: relative;
                 }
             });
 
-        // Render Pagination
+        // Render first load results
         getResultsForPage(1, 1)
 
         // Render Zhang table with Datatables
@@ -177,7 +177,7 @@ position: relative;
             fillOutModal(trait)
         })
 
-        // Fill out side bar for non-bulk traits
+        // Fetch data for a trait and fill out side bar for non-bulk traits
         $(document).on('click','#traitDetails', function() {
             const data = {csrf_token: $('#csrf_token').val(), trait_name: $(this).data('value')}
             $.ajax({
@@ -192,8 +192,11 @@ position: relative;
                 error: function(error){
                     console.error(error)
                     $('#offcanvas1 .btn-close').click()
-                    window.scrollTo(0, 0)
+                    $('html').animate({
+                        scrollTop: $('body').offset().top
+                    }, 100);
                     if (error.responseJSON && error.responseJSON.message) {
+                        $('.alert').remove()
                         flash_message(error.responseJSON.message)
                     }      
                 }
@@ -218,20 +221,24 @@ position: relative;
             }
         })
 
+        // Clear all filters for Categories
         $("#clearAll").on('click', function() {
             $('input[type=checkbox]').prop('checked', false)
             search()
         })
 
+        // Handle search bar
         $("#traitsSearch").on('keyup', function(){
             search()
         })
 
+        // Clear search bar and reset the table
         $("#clearSearch").on('click', function() {
             $("#traitsSearch").val('')
             search()
         })
 
+        // Filter table by tag links
         $('#tableAccordion').on('click', '[id^="tagLink"]', function() {
             const tagVal = $(this).data('value')
             const filterTag = $("input[type=checkbox]").filter(function(){
@@ -240,14 +247,15 @@ position: relative;
             filterTag.prop('checked', true)
             search()
         })
+
         // Prevent 'enter' key from reloading the page
         $('#traitsSearch').closest('form').on('submit', function(e){
             e.preventDefault();
         });
     })
 
-
-    function search() {
+    // Filter table by Search input and Categories
+    async function search() {
         const checkedTagsSelector = $(".filterCheckbox:checked")
         let selectedTags = []
         if (checkedTagsSelector.length) {
@@ -256,28 +264,30 @@ position: relative;
             }).get()
         }
         const data = {csrf_token: $('#csrf_token').val(), search_val: $("#traitsSearch").val(), selected_tags: selectedTags}
-        sendPostRequest(data)
+        await sendPostRequest(data)
+            .then( resp => handlePostRequest(resp))
+            .catch( e => {
+                console.error(e)
+                flash_message(`Failed to retrieve the list of traits: ${e.statusText}`)
+            })
     }
 
     function sendPostRequest(data) {
-                $.ajax({
+        return new Promise((resolve, reject) => {
+            $.ajax({
                 type: "POST",
                 url: "{{ url_for('phenotype_database.phenotype_database') }}",
                 data: JSON.stringify(data),
                 contentType: "application/json",
                 dataType: "json",
-                success: function(response) {
-                    $('#tableAccordion tbody').empty()
-                    filterTable(response.data)
-                    $('#tablePagination .pagination').empty()
-                    updatePagination(response.pagination)
-                },
-                error: function(error){
-                    console.log('something went wrong', error)
-                }
+                success: (response) => resolve(response),
+                error: (error)=> reject(error)
             })
+        })
+                
     }
 
+    // Fill out table for non-bulk traits
     function filterTable(arr) {
         for (let i = 0; i < arr.length; i++) {
             const speciesName = arr[i].species_name.charAt(0).toUpperCase() + arr[i].species_name.replace('_', '. ').slice(1)
@@ -363,7 +373,8 @@ position: relative;
 
     }
 
-    function getResultsForPage(page, currentPage) {
+    // Fetch data for given page
+    async function getResultsForPage(page, currentPage) {
         const checkedTagsSelector = $(".filterCheckbox:checked")
         let selectedTags = []
         if (checkedTagsSelector.length) {
@@ -378,7 +389,20 @@ position: relative;
             search_val: $("#traitsSearch").val(),
             selected_tags: selectedTags
         }
-        sendPostRequest(data)
+        await sendPostRequest(data)
+            .then( resp => handlePostRequest(resp))
+            .catch( e => {
+                console.error(e)
+                flash_message(`Failed to retrieve the list of traits: ${e.statusText}`)
+            })
+    }
+
+    // Update Table and Pagination with response data
+    function handlePostRequest(resp) {
+        $('#tableAccordion tbody').empty()
+        filterTable(resp.data)
+        $('#tablePagination .pagination').empty()
+        updatePagination(resp.pagination)
     }
 
     function fillOutModal(trait) {
