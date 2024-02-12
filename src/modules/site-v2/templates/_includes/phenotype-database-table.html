@@ -299,7 +299,11 @@ position: relative;
                                 data-bs-target="#collapse-${i+1}" aria-expanded="false" aria-controls="collapse-${i+1}"><i
                                     class="bi bi-chevron-right" aria-hidden="true"></i><em>${speciesName}</em></a>
                         </td>
-                        <td id="accordionHeading-${i+1}"><strong>${arr[i].trait_name_caendr}</strong></td>
+                        <td id="accordionHeading-${i+1}">
+                            <strong>${arr[i].trait_name_display_1}</strong><br/>
+                            <p class="mb-0">${arr[i].trait_name_display_2}</p>
+                            <em>${arr[i].trait_name_display_3}</em>
+                        </td>
                         <td>${arr[i].description_short}.</td>
                         <td>${arr[i].source_lab}</td>
                         <td>${createdOn}</td>
