@@ -8,26 +8,29 @@
 <style>
     .tooltip {
         position: absolute;
-        /* font-size: 8px !important; */
         width:  auto;
         height: auto;
-        padding:1.25em;
-        /* border: 1px solid black; */
         pointer-events: none;
-        background-color: #F8F9FA;
         border-radius: 5px;
-        box-shadow:0 .125rem .25rem rgba(0, 0, 0, .075);
-             
+        box-shadow:0 .125rem .25rem rgba(0, 0, 0, .075);      
+    }
+
+    .chartInfo {
+        margin-top: 7em;
     }
 
     #phenotype-chart .tooltip {
-        left: 30%;
+        left: 38%;
         top:95%;
+    }
+
+    #phenotype-chart-ranked-bar {
+        margin-top: 5em;
     }
 
     #phenotype-chart-ranked-bar .tooltip {
         right: 25px;
-        top: -25px;
+        top: -50px;
     }
 
     .tooltip p {
@@ -46,12 +49,17 @@
 
     #chartContainer {
         background-color: #FEFCFB;
+        min-height:50vh;
     }
 
 
     @media screen and (min-width: 768px) {
   #chartContainer {
     min-height:100vh;
+  }
+
+  .chartInfo {
+    margin-top: 0em;
   }
 
   #phenotype-chart svg {
@@ -64,7 +72,7 @@
   }
 
   #phenotype-chart .tooltip {
-    left: 75%;
+    left: 80%;
     top:15%;
     }
 }
@@ -128,9 +136,9 @@
                   </div>
                     <div id="phenotype-chart" class="text-center mb-5 position-relative"></div>
                     <div id="phenotype-chart-histogram" class="text-center mb-5 position-relative"></div>
-                    <div id="phenotype-chart-ranked-bar" class="text-center mb-5 position-relative"></div>
+                    <div id="phenotype-chart-ranked-bar" class="text-center mt-md-0 mb-5 position-relative"></div>
                     {%- if data.num_traits > 1 %}
-                    <div class="col-9 alert alert-info mt-5 mx-auto">
+                    <div class="col-9 alert alert-info mt-md-5 mx-auto chartInfo">
                         <p class="text-small text-center">
                             <i class="bi bi-info-circle-fill me-2" aria-hidden="true"></i>
                             <br>

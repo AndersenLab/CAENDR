@@ -256,7 +256,7 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
     // Create tooltip for data point mouseover
     const tooltip = d3.select(container_selector)
       .append("div")
-      .attr("class", "tooltip")
+      .attr("class", "tooltip text-bg-secondary text-white fs-5 p-3")
       .style("opacity", 0);
 
     // If an ID is provided for the tooltip, add it
@@ -496,7 +496,7 @@ function render_ranked_barplot(container_selector, data, config={}) {
   // Create tooltip for bar mouseover
   const tooltip = d3.select(container_selector)
     .append("div")
-    .attr("class", "tooltip")
+    .attr("class", "tooltip text-bg-secondary text-white fs-5 p-3")
     .style("opacity", 0);
 
   // If an ID is provided for the tooltip, add it
