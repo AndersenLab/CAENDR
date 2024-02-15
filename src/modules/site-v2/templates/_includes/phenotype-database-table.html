@@ -9,6 +9,11 @@ position: relative;
   right: 5px;
   color: grey
 }
+
+label {
+    white-space: normal;
+    word-wrap: break-word;
+}
 </style>
 {% endblock %}
 
@@ -22,7 +27,8 @@ position: relative;
 </nav>
 <div class="tab-content py-2" id="nav-tabContent">
     <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
-        <div class="d-flex my-3 justify-content-between">
+        <div class="d-flex flex-wrap my-3 justify-content-between">
+            <div class="col-12 col-md-3 mx-1 mb-3 mb-md-0">
             <form>
                 <label for="traitsSearch" class="form-label"><i class="bi bi-search"></i> Search:</label>
                 <div class="input-wrapper">
@@ -30,19 +36,20 @@ position: relative;
                     <i class="bi bi-x-circle-fill" id="clearSearch"></i>
                 </div>
             </form>
+        </div>
             <div class="col-12 col-md-3 mx-1 align-self-end mb-0">
                 <div class="dropdown">
                     <button class="btn btn-secondary text-white dropdown-toggle w-100" id="traitsFilter" type="button" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false"><i class="bi bi-filter"></i> Filter</button>
-                    <div class="dropdown-menu w-auto" role="menu" id="tagsFilter">
+                    <div class="dropdown-menu w-100 p-2" role="menu" id="tagsFilter">
                         <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}" />
-                        <div class="dropdown-item">
-                            <input type="checkbox" class="custom-control-input" id="selectAll">
-                            <label class="custom-check-label" for="selectAll">Select All</label>
+                        <div class="dropdown-item mb-1">
+                            <input type="checkbox" class="custom-control-input align-middle me-1" id="selectAll">
+                            <label class="custom-check-label align-middle" for="selectAll">Select All</label>
                         </div>
                         {% for tag in categories %}
-                        <div class="dropdown-item">
-                            <input type="checkbox" class="custom-control-input filterCheckbox" value="{{tag}}" id="{{tag}}">
-                            <label class="custom-check-label" for="{{tag}}">{{tag|replace('/', ' • ')}}</label>
+                        <div class="dropdown-item mb-1">
+                            <input type="checkbox" class="custom-control-input align-middle me-1 filterCheckbox" value="{{tag}}" id="{{tag}}">
+                            <label class="custom-check-label align-middle" for="{{tag}}">{{tag|replace('/', ' • ')}}</label>
                         </div>
                         {% endfor %}
                         <div class="d-flex justify-content-end">
