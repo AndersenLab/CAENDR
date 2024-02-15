@@ -157,9 +157,11 @@ label {
                     "data": "View Full Details",
                     "render": function(data, type, row) {
                         const d = JSON.stringify(row)
-                        return `<td class="optionsToolbar">
+                        return `<td>
+                            <div class="optionsToolbar">
                             <a id="details" data-value='${d}' data-bs-toggle="offcanvas" data-bs-target="#offcanvas1" aria-controls="offcanvas1" 
                             href="#"><i class="bi bi-list-ul" aria-hidden="true"></i>Full Details</a>
+                            </div>
                             </td>`
                         }
                 },
@@ -318,14 +320,14 @@ label {
                     </tr>
                     <tr id="collapse-${i+1}" class="text-start accordion-collapse collapse"
                         aria-labelledby="accordionHeading-${i+1}" data-bs-parent="#tableAccordion">
-                        <td colspan="7">
-                            <div class="ps-5 p-3">
+                        <td colspan="7" style="background-color: var(--bs-gray-200)">
+                            <div class="ms-5 pt-5 px-5 pb-2">
                                 <h3 class="h5 text-dark">Full Description</h3>
                                 <p>${arr[i].description_long}</p>
                             </div>
-                            <div class="d-flex justify-content-end pe-5 optionsToolbar">
+                            <div class="d-flex justify-content-end me-1 pb-3 optionsToolbar">
                                 <a data-bs-toggle="offcanvas" id="traitDetails" data-value="${arr[i].trait_name_caendr}" data-bs-target="#offcanvas1"
-                                    aria-controls="offcanvas1" href=" #"><i class="bi bi-list-ul"
+                                    aria-controls="offcanvas1" href=" #"><i class="bi bi-arrow-right"
                                         aria-hidden="true"></i>View Full Details</a>
                             </div>
                         </td>
