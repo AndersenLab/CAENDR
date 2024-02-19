@@ -187,8 +187,8 @@ try {
         x_label:       trait_label,
         tooltip_id:    'tooltip-single-histogram',
         tooltip_template: (d, labels) => `
-            <p class="tooltip-head"><b>Strain: ${d[2]}</b></p>
-            <p class="tooltip-body">${labels[0]}: ${d[0]}</p>
+            <p class="tooltip-head"><b>Strain: ${d[0]}</b></p>
+            <p class="tooltip-body">${labels[0]}: ${d[1]}</p>
         `,
     });
 } catch (err) {
@@ -203,8 +203,8 @@ try {
         y_label:       trait_label,
         tooltip_id:    'tooltip-single-barplot',
         tooltip_template: (d) => `
-            <p class="tooltip-head"><b>${d[1]}</b></p>
-            <p class="tooltip-body">Value = ${d[0].toFixed(4)}</p>
+            <p class="tooltip-head"><b>${d[0]}</b></p>
+            <p class="tooltip-body">Value = ${d[1].toFixed(4)}</p>
         `,
     });
 } catch (err) {
@@ -230,9 +230,9 @@ try {
         opacity_hover: 1,
         tooltip_id:    'tooltip-double-scatterplot',
         tooltip_template: (d, labels) => `
-            <p class="tooltip-head"><b>${d[2]}</b></p>
-            <p class="tooltip-body">x = ${d[0].toFixed(4)}</p>
-            <p class="tooltip-body">y = ${d[1].toFixed(4)}</p>
+            <p class="tooltip-head"><b>${d[0]}</b></p>
+            <p class="tooltip-body">x = ${d[1].toFixed(4)}</p>
+            <p class="tooltip-body">y = ${d[2].toFixed(4)}</p>
         `,
     });
 } catch (err) {
