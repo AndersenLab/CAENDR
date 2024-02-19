@@ -40,14 +40,23 @@ def admin_etl_op():
 @admin_etl_op_bp.route('/stats', methods=["GET"])
 @admin_required()
 def admin_etl_stats():
-  alt_parent_breadcrumb = {"title": "Admin", "url": url_for('admin.admin')}
-  title = 'ETL Stats'
+
+  # Check db status
   status, message = health_database_status()
   logger.debug(f"DB Status is {status} {message}")
   logger.debug("ETL Stats loading...")
+
+  # Get db stats
   stats = get_all_db_stats()
   logger.info(stats)
-  return render_template('admin/etl/stats.html', **locals())
+
+  return render_template('admin/etl/stats.html', **{
+    'title': 'ETL Stats',
+    'alt_parent_breadcrumb': {"title": "Admin", "url": url_for('admin.admin')},
+
+    # Stats
+    'stats': stats,
+  })
 
 
 
