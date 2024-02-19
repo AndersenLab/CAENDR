@@ -7,6 +7,7 @@ from flask import (render_template,
                     jsonify,
                     flash,
                     abort,
+                    Response,
                     Blueprint)
 from extensions import cache, compress
 from sqlalchemy import or_, func
@@ -26,6 +27,7 @@ from caendr.models.job_pipeline import PhenotypePipeline
 from caendr.models.status       import JobStatus
 from caendr.models.sql          import PhenotypeMetadata
 from caendr.models.trait        import Trait
+from caendr.utils.data          import get_file_format, convert_data_to_download_file
 
 
 
@@ -308,9 +310,18 @@ def list_results():
   })
 
 
-@phenotype_database_bp.route("/report/<id>", methods=['GET'])
+@phenotype_database_bp.route("/report/<id>",                     methods=['GET'])
+@phenotype_database_bp.route("/report/<id>/download/<file_ext>", methods=['GET'])
 @jwt_required()
-def report(id):
+def report(id, file_ext=None):
+
+  # Validate file extension, if provided
+  if file_ext:
+    file_format = get_file_format(file_ext, valid_formats={'tsv'})
+    if file_format is None:
+      abort(404)
+  else:
+    file_format = None
 
   # Fetch requested phenotype report
   # Ensures the report exists and the user has permission to view it
@@ -348,6 +359,18 @@ def report(id):
     logger.error(f'Error fetching Phenotype report {id}: Input data does not exist')
     return abort(404)
 
+  # If a file format was specified, return a downloadable file with the results
+  if file_format is not None:
+    columns = ['strain', *data['trait_names']]
+    values  = sorted(result['trait_values'], key=lambda v: v[0])
+    resp = Response(convert_data_to_download_file( values, columns, file_ext=file_ext ), mimetype=file_format['mimetype'])
+    try:
+      resp.headers['Content-Disposition'] = f'filename={job.report["species"]}_{"_".join(job.report.trait_names)}.{file_ext}'
+    except:
+      resp.headers['Content-Disposition'] = f'filename={job.report.id}.{file_ext}'
+    return resp
+
+  # Otherwise, return view page
   return render_template('tools/phenotype_database/report.html', **{
     'title': 'Phenotype Analysis Report',
     'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
