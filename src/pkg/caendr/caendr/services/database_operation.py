@@ -38,7 +38,7 @@ def get_etl_op(op_id, keys_only=False, order=None, placeholder=True):
 #
 
 @rollback_on_error
-def get_table_count(model) -> int:
+def count_table_rows(model) -> int:
   '''
     Count the number of rows in a SQL table.
 
@@ -58,7 +58,7 @@ def get_table_count(model) -> int:
 #   result = session.execute(query).fetchone()
 #   return result[0]
 
-def get_table_count_safe(model):
+def count_table_rows_safe(model):
   '''
     Count the number of rows in a SQL table.
     If any error is thrown, logs as a warning and returns `None` instead.
@@ -66,7 +66,7 @@ def get_table_count_safe(model):
 
   # Try getting the count directly, handling any SQL errors
   try:
-    return get_table_count(model)
+    return count_table_rows(model)
 
   # Log errors and return None
   except Exception as ex:
@@ -79,7 +79,7 @@ def get_all_db_stats():
     Count the rows in each table, and return all results.
     Returns `None` for any table that threw an error when trying to count the rows.
   '''
-  return [ [model.__tablename__, get_table_count_safe(model)] for model in ALL_SQL_TABLES ]
+  return [ [model.__tablename__, count_table_rows_safe(model)] for model in ALL_SQL_TABLES ]
 
 
 #
