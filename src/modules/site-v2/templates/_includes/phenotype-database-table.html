@@ -10,6 +10,10 @@ position: relative;
   color: grey
 }
 
+#tagsFilter, #tags {
+    text-transform: capitalize;
+}
+
 label {
     white-space: normal;
     word-wrap: break-word;
@@ -27,36 +31,29 @@ label {
 </nav>
 <div class="tab-content py-2" id="nav-tabContent">
     <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
-        <div class="d-flex flex-wrap my-3 justify-content-between">
+        <div class="d-flex flex-wrap justify-content-between my-5">
             <div class="col-12 col-md-3 mx-1 mb-3 mb-md-0">
-            <form>
-                <label for="traitsSearch" class="form-label"><i class="bi bi-search"></i> Search:</label>
-                <div class="input-wrapper">
-                    <input type="text" class="form-control" name="traitsSearch" id="traitsSearch">
-                    <i class="bi bi-x-circle-fill" id="clearSearch"></i>
-                </div>
-            </form>
-        </div>
-            <div class="col-12 col-md-3 mx-1 align-self-end mb-0">
-                <div class="dropdown">
-                    <button class="btn btn-secondary text-white dropdown-toggle w-100" id="traitsFilter" type="button" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false"><i class="bi bi-filter"></i> Filter</button>
-                    <div class="dropdown-menu w-100 p-2" role="menu" id="tagsFilter">
-                        <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}" />
-                        <div class="dropdown-item mb-1">
-                            <input type="checkbox" class="custom-control-input align-middle me-1" id="selectAll">
-                            <label class="custom-check-label align-middle" for="selectAll">Select All</label>
-                        </div>
-                        {% for tag in categories %}
-                        <div class="dropdown-item mb-1">
-                            <input type="checkbox" class="custom-control-input align-middle me-1 filterCheckbox" value="{{tag}}" id="{{tag}}">
-                            <label class="custom-check-label align-middle" for="{{tag}}">{{tag|replace('/', ' • ')}}</label>
-                        </div>
-                        {% endfor %}
-                        <div class="d-flex justify-content-end">
-                            <button class="btn btn-secondary text-white right-0 m-2" type="button" id="clearAll">Clear All Filters</button>
-                        </div>
+                <form>
+                    <label for="traitsSearch" class="form-label"><i class="bi bi-search"></i> Search:</label>
+                    <div class="input-wrapper">
+                        <input type="text" class="form-control" name="traitsSearch" id="traitsSearch">
+                        <i class="bi bi-x-circle-fill" id="clearSearch"></i>
                     </div>
-                </div>       
+                </form>
+        </div>
+            <div class="col-12 col-md-8 mx-1 align-self-end mb-0">
+                <div class="d-flex flex-wrap justify-content-center justify-content-md-end mt-3 mt-md-0" role="menu" id="tagsFilter">
+                    <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}" />
+                    {% for tag in categories %}
+                    <div class="d-flex align-items-center mx-2 mb-3">
+                        <input type="checkbox" class="custom-control-input me-1 filterCheckbox" value="{{tag}}" id="{{tag}}">
+                        <label class="custom-check-label" for="{{tag}}">{{tag|replace('/', ' • ')}}</label>
+                    </div>
+                    {% endfor %}
+                    <div class="d-flex mx-2 mb-3">
+                        <a class="fw-bold" role="button" id="clearAll">Clear All<i class="bi bi-x-circle-fill ms-1" aria-hidden="true"></i></a>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="table-responsive">
