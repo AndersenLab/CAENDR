@@ -1,14 +1,12 @@
-import os
-from caendr.services.logger import logger
 from sqlalchemy import func 
 
-from caendr.models.datastore import DatabaseOperation
-from caendr.models.sql import DbOp, ALL_SQL_TABLES
-from caendr.services.tool_versions import GCR_REPO_NAME
-from caendr.services.cloud.datastore import get_ds_entity, query_ds_entities
+from caendr.services.logger           import logger
+from caendr.utils.env                 import get_env_var
+
+from caendr.models.datastore          import DatabaseOperation
+from caendr.models.sql                import DbOp, ALL_SQL_TABLES
+from caendr.services.cloud.datastore  import get_ds_entity, query_ds_entities
 from caendr.services.cloud.postgresql import rollback_on_error
-from caendr.utils.data import unique_id
-from caendr.utils.env import get_env_var
 
 
 MODULE_DB_OPERATIONS_BUCKET_NAME       = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
