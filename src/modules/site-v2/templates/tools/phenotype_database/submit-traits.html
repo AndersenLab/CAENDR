@@ -4,16 +4,16 @@
 {% block content %}
 {% from "_includes/select-trait.html" import render_select_trait %}
 
-<div class="container px-5 pb-5">
-    <div class="d-flex flex-wrap justify-content-center mt-5">
-        <div class="col-8 col-md-5">
+<div class="container pb-5">
+    <div class="d-flex flex-wrap justify-content-around my-5">
+        <div class="col-9 col-md-4 mb-5">
             {%- if two_traits %}
             <h2 class="h3 text-dark text-center">Trait 1</h2>
             {%- endif %}
             {{ render_select_trait('trait-1') }}
         </div>
         {%- if two_traits %}
-        <div class="col-8 col-md-5">
+        <div class="col-9 col-md-4 mt-3 mt-md-0 mb-5">
             <h2 class="h3 text-dark text-center">Trait 2</h2>
             {{ render_select_trait('trait-2') }}
         </div>
@@ -21,7 +21,7 @@
     </div>
     <!-- /flex -->
 
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end p-3">
         <button class="btn btn-dark text-white" role="button"
             onclick="location.href=`{{ url_for('phenotype_database.phenotype_database') }}`">Start Over</button>
         <button id="submit-button" class="btn btn-secondary text-white" role="button" onclick="submit()">Next</button>

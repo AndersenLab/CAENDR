@@ -94,7 +94,7 @@ def data_release_list(species, release_version=None):
     'RELEASES': releases,
     'release_bucket': get_release_bucket(),
     'release_path': release.get_versioned_path_template().get_string(SPECIES = species.name),
-    'fasta_path': release.get_fasta_filepath_url() if release.check_fasta_file_exists() else None,
+    'fasta_path': release.get_fasta_filepath(schema=BlobURISchema.HTTPS) if release.check_fasta_file_exists() else None,
     'fasta_name': release.get_fasta_filename(),
   }
 
