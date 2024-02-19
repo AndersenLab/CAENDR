@@ -6,7 +6,7 @@ from caendr.utils.env                 import get_env_var
 from caendr.models.datastore          import DatabaseOperation
 from caendr.models.sql                import DbOp, ALL_SQL_TABLES
 from caendr.services.cloud.datastore  import get_ds_entity, query_ds_entities
-from caendr.services.cloud.postgresql import rollback_on_error
+from caendr.services.cloud.postgresql import rollback_on_error_handler
 
 
 MODULE_DB_OPERATIONS_BUCKET_NAME       = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
@@ -42,19 +42,31 @@ def get_count(q):
     count = q.session.execute(count_q).scalar()
     return count
 
-@rollback_on_error
-def get_table_count(model):
-  session = model.query.session
-  query = f"SELECT reltuples AS estimate FROM pg_class where relname = '{model.__tablename__}';"
-  result = session.execute(query).fetchone()
-  return result[0]
+# NOTE: This was the old way of getting the table count. Deprecated for being overly complex and potentially unsafe.
+#       For some tables, it gives a slightly lower count than the direct query.count() method...
+# @rollback_on_error
+# def get_table_count(model):
+#   session = model.query.session
+#   query = f"SELECT reltuples AS estimate FROM pg_class where relname = '{model.__tablename__}';"
+#   result = session.execute(query).fetchone()
+#   return result[0]
 
 def get_table_count_safe(model):
+  '''
+    Count the number of rows in a SQL table.
+    If any error is thrown, logs as a warning and returns `None` instead.
+  '''
+
+  # Try getting the count directly, handling any SQL errors
   try:
-    return get_table_count(model)
+    with rollback_on_error_handler():
+      return model.query.count()
+
+  # Log errors and return None
   except Exception as ex:
     logger.warning(f'Error getting count for table {model}: {ex}')
     return None
+
 
 def get_all_db_stats():
   stats = [ [model.__tablename__, get_table_count_safe(model)] for model in ALL_SQL_TABLES ]
