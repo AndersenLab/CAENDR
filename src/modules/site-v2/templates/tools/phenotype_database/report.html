@@ -104,7 +104,7 @@
             <!-- Download Buttons when those features are ready -->
             <!-- <div class="my-5">
                 <div class="d-grid gap-3">
-                  <a class="btn btn-secondary text-light" role="button" onClick=""><i class="bi bi-image-fill me-2"></i>Download SVG</a>
+                  <a class="btn btn-secondary text-light" role="button" onClick="download_charts_as_svg()"><i class="bi bi-image-fill me-2"></i>Download SVG</a>
                   <a class="btn btn-secondary text-light" role="button" href="{{ url_for('phenotype_database.report', id=report.id, file_ext='tsv') }}"
                     ><i class="bi bi-file-earmark-spreadsheet-fill me-2"></i>Download TSV</a>
                 </div>
@@ -169,6 +169,23 @@
 </script>
 
 <script src="{{ url_for('static', filename='js/plot.js') }}"></script>
+
+<script>
+{% include '_scripts/utils.js' %} {#/* defines: save_svg */#}
+
+function download_charts_as_svg() {
+    {%- if data.num_traits == 1 %}
+    const chart_id_histogram  = 'phenotype-chart-histogram';
+    const chart_id_ranked_bar = 'phenotype-chart-ranked-bar';
+    save_svg(`#${chart_id_histogram } svg`, `${chart_id_histogram }_{{ report.id }}`);
+    save_svg(`#${chart_id_ranked_bar} svg`, `${chart_id_ranked_bar}_{{ report.id }}`);
+    {%- else %}
+    const chart_id = 'phenotype-chart';
+    save_svg(`#${chart_id} svg`, `${chart_id}_{{ report.id }}`);
+    {%- endif %}
+}
+</script>
+
 
 <script type="module">
 
