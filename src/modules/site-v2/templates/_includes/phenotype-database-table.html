@@ -301,7 +301,7 @@ position: relative;
                     tagsHTML += `<div class="mb-3"><a role="button" class="btn btn-link" id="tagLink-${j+1}" data-value="${tags[j]}">${tags[j].replaceAll('/', ' • ')}</a></div>`
                 }
             }
-            
+
             let html = `
                     <tr class="py-3 dislayedRow">
                         <td>
@@ -309,7 +309,11 @@ position: relative;
                                 data-bs-target="#collapse-${i+1}" aria-expanded="false" aria-controls="collapse-${i+1}"><i
                                     class="bi bi-chevron-right" aria-hidden="true"></i><em>${speciesName}</em></a>
                         </td>
-                        <td id="accordionHeading-${i+1}"><strong>${arr[i].trait_name_caendr}</strong></td>
+                        <td id="accordionHeading-${i+1}">
+                            <strong>${arr[i].trait_name_display_1 || arr[i].trait_name_caendr}</strong>
+                            <p class="mb-0">${arr[i].trait_name_display_2}</p>
+                            <em>${arr[i].trait_name_display_3}</em>
+                        </td>
                         <td>${arr[i].description_short}.</td>
                         <td>${arr[i].source_lab}</td>
                         <td>${createdOn}</td>
