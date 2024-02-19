@@ -90,30 +90,14 @@
                     <a class="align-self-center text-dark fw-bold" onclick="" href="#">Submit to Phenotype Database?</a>
                 </div> -->
             </div>
-            {%- if data.num_traits > 1 %}
-            <div class="col-12 col-md-5 col-xl-12 text-bg-light border-0 rounded-2 shadow-sm p-3 mb-3 mb-xl-5">
-                <h3 class="h4 text-dark text-center">Trait 2</h3>
-                <h4 class="h5">Species:</strong></h4>
-                <p class="species"><em>{{ report['species']|replace('_', '. ')}}</em></h4>
-                <h4 class="h5">Name:</h4>
-                <p>{{ render_trait_name_multiline(report['trait_2_name_display'][0], report['trait_2_name_display'][1], report['trait_2_name_display'][2]) }}</p>
-                <h4 class="h5">Description:</h4>
-                <p>{{ report['trait_2']['description_short'] or report['trait_2']['description_long'] }}</p>
-                <!-- Submit to database button for when that feature is ready -->
-                <!-- <div class="d-flex justify-content-end mt-5 mb-3">
-                    <div class="text-bg-secondary text-white text-center rounded-circle pt-2 me-2 phenotypeIcon">
-                        <i class="bi bi-upload" aria-hidden="true"></i>
-                    </div>
-                    <a class="align-self-center text-dark fw-bold" onclick="" href="#">Submit to Phenotype Database?</a>
-                </div> -->
-            </div>
-            {%- endif %}
-            <!-- Download TSV button for when that feature is ready -->
-            <!-- <div class="col-12 col-md-5 col-xl-12 p-3 mb-3 mb-xl-5">
-                <div class="d-grid gap-2">
-                    <button class="btn btn-secondary text-white" type="button"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Download TSV</button>
-                  </div>
-            </div> -->
+            <!-- Download Buttons when those features are ready -->
+            <!-- <div class="my-5">
+                <div class="d-grid gap-3">
+                  <a class="btn btn-secondary text-light" role="button" onClick=""><i class="bi bi-image-fill me-2"></i>Download SVG</a>
+                  <a class="btn btn-secondary text-light" role="button" href="{{ url_for('phenotype_database.report', id=report.id, file_ext='tsv') }}"
+                    ><i class="bi bi-file-earmark-spreadsheet-fill me-2"></i>Download TSV</a>
+                </div>
+              </div> -->
         </div>
         <!-- /Input Card -->
         <!-- Tool column -->
