@@ -15,12 +15,27 @@ MODULE_DB_OPERATIONS_CONTAINER_VERSION = get_env_var('MODULE_DB_OPERATIONS_CONTA
 
 
 
+#
+# Retrieving ETL Op Entities
+#
+
 # TODO: Should this return DatabaseOperation entity objects?
 def get_all_db_ops(keys_only=False, order=None, placeholder=True):
   logger.debug(f'get_all_db_ops(keys_only={keys_only}, order={order})')
   ds_entities = query_ds_entities(DatabaseOperation.kind, keys_only=keys_only, order=order)
   # logger.debug(ds_entities)
   return ds_entities
+
+def get_etl_op(op_id, keys_only=False, order=None, placeholder=True):
+  logger.debug(f'get_etl_op(op_id={op_id}, keys_only={keys_only}, order={order})')
+  op = get_ds_entity(DatabaseOperation.kind, op_id)
+  logger.debug(op)
+  return op
+
+
+#
+# Computing SQL Table Stats
+#
 
 def get_count(q):
     count_q = q.statement.with_only_columns([func.count()]).order_by(None)
@@ -45,11 +60,10 @@ def get_all_db_stats():
   stats = [ [model.__tablename__, get_table_count_safe(model)] for model in ALL_SQL_TABLES ]
   return stats
 
-def get_etl_op(op_id, keys_only=False, order=None, placeholder=True):
-  logger.debug(f'get_etl_op(op_id={op_id}, keys_only={keys_only}, order={order})')
-  op = get_ds_entity(DatabaseOperation.kind, op_id)
-  logger.debug(op)
-  return op
+
+#
+# Db Op Forms
+#
 
 def get_db_op_form_options(): 
   return [ (op_type.value, DbOp.get_title(op_type)) for op_type in DbOp ]
