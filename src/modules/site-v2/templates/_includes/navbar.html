@@ -33,8 +33,10 @@
               <li><a class="dropdown-item" href="{{ url_for('heritability_calculator.heritability_calculator') }}">
                   Heritability
                   Calculator </a></li>
-                  <li><a class="dropdown-item" href="{{ url_for('phenotype_database.phenotype_database') }}">
-                    Phenotype Database and Analysis </a></li>
+              {%- if feature_flags.PHENOTYPE_DB_ENABLED %}
+              <li><a class="dropdown-item" href="{{ url_for('phenotype_database.phenotype_database') }}">
+                  Phenotype Database and Analysis </a></li>
+              {%- endif %}
             </ul>
           </div>
           <div class="nav-item dropdown mx-3">
