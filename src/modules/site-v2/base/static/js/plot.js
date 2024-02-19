@@ -169,18 +169,8 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
     const opacity       = config['opacity']       || 0;
     const opacity_hover = config['opacity_hover'] || 0;
 
-    // Create a template function for the tooltip
-    // By default, show label & value for each axis
-    const tooltip_id       = config['tooltip_id']       || null;
-    const tooltip_template = config['tooltip_template'] || ((d, labels) => `
-      <p class="tooltip-body">${labels[0]}: ${d[0]}</p>
-      <p class="tooltip-body">${labels[1]}: ${d[1]}</p>
-    `);
-
     // Create the SVG object for the full graphic (scatterplot + histograms + margins)
     const svg = d3.select(container_selector).append('svg')
-      //  .attr('width',  width  + margin.left + margin.right + hist_height)
-      //  .attr('height', height + margin.top + margin.bottom + hist_height)
       .attr('width', "100%")
       .attr('height', "100%")
       .attr("viewBox", `-25 -50 900 1000`)
@@ -252,46 +242,35 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
       .attr("cx", d => x(d[1]) )
       .attr("cy", d => y(d[2]) )
       .attr("r", circle_radius)
+      .attr("tabindex", "0")
       .style('fill',    "#0719BC")
       .style('opacity', opacity)
 
-    // Create tooltip for data point mouseover
-    const tooltip = d3.select(container_selector)
-      .append("div")
-      .attr("class", "tooltip")
-      .style("opacity", 0);
-
-    // If an ID is provided for the tooltip, add it
-    if (tooltip_id) {
-      tooltip.attr("id", tooltip_id);
-    }
+      // Create tooltips for data points
+      function setTooltips() {
+         dots.attr('data-tippy-content', (d,i)=> {
+           return `<p><strong>${d[0]}</strong></p>
+           x = ${d[1].toFixed(4)}
+           <br>y = ${d[2].toFixed(4)}`;
+         });
+        tippy(dots.nodes(), {
+          arrow: false,
+          allowHTML: true,
+          placement: 'right',
+        });
+      }
 
     // Add mouseover listener for individual dots
-    dots.on('mouseover', function(d) {
-
+     dots.on('mouseover', function(d) {
       // Select the dot and grow its radius
-      d3.select(this).attr('r', circle_radius + 3).style('opacity', opacity_hover);
-      
-      // Show the tooltip
-      tooltip.html(tooltip_template(d, [ config['x_label'], config['y_label'] ]))
-        //.style('left', (d3.event.pageX + 10) + 'px') // Position tooltip to the right of the cursor
-        //.style('top',  (d3.event.pageY - 25) + 'px') // Position tooltip above the cursor
-        .transition()
-        .duration(200)
-        .style('opacity', 1);
-    });
+       d3.select(this).attr('r', circle_radius + 3).style('opacity', opacity_hover);
+     });
 
     // Add mouseout event listener for individual dots
-    dots.on('mouseout', function() {
-
+     dots.on('mouseout', function() {
       // Select the dot and restore its original radius
-      d3.select(this).attr('r', circle_radius).style('opacity', opacity);
-
-      // Hide the tooltip
-      tooltip.transition()
-        .duration(300)
-        .style('opacity', 0);
-    })
+       d3.select(this).attr('r', circle_radius).style('opacity', opacity);
+     })
 
 
     // Gather the config params for the histograms
@@ -305,6 +284,8 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
     // Add the two histograms
     add_histogram_along_axis(PlotDimension.x_axis, x, data, svg, {...h_config, position: [margin.left,         margin.top              ]})
     add_histogram_along_axis(PlotDimension.y_axis, y, data, svg, {...h_config, position: [margin.left + width, margin.top + hist_height]})
+    // Render tooltips
+    setTooltips();
 }
 
 
@@ -345,8 +326,6 @@ function render_histogram(container_selector, data, config={}) {
 
   // Create the SVG object for the full graphic (scatterplot + histograms + margins)
   const svg = d3.select(container_selector).append('svg')
-    // .attr('width',  width  + margin.left + margin.right)
-    // .attr('height', height + margin.top + margin.bottom)
     .attr('width', "100%")
     .attr('height', "100%")
     .attr("viewBox", `0 0 1200 400`)
@@ -432,12 +411,6 @@ function render_ranked_barplot(container_selector, data, config={}) {
   // Read values from config, filling in default values when not supplied
   const fill_color    = config['fill_color']    || 'black';
 
-  // Create a template function for the tooltip
-  // By default, show label & value for each axis
-  const tooltip_id       = config['tooltip_id']       || null;
-  const tooltip_template = config['tooltip_template'] || ((d) => `
-    <p class="tooltip-body">${d[0]}: ${d[1]}</p>
-  `);
 
   // Sort data
   data.sort(function(b, a) {
@@ -452,8 +425,6 @@ function render_ranked_barplot(container_selector, data, config={}) {
 
   // Create the SVG object for the full graphic (scatterplot + histograms + margins)
   const svg = d3.select(container_selector).append('svg')
-    // .attr('width',  width  + margin.left + margin.right)
-    // .attr('height', height + margin.top + margin.bottom)
     .attr('width', "100%")
     .attr('height', "100%")
     .attr("viewBox", `0 -50 1200 500`)  
@@ -491,39 +462,36 @@ function render_ranked_barplot(container_selector, data, config={}) {
     .data(data)
     .enter()
     .append("rect")
-      .attr("x", (d) => xScale( d[0] ) )
-      .attr("y", (d) => yScale( Math.max(d[1], 0) ) )
+      .attr("x", (d) => xScale(d[0]))
+      .attr("y", (d) => yScale(Math.max(d[1], 0)))
       .attr("width", xScale.bandwidth())
-      .attr("height", (d) => bar_height( Math.abs(d[1]) ))
+      .attr("height", (d) => bar_height(Math.abs(d[1])))
       .attr("fill", fill_color)
+      .attr("tabindex", "0")
 
-  // Create tooltip for bar mouseover
-  const tooltip = d3.select(container_selector)
-    .append("div")
-    .attr("class", "tooltip")
-    .style("opacity", 0);
-
-  // If an ID is provided for the tooltip, add it
-  if (tooltip_id) {
-    tooltip.attr("id", tooltip_id);
+  // Create tooltips for bars
+  function setTooltips() {
+    bars.attr('data-tippy-content', (d, i) => {
+      return `
+            <p><strong>${d[0]}</strong></p>
+            Value = ${d[1].toFixed(4)}
+            `;
+    });
+    tippy(bars.nodes(), {
+      allowHTML: true,  
+      placement: 'top',
+    });
   }
 
-  // Add mouseover listener for individual bars -- show the tooltip
-  bars.on('mouseover', function(d) {
-    tooltip.html(tooltip_template(d))
-      //.style('left', (d3.event.pageX + 10) + 'px') // Position tooltip to the right of the cursor
-      //.style('top',  (d3.event.pageY - 25) + 'px') // Position tooltip above the cursor
-      .transition()
-      .duration(200)
-      .style('opacity', 1);
-  });
+  // Add mouseover listener for individual bars -- show selected bar
+   bars.on('mouseover', function(d) {
+    d3.select(this).attr('fill', "#BBDDF2")
+   });
 
-  // Add mouseout event listener for individual bars -- hide the tooltip
-  bars.on('mouseout', function() {
-    tooltip.transition()
-      .duration(300)
-      .style('opacity', 0);
-  })
+  // Add mouseout event listener for individual bars -- reset bar color
+   bars.on('mouseout', function() {
+    d3.select(this).attr('fill', fill_color)
+   })
 
   // Add label for y-axis, if one is provided
   if (config['y_label']) {
@@ -535,4 +503,6 @@ function render_ranked_barplot(container_selector, data, config={}) {
       .attr('text-anchor', 'middle')
       .text(config['y_label'])
     }
+    //Render tooltips
+    setTooltips();
 }

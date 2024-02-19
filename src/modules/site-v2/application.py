@@ -277,6 +277,14 @@ def configure_jinja(app):
       render_ext_markdown=render_ext_markdown
     )
 
+  @app.context_processor
+  def inject_feature_flags():
+    return {
+      'feature_flags': {
+        'PHENOTYPE_DB_ENABLED': get_env_var('PHENOTYPE_DB_ENABLED', var_type=bool, can_be_none=True),
+      },
+    }
+
   #  2021-04-14 17:26:51.348674+00:00
   #  '%Y-%m-%d %H:%M:%S.%f+%z'
   # Datetime filters for Jinja

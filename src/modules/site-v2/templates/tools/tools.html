@@ -68,6 +68,7 @@
       </div>
     </div>
     <!-- /Card Column -->
+    {%- if feature_flags.PHENOTYPE_DB_ENABLED %}
     <!-- Card Column -->
     <div class="col mt-md-0 mb-5  ">
       <div class="card h-100 shadow text-center pt-5 mt-5 mx-auto cardBorderBottom" style="min-height:20rem;">
@@ -81,6 +82,7 @@
       </div>
     </div>
     <!-- /Card Column -->
+    {%- endif %}
     </div>
   <!-- /Row -->
 </div> <!-- /Container -->

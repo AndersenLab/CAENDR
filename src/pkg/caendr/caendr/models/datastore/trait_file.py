@@ -26,6 +26,9 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
       # Identifying trait
       'trait_name_caendr',
       'trait_name_user',
+      'trait_name_display_1',
+      'trait_name_display_2',
+      'trait_name_display_3',
       'is_bulk_file',
       'dataset',
 

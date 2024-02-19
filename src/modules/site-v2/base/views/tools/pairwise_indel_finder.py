@@ -13,6 +13,7 @@ from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupErro
 from caendr.models.job_pipeline import IndelFinderPipeline
 from caendr.models.status import JobStatus
 from caendr.services.dataset_release import get_dataset_release
+from caendr.services.cloud.storage import BlobURISchema
 from caendr.utils.bio import parse_chrom_interval
 from caendr.utils.constants import CHROM_NUMERIC
 from caendr.utils.data import get_file_format
@@ -125,7 +126,7 @@ def pairwise_indel_finder():
     "species_list": Species.all(),
 
     # Data locations
-    "fasta_url": DatasetRelease.get_fasta_filepath_url_template().get_string_safe(),
+    'fasta_url': DatasetRelease.get_fasta_filepath_template(schema=BlobURISchema.HTTPS).get_string_safe(),
 
     # List of Species class fields to expose to the template
     # Optional - exposes all attributes if not provided
@@ -286,6 +287,9 @@ def report(id, file_ext=None):
       logger.error(f'Error fetching Indel Finder report {id}: Input data file does not exist')
       return abort(404)
 
+    # If the result is empty, make it an empty dict, for more straightforward field access in the rest of the function
+    if not ready:
+      result = {}
 
     # Get indel interval
     try:
@@ -307,6 +311,8 @@ def report(id, file_ext=None):
     # If a file format was specified, return a downloadable file with the results
     # TODO: Set a better filename?
     if file_format is not None:
+      if not ready:
+        abort(404)
       resp = Response(result['format_table'].to_csv(sep=file_format['sep']), mimetype=file_format['mimetype'])
       try:
         resp.headers['Content-Disposition'] = f'filename={job.report["species"]}_{job.report["strain_1"]}_{job.report["strain_2"]}_{data["site"]}.{file_ext}'
@@ -328,7 +334,7 @@ def report(id, file_ext=None):
       'id': id,
 
       # Job status
-      'empty': result['empty'],
+      'empty': result.get('empty'),
       'ready': ready,
 
       # Data
