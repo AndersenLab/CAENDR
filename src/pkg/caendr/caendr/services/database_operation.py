@@ -75,8 +75,11 @@ def get_table_count_safe(model):
 
 
 def get_all_db_stats():
-  stats = [ [model.__tablename__, get_table_count_safe(model)] for model in ALL_SQL_TABLES ]
-  return stats
+  '''
+    Count the rows in each table, and return all results.
+    Returns `None` for any table that threw an error when trying to count the rows.
+  '''
+  return [ [model.__tablename__, get_table_count_safe(model)] for model in ALL_SQL_TABLES ]
 
 
 #
