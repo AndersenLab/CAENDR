@@ -33,6 +33,9 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
       'dataset',
 
       # About trait
+      'trait_name_display_1',
+      'trait_name_display_2',
+      'trait_name_display_3',
       'description_short',
       'description_long',
       'units',
