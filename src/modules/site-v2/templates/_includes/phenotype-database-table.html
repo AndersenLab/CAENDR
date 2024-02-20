@@ -9,11 +9,20 @@ position: relative;
   right: 5px;
   color: grey
 }
+
+#tagsFilter, #tags {
+    text-transform: capitalize;
+}
+
+label {
+    white-space: normal;
+    word-wrap: break-word;
+}
 </style>
 {% endblock %}
 
 <nav>
-    <div class="nav nav-tabs border-0" id="nav-tab" role="tablist">
+    <div class="nav nav-tabs border-1" id="nav-tab" role="tablist">
         <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button"
             role="tab" aria-controls="nav-home" aria-selected="true">Traits</button>
         <button class="nav-link" id="nav-zhang-tab" data-bs-toggle="tab" data-bs-target="#nav-zhang" type="button"
@@ -22,34 +31,29 @@ position: relative;
 </nav>
 <div class="tab-content py-2" id="nav-tabContent">
     <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
-        <div class="d-flex my-3 justify-content-between">
-            <form>
-                <label for="traitsSearch" class="form-label"><i class="bi bi-search"></i> Search:</label>
-                <div class="input-wrapper">
-                    <input type="text" class="form-control" name="traitsSearch" id="traitsSearch">
-                    <i class="bi bi-x-circle-fill" id="clearSearch"></i>
-                </div>
-            </form>
-            <div class="col-12 col-md-3 mx-1 align-self-end mb-0">
-                <div class="dropdown">
-                    <button class="btn btn-secondary text-white dropdown-toggle w-100" id="traitsFilter" type="button" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false"><i class="bi bi-filter"></i> Filter</button>
-                    <div class="dropdown-menu w-auto" role="menu" id="tagsFilter">
-                        <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}" />
-                        <div class="dropdown-item">
-                            <input type="checkbox" class="custom-control-input" id="selectAll">
-                            <label class="custom-check-label" for="selectAll">Select All</label>
-                        </div>
-                        {% for tag in categories %}
-                        <div class="dropdown-item">
-                            <input type="checkbox" class="custom-control-input filterCheckbox" value="{{tag}}" id="{{tag}}">
-                            <label class="custom-check-label" for="{{tag}}">{{tag|replace('/', ' • ')}}</label>
-                        </div>
-                        {% endfor %}
-                        <div class="d-flex justify-content-end">
-                            <button class="btn btn-secondary text-white right-0 m-2" type="button" id="clearAll">Clear All Filters</button>
-                        </div>
+        <div class="d-flex flex-wrap justify-content-between my-5">
+            <div class="col-12 col-md-3 mx-1 mb-3 mb-md-0">
+                <form>
+                    <label for="traitsSearch" class="form-label"><i class="bi bi-search"></i> Search:</label>
+                    <div class="input-wrapper">
+                        <input type="text" class="form-control" name="traitsSearch" id="traitsSearch">
+                        <i class="bi bi-x-circle-fill" id="clearSearch"></i>
                     </div>
-                </div>       
+                </form>
+        </div>
+            <div class="col-12 col-md-8 mx-1 align-self-end mb-0">
+                <div class="d-flex flex-wrap justify-content-center justify-content-md-end mt-3 mt-md-0" role="menu" id="tagsFilter">
+                    <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}" />
+                    {% for tag in categories %}
+                    <div class="d-flex align-items-center mx-2 mb-3">
+                        <input type="checkbox" class="custom-control-input me-1 filterCheckbox" value="{{tag}}" id="{{tag}}">
+                        <label class="custom-check-label" for="{{tag}}">{{tag|replace('/', ' • ')}}</label>
+                    </div>
+                    {% endfor %}
+                    <div class="d-flex mx-2 mb-3">
+                        <a class="fw-bold" role="button" id="clearAll">Clear All<i class="bi bi-x-circle-fill ms-1" aria-hidden="true"></i></a>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="table-responsive">
@@ -100,7 +104,7 @@ position: relative;
 <div class="offcanvas offcanvas-end offcanvasPhenotype" tabindex="-1" id="offcanvas1"
     aria-labelledby="offcanvas1Label">
     <div class="offcanvas-header">
-        <h5 id="offcanvas1Label"></h5>
+        <h1 class="h5" id="offcanvas1Label"></h5>
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body p-4">
@@ -150,9 +154,11 @@ position: relative;
                     "data": "View Full Details",
                     "render": function(data, type, row) {
                         const d = JSON.stringify(row)
-                        return `<td class="optionsToolbar">
+                        return `<td>
+                            <div class="optionsToolbar">
                             <a id="details" data-value='${d}' data-bs-toggle="offcanvas" data-bs-target="#offcanvas1" aria-controls="offcanvas1" 
                             href="#"><i class="bi bi-list-ul" aria-hidden="true"></i>Full Details</a>
+                            </div>
                             </td>`
                         }
                 },
@@ -301,7 +307,7 @@ position: relative;
                     tagsHTML += `<div class="mb-3"><a role="button" class="btn btn-link" id="tagLink-${j+1}" data-value="${tags[j]}">${tags[j].replaceAll('/', ' • ')}</a></div>`
                 }
             }
-            
+
             let html = `
                     <tr class="py-3 dislayedRow">
                         <td>
@@ -309,7 +315,11 @@ position: relative;
                                 data-bs-target="#collapse-${i+1}" aria-expanded="false" aria-controls="collapse-${i+1}"><i
                                     class="bi bi-chevron-right" aria-hidden="true"></i><em>${speciesName}</em></a>
                         </td>
-                        <td id="accordionHeading-${i+1}"><strong>${arr[i].trait_name_caendr}</strong></td>
+                        <td id="accordionHeading-${i+1}">
+                            <strong>${arr[i].trait_name_display_1 || arr[i].trait_name_caendr}</strong>
+                            <p class="mb-0">${arr[i].trait_name_display_2}</p>
+                            <em>${arr[i].trait_name_display_3}</em>
+                        </td>
                         <td>${arr[i].description_short}.</td>
                         <td>${arr[i].source_lab}</td>
                         <td>${createdOn}</td>
@@ -321,14 +331,14 @@ position: relative;
                     </tr>
                     <tr id="collapse-${i+1}" class="text-start accordion-collapse collapse"
                         aria-labelledby="accordionHeading-${i+1}" data-bs-parent="#tableAccordion">
-                        <td colspan="7">
-                            <div class="ps-5 p-3">
+                        <td colspan="7" style="background-color: var(--bs-gray-200)">
+                            <div class="ms-5 pt-5 px-5 pb-2">
                                 <h3 class="h5 text-dark">Full Description</h3>
                                 <p>${arr[i].description_long}</p>
                             </div>
-                            <div class="d-flex justify-content-end pe-5 optionsToolbar">
+                            <div class="d-flex justify-content-end me-1 pb-3 optionsToolbar">
                                 <a data-bs-toggle="offcanvas" id="traitDetails" data-value="${arr[i].trait_name_caendr}" data-bs-target="#offcanvas1"
-                                    aria-controls="offcanvas1" href=" #"><i class="bi bi-list-ul"
+                                    aria-controls="offcanvas1" href=" #"><i class="bi bi-arrow-right"
                                         aria-hidden="true"></i>View Full Details</a>
                             </div>
                         </td>
@@ -352,8 +362,8 @@ position: relative;
             const pageNum = i + 1
             let iterPages = ''
             if (pageNum == p.current_page) {
-                iterPages += `<li class="page-item disabled">
-                                  <a class="page-link" href="#" tabindex="-1">${pageNum}</a>
+                iterPages += `<li class="page-item active">
+                                  <a class="page-link" href="#">${pageNum}</a>
                               </li>`
             } else {
                 iterPages += `<li class="page-item">
