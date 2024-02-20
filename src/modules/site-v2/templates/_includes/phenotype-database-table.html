@@ -322,8 +322,8 @@ label {
                         </td>
                         <td id="accordionHeading-${i+1}">
                             <strong>${arr[i].trait_name_display_1 || arr[i].trait_name_caendr}</strong>
-                            <p class="mb-0">${arr[i].trait_name_display_2}</p>
-                            <em>${arr[i].trait_name_display_3}</em>
+                            <p class="mb-0">${arr[i].trait_name_display_1 ? arr[i].trait_name_display_2 : ''}</p>
+                            <em>${arr[i].trait_name_display_1 ? arr[i].trait_name_display_3 : ''}</em>
                         </td>
                         <td>${arr[i].description_short}.</td>
                         <td>${arr[i].source_lab}</td>
