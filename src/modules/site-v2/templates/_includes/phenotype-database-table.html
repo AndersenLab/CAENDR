@@ -335,7 +335,7 @@ label {
                         <td id="accordionHeading-${i+1}">
                             ${nameHTML}
                         </td>
-                        <td>${arr[i].description_short}.</td>
+                        <td>${arr[i].description_short ? (arr[i].description_short + '.') : ''}</td>
                         <td>${arr[i].source_lab}</td>
                         <td>${createdOn}</td>
                         <td class="d-flex-row flex-column" id="tags">${tagsHTML}</td>
