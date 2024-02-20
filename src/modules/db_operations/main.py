@@ -84,7 +84,7 @@ logger.info('Initializing Flask SQLAlchemy')
 db.init_app(app)
 
 
-def parse_species_list(species_list):
+def parse_species_list(species_list = None):
 
   # If nothing provided, return None
   if not species_list:
