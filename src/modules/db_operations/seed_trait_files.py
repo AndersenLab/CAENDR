@@ -61,9 +61,12 @@ def populate_andersenlab_trait_files():
         'species':           get_field_from_record(record, 'Species', nullable=False),
 
         # About trait
-        'description_short': get_field_from_record(record, 'Short_Description'),
-        'description_long':  get_field_from_record(record, 'Long_Description'),
-        'units':             get_field_from_record(record, 'Units'),
+        'trait_name_display_1': get_field_from_record(record, 'Trait_Name_Display1'),
+        'trait_name_display_2': get_field_from_record(record, 'Trait_Name_Display2'),
+        'trait_name_display_3': get_field_from_record(record, 'Trait_Name_Display3'),
+        'description_short':    get_field_from_record(record, 'Short_Description'),
+        'description_long':     get_field_from_record(record, 'Long_Description'),
+        'units':                get_field_from_record(record, 'Units'),
 
         # Tag list (categories)
         'tags': list(filter(
