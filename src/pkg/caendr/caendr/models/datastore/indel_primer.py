@@ -72,7 +72,7 @@ class IndelPrimerReport(HashableEntity, ReportEntity):
 
 
   @staticmethod
-  def get_fasta_filepath(species, release = None):
+  def get_fasta_filepath(species, release = None, index = None, schema = None):
     '''
       Uses the provided release, or looks up the most recent release supporting Indel Primer
       for the given species.
@@ -89,7 +89,28 @@ class IndelPrimerReport(HashableEntity, ReportEntity):
 
     # Get DatasetRelease object and use to construct the FASTA filepath
     release_obj = get_dataset_release(release)
-    return release_obj.get_fasta_filepath_obj()
+    return release_obj.get_fasta_filepath(index=index, schema=schema)
+
+
+  @staticmethod
+  def get_fasta_filename(species, release = None, index = None, include_extension = True):
+    '''
+      Uses the provided release, or looks up the most recent release supporting Indel Primer
+      for the given species.
+
+      Equivalent to running `get_fasta_filepath_obj` on the appropriate DatasetRelease object.
+    '''
+
+    # Lookup desired species object
+    species_obj = Species.from_name(species)
+
+    # Default to the latest version defined for the species
+    if release is None:
+      release = species_obj['release_pif']
+
+    # Get DatasetRelease object and use to construct the FASTA filepath
+    release_obj = get_dataset_release(release)
+    return release_obj.get_fasta_filename(index=index, include_extension=include_extension)
 
 
   #

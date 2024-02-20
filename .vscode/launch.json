@@ -371,6 +371,26 @@
             }
         },
         {
+            "name": "Test Indel Finder",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/modules/indel_primer/main.py",
+            "console": "integratedTerminal",
+            "python": "${workspaceFolder}/src/modules/site-v2/venv/bin/python",
+            "envFile": "${workspaceFolder}/src/modules/indel_primer/.env",
+            "env": {
+                "ENV": "main",
+                "INDEL_SITE":       "V:6271917-6272026",
+                "INDEL_STRAIN_1":   "N2",
+                "INDEL_STRAIN_2":   "CB4856",
+                "RESULT_BUCKET":    "caendr-etl-logs",
+                "RESULT_BLOB":      "indel-finder-local-test.log",
+                "WORMBASE_VERSION": "WS276",
+                "RELEASE":          "20220216",
+                "SPECIES":          "c_elegans",
+            },
+        },
+        {
             "name": "Run Site-v2 (local API)",
             "type": "python",
             "request": "launch",

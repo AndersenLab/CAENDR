@@ -1,11 +1,13 @@
 import os
+from typing import Union, Tuple
+
 from caendr.services.logger import logger
 
 from caendr.api.gene import remove_prefix
 from caendr.models.datastore import Species, SpeciesEntity
 from caendr.models.error import NotFoundError
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, get_blob_list, check_blob_exists
-from caendr.utils.env import get_env_var_with_fallback
+from caendr.utils.env import get_env_var, get_env_var_with_fallback
 from caendr.utils.tokens import TokenizedString
 
 
@@ -13,6 +15,10 @@ from caendr.utils.tokens import TokenizedString
 V1_V2_Cutoff_Date = 20200101
 
 DATASET_RELEASE_BUCKET_NAME = get_env_var_with_fallback('MODULE_SITE_BUCKET_DATASET_RELEASE_NAME', 'MODULE_SITE_BUCKET_PUBLIC_NAME')
+
+FASTA_FILENAME_TEMPLATE = get_env_var('FASTA_FILENAME_TEMPLATE', as_template=True)
+FASTA_EXTENSION_FILE    = get_env_var('FASTA_EXTENSION_FILE')
+FASTA_EXTENSION_INDEX   = get_env_var('FASTA_EXTENSION_INDEX')
 
 
 
@@ -165,67 +171,82 @@ class DatasetRelease(SpeciesEntity):
 
   ## FASTA Filename ##
 
-  @staticmethod
-  def get_fasta_filename_template(include_extension=True):
-    return TokenizedString('${RELEASE}_${SPECIES}_${GENOME}.genome' + ('.fa' if include_extension else ''))
-
-  def get_fasta_filename(self, include_extension=True):
-    return DatasetRelease.get_fasta_filename_template(include_extension=include_extension).get_string(**{
+  def fasta_template_params(self):
+    return {
       'SPECIES': self['species'].name,
       'RELEASE': self['version'],
       'GENOME':  self['genome'],
-    })
+    }
+
+
+  @staticmethod
+  def get_fasta_filename_template(include_extension=True, index=False) -> TokenizedString:
+    '''
+      Get the FASTA file name template as a tokenized string.
+      Does not include any bucket / path information; see `get_fasta_filepath_template` for the full URI.
+
+      Arguments:
+        - `include_extension` (bool): Whether to include the file extension or not.
+        - `index` (bool):
+              If `True`, return the name of the index file, otherwise return the name of the full FASTA file.
+              Only applies if `include_extension` is `True`.
+    '''
+    ext = FASTA_EXTENSION_INDEX if index else FASTA_EXTENSION_FILE
+    return FASTA_FILENAME_TEMPLATE + (ext if include_extension else '')
+
+
+  def get_fasta_filename(self, include_extension=True, index=False):
+    '''
+      Get the filename for the FASTA file assocaited with this release.
+      Does not include any bucket / path information; see `get_fasta_filepath_template` for the full URI.
+
+      Arguments:
+        - `include_extension` (bool): Whether to include the file extension or not.
+        - `index` (bool):
+            If `True`, return the name of the index file, otherwise return the name of the full FASTA file.
+            Only applies if `include_extension` is `True`.
+    '''
+    return DatasetRelease.get_fasta_filename_template(include_extension=include_extension, index=index).get_string(**self.fasta_template_params())
 
 
 
   ## FASTA File Path ##
 
-  # TODO: Wrap these in a utility class?
   @staticmethod
-  def get_fasta_filepath_obj_template():
-    return {
-      'bucket': DatasetRelease.get_bucket_name(),
-      'path':   DatasetRelease.get_path_template(),
-      'name':   DatasetRelease.get_fasta_filename_template(include_extension=False),
-      'ext':    '.fa',
-    }
+  def get_fasta_filepath_template(index=False, schema=None):
+    '''
+      Get a URI path for FASTA files in the datastore, as one or more tokenized strings (depends on desired schema).
+    '''
+    # Get the template for the filename
+    filename_template = DatasetRelease.get_fasta_filename_template(include_extension=True, index=index)
+
+    # Combine with the the dataset release bucket & path to generate a URI
+    return TokenizedString.apply(
+      generate_blob_uri, DatasetRelease.get_bucket_name(), DatasetRelease.get_path_template(), filename_template, schema=schema
+    )
 
 
-  def get_fasta_filepath_obj(self):
+  def get_fasta_filepath(self, index=False, schema=None) -> Union[str, Tuple[str, ...]]:
+    '''
+      Get a URI path for the FASTA file associated with this release.
+    '''
+    # Get the template for the full filepath
+    template = DatasetRelease.get_fasta_filepath_template(index=index, schema=schema)
 
-    # Construct the set of token replacements for this release's file
-    params = {
-      'SPECIES': self['species'].name,
-      'RELEASE': self['version'],
-      'GENOME':  self['genome'],
-    }
-
-    # Fill in tokens from current release in template object
-    return {
-      key: (val.get_string(**params) if isinstance(val, TokenizedString) else val)
-        for key, val in DatasetRelease.get_fasta_filepath_obj_template().items()
-    }
+    # Fill in the tokens for singleton & tuple results
+    if isinstance(template, TokenizedString):
+      return template.get_string(**self.fasta_template_params())
+    else:
+      return tuple(
+        t.get_string(**self.fasta_template_params()) for t in template
+      )
 
 
   def check_fasta_file_exists(self):
-    obj = self.get_fasta_filepath_obj()
-    return check_blob_exists(obj['bucket'], f'{ obj["path"] }/{ obj["name"] }{ obj["ext"] }')
-
-
-
-  ## FASTA URL (full) ##
-
-  @staticmethod
-  def get_fasta_filepath_url_template():
-    obj = DatasetRelease.get_fasta_filepath_obj_template()
-    return TokenizedString.apply( generate_blob_uri, obj['bucket'], obj['path'], obj['name'] + obj['ext'], schema=BlobURISchema.HTTPS )
-
-  def get_fasta_filepath_url(self):
-    return DatasetRelease.get_fasta_filepath_url_template().get_string(**{
-      'SPECIES': self['species'].name,
-      'RELEASE': self['version'],
-      'GENOME':  self['genome'],
-    })
+    '''
+      Check whether this dataset release includes a FASTA file in the datastore.
+    '''
+    return check_blob_exists( *self.get_fasta_filepath(schema=BlobURISchema.PATH) )
 
 
 
