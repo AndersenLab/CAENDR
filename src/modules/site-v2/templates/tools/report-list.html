@@ -84,11 +84,13 @@ span.bi {
               <td class="data-{{column.class}}" {% if column.get('data_order') %}data-order="{{column.data_order(item)}}"{% endif %}>
                 {% if column.get('link_to_data', False) and (item.status == JobStatus.COMPLETE or item.status == JobStatus.ERROR) %}
                   <a href="{{ url_for(tool_name + '.report', id=item.id) }}">
-                    {{ item[column.field] }}
+                    {% if column.field %}{{ item[column.field] }}{% elif column.value %}{{ column.value }}{% endif %}
                   </a>
                 {% else %}
-                  {%- if item[column.field] %}
+                  {%- if column.field and item[column.field] %}
                   {{ item[column.field] }}
+                  {%- elif column.value %}
+                  {{ column.value }}
                   {%- endif %}
                 {% endif %}
               </td>

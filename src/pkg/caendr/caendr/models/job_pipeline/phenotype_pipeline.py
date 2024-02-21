@@ -47,7 +47,6 @@ class PhenotypePipeline(JobPipeline):
 
     # Start building props object
     props = {
-      'label':   data.get('label'),
       'species': data.get('species'),
     }
 
