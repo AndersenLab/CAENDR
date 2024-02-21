@@ -48,7 +48,6 @@ class PhenotypeReport(ReportEntity, HashableEntity):
     return {
       *super().get_props_set(),
       'species',
-      'label',
       'trait_1',
       'trait_1_name',
       'trait_2',
