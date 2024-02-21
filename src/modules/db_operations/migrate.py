@@ -1,10 +1,12 @@
 from flask_migrate import Migrate, migrate, upgrade
+from functools import wraps
 
 from caendr.services.logger import logger
 
 
 
 def migrate_wrapper(f):
+  @wraps(f)
   def inner(app, db, *args, **kwargs):
 
     # Ensure Flask_Migrate is using the provided app & database
