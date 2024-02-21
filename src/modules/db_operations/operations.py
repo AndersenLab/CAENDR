@@ -15,11 +15,15 @@ from migrate          import migrate_and_upgrade_database, upgrade_database
 def execute_operation(app, db, db_op: DbOp, species=None, reload_files=True, db_migration_message=None):
   logger.info(f'Executing {db_op.name}...')
 
+  ## Database Migrations
+
   if db_op == DbOp.UPGRADE_DATABASE:
     upgrade_database()
 
   elif db_op == DbOp.CREATE_DATABASE_MIGRATION:
     migrate_and_upgrade_database(message=db_migration_message)
+
+  ## Rebuilding Tables
 
   elif db_op == DbOp.DROP_AND_POPULATE_ALL_TABLES:
     drop_and_populate_all_tables(app, db, species, reload_files=reload_files)
@@ -42,8 +46,12 @@ def execute_operation(app, db, db_op: DbOp, species=None, reload_files=True, db_
   elif db_op == DbOp.DROP_AND_POPULATE_PHENOTYPES:
     drop_and_populate_phenotypes(app, db, species, reload_files=reload_files)
 
+  ## Updating Datastore
+
   elif db_op == DbOp.POPULATE_PHENOTYPES_DATASTORE:
     populate_andersenlab_trait_files()
+
+  ## Tests
 
   elif db_op == DbOp.TEST_ECHO:
     result, message = health_database_status()
