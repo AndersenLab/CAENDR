@@ -2,6 +2,12 @@
     // Use IntelliSense to learn about possible attributes.
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+
+    // "MODULE_DB_OPERATIONS_CONNECTION_TYPE" controls how the app will connect to the SQL database
+    // Supported values: "localhost", "host", "memory", "file", None
+    // If set to "file", the variable "MODULE_DB_OPERATIONS_CONNECTION_FILE" can be set to specify which file to use
+    // The app can create a new db file, but the directory MUST exist already.
+
     "version": "0.2.0",
     "configurations": [
         
