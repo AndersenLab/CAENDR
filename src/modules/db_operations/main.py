@@ -118,14 +118,17 @@ def run():
   except:
     logger.error(f'Unknown database operation {DATABASE_OPERATION}')
 
-  # Parse species list
+  # Parse species list (if applicable)
   species = parse_species_list( get_env_var('SPECIES_LIST', can_be_none=True) )
   species_string = '[' + ', '.join(species) + ']' if species else 'all'
+
+  # Parse db migration message (if applicable)
+  db_migration_message = get_env_var('DB_MIGRATION_MESSAGE', can_be_none=True)
 
   text = ""
 
   try:
-    execute_operation(app, db, db_op, species=species, reload_files=reload_files)
+    execute_operation(app, db, db_op, species=species, reload_files=reload_files, db_migration_message=db_migration_message)
     text = text + f"\n\nStatus: OK"
     text = text + f"\nOperation: {db_op.name}"
     text = text + f"\nOperation ID: {OPERATION_ID}"

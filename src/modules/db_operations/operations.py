@@ -12,14 +12,14 @@ from migrate          import migrate_and_upgrade_database, upgrade_database
 
 
 
-def execute_operation(app, db, db_op: DbOp, species=None, reload_files=True):
+def execute_operation(app, db, db_op: DbOp, species=None, reload_files=True, db_migration_message=None):
   logger.info(f'Executing {db_op.name}...')
 
   if db_op == DbOp.UPGRADE_DATABASE:
     upgrade_database()
 
   elif db_op == DbOp.CREATE_DATABASE_MIGRATION:
-    migrate_and_upgrade_database()
+    migrate_and_upgrade_database(message=db_migration_message)
 
   elif db_op == DbOp.DROP_AND_POPULATE_ALL_TABLES:
     drop_and_populate_all_tables(app, db, species, reload_files=reload_files)
