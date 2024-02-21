@@ -1,6 +1,7 @@
 from re import T
 import traceback
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from flask import Flask
 from caendr.services.logger import logger
 import time
@@ -81,6 +82,10 @@ if not get_env_var("MODULE_DB_OPERATIONS_CONNECTION_TYPE", can_be_none=True):
 
 logger.info('Initializing Flask SQLAlchemy')
 db.init_app(app)
+
+logger.info('Initializing Flask Migrations')
+migrate = Migrate()
+migrate.init_app(app, db)
 
 
 def parse_species_list(species_list):
