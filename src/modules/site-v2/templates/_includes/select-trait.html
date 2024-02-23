@@ -73,3 +73,18 @@
   }
   {%- endif %}
 {%- endmacro %}
+
+
+{%- macro render_trait_name_multiline(name_1, name_2, name_3, bold=true) %}
+  {%- if bold %}
+  <strong>{{ name_1 }}</strong>
+  {%- else %}
+  <span>{{ name_1 }}</span>
+  {%- endif %}
+  {%- if name_2 %}
+  <br /><span class="mb-0">{{ name_2 }}</span>
+  {%- endif %}
+  {%- if name_3 %}
+  <br /><em>{{ name_3 }}</em>
+  {%- endif %}
+{%- endmacro %}
