@@ -65,6 +65,7 @@
 
 
 {% block content %}
+{% from "_includes/select-trait.html" import render_trait_name_multiline %}
 
 <div class="container-fluid px-0 pb-5">
     <div class="d-flex justify-content-around flex-wrap mt-2">
@@ -78,7 +79,7 @@
                 <h4 class="h5">Species:</strong></h4>
                 <p class="species"><em>{{ report['species']|replace('_', '. ')}}</em></h4>
                 <h4 class="h5">Name:</strong></h4>
-                <p>{{ report['trait_1_name'] }}</h4>
+                <p>{{ render_trait_name_multiline(report['trait_1']['trait_name_display_1'], report['trait_1']['trait_name_display_2'], report['trait_1']['trait_name_display_3']) }}</p>
                 <h4 class="h5"><strong>Description:</strong></h4>
                 <p>{{ report['trait_1']['description_short'] or report['trait_1']['description_long'] }}</p>
                 <!-- Submit to database button for when that feature is ready -->
@@ -95,7 +96,7 @@
                 <h4 class="h5">Species:</strong></h4>
                 <p class="species"><em>{{ report['species']|replace('_', '. ')}}</em></h4>
                 <h4 class="h5">Name:</h4>
-                <p>{{ report['trait_2_name'] }}</p>
+                <p>{{ render_trait_name_multiline(report['trait_2']['trait_name_display_1'], report['trait_2']['trait_name_display_2'], report['trait_2']['trait_name_display_3']) }}</p>
                 <h4 class="h5">Description:</h4>
                 <p>{{ report['trait_2']['description_short'] or report['trait_2']['description_long'] }}</p>
                 <!-- Submit to database button for when that feature is ready -->
