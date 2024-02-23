@@ -114,7 +114,8 @@ label {
 
 {% block script %}
 <script>
-    {% include '_scripts/utils.js' %} {#/* defines: flash_message */#}
+    {% include '_scripts/utils.js' %}       {#/* defines: flash_message */#}
+    {% include '_scripts/trait_utils.js' %} {#/* defines: traitNameHTML */#}
 
     $(document).ready(function() {
 
@@ -308,23 +309,6 @@ label {
                 }
             }
 
-            // Render all provided components of the display name
-            let nameHTML;
-            if (arr[i].trait_name_display_1) {
-                nameHTML = `<strong>${arr[i].trait_name_display_1}</strong>`;
-                if (arr[i].trait_name_display_2) {
-                    nameHTML += `<p class="mb-0">${arr[i].trait_name_display_2}</p>`;
-                }
-                if (arr[i].trait_name_display_3) {
-                    if (!arr[i].trait_name_display_2) nameHTML += '<br />';
-                    nameHTML += `<em>${arr[i].trait_name_display_3}</em>`;
-                }
-            }
-            // If no display name, fall back to the CaeNDR trait name
-            else {
-                nameHTML = `<strong>${arr[i].trait_name_caendr}</strong>`;
-            }
-
             let html = `
                     <tr class="py-3 dislayedRow">
                         <td>
@@ -333,7 +317,7 @@ label {
                                     class="bi bi-chevron-right" aria-hidden="true"></i><em>${speciesName}</em></a>
                         </td>
                         <td id="accordionHeading-${i+1}">
-                            ${nameHTML}
+                            ${traitNameHTML( arr[i].trait_name_display_1, arr[i].trait_name_display_2, arr[i].trait_name_display_3 )}
                         </td>
                         <td>${arr[i].description_short ? (arr[i].description_short + '.') : ''}</td>
                         <td>${arr[i].source_lab}</td>
