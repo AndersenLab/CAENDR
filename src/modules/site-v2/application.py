@@ -16,7 +16,7 @@ from config import config
 import pytz
 
 from caendr.models.error import BasicAuthError
-from caendr.services.cloud.postgresql import db, health_database_status
+from caendr.services.cloud.postgresql import db, alembic, health_database_status
 from base.utils.markdown import render_markdown, render_ext_markdown
 
 
@@ -125,6 +125,7 @@ def create_app(config=config):
   register_extensions(app)
   register_errorhandlers(app)
   register_request_handlers(app)
+  register_db_version_control(app)
   configure_jinja(app)
   configure_ssl(app)
 
@@ -258,6 +259,15 @@ def ext_asset(path):
 ENV = os.environ.get("ENV")
 def get_env():
   return ENV or None
+
+
+
+def register_db_version_control(app):
+  logger.info('Initializing database version control (Alembic)...')
+  # app.config['ALEMBIC'] = {
+  #   'script_location': '???',
+  # }
+  alembic.init_app(app)
 
 
 def configure_jinja(app):

@@ -15,6 +15,23 @@
         <tbody id="stats-table-body"></tbody>
       </table>
 
+      <br />
+
+      <h2>Migrations</h2>
+      <div id="migrations-table-loader" class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <table id="migrations-table" class="table">
+        <thead>
+          <tr>
+            <th>Revision ID</th>
+            <th>Message</th>
+            <th>Current</th>
+          </tr>
+        </thead>
+        <tbody id="migrations-table-body"></tbody>
+      </table>
+
     </div> <!-- /col-md-6 -->
   </div> <!-- /row -->
       
@@ -44,6 +61,26 @@
       })
       .catch((err) => {
         console.error("Failed to retrieve database stats: ", err);
+      })
+
+    // Fetch the list of migrations
+    fetch_json("{{ url_for('api_database.get_all_db_migrations') }}")
+      .then((data) => {
+        const tableEl = document.getElementById('migrations-table-body');
+        const loader  = document.getElementById('migrations-table-loader');
+        loader.style.display = "none";
+        data.forEach(row => {
+          const rowEl = document.createElement('tr')
+          row.forEach(col => {
+            const colEl = document.createElement('td');
+            colEl.innerText = col;
+            rowEl.appendChild(colEl)
+          });
+          tableEl.appendChild(rowEl);
+        });
+      })
+      .catch((err) => {
+        console.error("Failed to retrieve database migrations: ", err);
       })
   });
 </script>

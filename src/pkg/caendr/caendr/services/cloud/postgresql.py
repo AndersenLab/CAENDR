@@ -7,6 +7,7 @@ from caendr.services.logger import logger
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, exc
+from flask_alembic import Alembic
 
 from caendr.services.cloud.secret import get_secret
 from caendr.utils.env import load_env, get_env_var
@@ -17,6 +18,7 @@ from caendr.utils.env import load_env, get_env_var
 load_env('.env')
 
 db = SQLAlchemy()
+alembic = Alembic()
 
 # GCP Variables
 GOOGLE_CLOUD_PROJECT_ID              = get_env_var('GOOGLE_CLOUD_PROJECT_ID')

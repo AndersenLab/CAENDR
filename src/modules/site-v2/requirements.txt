@@ -11,6 +11,7 @@ Flask_DebugToolbar==0.10.1
 Flask_HTTPAuth==4.8.0
 flask_jwt_extended==4.1.0
 Flask-Markdown==0.3
+Flask_Alembic==2.0.1
 Flask_RESTful==0.3.6
 Flask_SQLAlchemy==2.5.1
 Flask_SSLify>=0.1.5
