@@ -4,7 +4,7 @@ from caendr.services.logger           import logger
 from caendr.utils.env                 import get_env_var
 
 from caendr.models.datastore          import DatabaseOperation
-from caendr.models.sql                import DbOp, ALL_SQL_TABLES
+from caendr.models.sql                import DbOp
 from caendr.services.cloud.datastore  import get_ds_entity, query_ds_entities
 from caendr.services.cloud.postgresql import rollback_on_error
 
@@ -72,14 +72,6 @@ def count_table_rows_safe(model):
   except Exception as ex:
     logger.warning(f'Error getting count for table {model}: {ex}')
     return None
-
-
-def get_all_db_stats():
-  '''
-    Count the rows in each table, and return all results.
-    Returns `None` for any table that threw an error when trying to count the rows.
-  '''
-  return [ [model.__tablename__, count_table_rows_safe(model)] for model in ALL_SQL_TABLES ]
 
 
 #

@@ -8,7 +8,7 @@ from flask import Blueprint, render_template, url_for, request, redirect, flash,
 from base.utils.auth import admin_required, get_jwt, get_jwt_identity, get_current_user
 from base.forms import AdminCreateDatabaseOperationForm
 
-from caendr.services.database_operation import get_all_db_ops, get_all_db_stats, get_etl_op, get_db_op_form_options
+from caendr.services.database_operation import get_all_db_ops, get_etl_op, get_db_op_form_options
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
 
 from caendr.models.error        import PreflightCheckError
@@ -46,16 +46,9 @@ def admin_etl_stats():
   logger.debug(f"DB Status is {status} {message}")
   logger.debug("ETL Stats loading...")
 
-  # Get db stats
-  stats = get_all_db_stats()
-  logger.info(stats)
-
   return render_template('admin/etl/stats.html', **{
     'title': 'ETL Stats',
     'alt_parent_breadcrumb': {"title": "Admin", "url": url_for('admin.admin')},
-
-    # Stats
-    'stats': stats,
   })
 
 

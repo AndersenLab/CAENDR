@@ -7,18 +7,44 @@
     <div class='col-md-3'></div> <!-- /col-md-3 -->
     <div class='col-md-6'>
 
-      <table class="table">
-
-        {% for result in stats %}
-        <tr>
-          {% for elem in result %}
-          <td>{{elem}}</td>
-          {% endfor %}
-        </tr>
-        {% endfor %}
+      <h2>Tables</h2>
+      <div id="stats-table-loader" class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <table id="stats-table" class="table">
+        <tbody id="stats-table-body"></tbody>
       </table>
 
     </div> <!-- /col-md-6 -->
   </div> <!-- /row -->
       
+{% endblock %}
+
+{% block script %}
+<script>
+  {% include '_scripts/utils.js' %} {#/* defines: fetch_json */#}
+
+  $(document).ready(function() {
+
+    // Fetch the table stats
+    fetch_json("{{ url_for('api_database.get_all_db_stats') }}")
+      .then((data) => {
+        const tableEl = document.getElementById('stats-table-body');
+        const loader  = document.getElementById('stats-table-loader');
+        loader.style.display = "none";
+        data.forEach(row => {
+          const rowEl = document.createElement('tr')
+          row.forEach(col => {
+            const colEl = document.createElement('td');
+            colEl.innerText = col;
+            rowEl.appendChild(colEl)
+          });
+          tableEl.appendChild(rowEl);
+        });
+      })
+      .catch((err) => {
+        console.error("Failed to retrieve database stats: ", err);
+      })
+  });
+</script>
 {% endblock %}
