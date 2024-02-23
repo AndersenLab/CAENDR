@@ -12,16 +12,16 @@ from migrate          import migrate_and_upgrade_database, upgrade_database
 
 
 
-def execute_operation(app, db, db_op: DbOp, species=None, reload_files=True, db_migration_message=None):
+def execute_operation(app, db, db_op: DbOp, species=None, reload_files=True, db_migration_message=None, alembic=None):
   logger.info(f'Executing {db_op.name}...')
 
   ## Database Migrations
 
   if db_op == DbOp.UPGRADE_DATABASE:
-    upgrade_database(app, db)
+    upgrade_database(app, alembic)
 
   elif db_op == DbOp.CREATE_DATABASE_MIGRATION:
-    migrate_and_upgrade_database(app, db, message=db_migration_message)
+    migrate_and_upgrade_database(app, alembic, message=db_migration_message)
 
   ## Rebuilding Tables
 

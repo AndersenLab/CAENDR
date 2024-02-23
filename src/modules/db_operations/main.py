@@ -1,7 +1,7 @@
 from re import T
 import traceback
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
+from flask_alembic import Alembic
 from flask import Flask
 from caendr.services.logger import logger
 import time
@@ -83,9 +83,11 @@ if not get_env_var("MODULE_DB_OPERATIONS_CONNECTION_TYPE", can_be_none=True):
 logger.info('Initializing Flask SQLAlchemy')
 db.init_app(app)
 
-logger.info('Initializing Flask Migrations')
-migrate = Migrate()
-migrate.init_app(app, db)
+logger.info('Initializing database revisions (Flask Alembic)')
+# app.config['ALEMBIC'] = {
+#   'script_location': '???',
+# }
+alembic = Alembic(app)
 
 
 def parse_species_list(species_list):
@@ -128,7 +130,7 @@ def run():
   text = ""
 
   try:
-    execute_operation(app, db, db_op, species=species, reload_files=reload_files, db_migration_message=db_migration_message)
+    execute_operation(app, db, db_op, species=species, reload_files=reload_files, db_migration_message=db_migration_message, alembic=alembic)
     text = text + f"\n\nStatus: OK"
     text = text + f"\nOperation: {db_op.name}"
     text = text + f"\nOperation ID: {OPERATION_ID}"
