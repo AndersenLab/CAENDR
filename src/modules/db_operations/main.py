@@ -136,6 +136,10 @@ def run():
     text = text + f"\nOperation ID: {OPERATION_ID}"
     text = text + f"\nEnvironment: { get_env_var('ENV', 'n/a') }"
     text = text + f"\nSpecies: {species_string}"
+    try:
+      text = text + f"\nDatabase Revision: {alembic.current()[0]}"
+    except Exception:
+      text = text + f"\nDatabase Revision: N/A"
 
   except Exception as e:
     text = text + f"\nStatus: ERROR"
@@ -143,6 +147,10 @@ def run():
     text = text + f"\nOperation ID: {OPERATION_ID}"
     text = text + f"\nEnvironment: { get_env_var('ENV', 'n/a') }"
     text = text + f"\nSpecies: {species_string}"
+    try:
+      text = text + f"\nDatabase Revision: {alembic.current()[0]}"
+    except Exception:
+      text = text + f"\nDatabase Revision: N/A"
     text = text + f"\n\nError: {e}\n{traceback.format_exc()}"
     logger.error(text)
 
