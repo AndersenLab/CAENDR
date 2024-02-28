@@ -67,9 +67,9 @@
   document.getElementById("{{id}}-trait-name").innerText   = {{trait_var}}.trait_name_caendr;
   document.getElementById("{{id}}-trait-desc").innerText   = {{trait_var}}.description_short;
   try {
-    document.getElementById("{{id}}-species").innerText    = species_list[{{trait_var}}.species].short_name;
+    document.getElementById("{{id}}-species").innerText    = species_list[{{trait_var}}.species_name].short_name;
   } catch {
-    document.getElementById("{{id}}-species").innerText    = {{trait_var}}.species;
+    document.getElementById("{{id}}-species").innerText    = {{trait_var}}.species_name;
   }
   {%- endif %}
 {%- endmacro %}

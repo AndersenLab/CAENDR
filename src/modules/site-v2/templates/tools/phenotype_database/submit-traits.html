@@ -84,7 +84,8 @@
 {% from "_includes/strain-listing.html" import unpack_species_list        %}
 {% from "_scripts/submit-job.js"        import ajax_setup, def_submit_job %}
 <script>
-    {% include '_scripts/utils.js' %} {#/* defines: flash_message */#}
+    {% include '_scripts/utils.js' %}       {#/* defines: flash_message */#}
+    {% include '_scripts/trait_utils.js' %} {#/* defines: queryTraitByName */#}
     {{ def_submit_job('phenotype_database') }}
 
 
@@ -130,14 +131,17 @@
 
         // If trait is passed as a string value, look up its fields in the phenotype table
         if (trait !== null && typeof trait === 'string') {
-            const el = document.getElementById(`trait-data-${trait}`);
-            trait = {
-                'name':              trait,
-                'dataset':           dataset,
-                'trait_name_caendr': trait,
-                'description_short': el.dataset.description,
-                'species':           el.dataset.species,
-            }
+            queryTraitByName(trait)
+                // Re-call the function using the trait value instead of the name
+                // Response check prevents infinite recursion
+                .then((response) => {
+                    if (response !== null && typeof response === 'string') throw Error(`Invalid response for trait ${id}: "${response}"`);
+                    select_trait(id, response, dataset);
+                })
+                .fail((err) => {
+                    console.error(error);
+                })
+            return
         }
 
         // Select trait 1
@@ -172,20 +176,20 @@
     }
 
 
-    function filter_by_species(species) {
-        console.log('filtering by species...')
-        if (species === null) {
-            $('#tableAccordion tbody>tr').show()
-        }
-        else {
-            $('#tableAccordion tbody>tr').hide().each(function() {
-                console.log(this.dataset.species, species)
-                if (this.dataset.species == species) {
-                    $(this).show()
-                }
-            });
-        }
-    }
+    // function filter_by_species(species) {
+    //     console.log('filtering by species...')
+    //     if (species === null) {
+    //         $('#tableAccordion tbody>tr').show()
+    //     }
+    //     else {
+    //         $('#tableAccordion tbody>tr').hide().each(function() {
+    //             console.log(this.dataset.species, species)
+    //             if (this.dataset.species == species) {
+    //                 $(this).show()
+    //             }
+    //         });
+    //     }
+    // }
 
 
     function updateSubmitButton() {
