@@ -49,6 +49,11 @@
 {%- endmacro %}
 
 
+{#  Select a trait and render it in the trait selector with the given ID.
+    Can render from a Jinja Trait object or a JS trait JSON variable.
+
+    Requires that the JS function traitNameHTML is available in the calling context.
+#}
 {%- macro select_trait(id, trait_var=undefined, trait_obj=undefined) %}
   document.getElementById("{{id}}-container-empty"   ).classList.toggle('d-none', {{ 'true'  if trait_var is defined or trait_obj is defined else 'false' }});
   document.getElementById("{{id}}-container-selected").classList.toggle('d-none', {{ 'false' if trait_var is defined or trait_obj is defined else 'true'  }});
@@ -59,12 +64,12 @@
   document.getElementById("{{id}}-selector").dataset.trait = "{{trait_obj.name}}";
   document.getElementById("{{id}}-selector").dataset.set   = "{{trait_obj.dataset}}";
   document.getElementById("{{id}}-species").innerText      = "{{trait_obj.file.species.short_name}}"
-  document.getElementById("{{id}}-trait-name").innerText   = "{{trait_obj.name}}";
+  document.getElementById("{{id}}-trait-name").innerHTML   = `{{ render_trait_name_multiline(trait_obj.file['trait_name_display_1'], trait_obj.file['trait_name_display_2'], trait_obj.file['trait_name_display_3']) }}`;
   document.getElementById("{{id}}-trait-desc").innerText   = "{{trait_obj.file.description_short or trait_obj.file.description_long}}";
   {%- else %}
   document.getElementById("{{id}}-selector").dataset.trait = {{trait_var}}.trait_name_caendr;
   document.getElementById("{{id}}-selector").dataset.set   = {{trait_var}}.dataset;
-  document.getElementById("{{id}}-trait-name").innerText   = {{trait_var}}.trait_name_caendr;
+  document.getElementById("{{id}}-trait-name").innerHTML   = traitNameHTML({{trait_var}}.trait_name_display_1, {{trait_var}}.trait_name_display_2, {{trait_var}}.trait_name_display_3);
   document.getElementById("{{id}}-trait-desc").innerText   = {{trait_var}}.description_short;
   try {
     document.getElementById("{{id}}-species").innerText    = species_list[{{trait_var}}.species_name].short_name;
