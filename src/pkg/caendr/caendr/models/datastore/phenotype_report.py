@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, List
 
 from caendr.models.datastore import ReportEntity, HashableEntity, TraitFile
 from caendr.models.trait     import Trait
@@ -48,10 +48,16 @@ class PhenotypeReport(ReportEntity, HashableEntity):
     return {
       *super().get_props_set(),
       'species',
+
       'trait_1',
       'trait_1_name',
+      'trait_1_name_caendr',
+      'trait_1_name_display',
+
       'trait_2',
       'trait_2_name',
+      'trait_2_name_caendr',
+      'trait_2_name_display',
     }
 
 
@@ -254,3 +260,37 @@ class PhenotypeReport(ReportEntity, HashableEntity):
     if self['trait_2'] is None:
       return self['trait_1_name'],
     return self['trait_1_name'], self['trait_2_name']
+
+
+  @classmethod
+  def recompute_cached_names(cls, reports: List['PhenotypeReport'] = None):
+    '''
+      Recomputes the cached CaeNDR and display names for trait reports,
+      based on the values stored in the referenced TraitFile entities.
+
+      Arguments:
+        `reports` (optional): List of reports to recompute. If `None`, updates all reports.
+    '''
+    if reports is None:
+      reports = PhenotypeReport.query_ds()
+
+    for report in reports:
+
+      # Set CaeNDR and display names for trait 1, as applicable
+      if report['trait_1']:
+        report['trait_1_name_caendr'] = report['trait_1']['trait_name_caendr']
+        if report['trait_1'].display_name[0]:
+          report['trait_1_name_display'] = list(report['trait_1'].display_name)
+        else:
+          report['trait_1_name_display'] = [ report['trait_1_name'] ]
+
+      # Set CaeNDR and display names for trait 2, as applicable
+      if report['trait_2']:
+        report['trait_2_name_caendr'] = report['trait_2']['trait_name_caendr']
+        if report['trait_2'].display_name[0]:
+          report['trait_2_name_display'] = list(report['trait_2'].display_name)
+        else:
+          report['trait_2_name_display'] = [ report['trait_2_name'] ]
+
+      # Save the report
+      report.save()
