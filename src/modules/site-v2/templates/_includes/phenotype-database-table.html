@@ -169,7 +169,7 @@ label {
                         const trait_name = row.trait_name_caendr;
                         const url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", trait_name).replace("TRAIT_SET", 'zhang');
                         return `
-                            <div id="trait-data-${row.trait_name_caendr}" class="ps-3 pt-0" data-description="${row.description_short || row.description_long}" data-species="${row.species_name}">
+                            <div id="trait-data-${row.trait_name_caendr}" class="ps-3 pt-0">
                                 <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
                             </div>`
                     },
@@ -317,7 +317,7 @@ label {
                         <td>${createdOn}</td>
                         <td class="d-flex-row flex-column" id="tags">${tagsHTML}</td>
                         <td class="optionsToolbar">
-                            <div class="ps-3 pt-0" id="trait-data-${arr[i].trait_name_caendr}" data-description="${arr[i].description_short || arr[i].description_long}" data-species="${arr[i].species_name}"><a href='${url}'><i class="bi bi-arrow-right-circle-fill"
+                            <div class="ps-3 pt-0" id="trait-data-${arr[i].trait_name_caendr}"><a href='${url}'><i class="bi bi-arrow-right-circle-fill"
                                         aria-hidden="true"></i>Analyze</a></div>
                         </td>
                     </tr>
