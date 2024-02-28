@@ -115,7 +115,7 @@ label {
 {% block script %}
 <script>
     {% include '_scripts/utils.js' %}       {#/* defines: flash_message */#}
-    {% include '_scripts/trait_utils.js' %} {#/* defines: traitNameHTML */#}
+    {% include '_scripts/trait_utils.js' %} {#/* defines: traitNameHTML, queryTraitByName */#}
 
     $(document).ready(function() {
 
@@ -186,17 +186,11 @@ label {
 
         // Fetch data for a trait and fill out side bar for non-bulk traits
         $(document).on('click','#traitDetails', function() {
-            const data = {csrf_token: $('#csrf_token').val(), trait_name: $(this).data('value')}
-            $.ajax({
-                type: "POST",
-                url: "{{ url_for('phenotype_database.get_traits_json') }}",
-                data: JSON.stringify(data),
-                contentType: "application/json",
-                dataType: "json",
-                success: function(response) {
+            queryTraitByName($(this).data('value'), $('#csrf_token').val())
+                .then((response) => {
                     fillOutModal(response)
-                },
-                error: function(error){
+                })
+                .fail((error) => {
                     console.error(error)
                     $('#offcanvas1 .btn-close').click()
                     $('html').animate({
@@ -205,9 +199,8 @@ label {
                     if (error.responseJSON && error.responseJSON.message) {
                         $('.alert').remove()
                         flash_message(error.responseJSON.message)
-                    }      
-                }
-            })
+                    }
+                })
         })
 
 
