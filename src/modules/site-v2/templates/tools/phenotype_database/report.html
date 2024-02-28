@@ -149,7 +149,9 @@
 
 
 {% block script %}
-{% from "_includes/macros.html" import label_string_units %}
+{% from "_includes/macros.html"       import label_string_units %}
+{% from "_includes/select-trait.html" import render_trait_name_string %}
+
 <!-- Tooltips -->
 <script src="https://polyfill.io/v3/polyfill.min.js?features=Array.prototype.find,Promise,Object.assign"></script>
 <script src="https://unpkg.com/@popperjs/core@2"></script>
@@ -168,7 +170,8 @@ const data = {{ result.trait_values|tojson }};
 {%- if data.num_traits == 1 %}
 // Render chart(s) for one trait
 
-const trait_label = {{ label_string_units(data.trait_names[0], report['trait_1']['units']) }};
+{%- set trait_display_name = report['trait_1'].display_name %}
+const trait_label = {{ label_string_units( render_trait_name_string(trait_display_name[0], trait_display_name[1], trait_display_name[2]), report['trait_1']['units']) }};
 
 try {
     render_histogram('#phenotype-chart-histogram', data, {
@@ -194,8 +197,10 @@ try {
 {%- else %}
 // Render chart(s) for two traits
 
-const trait_label_1 = {{ label_string_units(data.trait_names[0], report['trait_1']['units']) }};
-const trait_label_2 = {{ label_string_units(data.trait_names[1], report['trait_2']['units']) }};
+{%- set trait_1_display_name = report['trait_1'].display_name %}
+{%- set trait_2_display_name = report['trait_2'].display_name %}
+const trait_label_1 = {{ label_string_units( render_trait_name_string(trait_1_display_name[0], trait_1_display_name[1], trait_1_display_name[2]), report['trait_1']['units']) }};
+const trait_label_2 = {{ label_string_units( render_trait_name_string(trait_2_display_name[0], trait_2_display_name[1], trait_2_display_name[2]), report['trait_2']['units']) }};
 
 try {
     render_scatterplot_histograms('#phenotype-chart', data, {

@@ -13,6 +13,20 @@ function traitNameHTML(name_1, name_2, name_3) {
 }
 
 
+// Render all provided components of the display name in a single line
+function traitNameString(name_1, name_2, name_3) {
+  let nameHTML;
+  nameHTML = `${name_1}`;
+  if (name_2) {
+    nameHTML += `, ${name_2}`;
+  }
+  if (name_3) {
+    nameHTML += `, ${name_3}`;
+  }
+  return nameHTML;
+}
+
+
 function queryTraitByName(trait_name, csrf_token=null) {
 
   // Construct the data object, using the optional CSRF token if provided

@@ -1,3 +1,5 @@
+from typing import Tuple, Optional
+
 from caendr.utils.env import get_env_var
 
 from caendr.models.datastore       import FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEntity
@@ -95,3 +97,13 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
   @is_bulk_file.setter
   def is_bulk_file(self, val):
     return self._set_raw_prop('is_bulk_file', bool(val))
+
+
+  @property
+  def display_name(self) -> Tuple[str, Optional[str], Optional[str]]:
+    '''
+      The trait display name as a tuple.  The first element will always exist.
+
+      Combines `trait_name_display_1`, `trait_name_display_2`, and `trait_name_display_3` into a single tuple.
+    '''
+    return self['trait_name_display_1'], self['trait_name_display_2'], self['trait_name_display_3']

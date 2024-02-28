@@ -93,3 +93,7 @@
   <br /><em>{{ name_3 }}</em>
   {%- endif %}
 {%- endmacro %}
+
+{%- macro render_trait_name_string(name_1, name_2, name_3) -%}
+  {{ name_1 }}{% if name_2 %}, {{ name_2 }}{% endif %}{% if name_3 %}, {{ name_3 }}{% endif %}
+{%- endmacro %}
