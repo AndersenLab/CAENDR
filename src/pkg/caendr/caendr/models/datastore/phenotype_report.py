@@ -285,8 +285,8 @@ class PhenotypeReport(ReportEntity, HashableEntity):
     elif not isinstance(trait, Trait):
       raise ValueError()
 
-    # For bulk files, store the single trait name, otherwise convert the display_name fields to a list
-    return [trait.name] if trait.file['is_bulk_file'] else list(trait.file.display_name)
+    # Use the Trait object to compute the display name
+    return list(trait.display_name)
 
 
   @classmethod
