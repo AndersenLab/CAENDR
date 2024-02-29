@@ -42,7 +42,7 @@
 
     #chartContainer {
         background-color: #FEFCFB;
-        min-height:50vh;
+        min-height:75vh;
     }
 
     #phenotype-chart svg {
@@ -51,7 +51,7 @@
 
     @media screen and (min-width: 768px) {
   #chartContainer {
-    min-height:110vh;
+    min-height:115vh;
   }
 
   #phenotype-chart svg {
@@ -85,7 +85,7 @@
                 <!-- Submit to database button for when that feature is ready -->
                 <!-- <div class="d-flex justify-content-end mt-5 mb-3">
                     <div class="text-bg-secondary text-white text-center rounded-circle pt-2 me-2 phenotypeIcon">
-                        <i class="bi bi-pencil-fill" aria-hidden="true"></i>
+                        <i class="bi bi-upload" aria-hidden="true"></i>
                     </div>
                     <a class="align-self-center text-dark fw-bold" onclick="" href="#">Submit to Phenotype Database?</a>
                 </div> -->
@@ -102,12 +102,18 @@
                 <!-- Submit to database button for when that feature is ready -->
                 <!-- <div class="d-flex justify-content-end mt-5 mb-3">
                     <div class="text-bg-secondary text-white text-center rounded-circle pt-2 me-2 phenotypeIcon">
-                        <i class="bi bi-pencil-fill" aria-hidden="true"></i>
+                        <i class="bi bi-upload" aria-hidden="true"></i>
                     </div>
                     <a class="align-self-center text-dark fw-bold" onclick="" href="#">Submit to Phenotype Database?</a>
                 </div> -->
             </div>
             {%- endif %}
+            <!-- Download TSV button for when that feature is ready -->
+            <!-- <div class="col-12 col-md-5 col-xl-12 p-3 mb-3 mb-xl-5">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-secondary text-white" type="button"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Download TSV</button>
+                  </div>
+            </div> -->
         </div>
         <!-- /Input Card -->
         <!-- Tool column -->
@@ -127,6 +133,9 @@
                   </div>
                     <div id="phenotype-chart" class="text-center"></div>
                     {%- if data.num_traits > 1 %}
+                    <div class="d-flex flex-wrap justify-content-end col-10 col-md-9 text-end mb-3 optionsToolbar">
+                        <div class="ps-3 pt-0"><a href="{{ url_for('phenotype_database.phenotype_database') }}"><i class="bi bi-file-earmark-image" aria-hidden="true"></i> Download SVG</a></div>
+                    </div>
                     <div class="col-10 col-md-7 p-2 mx-auto mb-3">
                         <p><strong>Correlation:</strong> {{ result.correlation|round(4) }}</p>
                         <p><strong>P-value:</strong> {{ result.p_value|round(4) }}</p>
@@ -135,7 +144,13 @@
                     {%- endif %}
                     {%- if data.num_traits == 1 %}
                     <div id="phenotype-chart-histogram" class="text-center mb-5 position-relative"></div>
+                    <div class="d-flex flex-wrap justify-content-end col-12 text-end pe-5 mb-3 optionsToolbar">
+                        <div class="ps-3 pt-0"><a href="{{ url_for('phenotype_database.phenotype_database') }}"><i class="bi bi-file-earmark-image" aria-hidden="true"></i> Download SVG</a></div>
+                    </div>
                     <div id="phenotype-chart-ranked-bar" class="text-center mt-md-0 mb-5 position-relative"></div>
+                    <div class="d-flex flex-wrap justify-content-end col-12 text-end pe-5 mb-3 optionsToolbar">
+                        <div class="ps-3 pt-0"><a href="{{ url_for('phenotype_database.phenotype_database') }}"><i class="bi bi-file-earmark-image" aria-hidden="true"></i> Download SVG</a></div>
+                    </div>
                     {%- endif %}
             </div>
         </div>

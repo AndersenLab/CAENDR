@@ -270,27 +270,32 @@ label {
             }).get()
         }
         const data = {csrf_token: $('#csrf_token').val(), search_val: $("#traitsSearch").val(), selected_tags: selectedTags}
-        await sendPostRequest(data)
-            .then( resp => handlePostRequest(resp))
-            .catch( e => {
-                console.error(e)
-                flash_message(`Failed to retrieve the list of traits: ${e.statusText}`)
-            })
+        try {
+            const res = await sendPostRequest(data)
+            return handlePostRequest(res)
+        } catch(err) {
+            console.error(err)
+            flash_message(`Failed to retrieve the list of traits: ${err.statusText}`)
+        }
     }
 
-    function sendPostRequest(data) {
-        return new Promise((resolve, reject) => {
-            $.ajax({
-                type: "POST",
-                url: "{{ url_for('phenotype_database.phenotype_database') }}",
-                data: JSON.stringify(data),
-                contentType: "application/json",
-                dataType: "json",
-                success: (response) => resolve(response),
-                error: (error)=> reject(error)
-            })
+    async function sendPostRequest(data) {
+        const resp = await fetch("{{ url_for('phenotype_database.phenotype_database') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                'X-CSRF-TOKEN': data.csrf_token
+            },
+            body: JSON.stringify(data)
         })
-                
+
+        if (resp.ok) {
+            const respData = await resp.json()
+            return respData
+        } else {
+            console.error(resp.statusText)
+            throw new Error
+        }
     }
 
     // Fill out table for non-bulk traits
@@ -307,7 +312,7 @@ label {
                     tagsHTML += `<div class="mb-3"><a role="button" class="btn btn-link" id="tagLink-${j+1}" data-value="${tags[j]}">${tags[j].replaceAll('/', ' • ')}</a></div>`
                 }
             }
-
+            
             let html = `
                     <tr class="py-3 dislayedRow">
                         <td>
@@ -397,12 +402,13 @@ label {
             search_val: $("#traitsSearch").val(),
             selected_tags: selectedTags
         }
-        await sendPostRequest(data)
-            .then( resp => handlePostRequest(resp))
-            .catch( e => {
-                console.error(e)
-                flash_message(`Failed to retrieve the list of traits: ${e.statusText}`)
-            })
+        try {
+            const res = await sendPostRequest(data)
+            return handlePostRequest(res)
+        } catch(err) {
+            console.error(err)
+            flash_message(`Failed to retrieve the list of traits: ${err.statusText}`)
+        }
     }
 
     // Update Table and Pagination with response data

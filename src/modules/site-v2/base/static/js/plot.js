@@ -171,7 +171,7 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
     const svg = d3.select(container_selector).append('svg')
       .attr('width', "100%")
       .attr('height', "100%")
-      .attr("viewBox", `-25 -50 900 1000`)
+      .attr("viewBox", `-25 -50 900 900`)
       .attr('preserveAspectRatio','xMinYMin')
 
     // Add a graph element for the scatterplot

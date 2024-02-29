@@ -307,7 +307,8 @@ def order_page_index():
     return render_template('order/order.html', **{
       'tool_alt_parent_breadcrumb': {"title": "Strain Catalog", "url": url_for('request_strains.request_strains')},
       'title': "Order Summary",
-      'form': form
+      'form': form,
+      'EULA_url': get_blob(MODULE_SITE_BUCKET_PRIVATE_NAME, EULA_FILE_NAME).public_url
     })
   elif user:
     users_cart = Cart.lookup_by_user(user['email'])
