@@ -97,3 +97,10 @@
 {%- macro render_trait_name_string(name_1, name_2, name_3) -%}
   {{ name_1 }}{% if name_2 %}, {{ name_2 }}{% endif %}{% if name_3 %}, {{ name_3 }}{% endif %}
 {%- endmacro %}
+
+{%- macro render_trait_name_label(name_1, name_2, name_3, units=none) -%}
+  <tspan style="font-weight: bold;">{{ name_1 }}</tspan>
+  {%- if name_2 %}, {{ name_2 }}{% endif -%}
+  {%- if name_3 %}, <tspan style="font-style: italic;">{{ name_3 }}</tspan>{% endif -%}
+  {%- if units %} <tspan style="font-style: italic; fill: var(--bs-gray-600)">({{ units }})</tspan>{%- endif -%}
+{%- endmacro %}

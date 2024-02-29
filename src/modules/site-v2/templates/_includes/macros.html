@@ -167,8 +167,3 @@
   <em>Unable to retrieve files.</em>
 {%- endif %}
 {%- endmacro %}
-
-
-{%- macro label_string_units(name, units=null) %}
-{%- if units -%} "{{ name }} ({{ units }})" {%- else -%} "{{ name }}" {%- endif -%}
-{%- endmacro %}

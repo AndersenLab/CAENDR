@@ -202,7 +202,7 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
         .attr('x', margin.left + (width / 2))
         .attr('y', height + margin.top + hist_height + 36)
         .attr('text-anchor', 'middle')
-        .text(config['x_label'])
+        .html(config['x_label'])
     }
 
     // Add label for y-axis, if one is provided
@@ -214,7 +214,7 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
         .attr('y', 0)
         .attr('dy', '.75em')
         .attr('text-anchor', 'middle')
-        .text(config['y_label'])
+        .html(config['y_label'])
 
       }
 
