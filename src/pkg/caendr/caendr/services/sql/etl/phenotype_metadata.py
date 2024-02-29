@@ -40,7 +40,7 @@ def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
            yield {
              'trait_name_caendr':    trait_name,
              'trait_name_user':      md['trait_name_user'],
-             'trait_name_display_1': '',
+             'trait_name_display_1': trait_name,
              'trait_name_display_2': '',
              'trait_name_display_3': '',
              'species_name':         md.species.name,
