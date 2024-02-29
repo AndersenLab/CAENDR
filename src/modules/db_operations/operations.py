@@ -2,7 +2,7 @@ import os
 from caendr.services.cloud.postgresql import health_database_status
 from caendr.services.logger import logger
 
-from caendr.models.datastore import Species
+from caendr.models.datastore import Species, PhenotypeReport
 from caendr.models.sql import DbOp, WormbaseGene, WormbaseGeneSummary, Strain, StrainAnnotatedVariant, PhenotypeDatabase, PhenotypeMetadata
 from caendr.services.sql.db import backup_external_db
 from caendr.services.sql.etl import ETLManager
@@ -48,6 +48,9 @@ def execute_operation(app, db, db_op: DbOp, species=None, reload_files=True):
     os.environ["MODULE_DB_OPERATIONS_CONNECTION_TYPE"] = "memory"
     logger.info("Using MOCK DATA")
     drop_and_populate_all_tables(app, db, species)
+
+  elif db_op == DbOp.RECOMPUTE_PHENOTYPE_REPORT_CACHED_NAMES:
+    PhenotypeReport.recompute_cached_display_names()
 
 
 

@@ -371,6 +371,24 @@
             }
         },
         {
+            "name": "DbOp: Recompute Phenotype Report Cached Names",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/modules/db_operations/main.py",
+            "console": "integratedTerminal",
+            "python": "${workspaceFolder}/src/modules/db_operations/venv/bin/python",
+            "justMyCode": true,
+            "envFile": "${workspaceFolder}/src/modules/db_operations/.env",
+            "env": {
+                "DATABASE_OPERATION": "RECOMPUTE_PHENOTYPE_REPORT_CACHED_NAMES",
+                "RELOAD_FILES": "false",
+                "MODULE_DB_TIMEOUT": "300",
+                "CAENDR_USE_SSL": "1",
+                "SENTRY_URL": "",
+                "SITE_BASE_URL": "https://localhost:8080",
+            }
+        },
+        {
             "name": "Test Indel Finder",
             "type": "python",
             "request": "launch",
