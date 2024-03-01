@@ -5,6 +5,9 @@
 <!-- D3js -->
 <script src="//d3js.org/d3.v4.min.js"></script>
 
+<!-- Printing to PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery.print/1.6.0/jQuery.print.min.js" integrity="sha512-i8ERcP8p05PTFQr/s0AZJEtUwLBl18SKlTOZTH0yK5jVU0qL8AIQYbbG5LU+68bdmEqJ6ltBRtCxnmybTbIYpw==" crossorigin="anonymous"></script>
+
 <style>
     .species::first-letter {
         text-transform: capitalize;
@@ -59,6 +62,19 @@
     height: 65%;
   }
 }
+
+
+    @media print {
+        .no-print, .no-print * {
+            display: none !important;
+        }
+
+        {%- if data.num_traits == 1 %}
+        #tool-column {
+            width: 100% !important;
+        }
+        {%- endif %}
+    }
 </style>
 
 {% endblock %}
@@ -67,7 +83,7 @@
 {% block content %}
 
 <div class="container-fluid px-0 pb-5">
-    <div class="d-flex justify-content-around flex-wrap mt-2">
+    <div id="report-print-container" class="d-flex justify-content-around flex-wrap mt-2">
         <!-- Results Card -->
         <div class="col-12 col-xl-3 d-flex flex-wrap flex-md-row flex-xl-column justify-content-around justify-content-xl-start px-4 mb-3">
             <h2 class="h3 w-100 w-xl-0 text-center mt-3 mb-5">Trait Information</h2>
@@ -108,18 +124,20 @@
             </div>
             {%- endif %}
             <!-- Download TSV button -->
-            <div class="col-12 col-md-5 col-xl-12 p-3 mb-3 mb-xl-5">
+            <div class="col-12 col-md-5 col-xl-12 p-3 mb-3 mb-xl-5 no-print">
                 <div class="d-grid gap-2">
                     <a class="btn btn-secondary text-white" role="button" href="{{ url_for('phenotype_database.report', id=report.id, file_ext='tsv') }}"
                         ><i class="bi bi-file-earmark-spreadsheet-fill"></i> Download TSV</a>
+                    <a class="btn btn-secondary text-white" role="button" onClick="download_report_as_pdf()" target="_blank"
+                        ><i class="bi bi-file-earmark-spreadsheet-fill"></i> Download PDF</a>
                 </div>
             </div>
         </div>
         <!-- /Input Card -->
         <!-- Tool column -->
-        <div class="d-flex flex-wrap flex-column col-md-12 col-xl-8">
+        <div id="tool-column" class="d-flex flex-wrap flex-column col-md-12 col-xl-8">
             <!-- Options Toolbar -->
-            <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar">
+            <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar no-print">
                 <div class="ps-3 pt-0"><a href="{{ url_for('phenotype_database.phenotype_database') }}"><i class="bi bi-plus-circle" aria-hidden="true"></i> New Analysis</a></div>
                 <div class="ps-3 pt-0"><a href="{{ url_for('phenotype_database.my_results') }}"><i class="bi bi-journal" aria-hidden="true"></i>View All My Phenotype Results</a></div>
                 <div class="ps-3 pt-0"><button class="btn border-0" onclick="openFullscreen();" id="fullscreenButton"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>View Fullscreen</button></div>
@@ -133,7 +151,7 @@
                     </div>
                     <div id="phenotype-chart" class="text-center"></div>
                     {%- if data.num_traits > 1 %}
-                    <div class="d-flex flex-wrap justify-content-end col-10 col-md-9 text-end mb-3 optionsToolbar">
+                    <div class="d-flex flex-wrap justify-content-end col-10 col-md-9 text-end mb-3 optionsToolbar no-print">
                         <div class="ps-3 pt-0">
                             <a role="button" onClick="download_chart_as_svg('phenotype-chart')"><i class="bi bi-file-earmark-image" aria-hidden="true"></i> Download SVG</a>
                         </div>
@@ -146,13 +164,13 @@
                     {%- endif %}
                     {%- if data.num_traits == 1 %}
                     <div id="phenotype-chart-histogram" class="text-center mb-5 position-relative"></div>
-                    <div class="d-flex flex-wrap justify-content-end col-12 text-end pe-5 mb-3 optionsToolbar">
+                    <div class="d-flex flex-wrap justify-content-end col-12 text-end pe-5 mb-3 optionsToolbar no-print">
                         <div class="ps-3 pt-0">
                             <a role="button" onClick="download_chart_as_svg('phenotype-chart-histogram')"><i class="bi bi-file-earmark-image" aria-hidden="true"></i> Download SVG</a>
                         </div>
                     </div>
                     <div id="phenotype-chart-ranked-bar" class="text-center mt-md-0 mb-5 position-relative"></div>
-                    <div class="d-flex flex-wrap justify-content-end col-12 text-end pe-5 mb-3 optionsToolbar">
+                    <div class="d-flex flex-wrap justify-content-end col-12 text-end pe-5 mb-3 optionsToolbar no-print">
                         <div class="ps-3 pt-0">
                             <a role="button" onClick="download_chart_as_svg('phenotype-chart-ranked-bar')"><i class="bi bi-file-earmark-image" aria-hidden="true"></i> Download SVG</a>
                         </div>
@@ -187,6 +205,10 @@
 
 function download_chart_as_svg(chart_id) {
     save_svg(`#${chart_id} svg`, `${chart_id}_{{ report.id }}`);
+}
+
+function download_report_as_pdf() {
+    $("#report-print-container").print()
 }
 </script>
 
