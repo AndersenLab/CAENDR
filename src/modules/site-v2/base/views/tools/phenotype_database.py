@@ -189,7 +189,7 @@ def get_traits_json():
       return jsonify(trait)
 
     except Exception as ex:
-      logger.error({err_msg: ex})
+      logger.error(f'{err_msg}: {ex}')
       
   return jsonify({ 'message': err_msg }), 404
 

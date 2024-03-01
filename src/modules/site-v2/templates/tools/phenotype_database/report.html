@@ -6,6 +6,9 @@
 <script src="//d3js.org/d3.v4.min.js"></script>
 
 <style>
+    .species::first-letter {
+        text-transform: capitalize;
+    }
     /* Tooltips */
     .tippy-box {
         background-color: var(--bs-gray-200);
@@ -39,12 +42,16 @@
 
     #chartContainer {
         background-color: #FEFCFB;
-        min-height:50vh;
+        min-height:75vh;
+    }
+
+    #phenotype-chart svg {
+        position: relative;
     }
 
     @media screen and (min-width: 768px) {
   #chartContainer {
-    min-height:110vh;
+    min-height:115vh;
   }
 
   #phenotype-chart svg {
@@ -62,35 +69,49 @@
 <div class="container-fluid px-0 pb-5">
     <div class="d-flex justify-content-around flex-wrap mt-2">
         <!-- Results Card -->
-        <div class="col col-md-6 col-xl-3 text-bg-light mb-5 p-5 rounded-2 shadow-sm overflow-auto" style="max-height: 145vh;">
-            <div><h2 class="h3 text-center mb-5">Trait Information</h2>
-
-            {%- if data.num_traits > 1 %}
-            <h3 class="h4 text-dark">Trait 1</h3>
-            {%- endif %}
-            <p><strong>Name:</strong></p>
-            <p>{{ report['trait_1_name'] }}</p>
-            <p><strong>Description</strong></p>
-            <p>{{ report['trait_1']['description_short'] or report['trait_1']['description_long'] }}</p>
-
-            {%- if data.num_traits > 1 %}
-            <h3 class="h4 text-dark">Trait 2</h3>
-            <p><strong>Name:</strong></p>
-            <p>{{ report['trait_2_name'] }}</p>
-            <p><strong>Description</strong></p>
-            <p>{{ report['trait_2']['description_short'] or report['trait_2']['description_long'] }}</p>
-            <h3 class="h4 text-dark">Correlation</h3>
-            <p>{{ result.correlation|round(4) }}</p>
-            <h3 class="h4 text-dark">P-Value</h3>
-            <p>{{ result.p_value|round(4) }}</p>
-            {%- endif %}
+        <div class="col-12 col-xl-3 d-flex flex-wrap flex-md-row flex-xl-column justify-content-around justify-content-xl-start px-4 mb-3">
+            <h2 class="h3 w-100 w-xl-0 text-center mt-3 mb-5">Trait Information</h2>
+            <div class="col-12 col-md-5 col-xl-12 text-bg-light border-0 rounded-2 shadow-sm p-3 mb-3 mb-xl-5">
+                {%- if data.num_traits > 1 %}
+                <h3 class="h4 text-dark text-center">Trait 1</h3>
+                {%- endif %}
+                <h4 class="h5">Species:</strong></h4>
+                <p class="species"><em>{{ report['species']|replace('_', '. ')}}</em></h4>
+                <h4 class="h5">Name:</strong></h4>
+                <p>{{ report['trait_1_name'] }}</h4>
+                <h4 class="h5"><strong>Description:</strong></h4>
+                <p>{{ report['trait_1']['description_short'] or report['trait_1']['description_long'] }}</p>
+                <!-- Submit to database button for when that feature is ready -->
+                <!-- <div class="d-flex justify-content-end mt-5 mb-3">
+                    <div class="text-bg-secondary text-white text-center rounded-circle pt-2 me-2 phenotypeIcon">
+                        <i class="bi bi-upload" aria-hidden="true"></i>
+                    </div>
+                    <a class="align-self-center text-dark fw-bold" onclick="" href="#">Submit to Phenotype Database?</a>
+                </div> -->
             </div>
-            <!-- Download Buttons -->
-            <div class="my-5">
-                <div class="d-grid gap-3">
-                  <a class="btn btn-secondary text-light" role="button" onClick="download_charts_as_svg()"><i class="bi bi-image-fill me-2"></i>Download SVG</a>
-                  <a class="btn btn-secondary text-light" role="button" href="{{ url_for('phenotype_database.report', id=report.id, file_ext='tsv') }}"
-                    ><i class="bi bi-file-earmark-spreadsheet-fill me-2"></i>Download TSV</a>
+            {%- if data.num_traits > 1 %}
+            <div class="col-12 col-md-5 col-xl-12 text-bg-light border-0 rounded-2 shadow-sm p-3 mb-3 mb-xl-5">
+                <h3 class="h4 text-dark text-center">Trait 2</h3>
+                <h4 class="h5">Species:</strong></h4>
+                <p class="species"><em>{{ report['species']|replace('_', '. ')}}</em></h4>
+                <h4 class="h5">Name:</h4>
+                <p>{{ report['trait_2_name'] }}</p>
+                <h4 class="h5">Description:</h4>
+                <p>{{ report['trait_2']['description_short'] or report['trait_2']['description_long'] }}</p>
+                <!-- Submit to database button for when that feature is ready -->
+                <!-- <div class="d-flex justify-content-end mt-5 mb-3">
+                    <div class="text-bg-secondary text-white text-center rounded-circle pt-2 me-2 phenotypeIcon">
+                        <i class="bi bi-upload" aria-hidden="true"></i>
+                    </div>
+                    <a class="align-self-center text-dark fw-bold" onclick="" href="#">Submit to Phenotype Database?</a>
+                </div> -->
+            </div>
+            {%- endif %}
+            <!-- Download TSV button -->
+            <div class="col-12 col-md-5 col-xl-12 p-3 mb-3 mb-xl-5">
+                <div class="d-grid gap-2">
+                    <a class="btn btn-secondary text-white" role="button" href="{{ url_for('phenotype_database.report', id=report.id, file_ext='tsv') }}"
+                        ><i class="bi bi-file-earmark-spreadsheet-fill"></i> Download TSV</a>
                 </div>
             </div>
         </div>
@@ -110,17 +131,25 @@
                     <button class="btn btn-danger text-light p-2 my-5 mx-auto" onclick="closeFullscreen();" id="closeButton"><i
                         class="bi bi-fullscreen-exit text-light" aria-hidden="true"></i> Close Fullscreen</button>
                   </div>
-                    <div id="phenotype-chart" class="text-center mb-5 position-relative"></div>
-                    <div id="phenotype-chart-histogram" class="text-center mb-5 position-relative"></div>
-                    <div id="phenotype-chart-ranked-bar" class="text-center mt-md-0 mb-5 position-relative"></div>
+                    <div id="phenotype-chart" class="text-center"></div>
                     {%- if data.num_traits > 1 %}
-                    <div class="col-9 alert alert-info mx-auto chartInfo">
-                        <p class="text-small text-center">
-                            <i class="bi bi-info-circle-fill me-2" aria-hidden="true"></i>
-                            <br>
-                            The data were mean centered and scaled to have a standard deviation of 1. These operations do not affect
-                            correlation tests and make the data easier to evaluate in a plot.
-                        </p>
+                    <div class="d-flex flex-wrap justify-content-end col-10 col-md-9 text-end mb-3 optionsToolbar">
+                        <div class="ps-3 pt-0"><a href="{{ url_for('phenotype_database.phenotype_database') }}"><i class="bi bi-file-earmark-image" aria-hidden="true"></i> Download SVG</a></div>
+                    </div>
+                    <div class="col-10 col-md-7 p-2 mx-auto mb-3">
+                        <p><strong>Correlation:</strong> {{ result.correlation|round(4) }}</p>
+                        <p><strong>P-value:</strong> {{ result.p_value|round(4) }}</p>
+                        <p><em><strong>Please Note:</strong> The data were mean centered and scaled to have a standard deviation of 1. These operations do not affect correlation tests and make the data easier to evaluate in a plot.</em></p>
+                    </div>
+                    {%- endif %}
+                    {%- if data.num_traits == 1 %}
+                    <div id="phenotype-chart-histogram" class="text-center mb-5 position-relative"></div>
+                    <div class="d-flex flex-wrap justify-content-end col-12 text-end pe-5 mb-3 optionsToolbar">
+                        <div class="ps-3 pt-0"><a href="{{ url_for('phenotype_database.phenotype_database') }}"><i class="bi bi-file-earmark-image" aria-hidden="true"></i> Download SVG</a></div>
+                    </div>
+                    <div id="phenotype-chart-ranked-bar" class="text-center mt-md-0 mb-5 position-relative"></div>
+                    <div class="d-flex flex-wrap justify-content-end col-12 text-end pe-5 mb-3 optionsToolbar">
+                        <div class="ps-3 pt-0"><a href="{{ url_for('phenotype_database.phenotype_database') }}"><i class="bi bi-file-earmark-image" aria-hidden="true"></i> Download SVG</a></div>
                     </div>
                     {%- endif %}
             </div>
