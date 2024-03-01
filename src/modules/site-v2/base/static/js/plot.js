@@ -40,6 +40,7 @@ function buffered_extent(data, buffer, f=null) {
  *   - d (int): The dimension of the histogram. 0 for x-axis, 1 for y-axis
  *   - axis: A d3 scaleLinear object mapping the domain of the given axis to its position in the graph
  *   - data: The data to plot
+ *       Expects an array with the label as the first element, and data value(s) as subsequent element(s).
  *   - target: The SVG element to create the histogram in
  *   - config: Optional keyword arguments.
  */
@@ -79,7 +80,7 @@ function add_histogram_along_axis(d, axis, data, target, config={}) {
   const bins = d3.histogram()
     .domain(axis.domain())
     .thresholds(axis.ticks(num_bins))
-    .value(n => n[d])
+    .value(n => n[d + 1])
     (data);
 
   // Compute the size of the bin with the max value
@@ -129,6 +130,7 @@ function add_histogram_along_axis(d, axis, data, target, config={}) {
  * Arguments:
  *   - container_selector: A selector for the element to create the graph in.
  *   - data: The data to graph.
+ *       Expects an array with the label as the first element, and data value(s) as subsequent element(s).
  *   - config (dict): A set of optional parameters.  Values include:
  *       'margin'
  *       'hist_height'
@@ -183,8 +185,8 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
     //   The buffer has to be at least 0.1 bc of a quirk of the bin widths:
     //   the target width is 0.2, but the axis will round its ticks to the nearest 0.5,
     //   meaning there may be a gap of 0.1 on either end of either axis
-    const x = d3.scaleLinear().domain(buffered_extent(data, 0.1, n => n[0])).range([0, width]).nice();
-    const y = d3.scaleLinear().domain(buffered_extent(data, 0.1, n => n[1])).range([height, 0]).nice();
+    const x = d3.scaleLinear().domain(buffered_extent(data, 0.1, n => n[1])).range([0, width]).nice();
+    const y = d3.scaleLinear().domain(buffered_extent(data, 0.1, n => n[2])).range([height, 0]).nice();
 
     // Add the x-axis
     g.append("g")
@@ -237,8 +239,8 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
       .data(data)
       .enter()
       .append("circle")
-      .attr("cx", d => x(d[0]) )
-      .attr("cy", d => y(d[1]) )
+      .attr("cx", d => x(d[1]) )
+      .attr("cy", d => y(d[2]) )
       .attr("r", circle_radius)
       .attr("tabindex", "0")
       .style('fill',    "#0719BC")
@@ -247,9 +249,9 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
       // Create tooltips for data points
       function setTooltips() {
          dots.attr('data-tippy-content', (d,i)=> {
-           return `<p><strong>${d[2]}</strong></p>
-           x = ${d[0].toFixed(4)}
-           <br>y = ${d[1].toFixed(4)}`;
+           return `<p><strong>${d[0]}</strong></p>
+           x = ${d[1].toFixed(4)}
+           <br>y = ${d[2].toFixed(4)}`;
          });
         tippy(dots.nodes(), {
           arrow: false,
@@ -293,6 +295,7 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
  * Arguments:
  *   - container_selector: A selector for the element to create the graph in.
  *   - data: The data to graph.
+ *       Expects an array with the label as the first element, and data value(s) as subsequent element(s).
  *   - config (dict): A set of optional parameters.  Values include:
  *       'margin'
  *       'width'
@@ -333,7 +336,7 @@ function render_histogram(container_selector, data, config={}) {
     .attr("transform", `translate(${ margin.left }, ${ margin.top })`);
 
   // Create mapping functions from data set to coordinates in the scatterplot
-  const x = d3.scaleLinear().domain(d3.extent(data, n => n[0])).range([0, width]).nice();
+  const x = d3.scaleLinear().domain(d3.extent(data, n => n[1])).range([0, width]).nice();
 
   // Add the x-axis
   g.append("g")
@@ -380,6 +383,7 @@ function render_histogram(container_selector, data, config={}) {
  * Arguments:
  *   - container_selector: A selector for the element to create the graph in.
  *   - data: The data to graph.
+ *       Expects an array with the label as the first element, and data value(s) as subsequent element(s).
  *   - config (dict): A set of optional parameters.  Values include:
  *       'margin'
  *       'width'
@@ -410,12 +414,12 @@ function render_ranked_barplot(container_selector, data, config={}) {
 
   // Sort data
   data.sort(function(b, a) {
-    return b[0] - a[0];
+    return b[1] - a[1];
   });
 
   // Compute the range of the data
   // If both values are positive or both negative, set end of range to 0
-  const data_range = d3.extent(data, d => d[0]);
+  const data_range = d3.extent(data, d => d[1]);
   data_range[0] = Math.min(data_range[0], 0)
   data_range[1] = Math.max(data_range[1], 0)
 
@@ -434,7 +438,7 @@ function render_ranked_barplot(container_selector, data, config={}) {
 
   // Create X axis (map strain name to x coordinate)
   const xScale = d3.scaleBand()
-    .domain(data.map( (d) => d[1] ))
+    .domain(data.map( (d) => d[0] ))
     .range([ margin.left, margin.left + width ])
     .padding(0.05)
   const xAxis = d3.axisBottom(xScale)
@@ -458,19 +462,19 @@ function render_ranked_barplot(container_selector, data, config={}) {
     .data(data)
     .enter()
     .append("rect")
-    .attr("x", (d) => xScale(d[1]))
-    .attr("y", (d) => yScale(Math.max(d[0], 0)))
-    .attr("width", xScale.bandwidth())
-    .attr("height", (d) => bar_height(Math.abs(d[0])))
-    .attr("fill", fill_color)
-    .attr("tabindex", "0")
+      .attr("x", (d) => xScale(d[0]))
+      .attr("y", (d) => yScale(Math.max(d[1], 0)))
+      .attr("width", xScale.bandwidth())
+      .attr("height", (d) => bar_height(Math.abs(d[1])))
+      .attr("fill", fill_color)
+      .attr("tabindex", "0")
 
   // Create tooltips for bars
   function setTooltips() {
     bars.attr('data-tippy-content', (d, i) => {
       return `
-            <p><strong>${d[1]}</strong></p>
-            Value = ${d[0].toFixed(4)}
+            <p><strong>${d[0]}</strong></p>
+            Value = ${d[1].toFixed(4)}
             `;
     });
     tippy(bars.nodes(), {
