@@ -24,7 +24,7 @@ resource "google_pubsub_subscription" "pipeline_task" {
   enable_message_ordering = "false"
 
   expiration_policy {
-    ttl = "2678400s"
+    ttl = ""
   }
 
   retry_policy {
