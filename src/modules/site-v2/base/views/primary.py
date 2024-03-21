@@ -16,7 +16,6 @@ def primary():
   # TODO: make news dynamic
   #files = sorted_files("base/static/content/news/")
 
-  flash(Markup("Welcome to the beta release of CaeNDR!"), category="success")
 
   return render_template('primary/home.html', **{
     'page_title': 'Caenorhabditis elegans Natural Diversity Resource',
