@@ -51,23 +51,6 @@ heritability_calculator_bp = Blueprint(
 )
 
 
-def results_columns():
-  return [
-    {
-      'title': 'Description',
-      'class': 'label',
-      'field': 'label',
-      'width': 0.6,
-      'link_to_data': True,
-    },
-    {
-      'title': 'Trait',
-      'class': 'trait',
-      'field': 'trait',
-      'width': 0.4,
-    },
-  ]
-
 
 @heritability_calculator_bp.route('')
 @jwt_required()
@@ -136,7 +119,6 @@ def list_results():
     # Table info
     'species_list': Species.all(),
     'items': list_reports(HeritabilityReport, None if show_all else user, filter_errs),
-    'columns': results_columns(),
 
     'JobStatus': JobStatus,
   })

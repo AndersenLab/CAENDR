@@ -65,6 +65,7 @@
 
 
 {% block content %}
+{% from "_includes/select-trait.html" import render_trait_name_multiline %}
 
 <div class="container-fluid px-0 pb-5">
     <div class="d-flex justify-content-around flex-wrap mt-2">
@@ -78,7 +79,7 @@
                 <h4 class="h5">Species:</strong></h4>
                 <p class="species"><em>{{ report['species']|replace('_', '. ')}}</em></h4>
                 <h4 class="h5">Name:</strong></h4>
-                <p>{{ report['trait_1_name'] }}</h4>
+                <p>{{ render_trait_name_multiline(report['trait_1_name_display'][0], report['trait_1_name_display'][1], report['trait_1_name_display'][2]) }}</p>
                 <h4 class="h5"><strong>Description:</strong></h4>
                 <p>{{ report['trait_1']['description_short'] or report['trait_1']['description_long'] }}</p>
                 <!-- Submit to database button for when that feature is ready -->
@@ -95,7 +96,7 @@
                 <h4 class="h5">Species:</strong></h4>
                 <p class="species"><em>{{ report['species']|replace('_', '. ')}}</em></h4>
                 <h4 class="h5">Name:</h4>
-                <p>{{ report['trait_2_name'] }}</p>
+                <p>{{ render_trait_name_multiline(report['trait_2_name_display'][0], report['trait_2_name_display'][1], report['trait_2_name_display'][2]) }}</p>
                 <h4 class="h5">Description:</h4>
                 <p>{{ report['trait_2']['description_short'] or report['trait_2']['description_long'] }}</p>
                 <!-- Submit to database button for when that feature is ready -->
@@ -163,7 +164,8 @@
 
 
 {% block script %}
-{% from "_includes/macros.html" import label_string_units %}
+{% from "_includes/select-trait.html" import render_trait_name_label %}
+
 <!-- Tooltips -->
 <script src="https://polyfill.io/v3/polyfill.min.js?features=Array.prototype.find,Promise,Object.assign"></script>
 <script src="https://unpkg.com/@popperjs/core@2"></script>
@@ -182,7 +184,8 @@ const data = {{ result.trait_values|tojson }};
 {%- if data.num_traits == 1 %}
 // Render chart(s) for one trait
 
-const trait_label = {{ label_string_units(data.trait_names[0], report['trait_1']['units']) }};
+{%- set trait_display_name = report['trait_1_name_display'] %}
+const trait_label = `{{ render_trait_name_label( trait_display_name[0], trait_display_name[1], trait_display_name[2], report['trait_1']['units'] ) }}`;
 
 try {
     render_histogram('#phenotype-chart-histogram', data, {
@@ -208,8 +211,10 @@ try {
 {%- else %}
 // Render chart(s) for two traits
 
-const trait_label_1 = {{ label_string_units(data.trait_names[0], report['trait_1']['units']) }};
-const trait_label_2 = {{ label_string_units(data.trait_names[1], report['trait_2']['units']) }};
+{%- set trait_1_display_name = report['trait_1_name_display'] %}
+{%- set trait_2_display_name = report['trait_2_name_display'] %}
+const trait_label_1 = `{{ render_trait_name_label( trait_1_display_name[0], trait_1_display_name[1], trait_1_display_name[2], report['trait_1']['units'] ) }}`;
+const trait_label_2 = `{{ render_trait_name_label( trait_2_display_name[0], trait_2_display_name[1], trait_2_display_name[2], report['trait_2']['units'] ) }}`;
 
 try {
     render_scatterplot_histograms('#phenotype-chart', data, {

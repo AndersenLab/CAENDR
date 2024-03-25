@@ -114,3 +114,17 @@ class Trait():
       mapping strain name to measured trait val.
     '''
     return dataframe_cols_to_dict(df, 'strain_name', 'trait_value', drop_na=True)
+
+
+  #
+  # Computing Display Name
+  #
+
+  @property
+  def display_name(self):
+    '''
+      Compute the display name for this trait.
+    '''
+
+    # For bulk files, store the single trait name, otherwise convert the display_name fields to a list
+    return (self.name,) if self.file['is_bulk_file'] else self.file.display_name

@@ -32,30 +32,6 @@ pairwise_indel_finder_bp = Blueprint(
 
 
 
-def results_columns():
-  return [
-    {
-      'title': 'Site',
-      'class': 'site',
-      'field': 'site',
-      'width': 0.5,
-      'link_to_data': True,
-      'data_order': lambda e: e['site'],
-    },
-    {
-      'title': 'Strain 1',
-      'class': 's1',
-      'field': 'strain_1',
-      'width': 0.25,
-    },
-    {
-      'title': 'Strain 2',
-      'class': 's2',
-      'field': 'strain_2',
-      'width': 0.25,
-    },
-  ]
-
 def try_get_sv_strains(species):
   try:
     return get_sv_strains(species)
@@ -185,7 +161,6 @@ def list_results():
     # Table info
     'species_list': Species.all(),
     'items': list_reports(IndelPrimerReport, None if show_all else user, filter_errs),
-    'columns': results_columns(),
 
     'JobStatus': JobStatus,
   })

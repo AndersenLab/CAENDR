@@ -1,0 +1,95 @@
+{% from "_includes/select-trait.html" import render_trait_name_multiline %}
+
+
+{%- macro render_report_list_column(item, column) %}
+  {%- set create_link  = column.get('linked', false) and (item.status in JobStatus.FINISHED) %}
+  {%- set render_value = item[column.field] if (column.field and item[column.field]) else column.value %}
+  <td {% if column.get('class') %}class="data-{{column.get('class')}}"{% endif %} {% if column.get('order') %}data-order="{{ item[column.get('order')] }}"{% endif %}>
+    {%- if create_link %}
+      <a href="{{ url_for(tool_name + '.report', id=item.id) }}">
+    {%- endif %}
+      {%- if column.render %} {{ column.render(render_value) }} {% else %} {{ render_value }} {% endif %}
+    {%- if create_link %}
+      </a>
+    {%- endif %}
+  </td>
+{%- endmacro %}
+
+
+{%- macro render_report_list_columns(columns, item) %}
+  {%- for column in columns %}
+    {{ render_report_list_column( item, column ) }}
+  {%- endfor %}
+{%- endmacro %}
+
+
+{%- macro render_trait_name_safe(display_name) %}
+  {% if display_name %} {{ render_trait_name_multiline(display_name[0], display_name[1], display_name[2]) }} {% endif %}
+{%- endmacro %}
+
+
+{% set report_list_columns = {
+    'pairwise_indel_finder': [
+      { 'title':  'Site',
+        'class':  'site',
+        'field':  'site',
+        'width':  0.5,
+        'order':  'site',
+        'linked': true,
+      },
+      { 'title':  'Strain 1',
+        'class':  's1',
+        'field':  'strain_1',
+        'width':  0.25,
+      },
+      { 'title':  'Strain 2',
+        'class':  's2',
+        'field':  'strain_2',
+        'width':  0.25,
+      },
+    ],
+    'genetic_mapping': [
+      { 'title':  'Description',
+        'class':  'label',
+        'field':  'label',
+        'width':  0.6,
+        'linked': true,
+      },
+      { 'title':  'Trait',
+        'class':  'trait',
+        'field':  'trait',
+        'width':  0.4,
+      },
+    ],
+    'heritability_calculator': [
+      { 'title':  'Description',
+        'class':  'label',
+        'field':  'label',
+        'width':  0.6,
+        'linked': true,
+      },
+      { 'title':  'Trait',
+        'class':  'trait',
+        'field':  'trait',
+        'width':  0.4,
+      },
+    ],
+    'phenotype_database': [
+      { 'title':  'Trait 1',
+        'field':  'trait_1_name_display',
+        'width':  0.4,
+        'render': render_trait_name_safe,
+      },
+      { 'title':  'Trait 2',
+        'field':  'trait_2_name_display',
+        'width':  0.4,
+        'render': render_trait_name_safe,
+      },
+      { 'title':  'View Report',
+        'value':  'View Report',
+        'width':  0.2,
+        'linked': true,
+      },
+    ]
+  }
+%}
