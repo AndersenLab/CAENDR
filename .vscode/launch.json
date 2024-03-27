@@ -4,7 +4,6 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        
         {
             "name": "Run Site-v2 (requires a local Postgres instance or cloud-sql-proxy)",
             "type": "python",
@@ -366,7 +365,7 @@
                 "WORMBASE_VERSION": "WS276",
                 "RELEASE":          "20220216",
                 "SPECIES":          "c_elegans",
-            },
+            }
         },
         {
             "name": "Run Site-v2 (local API)",
@@ -425,7 +424,33 @@
                 "--with-threads"
             ],
             "jinja": true
-                }
+        },
+        {
+            "name": "Run Pytest",
+            "type": "python",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/src/modules/site-v2",
+            "module": "pytest",
+            "python": "${workspaceFolder}/src/modules/site-v2/venv/bin/python",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "envFile": "${workspaceFolder}/src/modules/site-v2/.env",
+            "env": {
+                "ENV": "main",
+                "FLASK_APP": "main.py",
+                "FLASK_ENV": "development",
+                "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "localhost",
+                // "MODULE_DB_OPERATIONS_CONNECTION_TYPE": "file",
+                // "MODULE_DB_OPERATIONS_CONNECTION_FILE": "${workspaceFolder}/temp/local.db",
+                "MODULE_SITE_HOST": "localhost:8080",
+            },
+            "args": [
+                "-s",
+                "-v",
+                "${workspaceFolder}/src/modules/site-v2/tests",
+            ],
+            
+        }
     ],
     "compounds": [
         {
