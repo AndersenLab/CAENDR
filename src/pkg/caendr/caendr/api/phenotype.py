@@ -1,6 +1,6 @@
 import bleach
 import os
-from typing import Optional, Union
+from typing import Optional, Union, Iterable
 
 from sqlalchemy import or_, func
 
@@ -58,7 +58,19 @@ def get_trait(trait_name):
    return PhenotypeMetadata.query.get(trait_name)
 
 
-def filter_trait_query_by_text(query, search_val):
+
+#
+# Query Filters
+#
+# Conditionally add common filter types to a query object
+#
+
+
+def filter_trait_query_by_text(query, search_val: Optional[str]):
+  '''
+    Filter by a text search value on the text fields.
+    Generic "search" functionality.
+  '''
   print(search_val)
   if search_val and len(search_val):
     query = query.filter(
@@ -75,7 +87,10 @@ def filter_trait_query_by_text(query, search_val):
   return query
 
 
-def filter_trait_query_by_tags(query, tags):
+def filter_trait_query_by_tags(query, tags: Optional[Iterable[str]]):
+  '''
+    Filter by trait tags.
+  '''
   if len(tags):
     query = query.filter(or_(
       PhenotypeMetadata.tags.ilike(f"%{bleach.clean(tag)}%") for tag in tags

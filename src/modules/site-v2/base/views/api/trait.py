@@ -16,8 +16,19 @@ api_trait_bp = Blueprint(
 
 
 
+#
+# Helper Functions
+#
+
+
 def filter_trait_files(tf):
   return tf.is_public and not tf.is_bulk_file
+
+
+
+#
+# Query Endpoints
+#
 
 
 @api_trait_bp.route('/query', methods=['POST'])
@@ -28,7 +39,7 @@ def query():
     Query all trait files, optionally split into different lists based on species.
   '''
 
-  # Get query filters
+  # Get query filters (search parameters)
   selected_tags  = request.json.get('selected_tags', [])
   search_val     = request.json.get('search_val',    '')
   filter_dataset = request.json.get('dataset',       None)
