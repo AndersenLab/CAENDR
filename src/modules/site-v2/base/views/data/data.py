@@ -57,3 +57,15 @@ def protocols():
     }
     return render_template('data/protocols.html', **params)
 
+
+#
+# Submit Trait
+#
+@data_bp.route('/submit-trait/start')
+@cache.memoize(60*60)
+def submit_trait_start():
+
+  return render_template('data/submit-trait-start.html', **{
+    'title': 'Submit Trait',
+    'disable_parent_breadcrumb': True
+  })
