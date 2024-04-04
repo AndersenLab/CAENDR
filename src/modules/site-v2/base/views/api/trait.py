@@ -31,14 +31,17 @@ def query():
   # Get query filters
   selected_tags  = request.json.get('selected_tags', [])
   search_val     = request.json.get('search_val',    '')
+  filter_dataset = request.json.get('dataset',       None)
 
   # Get query pagination values
   page           = int(request.json.get('page', 1))
   current_page   = int(request.json.get('current_page', 1))
   per_page       = 10
 
-  # Filter by search value and tags, if provided
-  query = query_phenotype_metadata()
+  # Create the initial query
+  query = query_phenotype_metadata(dataset=filter_dataset)
+
+  # Filter by search values, if provided
   query = filter_trait_query_by_text(query, search_val)
   query = filter_trait_query_by_tags(query, selected_tags)
 

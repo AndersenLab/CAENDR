@@ -1,5 +1,6 @@
 import bleach
 import os
+from typing import Optional, Union
 
 from sqlalchemy import or_, func
 
@@ -9,7 +10,12 @@ from caendr.models.sql import PhenotypeMetadata
 from caendr.services.cloud.postgresql import rollback_on_error
 
 
-def query_phenotype_metadata(is_bulk_file=False, include_values=False, species: str = None):
+def query_phenotype_metadata(
+    include_values = False,
+    is_bulk_file: Optional[bool]                = None,
+    species:      Optional[str]                 = None,
+    dataset:      Optional[str]                 = None,
+):
     """
       Returns the list of traits with the corresponding metadata.
 
@@ -19,16 +25,19 @@ def query_phenotype_metadata(is_bulk_file=False, include_values=False, species: 
       - phenotype_values: if True, include phenotype values for each trait
       - species:          filters by species
     """
+
+    # Create the initial query
     query = PhenotypeMetadata.query
 
-    # Get traits for bulk file
-    if is_bulk_file:
-      query = query.filter_by(is_bulk_file=True)
-    else:
-      # Get traits for non-bulk files
-      query = query.filter_by(is_bulk_file=False)
+    # Optionally query by bulk file
+    if is_bulk_file is not None:
+      query = query.filter_by(is_bulk_file=bool(is_bulk_file))
 
-    # Query by species
+    # Optionally query by dataset
+    if dataset is not None:
+      query = query.filter_by(dataset=dataset)
+
+    # Optionally query by species
     if species is not None:
       if species in Species.all().keys():
         query = query.filter_by(species_name=species)
@@ -37,7 +46,7 @@ def query_phenotype_metadata(is_bulk_file=False, include_values=False, species: 
     
     # Include phenotype values for traits
     if include_values:
-       query = query.join(PhenotypeMetadata.phenotype_values)
+      query = query.join(PhenotypeMetadata.phenotype_values)
 
     return query
 
