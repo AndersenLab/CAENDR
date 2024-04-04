@@ -79,40 +79,12 @@ def phenotype_database():
   """
   form = EmptyForm()
   
-  # Get the list of traits for non-bulk files
+  # Get the list of unique tags
   try:
     query = query_phenotype_metadata()
-
-    # Get the list of unique tags
     tags = [ tr.tags.split(', ') for tr in query if tr.tags ]
     tags_list = [tg for tr_tag in tags for tg in tr_tag]
     unique_tags = list(set(tags_list))
-
-    if request.method == 'POST':
-      selected_tags = request.json.get('selected_tags', [])
-      search_val = request.json.get('search_val', '')
-      page = int(request.json.get('page', 1))
-      current_page = int(request.json.get('current_page', 1))
-      per_page = 10
-
-      # Filter by search value and tags, if provided
-      query = filter_trait_query_by_text(query, search_val)
-      query = filter_trait_query_by_tags(query, selected_tags)
-
-      # Paginate the query, rolling back on error
-      with rollback_on_error_handler():
-        pagination = query.paginate(page=page, per_page=per_page)
-
-      json_data = [ tr.to_json() for tr in pagination.items ]
-      pagination_data = {
-        'has_next':     pagination.has_next,
-        'has_prev':     pagination.has_prev,
-        'prev_num':     pagination.prev_num,
-        'next_num':     pagination.next_num,
-        'total_pages':  pagination.pages,
-        'current_page': current_page
-      }
-      return jsonify({'data': json_data, 'pagination': pagination_data })
         
   except Exception as ex:
     logger.error(f'Failed to retrieve the list of traits: {ex}')
