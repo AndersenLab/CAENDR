@@ -5,7 +5,6 @@ from typing import Optional, Union
 from sqlalchemy import or_, func
 
 from caendr.models.datastore import Species
-from caendr.models.error import BadRequestError
 from caendr.models.sql import PhenotypeMetadata
 from caendr.services.cloud.postgresql import rollback_on_error
 
@@ -13,7 +12,7 @@ from caendr.services.cloud.postgresql import rollback_on_error
 def query_phenotype_metadata(
     include_values = False,
     is_bulk_file: Optional[bool]                = None,
-    species:      Optional[str]                 = None,
+    species:      Optional[Union[Species, str]] = None,
     dataset:      Optional[str]                 = None,
 ):
     """
@@ -38,11 +37,8 @@ def query_phenotype_metadata(
       query = query.filter_by(dataset=dataset)
 
     # Optionally query by species
-    if species is not None:
-      if species in Species.all().keys():
-        query = query.filter_by(species_name=species)
-      else:
-        raise BadRequestError(f'Unrecognized species ID "{species}".')
+    # None values handled in function
+    filter_trait_query_by_species(query, species)
     
     # Include phenotype values for traits
     if include_values:
@@ -84,4 +80,27 @@ def filter_trait_query_by_tags(query, tags):
     query = query.filter(or_(
       PhenotypeMetadata.tags.ilike(f"%{bleach.clean(tag)}%") for tag in tags
     ))
+  return query
+
+
+def filter_trait_query_by_species(query, species: Optional[Union[Species, str]]):
+  '''
+    Filter by species.
+
+    If species is invalid, passes error raised by `Species` class.
+  '''
+  if species is not None:
+
+    # Cast string values to Species object
+    if isinstance(species, str):
+      species = Species.from_name(species)
+
+    # Validate species type
+    if not isinstance(species, Species):
+      raise ValueError(f'Expected species identifier, got {species}')
+
+    # Filter by the species name
+    query = query.filter_by(species_name=species.name)
+
+  # Return the (possibly filtered) query
   return query
