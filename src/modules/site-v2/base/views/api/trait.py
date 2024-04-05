@@ -42,19 +42,38 @@ def get_clean(source, key, value=None, _type=None):
   return v
 
 
-def query_traits_error_handler(f):
+def query_traits_error_handler(err_msg):
   '''
     Wrapper for trait query endpoints.
-    If query raises an error, returns an empty response and a `500` error.
+
+    If the wrapped function aborts with an error code, that code will be used
+    by the response. Otherwise, based on the error type, either a `404` or a
+    `500` will be returned.
   '''
-  @wraps(f)
-  def inner(*args, **kwargs):
-    try:
-      return f(*args, **kwargs)
-    except Exception as ex:
-      logger.error(f'Failed to retrieve the list of traits: {ex}')
-      return {}, 500
-  return inner
+
+  def decorator(f):
+    @wraps(f)
+    def inner(*args, **kwargs):
+      try:
+        return f(*args, **kwargs)
+
+      # Error handling
+      except Exception as ex:
+
+        # Choose error code based on error type
+        if hasattr(ex, 'code'):
+          err_code = ex.code
+        elif isinstance(ex, NotFoundError):
+          err_code = 404
+        else:
+          err_code = 500
+
+        # Log the full error, and return the response with an abridged message
+        logger.error(f'{err_msg}: {ex}')
+        return {'message': f'{err_msg}'}, err_code
+
+    return inner
+  return decorator
 
 
 
@@ -65,7 +84,7 @@ def query_traits_error_handler(f):
 
 @api_trait_bp.route('/query/sql', methods=['POST'])
 @cache.memoize(60*60)
-@query_traits_error_handler
+@query_traits_error_handler('Failed to retrieve the list of traits')
 @jsonify_request
 def query_sql():
   '''
@@ -113,7 +132,7 @@ def query_sql():
 
 @api_trait_bp.route('/query/datatable', methods=['GET'])
 @cache.memoize(60*60)
-@query_traits_error_handler
+@query_traits_error_handler('Failed to retrieve the list of traits')
 @jsonify_request
 def query_datatable():
   '''
@@ -189,19 +208,22 @@ def query_species(species_name):
 @api_trait_bp.route('/metadata', methods=['POST'])
 @cache.memoize(60*60)
 @compress.compressed()
+@query_traits_error_handler('Failed to retrieve trait metadata')
+@jsonify_request
 def get_trait_metadata():
   """
     Get traits data for non-bulk files in JSON format (include phenotype values)
   """
+
+  # Get the trait name from the request
   trait_name = get_clean(request.json, 'trait_name')
-  err_msg = f'Failed to retrieve metadata for trait {trait_name}'
+  if not trait_name:
+    abort(400, description='No trait name provided.')
 
-  if trait_name:
-    try:
-      trait = get_trait(trait_name).to_json_with_values()
-      return jsonify(trait)
+  # Try getting the trait from the database
+  trait = get_trait(trait_name)
+  if trait is None:
+    abort(404, description=f'Invalid trait name {trait_name}')
 
-    except Exception as ex:
-      logger.error(f'{err_msg}: {ex}')
-
-  return jsonify({ 'message': err_msg }), 404
+  # Return the full trait metadata
+  return trait.to_json_with_values()
