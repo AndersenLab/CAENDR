@@ -101,26 +101,6 @@ def phenotype_database():
   })
 
 
-@phenotype_database_bp.route('/traits-list', methods=['POST'])
-@cache.memoize(60*60)
-@compress.compressed()
-def get_traits_json():
-  """
-    Get traits data for non-bulk files in JSON format (include phenotype values)
-  """
-  trait_name = request.json.get('trait_name')
-  err_msg = f'Failed to retrieve metadata for trait {trait_name}'
-
-  if trait_name:
-    try:
-      trait = get_trait(trait_name).to_json_with_values()
-      return jsonify(trait)
-
-    except Exception as ex:
-      logger.error(f'{err_msg}: {ex}')
-      
-  return jsonify({ 'message': err_msg }), 404
-
 
 #
 # Submission Flow

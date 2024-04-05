@@ -1,9 +1,9 @@
 import bleach
 from functools import wraps
 
-from flask import request, Blueprint, abort
+from flask import request, Blueprint, abort, jsonify
 from caendr.services.logger import logger
-from extensions import cache
+from extensions import cache, compress
 
 from caendr.api.phenotype import query_phenotype_metadata, get_trait, filter_trait_query
 from caendr.services.cloud.postgresql import rollback_on_error_handler
@@ -178,3 +178,30 @@ def query_species(species_name):
       for tf in TraitFile.query_ds(ignore_errs=True, filters=['species', '=', species.name])
       if filter_trait_files(tf)
   ]
+
+
+
+#
+# Query single trait data
+#
+
+
+@api_trait_bp.route('/metadata', methods=['POST'])
+@cache.memoize(60*60)
+@compress.compressed()
+def get_trait_metadata():
+  """
+    Get traits data for non-bulk files in JSON format (include phenotype values)
+  """
+  trait_name = get_clean(request.json, 'trait_name')
+  err_msg = f'Failed to retrieve metadata for trait {trait_name}'
+
+  if trait_name:
+    try:
+      trait = get_trait(trait_name).to_json_with_values()
+      return jsonify(trait)
+
+    except Exception as ex:
+      logger.error(f'{err_msg}: {ex}')
+
+  return jsonify({ 'message': err_msg }), 404

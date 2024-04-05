@@ -188,7 +188,7 @@ label {
             const data = {csrf_token: $('#csrf_token').val(), trait_name: $(this).data('value')}
             $.ajax({
                 type: "POST",
-                url: "{{ url_for('phenotype_database.get_traits_json') }}",
+                url: "{{ url_for('api_trait.get_trait_metadata') }}",
                 data: JSON.stringify(data),
                 contentType: "application/json",
                 dataType: "json",
