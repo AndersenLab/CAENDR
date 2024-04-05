@@ -1,4 +1,5 @@
 import bleach
+from functools import wraps
 
 from flask import request, Blueprint, abort
 from caendr.services.logger import logger
@@ -40,6 +41,21 @@ def get_clean(source, key, value=None, _type=None):
   return v
 
 
+def query_traits_error_handler(f):
+  '''
+    Wrapper for trait query endpoints.
+    If query raises an error, returns an empty response and a `500` error.
+  '''
+  @wraps(f)
+  def inner(*args, **kwargs):
+    try:
+      return f(*args, **kwargs)
+    except Exception as ex:
+      logger.error(f'Failed to retrieve the list of traits: {ex}')
+      return {}, 500
+  return inner
+
+
 
 #
 # Query Endpoints
@@ -48,6 +64,7 @@ def get_clean(source, key, value=None, _type=None):
 
 @api_trait_bp.route('/query', methods=['POST'])
 @cache.memoize(60*60)
+@query_traits_error_handler
 @jsonify_request
 def query():
   '''
