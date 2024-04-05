@@ -4,7 +4,7 @@ from typing import Optional, Union, Iterable
 
 from sqlalchemy import or_, func
 
-from caendr.models.datastore import Species
+from caendr.models.datastore import Species, User
 from caendr.models.sql import PhenotypeMetadata
 from caendr.services.cloud.postgresql import rollback_on_error
 
@@ -12,8 +12,9 @@ from caendr.services.cloud.postgresql import rollback_on_error
 def query_phenotype_metadata(
     include_values = False,
     is_bulk_file: Optional[bool]                = None,
-    species:      Optional[Union[Species, str]] = None,
     dataset:      Optional[str]                 = None,
+    species:      Optional[Union[Species, str]] = None,
+    user:         Optional[Union[User, str]]    = None,
 ):
     """
       Returns the list of traits with the corresponding metadata.
@@ -39,6 +40,7 @@ def query_phenotype_metadata(
     # Optionally query by species
     # None values handled in function
     query = filter_trait_query_by_species(query, species)
+    query = filter_trait_query_by_user(query, user)
     
     # Include phenotype values for traits
     if include_values:
@@ -71,6 +73,7 @@ def filter_trait_query(
     search_val: Optional[str]                 = None,
     tags:       Optional[Iterable[str]]       = None,
     species:    Optional[Union[Species, str]] = None,
+    user:       Optional[Union[User, str]]    = None,
   ):
   '''
     Combined filtering function.
@@ -78,6 +81,7 @@ def filter_trait_query(
   query = filter_trait_query_by_text(query, search_val)
   query = filter_trait_query_by_tags(query, tags)
   query = filter_trait_query_by_species(query, species)
+  query = filter_trait_query_by_user(query, user)
   return query
 
 
@@ -113,6 +117,28 @@ def filter_trait_query_by_tags(query, tags: Optional[Iterable[str]]):
   return query
 
 
+def filter_trait_query_by_user(query, user: Optional[Union[User, str]]):
+  '''
+    Filter by submitting user.
+
+    If username is invalid, passes error raised by `User` class.
+  '''
+  if user:
+
+    # Cast string value to User object using unique datastore ID
+    if isinstance(user, str):
+      user = User.get_ds(user)
+
+    # Validate user type
+    if not isinstance(user, User):
+      raise ValueError(f'Expected user, got {user}')
+
+    # Filter by the username
+    query = query.filter_by(submitted_by=user.full_name)
+
+  return query
+
+
 def filter_trait_query_by_species(query, species: Optional[Union[Species, str]]):
   '''
     Filter by species.
@@ -121,7 +147,7 @@ def filter_trait_query_by_species(query, species: Optional[Union[Species, str]])
   '''
   if species is not None:
 
-    # Cast string values to Species object
+    # Cast string value to Species object
     if isinstance(species, str):
       species = Species.from_name(species)
 

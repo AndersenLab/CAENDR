@@ -76,6 +76,8 @@ def query_sql():
   selected_tags  = get_clean(request.json, 'selected_tags', [])
   search_val     = get_clean(request.json, 'search_val',    '').lower()
   filter_dataset = get_clean(request.args, 'dataset')
+  filter_user    = get_clean(request.json, 'user')
+  filter_species = get_clean(request.json, 'species')
 
   # Get query pagination values
   page           = get_clean(request.json, 'page',         1, _type=int)
@@ -83,7 +85,7 @@ def query_sql():
   per_page       = 10
 
   # Create the initial query
-  query = query_phenotype_metadata(dataset=filter_dataset)
+  query = query_phenotype_metadata(dataset=filter_dataset, species=filter_species, user=filter_user)
 
   # Filter by search values, if provided
   query = filter_trait_query(query, search_val=search_val, tags=selected_tags)
@@ -121,6 +123,8 @@ def query_datatable():
   # Get query filters (search parameters)
   search_value   = get_clean(request.args, 'search[value]', '').lower()
   filter_dataset = get_clean(request.args, 'dataset')
+  filter_user    = get_clean(request.args, 'user')
+  filter_species = get_clean(request.args, 'species')
 
   # Get query pagination values
   draw   = get_clean(request.args, 'draw',   _type=int)
@@ -128,7 +132,7 @@ def query_datatable():
   length = get_clean(request.args, 'length', _type=int)
 
   # Create the initial query
-  query = query_phenotype_metadata(dataset=filter_dataset)
+  query = query_phenotype_metadata(dataset=filter_dataset, species=filter_species, user=filter_user)
   total_records = query.count()
 
   # Filter by search values, if provided
