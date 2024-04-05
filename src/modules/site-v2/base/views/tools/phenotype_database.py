@@ -101,48 +101,6 @@ def phenotype_database():
   })
 
 
-@phenotype_database_bp.route('/traits-zhang')
-@cache.memoize(60*60)
-@compress.compressed()
-def get_zhang_traits_json():
-  """
-    Phenotype Database table (bulk)
-    Fetch table content by request for each page and render the data for Datatables()
-  """
-  try:
-    # get parameters for query
-    draw = request.args.get('draw', type=int)
-    start = request.args.get('start', type=int)
-    length = request.args.get('length', type=int)
-    search_value = bleach.clean(request.args.get('search[value]', '')).lower()
-
-    query = query_phenotype_metadata(is_bulk_file=True)
-    total_records = query.count()
-
-    # Filter by search value, if provided
-    query = filter_trait_query_by_text(query, search_value)
-
-    # Query PhenotypeMetadata (include phenotype values for each trait)
-    with rollback_on_error_handler():
-      data = query.offset(start).limit(length).from_self().\
-        join(PhenotypeMetadata.phenotype_values).all()
-
-    json_data = [ trait.to_json_with_values() for trait in data ]
-
-    filtered_records = query.count()
-
-    response_data = {
-        "draw": draw,
-        "recordsTotal": total_records,
-        "recordsFiltered": filtered_records,
-        "data": json_data
-    }
-
-  except Exception as ex:
-    logger.error(f'Failed to retrieve the list of traits: {ex}')
-    response_data = []
-  return jsonify(response_data)
-
 @phenotype_database_bp.route('/traits-list', methods=['POST'])
 @cache.memoize(60*60)
 @compress.compressed()

@@ -10,6 +10,7 @@ from caendr.services.cloud.postgresql import rollback_on_error_handler
 
 from caendr.models.datastore import TraitFile, Species
 from caendr.models.error     import NotFoundError
+from caendr.models.sql       import PhenotypeMetadata
 from caendr.utils.json       import jsonify_request
 
 
@@ -62,19 +63,19 @@ def query_traits_error_handler(f):
 #
 
 
-@api_trait_bp.route('/query', methods=['POST'])
+@api_trait_bp.route('/query/sql', methods=['POST'])
 @cache.memoize(60*60)
 @query_traits_error_handler
 @jsonify_request
-def query():
+def query_sql():
   '''
-    Query all trait files, optionally split into different lists based on species.
+    Query the trait database, and return results with SQL-style pagination.
   '''
 
   # Get query filters (search parameters)
   selected_tags  = get_clean(request.json, 'selected_tags', [])
   search_val     = get_clean(request.json, 'search_val',    '').lower()
-  filter_dataset = get_clean(request.json, 'dataset')
+  filter_dataset = get_clean(request.args, 'dataset')
 
   # Get query pagination values
   page           = get_clean(request.json, 'page',         1, _type=int)
@@ -105,6 +106,52 @@ def query():
       'current_page': current_page
     },
   }
+
+
+
+@api_trait_bp.route('/query/datatable', methods=['GET'])
+@cache.memoize(60*60)
+@query_traits_error_handler
+@jsonify_request
+def query_datatable():
+  '''
+    Query the trait database, and return results with DataTable-style pagination.
+  '''
+
+  # Get query filters (search parameters)
+  search_value   = get_clean(request.args, 'search[value]', '').lower()
+  filter_dataset = get_clean(request.args, 'dataset')
+
+  # Get query pagination values
+  draw   = get_clean(request.args, 'draw',   _type=int)
+  start  = get_clean(request.args, 'start',  _type=int)
+  length = get_clean(request.args, 'length', _type=int)
+
+  # Create the initial query
+  query = query_phenotype_metadata(dataset=filter_dataset)
+  total_records = query.count()
+
+  # Filter by search values, if provided
+  query = filter_trait_query(query, search_val=search_value)
+
+  # Query PhenotypeMetadata (include phenotype values for each trait)
+  with rollback_on_error_handler():
+    data = query.offset(start).limit(length).from_self().\
+      join(PhenotypeMetadata.phenotype_values).all()
+
+  # Count how many rows matched the filters
+  filtered_records = query.count()
+
+  # Format return data
+  return {
+    'data': [
+      trait.to_json_with_values() for trait in data
+    ],
+    'draw':            draw,
+    'recordsTotal':    total_records,
+    'recordsFiltered': filtered_records,
+  }
+
 
 
 @api_trait_bp.route('/<species_name>', methods=['GET'])

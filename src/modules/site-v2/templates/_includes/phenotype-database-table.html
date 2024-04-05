@@ -133,7 +133,7 @@ label {
         const zhangTable = $('#zhangTraits').DataTable( {
             "processing": true,
             "serverSide": true,
-            "ajax": "/tools/phenotype-database/traits-zhang",
+            "ajax": "{{ url_for('api_trait.query_datatable', dataset='zhang') }}",
             "ordering": false,
             "columns": [
                 {
@@ -280,13 +280,13 @@ label {
     }
 
     async function sendPostRequest(data) {
-        const resp = await fetch("{{ url_for('api_trait.query') }}", {
+        const resp = await fetch("{{ url_for('api_trait.query_sql', dataset='caendr') }}", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 'X-CSRF-TOKEN': data.csrf_token
             },
-            body: JSON.stringify({...data, 'dataset': 'caendr'}),
+            body: JSON.stringify({...data}),
         })
 
         if (resp.ok) {
