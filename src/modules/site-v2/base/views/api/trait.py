@@ -4,7 +4,7 @@ from flask import request, Blueprint, abort
 from caendr.services.logger import logger
 from extensions import cache
 
-from caendr.api.phenotype import query_phenotype_metadata, get_trait, filter_trait_query_by_text, filter_trait_query_by_tags
+from caendr.api.phenotype import query_phenotype_metadata, get_trait, filter_trait_query
 from caendr.services.cloud.postgresql import rollback_on_error_handler
 
 from caendr.models.datastore import TraitFile, Species
@@ -68,8 +68,7 @@ def query():
   query = query_phenotype_metadata(dataset=filter_dataset)
 
   # Filter by search values, if provided
-  query = filter_trait_query_by_text(query, search_val)
-  query = filter_trait_query_by_tags(query, selected_tags)
+  query = filter_trait_query(query, search_val=search_val, tags=selected_tags)
 
   # Paginate the query, rolling back on error
   with rollback_on_error_handler():

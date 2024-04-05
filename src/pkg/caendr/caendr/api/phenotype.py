@@ -66,6 +66,21 @@ def get_trait(trait_name):
 #
 
 
+def filter_trait_query(
+    query,
+    search_val: Optional[str]                 = None,
+    tags:       Optional[Iterable[str]]       = None,
+    species:    Optional[Union[Species, str]] = None,
+  ):
+  '''
+    Combined filtering function.
+  '''
+  query = filter_trait_query_by_text(query, search_val)
+  query = filter_trait_query_by_tags(query, tags)
+  query = filter_trait_query_by_species(query, species)
+  return query
+
+
 def filter_trait_query_by_text(query, search_val: Optional[str]):
   '''
     Filter by a text search value on the text fields.
