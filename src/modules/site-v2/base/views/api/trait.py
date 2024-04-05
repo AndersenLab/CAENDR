@@ -1,3 +1,5 @@
+import bleach
+
 from flask import request, Blueprint, abort
 from caendr.services.logger import logger
 from extensions import cache
@@ -25,6 +27,19 @@ def filter_trait_files(tf):
   return tf.is_public and not tf.is_bulk_file
 
 
+def get_clean(source, key, value=None, _type=None):
+  v = source.get(key, value)
+
+  # Clean value
+  if   isinstance(v, str):   v = bleach.clean(v)
+  elif isinstance(v, list):  v = [ bleach.clean(x) for x in v ]
+
+  # Optional typecasting
+  if _type: v = _type(v)
+
+  return v
+
+
 
 #
 # Query Endpoints
@@ -40,13 +55,13 @@ def query():
   '''
 
   # Get query filters (search parameters)
-  selected_tags  = request.json.get('selected_tags', [])
-  search_val     = request.json.get('search_val',    '')
-  filter_dataset = request.json.get('dataset',       None)
+  selected_tags  = get_clean(request.json, 'selected_tags', [])
+  search_val     = get_clean(request.json, 'search_val',    '').lower()
+  filter_dataset = get_clean(request.json, 'dataset')
 
   # Get query pagination values
-  page           = int(request.json.get('page', 1))
-  current_page   = int(request.json.get('current_page', 1))
+  page           = get_clean(request.json, 'page',         1, _type=int)
+  current_page   = get_clean(request.json, 'current_page', 1, _type=int)
   per_page       = 10
 
   # Create the initial query
