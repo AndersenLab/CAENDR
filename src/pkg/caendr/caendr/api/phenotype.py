@@ -38,7 +38,7 @@ def query_phenotype_metadata(
 
     # Optionally query by species
     # None values handled in function
-    filter_trait_query_by_species(query, species)
+    query = filter_trait_query_by_species(query, species)
     
     # Include phenotype values for traits
     if include_values:
@@ -91,7 +91,7 @@ def filter_trait_query_by_tags(query, tags: Optional[Iterable[str]]):
   '''
     Filter by trait tags.
   '''
-  if len(tags):
+  if tags and len(tags):
     query = query.filter(or_(
       PhenotypeMetadata.tags.ilike(f"%{bleach.clean(tag)}%") for tag in tags
     ))
