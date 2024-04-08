@@ -151,3 +151,14 @@ function flash_message(message, full_msg_link=null, full_msg_body=null) {
   {%- endfor %}
   {%- endif %}
 }
+
+
+/* Format a date as YYYY-MM-DD.
+ */
+function formatDate(d) {
+  if(d === null) return 'N/A'
+  const date = new Date(d)
+  const month = (date.getMonth()+1).toString().padStart(2, '0')
+  const day = date.getDate().toString().padStart(2, '0')
+  return `${date.getFullYear()}-${month}-${day}`
+}
