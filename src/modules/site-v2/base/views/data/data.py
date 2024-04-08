@@ -1,11 +1,15 @@
 import yaml
 
-from flask import render_template, Blueprint, redirect, url_for
+from flask      import render_template, Blueprint, redirect, url_for
 from extensions import cache
-from config import config
+from config     import config
 
-from caendr.models.error import EnvVarError
+from caendr.models.error           import EnvVarError
 from caendr.services.cloud.storage import get_blob
+from base.utils.auth               import jwt_required, get_current_user
+from base.forms                    import TraitSubmissionForm
+
+
 
 
 data_bp = Blueprint(
@@ -62,10 +66,32 @@ def protocols():
 # Submit Trait
 #
 @data_bp.route('/submit-trait/start')
-@cache.memoize(60*60)
+@jwt_required()
 def submit_trait_start():
-
+  """ Submit Trait start page """
   return render_template('data/submit-trait-start.html', **{
     'title': 'Submit Trait',
     'disable_parent_breadcrumb': True
+  })
+
+#
+# Submit Trait Form
+#
+@data_bp.route('/submit-trait/new-submission')
+@jwt_required()
+def submit_trait_form():
+  """ Trait Submission Form """
+  form = TraitSubmissionForm()
+  user = get_current_user()
+
+  if hasattr(user, 'username') and not form.submitted_by.data:
+    form.submitted_by.data = user.username
+
+  return render_template('data/submit-trait-form.html', **{
+    # Page Info
+    'title': 'Submit Trait',
+    'disable_parent_breadcrumb': True,
+
+    # Data
+    'form': form
   })
