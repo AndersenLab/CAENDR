@@ -92,10 +92,7 @@ function force_download(e) {
       // If everything succeeds, all future clicks will use the modified href
       // in the existing anchor element. If something fails, all clicks should
       // restart the blob download process, which is is acceptable.
-      const a = document.createElement('a');
-      a.href = el.href;
-      a.download = el.download || 'download';
-      a.click();
+      download_from_href(el.href, el.download || 'download');
     })
 }
 
@@ -105,6 +102,23 @@ function create_node(html) {
   const placeholder = document.createElement("div");
   placeholder.innerHTML = html;
   return placeholder.firstElementChild;
+}
+
+
+function save_svg(selector, filename=null) {
+  const svg_el = document.querySelector(selector);
+  const data = (new XMLSerializer()).serializeToString(svg_el);
+  const svg_blob = new Blob([data], {type: 'image/svg+xml;charset=utf-8'});
+  const url = URL.createObjectURL(svg_blob);
+  download_from_href(url, filename || 'download.svg');
+}
+
+
+function download_from_href(href, filename) {
+  const a = document.createElement('a');
+  a.href     = href;
+  a.download = filename || 'download';
+  a.click();
 }
 
 

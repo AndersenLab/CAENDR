@@ -136,8 +136,8 @@ class PhenotypePipeline(JobPipeline):
       center_and_scale_data(d) for d in data_vals
     )
 
-    # Zip the trait values together with the strain names, to get the full dataset array
-    data_tuples = list(zip( *data_vals, data_keys ))
+    # Zip the strain names together with the trait values, to get the full dataset array
+    data_tuples = list(zip( data_keys, *data_vals ))
 
     # Compute the Spearman Coefficient for the given data, if two traits are being compared
     if len(data_vals) == 2:
