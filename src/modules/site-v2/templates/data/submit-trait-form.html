@@ -6,6 +6,10 @@
     list-style-type: none;
     line-height: 2rem;
 }
+.required::after {
+    content: "*";
+    color: red;
+}
 </style>
 {% endblock %}
 
@@ -103,6 +107,19 @@
 
 <script>
 
+    $(document).ready(function() {
+        
+        // Add required class to labels
+        $('.form-group').each(function() {
+            const requiredSelector = $(this).find('[required]')
+            if (requiredSelector['0'] !== undefined) {
+                requiredSelector.siblings('label').addClass('required')
+            }
+            if ($(this).children('label').text().includes('file')) {
+                $(this).children('label').addClass('required')
+            }
+        })
+    })
 
 </script>
 
