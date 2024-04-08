@@ -1,0 +1,109 @@
+{% extends "_layouts/default.html" %}
+
+{% block custom_head %}
+<style>
+#tags > li {
+    list-style-type: none;
+    line-height: 2rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container px-5 pb-5">
+    <h2 class="text-center">Trait Submission Form</h2>
+
+    {% from "_includes/macros.html" import render_field %}
+
+    <form id="submit-trait" method="POST">
+        {{ form.csrf_token }}
+        <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="row my-5">
+            <h3>About You and Lab</h3>
+            <div class="col-md-4">
+                {{ render_field(form.submitted_by) }}
+            </div>
+            <div class="col-md-4">
+                {{ render_field(form.institution) }}
+            </div>
+            <div class="col-md-4">
+                {{ render_field(form.source_lab) }}
+            </div>
+        </div>
+        <div class="row my-5">
+            <div class="col-md-4">
+                {{ render_field(form.protocols) }}
+            </div>
+            <div class="col-md-4">
+                {{ render_field(form.publication) }}
+            </div>
+        </div>
+        <hr>
+        <div class="row my-5">
+            <h3>Trait Information</h3>
+            <div class="col-md-4">
+                {% call render_field(form.file) %}
+                 <!-- Info Button with Modal -->
+                 <button type="button" class="btn btn-secondary rounded-circle text-light text-center p-0 infoButton"
+                 data-bs-toggle="modal" data-bs-target="#infoModal" aria-label="infoModalLabel">
+                 <i class="bi bi-info lh-1" aria-hidden="true"></i>
+                </button>
+                <!-- Modal -->
+                <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5" id="infoModalLabel">File Format Information</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /Modal -->
+                {% endcall %}
+            </div>
+            <div class="col-md-4">
+                {{ render_field(form.trait_name_user) }}
+
+            </div>
+            <div class="col-md-4">
+                {{ render_field(form.species_name) }}
+            </div>
+        </div>
+        <div class="row my-5">
+            <div class="col-md-4">
+                {{ render_field(form.description_short) }}
+            </div>
+            <div class="col-md-4">
+                {{ render_field(form.description_long) }}
+            </div>
+            <div class="col-md-4">
+                {{ render_field(form.units) }}
+            </div>
+        </div>
+        <div class="row my-5">
+            <div class="col-md-12">
+                {{ render_field(form.tags, class="") }}
+            </div>
+        </div>
+        <button type='submit' name="trait_form" class="btn btn-secondary text-light" disabled aria-disabled="true">
+            Submit Form
+        </button>
+    </form>
+</div> <!-- /Container -->
+
+{% endblock %}
+
+{% block script %}
+
+<script>
+
+
+</script>
+
+{% endblock %}
