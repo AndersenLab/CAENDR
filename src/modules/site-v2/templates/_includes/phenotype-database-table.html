@@ -35,31 +35,8 @@ label {
 </nav>
 <div class="tab-content py-2" id="nav-tabContent">
     <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
-        <div class="d-flex flex-wrap justify-content-between my-5">
-            <div class="col-12 col-md-3 mx-1 mb-3 mb-md-0">
-                <form>
-                    <label for="traitsSearch" class="form-label"><i class="bi bi-search"></i> Search:</label>
-                    <div class="input-wrapper">
-                        <input type="text" class="form-control" name="traitsSearch" id="traitsSearch">
-                        <i class="bi bi-x-circle-fill" id="clearSearch"></i>
-                    </div>
-                </form>
-        </div>
-            <div class="col-12 col-md-8 mx-1 align-self-end mb-0">
-                <div class="d-flex flex-wrap justify-content-center justify-content-md-end mt-3 mt-md-0" role="menu" id="tagsFilter">
-                    <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}" />
-                    {% for tag in categories %}
-                    <div class="d-flex align-items-center mx-2 mb-3">
-                        <input type="checkbox" class="custom-control-input me-1 filterCheckbox" value="{{tag}}" id="{{tag}}">
-                        <label class="custom-check-label" for="{{tag}}">{{tag|replace('/', ' • ')}}</label>
-                    </div>
-                    {% endfor %}
-                    <div class="d-flex mx-2 mb-3">
-                        <a class="fw-bold" role="button" id="clearAll">Clear All<i class="bi bi-x-circle-fill ms-1" aria-hidden="true"></i></a>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}" />
+        {% include "_includes/phenotype-search-bar.html" %}
         <div class="table-responsive">
             <table class="table accordion p-0 text-center" id="tableAccordion">
                 <caption class="visually-hidden">A list of phenotype traits.</caption>
@@ -130,8 +107,8 @@ label {
                 if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
                     xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
                 }
-                }
-            });
+            }
+        });
 
         // Render first load results
         getResultsForPage(1, 1)
@@ -217,83 +194,38 @@ label {
         })
 
 
-        
-        // Handle the Categories filter
-        $(document).on( "change", "input[type=checkbox]", function () {
-            if ($(this).attr('id') !== 'selectAll') {
-                $('#selectAll').prop('checked', false)
-            }
-            search()
-        })
-
-        $('#selectAll').on('change', function() {
-            if ($(this).is(':checked')) {
-                $('.filterCheckbox').prop('checked', true)
-            } else {
-                $('.filterCheckbox').prop('checked', false)
-            }
-        })
-
-        // Clear all filters for Categories
-        $("#clearAll").on('click', function() {
-            $('input[type=checkbox]').prop('checked', false)
-            search()
-        })
-
-        // Handle search bar
-        $("#traitsSearch").on('keyup', function(){
-            search()
-        })
-
-        // Clear search bar and reset the table
-        $("#clearSearch").on('click', function() {
-            $("#traitsSearch").val('')
-            search()
-        })
-
         // Filter table by tag links
+        // Dispatches event for search bar to handle
         $('#tableAccordion').on('click', '[id^="tagLink"]', function() {
             const tagVal = $(this).data('value')
-            const filterTag = $("input[type=checkbox]").filter(function(){
-                return $(this).attr('value') === tagVal
-            })
-            filterTag.prop('checked', true)
-            search()
+            document.dispatchEvent(new CustomEvent('phenotype-table-update-tag', {
+                'detail': { tagVal },
+            }));
         })
 
-        // Prevent 'enter' key from reloading the page
-        $('#traitsSearch').closest('form').on('submit', function(e){
-            e.preventDefault();
-        });
     })
 
-    // Filter table by Search input and Categories
-    async function search() {
-        const checkedTagsSelector = $(".filterCheckbox:checked")
-        let selectedTags = []
-        if (checkedTagsSelector.length) {
-            selectedTags = $(".filterCheckbox:checked").map(function() {
-                return $(this).val()
-            }).get()
-        }
-        const data = {csrf_token: $('#csrf_token').val(), search_val: $("#traitsSearch").val(), selected_tags: selectedTags}
+    // Update search based on search widget
+    document.addEventListener('phenotype-table-search', async ({detail}) => {
         try {
-            const res = await sendPostRequest(data)
+            const res = await sendPostRequest(detail)
             return handlePostRequest(res)
         } catch(err) {
             console.error(err)
             flash_message(`Failed to retrieve the list of traits: ${err.statusText}`)
         }
-    }
+    });
 
     async function sendPostRequest(data) {
+        const csrf_token = $("#csrf_token").val();
+
         const resp = await fetch("{{ url_for('api_trait.query_sql', dataset='caendr') }}", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                'X-CSRF-TOKEN': data.csrf_token
+                'X-CSRF-TOKEN': csrf_token
             },
-            body: JSON.stringify({...data}),
+            body: JSON.stringify({...data, csrf_token}),
         })
 
         if (resp.ok) {
