@@ -1,4 +1,5 @@
 import bleach
+from enum import Enum
 from functools import wraps
 import json
 
@@ -20,6 +21,31 @@ from caendr.utils.json       import jsonify_request
 api_trait_bp = Blueprint(
   'api_trait', __name__
 )
+
+
+
+#
+# Helper Classes
+#
+
+
+class EndpointType(Enum):
+  '''
+    Enum class for trait API endpoint types.
+    Requires endpoints to have the format "{ prefix }_{ value }", where `value` is one of the enum values.
+  '''
+
+  PUBLIC  = 'public'
+  PRIVATE = 'private'
+  ALL     = 'all'
+
+  @classmethod
+  def full(cls, endpoint_prefix, endpoint_type):
+    return f'{ api_trait_bp.name }.{ endpoint_prefix }_{ endpoint_type.value }'
+
+  @classmethod
+  def matches(cls, endpoint, endpoint_type):
+    return endpoint.split('_')[-1] == endpoint_type.value
 
 
 
@@ -86,21 +112,22 @@ def query_traits_error_handler(err_msg):
   return decorator
 
 
-def get_and_validate_user(endpoint_prefix):
+def validate_user():
   '''
     Validate that the requesting user can access the current endpoint.
+    Requires endpoint to be formatted according to `EndpointType` Enum.
   '''
 
   # On the "public" endpoint, no user validation required
-  if request.endpoint == f'{ api_trait_bp.name }.{ endpoint_prefix }_public':
+  if EndpointType.matches( request.endpoint, EndpointType.PUBLIC ):
     return True
 
   # On the "private" endpoint, user must be logged in
-  elif request.endpoint == f'{ api_trait_bp.name }.{ endpoint_prefix }_private':
+  elif EndpointType.matches( request.endpoint, EndpointType.PRIVATE ):
     return get_current_user() is not None
 
   # On the "all" endpoint, user must be an admin
-  elif request.endpoint == f'{ api_trait_bp.name }.{ endpoint_prefix }_all':
+  elif EndpointType.matches( request.endpoint, EndpointType.ALL ):
     return user_is_admin()
 
   # If some other endpoint is being requested here somehow, abort
@@ -140,11 +167,11 @@ def query_list_sql():
   '''
 
   # Validate that the current user has access to the specific endpoint they're requesting
-  if not get_and_validate_user(endpoint_prefix = 'query_list_sql'):
+  if not validate_user():
     abort(403)
 
   # On the private endpoint, only consider traits belonging to the current user
-  if request.endpoint == f'{ api_trait_bp.name }.query_list_sql_private':
+  if EndpointType.matches( request.endpoint, EndpointType.PRIVATE ):
     current_user_filter = get_current_user()
   else:
     current_user_filter = None
@@ -223,11 +250,11 @@ def query_list_datatable():
   '''
 
   # Validate that the current user has access to the specific endpoint they're requesting
-  if not get_and_validate_user(endpoint_prefix = 'query_list_datatable'):
+  if not validate_user():
     abort(403)
 
   # On the private endpoint, only consider traits belonging to the current user
-  if request.endpoint == f'{ api_trait_bp.name }.query_list_datatable_private':
+  if EndpointType.matches( request.endpoint, EndpointType.PRIVATE ):
     current_user_filter = get_current_user()
   else:
     current_user_filter = None
