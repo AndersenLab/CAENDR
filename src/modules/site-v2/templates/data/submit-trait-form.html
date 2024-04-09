@@ -20,28 +20,17 @@
 
     {% from "_includes/macros.html" import render_field %}
 
-    <form id="submit-trait" method="POST">
+    <form id="form-submit" method="POST" enctype="multipart/form-data">
         {{ form.csrf_token }}
-        <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}" />
         <div class="row my-5">
             <h3>About You and Lab</h3>
-            <div class="col-md-4">
-                {{ render_field(form.submitted_by) }}
-            </div>
-            <div class="col-md-4">
-                {{ render_field(form.institution) }}
-            </div>
-            <div class="col-md-4">
-                {{ render_field(form.source_lab) }}
-            </div>
+            <div class="col-md-4">{{ render_field(form.username) }}</div>
+            <div class="col-md-4">{{ render_field(form.institution) }}</div>
+            <div class="col-md-4">{{ render_field(form.source_lab) }}</div>
         </div>
         <div class="row my-5">
-            <div class="col-md-4">
-                {{ render_field(form.protocols) }}
-            </div>
-            <div class="col-md-4">
-                {{ render_field(form.publication) }}
-            </div>
+            <div class="col-md-4">{{ render_field(form.protocols) }}</div>
+            <div class="col-md-4">{{ render_field(form.publication) }}</div>
         </div>
         <hr>
         <div class="row my-5">
@@ -71,33 +60,18 @@
                 <!-- /Modal -->
                 {% endcall %}
             </div>
-            <div class="col-md-4">
-                {{ render_field(form.trait_name_user) }}
-
-            </div>
-            <div class="col-md-4">
-                {{ render_field(form.species_name) }}
-            </div>
+            <div class="col-md-4">{{ render_field(form.trait_name_user) }}</div>
+            <div class="col-md-4">{{ render_field(form.species) }}</div>
         </div>
         <div class="row my-5">
-            <div class="col-md-4">
-                {{ render_field(form.description_short) }}
-            </div>
-            <div class="col-md-4">
-                {{ render_field(form.description_long) }}
-            </div>
-            <div class="col-md-4">
-                {{ render_field(form.units) }}
-            </div>
+            <div class="col-md-4"> {{ render_field(form.description_short) }}</div>
+            <div class="col-md-4">{{ render_field(form.description_long) }}</div>
+            <div class="col-md-4">{{ render_field(form.units) }}</div>
         </div>
         <div class="row my-5">
-            <div class="col-md-12">
-                {{ render_field(form.tags, class="") }}
-            </div>
+            <div class="col-md-12">{{ render_field(form.tags, class="") }}</div>
         </div>
-        <button type='submit' name="trait_form" class="btn btn-secondary text-light" disabled aria-disabled="true">
-            Submit Form
-        </button>
+        <button type="submit" id="submit-trait" value="Submit Form" class="btn btn-secondary text-light" aria-label="submit">Submit Form</button>
     </form>
 </div> <!-- /Container -->
 
@@ -119,6 +93,7 @@
                 $(this).children('label').addClass('required')
             }
         })
+
     })
 
 </script>
