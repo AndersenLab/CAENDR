@@ -1,0 +1,227 @@
+{% set offcanvas_id = 'phenotype-offcanvas' %}
+
+
+{% block custom_head %}
+<style>
+  .input-wrapper {
+    position: relative;
+  }
+  .input-wrapper i {
+    position: absolute;
+    top: 20%;
+    right: 5px;
+    color: grey
+  }
+
+  #tagsFilter, #tags {
+    text-transform: capitalize;
+  }
+
+  label {
+    white-space: normal;
+    word-wrap: break-word;
+  }
+</style>
+{% endblock %}
+
+
+<div>
+  <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}" />
+  {% include "_includes/phenotype-search-bar.html" %}
+
+  <div class="table-responsive">
+    <table id="library-table" class="table p-0 text-center w-100">
+      <caption class="visually-hidden">A list of phenotype traits.</caption>
+      <thead class="table-secondary align-middle">
+        <tr>
+          <th scope="col" class="col-1 text-center py-4">Species</th>
+          <th scope="col" class="col-1 text-center">Trait</th>
+          <th scope="col" class="col-1 text-center">Upload Date</th>
+          <th scope="col" class="col-1 text-center">Public Database</th>
+          <th scope="col" class="col-1 text-center">Phenotype Analysis</th>
+          <th scope="col" class="col-1 text-center">Genetic Mapping</th>
+        </tr>
+      </thead>
+      <tbody class="table-group-divider align-middle"></tbody>
+    </table>
+  </div>
+
+  <div class="offcanvas offcanvas-end offcanvasPhenotype" tabindex="-1" id="{{ offcanvas_id }}"
+    aria-labelledby="{{ offcanvas_id }}-label">
+    <div class="offcanvas-header">
+      <h1 class="h5" id="{{ offcanvas_id }}-label"></h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-4">
+      {% include "_includes/phenotype-offcanvas-content.html" %}
+    </div>
+  </div>
+</div>
+
+
+
+{% block script %}
+<script>
+  {% include '_scripts/utils.js' %} {#/* defines: flash_message, first_letter_caps */#}
+
+  $(document).ready(function() {
+
+    // Set standard header token for AJAX
+    $.ajaxSetup({
+      beforeSend: function(xhr, settings) {
+        if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+          xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
+        }
+      }
+    });
+
+    // Create main table as a DataTable
+    const table = $('#library-table').DataTable( {
+      "sDom": "tpr",
+      "processing": true,
+      "serverSide": true,
+      "ajax": {
+        url: "{{ url_for('api_trait.query_datatable') }}",
+        data: function(d) {
+          d.dataset = 'caendr';
+        },
+      },
+      "ordering": false,
+      "columns": [
+        {
+          "data": "species_name",
+          "render": function(data, type, row) {
+            const species_name = first_letter_caps(data).replace('_', '. ').italics();
+            const i = 0;
+            return `
+              <a href="#" class="text-dark fw-normal row-toggle" data-bs-toggle="collapse" data-bs-target="#collapse-${i+1}"
+                aria-expanded="false" aria-controls="collapse-${i+1}"
+              ><i class="bi bi-chevron-right" aria-hidden="true"></i> <em>${species_name}</em></a>
+            `;
+          },
+        },
+        {
+          "data": "Trait",
+          "render": function(data, type, row) {
+            return `
+              <strong>${row.trait_name_display_1 || row.trait_name_caendr}</strong>
+              <p class="mb-0">${row.trait_name_display_1 ? row.trait_name_display_2 : ''}</p>
+              <em>${row.trait_name_display_1 ? row.trait_name_display_3 : ''}</em>
+            `;
+          },
+        },
+        {
+          "data": "created_on",
+          "render": function(data, type, row) {
+            return formatDate(data);
+          },
+        },
+        {
+          "render": function(data, type, row) {
+            return `
+              <a href='#'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Submit</a>
+            `;
+          },
+          "sClass": "optionsToolbar",
+        },
+        {
+          "render": function(data, type, row) {
+            return `
+              <a href='#'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>View</a>
+            `;
+          },
+          "sClass": "optionsToolbar",
+        },
+        {
+          "render": function(data, type, row) {
+            return `
+              <a href='#'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
+            `;
+          },
+          "sClass": "optionsToolbar",
+        },
+      ],
+    });
+
+
+    /* Child Rows (Dropdowns) */
+
+    function format_child_row(data) {
+      return `
+        <div class="ms-5 pt-5 px-5 pb-2">
+            <h3 class="h5 text-dark">Full Description</h3>
+            <p>${data.description_long}</p>
+        </div>
+        <div class="d-flex justify-content-end me-1 pb-3 optionsToolbar">
+            <a class="trait-detail-button" href="#"
+              data-bs-toggle="offcanvas" data-bs-target="#{{ offcanvas_id }}" data-value="${data.trait_name_caendr}"
+              aria-controls="{{ offcanvas_id }}"
+            ><i class="bi bi-arrow-right" aria-hidden="true"></i>View Full Details</a>
+        </div>
+      `;
+    };
+
+    // Add event listener for opening and closing row details
+    table.on('click', '.row-toggle', function (e) {
+        const tr = e.target.closest('tr');
+        const row = table.row(tr);
+
+        if (row.child.isShown()) {
+          row.child.hide();
+        } else {
+          row.child(format_child_row(row.data())).show();
+        }
+    });
+
+
+    /* Offcanvas (Sidebar) */
+
+    // Fetch data for a trait and fill out side bar
+    $(document).on('click','.trait-detail-button', function() {
+      const data = {csrf_token: $('#csrf_token').val(), trait_name: $(this).data('value')}
+      $.ajax({
+        type: "POST",
+        url: "{{ url_for('api_trait.get_trait_metadata') }}",
+        data: JSON.stringify(data),
+        contentType: "application/json",
+        dataType: "json",
+        success: function(response) {
+          fillOutModal(response)
+        },
+        error: function(error){
+          console.error(error)
+          $('#{{ offcanvas_id }} .btn-close').click()
+          $('html').animate({
+            scrollTop: $('body').offset().top
+          }, 100);
+          if (error.responseJSON && error.responseJSON.message) {
+            $('.alert').remove()
+            flash_message(error.responseJSON.message)
+          }
+        }
+      })
+    })
+
+    function fillOutModal(trait) {
+      $('#{{ offcanvas_id }}-label').text(trait.trait_name_caendr);
+      document.dispatchEvent(new CustomEvent('phenotype-offcanvas-content', {
+        detail: { offcanvas_id: '{{offcanvas_id}}', trait: trait },
+      }));
+    }
+
+
+    /* Searching / Filtering Handlers */
+
+    // Update search based on search widget
+    document.addEventListener('phenotype-table-search', async ({detail}) => {
+      try {
+        table.search( JSON.stringify(detail) ).draw()
+      } catch(err) {
+        console.error(err)
+        flash_message(`Failed to retrieve the list of traits: ${err.statusText}`)
+      }
+    });
+
+  });
+</script>
+{% endblock %}
