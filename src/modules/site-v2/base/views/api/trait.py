@@ -9,7 +9,7 @@ from extensions import cache, compress
 from caendr.api.phenotype import query_phenotype_metadata, get_trait, filter_trait_query
 from caendr.services.cloud.postgresql import rollback_on_error_handler
 
-from caendr.models.datastore import TraitFile, Species
+from caendr.models.datastore import Entity, TraitFile, Species, User
 from caendr.models.error     import NotFoundError
 from caendr.models.sql       import PhenotypeMetadata
 from caendr.utils.json       import jsonify_request
@@ -38,7 +38,14 @@ def get_clean(source, key, value=None, _type=None):
   elif isinstance(v, list):  v = [ bleach.clean(x) for x in v ]
 
   # Optional typecasting
-  if _type: v = _type(v)
+  if _type and v is not None:
+    if issubclass(_type, Entity):
+      v_entity = _type.get_ds(v)
+      if v_entity is None:
+        raise NotFoundError(_type, {'name': v})
+      v = v_entity
+    else:
+      v = _type(v)
 
   return v
 
@@ -95,9 +102,14 @@ def query_list_sql():
   # Get query filters (search parameters)
   selected_tags  = get_clean(request.json, 'selected_tags', [])
   search_val     = get_clean(request.json, 'search_val',    '').lower()
-  filter_dataset = get_clean(request.args, 'dataset')
-  filter_user    = get_clean(request.json, 'user')
-  filter_species = get_clean(request.json, 'species')
+
+  # Get other query filters
+  try:
+    filter_dataset = get_clean(request.args, 'dataset')
+    filter_species = get_clean(request.args, 'species', _type=Species)
+    filter_user    = get_clean(request.args, 'user',    _type=User)
+  except NotFoundError as ex:
+    abort(422, description=ex.description)
 
   # Get query pagination values
   page           = get_clean(request.json, 'page',         1, _type=int)
@@ -162,9 +174,12 @@ def query_list_datatable():
   selected_tags = get_clean(search_full, 'selected_tags', [])
 
   # Get other query filters
-  filter_dataset = get_clean(request.args, 'dataset')
-  filter_species = get_clean(request.args, 'species')
-  filter_user    = get_clean(request.args, 'user')
+  try:
+    filter_dataset = get_clean(request.args, 'dataset')
+    filter_species = get_clean(request.args, 'species', _type=Species)
+    filter_user    = get_clean(request.args, 'user',    _type=User)
+  except NotFoundError as ex:
+    abort(422, description=ex.description)
 
   # Get query pagination values
   draw   = get_clean(request.args, 'draw',   _type=int)
