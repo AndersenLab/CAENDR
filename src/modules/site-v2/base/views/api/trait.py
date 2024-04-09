@@ -134,6 +134,27 @@ def validate_user():
   abort(404)
 
 
+def validate_endpoint_type(endpoint_prefix):
+  '''
+    Validate that the user has permission to access this endpoint, based on the `EndpointType` schema.
+
+    See `validate_user` for details.
+  '''
+
+  def decorator(f):
+    @wraps(f)
+    def inner(*args, **kwargs):
+
+      # Validate that the current user has access to the specific endpoint they're requesting
+      if not validate_user():
+        abort(403)
+
+      return f(*args, **kwargs)
+
+    return inner
+  return decorator
+
+
 
 #
 # Query Endpoints: List Traits
@@ -145,6 +166,7 @@ def validate_user():
 @api_trait_bp.route('/list/sql/all',     endpoint='query_list_sql_all',     methods=['POST'])
 @cache.memoize(60*60)
 @jwt_required(optional=True)
+@validate_endpoint_type('query_list_sql')
 @query_traits_error_handler('Failed to retrieve the list of traits')
 @jsonify_request
 def query_list_sql():
@@ -165,10 +187,6 @@ def query_list_sql():
     the current user will return no results, since the two user filters are exclusive.
     This is still a syntactically valid request, but it is semantically invalid.
   '''
-
-  # Validate that the current user has access to the specific endpoint they're requesting
-  if not validate_user():
-    abort(403)
 
   # On the private endpoint, only consider traits belonging to the current user
   if EndpointType.matches( request.endpoint, EndpointType.PRIVATE ):
@@ -228,6 +246,7 @@ def query_list_sql():
 @api_trait_bp.route('/list/datatable/all',     endpoint='query_list_datatable_all',     methods=['GET'])
 @cache.memoize(60*60)
 @jwt_required(optional=True)
+@validate_endpoint_type('query_list_datatable')
 @query_traits_error_handler('Failed to retrieve the list of traits')
 @jsonify_request
 def query_list_datatable():
@@ -248,10 +267,6 @@ def query_list_datatable():
     the current user will return no results, since the two user filters are exclusive.
     This is still a syntactically valid request, but it is semantically invalid.
   '''
-
-  # Validate that the current user has access to the specific endpoint they're requesting
-  if not validate_user():
-    abort(403)
 
   # On the private endpoint, only consider traits belonging to the current user
   if EndpointType.matches( request.endpoint, EndpointType.PRIVATE ):
