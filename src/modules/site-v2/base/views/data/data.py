@@ -9,6 +9,7 @@ from caendr.models.datastore       import TraitFile
 from caendr.models.status          import PublishStatus
 from caendr.services.cloud.storage import get_blob
 from caendr.services.logger        import logger
+from caendr.utils.data             import unique_id
 from base.utils.auth               import jwt_required, get_current_user
 from base.forms                    import TraitSubmissionForm
 
@@ -87,8 +88,8 @@ def submit_trait_form():
   form = TraitSubmissionForm()
   user = get_current_user()
 
-  if hasattr(user, 'username') and not form.submitted_by.data:
-    form.submitted_by.data = user.username
+  if hasattr(user, 'username') and not form.username.data:
+    form.username.data = user.username
 
   # Handle form submission
   if request.method == 'POST':
@@ -102,26 +103,27 @@ def submit_trait_form():
     else:
       try:
         # Create a new TraitFile object
-        tf = TraitFile(
+        tf = TraitFile(unique_id())
+        tf.set_properties(**{
           # User submitted data
-          trait_name_user=form.trait_name_user.data,
-          filename=form.file.data.filename,
-          species=form.species.data,
-          description_short=form.description_short.data,
-          description_long=form.description_long.data,
-          units=form.units.data,
-          tags=form.tags.data,
-          username=form.username.data,
-          institution=form.institution.data,
-          source_lab=form.source_lab.data,
-          protocols=form.protocols.data,
-          publication=form.publication.data,
+          'trait_name_user':   form.trait_name_user.data,
+          'filename':          form.file.data.filename,
+          'species':           form.species.data,
+          'description_short': form.description_short.data,
+          'description_long':  form.description_long.data,
+          'units':             form.units.data,
+          'tags':              form.tags.data,
+          'username':          form.username.data,
+          'institution':       form.institution.data,
+          'source_lab':        form.source_lab.data,
+          'protocols':         form.protocols.data,
+          'publication':       form.publication.data,
   
           # Internally used data
-          dataset='public',
-          publish_status=PublishStatus.UPLOADED,
-          is_bulk_file=False
-        )
+          'dataset':        'public',
+          'publish_status': PublishStatus.UPLOADED,
+          'is_bulk_file':   False
+        })
         tf.save()
         # TODO: save file to GCP
         # TODO: save the submission to My Trait Library
