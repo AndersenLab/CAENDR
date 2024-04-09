@@ -1,4 +1,5 @@
 import yaml
+import bleach
 
 from flask      import render_template, Blueprint, redirect, url_for, request, flash
 from extensions import cache
@@ -106,18 +107,18 @@ def submit_trait_form():
         tf = TraitFile(unique_id())
         tf.set_properties(**{
           # User submitted data
-          'trait_name_user':   form.trait_name_user.data,
-          'filename':          form.file.data.filename,
-          'species':           form.species.data,
-          'description_short': form.description_short.data,
-          'description_long':  form.description_long.data,
-          'units':             form.units.data,
-          'tags':              form.tags.data,
-          'username':          form.username.data,
-          'institution':       form.institution.data,
-          'source_lab':        form.source_lab.data,
-          'protocols':         form.protocols.data,
-          'publication':       form.publication.data,
+          'trait_name_user':   bleach.clean(form.trait_name_user.data),
+          'filename':          bleach.clean(form.file.data.filename),
+          'species':           bleach.clean(form.species.data),
+          'description_short': bleach.clean(form.description_short.data),
+          'description_long':  bleach.clean(form.description_long.data),
+          'units':             bleach.clean(form.units.data),
+          'tags':              [ bleach.clean(tag) for tag in form.tags.data ],
+          'username':          bleach.clean(form.username.data),
+          'institution':       bleach.clean(form.institution.data),
+          'source_lab':        bleach.clean(form.source_lab.data),
+          'protocols':         bleach.clean(form.protocols.data),
+          'publication':       bleach.clean(form.publication.data),
   
           # Internally used data
           'dataset':        'public',
@@ -125,14 +126,14 @@ def submit_trait_form():
           'is_bulk_file':   False
         })
         tf.save()
-        # TODO: save file to GCP
-        # TODO: save the submission to My Trait Library
         return 'Form submitted successfully!'
       except Exception as ex:
-        logger.error(f'Failed to create a trait file: {ex}')
+        logger.error(f'Failed to create a trait file {form.trait_name_user.data}: {ex}')
         flash('Failed to submit a form. Please try again later.', 'error')
         return redirect(url_for('data.submit_trait_start'))
+      # TODO: save file to GCP
 
+      # TODO: save the submission to My Trait Library
       
   return render_template('data/submit-trait-form.html', **{
     # Page Info
