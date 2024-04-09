@@ -1,5 +1,6 @@
 import bleach
 from functools import wraps
+import json
 
 from flask import request, Blueprint, abort, jsonify
 from caendr.services.logger import logger
@@ -139,11 +140,31 @@ def query_datatable():
     Query the trait database, and return results with DataTable-style pagination.
   '''
 
-  # Get query filters (search parameters)
-  search_value   = get_clean(request.args, 'search[value]', '').lower()
+  # Load full search object from request
+  search_raw = get_clean(request.args, 'search[value]', '')
+  if search_raw:
+    try:
+      search_full = json.loads(search_raw)
+    except:
+      abort(422, description="Invalid search")
+
+    # Treat non-dict values as search strings
+    # Use the original raw string here so JSON casting doesn't change the value
+    # (e.g. JSON "true" becoming Python "True")
+    if not isinstance(search_full, dict):
+      search_full = { 'search_val': search_raw }
+
+  else:
+    search_full = {}
+
+  # Get search parameters from search object
+  search_value  = get_clean(search_full, 'search_val', '').lower()
+  selected_tags = get_clean(search_full, 'selected_tags', [])
+
+  # Get other query filters
   filter_dataset = get_clean(request.args, 'dataset')
-  filter_user    = get_clean(request.args, 'user')
   filter_species = get_clean(request.args, 'species')
+  filter_user    = get_clean(request.args, 'user')
 
   # Get query pagination values
   draw   = get_clean(request.args, 'draw',   _type=int)
@@ -155,7 +176,7 @@ def query_datatable():
   total_records = query.count()
 
   # Filter by search values, if provided
-  query = filter_trait_query(query, search_val=search_value)
+  query = filter_trait_query(query, search_val=search_value, tags=selected_tags)
 
   # Query PhenotypeMetadata (include phenotype values for each trait)
   with rollback_on_error_handler():
