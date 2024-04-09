@@ -9,6 +9,7 @@ from caendr.models.sql import PhenotypeMetadata
 from caendr.services.cloud.postgresql import rollback_on_error
 
 
+
 def query_phenotype_metadata(
     include_values = False,
     is_bulk_file: Optional[bool]                = None,
@@ -41,7 +42,7 @@ def query_phenotype_metadata(
     # None values handled in function
     query = filter_trait_query_by_species(query, species)
     query = filter_trait_query_by_user(query, user)
-    
+
     # Include phenotype values for traits
     if include_values:
       query = query.join(PhenotypeMetadata.phenotype_values)
@@ -50,14 +51,14 @@ def query_phenotype_metadata(
 
 
 def get_all_traits_metadata():
-    """
-      Returns metadata for all traits
-    """
-    return PhenotypeMetadata.query.all()
+  """
+    Returns metadata for all traits
+  """
+  return PhenotypeMetadata.query.all()
 
 
 def get_trait(trait_name):
-   return PhenotypeMetadata.query.get(trait_name)
+  return PhenotypeMetadata.query.get(trait_name)
 
 
 
