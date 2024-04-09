@@ -6,6 +6,8 @@ from flask import request, Blueprint, abort, jsonify
 from caendr.services.logger import logger
 from extensions import cache, compress
 
+from base.utils.auth import jwt_required, get_current_user, user_is_admin
+
 from caendr.api.phenotype import query_phenotype_metadata, get_trait, filter_trait_query
 from caendr.services.cloud.postgresql import rollback_on_error_handler
 
@@ -84,22 +86,70 @@ def query_traits_error_handler(err_msg):
   return decorator
 
 
+def get_and_validate_user(endpoint_prefix):
+  '''
+    Validate that the requesting user can access the current endpoint.
+  '''
+
+  # On the "public" endpoint, no user validation required
+  if request.endpoint == f'{ api_trait_bp.name }.{ endpoint_prefix }_public':
+    return True
+
+  # On the "private" endpoint, user must be logged in
+  elif request.endpoint == f'{ api_trait_bp.name }.{ endpoint_prefix }_private':
+    return get_current_user() is not None
+
+  # On the "all" endpoint, user must be an admin
+  elif request.endpoint == f'{ api_trait_bp.name }.{ endpoint_prefix }_all':
+    return user_is_admin()
+
+  # If some other endpoint is being requested here somehow, abort
+  abort(404)
+
+
 
 #
 # Query Endpoints: List Traits
 #
 
 
-@api_trait_bp.route('/list/sql', methods=['POST'])
+@api_trait_bp.route('/list/sql/public',  endpoint='query_list_sql_public',  methods=['POST'])
+@api_trait_bp.route('/list/sql/private', endpoint='query_list_sql_private', methods=['POST'])
+@api_trait_bp.route('/list/sql/all',     endpoint='query_list_sql_all',     methods=['POST'])
 @cache.memoize(60*60)
+@jwt_required(optional=True)
 @query_traits_error_handler('Failed to retrieve the list of traits')
 @jsonify_request
 def query_list_sql():
   '''
-    Query the trait database, and return results with SQL-style pagination.
+    Query the trait database using SQL-style pagination.
+
+    Defines three separate endpoints:
+      - `public`:  Queries traits that have been submitted to the public phenotype database.
+      - `private`: Queries all traits that belong to the requesting user. Log-in required.
+      - `all`:     Queries all traits that have been uploaded. Admin users only.
+
+    Accepts the following URL variables to filter the request:
+      - `dataset`: The phenotype dataset.
+      - `species`: The species for the trait.
+      - `user`:    The user that submitted the trait.
+
+    Note that on the `private` endpoint, filtering the `user` parameter by anything other than
+    the current user will return no results, since the two user filters are exclusive.
+    This is still a syntactically valid request, but it is semantically invalid.
   '''
 
-  # Get query filters (search parameters)
+  # Validate that the current user has access to the specific endpoint they're requesting
+  if not get_and_validate_user(endpoint_prefix = 'query_list_sql'):
+    abort(403)
+
+  # On the private endpoint, only consider traits belonging to the current user
+  if request.endpoint == f'{ api_trait_bp.name }.query_list_sql_private':
+    current_user_filter = get_current_user()
+  else:
+    current_user_filter = None
+
+  # Get search parameters
   selected_tags  = get_clean(request.json, 'selected_tags', [])
   search_val     = get_clean(request.json, 'search_val',    '').lower()
 
@@ -117,10 +167,12 @@ def query_list_sql():
   per_page       = 10
 
   # Create the initial query
-  query = query_phenotype_metadata(dataset=filter_dataset, species=filter_species, user=filter_user)
+  query = query_phenotype_metadata( dataset=filter_dataset, user=current_user_filter )
 
   # Filter by search values, if provided
-  query = filter_trait_query(query, search_val=search_val, tags=selected_tags)
+  query = filter_trait_query(
+    query, search_val=search_val, tags=selected_tags, species=filter_species, user=filter_user,
+  )
 
   # Paginate the query, rolling back on error
   with rollback_on_error_handler():
@@ -143,14 +195,42 @@ def query_list_sql():
 
 
 
-@api_trait_bp.route('/list/datatable', methods=['GET'])
+
+@api_trait_bp.route('/list/datatable/public',  endpoint='query_list_datatable_public',  methods=['GET'])
+@api_trait_bp.route('/list/datatable/private', endpoint='query_list_datatable_private', methods=['GET'])
+@api_trait_bp.route('/list/datatable/all',     endpoint='query_list_datatable_all',     methods=['GET'])
 @cache.memoize(60*60)
+@jwt_required(optional=True)
 @query_traits_error_handler('Failed to retrieve the list of traits')
 @jsonify_request
 def query_list_datatable():
   '''
-    Query the trait database, and return results with DataTable-style pagination.
+    Query the trait database using DataTable-style pagination.
+
+    Defines three separate endpoints:
+      - `public`:  Queries traits that have been submitted to the public phenotype database.
+      - `private`: Queries all traits that belong to the requesting user. Log-in required.
+      - `all`:     Queries all traits that have been uploaded. Admin users only.
+
+    Accepts the following URL variables to filter the request:
+      - `dataset`: The phenotype dataset.
+      - `species`: The species for the trait.
+      - `user`:    The user that submitted the trait.
+
+    Note that on the `private` endpoint, filtering the `user` parameter by anything other than
+    the current user will return no results, since the two user filters are exclusive.
+    This is still a syntactically valid request, but it is semantically invalid.
   '''
+
+  # Validate that the current user has access to the specific endpoint they're requesting
+  if not get_and_validate_user(endpoint_prefix = 'query_list_datatable'):
+    abort(403)
+
+  # On the private endpoint, only consider traits belonging to the current user
+  if request.endpoint == f'{ api_trait_bp.name }.query_list_datatable_private':
+    current_user_filter = get_current_user()
+  else:
+    current_user_filter = None
 
   # Load full search object from request
   search_raw = get_clean(request.args, 'search[value]', '')
@@ -187,11 +267,13 @@ def query_list_datatable():
   length = get_clean(request.args, 'length', _type=int)
 
   # Create the initial query
-  query = query_phenotype_metadata(dataset=filter_dataset, species=filter_species, user=filter_user)
+  query = query_phenotype_metadata( dataset=filter_dataset, user=current_user_filter )
   total_records = query.count()
 
   # Filter by search values, if provided
-  query = filter_trait_query(query, search_val=search_value, tags=selected_tags)
+  query = filter_trait_query(
+    query, search_val=search_value, tags=selected_tags, species=filter_species, user=filter_user,
+  )
 
   # Query PhenotypeMetadata (include phenotype values for each trait)
   with rollback_on_error_handler():
