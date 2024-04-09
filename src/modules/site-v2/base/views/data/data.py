@@ -1,11 +1,14 @@
 import yaml
 
-from flask      import render_template, Blueprint, redirect, url_for
+from flask      import render_template, Blueprint, redirect, url_for, request, flash
 from extensions import cache
 from config     import config
 
 from caendr.models.error           import EnvVarError
+from caendr.models.datastore       import TraitFile
+from caendr.models.status          import PublishStatus
 from caendr.services.cloud.storage import get_blob
+from caendr.services.logger        import logger
 from base.utils.auth               import jwt_required, get_current_user
 from base.forms                    import TraitSubmissionForm
 
@@ -77,7 +80,7 @@ def submit_trait_start():
 #
 # Submit Trait Form
 #
-@data_bp.route('/submit-trait/new-submission')
+@data_bp.route('/submit-trait/new-submission', methods=['GET', 'POST'])
 @jwt_required()
 def submit_trait_form():
   """ Trait Submission Form """
@@ -87,11 +90,55 @@ def submit_trait_form():
   if hasattr(user, 'username') and not form.submitted_by.data:
     form.submitted_by.data = user.username
 
+  # Handle form submission
+  if request.method == 'POST':
+    form = TraitSubmissionForm(request.form)
+    form.file.data = request.files.get('file')
+
+    # Validate form fields
+    if not form.validate_on_submit():
+      flash('Please fill out all required fields.', 'warning')
+    
+    else:
+      try:
+        # Create a new TraitFile object
+        tf = TraitFile(
+          # User submitted data
+          trait_name_user=form.trait_name_user.data,
+          filename=form.file.data.filename,
+          species=form.species.data,
+          description_short=form.description_short.data,
+          description_long=form.description_long.data,
+          units=form.units.data,
+          tags=form.tags.data,
+          username=form.username.data,
+          institution=form.institution.data,
+          source_lab=form.source_lab.data,
+          protocols=form.protocols.data,
+          publication=form.publication.data,
+  
+          # Internally used data
+          dataset='public',
+          publish_status=PublishStatus.UPLOADED,
+          is_bulk_file=False
+        )
+        tf.save()
+        # TODO: save file to GCP
+        # TODO: save the submission to My Trait Library
+        return 'Form submitted successfully!'
+      except Exception as ex:
+        logger.error(f'Failed to create a trait file: {ex}')
+        flash('Failed to submit a form. Please try again later.', 'error')
+        return redirect(url_for('data.submit_trait_start'))
+
+      
   return render_template('data/submit-trait-form.html', **{
     # Page Info
     'title': 'Submit Trait',
     'disable_parent_breadcrumb': True,
 
     # Data
-    'form': form
+    'form': form,
+
   })
+
