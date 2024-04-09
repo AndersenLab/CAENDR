@@ -176,3 +176,8 @@ function formatDate(d) {
   const day = date.getDate().toString().padStart(2, '0')
   return `${date.getFullYear()}-${month}-${day}`
 }
+
+
+function first_letter_caps(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}

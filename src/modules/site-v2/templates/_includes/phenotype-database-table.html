@@ -98,7 +98,7 @@ label {
 
 {% block script %}
 <script>
-    {% include '_scripts/utils.js' %} {#/* defines: flash_message, format_date */#}
+    {% include '_scripts/utils.js' %} {#/* defines: flash_message, format_date, first_letter_caps */#}
 
     $(document).ready(function() {
 
@@ -121,9 +121,9 @@ label {
             "ordering": false,
             "columns": [
                 {
-                    "data": "Species",
+                    "data": "species_name",
                     "render": function(data, type, row) {
-                        return row.species_name.replace('c_', 'C. ').italics()
+                        return first_letter_caps(data).replace('_', '. ').italics();
                     }
                 },
                 {"data": "trait_name_caendr"},
@@ -240,7 +240,7 @@ label {
     // Fill out table for non-bulk traits
     function filterTable(arr) {
         for (let i = 0; i < arr.length; i++) {
-            const speciesName = arr[i].species_name.charAt(0).toUpperCase() + arr[i].species_name.replace('_', '. ').slice(1)
+            const speciesName = first_letter_caps(arr[i].species_name).replace('_', '. ').italics();
             const traitName = arr[i].trait_name_caendr
             let url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", traitName).replace("TRAIT_SET", 'caendr')
             const createdOn = formatDate(arr[i].created_on)
