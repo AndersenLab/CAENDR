@@ -117,7 +117,7 @@ label {
         const zhangTable = $('#zhangTraits').DataTable( {
             "processing": true,
             "serverSide": true,
-            "ajax": "{{ url_for('api_trait.query_datatable', dataset='zhang') }}",
+            "ajax": "{{ url_for('api_trait.query_list_datatable', dataset='zhang') }}",
             "ordering": false,
             "columns": [
                 {
@@ -172,7 +172,7 @@ label {
             const data = {csrf_token: $('#csrf_token').val(), trait_name: $(this).data('value')}
             $.ajax({
                 type: "POST",
-                url: "{{ url_for('api_trait.get_trait_metadata') }}",
+                url: "{{ url_for('api_trait.query_trait_metadata') }}",
                 data: JSON.stringify(data),
                 contentType: "application/json",
                 dataType: "json",
@@ -219,7 +219,7 @@ label {
     async function sendPostRequest(data) {
         const csrf_token = $("#csrf_token").val();
 
-        const resp = await fetch("{{ url_for('api_trait.query_sql', dataset='caendr') }}", {
+        const resp = await fetch("{{ url_for('api_trait.query_list_sql', dataset='caendr') }}", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

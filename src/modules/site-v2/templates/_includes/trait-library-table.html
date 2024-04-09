@@ -81,7 +81,7 @@
       "processing": true,
       "serverSide": true,
       "ajax": {
-        url: "{{ url_for('api_trait.query_datatable') }}",
+        url: "{{ url_for('api_trait.query_list_datatable') }}",
         data: function(d) {
           d.dataset = 'caendr';
         },
@@ -181,7 +181,7 @@
       const data = {csrf_token: $('#csrf_token').val(), trait_name: $(this).data('value')}
       $.ajax({
         type: "POST",
-        url: "{{ url_for('api_trait.get_trait_metadata') }}",
+        url: "{{ url_for('api_trait.query_trait_metadata') }}",
         data: JSON.stringify(data),
         contentType: "application/json",
         dataType: "json",

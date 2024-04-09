@@ -79,15 +79,15 @@ def query_traits_error_handler(err_msg):
 
 
 #
-# Query Endpoints
+# Query Endpoints: List Traits
 #
 
 
-@api_trait_bp.route('/query/sql', methods=['POST'])
+@api_trait_bp.route('/list/sql', methods=['POST'])
 @cache.memoize(60*60)
 @query_traits_error_handler('Failed to retrieve the list of traits')
 @jsonify_request
-def query_sql():
+def query_list_sql():
   '''
     Query the trait database, and return results with SQL-style pagination.
   '''
@@ -131,11 +131,11 @@ def query_sql():
 
 
 
-@api_trait_bp.route('/query/datatable', methods=['GET'])
+@api_trait_bp.route('/list/datatable', methods=['GET'])
 @cache.memoize(60*60)
 @query_traits_error_handler('Failed to retrieve the list of traits')
 @jsonify_request
-def query_datatable():
+def query_list_datatable():
   '''
     Query the trait database, and return results with DataTable-style pagination.
   '''
@@ -222,7 +222,7 @@ def query_species(species_name):
 
 
 #
-# Query single trait data
+# Query Endpoints: Single Trait
 #
 
 
@@ -231,7 +231,7 @@ def query_species(species_name):
 @compress.compressed()
 @query_traits_error_handler('Failed to retrieve trait metadata')
 @jsonify_request
-def get_trait_metadata():
+def query_trait_metadata():
   """
     Get traits data for non-bulk files in JSON format (include phenotype values)
   """
