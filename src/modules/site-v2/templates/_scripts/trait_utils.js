@@ -37,7 +37,7 @@ function queryTraitByName(trait_name, csrf_token=null) {
   return $.ajax({
       type:        "POST",
       url:         "{{ url_for('phenotype_database.get_traits_json') }}",
-      data:        JSON.stringify({trait_name}),
+      data:        JSON.stringify(data),
       contentType: "application/json",
       dataType:    "json",
   });
