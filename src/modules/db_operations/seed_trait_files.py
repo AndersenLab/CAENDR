@@ -2,15 +2,40 @@ from caendr.services.logger        import logger
 from caendr.services.cloud.secret  import get_secret
 
 from caendr.models.datastore       import TraitFile
-from caendr.models.error           import NotFoundError, NonUniqueEntity
+from caendr.models.error           import NotFoundError, NonUniqueEntity, GoogleSheetsParseError
 from caendr.models.status          import PublishStatus
-from caendr.services.cloud.sheets  import get_field_from_record
+from caendr.services.cloud.sheets  import check_missing_columns, get_field_from_record
 from caendr.utils.data             import unique_id
 from caendr.utils.local_files      import LocalGoogleSheet
 
 
 # Get secret value(s)
 ANDERSEN_LAB_TRAIT_SHEET = get_secret(f'ANDERSEN_LAB_TRAIT_SHEET')
+
+
+# Set of column headers that must exist in the sheet
+# NOTE: Not every entry needs to define all of these fields -- these are just the columns that should be available in the sheet.
+REQUIRED_SHEET_HEADERS = frozenset({
+  'Trait_Name_CaeNDR',
+  'Trait_Name_User',
+  'Species',
+  'Trait_Name_Display1',
+  'Trait_Name_Display2',
+  'Trait_Name_Display3',
+  'Short_Description',
+  'Long_Description',
+  'Units',
+  'Publication',
+  'Protocol',
+  'Institution',
+  'Captured_By_UserID',
+  'Capture_Date',
+
+  # TODO: How should we handle category tags?
+  # 'Category1',
+  # 'Category2',
+  # 'Category3',
+})
 
 
 
@@ -27,7 +52,17 @@ def populate_andersenlab_trait_files():
 
   # Fetch the Google Sheet and loop through all records
   trait_sheet = LocalGoogleSheet( 'TRAITS', ANDERSEN_LAB_TRAIT_SHEET )
-  for record in trait_sheet.fetch_resource().get_all_records():
+  resource = trait_sheet.fetch_resource()
+
+  # Make sure the Google Sheet has all the required columns
+  missing_columns = check_missing_columns(resource, REQUIRED_SHEET_HEADERS)
+  if len(missing_columns):
+    msg = f'{trait_sheet} (ID: {trait_sheet._sheet_id}) is missing columns: [{", ".join(missing_columns)}]'
+    logger.error(msg)
+    raise GoogleSheetsParseError(msg)
+
+  # Loop through rows in the sheet
+  for record in resource.get_all_records():
 
     # Require that unique CaeNDR trait name is defined
     trait_unique_name = record.get('Trait_Name_CaeNDR')
