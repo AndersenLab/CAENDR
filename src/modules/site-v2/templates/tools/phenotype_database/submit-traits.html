@@ -144,8 +144,18 @@
                     if (response !== null && typeof response === 'string') throw Error(`Invalid response for trait ${id}: "${response}"`);
                     select_trait(id, response, dataset);
                 })
-                .fail((err) => {
+                .fail((error) => {
+                    // If an error message was received, display it, otherwise use a fallback message
                     console.error(error);
+                    const resp = error.responseJSON
+                    if (resp && resp.message && false) {
+                        flash_message(resp.message, resp.full_msg_link, resp.full_msg_body);
+                    } else{
+                        flash_message(`Failed to retrieve metadata for trait ${trait}`);
+                    }
+
+                    // Close the modal so the user can see the error message
+                    $('#phenotypeDBModal').modal('hide');
                 })
             return
         }
