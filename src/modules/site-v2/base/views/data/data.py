@@ -73,7 +73,7 @@ def protocols():
 #
 # Submit Trait
 #
-@data_bp.route('/submit-trait/start')
+@data_bp.route('/submit-trait')
 @jwt_required()
 def submit_trait_start():
   """ Submit Trait start page """
@@ -110,18 +110,21 @@ def submit_trait_form():
         tf = TraitFile(unique_id())
         tf.set_properties(**{
           # User submitted data
-          'trait_name_user':   bleach.clean(form.trait_name_user.data),
-          'filename':          bleach.clean(form.file.data.filename),
-          'species':           bleach.clean(form.species.data),
-          'description_short': bleach.clean(form.description_short.data),
-          'description_long':  bleach.clean(form.description_long.data),
-          'units':             bleach.clean(form.units.data),
-          'tags':              [ bleach.clean(tag) for tag in form.tags.data ],
-          'username':          bleach.clean(form.username.data),
-          'institution':       bleach.clean(form.institution.data),
-          'source_lab':        bleach.clean(form.source_lab.data),
-          'protocols':         bleach.clean(form.protocols.data),
-          'publication':       bleach.clean(form.publication.data),
+          'trait_name_user':      bleach.clean(form.trait_name_user.data),
+          'trait_name_display_1': bleach.clean(form.trait_name_display_1.data),
+          'trait_name_display_2': bleach.clean(form.trait_name_display_2.data),
+          'trait_name_display_3': bleach.clean(form.trait_name_display_2.data),
+          'filename':             bleach.clean(form.file.data.filename),
+          'species':              bleach.clean(form.species.data),
+          'description_short':    bleach.clean(form.description_short.data),
+          'description_long':     bleach.clean(form.description_long.data),
+          'units':                bleach.clean(form.units.data),
+          'tags':                 [ bleach.clean(tag) for tag in form.tags.data ],
+          'username':             bleach.clean(form.username.data),
+          'institution':          bleach.clean(form.institution.data),
+          'source_lab':           bleach.clean(form.source_lab.data),
+          'protocols':            bleach.clean(form.protocols.data),
+          'publication':          bleach.clean(form.publication.data),
   
           # Internally used data
           'dataset':        'public',
@@ -129,6 +132,7 @@ def submit_trait_form():
           'is_bulk_file':   False
         })
         tf.save()
+
       except Exception as ex:
         logger.error(f'Failed to create a trait file {form.trait_name_user.data}: {ex}')
         flash('Failed to submit a form. Please try again later.', 'danger')
@@ -142,19 +146,19 @@ def submit_trait_form():
           flash('File already exists.', 'danger')
         else:
           upload_blob_from_file_object(MODULE_DB_OPERATIONS_BUCKET_NAME, form.file.data, blob_name)
-          return 'Form submitted successfully!'
+
       except Exception as ex:
         logger.error(f'Failed to upload a file {form.file.data.filename}: {ex}')
         flash('Failed to submit a form. Please try again later.', 'danger')
 
       # TODO: save the submission to My Trait Library
       
-      # return 'Form submitted successfully!'
+      flash('Trait submitted successfully.', 'success')
 
   return render_template('data/submit-trait-form.html', **{
     # Page Info
-    'title': 'Submit Trait',
-    'disable_parent_breadcrumb': True,
+    'title': 'Phenotype Database Trait Submission',
+    'tool_alt_parent_breadcrumb': {"title": "Submit Trait", "url": url_for('data.submit_trait_start')},
 
     # Data
     'form': form,

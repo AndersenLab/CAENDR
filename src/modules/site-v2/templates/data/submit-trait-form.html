@@ -16,14 +16,13 @@
 {% block content %}
 
 <div class="container px-5 pb-5">
-    <h2 class="text-center">Trait Submission Form</h2>
-
+    
     {% from "_includes/macros.html" import render_field %}
 
     <form id="form-submit" method="POST" enctype="multipart/form-data">
         {{ form.csrf_token }}
         <div class="row my-5">
-            <h3>About You and Lab</h3>
+            <h3 class="pb-3">About You and Lab</h3>
             <div class="col-md-4">{{ render_field(form.username) }}</div>
             <div class="col-md-4">{{ render_field(form.institution) }}</div>
             <div class="col-md-4">{{ render_field(form.source_lab) }}</div>
@@ -34,7 +33,7 @@
         </div>
         <hr>
         <div class="row my-5">
-            <h3>Trait Information</h3>
+            <h3 class="pb-3">Trait Information</h3>
             <div class="col-md-4">
                 {% call render_field(form.file) %}
                  <!-- Info Button with Modal -->
@@ -64,6 +63,11 @@
             <div class="col-md-4">{{ render_field(form.species) }}</div>
         </div>
         <div class="row my-5">
+            <div class="col-md-4"> {{ render_field(form.trait_name_display_1) }}</div>
+            <div class="col-md-4">{{ render_field(form.trait_name_display_2) }}</div>
+            <div class="col-md-4">{{ render_field(form.trait_name_display_3) }}</div>
+        </div>
+        <div class="row my-5">
             <div class="col-md-4"> {{ render_field(form.description_short) }}</div>
             <div class="col-md-4">{{ render_field(form.description_long) }}</div>
             <div class="col-md-4">{{ render_field(form.units) }}</div>
@@ -71,7 +75,7 @@
         <div class="row my-5">
             <div class="col-md-12">{{ render_field(form.tags, class="") }}</div>
         </div>
-        <button type="submit" id="submit-trait" value="Submit Form" class="btn btn-secondary text-light" aria-label="submit">Submit Form</button>
+        <button type="submit" id="submit-trait" value="Submit Form" class="btn btn-secondary text-light" aria-label="submit">Add Trait</button>
     </form>
 </div> <!-- /Container -->
 
@@ -83,7 +87,7 @@
 
     $(document).ready(function() {
         
-        // Add required class to labels
+        // Add 'required' class to labels
         $('.form-group').each(function() {
             const requiredSelector = $(this).find('[required]')
             if (requiredSelector['0'] !== undefined) {
