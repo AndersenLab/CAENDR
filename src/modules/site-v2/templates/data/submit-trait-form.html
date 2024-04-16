@@ -43,9 +43,9 @@
             </div>
         </div>
         <div class="row my-5">
-
             <div class="col-md-4">{{ render_field(form.trait_name_user, has_popover=true, content='This is the name used internally by your laboratory to refer to this trait. Please note: this name will not be shared publicly with other users and will only be displayed to you') }}</div>
             <div class="col-md-4">{{ render_field(form.species) }}</div>
+            <div class="col-md-4">{{ render_field(form.units) }}</div>
         </div>
         <div class="row my-5">
             <div class="col-md-4"> {{ render_field(form.trait_name_display_1, has_popover=true, content='This is the name that will be shared with other users in the phenotype database and will be used to represent your trait throughout the site. This name should be short (one word) and descriptive. The other display name fields can be used to provide additional description if needed.') }}</div>
@@ -53,12 +53,11 @@
             <div class="col-md-4">{{ render_field(form.trait_name_display_3, has_popover=true, content='This field can be used to provide additional information that\'s important for the user to know about the trait.') }}</div>
         </div>
         <div class="row my-5">
+            <div class="col-md-4 text-break">{{ render_field(form.tags, has_popover=true, content='Please select the best categories to describe your trait. Please note: at least one category is required.') }}</div>
             <div class="col-md-4"> {{ render_field(form.description_short ,has_popover=true, content='Please describe the trait in a few words, providing the information that\'s most important for other users who may want to perform an analysis using this trait.') }}</div>
             <div class="col-md-4">{{ render_field(form.description_long, has_popover=true, content='You may provide a longer description of the trait to provide additional useful information for other users who may want to perform an analysis using this trait.') }}</div>
-            <div class="col-md-4">{{ render_field(form.units) }}</div>
         </div>
         <div class="row my-5">
-            <div class="d-inline-flex">{{ render_field(form.tags, has_popover=true, content='Please select the best categories to describe your trait. Please note: at least one category is required.') }}</div>
         </div>
         <button type="submit" id="submit-trait" value="Submit Form" class="btn btn-secondary text-light" aria-label="submit">Add Trait</button>
     </form>
@@ -108,11 +107,13 @@
                     contentType: false,
                     processData: false,
                     success: function(response) {
-                        // check if response is not empty 
+                        $('.alert').remove()
                         display_file_content(response)
                     },
                     error: function(error){
                         console.error(error)
+                        $('#file-content').empty()
+                        $('#file-content').parent().addClass('d-none')
                         $('html').animate({
                             scrollTop: $('body').offset().top
                         }, 100);

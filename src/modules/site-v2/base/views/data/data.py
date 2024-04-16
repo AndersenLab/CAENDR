@@ -6,11 +6,12 @@ from flask      import render_template, Blueprint, redirect, url_for, request, f
 from extensions import cache
 from config     import config
 
-from caendr.models.error           import EnvVarError, FileUploadError
+from caendr.models.error           import EnvVarError, FileUploadError, DataFormatError
 from caendr.models.datastore       import TraitFile
 from caendr.models.status          import PublishStatus
 from caendr.services.cloud.storage import get_blob, upload_blob_from_file_object, check_blob_exists
 from caendr.services.logger        import logger
+from caendr.services.validate      import validate_trait_file
 from caendr.utils.data             import unique_id
 from base.utils.auth               import jwt_required, get_current_user
 from caendr.utils.env              import get_env_var
@@ -177,11 +178,16 @@ def parse_trait_file():
   """ Parse the trait file and return the data """
   try:
     with LocalUploadFile(request.files.get('file'), valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS) as file:
+      # Validate the file
+      try:
+        validate_trait_file(file)
+      except DataFormatError as ex:
+        return jsonify({ 'message': ex.msg }), 500
+      
+      # Parse the file
       with open(file) as f:
         file_content = []
         for idx, row in enumerate( csv.reader(f, delimiter='\t') ):
-          # TODO: validate number of columns
-          # TODO: validate data format
           file_content.append({'col_1': row[0], 'col_2': row[1]})
         return jsonify(file_content), 200
       
