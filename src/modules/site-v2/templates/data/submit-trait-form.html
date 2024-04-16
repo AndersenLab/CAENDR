@@ -32,12 +32,18 @@
             <div class="col-md-4">{{ render_field(form.publication) }}</div>
         </div>
         <hr>
+        <h3 class="pb-3">Trait Information</h3>
         <div class="row my-5">
-            <h3 class="pb-3">Trait Information</h3>
             <div class="col-md-4">
                 {% call render_field(form.file, has_popover=true, content="Example file") %}
                 {% endcall %}
             </div>
+            <div class="col-md-4 p-0 mx-5 d-none border border-1 rounded overflow-auto" style="height:30vh">
+                <table class="table table-hover mb-0" id="file-content"></table>
+            </div>
+        </div>
+        <div class="row my-5">
+
             <div class="col-md-4">{{ render_field(form.trait_name_user, has_popover=true, content='This is the name used internally by your laboratory to refer to this trait. Please note: this name will not be shared publicly with other users and will only be displayed to you') }}</div>
             <div class="col-md-4">{{ render_field(form.species) }}</div>
         </div>
@@ -63,6 +69,7 @@
 {% block script %}
 
 <script>
+    {% include '_scripts/utils.js' %} {#/* defines: flash_message */#}
 
     $(document).ready(function() {
         
@@ -78,6 +85,73 @@
             }
         })
 
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
+                }
+            }
+        });
+
+
+        $('#file').on('change', function(e) {
+            e.preventDefault()
+            const file = e.target.files[0]
+            if (file) {
+                const formData = new FormData()
+                formData.append('file', file)
+
+                $.ajax({
+                    type: "POST",
+                    url: "{{ url_for('data.parse_trait_file') }}",
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        // check if response is not empty 
+                        display_file_content(response)
+                    },
+                    error: function(error){
+                        console.error(error)
+                        $('html').animate({
+                            scrollTop: $('body').offset().top
+                        }, 100);
+                        if (error.responseJSON && error.responseJSON.message) {
+                            $('.alert').remove()
+                            flash_message(error.responseJSON.message)
+                        }         
+                    }
+                })            
+            } else {
+                $('#file-content').empty()
+                $('#file-content').parent().addClass('d-none')
+                // TODO: flash a message for user??
+            }
+            
+        })
+
+        function display_file_content(file) {
+            $('#file-content').parent().removeClass('d-none')
+            $('#file-content').empty()
+            // Create table header
+            const thead =  `<thead class="table-secondary" style="position:sticky;top:0;">
+                               <tr>
+                                 <th scope="col">${file[0].col_1}</th>
+                                 <th scope="col">${file[0].col_2}</th>
+                               </tr>
+                             </thead>`
+            $('#file-content').append(thead)
+
+            // Populate table with file content
+            let body = ''
+            for (let i = 1; i < file.length; i++) {
+                body += `<tr>
+                           <td>${file[i].col_1}</td>
+                           <td>${file[i].col_2}</td>
+                         </tr>`
+            }
+            $('#file-content').append(`<tbody>${body}</tbody>`)
+        }
     })
 
 </script>
