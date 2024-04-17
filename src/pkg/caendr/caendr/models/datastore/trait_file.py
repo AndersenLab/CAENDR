@@ -70,6 +70,8 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
 
   @property
   def prefix(self):
+    if self.dataset == 'public':
+      return TokenizedString(join_path('trait_files', self['dataset'], '${SPECIES}', '${USER_ID}'))
     return TokenizedString(join_path('trait_files', self['dataset'], '${SPECIES}'))
 
 
@@ -79,6 +81,8 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
 
   # The species is always determined by this entity itself, so we fill it in instead of letting the calling function supply it
   def get_filepath(self, schema: BlobURISchema = None, check_if_exists: bool = False):
+    if self.dataset == 'public':
+      return super().get_filepath_hashed(schema=schema, check_if_exists=check_if_exists, SPECIES=self['species'].name, USER_ID=self['username'])
     return super().get_filepath(schema=schema, check_if_exists=check_if_exists, SPECIES=self['species'].name)
 
 
