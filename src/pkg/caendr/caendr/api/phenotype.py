@@ -47,6 +47,9 @@ def query_phenotype_metadata(
     if include_values:
       query = query.join(PhenotypeMetadata.phenotype_values)
 
+    # Order alphabetically by trait names
+    query = order_trait_query_by_name(query)
+
     return query
 
 
@@ -59,6 +62,22 @@ def get_all_traits_metadata():
 
 def get_trait(trait_name):
   return PhenotypeMetadata.query.get(trait_name)
+
+
+def order_trait_query_by_name(query):
+  '''
+    Sort a Phenotype Database trait query alphabetically by the display name(s).
+  '''
+  return query.order_by(
+
+    # Order by display names, in order
+    PhenotypeMetadata.trait_name_display_1.asc(),
+    PhenotypeMetadata.trait_name_display_2.asc(),
+    PhenotypeMetadata.trait_name_display_3.asc(),
+
+    # Fallback to internal CaeNDR trait name
+    PhenotypeMetadata.trait_name_caendr.asc(),
+  )
 
 
 
