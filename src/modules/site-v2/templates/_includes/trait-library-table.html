@@ -127,24 +127,27 @@
         },
         {
           "render": function(data, type, row) {
+            const url = "{{ url_for('phenotype_database.phenotype_database') }}";
             return `
-              <a href='#'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Submit</a>
+              <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Submit</a>
             `;
           },
           "sClass": "optionsToolbar",
         },
         {
           "render": function(data, type, row) {
+            const url = "{{ url_for('phenotype_database.submit_start', trait='TRAIT_NAME', dataset='TRAIT_SET') }}".replace("TRAIT_NAME", row.trait_name_caendr).replace("TRAIT_SET", row.dataset);
             return `
-              <a href='#'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>View</a>
+              <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
             `;
           },
           "sClass": "optionsToolbar",
         },
         {
           "render": function(data, type, row) {
+            const url = "{{ url_for('genetic_mapping.genetic_mapping') }}";
             return `
-              <a href='#'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
+              <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
             `;
           },
           "sClass": "optionsToolbar",
