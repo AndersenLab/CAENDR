@@ -21,6 +21,10 @@
     white-space: normal;
     word-wrap: break-word;
   }
+
+  .dropdown-column {
+    width: 1.5em !important;
+  }
 </style>
 {% endblock %}
 
@@ -34,6 +38,7 @@
       <caption class="visually-hidden">A list of phenotype traits.</caption>
       <thead class="table-secondary align-middle">
         <tr>
+          <th scope="col" class="col-1 text-center dropdown-column"></th>
           <th scope="col" class="col-1 text-center py-4">Species</th>
           <th scope="col" class="col-1 text-center">Trait</th>
           <th scope="col" class="col-1 text-center">Upload Date</th>
@@ -89,15 +94,19 @@
       "ordering": false,
       "columns": [
         {
+          "render": function(data, type, row) {
+            return `
+              <button type="button" class="btn btn-link text-dark fw-normal d-block w-100 row-toggle"
+                  aria-expanded="false" aria-controls="full-info-${row.trait_name_caendr}"
+              ><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+            `;
+          },
+          "sClass": "p-0 m-0 dropdown-column",
+        },
+        {
           "data": "species_name",
           "render": function(data, type, row) {
-            const species_name = first_letter_caps(data).replace('_', '. ').italics();
-            const i = 0;
-            return `
-              <a href="#" class="text-dark fw-normal row-toggle" data-bs-toggle="collapse" data-bs-target="#collapse-${i+1}"
-                aria-expanded="false" aria-controls="collapse-${i+1}"
-              ><i class="bi bi-chevron-right" aria-hidden="true"></i> <em>${species_name}</em></a>
-            `;
+            return first_letter_caps(data).replace('_', '. ').italics();
           },
         },
         {
@@ -168,8 +177,11 @@
 
         if (row.child.isShown()) {
           row.child.hide();
+          e.target.closest('a').setAttribute('aria-expanded', 'false')
         } else {
           row.child(format_child_row(row.data())).show();
+          row.child().attr('id', `full-info-${row.data().trait_name_caendr}`)
+          e.target.closest('a').setAttribute('aria-expanded', 'true')
         }
     });
 
