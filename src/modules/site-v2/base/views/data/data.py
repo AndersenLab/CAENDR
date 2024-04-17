@@ -2,12 +2,12 @@ import yaml
 import bleach
 import csv
 
-from flask      import render_template, Blueprint, redirect, url_for, request, flash, jsonify
+from flask      import render_template, Blueprint, redirect, url_for, request, flash, jsonify, abort
 from extensions import cache
 from config     import config
 
 from caendr.models.error           import EnvVarError, FileUploadError, DataFormatError
-from caendr.models.datastore       import TraitFile
+from caendr.models.datastore       import TraitFile, Species
 from caendr.models.status          import PublishStatus
 from caendr.services.cloud.storage import get_blob, upload_blob_from_file_object, check_blob_exists
 from caendr.services.logger        import logger
@@ -113,9 +113,14 @@ def submit_trait_form():
       try:
         # Create a new TraitFile object
         tf = TraitFile(unique_id())
+
+        # Create a unique filename for file upload
+        hashed_filename = f'{unique_id()}.tsv'
+
         tf.set_properties(**{
           # User submitted data
           'trait_name_user':      bleach.clean(form.trait_name_user.data),
+          'trait_name_caendr':    bleach.clean(form.trait_name_user.data),
           'trait_name_display_1': bleach.clean(form.trait_name_display_1.data),
           'trait_name_display_2': bleach.clean(form.trait_name_display_2.data),
           'trait_name_display_3': bleach.clean(form.trait_name_display_2.data),
@@ -125,26 +130,30 @@ def submit_trait_form():
           'description_long':     bleach.clean(form.description_long.data),
           'units':                bleach.clean(form.units.data),
           'tags':                 [ bleach.clean(tag) for tag in form.tags.data ],
-          'username':             bleach.clean(form.username.data),
           'institution':          bleach.clean(form.institution.data),
           'source_lab':           bleach.clean(form.source_lab.data),
           'protocols':            bleach.clean(form.protocols.data),
           'publication':          bleach.clean(form.publication.data),
   
           # Internally used data
-          'dataset':        'public',
-          'publish_status': PublishStatus.UPLOADED,
-          'is_bulk_file':   False
+          'dataset':         'public',
+          'publish_status':  PublishStatus.UPLOADED,
+          'is_bulk_file':    False,
+          'hashed_filename': hashed_filename,
         })
+
+        tf.set_user(user)
         tf.save()
 
       except Exception as ex:
         logger.error(f'Failed to create a trait file {form.trait_name_user.data}: {ex}')
         flash('Failed to submit a form. Please try again later.', 'danger')
+        abort(500)
       
       # Save file to GCP bucket
       try:
-        blob_name = f'{MODULE_DB_OPERATIONS_TRAITFILE_PUBLIC_FILEPATH}/{user.name}/{form.file.data.filename}'
+        species = Species.get(form.species.data).name
+        blob_name = f'{MODULE_DB_OPERATIONS_TRAITFILE_PUBLIC_FILEPATH}/{species}/{user.name}/{hashed_filename}'
 
         # Check if the file already exists
         if check_blob_exists(MODULE_DB_OPERATIONS_BUCKET_NAME, blob_name):
@@ -155,8 +164,7 @@ def submit_trait_form():
       except Exception as ex:
         logger.error(f'Failed to upload a file {form.file.data.filename}: {ex}')
         flash('Failed to submit a form. Please try again later.', 'danger')
-
-      # TODO: save the submission to My Trait Library
+        abort(500)
       
       flash('Trait submitted successfully.', 'success')
 
