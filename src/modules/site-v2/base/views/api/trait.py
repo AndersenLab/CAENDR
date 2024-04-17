@@ -47,6 +47,10 @@ class EndpointType(Enum):
   def matches(cls, endpoint, endpoint_type):
     return endpoint.split('_')[-1] == endpoint_type.value
 
+  @classmethod
+  def matches_any(cls, endpoint, endpoint_type_set):
+    return any( cls.matches(endpoint, endpoint_type) for endpoint_type in endpoint_type_set )
+
 
 
 #
@@ -188,11 +192,14 @@ def query_list_sql():
     This is still a syntactically valid request, but it is semantically invalid.
   '''
 
-  # On the private endpoint, only consider traits belonging to the current user
+  # On the "private" endpoint, only consider traits belonging to the current user
   if EndpointType.matches( request.endpoint, EndpointType.PRIVATE ):
     current_user_filter = get_current_user()
   else:
     current_user_filter = None
+
+  # On the "private" and "all" endpoints, include private (unpublished) traits in the query
+  include_private_traits = EndpointType.matches_any( request.endpoint, { EndpointType.PRIVATE, EndpointType.ALL } )
 
   # Get search parameters
   selected_tags  = get_clean(request.json, 'selected_tags', [])
@@ -212,7 +219,12 @@ def query_list_sql():
   per_page       = 10
 
   # Create the initial query
-  query = query_phenotype_metadata( dataset=filter_dataset, user=current_user_filter )
+  # The filters here determine which traits are part of the "full" query,
+  # based on the request endpoint
+  query = query_phenotype_metadata(
+    include_private=include_private_traits,
+    dataset=filter_dataset, user=current_user_filter,
+  )
 
   # Filter by search values, if provided
   query = filter_trait_query(
@@ -237,7 +249,6 @@ def query_list_sql():
       'current_page': current_page
     },
   }
-
 
 
 
@@ -274,6 +285,9 @@ def query_list_datatable():
   else:
     current_user_filter = None
 
+  # On the "private" and "all" endpoints, include private (unpublished) traits in the query
+  include_private_traits = EndpointType.matches_any( request.endpoint, { EndpointType.PRIVATE, EndpointType.ALL } )
+
   # Load full search object from request
   search_raw = get_clean(request.args, 'search[value]', '')
   if search_raw:
@@ -309,7 +323,16 @@ def query_list_datatable():
   length = get_clean(request.args, 'length', _type=int)
 
   # Create the initial query
-  query = query_phenotype_metadata( dataset=filter_dataset, user=current_user_filter )
+  # The filters here determine which traits are part of the "full" query,
+  # based on the request endpoint
+  query = query_phenotype_metadata(
+    include_private=include_private_traits,
+    dataset=filter_dataset, user=current_user_filter,
+  )
+
+  # Count the full size of the query
+  # Any rows filtered out before this line aren't available in this request at all,
+  # and any rows filtered out after this line are considered filtered rows in the full request
   total_records = query.count()
 
   # Filter by search values, if provided

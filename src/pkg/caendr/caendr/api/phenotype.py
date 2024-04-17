@@ -11,24 +11,33 @@ from caendr.services.cloud.postgresql import rollback_on_error
 
 
 def query_phenotype_metadata(
-    include_values = False,
+    include_values:  bool = False,
+    include_private: bool = False,
     is_bulk_file: Optional[bool]                = None,
     dataset:      Optional[str]                 = None,
     species:      Optional[Union[Species, str]] = None,
     user:         Optional[Union[User, str]]    = None,
 ):
     """
-      Returns the list of traits with the corresponding metadata.
+      Create a trait metadata SQL query, with some optional initial filters.
+      Returns a query object that can be further refined.
 
       Args:
-      - is_bulk_file:     by default returns data for non-bulk files
-                          if 'is_bulk_file' set to True returns traits metadata for Zhang Expression file
-      - phenotype_values: if True, include phenotype values for each trait
-      - species:          filters by species
+        - `include_values`:  If `True`, includes the phenotype value measurements for each trait.
+        - `include_private`: If `True`, includes private (unpublished) traits in the query.
+        - `is_bulk_file`:    Optionally filter by whether the traits belong to a bulk dataset.
+                             If `None`, does not filter by this parameter.
+        - `dataset`:         Optionally filters by dataset.
+        - `species`:         Optionally filters by species.
+        - `user`:            Optionally filters by submitting user.
     """
 
     # Create the initial query
     query = PhenotypeMetadata.query
+
+    # TODO: Filter by public (published) / private (unpublished)
+    if not include_private:
+      pass
 
     # Optionally query by bulk file
     if is_bulk_file is not None:
