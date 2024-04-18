@@ -46,9 +46,13 @@
           <th scope="col" class="col-1 text-center py-4">Species</th>
           <th scope="col" class="col-1 text-center">Trait</th>
           <th scope="col" class="col-1 text-center">Upload Date</th>
+          {% if trait_library_table_mode == 'full'%}
           <th scope="col" class="col-1 text-center">Public Database</th>
           <th scope="col" class="col-1 text-center">Phenotype Analysis</th>
           <th scope="col" class="col-1 text-center">Genetic Mapping</th>
+          {% elif trait_library_table_mode == 'select' %}
+          <th scope="col" class="col-1 text-center">Select</th>
+          {% endif %}
         </tr>
       </thead>
       <tbody class="table-group-divider align-middle"></tbody>
@@ -129,6 +133,8 @@
             return formatDate(data);
           },
         },
+
+        {% if trait_library_table_mode == 'full' %}
         {
           "render": function(data, type, row) {
             const url = "{{ url_for('phenotype_database.phenotype_database') }}";
@@ -156,6 +162,17 @@
           },
           "sClass": "optionsToolbar",
         },
+        {% elif trait_library_table_mode == 'select' %}
+        {
+          "render": function(data, type, row) {
+            const url = `{{ trait_library_table_select_link | safe }}`.replace("TRAIT_NAME", row.trait_name_caendr).replace("TRAIT_SET", row.dataset);
+            return `
+              <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Select</a>
+            `;
+          },
+          "sClass": "optionsToolbar",
+        },
+        {% endif %}
       ],
     });
 
