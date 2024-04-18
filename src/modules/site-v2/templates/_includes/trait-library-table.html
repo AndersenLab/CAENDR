@@ -1,4 +1,8 @@
-{% set offcanvas_id = 'phenotype-offcanvas' %}
+{% if table_id is not defined %}
+  {% set table_id = "library-table" %}
+{% endif %}
+
+{% set offcanvas_id = table_id + '-phenotype-offcanvas' %}
 
 
 {% block custom_head %}
@@ -34,7 +38,7 @@
   {% include "_includes/phenotype-search-bar.html" %}
 
   <div class="table-responsive">
-    <table id="library-table" class="table p-0 text-center w-100">
+    <table id="{{ table_id }}" class="table p-0 text-center w-100">
       <caption class="visually-hidden">A list of phenotype traits.</caption>
       <thead class="table-secondary align-middle">
         <tr>
@@ -66,7 +70,7 @@
 
 
 {% block script %}
-<script>
+<script type="module">
   {% include '_scripts/utils.js' %} {#/* defines: flash_message, first_letter_caps */#}
 
   $(document).ready(function() {
@@ -81,7 +85,7 @@
     });
 
     // Create main table as a DataTable
-    const table = $('#library-table').DataTable( {
+    const table = $('#{{ table_id }}').DataTable( {
       "sDom": "tpr",
       "processing": true,
       "serverSide": true,
