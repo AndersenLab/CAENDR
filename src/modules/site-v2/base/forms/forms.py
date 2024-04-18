@@ -347,7 +347,7 @@ class TraitSubmissionForm(FlaskForm):
   trait_name_display_2 = StringField('Display Name 2')
   trait_name_display_3 = StringField('Display Name 3')
   description_short = TextAreaField('Short Description', validators=[Required(), Length(min=10, max=200)])
-  description_long = TextAreaField('Long Description')
+  description_long = TextAreaField('Long Description', validators=[Required(), Length(min=10)])
   units = StringField('Unit of Measurement', validators=[Length(min=0, max=10)])
   tags = MultiCheckboxField("Categories", choices=TRAIT_CATEGORY_OPTIONS, validators=[Required()])
   username = StringField('Username', validators=[Required(), Length(min=3, max=50)])
