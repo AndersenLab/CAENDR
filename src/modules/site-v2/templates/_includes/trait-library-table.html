@@ -69,7 +69,8 @@
 
 {% block script %}
 <script type="module">
-  {% include '_scripts/utils.js' %} {#/* defines: flash_message, first_letter_caps */#}
+  {% include '_scripts/utils.js' %}       {#/* defines: flash_message, first_letter_caps */#}
+  {% include '_scripts/trait_utils.js' %} {#/* defines: traitNameHTML, queryTraitByName */#}
 
   $(document).ready(function() {
 
@@ -112,13 +113,8 @@
           },
         },
         {
-          "data": "Trait",
           "render": function(data, type, row) {
-            return `
-              <strong>${row.trait_name_display_1 || row.trait_name_caendr}</strong>
-              <p class="mb-0">${row.trait_name_display_1 ? row.trait_name_display_2 : ''}</p>
-              <em>${row.trait_name_display_1 ? row.trait_name_display_3 : ''}</em>
-            `;
+            return traitNameHTML( row.trait_name_display_1, row.trait_name_display_2, row.trait_name_display_3 );
           },
         },
         {
@@ -207,18 +203,12 @@
     /* Offcanvas (Sidebar) */
 
     // Fetch data for a trait and fill out side bar
-    $(document).on('click','.trait-detail-button', function() {
-      const data = {csrf_token: $('#csrf_token').val(), trait_name: $(this).data('value')}
-      $.ajax({
-        type: "POST",
-        url: "{{ url_for('api_trait.query_trait_metadata') }}",
-        data: JSON.stringify(data),
-        contentType: "application/json",
-        dataType: "json",
-        success: function(response) {
+    $(document).on('click', '.trait-detail-button', function() {
+      queryTraitByName($(this).data('value'), $('#csrf_token').val())
+        .then((response) => {
           fillOutModal(response)
-        },
-        error: function(error){
+        })
+        .fail((error) => {
           console.error(error)
           $('#{{ offcanvas_id }} .btn-close').click()
           $('html').animate({
@@ -228,8 +218,7 @@
             $('.alert').remove()
             flash_message(error.responseJSON.message)
           }
-        }
-      })
+        })
     })
 
     function fillOutModal(trait) {
