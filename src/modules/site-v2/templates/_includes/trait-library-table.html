@@ -180,11 +180,11 @@
 
         if (row.child.isShown()) {
           row.child.hide();
-          e.target.closest('a').setAttribute('aria-expanded', 'false')
+          e.target.closest('button').setAttribute('aria-expanded', 'false')
         } else {
           row.child(format_child_row(row.data())).show();
           row.child().attr('id', `full-info-${row.data().trait_name_caendr}`)
-          e.target.closest('a').setAttribute('aria-expanded', 'true')
+          e.target.closest('button').setAttribute('aria-expanded', 'true')
         }
     });
 
