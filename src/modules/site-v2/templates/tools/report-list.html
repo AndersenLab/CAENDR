@@ -1,5 +1,8 @@
 {% extends "_layouts/default.html" %}
 
+{% from "_includes/report_list_macros.j2" import report_list_columns %}
+{% set columns = report_list_columns[tool_name] %}
+
 {% block custom_head %}
     <link rel="stylesheet" href="//cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css" />
     <script type="text/javascript" src="//cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
@@ -28,6 +31,7 @@ span.bi {
 
 {% block content %}
 {% from "_includes/macros.html" import render_dataTable_top_menu, render_dataTable_actions, render_dataTable_result_list_header %}
+{% from "_includes/report_list_macros.j2" import render_report_list_columns with context %}
 
 
 {{
@@ -80,19 +84,8 @@ span.bi {
               {% if item.species %}<i>{{ species_list[item.species].short_name }}</i>{% endif %}
             </td>
 
-            {% for column in columns %}
-              <td class="data-{{column.class}}" {% if column.get('data_order') %}data-order="{{column.data_order(item)}}"{% endif %}>
-                {% if column.get('link_to_data', False) and (item.status == JobStatus.COMPLETE or item.status == JobStatus.ERROR) %}
-                  <a href="{{ url_for(tool_name + '.report', id=item.id) }}">
-                    {{ item[column.field] }}
-                  </a>
-                {% else %}
-                  {%- if item[column.field] %}
-                  {{ item[column.field] }}
-                  {%- endif %}
-                {% endif %}
-              </td>
-            {% endfor %}
+            {# Render the columns specific to this report #}
+            {{ render_report_list_columns(columns, item) }}
 
             <td class="data-status">
               {% if item.status %} {{ item.status|capitalize }} {% else %} UNKNOWN {% endif %}

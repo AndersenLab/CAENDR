@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import List, Optional, Tuple, Union
 
 from caendr.models.datastore import ReportEntity, HashableEntity, TraitFile
 from caendr.models.trait     import Trait
@@ -48,11 +48,16 @@ class PhenotypeReport(ReportEntity, HashableEntity):
     return {
       *super().get_props_set(),
       'species',
-      'label',
+
+      # Identifiers for trait 1 (display name is cached)
       'trait_1',
-      'trait_1_name',
+      'trait_1_name_caendr',
+      'trait_1_name_display',
+
+      # Identifiers for trait 2 (display name is cached)
       'trait_2',
-      'trait_2_name',
+      'trait_2_name_caendr',
+      'trait_2_name_display',
     }
 
 
@@ -253,5 +258,57 @@ class PhenotypeReport(ReportEntity, HashableEntity):
   @property
   def trait_names(self) -> Tuple[str]:
     if self['trait_2'] is None:
-      return self['trait_1_name'],
-    return self['trait_1_name'], self['trait_2_name']
+      return self['trait_1_name_caendr'],
+    return self['trait_1_name_caendr'], self['trait_2_name_caendr']
+
+
+
+  #
+  # Computing & Caching Display Names
+  #
+
+
+  @classmethod
+  def compute_display_name(cls, trait: Union[Trait, TraitFile], trait_name: Optional[str] = None) -> List[str]:
+    '''
+      Compute the cache-able display name for a given trait.
+
+      If the `trait` argument is given as a `TraitFile` and references a bulk file, then the `trait_name` argument MUST be provided
+      to specify which trait in the file is intended.
+    '''
+
+    # Convert argument to a Trait object if it isn't one already
+    if isinstance(trait, TraitFile):
+      trait = Trait.from_datastore(trait, trait_name=trait_name)
+
+    # Reject all other invalid data types
+    elif not isinstance(trait, Trait):
+      raise ValueError()
+
+    # Use the Trait object to compute the display name
+    return list(trait.display_name)
+
+
+  @classmethod
+  def recompute_cached_display_names(cls, reports: List['PhenotypeReport'] = None):
+    '''
+      Recomputes the cached CaeNDR and display names for trait reports,
+      based on the values stored in the referenced TraitFile entities.
+
+      Arguments:
+        `reports` (optional): List of reports to recompute. If `None`, updates all reports.
+    '''
+    if reports is None:
+      reports = cls.query_ds()
+
+    # Set display names for both traits, as applicable
+    for report in reports:
+
+      if report['trait_1']:
+        report['trait_1_name_display'] = cls.compute_display_name(report['trait_1'], report['trait_1_name_caendr'])
+
+      if report['trait_2']:
+        report['trait_2_name_display'] = cls.compute_display_name(report['trait_2'], report['trait_2_name_caendr'])
+
+      # Save the report
+      report.save()

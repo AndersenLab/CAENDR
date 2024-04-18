@@ -4,6 +4,7 @@ import gspread
 import pandas as pd
 import requests
 import datetime
+from typing import Iterable
 
 from io import StringIO
 from oauth2client.service_account import ServiceAccountCredentials
@@ -103,3 +104,15 @@ def get_field_from_record(record, key, fallback=None, nullable=True, null_values
   elif val is None:
     raise ValueError()
   return val
+
+
+def check_missing_columns(sheet: gspread.Worksheet, required_columns: Iterable[str]):
+  '''
+    Given an iterable of column headers, return any headers that don't exist in the given sheet.
+  '''
+
+  # NOTE: row_values function is one-indexed!
+  header_row = sheet.row_values(1)
+
+  # Compute the set of required columns that are not in the header row
+  return frozenset(filter(lambda col: col not in header_row, required_columns))

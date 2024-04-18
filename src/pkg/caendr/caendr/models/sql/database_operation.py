@@ -16,6 +16,7 @@ class DbOp(Enum):
   POPULATE_PHENOTYPES_DATASTORE               = 'POPULATE_PHENOTYPES_DATASTORE'
   TEST_ECHO                                   = 'TEST_ECHO'
   TEST_MOCK_DATA                              = 'TEST_MOCK_DATA'
+  RECOMPUTE_PHENOTYPE_REPORT_CACHED_NAMES     = 'RECOMPUTE_PHENOTYPE_REPORT_CACHED_NAMES'
 
 
   def get_title(op):
@@ -37,6 +38,7 @@ class DbOp(Enum):
       DbOp.POPULATE_PHENOTYPES_DATASTORE:               'Create / update datastore trait file records from Google Sheet',
       DbOp.TEST_ECHO:                                   'Test ETL - Echo',
       DbOp.TEST_MOCK_DATA:                              'Test ETL - Mock Data',
+      DbOp.RECOMPUTE_PHENOTYPE_REPORT_CACHED_NAMES:     'Recompute cached trait display names in Phenotype Report entities'
     }
 
     return titles.get(op, '???')
