@@ -249,7 +249,7 @@
     /* Searching / Filtering Handlers */
 
     // Update search based on search widget
-    document.addEventListener('phenotype-table-search', async ({detail}) => {
+    document.addEventListener('{{ table_id }}-search', async ({detail}) => {
       try {
         table.search( JSON.stringify(detail) ).draw()
       } catch(err) {
