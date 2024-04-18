@@ -2,51 +2,64 @@
     {% set offcanvas_id = "phenotype-offcanvas" %}
 {% endif %}
 
-<div class="d-flex">
-    <div class="col-4">
-        <h2 class="h6 text-dark mb-3">Capture Date</h2>
-        <p id="{{offcanvas_id}}-captureDate"></p>
+<div class="offcanvas-header">
+    <div>
+        <h1 class="h5">
+            <span id="{{ offcanvas_id }}-header-1" class="d-block mb-1"></span>
+            <span id="{{ offcanvas_id }}-header-2" class="d-block text-dark fw-normal"></span>
+            <span class="d-block text-dark fw-normal"><em id="{{ offcanvas_id }}-header-3"></em></span>
+        </h1>
     </div>
-    <div class="col-4">
-        <h2 class="h6 text-dark mb-3">Upload Date</h2>
-        <p id="{{offcanvas_id}}-createdOn"></p>
-    </div>
-    <div class="col-4">
-        <h2 class="h6 text-dark mb-3">Last Updated</h2>
-        <p id="{{offcanvas_id}}-modifiedOn"></p>
-    </div>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
 </div>
-<div>
-    <h2 class="h6 text-dark mb-3">Species</h2>
-    <p><em id="{{offcanvas_id}}-species"></em></p>
-    <h2 class="h6 text-dark mb-3">WormBaseGeneID</h2>
-    <p id="{{offcanvas_id}}-wbgeneID"></p>
-    <h2 class="h6 text-dark mb-3">Source Lab</h2>
-    <p id="{{offcanvas_id}}-sourceLab"></p>
-    <h2 class="h6 text-dark mb-3">Institution</h2>
-    <p id="{{offcanvas_id}}-institution"></p>
-    <h2 class="h6 text-dark mb-3">Submitted By</h2>
-    <p id="{{offcanvas_id}}-submittedBy"></p>
-    <h2 class="h6 text-dark mb-3">Full Description</h2>
-    <p id="{{offcanvas_id}}-descriptionLong"></p>
-    <h2 class="h6 text-dark mb-3">Protocol</h2>
-    <p id="{{offcanvas_id}}-protocol"><a href="#" target="_blank"></a></p>
-    <h2 class="h6 text-dark mb-3">Publication</h2>
-    <p id="publication"><a href="#" target="_blank"></a></p>
-    <h2 class="h6 text-dark mb-3">Categories</h2>
-    <div id="{{offcanvas_id}}-tags" class="d-flex flex-column px-4"></div>
-    <div class="mt-5">
-        <h2 class="h6 text-dark mb-3">Values</h2>
-        <div class="my-4 border border-1 rounded overflow-auto" style="height:30vh">
-            <table class="table table-hover mb-0" id="{{offcanvas_id}}-values">
-                <thead class="table-secondary" style="position:sticky;top:0;">
-                    <tr>
-                        <th scope="col">Strain</th>
-                        <th scope="col">Value</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+
+<div class="offcanvas-body p-4">
+    <div class="d-flex">
+        <div class="col-4">
+            <h2 class="h6 text-dark mb-3">Capture Date</h2>
+            <p id="{{offcanvas_id}}-captureDate"></p>
+        </div>
+        <div class="col-4">
+            <h2 class="h6 text-dark mb-3">Upload Date</h2>
+            <p id="{{offcanvas_id}}-createdOn"></p>
+        </div>
+        <div class="col-4">
+            <h2 class="h6 text-dark mb-3">Last Updated</h2>
+            <p id="{{offcanvas_id}}-modifiedOn"></p>
+        </div>
+    </div>
+    <div>
+        <h2 class="h6 text-dark mb-3">Species</h2>
+        <p><em id="{{offcanvas_id}}-species"></em></p>
+        <h2 class="h6 text-dark mb-3">WormBaseGeneID</h2>
+        <p id="{{offcanvas_id}}-wbgeneID"></p>
+        <h2 class="h6 text-dark mb-3">Source Lab</h2>
+        <p id="{{offcanvas_id}}-sourceLab"></p>
+        <h2 class="h6 text-dark mb-3">Institution</h2>
+        <p id="{{offcanvas_id}}-institution"></p>
+        <h2 class="h6 text-dark mb-3">Submitted By</h2>
+        <p id="{{offcanvas_id}}-submittedBy"></p>
+        <h2 class="h6 text-dark mb-3">Full Description</h2>
+        <p id="{{offcanvas_id}}-descriptionLong"></p>
+        <h2 class="h6 text-dark mb-3">Protocol</h2>
+        <p id="{{offcanvas_id}}-protocol"><a href="#" target="_blank"></a></p>
+        <h2 class="h6 text-dark mb-3">Publication</h2>
+        <p id="publication"><a href="#" target="_blank"></a></p>
+        <h2 class="h6 text-dark mb-3">Categories</h2>
+        <div id="{{offcanvas_id}}-tags" class="d-flex flex-column px-4"></div>
+        <div class="mt-5">
+            <h2 class="h6 text-dark mb-3">Values</h2>
+            <div class="my-4 border border-1 rounded overflow-auto" style="height:30vh">
+                <table class="table table-hover mb-0" id="{{offcanvas_id}}-values">
+                    <thead class="table-secondary" style="position:sticky;top:0;">
+                        <tr>
+                            <th scope="col">Strain</th>
+                            <th scope="col">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -64,6 +77,11 @@
 
     // Main update function
     function fillOutModal(trait) {
+
+        // Fill out header
+        $('#{{ offcanvas_id }}-header-1').text(trait.trait_name_display_1)
+        $('#{{ offcanvas_id }}-header-2').text(trait.trait_name_display_2)
+        $('#{{ offcanvas_id }}-header-3').text(trait.trait_name_display_3)
 
         // Fill out basic fields
         manageVal(trait.capture_date,     '#{{ offcanvas_id }}-captureDate', true)

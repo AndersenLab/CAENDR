@@ -84,19 +84,7 @@ label {
 <!-- Offcanvas -->
 <div class="offcanvas offcanvas-end offcanvasPhenotype" tabindex="-1" id="{{ offcanvas_id }}"
     aria-labelledby="{{ offcanvas_id }}-label">
-    <div class="offcanvas-header">
-        <div>
-            <h1 class="h5">
-                <span id="{{ offcanvas_id }}-header-1" class="d-block mb-1"></span>
-                <span id="{{ offcanvas_id }}-header-2" class="d-block text-dark fw-normal"></span>
-                <span class="d-block text-dark fw-normal"><em id="{{ offcanvas_id }}-header-3"></em></span>
-            </h1>
-        </div>
-        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body p-4">
-        {% include "_includes/phenotype-offcanvas-content.html" %}
-    </div>
+    {% include "_includes/phenotype-offcanvas-content.html" %}
 </div>
 {# /Offcanvas #}
 
@@ -359,9 +347,6 @@ label {
     }
 
     function fillOutModal(trait) {
-        $('#{{ offcanvas_id }}-header-1').text(trait.trait_name_display_1)
-        $('#{{ offcanvas_id }}-header-2').text(trait.trait_name_display_2)
-        $('#{{ offcanvas_id }}-header-3').text(trait.trait_name_display_3)
         document.dispatchEvent(new CustomEvent('phenotype-offcanvas-content', {
             detail: { offcanvas_id: '{{offcanvas_id}}', trait: trait },
         }));
