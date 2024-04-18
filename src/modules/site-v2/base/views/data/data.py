@@ -18,6 +18,8 @@ from caendr.utils.env              import get_env_var
 from caendr.utils.local_files      import LocalUploadFile
 from base.forms                    import TraitSubmissionForm
 from constants                     import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
+from caendr.models.sql             import PhenotypeMetadata
+
 
 
 
@@ -120,7 +122,6 @@ def submit_trait_form():
         tf.set_properties(**{
           # User submitted data
           'trait_name_user':      bleach.clean(form.trait_name_user.data),
-          'trait_name_caendr':    bleach.clean(form.trait_name_user.data),
           'trait_name_display_1': bleach.clean(form.trait_name_display_1.data),
           'trait_name_display_2': bleach.clean(form.trait_name_display_2.data),
           'trait_name_display_3': bleach.clean(form.trait_name_display_2.data),
@@ -136,14 +137,23 @@ def submit_trait_form():
           'publication':          bleach.clean(form.publication.data),
   
           # Internally used data
-          'dataset':         'public',
-          'publish_status':  PublishStatus.UPLOADED,
-          'is_bulk_file':    False,
-          'hashed_filename': hashed_filename,
+          'dataset':           'public',
+          'publish_status':    PublishStatus.UPLOADED,
+          'is_bulk_file':      False,
+          'hashed_filename':   hashed_filename,
+          # How do we need to set a trait_name_caendr for user submission?
+          # It is important to have this prop for trait, as this is the primary key in Phenotype Metadata SQL table
+          'trait_name_caendr': bleach.clean(form.trait_name_user.data), 
         })
 
         tf.set_user(user)
+
+        # Save the TraitFile object to Datastore
         tf.save()
+
+        # Seed to Phenotype Metadata SQL table
+        new_trait = PhenotypeMetadata()
+        new_trait.add_trait(tf)
 
       except Exception as ex:
         logger.error(f'Failed to create a trait file {form.trait_name_user.data}: {ex}')
@@ -166,6 +176,7 @@ def submit_trait_form():
         flash('Failed to submit a form. Please try again later.', 'danger')
         abort(500)
       
+        # Seed to Phenotype Database SQL table
       flash('Trait submitted successfully.', 'success')
 
   return render_template('data/submit-trait-form.html', **{
