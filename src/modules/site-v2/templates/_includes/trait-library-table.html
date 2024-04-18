@@ -71,7 +71,7 @@
 {% block script %}
 <script type="module">
   {% include '_scripts/utils.js' %}       {#/* defines: flash_message, first_letter_caps */#}
-  {% include '_scripts/trait_utils.js' %} {#/* defines: traitNameHTML, queryTraitByName */#}
+  {% include '_scripts/trait_utils.js' %} {#/* defines: traitNameHTML, traitNameString, queryTraitByName */#}
 
   $(document).ready(function() {
 
@@ -102,6 +102,7 @@
             return `
               <button type="button" class="btn btn-link text-dark fw-normal d-block w-100 row-toggle"
                   aria-expanded="false" aria-controls="full-info-${row.trait_name_caendr}"
+                  aria-label="Show more details for trait ${traitNameString(row.trait_name_display_1, row.trait_name_display_2, row.trait_name_display_3)}"
               ><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
             `;
           },
@@ -205,7 +206,14 @@
           row.child().attr('id', `full-info-${row.data().trait_name_caendr}`)
           e.target.closest('button').setAttribute('aria-expanded', 'true')
         }
+
+        update_arrows('#{{ table_id }} .row-toggle');
     });
+
+    function update_arrows(selector) {
+      $(`${selector}[aria-expanded="true"]` ).html('<i class="bi bi-chevron-down"  aria-hidden="true"></i>');
+      $(`${selector}[aria-expanded="false"]`).html('<i class="bi bi-chevron-right" aria-hidden="true"></i>');
+    };
 
 
     /* Offcanvas (Sidebar) */
