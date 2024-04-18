@@ -104,7 +104,13 @@ label {
 <div class="offcanvas offcanvas-end offcanvasPhenotype" tabindex="-1" id="offcanvas1"
     aria-labelledby="offcanvas1Label">
     <div class="offcanvas-header">
-        <h1 class="h5" id="offcanvas1Label"></h5>
+        <div>
+            <h1 class="h5">
+                <span id="offcanvas1-header-1" class="d-block mb-1"></span>
+                <span id="offcanvas1-header-2" class="d-block text-dark fw-normal"></span>
+                <span class="d-block text-dark fw-normal"><em id="offcanvas1-header-3"></em></span>
+            </h1>
+        </div>
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body p-4">
@@ -114,7 +120,8 @@ label {
 
 {% block script %}
 <script>
-    {% include '_scripts/utils.js' %} {#/* defines: flash_message */#}
+    {% include '_scripts/utils.js' %}       {#/* defines: flash_message */#}
+    {% include '_scripts/trait_utils.js' %} {#/* defines: traitNameHTML, queryTraitByName */#}
 
     $(document).ready(function() {
 
@@ -168,7 +175,7 @@ label {
                         const trait_name = row.trait_name_caendr;
                         const url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", trait_name).replace("TRAIT_SET", 'zhang');
                         return `
-                            <div id="trait-data-${row.trait_name_caendr}" class="ps-3 pt-0" data-description="${row.description_short || row.description_long}" data-species="${row.species_name}">
+                            <div id="trait-data-${row.trait_name_caendr}" class="ps-3 pt-0">
                                 <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
                             </div>`
                     },
@@ -185,17 +192,11 @@ label {
 
         // Fetch data for a trait and fill out side bar for non-bulk traits
         $(document).on('click','#traitDetails', function() {
-            const data = {csrf_token: $('#csrf_token').val(), trait_name: $(this).data('value')}
-            $.ajax({
-                type: "POST",
-                url: "{{ url_for('phenotype_database.get_traits_json') }}",
-                data: JSON.stringify(data),
-                contentType: "application/json",
-                dataType: "json",
-                success: function(response) {
+            queryTraitByName($(this).data('value'), $('#csrf_token').val())
+                .then((response) => {
                     fillOutModal(response)
-                },
-                error: function(error){
+                })
+                .fail((error) => {
                     console.error(error)
                     $('#offcanvas1 .btn-close').click()
                     $('html').animate({
@@ -204,9 +205,8 @@ label {
                     if (error.responseJSON && error.responseJSON.message) {
                         $('.alert').remove()
                         flash_message(error.responseJSON.message)
-                    }      
-                }
-            })
+                    }
+                })
         })
 
 
@@ -321,16 +321,14 @@ label {
                                     class="bi bi-chevron-right" aria-hidden="true"></i><em>${speciesName}</em></a>
                         </td>
                         <td id="accordionHeading-${i+1}">
-                            <strong>${arr[i].trait_name_display_1 || arr[i].trait_name_caendr}</strong>
-                            <p class="mb-0">${arr[i].trait_name_display_1 ? arr[i].trait_name_display_2 : ''}</p>
-                            <em>${arr[i].trait_name_display_1 ? arr[i].trait_name_display_3 : ''}</em>
+                            ${traitNameHTML( arr[i].trait_name_display_1, arr[i].trait_name_display_2, arr[i].trait_name_display_3 )}
                         </td>
-                        <td>${arr[i].description_short}.</td>
+                        <td>${arr[i].description_short ? (arr[i].description_short + '.') : ''}</td>
                         <td>${arr[i].source_lab}</td>
                         <td>${createdOn}</td>
-                        <td class="d-flex flex-column" id="tags">${tagsHTML}</td>
+                        <td class="d-flex-row flex-column" id="tags">${tagsHTML}</td>
                         <td class="optionsToolbar">
-                            <div class="ps-3 pt-0" id="trait-data-${arr[i].trait_name_caendr}" data-description="${arr[i].description_short || arr[i].description_long}" data-species="${arr[i].species_name}"><a href='${url}'><i class="bi bi-arrow-right-circle-fill"
+                            <div class="ps-3 pt-0" id="trait-data-${arr[i].trait_name_caendr}"><a href='${url}'><i class="bi bi-arrow-right-circle-fill"
                                         aria-hidden="true"></i>Analyze</a></div>
                         </td>
                     </tr>
@@ -422,7 +420,9 @@ label {
     }
 
     function fillOutModal(trait) {
-        $('#offcanvas1Label').text(trait.trait_name_caendr)
+        $('#offcanvas1-header-1').text(trait.trait_name_display_1)
+        $('#offcanvas1-header-2').text(trait.trait_name_display_2)
+        $('#offcanvas1-header-3').text(trait.trait_name_display_3)
         manageVal(trait.capture_date, '#captureDate', true)
         manageVal(trait.created_on, '#createdOn', true)
         manageVal(trait.modified_on, '#modifiedOn', true)

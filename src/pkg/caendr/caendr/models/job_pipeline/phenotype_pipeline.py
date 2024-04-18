@@ -47,24 +47,25 @@ class PhenotypePipeline(JobPipeline):
 
     # Start building props object
     props = {
-      'label':   data.get('label'),
       'species': data.get('species'),
     }
 
     # Construct the first trait object and add relevant fields to props
     trait_1 = Trait(dataset=data['trait_1_dataset'], trait_name=data['trait_1'])
-    props['trait_1']      = trait_1.file
-    props['trait_1_name'] = trait_1.name
+    props['trait_1']              = trait_1.file
+    props['trait_1_name_caendr']  = trait_1.name
+    props['trait_1_name_display'] = PhenotypeReport.compute_display_name(trait_1)
 
     # If a second trait file is provided, construct trait object
     if (data.get('trait_2')):
       trait_2 = Trait(dataset=data['trait_2_dataset'], trait_name=data['trait_2'])
-      props['trait_2']      = trait_2.file
-      props['trait_2_name'] = trait_2.name
+      props['trait_2']              = trait_2.file
+      props['trait_2_name_caendr']  = trait_2.name
+      props['trait_2_name_display'] = PhenotypeReport.compute_display_name(trait_2)
 
       # Compute hash from unique trait names
       # Sort before combining, so either order will produce the same hash
-      hash_source = ' '.join(sorted([props.get('trait_1_name', trait_1.name), props.get('trait_2_name', trait_2.name)]))
+      hash_source = ' '.join(sorted([props.get('trait_1_name_caendr', trait_1.name), props.get('trait_2_name_caendr', trait_2.name)]))
 
       # Check that both traits have the same species
       # The front-end interface should prevent this, but if a job is somehow submitted with

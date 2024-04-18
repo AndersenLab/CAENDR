@@ -44,31 +44,6 @@ def check_bp_enabled():
 
 
 
-def results_columns():
-  return [
-    {
-      'title': 'Description',
-      'class': 'label',
-      'field': 'label',
-      'width': 0.2,
-      'link_to_data': True,
-    },
-    {
-      'title': 'Trait 1',
-      'class': 's1',
-      'field': 'trait_1_name',
-      'width': 0.4,
-    },
-    {
-      'title': 'Trait 2',
-      'class': 's2',
-      'field': 'trait_2_name',
-      'width': 0.4,
-    },
-  ]
-
-
-
 #
 # Main Endpoint
 #
@@ -253,7 +228,7 @@ def submit():
   # Read & clean fields from JSON data
   data = {
     field: bleach.clean(request.json.get(field))
-      for field in {'label', 'species', 'trait_1', 'trait_1_dataset'}
+      for field in {'species', 'trait_1', 'trait_1_dataset'}
   }
 
   # Read & clean values for trait 2, if given
@@ -312,7 +287,6 @@ def list_results():
     # Table info
     'species_list': Species.all(),
     'items': list_reports(PhenotypeReport, user = None if show_all else user, filter_errs=filter_errs),
-    'columns': results_columns(),
 
     'JobStatus': JobStatus,
   })

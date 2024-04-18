@@ -160,6 +160,10 @@ class PreflightCheckError(InternalError):
 
 class GoogleSheetsParseError(InternalError):
   description = "Unable to parse Google Sheets document"
+  def __init__(self, description = None):
+    if description is not None:
+      self.description = f'{self.description}: {description}'
+    super().__init__()
 
 class ExternalMarkdownRenderError(InternalError):
   def __init__(self, url, src):
