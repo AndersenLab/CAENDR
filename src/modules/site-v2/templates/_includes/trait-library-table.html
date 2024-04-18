@@ -43,8 +43,9 @@
       <thead class="table-secondary align-middle">
         <tr>
           <th scope="col" class="col-1 text-center dropdown-column"></th>
+          <th scope="col" class="col-1 text-center">Internal Name</th>
+          <th scope="col" class="col-1 text-center">Display Name</th>
           <th scope="col" class="col-1 text-center py-4">Species</th>
-          <th scope="col" class="col-1 text-center">Trait</th>
           <th scope="col" class="col-1 text-center">Upload Date</th>
           {% if trait_library_table_mode == 'full'%}
           <th scope="col" class="col-1 text-center">Public Database</th>
@@ -107,14 +108,21 @@
           "sClass": "p-0 m-0 dropdown-column",
         },
         {
-          "data": "species_name",
+          "data": "trait_name_user",
           "render": function(data, type, row) {
-            return first_letter_caps(data).replace('_', '. ').italics();
+            return data || row.trait_name_caendr;
           },
         },
         {
           "render": function(data, type, row) {
             return traitNameHTML( row.trait_name_display_1, row.trait_name_display_2, row.trait_name_display_3 );
+          },
+          "width": '20%',
+        },
+        {
+          "data": "species_name",
+          "render": function(data, type, row) {
+            return first_letter_caps(data).replace('_', '. ').italics();
           },
         },
         {
