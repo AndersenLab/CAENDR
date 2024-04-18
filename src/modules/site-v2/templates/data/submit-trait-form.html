@@ -27,10 +27,6 @@
             <div class="col-md-4">{{ render_field(form.institution) }}</div>
             <div class="col-md-4">{{ render_field(form.source_lab, has_popover=true, content='Please enter the worm lab code for your lab as found on https://cgc.umn.edu/laboratories') }}</div>
         </div>
-        <div class="row my-5">
-            <div class="col-md-4">{{ render_field(form.protocols) }}</div>
-            <div class="col-md-4">{{ render_field(form.publication) }}</div>
-        </div>
         <hr>
         <h3 class="pb-3">Trait Information</h3>
         <div class="row my-5">
@@ -53,9 +49,13 @@
             <div class="col-md-4">{{ render_field(form.trait_name_display_3, has_popover=true, content='This field can be used to provide additional information that\'s important for the user to know about the trait.') }}</div>
         </div>
         <div class="row my-5">
-            <div class="col-md-4 text-break">{{ render_field(form.tags, has_popover=true, content='Please select the best categories to describe your trait. Please note: at least one category is required.') }}</div>
             <div class="col-md-4"> {{ render_field(form.description_short ,has_popover=true, content='Please describe the trait in a few words, providing the information that\'s most important for other users who may want to perform an analysis using this trait.') }}</div>
             <div class="col-md-4">{{ render_field(form.description_long, has_popover=true, content='You may provide a longer description of the trait to provide additional useful information for other users who may want to perform an analysis using this trait.') }}</div>
+            <div class="col-md-4">{{ render_field(form.protocols) }}</div>
+        </div>
+        <div class="row my-5">
+            <div class="col-md-4 text-break">{{ render_field(form.tags, has_popover=true, content='Please select the best categories to describe your trait. Please note: at least one category is required.') }}</div>
+            <div class="col-md-4">{{ render_field(form.publication) }}</div>
         </div>
         <div class="row my-5">
         </div>
