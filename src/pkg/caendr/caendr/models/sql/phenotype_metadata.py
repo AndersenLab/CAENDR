@@ -10,8 +10,8 @@ class PhenotypeMetadata(DictSerializable, db.Model):
       This table includes details such as species, description, source lab, and other additional 
       information.
   """
-
-  trait_name_caendr = db.Column(db.String(), unique=True, primary_key=True)
+  id = db.Column(db.String(), primary_key=True)
+  trait_name_caendr = db.Column(db.String(), unique=True)
   trait_name_user = db.Column(db.String(), nullable=True)
   trait_name_display_1 = db.Column(db.String())
   trait_name_display_2 = db.Column(db.String())
@@ -34,8 +34,8 @@ class PhenotypeMetadata(DictSerializable, db.Model):
   is_bulk_file = db.Column(db.Boolean(), nullable=False)
   phenotype_values = db.relationship(
                       'PhenotypeDatabase', 
-                      backref='phenotype_db.trait_name', 
-                      primaryjoin='PhenotypeMetadata.trait_name_caendr==PhenotypeDatabase.trait_name', 
+                      backref='phenotype_db.metadata_id', 
+                      primaryjoin='PhenotypeMetadata.id==PhenotypeDatabase.metadata_id', 
                       lazy='select')
 
   __tablename__ = 'phenotype_metadata'
@@ -52,6 +52,7 @@ class PhenotypeMetadata(DictSerializable, db.Model):
   
   def add_trait(self, trait_obj):
     new_trait = PhenotypeMetadata(
+      id = trait_obj['name'],
       trait_name_caendr = trait_obj['trait_name_caendr'],
       trait_name_user = trait_obj['trait_name_user'],
       trait_name_display_1 = trait_obj['trait_name_display_1'],
