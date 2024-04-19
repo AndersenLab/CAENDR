@@ -9,7 +9,7 @@ from extensions import cache, compress
 
 from base.utils.auth import jwt_required, get_current_user, user_is_admin
 
-from caendr.api.phenotype import query_phenotype_metadata, get_trait, filter_trait_query
+from caendr.api.phenotype import query_phenotype_metadata, get_trait, filter_trait_query, get_trait_categories
 from caendr.services.cloud.postgresql import rollback_on_error_handler
 
 from caendr.models.datastore import Entity, TraitFile, Species, User
@@ -410,3 +410,21 @@ def query_trait_metadata():
 
   # Return the full trait metadata
   return trait.to_json_with_values()
+
+
+
+#
+# Query Endpoint: Trait Categories
+#
+
+
+@api_trait_bp.route('/categories', methods=['GET'])
+@cache.memoize(60*60)
+@compress.compressed()
+@query_traits_error_handler('Failed to retrieve trait categories')
+@jsonify_request
+def query_trait_categories():
+  """
+    Get list of trait categories.
+  """
+  return get_trait_categories()

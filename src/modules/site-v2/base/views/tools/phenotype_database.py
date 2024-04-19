@@ -12,7 +12,7 @@ from flask import (render_template,
 from extensions import cache, compress
 from sqlalchemy import or_, func
 
-from caendr.api.phenotype import query_phenotype_metadata, get_trait, filter_trait_query_by_text, filter_trait_query_by_tags
+from caendr.api.phenotype import query_phenotype_metadata, get_trait_categories
 from caendr.services.cloud.postgresql import rollback_on_error_handler
 
 from caendr.services.logger import logger
@@ -55,14 +55,11 @@ def phenotype_database():
     Phenotype Database table (non-bulk)
   """
   form = EmptyForm()
-  
+
   # Get the list of unique tags
   try:
-    query = query_phenotype_metadata()
-    tags = [ tr.tags.split(', ') for tr in query if tr.tags ]
-    tags_list = [tg for tr_tag in tags for tg in tr_tag]
-    unique_tags = list(set(tags_list))
-        
+    categories = get_trait_categories()
+
   except Exception as ex:
     logger.error(f'Failed to retrieve the list of traits: {ex}')
     abort(500, description='Failed to retrieve the list of traits')
@@ -73,7 +70,7 @@ def phenotype_database():
     "tool_alt_parent_breadcrumb": { "title": "Tools", "url": url_for('tools.tools') },
 
     # Data
-    'categories': unique_tags,
+    'categories': categories,
     'form': form
   })
 

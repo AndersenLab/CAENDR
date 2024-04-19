@@ -38,6 +38,8 @@ class PhenotypeMetadata(DictSerializable, db.Model):
 
   __tablename__ = 'phenotype_metadata'
 
+
+
   def to_json_with_values(self):
     """
       Converts PhenotypeMetadata instance to JSON in the joined queries
@@ -46,3 +48,12 @@ class PhenotypeMetadata(DictSerializable, db.Model):
     phenotype_values = [ v.to_json() for v in self.phenotype_values ]
     json_trait['phenotype_values'] = phenotype_values
     return json_trait
+
+
+  def get_tags(self):
+    '''
+      Get the category tags as a set of strings.
+      If no tag set defined, returns None.
+    '''
+    if self.tags:
+      return { tg.strip() for tg in self.tags.split(',') }

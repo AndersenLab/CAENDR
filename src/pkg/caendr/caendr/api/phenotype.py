@@ -189,3 +189,35 @@ def filter_trait_query_by_species(query, species: Optional[Union[Species, str]])
 
   # Return the (possibly filtered) query
   return query
+
+
+
+#
+# Trait Categories
+#
+
+
+@rollback_on_error
+def get_trait_categories(query = None):
+  '''
+    Get the list of trait categories.
+
+    If a query is provided, only returns categories represented in that query.
+    Otherwise, creates a new query.
+
+    TODO: Currently, uses PhenotypeMetadata table queries to get the full list
+          of categories, as strings. In the future we may want to explicitly
+          store this list somewhere and attach metadata.
+  '''
+  # If no query given, default to full-database search
+  # TODO: We can speed this up a lot by excluding Zhang traits... what is the most data-agnostic way to do that?
+  if query is None:
+    query = query_phenotype_metadata()
+
+  # Parse the list of tags from each row
+  # `filter` with None removes all non-truthy values, i.e. empty tag sets
+  tags = filter(None, ( tr.get_tags() for tr in query ))
+
+  # Flatten the list of lists into a set, and sort the result
+  tags_list = { tg for tr_tag in tags for tg in tr_tag }
+  return sorted(tags_list)
