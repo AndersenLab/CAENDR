@@ -38,6 +38,7 @@ def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
            trait_name = '_'.join(row[:3])
            wbgene_id = row[1]
            yield {
+             'id':                   f'{file_name}_{idx}',
              'trait_name_caendr':    trait_name,
              'trait_name_user':      md['trait_name_user'],
              'trait_name_display_1': '',
@@ -62,6 +63,7 @@ def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
             } 
     else:
       yield {
+      'id':                   file_name,
       'trait_name_caendr':    md['trait_name_caendr'],
       'trait_name_user':      md['trait_name_user'],
       'trait_name_display_1': md['trait_name_display_1'],
