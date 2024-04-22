@@ -10,7 +10,7 @@ from base.utils.tools           import lookup_report, get_upload_err_msg
 from constants                  import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 from caendr.models.datastore    import DatasetRelease, Species
-from caendr.models.error        import NotFoundError, ReportLookupError, EmptyReportDataError, EmptyReportResultsError, FileUploadError
+from caendr.models.error        import NotFoundError, ReportLookupError, EmptyReportDataError, EmptyReportResultsError, FileUploadError, DataValidationError
 from caendr.models.job_pipeline import JobPipeline
 from caendr.services.logger     import logger
 from caendr.utils.local_files   import LocalUploadFile
@@ -120,6 +120,14 @@ def parse_job_id(pipeline_class: Type[JobPipeline], fetch=True, check_data_exist
       except (EmptyReportDataError, EmptyReportResultsError) as ex:
         logger.error(f'Error fetching {pipeline_class.get_kind()} report {ex.id}: {ex.description}')
         return abort(404, description = ex.description)
+
+      # Error with the submission data
+      # This should only be possible if a report was somehow created with invalid data,
+      # e.g. not enough traits in a Phenotype Analysis report
+      except DataValidationError as ex:
+        logger.error(f'Error fetching {pipeline_class.get_kind()} report {id}: {ex}')
+        flash(ex.msg, 'error')
+        return abort(400, description = ex.msg)
 
       # General error
       except Exception as ex:

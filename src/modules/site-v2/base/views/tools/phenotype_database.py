@@ -20,10 +20,11 @@ from caendr.utils.env       import get_env_var
 
 from base.forms                 import EmptyForm
 from base.utils.auth            import jwt_required, get_current_user, user_is_admin
-from base.utils.tools           import lookup_report, list_reports, try_submit
+from base.utils.tools           import list_reports, try_submit
+from base.utils.view_decorators import parse_job_id
 
 from caendr.models.datastore    import PhenotypeReport, Species
-from caendr.models.error        import ReportLookupError, EmptyReportDataError, EmptyReportResultsError, NotFoundError, DataValidationError
+from caendr.models.error        import NotFoundError
 from caendr.models.job_pipeline import PhenotypePipeline
 from caendr.models.status       import JobStatus
 from caendr.models.sql          import PhenotypeMetadata
@@ -292,10 +293,11 @@ def list_results():
   })
 
 
-@phenotype_database_bp.route("/report/<id>",                     methods=['GET'])
-@phenotype_database_bp.route("/report/<id>/download/<file_ext>", methods=['GET'])
+@phenotype_database_bp.route("/report/<report_id>",                     methods=['GET'])
+@phenotype_database_bp.route("/report/<report_id>/download/<file_ext>", methods=['GET'])
 @jwt_required()
-def report(id, file_ext=None):
+@parse_job_id(PhenotypePipeline)
+def report(job: PhenotypePipeline, data, result, file_ext=None):
 
   # Validate file extension, if provided
   if file_ext:
@@ -304,42 +306,6 @@ def report(id, file_ext=None):
       abort(404)
   else:
     file_format = None
-
-  # Fetch requested phenotype report
-  # Ensures the report exists and the user has permission to view it
-  try:
-    job: PhenotypePipeline = lookup_report(PhenotypeReport.kind, id)
-
-  # If the report lookup request is invalid, show an error message
-  except ReportLookupError as ex:
-    flash(ex.msg, 'danger')
-    abort(ex.code)
-
-  # Try getting & parsing the report data file and results
-  # If result is None, job hasn't finished computing yet
-  try:
-    data, result = job.fetch()
-
-  # Error reading one of the report files
-  except (EmptyReportDataError, EmptyReportResultsError) as ex:
-    logger.error(f'Error fetching Phenotype report {ex.id}: {ex.description}')
-    return abort(404, description = ex.description)
-
-  # Error with the submission data
-  # This should only be possible if a report was somehow created with invalid data, e.g. not enough traits
-  except DataValidationError as ex:
-    flash(ex.msg, 'error')
-    return abort(400, description = ex.msg)
-
-  # General error
-  except Exception as ex:
-    logger.error(f'Error fetching Phenotype report {id}: {ex}')
-    return abort(400, description = 'Something went wrong')
-
-  # No data file found
-  if data is None:
-    logger.error(f'Error fetching Phenotype report {id}: Input data does not exist')
-    return abort(404)
 
   # If a file format was specified, return a downloadable file with the results
   if file_format is not None:
