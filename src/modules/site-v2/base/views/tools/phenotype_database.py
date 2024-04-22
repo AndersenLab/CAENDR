@@ -21,7 +21,7 @@ from caendr.utils.env       import get_env_var
 from base.forms                 import EmptyForm
 from base.utils.auth            import jwt_required, get_current_user, user_is_admin
 from base.utils.tools           import list_reports, try_submit
-from base.utils.view_decorators import parse_job_id
+from base.utils.view_decorators import parse_job_id, validate_form
 
 from caendr.models.datastore    import PhenotypeReport, Species
 from caendr.models.error        import NotFoundError
@@ -224,25 +224,15 @@ def submit_traits():
 
 @phenotype_database_bp.route('/submit', methods=["POST"])
 @jwt_required()
-def submit():
+@validate_form(None, from_json=True)
+def submit(form_data, no_cache=False):
 
-  # Read & clean fields from JSON data
-  data = {
-    field: bleach.clean(request.json.get(field))
-      for field in {'species', 'trait_1', 'trait_1_dataset'}
-  }
-
-  # Read & clean values for trait 2, if given
-  trait_2         = request.json.get('trait_2')
-  trait_2_dataset = request.json.get('trait_2_dataset')
-  data['trait_2']         = bleach.clean(trait_2)         if trait_2         is not None else None
-  data['trait_2_dataset'] = bleach.clean(trait_2_dataset) if trait_2_dataset is not None else None
-
-  # If user is admin, allow them to bypass cache with URL variable
-  no_cache = bool(user_is_admin() and request.args.get("nocache", False))
+  # Make sure these keys exist in the form data, even if they weren't provided in the submission
+  form_data['trait_2']         = form_data.get('trait_2',         None)
+  form_data['trait_2_dataset'] = form_data.get('trait_2_dataset', None)
 
   # Try submitting the job & getting a JSON status message
-  response, code = try_submit(PhenotypeReport.kind, get_current_user(), data, no_cache)
+  response, code = try_submit(PhenotypeReport.kind, get_current_user(), form_data, no_cache)
 
   # If there was an error, flash it
   if code != 200 and int(request.args.get('reloadonerror', 1)):
