@@ -11,7 +11,7 @@ from caendr.models.datastore       import TraitFile, Species
 from caendr.models.status          import PublishStatus
 from caendr.services.cloud.storage import get_blob, upload_blob_from_file_object, check_blob_exists
 from caendr.services.logger        import logger
-from caendr.services.validate      import validate_trait_file
+from caendr.services.validate      import validate_file, StrainValidator, NumberValidator
 from caendr.utils.data             import unique_id
 from base.utils.auth               import jwt_required, get_current_user
 from caendr.utils.env              import get_env_var
@@ -199,9 +199,13 @@ def parse_trait_file():
     with LocalUploadFile(request.files.get('file'), valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS) as file:
       # Validate the file
       try:
-        validate_trait_file(file)
-      except DataFormatError as ex:
-        return jsonify({ 'message': ex.msg }), 500
+        species = Species.from_name(request.form.get('species'))
+        validate_file(file, [
+                              StrainValidator( 'strain', species=species, force_unique=True, force_unique_msgs={} ),
+                              NumberValidator( None, accept_float=True, accept_na=True ),
+                            ])
+      except Exception as ex:
+        return jsonify({ 'message': ex }), 500
       
       # Parse the file
       with open(file) as f:

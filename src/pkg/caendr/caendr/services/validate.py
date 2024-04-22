@@ -82,47 +82,6 @@ def validate_file(local_path_or_file, validators, delimiter='\t', unique_rows=Fa
       validator.finish()
 
 
-def validate_trait_file(file, num_cols=2, delimiter='\t'):
-  """ Validate a user uploaded trait file for Phenotype Database submission """
-  with open(file, 'r') as f:
-    csv_reader = csv.reader(f, delimiter=delimiter)
-
-    # Get the header line, throwing an empty file error if not found
-    try:
-      csv_headings  = next(csv_reader)
-    except StopIteration:
-      raise DataFormatError('The file is empty. Please edit the file to include your data.')
-    
-    # Check that first line has correct number of columns
-    if len(csv_headings) != num_cols:
-      raise DataFormatError(f'The file contains an incorrect number of columns. Please edit the file to ensure it contains {num_cols} columns.', 1)
-    
-    # Loop through all remaining lines in the file
-    for line, csv_row in enumerate(csv_reader, start=2):
-
-      # Check for empty lines
-      if ''.join(csv_row).strip() == '':
-        raise DataFormatError(f'Rows cannot be blank. Please check line #{ line } to ensure valid data have been entered.', line)
-
-      # Check that line has the correct number of columns
-      if len(csv_row) != num_cols:
-        raise DataFormatError(f'File contains incorrect number of columns. Please edit the file to ensure it contains { num_cols } columns.', line)
-      
-      # Check if first column is string value
-      if not isinstance(csv_row[0], str):
-        raise DataFormatError(f'Strain names need to be in text format. Please check line #{ line } to ensure valid strain names have been entered.', line)
-      
-      # Skip if trait_value is empty
-      if csv_row[1] == '':
-        continue
-      
-      # Check if second column is numeric value
-      try:
-        float(csv_row[1])
-      except:
-        raise DataFormatError(f'Trait values need to be in numeric format. Please check line #{ line } to ensure valid trait values have been entered.', line)
-      
-
 #
 # Validator Base Class
 #

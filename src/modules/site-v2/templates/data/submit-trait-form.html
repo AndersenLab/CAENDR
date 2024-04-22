@@ -10,6 +10,14 @@
     content: "*";
     color: red;
 }
+#info {
+        background-color: var(--bs-footerBg);
+        max-width: 650px;
+    }
+#info i {
+    color: #0719BC;
+    font-size: 1.5rem
+}
 </style>
 {% endblock %}
 
@@ -29,33 +37,39 @@
         </div>
         <hr>
         <h3 class="pb-3">Trait Information</h3>
+        <div id="info" class="d-flex flex-row p-2 my-4">
+            <i class="bi bi-info-circle-fill p-3"></i>
+            <p>Select species and upload a file to preview your data and check if it meets the required format. <strong>Please note:</strong> you need to select species to preview your file.</p>
+        </div>
         <div class="row my-5">
-            <div class="col-md-4">
+            <div class="col-md-3">{{ render_field(form.species) }}</div>
+            <div class="col-md-3 d-flex">
                 {% call render_field(form.file, has_popover=true, content="Example file") %}
                 {% endcall %}
             </div>
-            <div class="col-md-4 p-0 mx-5 d-none border border-1 rounded overflow-auto" style="height:30vh">
+            <button class="col-md-2 btn btn-secondary text-light align-self-baseline" disabled style="height:2.3rem; margin-top:2rem" type="button" id="file-upload">Upload File</button>
+            <div class="col-md-3 p-0 mx-4 d-none border border-1 rounded overflow-auto" style="height:30vh">
                 <table class="table table-hover mb-0" id="file-content"></table>
             </div>
         </div>
+        <hr>
         <div class="row my-5">
             <div class="col-md-4">{{ render_field(form.trait_name_user, has_popover=true, content='This is the name used internally by your laboratory to refer to this trait. Please note: this name will not be shared publicly with other users and will only be displayed to you') }}</div>
-            <div class="col-md-4">{{ render_field(form.species) }}</div>
-            <div class="col-md-4">{{ render_field(form.units) }}</div>
-        </div>
-        <div class="row my-5">
             <div class="col-md-4"> {{ render_field(form.trait_name_display_1, has_popover=true, content='This is the name that will be shared with other users in the phenotype database and will be used to represent your trait throughout the site. This name should be short (one word) and descriptive. The other display name fields can be used to provide additional description if needed.') }}</div>
             <div class="col-md-4">{{ render_field(form.trait_name_display_2, has_popover=true, content='This field can be used to provide additional information that\'s important for the user to know about the trait.') }}</div>
-            <div class="col-md-4">{{ render_field(form.trait_name_display_3, has_popover=true, content='This field can be used to provide additional information that\'s important for the user to know about the trait.') }}</div>
         </div>
         <div class="row my-5">
+            <div class="col-md-4">{{ render_field(form.trait_name_display_3, has_popover=true, content='This field can be used to provide additional information that\'s important for the user to know about the trait.') }}</div>
             <div class="col-md-4"> {{ render_field(form.description_short ,has_popover=true, content='Please describe the trait in a few words, providing the information that\'s most important for other users who may want to perform an analysis using this trait.') }}</div>
             <div class="col-md-4">{{ render_field(form.description_long, has_popover=true, content='You may provide a longer description of the trait to provide additional useful information for other users who may want to perform an analysis using this trait.') }}</div>
+        </div>
+        <div class="row my-5">
+            <div class="col-md-4">{{ render_field(form.units) }}</div>
             <div class="col-md-4">{{ render_field(form.protocols) }}</div>
+            <div class="col-md-4">{{ render_field(form.publication) }}</div>
         </div>
         <div class="row my-5">
             <div class="col-md-4 text-break">{{ render_field(form.tags, has_popover=true, content='Please select the best categories to describe your trait. Please note: at least one category is required.') }}</div>
-            <div class="col-md-4">{{ render_field(form.publication) }}</div>
         </div>
         <div class="row my-5">
         </div>
@@ -92,14 +106,26 @@
             }
         });
 
+        $('#speciesSelect, #file').on('change', function() {
+            $('#file-upload').prop('disabled', !$('#speciesSelect').val() || !$('#file').val())
+        })
 
-        $('#file').on('change', function(e) {
+        $('#file').on('change', function() {
+            if ($('#file')[0].files[0] == undefined) {
+                $('#file-content').empty()
+                $('#file-content').parent().addClass('d-none')
+            }
+        })
+
+        // Upload the file and display the content
+        $('#file-upload').on('click', function(e) {
             e.preventDefault()
-            const file = e.target.files[0]
-            if (file) {
+            const file = $('#file')[0].files[0]
+            const species = $('#speciesSelect').val()
+            if (file && species) {
                 const formData = new FormData()
                 formData.append('file', file)
-
+                formData.append('species', species)
                 $.ajax({
                     type: "POST",
                     url: "{{ url_for('data.parse_trait_file') }}",
@@ -123,12 +149,7 @@
                         }         
                     }
                 })            
-            } else {
-                $('#file-content').empty()
-                $('#file-content').parent().addClass('d-none')
-                // TODO: flash a message for user??
-            }
-            
+            }            
         })
 
         function display_file_content(file) {
