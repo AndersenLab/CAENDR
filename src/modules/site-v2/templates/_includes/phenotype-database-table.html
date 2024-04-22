@@ -1,0 +1,510 @@
+{% block custom_head %}
+<style>
+.input-wrapper {
+position: relative;
+}
+.input-wrapper i {
+  position: absolute;
+  top: 20%;
+  right: 5px;
+  color: grey
+}
+
+#tagsFilter, #tags {
+    text-transform: capitalize;
+}
+
+label {
+    white-space: normal;
+    word-wrap: break-word;
+}
+</style>
+{% endblock %}
+
+<nav>
+    <div class="nav nav-tabs border-1" id="nav-tab" role="tablist">
+        <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button"
+            role="tab" aria-controls="nav-home" aria-selected="true">Traits</button>
+        <button class="nav-link" id="nav-zhang-tab" data-bs-toggle="tab" data-bs-target="#nav-zhang" type="button"
+            role="tab" aria-controls="nav-zhang" aria-selected="false">Zhang et al. Traits</button>
+    </div>
+</nav>
+<div class="tab-content py-2" id="nav-tabContent">
+    <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+        <div class="d-flex flex-wrap justify-content-between my-5">
+            <div class="col-12 col-md-3 mx-1 mb-3 mb-md-0">
+                <form>
+                    <label for="traitsSearch" class="form-label"><i class="bi bi-search"></i> Search:</label>
+                    <div class="input-wrapper">
+                        <input type="text" class="form-control" name="traitsSearch" id="traitsSearch">
+                        <i class="bi bi-x-circle-fill" id="clearSearch"></i>
+                    </div>
+                </form>
+        </div>
+            <div class="col-12 col-md-8 mx-1 align-self-end mb-0">
+                <div class="d-flex flex-wrap justify-content-center justify-content-md-end mt-3 mt-md-0" role="menu" id="tagsFilter">
+                    <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}" />
+                    {% for tag in categories %}
+                    <div class="d-flex align-items-center mx-2 mb-3">
+                        <input type="checkbox" class="custom-control-input me-1 filterCheckbox" value="{{tag}}" id="{{tag}}">
+                        <label class="custom-check-label" for="{{tag}}">{{tag|replace('/', ' • ')}}</label>
+                    </div>
+                    {% endfor %}
+                    <div class="d-flex mx-2 mb-3">
+                        <a class="fw-bold" role="button" id="clearAll">Clear All<i class="bi bi-x-circle-fill ms-1" aria-hidden="true"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table accordion p-0 text-center" id="tableAccordion">
+                <caption class="visually-hidden">A list of phenotype traits.</caption>
+                <thead class="table-secondary align-middle">
+                    <tr>
+                        <th scope="col" class="col-1 py-4">Species</th>
+                        <th scope="col" class="col-1">Trait</th>
+                        <th scope="col" class="col-1">Short Description</th>
+                        <th scope="col" class="col-1">Source Lab</th>
+                        <th scope="col" class="col-1">Upload Date</th>
+                        <th scope="col" class="col-1">Categories</th>
+                        <th scope="col" class="col-1">Analyze</th>
+                    </tr>
+                </thead>
+                <tbody class="table-group-divider align-middle">
+                </tbody>
+            </table>
+        </div>
+        <nav class="d-flex justify-content-end" aria-label="Phenotype database table page navigation" id="tablePagination">
+            <ul class="pagination">   
+            </ul>
+        </nav>
+    </div>
+    <div class="tab-pane fade" id="nav-zhang" role="tabpanel" aria-labelledby="nav-profile-tab">
+        <div class="table-responsive">
+            <table class="table p-0 text-center w-100" id="zhangTraits">
+                <caption class="visually-hidden">A list of Zhang et al. traits.</caption>
+                <thead class="table-secondary align-middle">
+                    <tr>
+                        <th scope="col" class="py-4 text-center">Species</th>
+                        <th scope="col" class="text-center">Trait</th>
+                        <th scope="col" class="text-center">Description</th>
+                        <th scope="col" class="text-center">Upload Date</th>
+                        <th scope="col" class="text-center">View Full Details</th>
+                        <th scope="col" class="text-center">Analyze</th>
+                    </tr>
+                </thead>
+                <tbody class="table-group-divider align-middle">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Offcanvas -->
+<div class="offcanvas offcanvas-end offcanvasPhenotype" tabindex="-1" id="offcanvas1"
+    aria-labelledby="offcanvas1Label">
+    <div class="offcanvas-header">
+        <div>
+            <h1 class="h5">
+                <span id="offcanvas1-header-1" class="d-block mb-1"></span>
+                <span id="offcanvas1-header-2" class="d-block text-dark fw-normal"></span>
+                <span class="d-block text-dark fw-normal"><em id="offcanvas1-header-3"></em></span>
+            </h1>
+        </div>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-4">
+        {% include "_includes/phenotype-offcanvas-content.html" %}
+    </div>
+</div>
+
+{% block script %}
+<script>
+    {% include '_scripts/utils.js' %}       {#/* defines: flash_message */#}
+    {% include '_scripts/trait_utils.js' %} {#/* defines: traitNameHTML, queryTraitByName */#}
+
+    $(document).ready(function() {
+
+        $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
+                }
+                }
+            });
+
+        // Render first load results
+        getResultsForPage(1, 1)
+
+        // Render Zhang table with Datatables
+        const zhangTable = $('#zhangTraits').DataTable( {
+            "processing": true,
+            "serverSide": true,
+            "ajax": "/tools/phenotype-database/traits-zhang",
+            "ordering": false,
+            "columns": [
+                {
+                    "data": "Species",
+                    "render": function(data, type, row) {
+                        return row.species_name.replace('c_', 'C. ').italics()
+                    }
+                },
+                {"data": "trait_name_caendr"},
+                {"data": "description_long"},
+                {
+                    "data": "Upload Date",
+                    "render": function(data, type, row) {
+                        return formatDate(row.created_on)
+                    }
+                },
+                {
+                    "data": "View Full Details",
+                    "render": function(data, type, row) {
+                        const d = JSON.stringify(row)
+                        return `<td>
+                            <div class="optionsToolbar">
+                            <a id="details" data-value='${d}' data-bs-toggle="offcanvas" data-bs-target="#offcanvas1" aria-controls="offcanvas1" 
+                            href="#"><i class="bi bi-list-ul" aria-hidden="true"></i>Full Details</a>
+                            </div>
+                            </td>`
+                        }
+                },
+                {
+                    "data": "Analyze",
+                    "render": function(data, type, row) {
+                        const trait_name = row.trait_name_caendr;
+                        const url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", trait_name).replace("TRAIT_SET", 'zhang');
+                        return `
+                            <div id="trait-data-${row.trait_name_caendr}" class="ps-3 pt-0">
+                                <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
+                            </div>`
+                    },
+                    "sClass": "optionsToolbar",
+                },
+            ]
+        });
+
+        // Fill out side bar for Zhang traits
+        $(document).on('click','#details', function() {
+            const trait = $(this).data('value')
+            fillOutModal(trait)
+        })
+
+        // Fetch data for a trait and fill out side bar for non-bulk traits
+        $(document).on('click','#traitDetails', function() {
+            queryTraitByName($(this).data('value'), $('#csrf_token').val())
+                .then((response) => {
+                    fillOutModal(response)
+                })
+                .fail((error) => {
+                    console.error(error)
+                    $('#offcanvas1 .btn-close').click()
+                    $('html').animate({
+                        scrollTop: $('body').offset().top
+                    }, 100);
+                    if (error.responseJSON && error.responseJSON.message) {
+                        $('.alert').remove()
+                        flash_message(error.responseJSON.message)
+                    }
+                })
+        })
+
+
+        
+        // Handle the Categories filter
+        $(document).on( "change", "input[type=checkbox]", function () {
+            if ($(this).attr('id') !== 'selectAll') {
+                $('#selectAll').prop('checked', false)
+            }
+            search()
+        })
+
+        $('#selectAll').on('change', function() {
+            if ($(this).is(':checked')) {
+                $('.filterCheckbox').prop('checked', true)
+            } else {
+                $('.filterCheckbox').prop('checked', false)
+            }
+        })
+
+        // Clear all filters for Categories
+        $("#clearAll").on('click', function() {
+            $('input[type=checkbox]').prop('checked', false)
+            search()
+        })
+
+        // Handle search bar
+        $("#traitsSearch").on('keyup', function(){
+            search()
+        })
+
+        // Clear search bar and reset the table
+        $("#clearSearch").on('click', function() {
+            $("#traitsSearch").val('')
+            search()
+        })
+
+        // Filter table by tag links
+        $('#tableAccordion').on('click', '[id^="tagLink"]', function() {
+            const tagVal = $(this).data('value')
+            const filterTag = $("input[type=checkbox]").filter(function(){
+                return $(this).attr('value') === tagVal
+            })
+            filterTag.prop('checked', true)
+            search()
+        })
+
+        // Prevent 'enter' key from reloading the page
+        $('#traitsSearch').closest('form').on('submit', function(e){
+            e.preventDefault();
+        });
+    })
+
+    // Filter table by Search input and Categories
+    async function search() {
+        const checkedTagsSelector = $(".filterCheckbox:checked")
+        let selectedTags = []
+        if (checkedTagsSelector.length) {
+            selectedTags = $(".filterCheckbox:checked").map(function() {
+                return $(this).val()
+            }).get()
+        }
+        const data = {csrf_token: $('#csrf_token').val(), search_val: $("#traitsSearch").val(), selected_tags: selectedTags}
+        try {
+            const res = await sendPostRequest(data)
+            return handlePostRequest(res)
+        } catch(err) {
+            console.error(err)
+            flash_message(`Failed to retrieve the list of traits: ${err.statusText}`)
+        }
+    }
+
+    async function sendPostRequest(data) {
+        const resp = await fetch("{{ url_for('phenotype_database.phenotype_database') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                'X-CSRF-TOKEN': data.csrf_token
+            },
+            body: JSON.stringify(data)
+        })
+
+        if (resp.ok) {
+            const respData = await resp.json()
+            return respData
+        } else {
+            console.error(resp.statusText)
+            throw new Error
+        }
+    }
+
+    // Fill out table for non-bulk traits
+    function filterTable(arr) {
+        for (let i = 0; i < arr.length; i++) {
+            const speciesName = arr[i].species_name.charAt(0).toUpperCase() + arr[i].species_name.replace('_', '. ').slice(1)
+            const traitName = arr[i].trait_name_caendr
+            let url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", traitName).replace("TRAIT_SET", 'caendr')
+            const createdOn = formatDate(arr[i].created_on)
+            let tagsHTML = ''
+            if (arr[i].tags !== null && arr[i].tags.length) {
+                const tags = arr[i].tags.split(', ')
+                for (let j = 0; j < tags.length; j++) {
+                    tagsHTML += `<div class="mb-3"><a role="button" class="btn btn-link" id="tagLink-${j+1}" data-value="${tags[j]}">${tags[j].replaceAll('/', ' • ')}</a></div>`
+                }
+            }
+            
+            let html = `
+                    <tr class="py-3 dislayedRow">
+                        <td>
+                            <a href="#" class="text-dark fw-normal" data-bs-toggle="collapse"
+                                data-bs-target="#collapse-${i+1}" aria-expanded="false" aria-controls="collapse-${i+1}"><i
+                                    class="bi bi-chevron-right" aria-hidden="true"></i><em>${speciesName}</em></a>
+                        </td>
+                        <td id="accordionHeading-${i+1}">
+                            ${traitNameHTML( arr[i].trait_name_display_1, arr[i].trait_name_display_2, arr[i].trait_name_display_3 )}
+                        </td>
+                        <td>${arr[i].description_short ? (arr[i].description_short + '.') : ''}</td>
+                        <td>${arr[i].source_lab}</td>
+                        <td>${createdOn}</td>
+                        <td class="d-flex-row flex-column" id="tags">${tagsHTML}</td>
+                        <td class="optionsToolbar">
+                            <div class="ps-3 pt-0" id="trait-data-${arr[i].trait_name_caendr}"><a href='${url}'><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Analyze</a></div>
+                        </td>
+                    </tr>
+                    <tr id="collapse-${i+1}" class="text-start accordion-collapse collapse"
+                        aria-labelledby="accordionHeading-${i+1}" data-bs-parent="#tableAccordion">
+                        <td colspan="7" style="background-color: var(--bs-gray-200)">
+                            <div class="ms-5 pt-5 px-5 pb-2">
+                                <h3 class="h5 text-dark">Full Description</h3>
+                                <p>${arr[i].description_long}</p>
+                            </div>
+                            <div class="d-flex justify-content-end me-1 pb-3 optionsToolbar">
+                                <a data-bs-toggle="offcanvas" id="traitDetails" data-value="${arr[i].trait_name_caendr}" data-bs-target="#offcanvas1"
+                                    aria-controls="offcanvas1" href=" #"><i class="bi bi-arrow-right"
+                                        aria-hidden="true"></i>View Full Details</a>
+                            </div>
+                        </td>
+                    </tr>
+            `
+            
+            $('#tableAccordion tbody').append(html)
+        }
+    }
+
+    function updatePagination(p) {
+        let html = ''
+        let prev = ''
+        if(p.has_prev) {
+            prev += `<a class="page-link" role="button" onClick="getResultsForPage(${p.prev_num}, ${p.current_page})">Previous</a>`
+        } else {
+            prev +=  '<a class="page-link disabled" href="#" tabindex="-1">Previous</a>'
+        }
+        html +=  `<li class="page-item">${prev}</li>`
+        for (let i = 0; i < p.total_pages; i++) {
+            const pageNum = i + 1
+            let iterPages = ''
+            if (pageNum == p.current_page) {
+                iterPages += `<li class="page-item active">
+                                  <a class="page-link" href="#">${pageNum}</a>
+                              </li>`
+            } else {
+                iterPages += `<li class="page-item">
+                                  <a class="page-link" role="button" onClick="getResultsForPage(${pageNum}, ${pageNum})">${pageNum}</a>
+                              </li>`
+            }
+            html += iterPages
+        }
+        let next = ''
+        if (p.has_next) {
+            next += `<a class="page-link" role="button" onClick="getResultsForPage(${p.next_num}, ${p.current_page})">Next</a>`
+        } else {
+            next += '<a class="page-link disabled" href="#" tabindex="-1">Next</a>'
+        }
+        html += `<li class="page-item">${next}</li>`
+        $('#tablePagination .pagination').append(html)
+
+    }
+
+    // Fetch data for given page
+    async function getResultsForPage(page, currentPage) {
+        const checkedTagsSelector = $(".filterCheckbox:checked")
+        let selectedTags = []
+        if (checkedTagsSelector.length) {
+            selectedTags = $(".filterCheckbox:checked").map(function() {
+                return $(this).val()
+            }).get()
+        }
+        const data = {
+            csrf_token: $('#csrf_token').val(), 
+            page: page, 
+            current_page: currentPage,
+            search_val: $("#traitsSearch").val(),
+            selected_tags: selectedTags
+        }
+        try {
+            const res = await sendPostRequest(data)
+            return handlePostRequest(res)
+        } catch(err) {
+            console.error(err)
+            flash_message(`Failed to retrieve the list of traits: ${err.statusText}`)
+        }
+    }
+
+    // Update Table and Pagination with response data
+    function handlePostRequest(resp) {
+        $('#tableAccordion tbody').empty()
+        filterTable(resp.data)
+        $('#tablePagination .pagination').empty()
+        updatePagination(resp.pagination)
+    }
+
+    function fillOutModal(trait) {
+        $('#offcanvas1-header-1').text(trait.trait_name_display_1)
+        $('#offcanvas1-header-2').text(trait.trait_name_display_2)
+        $('#offcanvas1-header-3').text(trait.trait_name_display_3)
+        manageVal(trait.capture_date, '#captureDate', true)
+        manageVal(trait.created_on, '#createdOn', true)
+        manageVal(trait.modified_on, '#modifiedOn', true)
+        manageVal(trait.species_name, '#species')
+        manageVal(trait.wbgene_id, '#wbgeneID')
+        manageVal(trait.source_lab, '#sourceLab')
+        manageVal(trait.institution, '#institution')
+        manageVal(trait.submitted_by, '#submittedBy')
+        manageVal(trait.description_long, '#descriptionLong')
+        manageVal(trait.protocols, '#protocol', false, true)
+        manageVal(trait.publication, '#publication', false, true)
+        $('#offcanvas1 #tags').empty()
+        if (trait.tags !== null || (trait.tags && trait.tags.length)) {
+            $('#offcanvas1 #tags').prev().show()
+            $('#offcanvas1 #tags').append(displayTags(trait.tags.split(', ')))
+        } else {
+            $('#offcanvas1 #tags').prev().hide()
+        }
+        $('#values > tbody').empty()
+        if (trait.phenotype_values.length) {
+            $('#values').parent().prev().show()
+            $('#values').parent().show()
+            $('#values > tbody').append(populateValues(trait.phenotype_values))
+        } else {
+            $('#values').parent().prev().hide()
+            $('#values').parent().hide()
+        }
+    }
+
+    // The function populates phenotype values in the table inside the side bar.
+    function populateValues(arr) {
+        let result = ''
+        for (let i = 0; i < arr.length; i++) {
+            result += `<tr><td>${arr[i].strain_name}</td><td>${arr[i].trait_value}</td></tr>`
+        }
+        return result
+    }
+
+    // The function populates Categories field in the side bar
+    function displayTags(arr) {
+        if (arr == null) return;
+        let result = ''
+        for (tag of arr) {
+            result += `<div class="mb-3">${tag.replaceAll('/', ' • ')}</div>`
+        }
+        return result
+    }
+
+    function formatDate(d) {
+        if(d === null) return 'N/A'
+        const date = new Date(d)
+        const month = (date.getMonth()+1).toString().padStart(2, '0')
+        const day = date.getDate().toString().padStart(2, '0')
+        return `${date.getFullYear()}-${month}-${day}`
+    }
+
+    // The function manages the fields in the side bar. 
+    // If a field has a value the field will be displayed, if not - it will be hidden
+    function manageVal(d, id, isDate=false, isLink=false) {
+        if (id === '#species') {
+            d = d[0].toUpperCase() + '. ' + d.slice(2)
+        }
+        const hasValue = !(d === null || d === 'N/A' || !d.length )
+        if (hasValue && isDate) {
+            $(id).parent().show()
+            $(id).text(formatDate(d))
+        } else if (!hasValue && isDate) {
+            $(id).parent().hide()
+        } else if (hasValue && isLink) {
+            $(id).prev().show()
+            $(`${id} > a`).text(d)
+        } else if (!hasValue && isLink) {
+            $(`${id} > a`).text('')
+            $(id).prev().hide()
+        } else if (hasValue && !isDate && !isLink) {
+            $(id).prev().show()
+            $(id).text(d)
+        } else if (!hasValue && !isDate && !isLink) {
+            $(id).text('')
+            $(id).prev().hide()
+        }
+    }
+
+</script>
+{% endblock %}

@@ -146,6 +146,12 @@ class DataFormatError(InternalError):
     self.full_msg_link = full_msg_link
     super().__init__()
 
+class DataValidationError(InternalError):
+  description = "Error validating job input data"
+  def __init__(self, msg):
+    self.msg = msg.strip()
+    super().__init__()
+
 class PreflightCheckError(InternalError):
   description = "One or more files required for this job were not found"
   def __init__(self, missing_files: list):
@@ -154,6 +160,10 @@ class PreflightCheckError(InternalError):
 
 class GoogleSheetsParseError(InternalError):
   description = "Unable to parse Google Sheets document"
+  def __init__(self, description = None):
+    if description is not None:
+      self.description = f'{self.description}: {description}'
+    super().__init__()
 
 class ExternalMarkdownRenderError(InternalError):
   def __init__(self, url, src):
@@ -271,14 +281,13 @@ class MissingTokenError(InternalError):
 class UnschedulableJobTypeError(InternalError):
   pass
 
+class UnrunnableJobTypeError(InternalError):
+  pass
+
 
 class ForeignResourceMissingError(InternalError):
-  def __init__(self, resource_type, resource_id, species):
-    try:
-      species_name = species.name
-    except:
-      species_name = species
-    self.description = f'Could not fetch foreign resource {resource_id} ({resource_type}) for species {species_name}'
+  def __init__(self, resource):
+    self.description = f'Could not fetch foreign resource: {repr(resource)}'
     super().__init__()
 
 class ForeignResourceUndefinedError(InternalError):

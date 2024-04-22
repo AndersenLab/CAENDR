@@ -5,7 +5,7 @@ from flask import Response, Blueprint, render_template, request, url_for, jsonif
 
 from base.forms import PairwiseIndelForm
 from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
-from base.utils.tools import try_submit
+from base.utils.tools import list_reports, try_submit
 from base.utils.view_decorators import parse_job_id, validate_form
 
 from caendr.models.datastore.browser_track import BrowserTrackDefault
@@ -14,6 +14,7 @@ from caendr.models.error import NotFoundError, NonUniqueEntity
 from caendr.models.job_pipeline import IndelFinderPipeline
 from caendr.models.status import JobStatus
 from caendr.services.dataset_release import get_dataset_release
+from caendr.services.cloud.storage import BlobURISchema
 from caendr.utils.bio import parse_chrom_interval
 from caendr.utils.constants import CHROM_NUMERIC
 from caendr.utils.data import get_file_format
@@ -21,8 +22,6 @@ from caendr.utils.data import get_file_format
 from caendr.services.indel_primer import (
     get_sv_strains,
     query_indels_and_mark_overlaps,
-    get_indel_primer,
-    get_indel_primers,
 )
 
 
@@ -33,30 +32,6 @@ pairwise_indel_finder_bp = Blueprint(
 )
 
 
-
-def results_columns():
-  return [
-    {
-      'title': 'Site',
-      'class': 'site',
-      'field': 'site',
-      'width': 0.5,
-      'link_to_data': True,
-      'data_order': lambda e: e['site'],
-    },
-    {
-      'title': 'Strain 1',
-      'class': 's1',
-      'field': 'strain_1',
-      'width': 0.25,
-    },
-    {
-      'title': 'Strain 2',
-      'class': 's2',
-      'field': 'strain_2',
-      'width': 0.25,
-    },
-  ]
 
 def try_get_sv_strains(species):
   try:
@@ -128,7 +103,7 @@ def pairwise_indel_finder():
     "species_list": Species.all(),
 
     # Data locations
-    "fasta_url": DatasetRelease.get_fasta_filepath_url_template().get_string_safe(),
+    'fasta_url': DatasetRelease.get_fasta_filepath_template(schema=BlobURISchema.HTTPS).get_string_safe(),
 
     # List of Species class fields to expose to the template
     # Optional - exposes all attributes if not provided
@@ -186,8 +161,7 @@ def list_results():
 
     # Table info
     'species_list': Species.all(),
-    'items': get_indel_primers(None if show_all else user.name, filter_errs),
-    'columns': results_columns(),
+    'items': list_reports(IndelPrimerReport, None if show_all else user, filter_errs),
 
     'JobStatus': JobStatus,
   })
@@ -242,6 +216,10 @@ def report(job: IndelFinderPipeline, data, result, file_ext=None):
     # Report is ready if result exists
     ready = result is not None
 
+    # If the result is empty, make it an empty dict, for more straightforward field access in the rest of the function
+    if not ready:
+      result = {}
+
     # Get indel interval
     try:
       interval = parse_chrom_interval(data['site'])
@@ -262,6 +240,8 @@ def report(job: IndelFinderPipeline, data, result, file_ext=None):
     # If a file format was specified, return a downloadable file with the results
     # TODO: Set a better filename?
     if file_format is not None:
+      if not ready:
+        abort(404)
       resp = Response(result['format_table'].to_csv(sep=file_format['sep']), mimetype=file_format['mimetype'])
       try:
         resp.headers['Content-Disposition'] = f'filename={job.report["species"]}_{job.report["strain_1"]}_{job.report["strain_2"]}_{data["site"]}.{file_ext}'
@@ -283,7 +263,7 @@ def report(job: IndelFinderPipeline, data, result, file_ext=None):
       'report_id': job.report.id,
 
       # Job status
-      'empty': result['empty'],
+      'empty': result.get('empty'),
       'ready': ready,
 
       # Data

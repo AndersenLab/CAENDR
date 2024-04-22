@@ -2,18 +2,21 @@ from typing import Dict, List
 
 from caendr.utils.env              import get_env_var
 from caendr.services.cloud.secret  import get_secret
+from caendr.services.logger        import logger
 
 # Local imports
 from .strains                      import fetch_andersen_strains
 from .wormbase                     import parse_gene_gtf, parse_gene_gff_summary
 from .strain_annotated_variants    import parse_strain_variant_annotation_data
 from .phenotype_db                 import parse_phenotypedb_traits_data, parse_phenotypedb_bulk_trait_file
+from .phenotype_metadata           import parse_phenotype_metadata
 
-from caendr.models.sql             import Strain, WormbaseGeneSummary, WormbaseGene, StrainAnnotatedVariant, PhenotypeDatabase
+from caendr.models.sql             import Strain, WormbaseGeneSummary, WormbaseGene, StrainAnnotatedVariant, PhenotypeDatabase, PhenotypeMetadata
 from caendr.models.datastore       import Species, TraitFile
 from caendr.services.cloud.storage import BlobURISchema
 from caendr.models.datastore       import Species
 from caendr.utils.local_files      import ForeignResource, ForeignResourceTemplate, LocalDatastoreFileTemplate, LocalGoogleSheetTemplate
+from caendr.models.error           import ForeignResourceMissingError
 
 
 
@@ -59,11 +62,15 @@ class ParseConfig():
     '''
       Fetch all the files required for this species.
     '''
-    return {
-      file_template.resource_id: file_template.get_for_species(species).fetch()
-        for file_template in self.files
-        if  file_template.has_for_species(species)
-    }
+    result = {}
+    for file_template in self.files:
+      try:
+        if file_template.has_for_species(species):
+          result[file_template.resource_id] = file_template.get_for_species(species).fetch()
+      except ForeignResourceMissingError as ex:
+        logger.error(f'Skipping {file_template.get_print_uri(species)}: {ex}')
+    logger.debug(f'Fetched {len(result)} files out of {len(self.files)} requested.')
+    return result
 
 
   def parse_all(self, species):
@@ -137,8 +144,8 @@ WormbaseGeneConfig = TableConfig(
   WormbaseGene,
   ParseConfig(
     parse_gene_gtf,
-    LocalDatastoreFileTemplate( 'GENE_GFF', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_GTF_FILENAME ),
-    LocalDatastoreFileTemplate( 'GENE_GFF', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_IDS_FILENAME ),
+    LocalDatastoreFileTemplate( 'GENE_GTF', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_GTF_FILENAME ),
+    LocalDatastoreFileTemplate( 'GENE_IDS', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_IDS_FILENAME ),
   ),
 )
 
@@ -164,4 +171,12 @@ PhenotypeDatabaseConfig = TableConfig(
     parse_phenotypedb_traits_data,
     *LocalDatastoreFileTemplate.from_file_record_entities(TraitFile, filter = lambda tf: not tf.is_bulk_file),
   ),
+)
+
+PhenotypeMetadataConfig = TableConfig(
+  PhenotypeMetadata,
+  ParseConfig(
+    parse_phenotype_metadata,
+    *LocalDatastoreFileTemplate.from_file_record_entities(TraitFile),
+  )
 )

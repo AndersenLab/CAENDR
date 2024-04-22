@@ -172,7 +172,7 @@ def get_bam_bai_download_link(species, strain_name, ext, signed=False):
   bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
   bam_prefix  = BAM_BAI_PREFIX.get_string(SPECIES=species.name)
 
-  return generate_blob_uri( bucket_name, bam_prefix, f'{strain_name}.{ext}', BlobURISchema.sign(signed) )
+  return generate_blob_uri( bucket_name, bam_prefix, f'{strain_name}.{ext}', schema=BlobURISchema.sign(signed) )
 
 
 def fetch_bam_bai_download_script(species, release, reload=False):

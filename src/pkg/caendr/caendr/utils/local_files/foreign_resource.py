@@ -10,6 +10,9 @@ class ForeignResource(ABC):
     This may be a datastore file, a sheet, etc.
   '''
 
+  def __init__(self, resource_id: str):
+    self.resource_id = resource_id
+
   @property
   @abstractmethod
   def metadata(self):

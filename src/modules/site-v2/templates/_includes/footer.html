@@ -6,64 +6,83 @@
     <a class="btn btn-primary rounded-pill" role="button" href="https://goo.gl/forms/rfWz4AlCIP" target="_blank">Send Feedback <i
       class="bi bi-box-arrow-right ms-1" aria-hidden="true"></i></a>
 </div>
-  <div class="container-fluid p-5">
+  <div class="container-fluid py-5">
     <div class="d-flex flex-sm-column flex-md-row flex-wrap justify-content-start pt-5">
       <div class="col-12 col-md-3 mb-5">  
-        <a href="/" aria-label="CaeNDR home"><img src="/static/img/caeNDRLogo.png" class="d-block img-fluid mx-auto footerImage" alt=""></a>
+        <a href="/" aria-label="CaeNDR home"><img src="/static/img/caeNDRLogo.png" class="d-block img-fluid mx-auto mb-5 footerImage" alt="" style="max-width:125px;"></a>
       </div>
-      <div class="col-3 col-md-2 mx-auto mb-5">
-        <nav class="nav flex-column">
-          <h3 class="h5 text-dark">Tools</h3>
-          <li><a class="nav-link ps-0" href="{{ url_for('genome_browser.genome_browser')                   }}">
-              Genome Browser
-            </a></li>
-          <li><a class="nav-link ps-0" href="{{ url_for('variant_annotation.variant_annotation')           }}">
-              Variant
-              Annotation </a></li>
-          <li><a class="nav-link ps-0" href="{{ url_for('genetic_mapping.genetic_mapping')                 }}">
-              Genetic Mapping
-            </a></li>
-          <li><a class="nav-link ps-0" href="{{ url_for('pairwise_indel_finder.pairwise_indel_finder')     }}">
-              Pairwise Indel
-              Finder</a></li>
-          <li><a class="nav-link ps-0" href="{{ url_for('heritability_calculator.heritability_calculator') }}">
-              Heritability
-              Calculator </a></li>
-        </nav>
+
+      <div class="col-12 col-md-6 d-flex flex-row justify-content-evenly justify-content-md-between">
+          <div class="col-3 mb-5">
+            <nav class="nav flex-column">
+              <h3 class="h5 text-dark">Tools</h3>
+              <a class="nav-link ps-0" href="{{ url_for('genome_browser.genome_browser')                   }}">
+                Genome Browser
+              </a>
+              <a class="nav-link ps-0" href="{{ url_for('variant_annotation.variant_annotation')           }}">
+                Variant
+                Annotation </a>
+              <a class="nav-link ps-0" href="{{ url_for('genetic_mapping.genetic_mapping')                 }}">
+                Genetic Mapping
+              </a>
+              <a class="nav-link ps-0" href="{{ url_for('pairwise_indel_finder.pairwise_indel_finder')     }}">
+                Pairwise Indel
+                Finder</a></li>
+              <a class="nav-link ps-0" href="{{ url_for('heritability_calculator.heritability_calculator') }}">
+                Heritability
+                Calculator </a>
+            </nav>
+          </div>
+          <div class="col-3 mb-5">
+            <nav class="nav flex-column">
+              <h3 class="h5 text-dark">Data</h3>
+              <a class="nav-link ps-0" href="{{ url_for('data_releases.data_releases') }}"> Download Data </a>
+              <a class="nav-link ps-0" href="{{ url_for('data.protocols')     }}"> Protocols </a>
+              <a class="nav-link ps-0"
+                href="https://docs.google.com/forms/d/e/1FAIpQLSfO0m4UMzTSz79weA2ICkuIHDYnZegqXly4SA15_w3FMuyocQ/viewform"
+                target="_blank"> Submit A Strain <i class="bi bi-box-arrow-right" aria-hidden="true"></i></a><span
+                class="visually-hidden">Link opens in a new tab</span>
+            </nav>
+          </div>
+          <div class="col-3 mb-5">
+            <nav class="nav flex-column">
+              <h3 class="h5 text-dark">About Us</h3>
+              <a class="nav-link ps-0" href="{{ url_for('about.about')      }}"> About CaeNDR </a>
+              <a class="nav-link ps-0" href="{{ url_for('about.people')     }}"> People </a>
+              <a class="nav-link ps-0" href="{{ url_for('about.contact_us') }}"> Contact Us </a>
+            </nav>
+          </div>
       </div>
-      <div class="col-3 col-md-2 mx-auto mb-5">
+
+      <div class="col-12 col-md-3 d-flex justify-content-center">
         <nav class="nav flex-column">
-          <h3 class="h5 text-dark">Data</h3>
-          <li><a class="nav-link ps-0" href="{{ url_for('data_releases.data_releases') }}"> Download Data </a></li>
-          <li><a class="nav-link ps-0" href="{{ url_for('data.protocols')     }}"> Protocols </a></li>
-          <li><a class="nav-link ps-0" href="https://docs.google.com/forms/d/e/1FAIpQLSfO0m4UMzTSz79weA2ICkuIHDYnZegqXly4SA15_w3FMuyocQ/viewform" target="_blank"> Submit A Strain <i class="bi bi-box-arrow-right" aria-hidden="true"></i></a><span class="visually-hidden">Link opens in a new tab</span></li>
-        </nav>
-      </div>
-      <div class="col-3 col-md-2 mx-auto mb-5">
-        <nav class="nav flex-column">
-          <h3 class="h5 text-dark">About Us</h3>
-          <li><a class="nav-link ps-0" href="{{ url_for('about.about')      }}"> About CaeNDR </a></li>
-          <li><a class="nav-link ps-0" href="{{ url_for('about.people')     }}"> People </a></li>
-          <li><a class="nav-link ps-0" href="{{ url_for('about.contact_us') }}"> Contact Us </a></li>
-        </nav>
-      </div>
-      <div class="col-6 col-md-2 ms-2 mb-5">
-        <nav class="nav flex-column">
-          <h3 class="h5 text-dark"><i class="bi bi-chat-left-quote-fill text-secondary me-1" aria-hidden="true"></i>Cite
-            CaeNDR</h3>
-          <p>Cook DE, Zdraljevic S, Roberts JP, Andersen EC
-            <br>(2016 Oct 3) <em>Nucleic Acids Research</em>
-            <br>[ <a href="http://nar.oxfordjournals.org/content/early/2016/10/03/nar.gkw893.full"
-              target="_blank">Article on Nucleic Acids Research</a> | <a href="https://dx.doi.org/10.1093/nar/gkw893"
-              target="_blank">DOI</a> | <a href="https://www.ncbi.nlm.nih.gov/pubmed/27701074"
-              target="_blank">Pubmed</a> ]
-          </p>
+          <div class="text-center">
+            <a href="#citationModal" data-bs-target="#citationModal" data-bs-toggle="modal"> <i
+                class="bi bi-chat-right-quote-fill text-secondary fs-1 me-1 d-block" aria-hidden="true"></i>
+              <h3 class="h4">Cite CaeNDR</h3>
+            </a>
+            </div>
         </nav>
       </div>
     </div>
   </div>
-</footer>
-</div>
+  <!-- Modal -->
+  <div class="modal fade" id="citationModal" tabindex="-1" aria-labelledby="citationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="citationModalLabel">CaeNDR, the <em>Caenorhabditis</em> Natural Diversity
+            Resource</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          {% include "_includes/cite-caendr.html" %}
+        </div>
+      </div>
+    </div>
+  </div>
+  </footer>
+  </div>
 <!-- /Container /Footer /Row -->
 
 
@@ -100,3 +119,4 @@
   }
   );
 </script> -->
+

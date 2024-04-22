@@ -1,0 +1,259 @@
+{% extends "_layouts/default-nocontainer.html" %}
+
+
+{% block content %}
+{% from "_includes/select-trait.html" import render_select_trait %}
+
+<div class="container pb-5">
+    <div class="d-flex flex-wrap justify-content-around my-5">
+        <div class="col-9 col-md-4 mb-5">
+            {%- if two_traits %}
+            <h2 class="h3 text-dark text-center">Trait 1</h2>
+            {%- endif %}
+            {{ render_select_trait('trait-1') }}
+        </div>
+        {%- if two_traits %}
+        <div class="col-9 col-md-4 mt-3 mt-md-0 mb-5">
+            <h2 class="h3 text-dark text-center">Trait 2</h2>
+            {{ render_select_trait('trait-2') }}
+        </div>
+        {%- endif %}
+    </div>
+    <!-- /flex -->
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end p-3">
+        <button class="btn btn-dark text-white" role="button"
+            onclick="location.href=`{{ url_for('phenotype_database.phenotype_database') }}`">Start Over</button>
+        <button id="submit-button" class="btn btn-secondary text-white" role="button" onclick="submit()">Next</button>
+    </div>
+</div> <!-- /Container -->
+
+<!-- Phenotype DB modal -->
+<div class="modal fade" id="phenotypeDBModal" tabindex="-1" aria-labelledby="phenotypeDBModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="phenotypeDBModalLabel">Phenotype Database</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container my-3">
+                    {% with analyze_link = 'javascript:select_trait(null, \"TRAIT_NAME\", \"TRAIT_SET\")' %}
+                    {% include "_includes/phenotype-database-table.html" %}
+                    {% endwith %}
+                </div>
+                <!-- Offcanvas -->
+                <div class="offcanvas offcanvas-end offcanvasPhenotype" tabindex="-1" id="offcanvas1"
+                    aria-labelledby="offcanvas1Label">
+                    <div class="offcanvas-header">
+                        <div>
+                            <h1 class="h5">
+                                <span id="offcanvas1-header-1" class="d-block mb-1"></span>
+                                <span id="offcanvas1-header-2" class="d-block text-dark fw-normal"></span>
+                                <span class="d-block text-dark fw-normal"><em id="offcanvas1-header-3"></em></span>
+                            </h1>
+                        </div>
+                        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="offcanvas-body p-4">
+                        {% include "_includes/phenotype-offcanvas-content.html" %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Thank You Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModalLabel">Thank you</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Your analysis has been submitted</p>
+            </div>
+            <div class="modal-footer">
+                <button id="goToReportButton" type="button" class="btn btn-secondary text-white">Go to Report</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+{% from "_includes/select-trait.html"   import select_trait               %}
+{% from "_includes/strain-listing.html" import unpack_species_list        %}
+{% from "_scripts/submit-job.js"        import ajax_setup, def_submit_job %}
+<script>
+    {% include '_scripts/utils.js' %}       {#/* defines: flash_message */#}
+    {% include '_scripts/trait_utils.js' %} {#/* defines: queryTraitByName */#}
+    {{ def_submit_job('phenotype_database') }}
+
+
+    /* Species */
+    const species_list = {{ unpack_species_list(species_list, species_fields) }};
+    let species = 'c_elegans';
+
+
+    let current_menu = null;
+    document.body.addEventListener('phenotype-db-modal-open', ({detail}) => {
+        current_menu = detail;
+    });
+
+
+    /* Initialization */
+    $(document).ready(function(){
+
+        // Set headers for AJAX requests
+        {{ ajax_setup(form.csrf_token._value()) }}
+
+        {%- if initial_trait is not none %}
+        // Set the initial trait
+        {{ select_trait('trait-1', trait_obj=initial_trait) }}
+        {%- endif %}
+
+        updateSubmitButton();
+    })
+
+
+    function get_trait_id(id) {
+        return [
+            document.getElementById(`${id}-selector`).dataset.trait,
+            document.getElementById(`${id}-selector`).dataset.set,
+        ]
+    }
+
+
+    function select_trait(id=null, trait=null, dataset=null) {
+
+        // Unless a selector is specifically named,
+        // default to last selector to open the phenotype db modal
+        if (id === null) id = current_menu;
+
+        // If trait is passed as a string value, look up its fields in the phenotype table
+        if (trait !== null && typeof trait === 'string') {
+            queryTraitByName(trait)
+                // Re-call the function using the trait value instead of the name
+                // Response check prevents infinite recursion
+                .then((response) => {
+                    if (response !== null && typeof response === 'string') throw Error(`Invalid response for trait ${id}: "${response}"`);
+                    select_trait(id, response, dataset);
+                })
+                .fail((error) => {
+                    // If an error message was received, display it, otherwise use a fallback message
+                    console.error(error);
+                    const resp = error.responseJSON
+                    if (resp && resp.message && false) {
+                        flash_message(resp.message, resp.full_msg_link, resp.full_msg_body);
+                    } else{
+                        flash_message(`Failed to retrieve metadata for trait ${trait}`);
+                    }
+
+                    // Close the modal so the user can see the error message
+                    $('#phenotypeDBModal').modal('hide');
+                })
+            return
+        }
+
+        // Select trait 1
+        if (id == 'trait-1') {
+            if (trait === null) {
+                {{ select_trait('trait-1') }}
+            } else {
+                {{ select_trait('trait-1', 'trait') }}
+            }
+        }
+
+        // Select trait 2
+        else if (id == 'trait-2') {
+            if (trait === null) {
+                {{ select_trait('trait-2') }}
+            } else {
+                {{ select_trait('trait-2', 'trait') }}
+            }
+        }
+
+        // Close the modal on selection
+        $('#phenotypeDBModal').modal('hide');
+
+        {%- if two_traits %}
+        // const otherTrait = get_trait_id(id == 'trait-1' ? 'trait-2' : 'trait-1')[0];
+        // if (otherTrait != null) {
+        //     filter_by_species(trait === null ? null : trait.species);
+        // }
+        {%- endif %}
+
+        updateSubmitButton();
+    }
+
+
+    // function filter_by_species(species) {
+    //     console.log('filtering by species...')
+    //     if (species === null) {
+    //         $('#tableAccordion tbody>tr').show()
+    //     }
+    //     else {
+    //         $('#tableAccordion tbody>tr').hide().each(function() {
+    //             console.log(this.dataset.species, species)
+    //             if (this.dataset.species == species) {
+    //                 $(this).show()
+    //             }
+    //         });
+    //     }
+    // }
+
+
+    function updateSubmitButton() {
+        const [trait_1, trait_1_dataset] = get_trait_id('trait-1');
+        {%- if two_traits %}
+        const [trait_2, trait_2_dataset] = get_trait_id('trait-2');
+        {%- endif %}
+        const canSubmit = trait_1 != null {% if two_traits %} && trait_2 != null{% endif %};
+        document.getElementById('submit-button').classList.toggle('disabled', !canSubmit);
+    }
+
+
+    function submit() {
+        const [trait_1, trait_1_dataset] = get_trait_id('trait-1');
+        {%- if two_traits %}
+        const [trait_2, trait_2_dataset] = get_trait_id('trait-2');
+        {%- endif %}
+
+        if (trait_1 == null {% if two_traits %} || trait_2 == null {% endif %}) {
+            {%- if two_traits %}
+            flash_message('Please select two traits.');
+            {%- else %}
+            flash_message('Please select a trait.');
+            {%- endif %}
+            throw Error('Submission missing one or more traits.');
+        }
+
+        data = {
+            species,
+            trait_1, trait_1_dataset,
+            {%- if two_traits %}
+            trait_2, trait_2_dataset,
+            {%- endif %}
+        }
+
+        submit_job(data, '#confirmationModal', {'auto_redirect': false})
+            .done((result) => {
+                document.getElementById('goToReportButton').addEventListener('click', () => {
+                    window.location.href = `{{ url_for('phenotype_database.report', id='') }}${ result.id }`;
+                })
+            })
+            // If validation fails, just flash the error
+            .fail((error) => {
+                const resp = error.responseJSON
+                if (resp && resp.message) {
+                    flash_message(resp.message, resp.full_msg_link, resp.full_msg_body);
+                }
+            })
+    }
+</script>
+{% endblock %}

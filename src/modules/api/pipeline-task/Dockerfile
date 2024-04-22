@@ -6,17 +6,12 @@ ENV PYTHONUNBUFFERED True
 
 # Install production dependencies.
 RUN apt-get update && \
-    apt-get upgrade -y --no-install-recommends && \
     apt-get install -y --no-install-recommends \
       build-essential \
       libbz2-dev \
       libssl-dev \
       liblzma-dev \
       libz-dev \
-      python3-dev \
-      python3 \
-      python3-venv \
-      python3-virtualenv \
       tabix \
       libcurl4-openssl-dev \
       virtualenv && \
@@ -29,6 +24,8 @@ ENV APP_HOME /api_pipeline_task
 WORKDIR $APP_HOME
 
 # make venv
+RUN pip install virtualenv
+
 RUN virtualenv --python=python3 venv
 ENV VIRTUAL_ENV $APP_HOME/venv
 RUN python -m venv $VIRTUAL_ENV

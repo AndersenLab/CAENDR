@@ -45,12 +45,16 @@ from caendr.utils.env import get_env_var
 from caendr.services.email import send_email, ORDER_SUBMISSION_EMAIL_TEMPLATE
 from caendr.services.cloud.sheets import add_to_order_ws, lookup_order
 from caendr.services.cloud.secret import get_secret
+from caendr.services.cloud.storage import get_blob
 
 MODULE_SITE_CART_COOKIE_NAME = get_env_var('MODULE_SITE_CART_COOKIE_NAME')
 MODULE_SITE_CART_COOKIE_AGE_SECONDS = get_env_var('MODULE_SITE_CART_COOKIE_AGE_SECONDS', var_type=int)
-STRAIN_SUBMISSION_URL = get_env_var('MODULE_SITE_STRAIN_SUBMISSION_URL')
+MODULE_SITE_BUCKET_PRIVATE_NAME = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
 
+STRAIN_SUBMISSION_URL = get_env_var('MODULE_SITE_STRAIN_SUBMISSION_URL')
 NO_REPLY_EMAIL = get_secret('NO_REPLY_EMAIL')
+EULA_FILE_NAME = get_env_var('EULA_FILE_NAME')
+
 
 
 strains_bp = Blueprint('request_strains',
@@ -145,7 +149,6 @@ def strains_data_csv(species_name, release_name, file_ext):
 @strains_bp.route('/', methods=['GET', 'POST'])
 @cache.memoize(60*60)
 def request_strains():
-    flash(Markup("<strong>Please note:</strong> although the site is currently accepting orders, orders will <u>not ship</u> until Fall 2023."), category="warning")
 
     try:
       strain_listing = get_strains()
@@ -299,35 +302,35 @@ def order_page_index():
 
   if user and hasattr(user, 'email') and not form.email.data:
     form.email.data = user.email
-  
-  flash(Markup("<strong>Please note:</strong> although the site is currently able to accept orders, orders will <u>not ship</u> until Fall 2023."), category="warning")
 
   if not user and not cart_id:
     return render_template('order/order.html', **{
       'tool_alt_parent_breadcrumb': {"title": "Strain Catalog", "url": url_for('request_strains.request_strains')},
       'title': "Order Summary",
-      'form': form
+      'form': form,
+      'EULA_url': get_blob(MODULE_SITE_BUCKET_PRIVATE_NAME, EULA_FILE_NAME).public_url
     })
   elif user:
     users_cart = Cart.lookup_by_user(user['email'])
   else:
     users_cart = Cart(cart_id)
 
-  cartItems = users_cart['items']
+  cart_items = users_cart['items']
   form.version.data = users_cart['version']
 
-  for item in cartItems:
+  for item in cart_items:
     item['price'] = Cart.get_price(item)
     species = item.get('species')
     item['species_short_name'] = Species.from_name(species).short_name
-  totalPrice = sum(item['price'] for item in cartItems)
+  totalPrice = sum(item['price'] for item in cart_items)
 
   return render_template('order/order.html', **{
     'tool_alt_parent_breadcrumb': {"title": "Strain Catalog", "url": url_for('request_strains.request_strains')},
     'title': "Order Summary",
-    'cartItems': cartItems,
-    'totalPrice': totalPrice,
-    'form': form
+    'cart_items': cart_items,
+    'total_price': totalPrice,
+    'form': form,
+    'EULA_url': get_blob(MODULE_SITE_BUCKET_PRIVATE_NAME, EULA_FILE_NAME).public_url
   })
   
 

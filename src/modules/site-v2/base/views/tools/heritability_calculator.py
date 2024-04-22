@@ -15,14 +15,14 @@ from datetime import datetime
 
 from base.forms import HeritabilityForm
 from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user, user_is_admin
-from base.utils.tools import try_submit
+from base.utils.tools import list_reports, try_submit
 from base.utils.view_decorators import parse_job_id, validate_form
 
 from caendr.models.datastore import Species, HeritabilityReport
+from caendr.models.job_pipeline import HeritabilityPipeline
 from caendr.models.status import JobStatus
 from caendr.models.job_pipeline import HeritabilityPipeline
 from caendr.api.strain import get_strains
-from caendr.services.heritability_report import get_heritability_report, get_heritability_reports
 from caendr.utils.data import unique_id, get_object_hash
 from caendr.utils.env import get_env_var
 from caendr.services.cloud.storage import generate_blob_uri, BlobURISchema
@@ -43,23 +43,6 @@ heritability_calculator_bp = Blueprint(
   'heritability_calculator', __name__
 )
 
-
-def results_columns():
-  return [
-    {
-      'title': 'Description',
-      'class': 'label',
-      'field': 'label',
-      'width': 0.6,
-      'link_to_data': True,
-    },
-    {
-      'title': 'Trait',
-      'class': 'trait',
-      'field': 'trait',
-      'width': 0.4,
-    },
-  ]
 
 
 @heritability_calculator_bp.route('')
@@ -128,8 +111,7 @@ def list_results():
 
     # Table info
     'species_list': Species.all(),
-    'items': get_heritability_reports(None if show_all else user.name, filter_errs),
-    'columns': results_columns(),
+    'items': list_reports(HeritabilityReport, None if show_all else user, filter_errs),
 
     'JobStatus': JobStatus,
   })

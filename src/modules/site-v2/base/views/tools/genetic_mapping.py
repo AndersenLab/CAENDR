@@ -6,10 +6,9 @@ from flask import jsonify
 
 from base.forms import MappingForm
 from base.utils.auth  import get_jwt, jwt_required, admin_required, get_current_user, user_is_admin
-from base.utils.tools import try_submit
+from base.utils.tools import list_reports, try_submit
 from base.utils.view_decorators import parse_job_id, validate_form
 
-from caendr.services.nemascan_mapping import get_mapping, get_mappings
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
 from caendr.models.datastore import Species, NemascanReport
 from caendr.models.job_pipeline import NemascanPipeline
@@ -26,24 +25,6 @@ genetic_mapping_bp = Blueprint(
   'genetic_mapping', __name__
 )
 
-
-
-def results_columns():
-  return [
-    {
-      'title': 'Description',
-      'class': 'label',
-      'field': 'label',
-      'width': 0.6,
-      'link_to_data': True,
-    },
-    {
-      'title': 'Trait',
-      'class': 'trait',
-      'field': 'trait',
-      'width': 0.4,
-    },
-  ]
 
 
 @genetic_mapping_bp.route('', methods=['GET'])
@@ -128,8 +109,7 @@ def list_results():
 
     # Table info
     'species_list': Species.all(),
-    'items': get_mappings(None if show_all else user.name, filter_errs),
-    'columns': results_columns(),
+    'items': list_reports(NemascanReport, None if show_all else user, filter_errs),
 
     'JobStatus': JobStatus,
   })
@@ -182,7 +162,7 @@ def report_fullscreen(job: NemascanPipeline):
 @genetic_mapping_bp.route('/report/<id>/status', methods=['GET'])
 @jwt_required()
 def report_status(id):
-  mapping = get_mapping(id)
+  mapping = NemascanReport.get_ds(id)
   data_url = generate_blob_uri(mapping.get_bucket_name(), mapping.get_data_blob_path(), schema=BlobURISchema.HTTPS)
 
   # TODO: Definition of report_path has been changed(?) since this was written, is now a property

@@ -2,6 +2,7 @@ import yaml
 import hashlib
 import uuid
 import string
+import numpy  as np
 import pandas as pd
 
 from collections import Counter
@@ -177,3 +178,33 @@ def batch_generator(g, batch_size=DEFAULT_BATCH_SIZE):
 
   for top in g:
     yield _inner(top)
+
+
+
+def dataframe_cols_to_dict(df, key_col, val_col, drop_na=True):
+  key_col_name = df.columns[key_col] if isinstance(key_col, int) else key_col
+  val_col_name = df.columns[val_col] if isinstance(val_col, int) else val_col
+  d = df.set_index(key_col_name)
+  if drop_na:
+    d = d.dropna()
+  return d.to_dict()[val_col_name]
+
+
+def keyset_intersection(*dicts):
+  '''
+    Get the set of keys present in all provided dicts.
+  '''
+  overlap = set(dicts[0].keys())
+  for d in dicts[1:]:
+    overlap = overlap.intersection(d.keys())
+  return overlap
+
+
+def center_and_scale_data(data):
+  '''
+    Mean-center an array of data and scale it by its standard deviation.
+  '''
+  data   = np.array(data)
+  mean   = np.mean(data)
+  stddev = np.std(data)
+  return (data - mean) / stddev

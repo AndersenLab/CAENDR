@@ -1,0 +1,277 @@
+{% extends "_layouts/default-nocontainer.html" %}
+
+{% block custom_head %}
+
+<!-- D3js -->
+<script src="//d3js.org/d3.v4.min.js"></script>
+
+<!-- Printing to PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery.print/1.6.0/jQuery.print.min.js" integrity="sha512-i8ERcP8p05PTFQr/s0AZJEtUwLBl18SKlTOZTH0yK5jVU0qL8AIQYbbG5LU+68bdmEqJ6ltBRtCxnmybTbIYpw==" crossorigin="anonymous"></script>
+
+<style>
+    .species::first-letter {
+        text-transform: capitalize;
+    }
+    /* Tooltips */
+    .tippy-box {
+        background-color: var(--bs-gray-200);
+        color: var(--bs-dark);
+        font-size: 18px;
+        text-align: center;
+        padding:.25em;
+        box-shadow:0 .125rem .25rem rgba(0, 0, 0, .075); 
+    }
+
+    .tippy-box[data-placement^='top'] > .tippy-arrow::before {
+        border-top-color: var(--bs-gray-200);
+    }
+    .tippy-box[data-placement^='bottom'] > .tippy-arrow::before {
+        border-bottom-color: var(--bs-gray-200);
+    }
+    .tippy-box[data-placement^='left'] > .tippy-arrow::before {
+        border-left-color: var(--bs-gray-200);
+    }
+    .tippy-box[data-placement^='right'] > .tippy-arrow::before {
+        border-right-color: var(--bs-gray-200);
+    }
+
+    #phenotype-chart-ranked-bar {
+        margin-top: 5em;
+    }
+
+    #closeButton {
+    display:none;
+  }
+
+    #chartContainer {
+        background-color: #FEFCFB;
+        min-height:75vh;
+    }
+
+    #phenotype-chart svg {
+        position: relative;
+    }
+
+    @media screen and (min-width: 768px) {
+  #chartContainer {
+    min-height:125vh;
+  }
+
+  #phenotype-chart svg {
+    width: 65%;
+    height: 65%;
+  }
+}
+
+
+    @media print {
+
+        {%- if data.num_traits == 1 %}
+        #tool-column {
+            width: 100% !important;
+        }
+        {%- endif %}
+    }
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+{% from "_includes/select-trait.html" import render_trait_name_multiline %}
+
+<div class="container-fluid px-0 pb-5">
+    <div id="report-print-container" class="d-flex justify-content-around flex-wrap mt-2">
+        <!-- Results Card -->
+        <div class="col-12 col-xl-3 d-flex flex-wrap flex-md-row flex-xl-column justify-content-around justify-content-xl-start px-4 mb-3">
+            <h2 class="h3 w-100 w-xl-0 text-center mt-3 mb-5">Trait Information</h2>
+            <div class="col-12 col-md-5 col-xl-12 text-bg-light border-0 rounded-2 shadow-sm p-3 mb-3 mb-xl-5">
+                {%- if data.num_traits > 1 %}
+                <h3 class="h4 text-dark text-center">Trait 1</h3>
+                {%- endif %}
+                <h4 class="h5">Species:</strong></h4>
+                <p class="species"><em>{{ report['species']|replace('_', '. ')}}</em></h4>
+                <h4 class="h5">Name:</strong></h4>
+                <p>{{ render_trait_name_multiline(report['trait_1_name_display'][0], report['trait_1_name_display'][1], report['trait_1_name_display'][2]) }}</p>
+                <h4 class="h5"><strong>Description:</strong></h4>
+                <p>{{ report['trait_1']['description_short'] or report['trait_1']['description_long'] }}</p>
+                <!-- Submit to database button for when that feature is ready -->
+                <!-- <div class="d-flex justify-content-end mt-5 mb-3">
+                    <div class="text-bg-secondary text-white text-center rounded-circle pt-2 me-2 phenotypeIcon">
+                        <i class="bi bi-upload" aria-hidden="true"></i>
+                    </div>
+                    <a class="align-self-center text-dark fw-bold" onclick="" href="#">Submit to Phenotype Database?</a>
+                </div> -->
+            </div>
+            {%- if data.num_traits > 1 %}
+            <div class="col-12 col-md-5 col-xl-12 text-bg-light border-0 rounded-2 shadow-sm p-3 mb-3 mb-xl-5">
+                <h3 class="h4 text-dark text-center">Trait 2</h3>
+                <h4 class="h5">Species:</strong></h4>
+                <p class="species"><em>{{ report['species']|replace('_', '. ')}}</em></h4>
+                <h4 class="h5">Name:</h4>
+                <p>{{ render_trait_name_multiline(report['trait_2_name_display'][0], report['trait_2_name_display'][1], report['trait_2_name_display'][2]) }}</p>
+                <h4 class="h5">Description:</h4>
+                <p>{{ report['trait_2']['description_short'] or report['trait_2']['description_long'] }}</p>
+                <!-- Submit to database button for when that feature is ready -->
+                <!-- <div class="d-flex justify-content-end mt-5 mb-3">
+                    <div class="text-bg-secondary text-white text-center rounded-circle pt-2 me-2 phenotypeIcon">
+                        <i class="bi bi-upload" aria-hidden="true"></i>
+                    </div>
+                    <a class="align-self-center text-dark fw-bold" onclick="" href="#">Submit to Phenotype Database?</a>
+                </div> -->
+            </div>
+            {%- endif %}
+            <!-- Download TSV button -->
+            <div class="col-12 col-md-5 col-xl-12 p-3 mb-3 mb-xl-5 d-print-none">
+                <div class="d-grid gap-2">
+                    <a class="btn btn-secondary text-white" role="button" href="{{ url_for('phenotype_database.report', id=report.id, file_ext='tsv') }}"
+                        ><i class="bi bi-file-earmark-spreadsheet-fill"></i> Download TSV</a>
+                    <a class="btn btn-secondary text-white" role="button" onClick="download_report_as_pdf()" target="_blank"
+                        ><i class="bi bi-file-earmark-pdf-fill"></i> Print Report</a>
+                </div>
+            </div>
+        </div>
+        <!-- /Input Card -->
+        <!-- Tool column -->
+        <div id="tool-column" class="d-flex flex-wrap flex-column col-md-12 col-xl-8">
+            <!-- Options Toolbar -->
+            <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar d-print-none">
+                <div class="ps-3 pt-0"><a href="{{ url_for('phenotype_database.phenotype_database') }}"><i class="bi bi-plus-circle" aria-hidden="true"></i> New Analysis</a></div>
+                <div class="ps-3 pt-0"><a href="{{ url_for('phenotype_database.my_results') }}"><i class="bi bi-journal" aria-hidden="true"></i>View All My Phenotype Results</a></div>
+                <div class="ps-3 pt-0"><button class="btn border-0" onclick="openFullscreen();" id="fullscreenButton"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>View Fullscreen</button></div>
+            </div>
+            <!-- /Options Toolbar -->
+            <div class="row">
+                <div class="col overflow-auto px-0" id="chartContainer">
+                    <div>
+                        <button class="btn btn-danger text-light p-2 my-5 mx-auto" onclick="closeFullscreen();" id="closeButton"><i
+                            class="bi bi-fullscreen-exit text-light" aria-hidden="true"></i> Close Fullscreen</button>
+                    </div>
+                    <div id="phenotype-chart" class="text-center"></div>
+                    {%- if data.num_traits > 1 %}
+                    <div class="d-flex flex-wrap justify-content-end col-10 col-md-9 text-end mb-3 optionsToolbar no-print">
+                        <div class="ps-3 pt-0">
+                            <a role="button" onClick="download_chart_as_svg('phenotype-chart')"><i class="bi bi-file-earmark-image" aria-hidden="true"></i> Download SVG</a>
+                        </div>
+                    </div>
+                    <div class="col-10 col-md-7 p-2 mx-auto mb-3">
+                        <p><strong>Correlation:</strong> {{ result.correlation|round(4) }}</p>
+                        <p><strong>P-value:</strong> {{ result.p_value|round(4) }}</p>
+                        <p><em><strong>Please Note:</strong> The data were mean centered and scaled to have a standard deviation of 1. These operations do not affect correlation tests and make the data easier to evaluate in a plot.</em></p>
+                    </div>
+                    {%- endif %}
+                    {%- if data.num_traits == 1 %}
+                    <div id="phenotype-chart-histogram" class="text-center mb-5 position-relative"></div>
+                    <div class="d-flex flex-wrap justify-content-end col-12 text-end pe-5 mb-3 optionsToolbar d-print-none">
+                        <div class="ps-3 pt-0">
+                            <a role="button" onClick="download_chart_as_svg('phenotype-chart-histogram')"><i class="bi bi-file-earmark-image" aria-hidden="true"></i> Download SVG</a>
+                        </div>
+                    </div>
+                    <div id="phenotype-chart-ranked-bar" class="text-center mt-md-0 mb-5 position-relative"></div>
+                    <div class="d-flex flex-wrap justify-content-end col-12 text-end pe-5 mb-3 optionsToolbar d-print-none">
+                        <div class="ps-3 pt-0">
+                            <a role="button" onClick="download_chart_as_svg('phenotype-chart-ranked-bar')"><i class="bi bi-file-earmark-image" aria-hidden="true"></i> Download SVG</a>
+                        </div>
+                    </div>
+                    {%- endif %}
+                </div>
+            </div>
+        </div>
+        <!-- /Tool Column -->
+    </div>
+    <!-- /Flex -->
+</div> <!-- /Container -->
+
+{% endblock %}
+
+
+{% block script %}
+{% from "_includes/select-trait.html" import render_trait_name_label %}
+
+<!-- Tooltips -->
+<script src="https://polyfill.io/v3/polyfill.min.js?features=Array.prototype.find,Promise,Object.assign"></script>
+<script src="https://unpkg.com/@popperjs/core@2"></script>
+<script src="https://unpkg.com/tippy.js@6"></script>
+<!-- View charts in fullscreen -->
+<script type="text/javascript">
+ {% include '_scripts/fullscreen.js' %}
+</script>
+
+<script src="{{ url_for('static', filename='js/plot.js') }}"></script>
+
+<script>
+{% include '_scripts/utils.js' %} {#/* defines: save_svg */#}
+
+function download_chart_as_svg(chart_id) {
+    save_svg(`#${chart_id} svg`, `${chart_id}_{{ report.id }}`);
+}
+
+function download_report_as_pdf() {
+    $("#report-print-container").print()
+}
+</script>
+
+
+<script type="module">
+
+const data = {{ result.trait_values|tojson }};
+
+{%- if data.num_traits == 1 %}
+// Render chart(s) for one trait
+
+{%- set trait_display_name = report['trait_1_name_display'] %}
+const trait_label = `{{ render_trait_name_label( trait_display_name[0], trait_display_name[1], trait_display_name[2], report['trait_1']['units'] ) }}`;
+
+try {
+    render_histogram('#phenotype-chart-histogram', data, {
+         width:         1200,
+        fill_color:    '#0719BC',
+        bins_per_tick: 2,
+        x_label:       trait_label,
+    });
+} catch (err) {
+    console.error(`Could not construct histogram. ${err}`)
+}
+
+try {
+    render_ranked_barplot('#phenotype-chart-ranked-bar', data, {
+        width:         1200,
+        fill_color:    '#0719BC',
+        y_label:       trait_label,
+    });
+} catch (err) {
+    console.error(`Could not construct ranked bar plot. ${err}`)
+}
+
+{%- else %}
+// Render chart(s) for two traits
+
+{%- set trait_1_display_name = report['trait_1_name_display'] %}
+{%- set trait_2_display_name = report['trait_2_name_display'] %}
+const trait_label_1 = `{{ render_trait_name_label( trait_1_display_name[0], trait_1_display_name[1], trait_1_display_name[2], report['trait_1']['units'] ) }}`;
+const trait_label_2 = `{{ render_trait_name_label( trait_2_display_name[0], trait_2_display_name[1], trait_2_display_name[2], report['trait_2']['units'] ) }}`;
+
+try {
+    render_scatterplot_histograms('#phenotype-chart', data, {
+        hist_height:   60,
+        width:         800,
+        height:        800,
+        fill_color:    '#0719BC',
+        bin_width:     0.2,
+        x_label:       `${trait_label_1}`,
+        y_label:       `${trait_label_2}`,
+        opacity:       0.5,
+        opacity_hover: 1,
+    });
+} catch (err) {
+    console.error(`Could not construct scatterplot. ${err}`)
+}
+{%- endif %}
+
+</script>
+<!-- View charts in fullscreen -->
+<script>
+    let fullscreenBrowser = document.getElementById("chartContainer");
+</script>
+
+{% endblock %}

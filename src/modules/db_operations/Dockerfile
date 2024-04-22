@@ -7,10 +7,6 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       build-essential \
       libz-dev \
-      python3 \
-      python3-dev \
-      python3-venv \
-      python3-virtualenv \
       virtualenv \
       wget && \
     apt-get autoremove && \
@@ -21,6 +17,8 @@ ENV APP_HOME /db_operations
 WORKDIR $APP_HOME
 
 # make venv
+RUN pip install virtualenv
+
 RUN virtualenv --python=python3 venv
 ENV VIRTUAL_ENV=$APP_HOME/venv
 RUN python -m venv $VIRTUAL_ENV
