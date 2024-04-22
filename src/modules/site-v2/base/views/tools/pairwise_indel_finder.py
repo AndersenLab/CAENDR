@@ -134,7 +134,7 @@ def pairwise_indel_finder():
 @pairwise_indel_finder_bp.route('/my-results',  methods=['GET'], endpoint='my_results')
 @jwt_required()
 def list_results():
-  show_all = request.path.endswith('all-results')
+  show_all = request.endpoint.endswith('all_results')
   user = get_current_user()
 
   # Only show malformed Entities to admin users
