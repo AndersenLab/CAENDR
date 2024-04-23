@@ -38,8 +38,14 @@
         <hr>
         <h3 class="pb-3">Trait Information</h3>
         <div id="info" class="d-flex flex-row p-2 my-4">
-            <i class="bi bi-info-circle-fill p-3"></i>
-            <p>Select species and upload a file to preview your data and check if it meets the required format. <strong>Please note:</strong> you need to select species to preview your file.</p>
+            <i class="bi bi-info-circle-fill p-3 align-self-center"></i>
+            <div>
+                <p class="mb-1"><strong>Step 1.</strong> Select species. This step is necessary to allow for file upload and preview.</p>
+                <p class="mb-1"><strong>Step 2.</strong> Upload your file to generate a preview.</p>
+                <p class="mb-1"><strong>Step 3.</strong> Verify the preview data to ensure that it meets the format requirements.</p>
+
+            </div>
+            <!-- <p>Select species and upload a file to preview your data and check if it meets the required format. <strong>Please note:</strong> you need to select species to preview your file.</p> -->
         </div>
         <div class="row my-5">
             <div class="col-md-3">{{ render_field(form.species) }}</div>
