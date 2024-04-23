@@ -1,13 +1,17 @@
 from flask import jsonify, Blueprint, url_for, abort, request
 
+from caendr.services.logger import logger
+
+from base.utils.auth  import admin_required
 from base.utils.tools import lookup_report
 from base.views.tools import pairwise_indel_finder_bp, genetic_mapping_bp, heritability_calculator_bp
 
-from caendr.models.datastore import NemascanReport, HeritabilityReport, IndelPrimerReport
-from caendr.models.error     import ReportLookupError
+from caendr.models.datastore import NemascanReport, HeritabilityReport, IndelPrimerReport, Announcement
+from caendr.models.error     import ReportLookupError, NotFoundError
 from caendr.models.status    import JobStatus
 from caendr.services.email   import REPORT_SUCCESS_EMAIL_TEMPLATE, REPORT_ERROR_EMAIL_TEMPLATE
 from caendr.services.cloud.secret import get_secret
+from caendr.utils.json       import jsonify_request
 
 API_SITE_ACCESS_TOKEN = get_secret('CAENDR_API_SITE_ACCESS_TOKEN')
 
@@ -25,6 +29,12 @@ REPORT_BP_MAP = {
 @api_notifications_bp.route('', methods=['GET'])
 def notifications():
   abort(404)
+
+
+
+#
+# Job Status Notifications
+#
 
 
 @api_notifications_bp.route('/job-finish/<kind>/<id>/<status>', methods=['GET'])
@@ -73,3 +83,52 @@ def job_finish(kind, id, status):
       report_link = f'<a>{link}</a>',
     ),
   })
+
+
+
+#
+# Site Announcements
+#
+
+
+@api_notifications_bp.route('/announcements', methods=['GET'])
+@admin_required()
+@jsonify_request
+def announcement_list():
+  '''
+    Get the list of all site announcements.
+  '''
+  return {
+    'data': [ e.serialize(include_name=True) for e in Announcement.query_ds() ]
+  }
+
+
+@api_notifications_bp.route('/announcement',                    methods=['POST'])
+@api_notifications_bp.route('/announcement/<string:entity_id>', methods=['GET'])
+@admin_required()
+@jsonify_request
+def announcement(entity_id: str):
+  '''
+    Manage one of the site announcements.
+
+    Methods:
+      GET:    Get the data for the given announcement ID.
+      POST:   Create a new announcement.
+  '''
+
+  # GET Request
+  # Return the list of announcement entities
+  if request.method == 'GET':
+    return Announcement.get_ds(entity_id).serialize()
+
+  # POST Request
+  # Create a new announcement, and return its unique ID
+  if request.method == 'POST':
+    new_announcement = Announcement(**request.get_json())
+    new_announcement.save()
+    return { 'id': new_announcement.name }
+
+  # If somehow the method didn't match any of the above,
+  # return a Method Not Allowed error
+  return 405
+
