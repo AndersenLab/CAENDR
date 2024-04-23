@@ -33,24 +33,6 @@ genetic_mapping_bp = Blueprint(
 
 
 
-def results_columns():
-  return [
-    {
-      'title': 'Description',
-      'class': 'label',
-      'field': 'label',
-      'width': 0.6,
-      'link_to_data': True,
-    },
-    {
-      'title': 'Trait',
-      'class': 'trait',
-      'field': 'trait',
-      'width': 0.4,
-    },
-  ]
-
-
 @genetic_mapping_bp.route('', methods=['GET'])
 @jwt_required()
 def genetic_mapping():
@@ -162,7 +144,6 @@ def list_results():
     # Table info
     'species_list': Species.all(),
     'items': list_reports(NemascanReport, None if show_all else user, filter_errs),
-    'columns': results_columns(),
 
     'JobStatus': JobStatus,
   })
