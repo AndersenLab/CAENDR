@@ -215,6 +215,8 @@ def submit_trait_form():
         abort(500)
       
       flash('Trait submitted successfully.', 'success')
+      # TODO: change the redirect to MTL
+      return redirect(url_for('data.submit_trait_start'))
 
   return render_template('data/submit-trait-form.html', **{
     # Page Info
