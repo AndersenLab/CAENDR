@@ -39,6 +39,8 @@
 {% block script %}
 
 <script>
+  {% include '_scripts/utils.js' %}       {#/* defines: flash_message */#}
+
 
   function disableButton() {
     const btn = document.getElementById('save-btn');
@@ -105,10 +107,15 @@
 
         // On failure, print error message
         error: function(error) {
-          console.log(...data)
-          console.error(error);
+          console.error('ERROR saving announcement: ', error)
+          const resp = error.responseJSON
+          if (resp && resp.message) {
+            flash_message(resp.message, resp.full_msg_link, resp.full_msg_body);
+          } else {
+            flash_message('There was a problem saving your announcement. Please try again later.');
+          }
           enableButton();
-        }    
+        }
       });
 
     });

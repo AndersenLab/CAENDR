@@ -34,6 +34,8 @@
 
 {% block script %}
 <script>
+  {% include '_scripts/utils.js' %}       {#/* defines: flash_message */#}
+
 
   $(document).ready(function() {
 
@@ -49,7 +51,18 @@
     const table = $('#announcements-table').DataTable( {
       "sDom": "tpr",
       "processing": true,
-      "ajax": "{{ url_for('notifications.announcement_list') }}",
+      "ajax": {
+        url: "{{ url_for('notifications.announcement_list') }}",
+        error: function(error) {
+          console.error('ERROR retrieving announcements: ', error);
+          const resp = error.responseJSON
+          if (resp && resp.message) {
+            flash_message(resp.message, resp.full_msg_link, resp.full_msg_body);
+          } else {
+            flash_message('There was a problem retrieving the list of announcements. Please try again later.');
+          }
+        },
+      },
       "ordering": false,
       "columns": [
         {
