@@ -67,7 +67,7 @@ def announcements_edit(entity_id=None):
     announcement = None
 
   return render_template('admin/announcements/edit.html', **{
-    'title': 'Edit Announcement',
+    'title': ('Edit' if announcement else 'Create') + ' Announcement',
     'form':  AnnouncementForm(),
 
     'announcement': announcement,
