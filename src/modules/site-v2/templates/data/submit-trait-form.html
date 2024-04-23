@@ -111,10 +111,8 @@
         })
 
         $('#file').on('change', function() {
-            if ($('#file')[0].files[0] == undefined) {
-                $('#file-content').empty()
-                $('#file-content').parent().addClass('d-none')
-            }
+            $('#file-content').empty()
+            $('#file-content').parent().addClass('d-none')
         })
 
         // Upload the file and display the content
