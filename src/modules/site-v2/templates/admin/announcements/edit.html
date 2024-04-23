@@ -15,8 +15,7 @@
   <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">
 
   <div class="row">
-    <div class="col-md-10"></div>
-    <div class="col-md-2">
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
       <button id='save-btn' value="save-btn" type='submit' class="btn btn-primary btn-block">
         <span class="glyphicon glyphicon-save" aria-hidden="true"></span> 
         Save
@@ -25,8 +24,10 @@
   </div>
 
   <div class="row">
-    {{ render_field(form.active) }}
-    {{ render_field(form.url_list) }}
+    {# <div class='mb-4'>{{ render_field(form.active) }}</div> #}
+    <div class='mb-4'>{{ render_field(form.url_list) }}</div>
+
+    <label class="form-label" for="editor">Content</label>
     <div id="editor"></div>
   </div>
 
