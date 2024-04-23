@@ -11,8 +11,8 @@ class PhenotypeMetadata(DictSerializable, db.Model):
       information.
   """
   id = db.Column(db.String(), primary_key=True)
-  trait_name_caendr = db.Column(db.String(), unique=True)
   trait_name_user = db.Column(db.String(), nullable=True)
+  trait_name_caendr = db.Column(db.String())
   trait_name_display_1 = db.Column(db.String())
   trait_name_display_2 = db.Column(db.String())
   trait_name_display_3 = db.Column(db.String())
@@ -52,8 +52,7 @@ class PhenotypeMetadata(DictSerializable, db.Model):
   
   def add_trait(self, trait_obj):
     new_trait = PhenotypeMetadata(
-      id = trait_obj['name'],
-      trait_name_caendr = trait_obj['trait_name_caendr'],
+      id = trait_obj.name,
       trait_name_user = trait_obj['trait_name_user'],
       trait_name_display_1 = trait_obj['trait_name_display_1'],
       trait_name_display_2 = trait_obj['trait_name_display_2'],

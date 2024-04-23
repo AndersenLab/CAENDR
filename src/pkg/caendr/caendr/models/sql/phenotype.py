@@ -1,5 +1,5 @@
-from caendr.services.cloud.postgresql import db
-from caendr.models.sql.dict_serializable import DictSerializable
+from caendr.services.cloud.postgresql     import db
+from caendr.models.sql.dict_serializable  import DictSerializable
 
 class PhenotypeDatabase(DictSerializable, db.Model):
   """
@@ -14,3 +14,10 @@ class PhenotypeDatabase(DictSerializable, db.Model):
 
   __tablename__ = 'phenotype_db'
 
+
+  def add_trait_data(self, trait_data):
+    """
+        Adds trait data to the Phenotype Database table
+    """
+    db.session.bulk_insert_mappings(PhenotypeDatabase, trait_data)
+    db.session.commit()

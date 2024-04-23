@@ -6,7 +6,7 @@ from flask      import render_template, Blueprint, redirect, url_for, request, f
 from extensions import cache
 from config     import config
 
-from caendr.models.error           import EnvVarError, FileUploadError, DataFormatError
+from caendr.models.error           import EnvVarError, FileUploadError
 from caendr.models.datastore       import TraitFile, Species
 from caendr.models.status          import PublishStatus
 from caendr.services.cloud.storage import get_blob, upload_blob_from_file_object, check_blob_exists
@@ -18,7 +18,7 @@ from caendr.utils.env              import get_env_var
 from caendr.utils.local_files      import LocalUploadFile
 from base.forms                    import TraitSubmissionForm
 from constants                     import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
-from caendr.models.sql             import PhenotypeMetadata
+from caendr.models.sql             import PhenotypeMetadata, PhenotypeDatabase
 
 
 
@@ -141,9 +141,6 @@ def submit_trait_form():
           'publish_status':    PublishStatus.UPLOADED,
           'is_bulk_file':      False,
           'hashed_filename':   hashed_filename,
-          # How do we need to set a trait_name_caendr for user submission?
-          # It is important to have this prop for trait, as this is the primary key in Phenotype Metadata SQL table
-          'trait_name_caendr': bleach.clean(form.trait_name_user.data), 
         })
 
         tf.set_user(user)
@@ -161,22 +158,62 @@ def submit_trait_form():
         abort(500)
       
       # Save file to GCP bucket
+      species_name = Species.get(form.species.data).name
+      blob_name = f'{MODULE_DB_OPERATIONS_TRAITFILE_PUBLIC_FILEPATH}/{species_name}/{user.name}/{hashed_filename}'
+
+      # Check if the file already exists
+      if check_blob_exists(MODULE_DB_OPERATIONS_BUCKET_NAME, blob_name):
+        flash('File already exists.', 'danger')
+      else:
+        upload_blob_from_file_object(MODULE_DB_OPERATIONS_BUCKET_NAME, form.file.data, blob_name)
+
+      # Reset the file pointer
+      form.file.data.seek(0)
+        
       try:
-        species = Species.get(form.species.data).name
-        blob_name = f'{MODULE_DB_OPERATIONS_TRAITFILE_PUBLIC_FILEPATH}/{species}/{user.name}/{hashed_filename}'
+        # Seed the file data to Phenotype Database SQL table
+        with LocalUploadFile(form.file.data, valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS) as file:
 
-        # Check if the file already exists
-        if check_blob_exists(MODULE_DB_OPERATIONS_BUCKET_NAME, blob_name):
-          flash('File already exists.', 'danger')
-        else:
-          upload_blob_from_file_object(MODULE_DB_OPERATIONS_BUCKET_NAME, form.file.data, blob_name)
+          # Validate the file
+          try:
+            validate_file(file, [
+                                  StrainValidator( 'strain', species=tf['species'], force_unique=True, force_unique_msgs={} ),
+                                  NumberValidator( None, accept_float=True, accept_na=True ),
+                                ])
+          except Exception as ex:
+            flash(f'Failed to validate the file: {ex.msg}', 'danger')
+            return render_template('data/submit-trait-form.html', **{
+              # Page Info
+              'title': 'Phenotype Database Trait Submission',
+              'tool_alt_parent_breadcrumb': {"title": "Submit Trait", "url": url_for('data.submit_trait_start')},
 
-      except Exception as ex:
+              # Data
+              'form': form,
+            })
+          
+          # Parse the trait file
+          trait_data_list = []
+          with open(file) as f:
+            for idx, row in enumerate( csv.reader(f, delimiter='\t') ):
+              if idx == 0:
+                continue
+              else:
+                trait_data = {
+                  'trait_name':  tf['trait_name_user'],
+                  'strain_name': row[0],
+                  'trait_value': row[1],
+                  'metadata_id': tf.name
+                }
+                trait_data_list.append(trait_data)
+
+        trait_data = PhenotypeDatabase()
+        trait_data.add_trait_data(trait_data_list)
+
+      except FileUploadError as ex:
         logger.error(f'Failed to upload a file {form.file.data.filename}: {ex}')
         flash('Failed to submit a form. Please try again later.', 'danger')
         abort(500)
       
-        # Seed to Phenotype Database SQL table
       flash('Trait submitted successfully.', 'success')
 
   return render_template('data/submit-trait-form.html', **{
@@ -205,7 +242,7 @@ def parse_trait_file():
                               NumberValidator( None, accept_float=True, accept_na=True ),
                             ])
       except Exception as ex:
-        return jsonify({ 'message': ex }), 500
+        return jsonify({ 'message': ex.msg }), 500
       
       # Parse the file
       with open(file) as f:
