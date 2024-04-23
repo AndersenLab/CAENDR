@@ -1,0 +1,94 @@
+{% extends "_layouts/default.html" %}
+
+{% block content %}
+<div class="row pb-3">
+  <div class="col-md-10"></div>
+  <div class="col-md-2">
+    <a id='create' href="{{ url_for('admin.announcements_edit')}}" class="btn btn-primary btn-block"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> New Announcement </a>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-12">
+    <div class="table-responsive">
+      <table class="table accordion p-0 text-center w-100" id="announcements-table">
+          <caption class="visually-hidden">A list of announcements.</caption>
+          <thead class="table-secondary align-middle">
+            <tr>
+              <th scope="col" class="col-1 text-center">Active</th>
+              <th scope="col" class="col-1 text-center">Text</th>
+              <th scope="col" class="col-1 text-center">URLs</th>
+              <th scope="col" class="col-1 text-center">Edit</th>
+              <th scope="col" class="col-1 text-center">Delete</th>
+            </tr>
+          </thead>
+          <tbody class="table-group-divider align-middle">
+          </tbody>
+      </table>
+    </div>
+	</div>
+</div>
+{% endblock %}
+
+
+
+{% block script %}
+<script>
+
+  $(document).ready(function() {
+
+    $.ajaxSetup({
+      beforeSend: function(xhr, settings) {
+        if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+          xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
+        }
+      }
+    });
+
+    // Render table with Datatables
+    const table = $('#announcements-table').DataTable( {
+      "sDom": "tpr",
+      "processing": true,
+      "ajax": "{{ url_for('notifications.announcement_list') }}",
+      "ordering": false,
+      "columns": [
+        {
+          "data": "active",
+          "render": function(data, type, row) {
+            return `<input class="form-check-input" type="checkbox" ${data ? "checked" : ""}>`;
+          },
+          'sWidth': '10%',
+        },
+        {
+          "data": "content",
+          'sWidth': '35%',
+        },
+        {
+          "data": "url_list",
+          'sWidth': '35%',
+        },
+        {
+          "render": function(data, type, row) {
+            const url = "{{ url_for('admin.announcements_edit', entity_id='ANNOUNCEMENT_ID') }}".replace('ANNOUNCEMENT_ID', row.name);
+            return `
+              <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Edit</a>
+            `;
+          },
+          "sClass": "optionsToolbar",
+          'sWidth': '10%',
+        },
+        {
+          "render": function(data, type, row) {
+            return `
+              <button type="button" class="btn btn-link"><i class="bi bi-trash3-fill" aria-hidden="true"></i>Delete</button>
+            `;
+          },
+          "sClass": "optionsToolbar",
+          'sWidth': '10%',
+        },
+      ]
+    });
+
+  });
+</script>
+{% endblock %}

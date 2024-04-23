@@ -1,9 +1,10 @@
-from flask import (render_template,
-                  Blueprint)
+from flask import render_template, Blueprint, abort
 
 from config import config
+from base.forms      import AnnouncementForm
 from base.utils.auth import admin_required
 
+from caendr.models.datastore      import Announcement
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.sheets import GOOGLE_SHEET_PREFIX
 
@@ -36,3 +37,38 @@ def admin_publications_sheet():
   title = "CaeNDR Publications Sheet"
   sheet_url = f"{GOOGLE_SHEET_PREFIX}/{CENDR_PUBLICATIONS_SHEET}"
   return render_template('admin/google_sheet.html', **locals())
+
+
+@admin_bp.route('/announcements', methods=['GET'])
+@admin_required()
+def announcements():
+  '''
+    Manage the site announcements.
+  '''
+  return render_template('admin/announcements/list.html', **{
+    'title': 'Site Announcements',
+    'form':  AnnouncementForm(),
+  })
+
+
+@admin_bp.route('/announcements/create',                  methods=['GET'])
+@admin_bp.route('/announcements/edit/<string:entity_id>', methods=['GET'])
+@admin_required()
+def announcements_edit(entity_id=None):
+  '''
+    Manage the site announcements.
+  '''
+  if entity_id:
+    try:
+      announcement = Announcement.get_ds(entity_id)
+    except:
+      abort(500)
+  else:
+    announcement = None
+
+  return render_template('admin/announcements/edit.html', **{
+    'title': 'Edit Announcement',
+    'form':  AnnouncementForm(),
+
+    'announcement': announcement,
+  })

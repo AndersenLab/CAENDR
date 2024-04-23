@@ -2,6 +2,7 @@ from flask import jsonify, Blueprint, url_for, abort, request
 
 from caendr.services.logger import logger
 
+from base.forms       import AnnouncementForm
 from base.utils.auth  import admin_required
 from base.utils.tools import lookup_report
 from base.views.tools import pairwise_indel_finder_bp, genetic_mapping_bp, heritability_calculator_bp
@@ -91,6 +92,20 @@ def job_finish(kind, id, status):
 #
 
 
+def get_announcement(entity_id):
+  '''
+    Helper function to handle looking up announcement entity.
+    TODO: This can be done with new decorator(s) in another branch.
+  '''
+  try:
+    return Announcement.get_ds(entity_id)
+  except NotFoundError:
+    abort(404)
+  except Exception as ex:
+    logger.error(f'Error retrieving announcement {entity_id}: {ex}')
+    abort(500)
+
+
 @api_notifications_bp.route('/announcements', methods=['GET'])
 @admin_required()
 @jsonify_request
@@ -104,29 +119,57 @@ def announcement_list():
 
 
 @api_notifications_bp.route('/announcement',                    methods=['POST'])
-@api_notifications_bp.route('/announcement/<string:entity_id>', methods=['GET'])
+@api_notifications_bp.route('/announcement/<string:entity_id>', methods=['GET', 'PATCH'])
 @admin_required()
 @jsonify_request
-def announcement(entity_id: str):
+def announcement(entity_id: str = None):
   '''
     Manage one of the site announcements.
 
     Methods:
       GET:    Get the data for the given announcement ID.
       POST:   Create a new announcement.
+      PATCH:  Update an existing announcement.
   '''
 
   # GET Request
   # Return the list of announcement entities
   if request.method == 'GET':
-    return Announcement.get_ds(entity_id).serialize()
+    return get_announcement(entity_id).serialize()
 
   # POST Request
   # Create a new announcement, and return its unique ID
   if request.method == 'POST':
-    new_announcement = Announcement(**request.get_json())
+
+    # Validate form
+    # TODO: Clean / validate values
+    form = AnnouncementForm(request.form)
+    if not form.validate():
+      return 400
+
+    new_announcement = Announcement(**{
+      prop: request.form.get(prop) for prop in Announcement.get_props_set()
+    })
     new_announcement.save()
     return { 'id': new_announcement.name }
+
+  # PATCH Request
+  # Lookup the desired announcement and update its properties
+  if request.method == 'PATCH':
+
+    # Validate form
+    # TODO: Clean / validate values
+    form = AnnouncementForm(request.form)
+    if not form.validate():
+      return 400
+
+    # Update the announcement object
+    announcement = get_announcement(entity_id)
+    announcement.set_properties(**{
+      prop: request.form.get(prop, announcement[prop]) for prop in Announcement.get_props_set()
+    })
+    announcement.save()
+    return { 'id': announcement.name }
 
   # If somehow the method didn't match any of the above,
   # return a Method Not Allowed error

@@ -119,6 +119,13 @@ class RecoverUserForm(FlaskForm):
   email = EmailField('Email Address', [Required(), Email(), Length(min=6, max=320)])
   recaptcha = RecaptchaField()
 
+
+class AnnouncementForm(FlaskForm):
+  """ Edit form for site announcements """
+  active   = BooleanField('Active')
+  content  = StringField('Content', [Optional()])
+  url_list = TextAreaField('URL Patterns', [Optional()])
+
 class MarkdownForm(FlaskForm):
   """ markdown editing form """
   _CONTENT_TYPES = get_content_type_form_options()

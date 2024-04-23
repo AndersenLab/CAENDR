@@ -1,0 +1,119 @@
+{% extends "_layouts/default.html" %}
+
+
+{% block custom_head %}
+<link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
+{% endblock %}
+
+
+{% block content %}
+{% from "_includes/macros.html" import render_field %}
+<script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+
+<form id='form-submit' method="POST" action="{{ kind }}">
+  {{ form.csrf_token }}
+  <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">
+
+  <div class="row">
+    <div class="col-md-10"></div>
+    <div class="col-md-2">
+      <button id='save-btn' value="save-btn" type='submit' class="btn btn-primary btn-block">
+        <span class="glyphicon glyphicon-save" aria-hidden="true"></span> 
+        Save
+      </button>
+    </div>
+  </div>
+
+  <div class="row">
+    {{ render_field(form.active) }}
+    {{ render_field(form.url_list) }}
+    <div id="editor"></div>
+  </div>
+
+</form>
+
+{% endblock %}
+
+
+{% block script %}
+
+<script>
+
+  function disableButton() {
+    const btn = document.getElementById('save-btn');
+    btn.disabled = true;
+    btn.innerText = 'Loading...'
+  }
+
+  function enableButton() {
+    const btn = document.getElementById('save-btn');
+    btn.disabled = false;
+    btn.innerText = 'Save'
+  }
+
+
+  $(document).ready(function () {
+
+    // Markdown editor
+    const Editor = toastui.Editor;
+    const editor = new Editor({
+      el: document.querySelector('#editor'),
+      height: '200px',
+      initialEditType: 'markdown',
+      previewStyle: 'vertical',
+      initialValue: "{{ announcement['content'] }}",
+      toolbarItems: [
+        ['bold', 'italic', 'link'],
+      ],
+    });
+
+
+    // Form Submission
+    $("#save-btn").on("click", function(e) {
+      e.preventDefault();
+      disableButton();
+
+      // Get the fields from the form
+      const data = new FormData($('form#form-submit')[0]);
+
+      // Append the Markdown content to the form object
+      const md_content = editor.getMarkdown();
+      data.append('content', md_content);
+
+      // Send the appropriate AJAX request
+      $.ajax({
+        {% if announcement %}
+        type: "PATCH",
+        url:  "{{ url_for('notifications.announcement', entity_id = announcement.name) }}",
+        {% else %}
+        type: "POST",
+        url:  "{{ url_for('notifications.announcement') }}",
+        {% endif %}
+        headers: {
+          'X-CSRF-TOKEN': "{{ form.csrf_token._value() }}",
+        },
+        processData: false,
+        contentType: false,
+        dataType:    'json',
+        data:        data,
+
+        // On success, redirect to list page
+        success: function(result) {
+          window.location = "{{ url_for('admin.announcements') }}";
+        },
+
+        // On failure, print error message
+        error: function(error) {
+          console.log(...data)
+          console.error(error);
+          enableButton();
+        }    
+      });
+
+    });
+  });
+
+</script>
+
+{% endblock %}
+
