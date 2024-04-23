@@ -308,7 +308,7 @@ def download_blob_to_file(bucket_name, *path, destination='', filename=None):
 
   # Retrieve the blob, throwing an error if it doesn't exist
   blob = get_blob(bucket_name, *path)
-  if not blob.exists():
+  if not (blob and blob.exists()):
     raise NotFoundError('blob', {'bucket': bucket_name, 'name': join_path(*path)})
 
   # Download the blob to a file and return the filename

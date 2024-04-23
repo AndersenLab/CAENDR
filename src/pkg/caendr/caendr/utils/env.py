@@ -72,6 +72,44 @@ def get_env_var(key, value=None, can_be_none=False, as_template=False, var_type=
   return v
 
 
+
+def get_env_var_with_fallback(key, *fallback_keys, fallback_on_err=True, **kwargs):
+  '''
+    Get a value from the environment, trying one or more keys and taking the first value found.
+  '''
+  from caendr.models.error import EnvVarError
+
+  # Initialize var to track error(s)
+  err = None
+
+  # Loop through all keys
+  keys = [key, *fallback_keys]
+  for key in keys:
+
+    # Try to return the current key's value
+    try:
+      return get_env_var(key, **kwargs)
+
+    # If the variable could not be found, skip to the next key
+    except EnvVarError:
+      continue
+
+    # If there was a type error interpreting the variable, optionally track the error and skip to the next key
+    except Exception as e:
+      if fallback_on_err:
+        err = e
+        continue
+      raise
+
+  # If one of the keys raised an error and no fallbacks were found, re-raise that error
+  if err is not None:
+    raise err
+
+  # If none of the keys were found, raise an error combining all the key names
+  raise EnvVarError(keys)
+
+
+
 def remove_env_escape_chars(val: str):
   return val.replace('\\', '')
 

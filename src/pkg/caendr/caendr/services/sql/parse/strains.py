@@ -4,11 +4,11 @@ from caendr.services.logger import logger
 from caendr.models.datastore  import Species
 from caendr.utils.local_files import LocalGoogleSheet
 from caendr.utils.data        import log_status
+from caendr.utils.constants   import GOOGLE_SHEET_NULL_VALUES
 
 
 
 elevation_cache = {}
-NULL_VALS = ["None", "", "NA", None]
 
 
 # Local get_elevation import because this module is now used in the site
@@ -44,13 +44,13 @@ def fetch_andersen_strains(species: Species, STRAINS: LocalGoogleSheet):
   for record in STRAINS:
 
     # Only take records with a release reported
-    if record.get('release') in NULL_VALS:
+    if record.get('release') in GOOGLE_SHEET_NULL_VALUES:
       continue
 
     record = {k.lower(): v for k, v in record.items()}
     for k, v in record.items():
       # Set NA to None
-      if v in NULL_VALS:
+      if v in GOOGLE_SHEET_NULL_VALUES:
         v = None
         record[k] = v
       if k in ['sampling_date'] and v:
@@ -66,12 +66,12 @@ def fetch_andersen_strains(species: Species, STRAINS: LocalGoogleSheet):
     record["issues"] = record["issues"] == "TRUE"
 
     # Set isotype_ref_strain = FALSE if no isotype is assigned.
-    if record['isotype'] in NULL_VALS:
+    if record['isotype'] in GOOGLE_SHEET_NULL_VALUES:
       record['isotype_ref_strain'] = False
       record['wgs_seq'] = False
 
     # Skip strains that lack an isotype
-    if record['isotype'] in NULL_VALS and record['issues'] is False:
+    if record['isotype'] in GOOGLE_SHEET_NULL_VALUES and record['issues'] is False:
       continue
 
     # Fix strain reference

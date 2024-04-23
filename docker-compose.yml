@@ -5,7 +5,7 @@ services:
     image: postgres:13.5-alpine
     restart: always
     env_file:
-      - src/modules/site/.env
+      - src/modules/site-v2/.env
     environment:
       - POSTGRES_USER=$MODULE_DB_OPERATIONS_DB_USER_NAME
       - POSTGRES_DB=$MODULE_DB_OPERATIONS_DB_NAME
@@ -20,7 +20,7 @@ services:
     image: gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine
     restart: always
     env_file:
-      - src/modules/site/.env
+      - src/modules/site-v2/.env
     volumes:
       - $GOOGLE_APPLICATION_CREDENTIALS:/config
     ports:

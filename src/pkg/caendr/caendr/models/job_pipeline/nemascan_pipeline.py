@@ -9,7 +9,8 @@ from caendr.models.task            import NemascanTask
 # Services
 from caendr.models.datastore       import Species
 from caendr.services.cloud.storage import BlobURISchema
-from caendr.services.validate      import get_delimiter_from_filepath, validate_file, validate_num, validate_strain
+from caendr.services.validate      import validate_file, NumberValidator, StrainValidator
+from caendr.utils.data             import get_delimiter_from_filepath
 from caendr.utils.env              import get_env_var
 from caendr.utils.file             import get_file_hash
 from caendr.utils.local_files      import LocalUploadFile
@@ -44,9 +45,9 @@ class NemascanPipeline(JobPipeline):
   #
 
   @classmethod
-  def validator_columns(cls, data):
+  def column_validators(cls, data):
     '''
-      Define an expected header & a validator function for each column in the file
+      Create a ColumnValidator object for each column in the file
     '''
 
     # Define a formatting function that customizes the message if duplicate strains are found
@@ -57,14 +58,8 @@ class NemascanPipeline(JobPipeline):
     }
 
     return [
-      {
-        'header': 'strain',
-        'validator': validate_strain(Species.from_name(data['species']), force_unique=True, force_unique_msgs=force_unique_msgs)
-      },
-      {
-        # 'header': { 'validator': lambda x: x },
-        'validator': validate_num(accept_float=True, accept_na=True),
-      },
+      StrainValidator( 'strain', species=Species.from_name(data['species']), force_unique=True, force_unique_msgs=force_unique_msgs ),
+      NumberValidator( None,     accept_float=True, accept_na=True ),
     ]
 
 
@@ -82,7 +77,7 @@ class NemascanPipeline(JobPipeline):
 
     # Validate each line in the file
     # Will raise an error if any problems are found, otherwise silently passes
-    validate_file(local_file, cls.validator_columns(data), delimiter=delimiter, unique_rows=True)
+    validate_file(local_file, cls.column_validators(data), delimiter=delimiter, unique_rows=True)
 
     # Compute hash from file
     data_hash = get_file_hash(local_file, length=32)

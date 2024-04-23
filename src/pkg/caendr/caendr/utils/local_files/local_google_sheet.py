@@ -8,13 +8,17 @@ from caendr.services.cloud.sheets import get_google_sheet
 
 class LocalGoogleSheet(ForeignResource):
 
-  def __init__(self, sheet_id, resource_id = None, species = None):
-    self._sheet_id     = sheet_id
-    self.__resource_id = resource_id or sheet_id
-    self.__species     = species
+  def __init__(self, resource_id: str, sheet_id: str, species = None):
+
+    # Pass resource ID to parent
+    super().__init__(resource_id)
+
+    # Save vars locally
+    self._sheet_id = sheet_id
+    self.__species = species
 
   def __repr__(self):
-    return f'Google Sheet "{self.__resource_id}"' + (f' for {self.__species.name}' if self.__species else '')
+    return f'Google Sheet "{self.resource_id}"' + (f' for {self.__species.name}' if self.__species else '')
 
 
   #
@@ -42,7 +46,7 @@ class LocalGoogleSheet(ForeignResource):
     try:
       return get_google_sheet( self._sheet_id )
     except Exception as ex:
-      raise ForeignResourceMissingError('Google Sheet', self.__resource_id, self.__species) from ex
+      raise ForeignResourceMissingError(self) from ex
 
 
 
@@ -55,12 +59,12 @@ class LocalGoogleSheetTemplate(ForeignResourceTemplate):
 
   __sheet_ids = {}
 
-  def __init__(self, resource_id, sheet_ids):
-    self.__resource_id = resource_id
+  def __init__(self, resource_id: str, sheet_ids):
+    super().__init__(resource_id)
     self.__sheet_ids = sheet_ids
 
   def __repr__(self):
-    return f'Google Sheet Template "{self.__resource_id}"'
+    return f'Google Sheet Template "{self.resource_id}"'
 
 
   #
@@ -68,7 +72,7 @@ class LocalGoogleSheetTemplate(ForeignResourceTemplate):
   #
 
   def get_print_uri(self, species: Species) -> str:
-    return f'Google Sheet "{self.__resource_id}" for {species.name}'
+    return f'Google Sheet "{self.resource_id}" for {species.name}'
 
   def check_exists(self, species: Species) -> bool:
     try:
@@ -86,7 +90,7 @@ class LocalGoogleSheetTemplate(ForeignResourceTemplate):
 
     # Check that species is valid
     if not self.has_for_species(species):
-      raise ForeignResourceUndefinedError('Google Sheet', self.__resource_id, species)
+      raise ForeignResourceUndefinedError('Google Sheet', self.resource_id, species)
 
     # Create new local sheet object
-    return LocalGoogleSheet(self.__sheet_ids[species.name], resource_id=self.__resource_id, species=species)
+    return LocalGoogleSheet(self.resource_id, self.__sheet_ids[species.name], species=species)

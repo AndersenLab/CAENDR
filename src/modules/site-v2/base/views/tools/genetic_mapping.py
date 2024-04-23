@@ -7,16 +7,16 @@ from flask import jsonify
 
 from base.forms import MappingForm
 from base.utils.auth  import get_jwt, jwt_required, admin_required, get_current_user, user_is_admin
-from base.utils.tools import get_upload_err_msg, lookup_report, try_submit
+from base.utils.tools import get_upload_err_msg, lookup_report, list_reports, try_submit
 from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
-from caendr.services.nemascan_mapping import get_mapping, get_mappings
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, get_blob, get_blob_list, check_blob_exists
 from caendr.models.datastore import Species, NemascanReport
 from caendr.models.error import (
     FileUploadError,
     ReportLookupError,
 )
+from caendr.models.job_pipeline import NemascanPipeline
 from caendr.models.status import JobStatus
 from caendr.utils.env import get_env_var
 from caendr.utils.local_files import LocalUploadFile
@@ -31,24 +31,6 @@ genetic_mapping_bp = Blueprint(
   'genetic_mapping', __name__
 )
 
-
-
-def results_columns():
-  return [
-    {
-      'title': 'Description',
-      'class': 'label',
-      'field': 'label',
-      'width': 0.6,
-      'link_to_data': True,
-    },
-    {
-      'title': 'Trait',
-      'class': 'trait',
-      'field': 'trait',
-      'width': 0.4,
-    },
-  ]
 
 
 @genetic_mapping_bp.route('', methods=['GET'])
@@ -161,8 +143,7 @@ def list_results():
 
     # Table info
     'species_list': Species.all(),
-    'items': get_mappings(None if show_all else user.name, filter_errs),
-    'columns': results_columns(),
+    'items': list_reports(NemascanReport, None if show_all else user, filter_errs),
 
     'JobStatus': JobStatus,
   })
@@ -175,7 +156,7 @@ def report(id):
   # Fetch requested mapping report
   # Ensures the report exists and the user has permission to view it
   try:
-    job = lookup_report(NemascanReport.kind, id)
+    job: NemascanPipeline = lookup_report(NemascanReport.kind, id)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:
@@ -212,7 +193,7 @@ def report_fullscreen(id):
   # Fetch requested mapping report
   # Ensures the report exists and the user has permission to view it
   try:
-    job = lookup_report(NemascanReport.kind, id)
+    job: NemascanPipeline = lookup_report(NemascanReport.kind, id)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:
@@ -233,7 +214,7 @@ def report_fullscreen(id):
 @genetic_mapping_bp.route('/report/<id>/status', methods=['GET'])
 @jwt_required()
 def report_status(id):
-  mapping = get_mapping(id)
+  mapping = NemascanReport.get_ds(id)
   data_url = generate_blob_uri(mapping.get_bucket_name(), mapping.get_data_blob_path(), schema=BlobURISchema.HTTPS)
 
   # TODO: Definition of report_path has been changed(?) since this was written, is now a property
@@ -258,7 +239,7 @@ def results(id):
   # Fetch requested mapping report
   # Ensures the report exists and the user has permission to view it
   try:
-    job = lookup_report(NemascanReport.kind, id)
+    job: NemascanPipeline = lookup_report(NemascanReport.kind, id)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:

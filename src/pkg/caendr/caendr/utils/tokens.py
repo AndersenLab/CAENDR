@@ -92,7 +92,11 @@ class TokenizedString():
     )
 
     # Run the provided function on the raw arguments, create a TokenizedString from the result, and apply all tokens
-    return TokenizedString( f(*raw_args, **raw_kwargs) ).set_tokens(**tokens)
+    result = f(*raw_args, **raw_kwargs)
+    if isinstance(result, str):
+      return TokenizedString( result ).set_tokens(**tokens)
+    else:
+      return tuple( TokenizedString(s).set_tokens(**tokens) for s in result )
 
 
 

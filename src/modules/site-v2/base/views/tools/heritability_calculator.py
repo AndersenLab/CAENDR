@@ -16,7 +16,7 @@ import bleach
 
 from base.forms import HeritabilityForm
 from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user, user_is_admin
-from base.utils.tools import get_upload_err_msg, lookup_report, try_submit
+from base.utils.tools import get_upload_err_msg, lookup_report, list_reports, try_submit
 from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 from caendr.models.error import (
@@ -26,9 +26,9 @@ from caendr.models.error import (
     ReportLookupError,
 )
 from caendr.models.datastore import Species, HeritabilityReport
+from caendr.models.job_pipeline import HeritabilityPipeline
 from caendr.models.status import JobStatus
 from caendr.api.strain import get_strains
-from caendr.services.heritability_report import get_heritability_report, get_heritability_reports
 from caendr.utils.data import unique_id, get_object_hash
 from caendr.utils.env import get_env_var
 from caendr.utils.local_files import LocalUploadFile
@@ -50,23 +50,6 @@ heritability_calculator_bp = Blueprint(
   'heritability_calculator', __name__
 )
 
-
-def results_columns():
-  return [
-    {
-      'title': 'Description',
-      'class': 'label',
-      'field': 'label',
-      'width': 0.6,
-      'link_to_data': True,
-    },
-    {
-      'title': 'Trait',
-      'class': 'trait',
-      'field': 'trait',
-      'width': 0.4,
-    },
-  ]
 
 
 @heritability_calculator_bp.route('')
@@ -135,8 +118,7 @@ def list_results():
 
     # Table info
     'species_list': Species.all(),
-    'items': get_heritability_reports(None if show_all else user.name, filter_errs),
-    'columns': results_columns(),
+    'items': list_reports(HeritabilityReport, None if show_all else user, filter_errs),
 
     'JobStatus': JobStatus,
   })
@@ -193,7 +175,7 @@ def submit():
 @heritability_calculator_bp.route("/report/<id>/logs")
 @jwt_required()
 def view_logs(id):
-  hr = get_heritability_report(id)    
+  hr = HeritabilityReport.get_ds(id)
   # get workflow bucket
   from google.cloud import storage
   storage_client = storage.Client()
@@ -231,7 +213,7 @@ def report(id):
   # Fetch requested heritability report
   # Ensures the report exists and the user has permission to view it
   try:
-    job = lookup_report(HeritabilityReport.kind, id, user=user)
+    job: HeritabilityPipeline = lookup_report(HeritabilityReport.kind, id, user=user)
 
   # If the report lookup request is invalid, show an error message
   except ReportLookupError as ex:

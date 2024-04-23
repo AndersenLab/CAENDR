@@ -94,7 +94,7 @@ def data_release_list(species, release_version=None):
     'RELEASES': releases,
     'release_bucket': get_release_bucket(),
     'release_path': release.get_versioned_path_template().get_string(SPECIES = species.name),
-    'fasta_path': release.get_fasta_filepath_url() if release.check_fasta_file_exists() else None,
+    'fasta_path': release.get_fasta_filepath(schema=BlobURISchema.HTTPS) if release.check_fasta_file_exists() else None,
     'fasta_name': release.get_fasta_filename(),
   }
 
@@ -160,7 +160,7 @@ def data_v01(params, files):
     vcf_summary = None
 
   return {
-    'site_bucket_public_name': config.get('MODULE_SITE_BUCKET_PUBLIC_NAME', 'NONE'),
+    'site_bucket_public_name': config.get('MODULE_SITE_BUCKET_DATASET_RELEASE_NAME', config.get('MODULE_SITE_BUCKET_PUBLIC_NAME', 'NONE')),
     'browser_tracks_path': get_browser_tracks_path().get_string_safe(),
     'vcf_summary_url': vcf_summary_url,
     'vcf_summary': vcf_summary,

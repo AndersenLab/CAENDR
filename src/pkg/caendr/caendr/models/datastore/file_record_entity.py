@@ -65,6 +65,8 @@ class FileRecordEntity(Entity, ABC):
     '''
       The name of the file itself. Returns as a `TokenizedString`.
     '''
+    if self._get_raw_prop('filename') is None:
+      return None
     return TokenizedString( self._get_raw_prop('filename') )
 
   @filename.setter
@@ -74,7 +76,7 @@ class FileRecordEntity(Entity, ABC):
     '''
     if isinstance(v, TokenizedString):
       v = v.raw_string
-    if not isinstance(v, str):
+    if not (isinstance(v, str) or v is None):
       raise ValueError(f'Cannot set prop "filename" to "{v}" (type {type(v)}): must be a string')
     return self._set_raw_prop('filename', v)
 

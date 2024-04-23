@@ -48,7 +48,7 @@
                     <div class="row">
                         <div class="col-6">
                             <h2>Release Notes</h2>
-                            <p>{{ render_ext_markdown(files and files.get('release_notes'), ignore_err=true, backup_text="*Release notes are not available at this time.*") }}</p>
+                            <p>{{ render_ext_markdown((files or {}).get('release_notes'), ignore_err=true, backup_text="*Release notes are not available at this time.*") }}</p>
                         </div>
                         <div class="col-6">
                             <div class="card">
@@ -57,7 +57,7 @@
                                 </div>
                                 <div class="card-body">
                                     <p class="card-text">
-                                        {{ render_ext_markdown(files and files.get('summary'), ignore_err=true, backup_text="*Release summary is not available at this time.*") }}
+                                        {{ render_ext_markdown((files or {}).get('summary'), ignore_err=true, backup_text="*Release summary is not available at this time.*") }}
                                     </p>
                                 </div>
                             </div>

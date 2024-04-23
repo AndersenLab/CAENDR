@@ -1,7 +1,9 @@
+from typing import Tuple, Optional
+
 from caendr.utils.env import get_env_var
 
 from caendr.models.datastore       import FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEntity
-from caendr.services.cloud.storage import BlobURISchema
+from caendr.services.cloud.storage import BlobURISchema, join_path
 from caendr.utils.tokens           import TokenizedString
 
 
@@ -24,19 +26,41 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
       *super().get_props_set(),
 
       # Identifying trait
-      'trait_name',
-      'species',
-      'is_bulk_file',
+      'trait_name_caendr',
+      'dataset',
 
-      # About trait
+      # About trait (display info)
+      'trait_name_user',
+      'trait_name_display_1',
+      'trait_name_display_2',
+      'trait_name_display_3',
       'description_short',
       'description_long',
       'units',
+      'tags',
 
       # Source information
-      'doi',
+      'publication',
       'protocols',
       'source_lab',
+      'institution',
+      'capture_date',
+
+      # Other
+      'is_bulk_file',
+    }
+
+
+  def serialize(self, include_meta=True):
+    return {
+      **super().serialize(include_meta=include_meta),
+
+      # Add Python property values & function lookups
+      'name':        self.name,
+      'uri':         self.get_filepath(schema=BlobURISchema.HTTPS),
+      'submitter':   self.get_user_full_name() if self.from_public else 'CaeNDR',
+      'is_public':   self.is_public,
+      'from_caendr': self.from_caendr,
     }
 
 
@@ -50,13 +74,7 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
 
   @property
   def prefix(self):
-
-    # If published by CaeNDR, go to CaeNDR folder
-    if self.from_caendr:
-      return TokenizedString('trait_files/caendr/${SPECIES}')
-
-    # If public user submission, go to user folder
-    return TokenizedString('trait_files/public/' + self['username'])
+    return TokenizedString(join_path('trait_files', self['dataset'], '${SPECIES}'))
 
 
   #
@@ -79,3 +97,13 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
   @is_bulk_file.setter
   def is_bulk_file(self, val):
     return self._set_raw_prop('is_bulk_file', bool(val))
+
+
+  @property
+  def display_name(self) -> Tuple[str, Optional[str], Optional[str]]:
+    '''
+      The trait display name as a tuple.  The first element will always exist.
+
+      Combines `trait_name_display_1`, `trait_name_display_2`, and `trait_name_display_3` into a single tuple.
+    '''
+    return self['trait_name_display_1'], self['trait_name_display_2'], self['trait_name_display_3']

@@ -24,12 +24,14 @@ from caendr.services.logger           import logger
 # Local import
 from operations import execute_operation
 
+from caendr.models.sql import DbOp
+
 
 # Load environment variables
 MODULE_DB_OPERATIONS_BUCKET_NAME = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
 ETL_LOGS_BUCKET_NAME             = get_env_var('ETL_LOGS_BUCKET_NAME')
 EXTERNAL_DB_BACKUP_PATH          = get_env_var('EXTERNAL_DB_BACKUP_PATH')
-DB_OP                            = get_env_var('DATABASE_OPERATION')
+DATABASE_OPERATION               = get_env_var('DATABASE_OPERATION')
 EMAIL                            = get_env_var('EMAIL',        can_be_none=True)
 OPERATION_ID                     = get_env_var('OPERATION_ID', can_be_none=True)
 
@@ -108,6 +110,12 @@ def run():
   use_mock_data = get_env_var('USE_MOCK_DATA', False, var_type=bool)
   reload_files  = get_env_var('RELOAD_FILES',  True,  var_type=bool)
 
+  # Parse database operation
+  try:
+    db_op = DbOp[DATABASE_OPERATION]
+  except:
+    logger.error(f'Unknown database operation {DATABASE_OPERATION}')
+
   # Parse species list
   species = parse_species_list( get_env_var('SPECIES_LIST', can_be_none=True) )
   species_string = '[' + ', '.join(species) + ']' if species else 'all'
@@ -115,16 +123,16 @@ def run():
   text = ""
 
   try:
-    execute_operation(db, DB_OP, species=species, reload_files=reload_files)
+    execute_operation(db, db_op, species=species, reload_files=reload_files)
     text = text + f"\n\nStatus: OK"
-    text = text + f"\nOperation: {DB_OP}"
+    text = text + f"\nOperation: {db_op.name}"
     text = text + f"\nOperation ID: {OPERATION_ID}"
     text = text + f"\nEnvironment: { get_env_var('ENV', 'n/a') }"
     text = text + f"\nSpecies: {species_string}"
 
   except Exception as e:
     text = text + f"\nStatus: ERROR"
-    text = text + f"\nOperation: {DB_OP}"
+    text = text + f"\nOperation: {db_op.name}"
     text = text + f"\nOperation ID: {OPERATION_ID}"
     text = text + f"\nEnvironment: { get_env_var('ENV', 'n/a') }"
     text = text + f"\nSpecies: {species_string}"
@@ -152,7 +160,7 @@ def run():
     send_email({
       "from": f'CaeNDR <{NO_REPLY_EMAIL}>',
       "to": EMAIL,
-      "subject": f"ETL finished for operation: {DB_OP} in {elapsed} seconds",
+      "subject": f"ETL finished for operation: {db_op.name} in {elapsed} seconds",
       "text": text,
     })
 

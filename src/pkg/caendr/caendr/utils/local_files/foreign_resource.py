@@ -14,6 +14,9 @@ class ForeignResource(Iterable, ABC):
       - `__iter__`: yields each "row" from the resource
   '''
 
+  def __init__(self, resource_id: str):
+    self.resource_id = resource_id
+
   @property
   @abstractmethod
   def metadata(self):
@@ -49,6 +52,10 @@ class ForeignResourceTemplate(ABC):
     Generic interface for managing a set of foreign resources
     which follow the same template and are each specific to one species.
   '''
+
+  def __init__(self, resource_id: str):
+    self.resource_id = resource_id
+
 
   @abstractmethod
   def get_print_uri(self, species: Species) -> str:

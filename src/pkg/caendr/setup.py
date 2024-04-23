@@ -24,14 +24,15 @@ setup(
     'gtfparse==0.0.6',
     'logzero==1.3.1',
     'oauth2client',
-    'numpy',
-    'pandas',
+    'numpy==1.19.5',
+    'pandas==1.1.3',
     'plotly==5.3.0',
     'psycopg2-binary>=2.9.1',
     'pg8000',
     'python-dotenv==0.19.1',
     'pytabix==0.1',
     'importlib; python_version == "3.8.10"',
+    'scipy',
     'Werkzeug==1.0.0'
   ],
 )

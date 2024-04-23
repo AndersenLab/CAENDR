@@ -4,12 +4,14 @@ import gspread
 import pandas as pd
 import requests
 import datetime
+from typing import Iterable
 
 from io import StringIO
 from oauth2client.service_account import ServiceAccountCredentials
 from base64 import b64decode
 from caendr.services.logger import logger
 
+from caendr.utils.constants import GOOGLE_SHEET_NULL_VALUES
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.service_account import get_service_account_credentials
 
@@ -91,3 +93,26 @@ def lookup_order(invoice_hash):
   else:
     return None
 
+
+def get_field_from_record(record, key, fallback=None, nullable=True, null_values=GOOGLE_SHEET_NULL_VALUES):
+  '''
+    Look up a field in a record, optionally casting null values to `None`.
+  '''
+  val = record.get(key, fallback)
+  if nullable and (val is None or val in null_values):
+    return None
+  elif val is None:
+    raise ValueError()
+  return val
+
+
+def check_missing_columns(sheet: gspread.Worksheet, required_columns: Iterable[str]):
+  '''
+    Given an iterable of column headers, return any headers that don't exist in the given sheet.
+  '''
+
+  # NOTE: row_values function is one-indexed!
+  header_row = sheet.row_values(1)
+
+  # Compute the set of required columns that are not in the header row
+  return frozenset(filter(lambda col: col not in header_row, required_columns))

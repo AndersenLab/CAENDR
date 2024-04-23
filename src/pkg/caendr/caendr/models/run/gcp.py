@@ -11,9 +11,10 @@ from googleapiclient.errors import HttpError
 from caendr.services.logger import logger
 from caendr.utils.env       import get_env_var
 
-from caendr.models.datastore            import PipelineOperation, DbOp, DatabaseOperation
+from caendr.models.datastore            import PipelineOperation, DatabaseOperation
 from caendr.models.error                import PipelineRunError, NotFoundError
 from caendr.models.report               import GCPReport
+from caendr.models.sql                  import DbOp
 from caendr.models.status               import JobStatus
 from caendr.models.lifesciences         import ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
 from caendr.services.cloud.cloudrun     import create_job, run_job, get_job_execution_status
@@ -157,7 +158,7 @@ class GCPRunner(Runner):
     # Loop through valid database operations
     for op in DbOp:
       if data_id == make_dns_name_safe(op.name):
-        return _kind, op.name
+        return make_dns_name_safe(kind), op.name
 
     raise ValueError(f'Job name { job_name } does not match any valid database operations (searching for: "{ data_id }").')
 

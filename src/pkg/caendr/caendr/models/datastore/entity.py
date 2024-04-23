@@ -159,7 +159,11 @@ class Entity(object):
     now = datetime.now(timezone.utc)
 
     # Get serialized dict of all props and meta props
-    props = self.serialize()
+    props = {
+      k: v
+        for k, v in self.serialize(include_meta=True).items()
+        if k in self.get_props_set() or k in self.get_props_set_meta()
+    }
 
     # Update timestamps
     if not self._exists:
@@ -256,6 +260,8 @@ class Entity(object):
         props[key] = val.name
       elif isinstance(val, TokenizedString):
         props[key] = val.raw_string
+      elif isinstance(val, Entity):
+        props[key] = val.name
 
     return props
 
@@ -435,29 +441,6 @@ class Entity(object):
     if len(matches) == 0:
       if required:
         raise NotFoundError( cls.kind, {key: val} )
-      else:
-        return None
-
-    # If exactly one entity found, return it
-    elif len(matches) == 1:
-      return matches[0]
-
-    # If more than one entity found, raise an error
-    else:
-      raise NonUniqueEntity( cls.kind, key, val, matches )
-
-
-  @classmethod
-  def query_ds_not_deleted(cls, key, val, required=False):
-
-    # Run query with given key and val
-    matches = cls.query_ds(filters=[(key, '=', val)])
-    matches = [ el for el in matches if not el['is_deleted'] ]
-
-    # If no matching entities found, return None
-    if len(matches) == 0:
-      if required:
-        raise NotFoundError(cls.kind, {key: val})
       else:
         return None
 

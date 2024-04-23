@@ -1,16 +1,19 @@
-from typing import Dict
+from typing import Dict, List
 
 from caendr.utils.env                 import get_env_var
 from caendr.services.cloud.secret     import get_secret
+from caendr.services.logger           import logger
 
 # Local imports
 from .parse.strains                   import fetch_andersen_strains
 from .parse.wormbase                  import parse_gene_gtf, parse_gene_gff_summary
 from .parse.strain_annotated_variants import parse_strain_variant_annotation_data
 from .parse.phenotype_db              import parse_phenotypedb_traits_data, parse_phenotypedb_bulk_trait_file
+from .parse.phenotype_metadata        import parse_phenotype_metadata
 
-from caendr.models.sql                import Strain, WormbaseGeneSummary, WormbaseGene, StrainAnnotatedVariant, PhenotypeDatabase
+from caendr.models.sql                import Strain, WormbaseGeneSummary, WormbaseGene, StrainAnnotatedVariant, PhenotypeDatabase, PhenotypeMetadata
 from caendr.models.datastore          import Species, TraitFile
+from caendr.models.error              import ForeignResourceMissingError
 from caendr.utils.local_files         import ForeignResource, ForeignResourceTemplate, LocalDatastoreFileTemplate, LocalGoogleSheetTemplate
 
 
@@ -48,7 +51,7 @@ class ParseConfig():
     Helper class to associate a parsing function with a set of files.
   '''
 
-  def __init__(self, parse, files: Dict[str, ForeignResourceTemplate]):
+  def __init__(self, parse, *files: ForeignResourceTemplate):
     self.parse = parse
     self.files = files
 
@@ -57,11 +60,15 @@ class ParseConfig():
     '''
       Fetch all the files required for this species.
     '''
-    return {
-      file_id: file_template.get_for_species(species).fetch()
-        for file_id, file_template in self.files.items()
-        if file_template.has_for_species(species)
-    }
+    result = {}
+    for file_template in self.files:
+      try:
+        if file_template.has_for_species(species):
+          result[file_template.resource_id] = file_template.get_for_species(species).fetch()
+      except ForeignResourceMissingError as ex:
+        logger.error(f'Skipping {file_template.get_print_uri(species)}: {ex}')
+    logger.debug(f'Fetched {len(result)} files out of {len(self.files)} requested.')
+    return result
 
 
   def parse_all(self, species):
@@ -93,6 +100,13 @@ class TableConfig():
     '''
     return self.table.__tablename__
 
+  @property
+  def all_resources(self) -> List[ForeignResourceTemplate]:
+    resources = []
+    for config in self._parse_configs:
+      resources += config.files
+    return resources
+
 
   def parse_for_species(self, species):
     '''
@@ -112,9 +126,7 @@ StrainConfig = TableConfig(
   Strain,
   ParseConfig(
     fetch_andersen_strains,
-    {
-      'STRAINS': LocalGoogleSheetTemplate( 'STRAINS', ANDERSEN_LAB_STRAIN_SHEETS ),
-    },
+    LocalGoogleSheetTemplate( 'STRAINS', ANDERSEN_LAB_STRAIN_SHEETS ),
   ),
 )
 
@@ -122,9 +134,7 @@ WormbaseGeneSummaryConfig = TableConfig(
   WormbaseGeneSummary,
   ParseConfig(
     parse_gene_gff_summary,
-    {
-      'GENE_GFF': LocalDatastoreFileTemplate( 'GENE_GFF', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_GFF_FILENAME, delimiter='\t' ),
-    },
+    LocalDatastoreFileTemplate( 'GENE_GFF', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_GFF_FILENAME, delimiter='\t' ),
   ),
 )
 
@@ -132,10 +142,8 @@ WormbaseGeneConfig = TableConfig(
   WormbaseGene,
   ParseConfig(
     parse_gene_gtf,
-    {
-      'GENE_GTF': LocalDatastoreFileTemplate( 'GENE_GFF', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_GTF_FILENAME ),
-      'GENE_IDS': LocalDatastoreFileTemplate( 'GENE_GFF', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_IDS_FILENAME ),
-    },
+    LocalDatastoreFileTemplate( 'GENE_GTF', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_GTF_FILENAME ),
+    LocalDatastoreFileTemplate( 'GENE_IDS', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_IDS_FILENAME ),
   ),
 )
 
@@ -143,9 +151,7 @@ StrainAnnotatedVariantConfig = TableConfig(
   StrainAnnotatedVariant,
   ParseConfig(
     parse_strain_variant_annotation_data,
-    {
-      'SVA_CSVGZ': LocalDatastoreFileTemplate( 'SVA_CSVGZ', MODULE_DB_OPERATIONS_BUCKET_NAME, SVA_FILEPATH, SVA_FILENAME, delimiter='\t' ),
-    },
+    LocalDatastoreFileTemplate( 'SVA_CSVGZ', MODULE_DB_OPERATIONS_BUCKET_NAME, SVA_FILEPATH, SVA_FILENAME, delimiter='\t' ),
   ),
 )
 
@@ -155,16 +161,20 @@ PhenotypeDatabaseConfig = TableConfig(
   # Bulk file(s)
   ParseConfig(
     parse_phenotypedb_bulk_trait_file,
-    {
-      tf.name: LocalDatastoreFileTemplate.from_file_record_entity(tf, delimiter='\t', skip_comments=False) for tf in TraitFile.query_ds() if tf.is_bulk_file
-    },
+    *LocalDatastoreFileTemplate.from_file_record_entities(TraitFile, filter = lambda tf: tf.is_bulk_file),
   ),
 
   # Non-bulk files
   ParseConfig(
     parse_phenotypedb_traits_data,
-    {
-      tf.name: LocalDatastoreFileTemplate.from_file_record_entity(tf, delimiter='\t', skip_comments=False) for tf in TraitFile.query_ds() if not tf.is_bulk_file
-    },
+    *LocalDatastoreFileTemplate.from_file_record_entities(TraitFile, filter = lambda tf: not tf.is_bulk_file),
   ),
+)
+
+PhenotypeMetadataConfig = TableConfig(
+  PhenotypeMetadata,
+  ParseConfig(
+    parse_phenotype_metadata,
+    *LocalDatastoreFileTemplate.from_file_record_entities(TraitFile),
+  )
 )

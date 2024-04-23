@@ -10,6 +10,7 @@ from flask import ( render_template,
                   )
 from extensions import cache
 from base.forms import SpeciesSelectForm
+from caendr.services.cloud.storage import BlobURISchema
 
 from caendr.api.isotype import get_isotypes
 from caendr.services.dataset_release import get_dataset_release, get_latest_dataset_release_version
@@ -113,7 +114,7 @@ def genome_browser(region="III:11746923-11750250", query=None):
     },
 
     # Data locations
-    'fasta_url': DatasetRelease.get_fasta_filepath_url_template().get_string_safe(),
+    'fasta_url': DatasetRelease.get_fasta_filepath_template(schema=BlobURISchema.HTTPS).get_string_safe(),
 
     # String replacement tokens
     # Maps token to the field in Species object it should be replaced with

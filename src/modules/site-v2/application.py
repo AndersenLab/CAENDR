@@ -41,13 +41,14 @@ from base.views.tools import variant_annotation_bp
 from base.views.tools import genetic_mapping_bp
 from base.views.tools import pairwise_indel_finder_bp
 from base.views.tools import heritability_calculator_bp
+from base.views.tools import phenotype_database_bp
 
 # About & Get Involved
 from base.views.about        import about_bp
 from base.views.get_involved import get_involved_bp
 
 # API
-from base.views.api import api_gene_bp, api_notifications_bp
+from base.views.api import api_gene_bp, api_notifications_bp, api_trait_bp
 
 # Admin
 from base.views.admin import admin_bp
@@ -219,8 +220,9 @@ def register_blueprints(app):
   app.register_blueprint(check_bp, url_prefix='')
   
   # API
-  app.register_blueprint(api_gene_bp, url_prefix='/api')
+  app.register_blueprint(api_gene_bp,          url_prefix='/api')
   app.register_blueprint(api_notifications_bp, url_prefix='/api/notifications')
+  app.register_blueprint(api_trait_bp,         url_prefix='/api/trait')
 
   
   # Auth
@@ -234,6 +236,7 @@ def register_blueprints(app):
   app.register_blueprint(genetic_mapping_bp,         url_prefix='/tools/genetic-mapping')
   app.register_blueprint(pairwise_indel_finder_bp,   url_prefix='/tools/pairwise-indel-finder')
   app.register_blueprint(heritability_calculator_bp, url_prefix='/tools/heritability-calculator')
+  app.register_blueprint(phenotype_database_bp,      url_prefix='/tools/phenotype-database')
 
   '''
   app.register_blueprint(gene_bp, url_prefix='/gene')
@@ -274,6 +277,14 @@ def configure_jinja(app):
       render_ext_markdown=render_ext_markdown
     )
 
+  @app.context_processor
+  def inject_feature_flags():
+    return {
+      'feature_flags': {
+        'PHENOTYPE_DB_ENABLED': get_env_var('PHENOTYPE_DB_ENABLED', var_type=bool, can_be_none=True),
+      },
+    }
+
   #  2021-04-14 17:26:51.348674+00:00
   #  '%Y-%m-%d %H:%M:%S.%f+%z'
   # Datetime filters for Jinja
@@ -293,6 +304,10 @@ def configure_jinja(app):
     text = text.replace('C. briggsae', '<i>C. briggsae</i>')
     text = text.replace('C. elegans', '<i>C. elegans</i>')
     return text
+
+  @app.template_filter('percent')
+  def _jinja2_filter_percent(n):
+    return f'{round(n * 100, 2)}%'
 
 
 def register_errorhandlers(app):
