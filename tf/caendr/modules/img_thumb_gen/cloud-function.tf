@@ -21,7 +21,7 @@ resource "google_cloudfunctions_function" "generate_thumbnails" {
   name                  = "generate_thumbnails"
   project               = "${var.google_cloud_vars.project_id}"
   region                = "${var.google_cloud_vars.region}"
-  runtime               = "python37"
+  runtime               = "python312"
   service_account_email = "${var.google_cloud_vars.project_id}@appspot.gserviceaccount.com"
   timeout               = "60"
 
