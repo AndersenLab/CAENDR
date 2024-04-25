@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from caendr.services.cloud.postgresql import db
 from caendr.models.sql.dict_serializable import DictSerializable
 
@@ -8,9 +10,9 @@ class PhenotypeMetadata(DictSerializable, db.Model):
       This table includes details such as species, description, source lab, and other additional 
       information.
   """
-
-  trait_name_caendr = db.Column(db.String(), unique=True, primary_key=True)
+  id = db.Column(db.String(), primary_key=True)
   trait_name_user = db.Column(db.String(), nullable=True)
+  trait_name_caendr = db.Column(db.String())
   trait_name_display_1 = db.Column(db.String())
   trait_name_display_2 = db.Column(db.String())
   trait_name_display_3 = db.Column(db.String())
@@ -32,8 +34,8 @@ class PhenotypeMetadata(DictSerializable, db.Model):
   is_bulk_file = db.Column(db.Boolean(), nullable=False)
   phenotype_values = db.relationship(
                       'PhenotypeDatabase', 
-                      backref='phenotype_db.trait_name', 
-                      primaryjoin='PhenotypeMetadata.trait_name_caendr==PhenotypeDatabase.trait_name', 
+                      backref='phenotype_db.metadata_id', 
+                      primaryjoin='PhenotypeMetadata.id==PhenotypeDatabase.metadata_id', 
                       lazy='select')
 
   __tablename__ = 'phenotype_metadata'
@@ -46,3 +48,30 @@ class PhenotypeMetadata(DictSerializable, db.Model):
     phenotype_values = [ v.to_json() for v in self.phenotype_values ]
     json_trait['phenotype_values'] = phenotype_values
     return json_trait
+  
+  
+  def add_trait(self, trait_obj):
+    new_trait = PhenotypeMetadata(
+      id = trait_obj.name,
+      trait_name_user = trait_obj['trait_name_user'],
+      trait_name_display_1 = trait_obj['trait_name_display_1'],
+      trait_name_display_2 = trait_obj['trait_name_display_2'],
+      trait_name_display_3 = trait_obj['trait_name_display_3'],
+      species_name = trait_obj['species'].name,
+      wbgene_id = 'N/A',
+      description_short = trait_obj['description_short'],
+      description_long = trait_obj['description_long'],
+      units = trait_obj['units'],
+      publication = trait_obj['publication'],
+      protocols = trait_obj['protocols'],
+      source_lab = trait_obj['source_lab'],
+      institution = trait_obj['institution'],
+      submitted_by = trait_obj.get_user_full_name(),
+      tags = ', '.join(trait_obj['tags']),
+      created_on = datetime.now(timezone.utc),
+      modified_on = datetime.now(timezone.utc),
+      dataset = trait_obj['dataset'],
+      is_bulk_file = trait_obj['is_bulk_file']
+    )
+    db.session.add(new_trait)
+    db.session.commit()

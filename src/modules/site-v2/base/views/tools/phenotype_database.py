@@ -155,12 +155,12 @@ def get_traits_json():
   """
     Get traits data for non-bulk files in JSON format (include phenotype values)
   """
-  trait_name = request.json.get('trait_name')
-  err_msg = f'Failed to retrieve metadata for trait {trait_name}'
+  trait_id = request.json.get('trait_id')
+  err_msg = f'Failed to retrieve metadata for trait {trait_id}'
 
-  if trait_name:
+  if trait_id:
     try:
-      trait = get_trait(trait_name).to_json_with_values()
+      trait = get_trait(trait_id).to_json_with_values()
       return jsonify(trait)
 
     except Exception as ex:

@@ -29,7 +29,7 @@ from wtforms.validators import (Required,
 from wtforms.fields.html5 import EmailField
 
 
-from constants import PRICES, SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS, TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
+from constants import PRICES, SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS, TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS, TRAIT_CATEGORY_OPTIONS
 
 from caendr.services.profile import get_profile_role_form_options
 from caendr.services.user import get_user_role_form_options, get_local_user_by_email
@@ -336,3 +336,27 @@ class MappingSubmissionForm(Form):
 
 class StrainListForm(Form):
   species = SpeciesSelectField(validators=[Required()])
+
+
+class TraitSubmissionForm(FlaskForm):
+  """ The trait submission form """
+  file = FileField('Select file', render_kw={'accept': ','.join({ f'.{ext}' for ext in TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS})}, validators=[Required()])
+  species = SpeciesSelectField(validators=[Required()])
+  trait_name_user = StringField('Internal Trait Name', validators=[Required(), Length(min=3, max=50)])
+  trait_name_display_1 = StringField('Display Name 1', validators=[Required(), Length(min=3, max=50)])
+  trait_name_display_2 = StringField('Display Name 2')
+  trait_name_display_3 = StringField('Display Name 3')
+  description_short = TextAreaField('Short Description', validators=[Required(), Length(min=10, max=200)])
+  description_long = TextAreaField('Long Description', validators=[Required(), Length(min=10)])
+  units = StringField('Unit of Measurement', validators=[Length(min=0, max=10)])
+  tags = MultiCheckboxField("Categories", choices=TRAIT_CATEGORY_OPTIONS, validators=[Required()])
+  username = StringField('Username', validators=[Required(), Length(min=3, max=50)])
+  institution = StringField('Institution', validators=[Required(), Length(min=3, max=50)])
+  source_lab = StringField('Source Lab', validators=[Required(), Length(min=1, max=4)])
+  protocols = TextAreaField('Protocols', validators=[Length(min=0, max=200)])
+  publication = TextAreaField('Publications', validators=[Length(min=0, max=200)])
+
+
+
+
+

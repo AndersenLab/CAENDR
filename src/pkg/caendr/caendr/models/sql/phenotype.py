@@ -1,5 +1,5 @@
-from caendr.services.cloud.postgresql import db
-from caendr.models.sql.dict_serializable import DictSerializable
+from caendr.services.cloud.postgresql     import db
+from caendr.models.sql.dict_serializable  import DictSerializable
 
 class PhenotypeDatabase(DictSerializable, db.Model):
   """
@@ -7,8 +7,17 @@ class PhenotypeDatabase(DictSerializable, db.Model):
       by different strains. Each row represents a specific combination of strain, 
       trait, and the corresponding trait value
   """
-  trait_name = db.Column(db.String(), db.ForeignKey('phenotype_metadata.trait_name_caendr'), primary_key=True)
+  trait_name = db.Column(db.String())
   strain_name = db.Column(db.String(), primary_key=True)
   trait_value = db.Column(db.Float())
+  metadata_id = db.Column(db.String(), db.ForeignKey('phenotype_metadata.id'), primary_key=True)
 
   __tablename__ = 'phenotype_db'
+
+
+  def add_trait_data(self, trait_data):
+    """
+        Adds trait data to the Phenotype Database table
+    """
+    db.session.bulk_insert_mappings(PhenotypeDatabase, trait_data)
+    db.session.commit()
