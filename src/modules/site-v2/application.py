@@ -17,7 +17,7 @@ import pytz
 
 from caendr.models.error import BasicAuthError
 from caendr.services.cloud.postgresql import db, health_database_status
-from base.utils.markdown import render_markdown, render_ext_markdown
+from base.utils.markdown import render_markdown, render_ext_markdown, render_markdown_inline
 
 
 
@@ -274,7 +274,8 @@ def configure_jinja(app):
       get_env=get_env,
       basename=os.path.basename,
       render_markdown=render_markdown,
-      render_ext_markdown=render_ext_markdown
+      render_ext_markdown=render_ext_markdown,
+      render_markdown_inline=render_markdown_inline,
     )
 
   @app.context_processor
@@ -308,6 +309,10 @@ def configure_jinja(app):
   @app.template_filter('percent')
   def _jinja2_filter_percent(n):
     return f'{round(n * 100, 2)}%'
+
+  @app.template_filter('markdown')
+  def _jinja2_filter_markdown(text):
+    return render_markdown_inline(text)
 
 
 def register_errorhandlers(app):

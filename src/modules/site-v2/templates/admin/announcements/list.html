@@ -169,6 +169,10 @@
         {
           "data": "content",
           'sWidth': '35%',
+          "render": function(data, type, row) {
+            // Protect against code injection
+            return $('<div />').text(data).html().replace('\n', '<br>');
+          },
         },
         {
           "data": "url_list",
