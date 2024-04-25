@@ -20,6 +20,9 @@
         <span class="glyphicon glyphicon-save" aria-hidden="true"></span> 
         Save
       </button>
+      <button id='cancel-btn' value="cancel-btn" type='button' class="btn btn-danger btn-block">
+        Cancel
+      </button>
     </div>
   </div>
 
@@ -120,6 +123,13 @@
       });
 
     });
+
+
+    $("#cancel-btn").on("click", function(e) {
+      e.preventDefault();
+      window.location = "{{ url_for('admin.announcements') }}";
+    });
+
   });
 
 </script>
