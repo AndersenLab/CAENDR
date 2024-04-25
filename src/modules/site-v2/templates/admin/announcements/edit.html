@@ -185,7 +185,14 @@
 
     });
 
+  });
 
+</script>
+
+
+<script type="module">
+
+  $(document).ready(function () {
     $("#cancel-btn").on("click", function(e) {
       e.preventDefault();
       window.location = "{{ url_for('admin.announcements') }}";
