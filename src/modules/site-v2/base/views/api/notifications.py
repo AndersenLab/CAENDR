@@ -145,7 +145,7 @@ def announcement(entity_id: str = None):
     # TODO: Clean / validate values
     form = AnnouncementForm(request.form)
     if not form.validate():
-      return 400
+      abort(400)
 
     new_announcement = Announcement(**{
       prop: request.form.get(prop) for prop in Announcement.get_props_set()
@@ -161,7 +161,7 @@ def announcement(entity_id: str = None):
     # TODO: Clean / validate values
     form = AnnouncementForm(request.form)
     if not form.validate():
-      return 400
+      abort(400)
 
     # Extract the new property values from the form, casting "active" to a bool
     new_values = {
@@ -180,5 +180,4 @@ def announcement(entity_id: str = None):
 
   # If somehow the method didn't match any of the above,
   # return a Method Not Allowed error
-  return 405
-
+  abort(405)
