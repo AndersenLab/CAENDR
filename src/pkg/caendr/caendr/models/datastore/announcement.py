@@ -1,6 +1,6 @@
 from enum import Enum
 
-from caendr.models.datastore import Entity
+from caendr.models.datastore import DeletableEntity
 from caendr.utils.data       import unique_id
 
 
@@ -21,7 +21,7 @@ class AnnouncementType(Enum):
 
 
 
-class Announcement(Entity):
+class Announcement(DeletableEntity):
   kind = 'announcement'
 
   exclude_from_indexes = ('content', 'url_list')

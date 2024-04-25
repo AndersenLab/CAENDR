@@ -114,12 +114,12 @@ def announcement_list():
     Get the list of all site announcements.
   '''
   return {
-    'data': [ e.serialize(include_name=True) for e in Announcement.query_ds() ]
+    'data': [ e.serialize(include_name=True) for e in Announcement.query_ds(deleted=False) ]
   }
 
 
 @api_notifications_bp.route('/announcement',                    methods=['POST'])
-@api_notifications_bp.route('/announcement/<string:entity_id>', methods=['GET', 'PATCH'])
+@api_notifications_bp.route('/announcement/<string:entity_id>', methods=['GET', 'PATCH', 'DELETE'])
 @admin_required()
 @jsonify_request
 def announcement(entity_id: str = None):
@@ -130,6 +130,7 @@ def announcement(entity_id: str = None):
       GET:    Get the data for the given announcement ID.
       POST:   Create a new announcement.
       PATCH:  Update an existing announcement.
+      DELETE: Delete an existing announcement.
   '''
 
   # GET Request
@@ -177,6 +178,14 @@ def announcement(entity_id: str = None):
     announcement.set_properties(**new_values)
     announcement.save()
     return { 'id': announcement.name }
+
+  # DELETE Request
+  # Lookup the desired announcement and soft delete it
+  if request.method == 'DELETE':
+    announcement = get_announcement(entity_id)
+    announcement.soft_delete()
+    announcement.save()
+    return {}, 200
 
   # If somehow the method didn't match any of the above,
   # return a Method Not Allowed error

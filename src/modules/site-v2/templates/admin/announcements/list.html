@@ -29,6 +29,24 @@
     </div>
 	</div>
 </div>
+
+<div class="modal fade" id="confirm-delete-modal" tabindex="-1" aria-labelledby="confirm-delete-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="confirm-delete-modal-label">Delete Announcement</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>You are about to delete the following announcement:</p>
+        <div id="confirm-delete-modal-body-container" class="text-center"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="confirm-delete-button" type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="deleteCurrentAnnouncement()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 
@@ -37,11 +55,68 @@
 <script>
   {% include '_scripts/utils.js' %}       {#/* defines: flash_message */#}
 
+
+  // Declare object to store announcements returned from AJAX call
+  let announcements = {};
+  let currentAnnouncement = null;
+
+  // Declare data table at "global" scope
+  let table;
+
   const alertClassMap = {
     {%- for x in AnnouncementType %}
     "{{ x.name }}": "{{ x.get_bootstrap_color() }}",
     {%- endfor %}
   };
+
+
+
+  /*
+   * Deleting Announcements
+   */
+
+  function disableButton() {
+    const button = document.getElementById("confirm-delete-button");
+    button.innerText = 'Deleting...';
+    button.disabled  = true;
+  }
+
+  function enableButton() {
+    const button = document.getElementById("confirm-delete-button");
+    button.innerText = 'Delete';
+    button.disabled = false;
+  }
+
+  function fillDeleteModal(announcement_id) {
+    const container = document.getElementById('confirm-delete-modal-body-container');
+    container.innerHTML = announcements[announcement_id]['content'];
+    currentAnnouncement = announcement_id;
+  }
+
+  function deleteCurrentAnnouncement() {
+    disableButton();
+    $.ajax({
+      url: "{{ url_for('notifications.announcement', entity_id='ANNOUNCEMENT_ID') }}".replace("ANNOUNCEMENT_ID", currentAnnouncement),
+      type: "DELETE",
+      headers: {
+        'X-CSRF-TOKEN': "{{ form.csrf_token._value() }}",
+      },
+      success: (result) => {
+        enableButton();
+        table.ajax.reload();
+      },
+      error: (error) => {
+        console.error('ERROR saving announcement: ', error)
+        const resp = error.responseJSON
+        if (resp && resp.message) {
+          flash_message(resp.message, resp.full_msg_link, resp.full_msg_body);
+        } else {
+          flash_message('There was a problem deleting this announcement. Please try again later.');
+        }
+        enableButton();
+      }
+    });
+  }
 
 
   $(document).ready(function() {
@@ -55,11 +130,22 @@
     });
 
     // Render table with Datatables
-    const table = $('#announcements-table').DataTable( {
+    table = $('#announcements-table').DataTable( {
       "sDom": "tpr",
       "processing": true,
       "ajax": {
         url: "{{ url_for('notifications.announcement_list') }}",
+
+        // Intercept successful call to store the retrieved values
+        dataSrc: function(resp) {
+          announcements = {};
+          for (const a of resp.data) {
+            announcements[a.name] = a;
+          };
+          return resp.data;
+        },
+
+        // On error, flash message
         error: function(error) {
           console.error('ERROR retrieving announcements: ', error);
           const resp = error.responseJSON
@@ -107,9 +193,12 @@
           'sWidth': '10%',
         },
         {
+          "data": "name",
           "render": function(data, type, row) {
             return `
-              <button type="button" class="btn btn-link"><i class="bi bi-trash3-fill" aria-hidden="true"></i>Delete</button>
+              <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#confirm-delete-modal" onclick="fillDeleteModal('${data}')">
+                <i class="bi bi-trash3-fill" aria-hidden="true"></i>Delete
+              </button>
             `;
           },
           "sClass": "optionsToolbar",

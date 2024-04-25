@@ -30,7 +30,18 @@ class DeletableEntity(Entity):
       *super().get_props_set(),
       'is_deleted'
     }
-  
+
+
+
+  @classmethod
+  def query_ds(cls, *args, deleted=None, **kwargs):
+
+    if deleted is None:
+      return super().query_ds(*args, **kwargs)
+
+    return [
+      match for match in super().query_ds(*args, **kwargs) if (match['is_deleted'] == deleted)
+    ]
 
 
   @classmethod
