@@ -163,11 +163,18 @@ def announcement(entity_id: str = None):
     if not form.validate():
       return 400
 
+    # Extract the new property values from the form, casting "active" to a bool
+    new_values = {
+      prop: request.form.get(prop)
+        for prop in Announcement.get_props_set()
+        if request.form.get(prop) is not None
+    }
+    if request.form.get('active') is not None:
+      new_values['active'] = request.form.get('active') == 'true'
+
     # Update the announcement object
     announcement = get_announcement(entity_id)
-    announcement.set_properties(**{
-      prop: request.form.get(prop, announcement[prop]) for prop in Announcement.get_props_set()
-    })
+    announcement.set_properties(**new_values)
     announcement.save()
     return { 'id': announcement.name }
 

@@ -27,8 +27,8 @@
   </div>
 
   <div class="row">
-    {# <div class='mb-4'>{{ render_field(form.active) }}</div> #}
-    <div class='mb-4'>{{ render_field(form.style) }}</div>
+    <div class='col-4 mb-4'>{{ render_field(form.active, class_='form-check-input d-block') }}</div>
+    <div class='col-8 mb-4'>{{ render_field(form.style) }}</div>
     <div class='mb-4'>{{ render_field(form.url_list) }}</div>
 
     <label class="form-label" for="editor">Content</label>
@@ -46,6 +46,10 @@
   {% include '_scripts/utils.js' %}       {#/* defines: flash_message */#}
 
 
+  // Declare the MD editor at the "global" scope, so we can get its contents from anywhere
+  let editor;
+
+
   function disableButton() {
     const btn = document.getElementById('save-btn');
     btn.disabled = true;
@@ -59,11 +63,29 @@
   }
 
 
+  function getFormData() {
+    // Get the fields from the form
+    const data = new FormData($('form#form-submit')[0]);
+
+    // Make the "active" checkmark a boolean
+    // Without this step, checked => "y" and unchecked isn't included
+    const active = $('form#form-submit #active')[0];
+    data.set('active', active.checked);
+
+    // Append the Markdown content to the form object
+    const md_content = editor.getMarkdown();
+    data.append('content', md_content);
+
+    // Return the form data
+    return data;
+  }
+
+
   $(document).ready(function () {
 
     // Markdown editor
     const Editor = toastui.Editor;
-    const editor = new Editor({
+    editor = new Editor({
       el: document.querySelector('#editor'),
       height: '200px',
       initialEditType: 'markdown',
@@ -80,13 +102,6 @@
       e.preventDefault();
       disableButton();
 
-      // Get the fields from the form
-      const data = new FormData($('form#form-submit')[0]);
-
-      // Append the Markdown content to the form object
-      const md_content = editor.getMarkdown();
-      data.append('content', md_content);
-
       // Send the appropriate AJAX request
       $.ajax({
         {% if announcement %}
@@ -102,7 +117,7 @@
         processData: false,
         contentType: false,
         dataType:    'json',
-        data:        data,
+        data:        getFormData(),
 
         // On success, redirect to list page
         success: function(result) {

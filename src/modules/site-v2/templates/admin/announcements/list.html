@@ -75,8 +75,9 @@
         {
           "data": "active",
           "render": function(data, type, row) {
-            return `<input class="form-check-input" type="checkbox" ${data ? "checked" : ""}>`;
+            return data ? `<i class="bi bi-check-circle-fill" aria-hidden="true"></i>` : "";
           },
+          "sClass": "optionsToolbar",
           'sWidth': '10%',
         },
         {

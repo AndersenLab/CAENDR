@@ -27,6 +27,7 @@ from wtforms.validators import (Required,
                                 Optional,
                                 ValidationError)
 from wtforms.fields.html5 import EmailField
+from wtforms.widgets import CheckboxInput
 
 
 from constants import PRICES, SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS, TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
@@ -123,6 +124,7 @@ class RecoverUserForm(FlaskForm):
 
 class AnnouncementForm(FlaskForm):
   """ Edit form for site announcements """
+  # active   = BooleanField('Active', widget=CheckboxInput())
   active   = BooleanField('Active')
   content  = StringField('Content', [Optional()])
   url_list = TextAreaField('URL Patterns', [Optional()])
