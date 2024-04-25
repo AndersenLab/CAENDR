@@ -37,6 +37,7 @@ from caendr.services.database_operation import get_db_op_form_options
 from caendr.services.indel_primer import get_indel_primer_chrom_choices
 from caendr.services.markdown import get_content_type_form_options
 from caendr.models.datastore import User, Species, DatasetRelease, TraitFile
+from caendr.models.datastore.announcement import AnnouncementType
 from caendr.api.strain import query_strains
 from base.forms.validators import (validate_duplicate_strain, 
                                    validate_duplicate_isotype, 
@@ -125,6 +126,7 @@ class AnnouncementForm(FlaskForm):
   active   = BooleanField('Active')
   content  = StringField('Content', [Optional()])
   url_list = TextAreaField('URL Patterns', [Optional()])
+  style    = SelectField('Style', choices=[(x.name, x.value) for x in AnnouncementType])
 
 class MarkdownForm(FlaskForm):
   """ markdown editing form """

@@ -18,6 +18,7 @@
               <th scope="col" class="col-1 text-center">Active</th>
               <th scope="col" class="col-1 text-center">Text</th>
               <th scope="col" class="col-1 text-center">URLs</th>
+              <th scope="col" class="col-1 text-center">Style</th>
               <th scope="col" class="col-1 text-center">Edit</th>
               <th scope="col" class="col-1 text-center">Delete</th>
             </tr>
@@ -35,6 +36,12 @@
 {% block script %}
 <script>
   {% include '_scripts/utils.js' %}       {#/* defines: flash_message */#}
+
+  const alertClassMap = {
+    {%- for x in AnnouncementType %}
+    "{{ x.name }}": "{{ x.get_bootstrap_color() }}",
+    {%- endfor %}
+  };
 
 
   $(document).ready(function() {
@@ -74,11 +81,19 @@
         },
         {
           "data": "content",
-          'sWidth': '35%',
+          'sWidth': '30%',
         },
         {
           "data": "url_list",
-          'sWidth': '35%',
+          'sWidth': '30%',
+        },
+        {
+          "data": "style",
+          'sWidth': '10%',
+          "createdCell": function( cell, cellData, rowData, rowIndex, colIndex ) {
+            cell.classList.add(`bg-${ alertClassMap[ cellData ] }`);
+            cell.classList.add('bg-opacity-25');
+          },
         },
         {
           "render": function(data, type, row) {

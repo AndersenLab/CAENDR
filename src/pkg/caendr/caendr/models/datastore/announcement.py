@@ -1,5 +1,23 @@
+from enum import Enum
+
 from caendr.models.datastore import Entity
 from caendr.utils.data       import unique_id
+
+
+
+class AnnouncementType(Enum):
+  GENERAL     = 'General'
+  MAINTENANCE = 'Maintenance'
+  ERROR       = 'Error'
+
+  def get_bootstrap_color(self):
+    __BOOTSTRAP_COLOR_MAP = {
+      AnnouncementType.GENERAL:     'success',
+      AnnouncementType.MAINTENANCE: 'warning',
+      AnnouncementType.ERROR:       'danger',
+    }
+    return __BOOTSTRAP_COLOR_MAP[self]
+
 
 
 
@@ -29,6 +47,7 @@ class Announcement(Entity):
       'active',
       'content',
       'url_list',
+      'style',
     }
 
 
@@ -39,3 +58,12 @@ class Announcement(Entity):
   @active.setter
   def active(self, val):
     self._set_raw_prop('active', bool(val))
+
+
+  @property
+  def style(self):
+    return self._get_enum_prop(AnnouncementType, 'style', None)
+
+  @style.setter
+  def style(self, val):
+    return self._set_enum_prop(AnnouncementType, 'style', val)

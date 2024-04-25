@@ -8,6 +8,9 @@ from caendr.models.datastore      import Announcement
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.sheets import GOOGLE_SHEET_PREFIX
 
+from caendr.models.datastore.announcement import AnnouncementType
+
+
 ANDERSEN_LAB_STRAIN_SHEET = get_secret('ANDERSEN_LAB_STRAIN_SHEET')
 CENDR_PUBLICATIONS_SHEET = get_secret('CENDR_PUBLICATIONS_SHEET')
 
@@ -48,6 +51,8 @@ def announcements():
   return render_template('admin/announcements/list.html', **{
     'title': 'Site Announcements',
     'form':  AnnouncementForm(),
+
+    'AnnouncementType': AnnouncementType,
   })
 
 
