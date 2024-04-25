@@ -168,11 +168,15 @@
         },
         {
           "data": "content",
-          'sWidth': '30%',
+          'sWidth': '35%',
         },
         {
           "data": "url_list",
-          'sWidth': '30%',
+          "render": function(data, type, row) {
+            return data.replaceAll('\n', '<br>');
+          },
+          'sWidth': '25%',
+          "sClass": "text-start",
         },
         {
           "data": "style",
