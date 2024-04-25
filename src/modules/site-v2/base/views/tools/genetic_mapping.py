@@ -6,6 +6,7 @@ import bleach
 from flask import jsonify
 
 from base.forms import MappingForm
+from base.utils.announcements import block_announcements
 from base.utils.auth  import get_jwt, jwt_required, admin_required, get_current_user, user_is_admin
 from base.utils.tools import get_upload_err_msg, lookup_report, list_reports, try_submit
 from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
@@ -188,6 +189,7 @@ def report(id):
 
 @genetic_mapping_bp.route('/report/<id>/fullscreen', methods=['GET'])
 @jwt_required()
+@block_announcements
 def report_fullscreen(id):
 
   # Fetch requested mapping report

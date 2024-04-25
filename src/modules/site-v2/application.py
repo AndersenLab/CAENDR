@@ -4,7 +4,7 @@ import requests
 
 from datetime import datetime
 from caendr.services.logger import logger
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, flash, g, session
 from flask_wtf.csrf import CSRFProtect
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -128,6 +128,7 @@ def create_app(config=config):
   configure_jinja(app)
   configure_ssl(app)
 
+  register_announcement_handlers(app)
   password_protect_site(app)
 
   # app.teardown_request(close_active_connections)
@@ -313,6 +314,39 @@ def configure_jinja(app):
   @app.template_filter('markdown')
   def _jinja2_filter_markdown(text):
     return render_markdown_inline(text)
+
+
+def register_announcement_handlers(app):
+  '''
+    Add site-wide announcements to relevant requests.
+  '''
+  @app.after_request
+  def flash_announcements(response):
+    from caendr.models.datastore import Announcement
+
+    # Announcements only possible for a non-redirecting GET request that returns HTML (excluding static files)
+    # Additionally, specific endpoints can block announcements using the block_announcements decorator
+    # or the block_announcements_from_bp function
+    can_show_announcements_conditions = [
+      request.endpoint  != 'static',
+      request.method    == 'GET',
+      not (response.status_code >= 300 and response.status_code < 400),
+      response.mimetype == 'text/html',
+      not getattr(g, 'block_site_announcements', False),
+    ]
+    if all(can_show_announcements_conditions):
+
+      # Loop through all active announcements, flashing the ones that match the current path
+      for a in Announcement.query_ds(filters=[("active", "=", True)], deleted=False):
+        if a.matches_path(request.path):
+          flash(a['content'], a['style'].get_bootstrap_color())
+
+    # As a final check, remove identical messages from the session
+    if len(session.get('_flashes', [])):
+      session.update({'_flashes': list(set(session.get('_flashes', [])))})
+
+    # Return the response
+    return response
 
 
 def register_errorhandlers(app):
