@@ -80,7 +80,7 @@ def protocols():
 #
 # Submit Trait
 #
-@data_bp.route('/submit-trait')
+@data_bp.route('/trait/start-submit')
 @jwt_required()
 def submit_trait_start():
   """ Submit Trait start page """
@@ -92,7 +92,7 @@ def submit_trait_start():
 #
 # Submit Trait Form
 #
-@data_bp.route('/submit-trait/new-submission', methods=['GET', 'POST'])
+@data_bp.route('/trait/create', methods=['GET', 'POST'])
 @jwt_required()
 def submit_trait_form():
   """ Trait Submission Form """
@@ -230,7 +230,7 @@ def submit_trait_form():
 #
 # File Upload
 #
-@data_bp.route('/submit-trait/parse-file', methods=['POST'])
+@data_bp.route('/trait/parse-file', methods=['POST'])
 @jwt_required()
 def parse_trait_file():
   """ Parse the trait file and return the data """
@@ -259,3 +259,5 @@ def parse_trait_file():
   except Exception as ex:
     logger.error(f'Failed to parse the file: {ex}')
     return jsonify({ 'message': 'Failed to parse the file. Please try again later.' }), 500
+
+
