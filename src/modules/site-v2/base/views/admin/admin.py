@@ -79,4 +79,5 @@ def announcements_edit(entity_id=None):
     'form':  form,
 
     'announcement': announcement,
+    'AnnouncementType': AnnouncementType,
   })
