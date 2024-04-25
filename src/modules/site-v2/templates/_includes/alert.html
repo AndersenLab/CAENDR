@@ -4,7 +4,7 @@
 
 <div
     {% if alert_id is defined %}id="{{alert_id}}"{% endif %}
-    class="container alert alert-{{ category }} {% if dismissable %}alert-dismissible{% endif %} fade show pt-3 my-5 fw-bold text-center"
+    class="container alert alert-{{ category }} {% if dismissable %}alert-dismissible{% endif %} fade show pt-3 my-5 fw-bold text-center {{ alert_classes }}"
 >
     <p>{{ msg }}</p>
     {%- if dismissable %}

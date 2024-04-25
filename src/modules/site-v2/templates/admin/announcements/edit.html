@@ -13,11 +13,13 @@
 
 <div class="row">
   <label class="form-label" for="preview-alert">Preview</label>
-  {% with dismissable = false %}
-  {% with alert_id = 'preview-alert' %}
+  {%- with dismissable   = false %}
+  {%- with alert_id      = 'preview-alert' %}
+  {%- with alert_classes = 'mt-3' %}
   {% include '_includes/alert.html' %}
-  {% endwith %}
-  {% endwith %}
+  {%- endwith %}
+  {%- endwith %}
+  {%- endwith %}
 </div>
 
 <form id='form-submit' method="POST" action="{{ kind }}">
