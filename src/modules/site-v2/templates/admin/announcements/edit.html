@@ -10,6 +10,16 @@
 {% from "_includes/macros.html" import render_field %}
 <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
 
+
+<div class="row">
+  <label class="form-label" for="preview-alert">Preview</label>
+  {% with dismissable = false %}
+  {% with alert_id = 'preview-alert' %}
+  {% include '_includes/alert.html' %}
+  {% endwith %}
+  {% endwith %}
+</div>
+
 <form id='form-submit' method="POST" action="{{ kind }}">
   {{ form.csrf_token }}
   <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">
@@ -49,6 +59,12 @@
   // Declare the MD editor at the "global" scope, so we can get its contents from anywhere
   let editor;
 
+  const alertClassMap = {
+    {%- for x in AnnouncementType %}
+    "{{ x.name }}": "{{ x.get_bootstrap_color() }}",
+    {%- endfor %}
+  };
+
 
   function disableButton() {
     const btn = document.getElementById('save-btn');
@@ -81,6 +97,23 @@
   }
 
 
+  function updatePreview() {
+    const data = getFormData();
+    const preview = document.getElementById('preview-alert');
+
+    // Update the preview alert class
+    preview.classList.forEach((foo) => {
+      if (foo.startsWith('alert-')) {
+        preview.classList.remove(foo);
+      }
+    });
+    preview.classList.add(`alert-${ alertClassMap[ data.get('style') ] }`);
+
+    // Update the content
+    preview.innerHTML = editor.getHTML();
+  }
+
+
   $(document).ready(function () {
 
     // Markdown editor
@@ -94,7 +127,18 @@
       toolbarItems: [
         ['bold', 'italic', 'link'],
       ],
+      events: {
+        // Update preview when content changes
+        change: () => updatePreview(),
+      },
     });
+
+
+    // Initialize preview, then update when form changes
+    updatePreview();
+    $("#form-submit").on("change", function(e) {
+      updatePreview();
+    })
 
 
     // Form Submission
