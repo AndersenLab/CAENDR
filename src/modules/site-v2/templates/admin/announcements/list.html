@@ -56,6 +56,8 @@
   {% include '_scripts/utils.js' %}       {#/* defines: flash_message */#}
 
 
+  const tableTextMaxLength = 256;
+
   // Declare object to store announcements returned from AJAX call
   let announcements = {};
   let currentAnnouncement = null;
@@ -170,6 +172,10 @@
           "data": "content",
           'sWidth': '35%',
           "render": function(data, type, row) {
+            // Cap text length
+            if (data.length > tableTextMaxLength) {
+              data = data.slice(0, tableTextMaxLength - 3) + '...';
+            }
             // Protect against code injection
             return $('<div />').text(data).html().replace('\n', '<br>');
           },
