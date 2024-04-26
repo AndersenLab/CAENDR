@@ -9,7 +9,7 @@ setup(
     'cachelib',
     'cyvcf2==0.30.22',
     'Flask_SQLAlchemy==2.5.1',
-    'Flask==1.1.2',
+    'Flask==2.2.5',
     'protobuf==3.20.2',
     'google-cloud-appengine-logging==0.1.0',
     'google_cloud_audit_log==0.2.5',
@@ -33,6 +33,6 @@ setup(
     'pytabix==0.1',
     'importlib; python_version == "3.8.10"',
     'scipy',
-    'Werkzeug==1.0.0'
+    'Werkzeug==2.3.8'
   ],
 )
