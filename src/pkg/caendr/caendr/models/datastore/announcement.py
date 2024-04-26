@@ -1,5 +1,9 @@
+import bleach
 from   enum import Enum
+import markdown
 import re
+
+from flask import Markup
 
 from caendr.models.datastore import DeletableEntity
 from caendr.utils.data       import unique_id
@@ -39,7 +43,10 @@ class Announcement(DeletableEntity):
     super().__init__(name_or_obj, *args, **kwargs)
 
 
-  ## Props ##
+
+  #
+  # Props
+  #
 
   @classmethod
   def get_props_set(cls):
@@ -59,6 +66,17 @@ class Announcement(DeletableEntity):
   @active.setter
   def active(self, val):
     self._set_raw_prop('active', bool(val))
+
+
+  @property
+  def content(self):
+    return bleach.clean( self._get_raw_prop('content', '') )
+
+  @content.setter
+  def content(self, val):
+    if not isinstance(val, str):
+      raise ValueError(f'Prop "content" must be a string, got: {val}')
+    return self._set_raw_prop( 'content', bleach.clean( val ) )
 
 
   @property
@@ -97,6 +115,25 @@ class Announcement(DeletableEntity):
 
     # If validation succeeded, convert to newline-separated string and save
     return self._set_raw_prop('url_list', '\n'.join(val))
+
+
+
+  #
+  # Extra Props
+  #
+
+  @property
+  def content_html(self):
+    '''
+      The content of this announcement as HTML.
+    '''
+    return Markup(markdown.markdown( self['content'] ))
+
+
+  def serialize(self, **kwargs):
+    props = super().serialize(**kwargs)
+    props['content_html'] = self.content_html
+    return props
 
 
 
