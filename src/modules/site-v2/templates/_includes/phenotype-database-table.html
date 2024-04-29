@@ -164,14 +164,24 @@ label {
 
         // Fetch data for a trait and fill out side bar for non-bulk traits
         $(document).on('click','#traitDetails', function() {
-            $('.offcanvas-header, .offcanvas-body').hide()
-            $('#{{ offcanvas_id }}-spinner').removeClass('d-none')
+            const offcanvas_content = $('#{{ offcanvas_id }}-header, #{{ offcanvas_id }}-body');
+            const offcanvas_spinner = $('#{{ offcanvas_id }}-spinner');
+
+            // Show the loader
+            offcanvas_content.hide()
+            offcanvas_spinner.removeClass('d-none')
+
+            // Query data for the given trait
             queryTraitByName($(this).data('value'), $('#csrf_token').val())
+
+                // On success, fill out and show the offcanvas content
                 .then((response) => {
-                    $('#{{ offcanvas_id }}-spinner').addClass('d-none')
-                    $('.offcanvas-header, .offcanvas-body').show()
+                    offcanvas_spinner.addClass('d-none')
+                    offcanvas_content.show()
                     fillOutModal(response)
                 })
+
+                // On failure, close the offcanvas item and flash the error (if given)
                 .fail((error) => {
                     console.error(error)
                     $('#{{ offcanvas_id }} .btn-close').click()
