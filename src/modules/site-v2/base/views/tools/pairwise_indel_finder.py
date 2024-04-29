@@ -5,11 +5,12 @@ from flask import Response, Blueprint, render_template, request, url_for, jsonif
 
 from base.forms import PairwiseIndelForm
 from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
-from base.utils.tools import lookup_report, list_reports, try_submit
+from base.utils.tools import list_reports, try_submit
+from base.utils.view_decorators import parse_job_id, validate_form
 
 from caendr.models.datastore.browser_track import BrowserTrackDefault
 from caendr.models.datastore import Species, IndelPrimerReport, DatasetRelease
-from caendr.models.error import NotFoundError, NonUniqueEntity, ReportLookupError, EmptyReportDataError, EmptyReportResultsError
+from caendr.models.error import NotFoundError, NonUniqueEntity
 from caendr.models.job_pipeline import IndelFinderPipeline
 from caendr.models.status import JobStatus
 from caendr.services.dataset_release import get_dataset_release
@@ -133,7 +134,7 @@ def pairwise_indel_finder():
 @pairwise_indel_finder_bp.route('/my-results',  methods=['GET'], endpoint='my_results')
 @jwt_required()
 def list_results():
-  show_all = request.path.endswith('all-results')
+  show_all = request.endpoint.endswith('all_results')
   user = get_current_user()
 
   # Only show malformed Entities to admin users
@@ -169,44 +170,25 @@ def list_results():
 
 @pairwise_indel_finder_bp.route("/query-indels", methods=["POST"])
 @jwt_required()
-def query():
+@validate_form(PairwiseIndelForm)
+def query(form_data, no_cache=False):
 
-  # Validate query form
-  form = PairwiseIndelForm()
-  if form.validate_on_submit():
+  # If either of the strains is missing, raise a 422 Unprocessable Entity error
+  if form_data.get('strain_1') is None or form_data.get('strain_2') is None:
+    return {}, 422
 
-    # Extract fields
-    species  = form.data['species']
-    strain_1 = form.data['strain_1']
-    strain_2 = form.data['strain_2']
-    chrom    = form.data['chromosome']
-    start    = form.data['start']
-    stop     = form.data['stop']
-
-    # Run query and return results
-    results = query_indels_and_mark_overlaps(species, strain_1, strain_2, chrom, start, stop)
-    return jsonify({ 'results': results })
-
-  # If form not valid, return errors
-  return jsonify({ 'errors': form.errors })
+  # Pass the form fields to the query function & return the result
+  return jsonify({ 'results': query_indels_and_mark_overlaps(**form_data) })
 
 
 
 @pairwise_indel_finder_bp.route('/submit', methods=["POST"])
 @jwt_required()
-def submit():
-
-  # Get current user
-  user = get_current_user()
-
-  # Get info about data
-  data = request.get_json()
-
-  # If user is admin, allow them to bypass cache with URL variable
-  no_cache = bool(user_is_admin() and request.args.get("nocache", False))
+@validate_form(None, from_json=True)
+def submit(form_data, no_cache=False):
 
   # Try submitting the job & getting a JSON status message
-  response, code = try_submit(IndelPrimerReport.kind, user, data, no_cache)
+  response, code = try_submit(IndelPrimerReport.kind, get_current_user(), form_data, no_cache)
 
   # If there was an error, flash it
   if code != 200 and int(request.args.get('reloadonerror', 1)):
@@ -217,10 +199,11 @@ def submit():
 
 
 
-@pairwise_indel_finder_bp.route("/report/<id>")
-@pairwise_indel_finder_bp.route("/report/<id>/download/<file_ext>")
+@pairwise_indel_finder_bp.route("/report/<report_id>",                     methods=['GET'])
+@pairwise_indel_finder_bp.route("/report/<report_id>/download/<file_ext>", methods=['GET'])
 @jwt_required()
-def report(id, file_ext=None):
+@parse_job_id(IndelFinderPipeline)
+def report(job: IndelFinderPipeline, data, result, file_ext=None):
 
     # Validate file extension, if provided
     if file_ext:
@@ -230,37 +213,8 @@ def report(id, file_ext=None):
     else:
       file_format = None
 
-    # Fetch requested primer report
-    # Ensures the report exists and the user has permission to view it
-    try:
-      job: IndelFinderPipeline = lookup_report(IndelPrimerReport.kind, id)
-
-    # If the report lookup request is invalid, show an error message
-    except ReportLookupError as ex:
-      flash(ex.msg, 'danger')
-      abort(ex.code)
-
-
-    # Try getting the report data file and results
-    # If result is None, job hasn't finished computing yet
-    try:
-      data, result = job.fetch()
-      ready = result is not None
-
-    # Error reading one of the report files
-    except (EmptyReportDataError, EmptyReportResultsError) as ex:
-      logger.error(f'Error fetching Indel Finder report {ex.id}: {ex.description}')
-      return abort(404, description = ex.description)
-
-    # General error
-    except Exception as ex:
-      logger.error(f'Error fetching Indel Finder report {id}: {ex}')
-      return abort(400, description = 'Something went wrong')
-
-    # No data file found
-    if data is None:
-      logger.error(f'Error fetching Indel Finder report {id}: Input data file does not exist')
-      return abort(404)
+    # Report is ready if result exists
+    ready = result is not None
 
     # If the result is empty, make it an empty dict, for more straightforward field access in the rest of the function
     if not ready:
@@ -306,7 +260,7 @@ def report(id, file_ext=None):
 
       # GCP data info
       'data_hash': job.report.data_hash,
-      'id': id,
+      'report_id': job.report.id,
 
       # Job status
       'empty': result.get('empty'),

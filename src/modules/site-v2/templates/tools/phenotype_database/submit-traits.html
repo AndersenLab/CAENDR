@@ -244,7 +244,7 @@
         submit_job(data, '#confirmationModal', {'auto_redirect': false})
             .done((result) => {
                 document.getElementById('goToReportButton').addEventListener('click', () => {
-                    window.location.href = `{{ url_for('phenotype_database.report', id='') }}${ result.id }`;
+                    window.location.href = `{{ url_for('phenotype_database.report', report_id='') }}${ result.id }`;
                 })
             })
             // If validation fails, just flash the error
