@@ -98,13 +98,12 @@ def submit_traits():
 
   # Check for URL vars specifying an initial trait
   # These will be inherited from submit_start
-  initial_trait_name = request.args.get('trait')
-  initial_trait_set  = request.args.get('dataset')
+  initial_trait_id = request.args.get('trait')
 
   # Try looking up the specified trait
-  if initial_trait_name:
+  if initial_trait_id:
     try:
-      initial_trait = Trait(dataset=initial_trait_set, trait_name=initial_trait_name)
+      initial_trait = Trait.from_id(initial_trait_id)
     except NotFoundError:
       flash('That trait could not be found.', 'danger')
       initial_trait = None

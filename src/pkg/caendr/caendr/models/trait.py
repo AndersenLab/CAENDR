@@ -67,6 +67,24 @@ class Trait():
   #
 
   @staticmethod
+  def from_id(trait_id: str) -> 'Trait':
+    '''
+      Instantiate a `Trait` object from a unique trait ID.
+      The given ID must exist in the PhenotypeMetadata SQL table, otherwise a `ValueError` will be raised.
+    '''
+
+    # Get the SQL row with the given trait ID
+    sql_row = PhenotypeMetadata.query.get(trait_id)
+    if sql_row is None:
+      raise ValueError(f'Invalid trait ID {trait_id}')
+
+    # Construct a Trait object using the data in the SQL row
+    return Trait(
+      trait_name = sql_row.trait_name_caendr,
+      dataset    = sql_row.dataset,
+    )
+
+  @staticmethod
   def from_dataset(dataset: str, trait_name: Optional[str] = None) -> 'Trait':
     return Trait( dataset = dataset, trait_name = trait_name )
 
