@@ -124,13 +124,12 @@ label {
                 {"data": "trait_name_caendr"},
                 {"data": "description_long"},
                 {
-                    "data": "Upload Date",
+                    "data": "created_on",
                     "render": function(data, type, row) {
-                        return formatDate(row.created_on)
+                        return formatDate(data)
                     }
                 },
                 {
-                    "data": "View Full Details",
                     "render": function(data, type, row) {
                         const d = JSON.stringify(row)
                         return `<td>
