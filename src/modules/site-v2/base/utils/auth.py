@@ -186,7 +186,7 @@ def access_token_required(token):
       # Check for access token in request
       access_token = request.headers.get('Authorization')
       if access_token != 'Bearer {}'.format(token):
-        abort(403)
+        abort(401)
 
       # Forward to wrapped function
       return fn(*args, **kwargs)
