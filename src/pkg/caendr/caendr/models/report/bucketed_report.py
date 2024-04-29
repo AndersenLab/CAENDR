@@ -34,12 +34,12 @@ class BucketedReport(Report):
   @classmethod
   @abstractmethod
   def _generate_uri(cls, bucket: str, *path: str, schema: BlobURISchema=None):
-    pass
+    raise NotImplementedError
 
   @classmethod
   @abstractmethod
   def _list_files(cls, bucket: str, *prefix: str, filter=None):
-    pass
+    raise NotImplementedError
 
 
 
@@ -55,7 +55,7 @@ class BucketedReport(Report):
     '''
       Bucket where any data specific to report is stored.
     '''
-    pass
+    raise NotImplementedError
 
   @property
   @abstractmethod
@@ -63,7 +63,7 @@ class BucketedReport(Report):
     '''
       Bucket where any data specific to tool but NOT to individual report is stored.
     '''
-    pass
+    raise NotImplementedError
 
   @property
   @abstractmethod
@@ -71,7 +71,7 @@ class BucketedReport(Report):
     '''
       Bucket to use as temp storage for work.
     '''
-    pass
+    raise NotImplementedError
 
 
 
