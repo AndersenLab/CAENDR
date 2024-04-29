@@ -147,12 +147,7 @@
                 .fail((error) => {
                     // If an error message was received, display it, otherwise use a fallback message
                     console.error(error);
-                    const resp = error.responseJSON
-                    if (resp && resp.message && false) {
-                        flash_message(resp.message, resp.full_msg_link, resp.full_msg_body);
-                    } else{
-                        flash_message(`Failed to retrieve metadata for trait ${trait}`);
-                    }
+                    flashErrorResponse(error.responseJSON, `Failed to retrieve metadata for trait ${trait}.`)
 
                     // Close the modal so the user can see the error message
                     $('#phenotypeDBModal').modal('hide');
@@ -249,10 +244,7 @@
             })
             // If validation fails, just flash the error
             .fail((error) => {
-                const resp = error.responseJSON
-                if (resp && resp.message) {
-                    flash_message(resp.message, resp.full_msg_link, resp.full_msg_body);
-                }
+                flashErrorResponse(error.responseJSON, 'There was a problem with your submission. Please try again later.')
             })
     }
 </script>

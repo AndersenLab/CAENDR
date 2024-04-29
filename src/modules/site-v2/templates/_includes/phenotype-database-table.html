@@ -183,13 +183,7 @@ label {
                 .fail((error) => {
                     console.error(error)
                     $('#{{ offcanvas_id }} .btn-close').click()
-                    $('html').animate({
-                        scrollTop: $('body').offset().top
-                    }, 100);
-                    if (error.responseJSON && error.responseJSON.message) {
-                        $('.alert').remove()
-                        flash_message(error.responseJSON.message)
-                    }
+                    flashErrorResponse(error.responseJSON, 'There was a problem retrieving this trait. Please try again later.')
                 })
         })
 

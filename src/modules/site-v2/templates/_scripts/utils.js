@@ -167,6 +167,27 @@ function flash_message(message, full_msg_link=null, full_msg_body=null) {
 }
 
 
+function flashErrorResponse(responseJSON, backupMessage, scrollToTop = true) {
+
+  // Optionally scroll to the top of the page to highlight the error message
+  if (scrollToTop) {
+    $('html').animate({
+      scrollTop: $('body').offset().top,
+    }, 100);
+  }
+
+  // If the response JSON contains a message, flash all the details it has
+  if (responseJSON && responseJSON.message) {
+    flash_message(responseJSON.message, responseJSON.full_msg_link, responseJSON.full_msg_body);
+  }
+
+  // Otherwise, flash a backup message
+  else {
+    flash_message(backupMessage);
+  }
+}
+
+
 /* Format a date as YYYY-MM-DD.
  */
 function formatDate(d) {
