@@ -144,7 +144,7 @@ label {
                 {
                     "data": "id",
                     "render": function(data, type, row) {
-                        const url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", data).replace("TRAIT_SET", 'zhang');
+                        const url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", data);
                         return `
                             <div id="trait-data-${data}" class="ps-3 pt-0">
                                 <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
@@ -242,8 +242,7 @@ label {
     function filterTable(arr) {
         for (let i = 0; i < arr.length; i++) {
             const speciesName = first_letter_caps(arr[i].species_name).replace('_', '. ').italics();
-            const traitName = arr[i].id
-            let url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", traitName).replace("TRAIT_SET", 'caendr')
+            const traitID = arr[i].id
             const createdOn = formatDate(arr[i].created_on)
             let tagsHTML = ''
             if (arr[i].tags !== null && arr[i].tags.length) {
@@ -252,6 +251,8 @@ label {
                     tagsHTML += `<div class="mb-3"><a role="button" class="btn btn-link" id="tagLink-${j+1}" data-value="${tags[j]}">${tags[j].replaceAll('/', ' • ')}</a></div>`
                 }
             }
+
+            const url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", traitID);
             
             let html = `
                     <tr class="py-3 dislayedRow">
@@ -268,7 +269,7 @@ label {
                         <td>${createdOn}</td>
                         <td class="d-flex-row flex-column" id="tags">${tagsHTML}</td>
                         <td class="optionsToolbar">
-                            <div class="ps-3 pt-0" id="trait-data-${arr[i].id}"><a href='${url}'><i class="bi bi-arrow-right-circle-fill"
+                            <div class="ps-3 pt-0" id="trait-data-${ traitID }"><a href='${url}'><i class="bi bi-arrow-right-circle-fill"
                                         aria-hidden="true"></i>Analyze</a></div>
                         </td>
                     </tr>
@@ -280,7 +281,7 @@ label {
                                 <p>${arr[i].description_long}</p>
                             </div>
                             <div class="d-flex justify-content-end me-1 pb-3 optionsToolbar">
-                                <a data-bs-toggle="offcanvas" id="traitDetails" data-value="${arr[i].id}" data-bs-target="#{{ offcanvas_id }}"
+                                <a data-bs-toggle="offcanvas" id="traitDetails" data-value="${ traitID }" data-bs-target="#{{ offcanvas_id }}"
                                     aria-controls="{{ offcanvas_id }}" href=" #"><i class="bi bi-arrow-right"
                                         aria-hidden="true"></i>View Full Details</a>
                             </div>
