@@ -104,7 +104,7 @@ def submit_traits():
   if initial_trait_id:
     try:
       initial_trait = Trait.from_id(initial_trait_id)
-    except NotFoundError:
+    except (NotFoundError, ValueError):
       flash('That trait could not be found.', 'danger')
       initial_trait = None
   else:
