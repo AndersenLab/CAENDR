@@ -37,3 +37,15 @@ REPORT_V2_FILE_LIST = ['alignment_report.html', 'concordance_report.html', 'gatk
 # TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS = { 'csv', 'tsv' }
 # TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS = { 'csv' }
 TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS = { 'tsv' }
+
+TRAIT_CATEGORY_OPTIONS = [
+  ('Growth/Physiology', 'Growth/Physiology'), 
+  ('Morphology/Development/Lineage/Cell type', 'Morphology/Development/Lineage/Cell type'), 
+  ('Behavior', 'Behavior'), 
+  ('Molecular', 'Molecular'), 
+  ('Stress response', 'Stress response'), 
+  ('Drug/Compound/Condition/Treatment', 'Drug/Compound/Condition/Treatment'), 
+  ('Ecology', 'Ecology'), 
+  ('Genomics', 'Genomics'), 
+  ('Reproduction', 'Reproduction')
+]

@@ -164,8 +164,12 @@ label {
 
         // Fetch data for a trait and fill out side bar for non-bulk traits
         $(document).on('click','#traitDetails', function() {
+            $('.offcanvas-header, .offcanvas-body').hide()
+            $('#{{ offcanvas_id }}-spinner').removeClass('d-none')
             queryTraitByName($(this).data('value'), $('#csrf_token').val())
                 .then((response) => {
+                    $('#{{ offcanvas_id }}-spinner').addClass('d-none')
+                    $('.offcanvas-header, .offcanvas-body').show()
                     fillOutModal(response)
                 })
                 .fail((error) => {
@@ -267,7 +271,7 @@ label {
                                 <p>${arr[i].description_long}</p>
                             </div>
                             <div class="d-flex justify-content-end me-1 pb-3 optionsToolbar">
-                                <a data-bs-toggle="offcanvas" id="traitDetails" data-value="${arr[i].trait_name_caendr}" data-bs-target="#{{ offcanvas_id }}"
+                                <a data-bs-toggle="offcanvas" id="traitDetails" data-value="${arr[i].id}" data-bs-target="#{{ offcanvas_id }}"
                                     aria-controls="{{ offcanvas_id }}" href=" #"><i class="bi bi-arrow-right"
                                         aria-hidden="true"></i>View Full Details</a>
                             </div>

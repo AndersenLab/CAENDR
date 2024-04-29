@@ -20,10 +20,11 @@ from caendr.utils.env       import get_env_var
 
 from base.forms                 import EmptyForm
 from base.utils.auth            import jwt_required, get_current_user, user_is_admin
-from base.utils.tools           import lookup_report, list_reports, try_submit
+from base.utils.tools           import list_reports, try_submit
+from base.utils.view_decorators import parse_job_id, validate_form
 
 from caendr.models.datastore    import PhenotypeReport, Species
-from caendr.models.error        import ReportLookupError, EmptyReportDataError, EmptyReportResultsError, NotFoundError, DataValidationError
+from caendr.models.error        import NotFoundError
 from caendr.models.job_pipeline import PhenotypePipeline
 from caendr.models.status       import JobStatus
 from caendr.models.sql          import PhenotypeMetadata
@@ -130,25 +131,15 @@ def submit_traits():
 
 @phenotype_database_bp.route('/submit', methods=["POST"])
 @jwt_required()
-def submit():
+@validate_form(None, from_json=True)
+def submit(form_data, no_cache=False):
 
-  # Read & clean fields from JSON data
-  data = {
-    field: bleach.clean(request.json.get(field))
-      for field in {'species', 'trait_1', 'trait_1_dataset'}
-  }
-
-  # Read & clean values for trait 2, if given
-  trait_2         = request.json.get('trait_2')
-  trait_2_dataset = request.json.get('trait_2_dataset')
-  data['trait_2']         = bleach.clean(trait_2)         if trait_2         is not None else None
-  data['trait_2_dataset'] = bleach.clean(trait_2_dataset) if trait_2_dataset is not None else None
-
-  # If user is admin, allow them to bypass cache with URL variable
-  no_cache = bool(user_is_admin() and request.args.get("nocache", False))
+  # Make sure these keys exist in the form data, even if they weren't provided in the submission
+  form_data['trait_2']         = form_data.get('trait_2',         None)
+  form_data['trait_2_dataset'] = form_data.get('trait_2_dataset', None)
 
   # Try submitting the job & getting a JSON status message
-  response, code = try_submit(PhenotypeReport.kind, get_current_user(), data, no_cache)
+  response, code = try_submit(PhenotypeReport.kind, get_current_user(), form_data, no_cache)
 
   # If there was an error, flash it
   if code != 200 and int(request.args.get('reloadonerror', 1)):
@@ -166,7 +157,7 @@ def submit():
 @phenotype_database_bp.route('/my-results',  methods=['GET'], endpoint='my_results')
 @jwt_required()
 def list_results():
-  show_all = request.path.endswith('all-results')
+  show_all = request.endpoint.endswith('all_results')
   user = get_current_user()
 
   # Only show malformed Entities to admin users
@@ -199,10 +190,11 @@ def list_results():
   })
 
 
-@phenotype_database_bp.route("/report/<id>",                     methods=['GET'])
-@phenotype_database_bp.route("/report/<id>/download/<file_ext>", methods=['GET'])
+@phenotype_database_bp.route("/report/<report_id>",                     methods=['GET'])
+@phenotype_database_bp.route("/report/<report_id>/download/<file_ext>", methods=['GET'])
 @jwt_required()
-def report(id, file_ext=None):
+@parse_job_id(PhenotypePipeline)
+def report(job: PhenotypePipeline, data, result, file_ext=None):
 
   # Validate file extension, if provided
   if file_ext:
@@ -211,42 +203,6 @@ def report(id, file_ext=None):
       abort(404)
   else:
     file_format = None
-
-  # Fetch requested phenotype report
-  # Ensures the report exists and the user has permission to view it
-  try:
-    job: PhenotypePipeline = lookup_report(PhenotypeReport.kind, id)
-
-  # If the report lookup request is invalid, show an error message
-  except ReportLookupError as ex:
-    flash(ex.msg, 'danger')
-    abort(ex.code)
-
-  # Try getting & parsing the report data file and results
-  # If result is None, job hasn't finished computing yet
-  try:
-    data, result = job.fetch()
-
-  # Error reading one of the report files
-  except (EmptyReportDataError, EmptyReportResultsError) as ex:
-    logger.error(f'Error fetching Phenotype report {ex.id}: {ex.description}')
-    return abort(404, description = ex.description)
-
-  # Error with the submission data
-  # This should only be possible if a report was somehow created with invalid data, e.g. not enough traits
-  except DataValidationError as ex:
-    flash(ex.msg, 'error')
-    return abort(400, description = ex.msg)
-
-  # General error
-  except Exception as ex:
-    logger.error(f'Error fetching Phenotype report {id}: {ex}')
-    return abort(400, description = 'Something went wrong')
-
-  # No data file found
-  if data is None:
-    logger.error(f'Error fetching Phenotype report {id}: Input data does not exist')
-    return abort(404)
 
   # If a file format was specified, return a downloadable file with the results
   if file_format is not None:

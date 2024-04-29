@@ -399,14 +399,14 @@ def query_trait_metadata():
   """
 
   # Get the trait name from the request
-  trait_name = get_clean(request.json, 'trait_name')
-  if not trait_name:
-    abort(400, description='No trait name provided.')
+  trait_id = get_clean(request.json, 'trait_id')
+  if not trait_id:
+    abort(400, description='No trait ID provided.')
 
   # Try getting the trait from the database
-  trait = get_trait(trait_name)
+  trait = get_trait(trait_id)
   if trait is None:
-    abort(404, description=f'Invalid trait name {trait_name}')
+    abort(404, description=f'Invalid trait ID {trait_id}')
 
   # Return the full trait metadata
   return trait.to_json_with_values()

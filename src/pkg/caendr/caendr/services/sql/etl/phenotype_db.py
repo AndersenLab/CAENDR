@@ -58,9 +58,10 @@ def parse_phenotypedb_traits_data(species: Species, **files: LocalDatastoreFile)
 
           # Yield each trait measurement as a new row
           yield {
-            'trait_name':   trait_name,
-            'strain_name':  strain_name,
-            'trait_value':  trait_value
+            'trait_name':  trait_name,
+            'strain_name': strain_name,
+            'trait_value': trait_value,
+            'metadata_id': file_name
           }
 
 
@@ -80,6 +81,7 @@ def parse_phenotypedb_bulk_trait_file(species: Species, **files: LocalDatastoreF
     with open(file_path) as csv_file:
       for idx, row in enumerate( csv.reader(csv_file, delimiter='\t') ):
 
+        id = f'{file_name}_{idx}'
         # First line is column names - don't interpret as data
         if idx == 0:
           logger.info(f'Column names in file "{file_name}" are: {", ".join(row)}')
@@ -108,7 +110,8 @@ def parse_phenotypedb_bulk_trait_file(species: Species, **files: LocalDatastoreF
 
           # Yield each trait measurement as a new row
           yield {
-            'trait_name':   trait_name,
-            'strain_name':  strain_name,
-            'trait_value':  trait_value
+            'trait_name':  trait_name,
+            'strain_name': strain_name,
+            'trait_value': trait_value,
+            'metadata_id': id
           }

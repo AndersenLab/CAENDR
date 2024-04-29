@@ -27,10 +27,10 @@ function traitNameString(name_1, name_2, name_3) {
 }
 
 
-function queryTraitByName(trait_name, csrf_token=null) {
+function queryTraitByName(trait_id, csrf_token=null) {
 
   // Construct the data object, using the optional CSRF token if provided
-  let data = {trait_name};
+  let data = {trait_id};
   if (csrf_token !== null) data['csrf_token'] = csrf_token;
 
   // Return the AJAX request as a Promise object
