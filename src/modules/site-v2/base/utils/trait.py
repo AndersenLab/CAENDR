@@ -121,7 +121,7 @@ def add_trait(form_data, user):
       try:
         with rollback_on_error_handler():
           trait_data = PhenotypeDatabase()
-          trait_data.add_trait_data('hello')
+          trait_data.add_trait_data(trait_data_list)
       except Exception as ex:
         rollback_submission_on_error(tf.name, blob_name)
         logger.error(f'Failed to seed the file data to the database: {ex}')
