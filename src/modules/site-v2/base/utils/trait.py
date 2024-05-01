@@ -131,6 +131,11 @@ def add_trait(form_data, user):
     logger.error(f'Failed to upload a file {form_data.file.data.filename}: {ex}')
     return {'message': 'Failed to submit a form. Please try again later.'}, 500
   
+  except Exception as ex:
+    rollback_submission_on_error(tf.name, blob_name)
+    logger.error(f'Failed to upload the file data to the database: {ex}')
+    return {'message': 'Failed to submit a form. Please try again later.'}, 500
+  
   return {'message': 'Trait submitted successfully.'}, 200
 
 
