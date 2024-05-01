@@ -50,7 +50,7 @@ class PhenotypeMetadata(DictSerializable, db.Model):
     return json_trait
   
   
-  def add_trait(self, trait_obj):
+  def add(self, trait_obj):
     new_trait = PhenotypeMetadata(
       id = trait_obj.name,
       trait_name_user = trait_obj['trait_name_user'],
@@ -74,4 +74,8 @@ class PhenotypeMetadata(DictSerializable, db.Model):
       is_bulk_file = trait_obj['is_bulk_file']
     )
     db.session.add(new_trait)
+    db.session.commit()
+
+  def delete(self):
+    db.session.delete(self)
     db.session.commit()
