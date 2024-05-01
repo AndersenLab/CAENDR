@@ -5,22 +5,18 @@ from flask      import render_template, Blueprint, redirect, url_for, request, f
 from extensions import cache
 from config     import config
 
-from caendr.models.error              import EnvVarError, FileUploadError
-from caendr.models.datastore          import Species
-from caendr.services.cloud.storage    import get_blob
-from caendr.services.logger           import logger
-from caendr.services.validate         import validate_file, StrainValidator, NumberValidator
-from caendr.utils.env                 import get_env_var
-from caendr.utils.local_files         import LocalUploadFile
-from base.utils.auth                  import jwt_required, get_current_user
-from base.utils.trait                 import add_trait
-from base.forms                       import TraitSubmissionForm
-from constants                        import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
+from caendr.models.error           import EnvVarError, FileUploadError
+from caendr.models.datastore       import Species
+from caendr.services.cloud.storage import get_blob
+from caendr.services.logger        import logger
+from caendr.services.validate      import validate_file, StrainValidator, NumberValidator
+from caendr.utils.local_files      import LocalUploadFile
+from base.utils.auth               import jwt_required, get_current_user
+from base.utils.trait              import add_trait
+from base.forms                    import TraitSubmissionForm
+from constants                     import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 
-
-MODULE_DB_OPERATIONS_BUCKET_NAME = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
-MODULE_DB_OPERATIONS_TRAITFILE_PUBLIC_FILEPATH = get_env_var('MODULE_DB_OPERATIONS_TRAITFILE_PUBLIC_FILEPATH')
 
 data_bp = Blueprint(
   'data', __name__, template_folder='templates'
