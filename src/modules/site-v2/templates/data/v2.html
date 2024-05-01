@@ -91,14 +91,14 @@
                                         <tr>
                                             <th scope="row">Strain Issues</th>
                                             <td>This <a
-                                                    href="{{ url_for('data_releases.strain_issues', species = species.get_slug(), release_version = release_version) }}">link</a>
+                                                    href="{{ url_for('data_releases.strain_issues', species_name = species.get_slug(), release_version = release_version) }}">link</a>
                                                 contains all strain issues for this release</td>
                                             <td></td>
                                         </tr>
                                         <tr>
                                             <th scope="row">Alignment Data</th>
                                             <td>This <a
-                                                    href="{{ url_for('data_releases.alignment_data', species = species.get_slug(), release_version = release_version) }}">link</a>
+                                                    href="{{ url_for('data_releases.alignment_data', species_name = species.get_slug(), release_version = release_version) }}">link</a>
                                                 contains all alignment data as BAM or BAI files.</td>
                                             <td></td>
                                         </tr>

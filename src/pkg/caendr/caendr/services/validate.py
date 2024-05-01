@@ -82,8 +82,6 @@ def validate_file(local_path_or_file, validators, delimiter='\t', unique_rows=Fa
       validator.finish()
 
 
-
-
 #
 # Validator Base Class
 #

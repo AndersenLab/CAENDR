@@ -49,8 +49,8 @@ def get_all_traits_metadata():
     return PhenotypeMetadata.query.all()
 
 
-def get_trait(trait_name):
-   return PhenotypeMetadata.query.get(trait_name)
+def get_trait(trait_id):
+   return PhenotypeMetadata.query.get(trait_id)
 
 
 def filter_trait_query_by_text(query, search_val):

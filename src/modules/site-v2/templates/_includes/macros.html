@@ -26,9 +26,19 @@
   </script>
 {% endmacro %}
 
-{% macro render_field(field, form_prefix=None, form_suffix=None, make_err_container=false) %}
+{% macro render_field(field, form_prefix=None, form_suffix=None, make_err_container=false, has_popover=false, content=None) %}
   <div class="form-group {% if field.errors %}has-error{% endif %}">
-    {{ field.label(class='form-label') }}
+    <div class="label-group d-flex">
+      {{ field.label(class='form-label') }}
+      {% if has_popover %}
+      <!-- Info Popover -->
+      <a class="btn btn-secondary rounded-circle infoButton mx-2" role="button" tabindex="0" data-bs-toggle="popover"
+      data-bs-trigger="focus" data-bs-title="More information"
+      data-bs-content="{{ content }}" aria-label="More information about {{ field.label.text }}"><i class="bi bi-info lh-1"
+          aria-hidden="true"></i></a>
+      <!-- /Info Popover -->
+      {% endif %}
+    </div>
     {% if form_prefix or form_suffix %}
     <div class="input-group">
     {% endif %}
@@ -48,6 +58,7 @@
         {{ field(class="form-control", required=kwargs.get('required', field.flags.required), **kwargs) }}
       {% endif %}
       {% if form_suffix %}<span class="input-group-addon">{{ form_prefix }}</span>{% endif %}
+
     {% if form_prefix or form_suffix %}
     </div>
     {% endif %}
@@ -57,6 +68,7 @@
     {% if make_err_container %}
       <p class='text-danger err-container'></p>
     {% endif %}
+
   </div>
 {% endmacro %}
 

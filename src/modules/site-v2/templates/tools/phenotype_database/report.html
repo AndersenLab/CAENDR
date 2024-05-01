@@ -124,7 +124,7 @@
             <!-- Download TSV button -->
             <div class="col-12 col-md-5 col-xl-12 p-3 mb-3 mb-xl-5 d-print-none">
                 <div class="d-grid gap-2">
-                    <a class="btn btn-secondary text-white" role="button" href="{{ url_for('phenotype_database.report', id=report.id, file_ext='tsv') }}"
+                    <a class="btn btn-secondary text-white" role="button" href="{{ url_for('phenotype_database.report', report_id=report.id, file_ext='tsv') }}"
                         ><i class="bi bi-file-earmark-spreadsheet-fill"></i> Download TSV</a>
                     <a class="btn btn-secondary text-white" role="button" onClick="download_report_as_pdf()" target="_blank"
                         ><i class="bi bi-file-earmark-pdf-fill"></i> Print Report</a>

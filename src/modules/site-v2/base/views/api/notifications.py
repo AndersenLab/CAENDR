@@ -3,7 +3,7 @@ from flask import jsonify, Blueprint, url_for, abort, request
 from caendr.services.logger import logger
 
 from base.forms       import AnnouncementForm
-from base.utils.auth  import admin_required
+from base.utils.auth  import access_token_required, admin_required
 from base.utils.tools import lookup_report
 from base.views.tools import pairwise_indel_finder_bp, genetic_mapping_bp, heritability_calculator_bp
 
@@ -39,12 +39,8 @@ def notifications():
 
 
 @api_notifications_bp.route('/job-finish/<kind>/<id>/<status>', methods=['GET'])
+@access_token_required(API_SITE_ACCESS_TOKEN)
 def job_finish(kind, id, status):
-
-  # Validate that this request came from the pipeline API
-  access_token = request.headers.get('Authorization')
-  if access_token != 'Bearer {}'.format(API_SITE_ACCESS_TOKEN):
-    abort(403)
 
   # Fetch requested report, aborting if kind is invalid or report cannot be found
   try:
@@ -62,7 +58,7 @@ def job_finish(kind, id, status):
   # Complete message
   if status == JobStatus.COMPLETE:
     template = REPORT_SUCCESS_EMAIL_TEMPLATE.strip('\n')
-    link     = url_for(bp + '.report', id=report.id, _external=True)
+    link     = url_for(bp + '.report', report_id=report.id, _external=True)
 
   # Error message
   elif status == JobStatus.ERROR:
