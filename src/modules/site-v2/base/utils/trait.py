@@ -34,7 +34,7 @@ def add_trait(form_data, user):
     tf = TraitFile(unique_id())
 
     # Create a unique filename for file uload
-    hashed_filename = f'{unique_id()}.tsv'  
+    filename_hash = f'{unique_id()}.tsv'  
     tf.set_properties(**{
       # User submitted data
       'trait_name_user':      bleach.clean(form_data.trait_name_user.data),
@@ -53,10 +53,10 @@ def add_trait(form_data, user):
       'publication':          bleach.clean(form_data.publication.data),
   
       # Internally used data
-      'dataset':           'public',
-      'publish_status':    PublishStatus.UPLOADED,
-      'is_bulk_file':      False,
-      'hashed_filename':   hashed_filename,
+      'dataset':        'public',
+      'publish_status': PublishStatus.UPLOADED,
+      'is_bulk_file':   False,
+      'filename_hash':  filename_hash,
     })
 
     tf.set_user(user)
@@ -79,7 +79,7 @@ def add_trait(form_data, user):
       
   # Save file to GCP bucket
   species_name = Species.get(form_data.species.data).name
-  blob_name = f'{MODULE_DB_OPERATIONS_TRAITFILE_PUBLIC_FILEPATH}/{species_name}/{user.name}/{hashed_filename}'
+  blob_name = f'{MODULE_DB_OPERATIONS_TRAITFILE_PUBLIC_FILEPATH}/{species_name}/{user.name}/{filename_hash}'
 
   # Check if the file already exists
   if check_blob_exists(MODULE_DB_OPERATIONS_BUCKET_NAME, blob_name):
