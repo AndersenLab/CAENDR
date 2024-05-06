@@ -2,7 +2,7 @@ import bleach
 import csv
 
 from caendr.models.error              import FileUploadError
-from caendr.models.datastore          import TraitFile, Species
+from caendr.models.datastore          import TraitFile, Species, DatasetType
 from caendr.models.status             import PublishStatus
 from caendr.models.sql                import PhenotypeMetadata, PhenotypeDatabase
 from caendr.services.cloud.storage    import upload_blob_from_file_object, check_blob_exists, get_blob_if_exists
@@ -53,7 +53,7 @@ def add_trait(form_data, user):
       'publication':          bleach.clean(form_data.publication.data),
   
       # Internally used data
-      'dataset':        'public',
+      'dataset':        DatasetType.PUBLIC,
       'publish_status': PublishStatus.UPLOADED,
       'is_bulk_file':   False,
       'filename_hash':  filename_hash,

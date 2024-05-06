@@ -70,7 +70,7 @@ class PhenotypeMetadata(DictSerializable, db.Model):
       tags = ', '.join(trait_obj['tags']),
       created_on = datetime.now(timezone.utc),
       modified_on = datetime.now(timezone.utc),
-      dataset = trait_obj['dataset'],
+      dataset = trait_obj['dataset'].value,
       is_bulk_file = trait_obj['is_bulk_file']
     )
     db.session.add(new_trait)
