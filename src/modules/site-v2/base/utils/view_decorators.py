@@ -194,7 +194,7 @@ def parse_entity_id(entity_class: Type[Entity], required: bool = True, kw_name_i
 
 
 
-def validate_form(form_class: Type[FlaskForm], from_json: bool = False, err_msg: str = None, flash_err_msg: bool = True):
+def validate_form(form_class: Type[FlaskForm], from_json: bool = False, err_msg: str = None, flash_err_msg: bool = True, methods = None):
   '''
     Parse the request form into the given form type, validate the fields, and inject the data as a dict.
 
@@ -211,6 +211,8 @@ def validate_form(form_class: Type[FlaskForm], from_json: bool = False, err_msg:
       - `from_json`: If `True`, use the request `.get_json()` as the fields instead.
       - `err_msg`: An error message to add to the response if validation fails.
       - `flash_err_msg`: If `True`, flashes the `err_msg` in addition to returning it.
+      - `methods`: A list of request methods to expect a form from. If `None`, checks for a form in all requests;
+                   otherwise, does not try to extract a form from any request method not in the list.
   '''
 
   def wrapper(f):
@@ -227,6 +229,11 @@ def validate_form(form_class: Type[FlaskForm], from_json: bool = False, err_msg:
 
       # If user is admin, allow them to bypass cache with URL variable
       no_cache = bool(user_is_admin() and request.args.get("nocache", False))
+
+      # If a list of methods is provided, make sure the current request method is in it
+      # If it's not, then there should not be any form data for this request
+      if methods is not None and request.method not in methods:
+        return f(*args, form_data=None, no_cache=no_cache, **kwargs)
 
       # Pull the raw data from either the form or the JSON body
       raw_data = request.get_json() if from_json else request.form

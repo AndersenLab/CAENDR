@@ -7,7 +7,7 @@ from base.utils.auth  import access_token_required, admin_required
 from base.utils.tools import lookup_report
 from base.views.tools import pairwise_indel_finder_bp, genetic_mapping_bp, heritability_calculator_bp
 
-from base.utils.view_decorators import parse_entity_id
+from base.utils.view_decorators import parse_entity_id, validate_form
 
 from caendr.models.datastore import NemascanReport, HeritabilityReport, IndelPrimerReport, Announcement
 from caendr.models.error     import ReportLookupError, NotFoundError
@@ -106,8 +106,9 @@ def announcement_list():
 @api_notifications_bp.route('/announcement/<string:entity_id>', methods=['GET', 'PATCH', 'DELETE'])
 @admin_required()
 @parse_entity_id(Announcement, required=False, kw_name_id='entity_id', kw_name_entity='announcement')
+@validate_form(AnnouncementForm, methods=['POST', 'PATCH'])
 @jsonify_request
-def announcement(announcement: Announcement = None):
+def announcement(announcement: Announcement = None, form_data = None, no_cache: bool = False):
   '''
     Manage one of the site announcements.
 
@@ -126,15 +127,8 @@ def announcement(announcement: Announcement = None):
   # POST Request
   # Create a new announcement, and return its unique ID
   if request.method == 'POST':
-
-    # Validate form
-    # TODO: Clean / validate values
-    form = AnnouncementForm(request.form)
-    if not form.validate():
-      abort(400)
-
     new_announcement = Announcement(**{
-      prop: request.form.get(prop) for prop in Announcement.get_props_set()
+      prop: form_data.get(prop) for prop in Announcement.get_props_set()
     })
     new_announcement.save()
     return { 'id': new_announcement.name }
@@ -143,20 +137,14 @@ def announcement(announcement: Announcement = None):
   # Lookup the desired announcement and update its properties
   if request.method == 'PATCH':
 
-    # Validate form
-    # TODO: Clean / validate values
-    form = AnnouncementForm(request.form)
-    if not form.validate():
-      abort(400)
-
     # Extract the new property values from the form, casting "active" to a bool
     new_values = {
-      prop: request.form.get(prop)
+      prop: form_data.get(prop)
         for prop in Announcement.get_props_set()
-        if request.form.get(prop) is not None
+        if form_data.get(prop) is not None
     }
-    if request.form.get('active') is not None:
-      new_values['active'] = request.form.get('active') == 'true'
+    if form_data.get('active') is not None:
+      new_values['active'] = form_data.get('active') == 'true'
 
     # Update the announcement object
     announcement.set_properties(**new_values)
