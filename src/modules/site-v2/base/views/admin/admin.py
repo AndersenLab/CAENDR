@@ -73,6 +73,8 @@ def announcements_edit(entity_id=None):
 
   # Initialize the form with the existing object (or None if creating new)
   form = AnnouncementForm(obj=announcement)
+  if announcement:
+    form.style.data = announcement['style'].name
 
   return render_template('admin/announcements/edit.html', **{
     'title': ('Edit' if announcement else 'Create') + ' Announcement',
