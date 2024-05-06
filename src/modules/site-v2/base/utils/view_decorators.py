@@ -9,7 +9,7 @@ from base.utils.auth            import user_is_admin
 from base.utils.tools           import lookup_report, get_upload_err_msg
 from constants                  import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
-from caendr.models.datastore    import DatasetRelease, Species
+from caendr.models.datastore    import DatasetRelease, Species, Entity
 from caendr.models.error        import NotFoundError, ReportLookupError, EmptyReportDataError, EmptyReportResultsError, FileUploadError, DataValidationError
 from caendr.models.job_pipeline import JobPipeline
 from caendr.services.logger     import logger
@@ -141,6 +141,53 @@ def parse_job_id(pipeline_class: Type[JobPipeline], fetch=True, check_data_exist
 
       # Pass the objects to the function
       return f(*args, job=job, data=data, result=result, **kwargs)
+
+    return decorator
+  return wrapper
+
+
+
+def parse_entity_id(entity_class: Type[Entity], required: bool = True, kw_name_id: str = 'entity_id', kw_name_entity: str = 'entity'):
+  '''
+    Given an entity ID as a keyword argument, lookup and inject the entity with that ID.
+  '''
+  def wrapper(f):
+    @wraps(f)
+    def decorator(*args, **kwargs):
+
+      # Extract the entity ID from the keywords using the given name
+      entity_id = kwargs.get(kw_name_id)
+      kwargs = { key: val for key, val in kwargs.items() if key != kw_name_id }
+
+      # If no ID given, optionally raise error
+      if entity_id is None:
+        if required:
+          abort(404)
+        else:
+          e = None
+
+      # If ID given, try retrieving entity from datastore
+      else:
+        try:
+          e = entity_class.get_ds(entity_id)
+
+        # If not found, abort with 404
+        except NotFoundError as ex:
+          logger.error(f'Could not find {entity_class.kind} with ID {entity_id}: {ex}')
+          abort(404, description = f'Could not find an {entity_class.kind} object with the given ID.')
+
+        # General error: include default message
+        except Exception as ex:
+          logger.error(f'Error retrieving {entity_class.kind} with ID {entity_id}: {ex}')
+          abort(500, description = 'Something went wrong')
+
+        # If entity does not exist, abort with 404
+        if e is None:
+          logger.error(f'Could not find {entity_class.kind} with ID {entity_id}')
+          abort(404, description = f'Could not find an {entity_class.kind} object with the given ID.')
+
+      # Inject retrieved entity into function call
+      return f(*args, **{kw_name_entity: e}, **kwargs)
 
     return decorator
   return wrapper

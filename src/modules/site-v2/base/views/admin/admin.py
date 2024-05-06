@@ -3,6 +3,7 @@ from flask import render_template, Blueprint, abort
 from config import config
 from base.forms      import AnnouncementForm
 from base.utils.auth import admin_required
+from base.utils.view_decorators import parse_entity_id
 
 from caendr.models.datastore      import Announcement
 from caendr.services.cloud.secret import get_secret
@@ -59,17 +60,11 @@ def announcements():
 @admin_bp.route('/announcements/create',                  methods=['GET'])
 @admin_bp.route('/announcements/edit/<string:entity_id>', methods=['GET'])
 @admin_required()
-def announcements_edit(entity_id=None):
+@parse_entity_id(Announcement, required=False, kw_name_id='entity_id', kw_name_entity='announcement')
+def announcements_edit(announcement: Announcement = None):
   '''
     Manage the site announcements.
   '''
-  if entity_id:
-    try:
-      announcement = Announcement.get_ds(entity_id)
-    except:
-      abort(500)
-  else:
-    announcement = None
 
   # Initialize the form with the existing object (or None if creating new)
   form = AnnouncementForm(obj=announcement)

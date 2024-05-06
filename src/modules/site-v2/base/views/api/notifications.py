@@ -7,6 +7,8 @@ from base.utils.auth  import access_token_required, admin_required
 from base.utils.tools import lookup_report
 from base.views.tools import pairwise_indel_finder_bp, genetic_mapping_bp, heritability_calculator_bp
 
+from base.utils.view_decorators import parse_entity_id
+
 from caendr.models.datastore import NemascanReport, HeritabilityReport, IndelPrimerReport, Announcement
 from caendr.models.error     import ReportLookupError, NotFoundError
 from caendr.models.status    import JobStatus
@@ -88,20 +90,6 @@ def job_finish(kind, id, status):
 #
 
 
-def get_announcement(entity_id):
-  '''
-    Helper function to handle looking up announcement entity.
-    TODO: This can be done with new decorator(s) in another branch.
-  '''
-  try:
-    return Announcement.get_ds(entity_id)
-  except NotFoundError:
-    abort(404)
-  except Exception as ex:
-    logger.error(f'Error retrieving announcement {entity_id}: {ex}')
-    abort(500)
-
-
 @api_notifications_bp.route('/announcements', methods=['GET'])
 @admin_required()
 @jsonify_request
@@ -117,8 +105,9 @@ def announcement_list():
 @api_notifications_bp.route('/announcement',                    methods=['POST'])
 @api_notifications_bp.route('/announcement/<string:entity_id>', methods=['GET', 'PATCH', 'DELETE'])
 @admin_required()
+@parse_entity_id(Announcement, required=False, kw_name_id='entity_id', kw_name_entity='announcement')
 @jsonify_request
-def announcement(entity_id: str = None):
+def announcement(announcement: Announcement = None):
   '''
     Manage one of the site announcements.
 
@@ -132,7 +121,7 @@ def announcement(entity_id: str = None):
   # GET Request
   # Return the list of announcement entities
   if request.method == 'GET':
-    return get_announcement(entity_id).serialize()
+    return announcement.serialize()
 
   # POST Request
   # Create a new announcement, and return its unique ID
@@ -170,7 +159,6 @@ def announcement(entity_id: str = None):
       new_values['active'] = request.form.get('active') == 'true'
 
     # Update the announcement object
-    announcement = get_announcement(entity_id)
     announcement.set_properties(**new_values)
     announcement.save()
     return { 'id': announcement.name }
@@ -178,7 +166,6 @@ def announcement(entity_id: str = None):
   # DELETE Request
   # Lookup the desired announcement and soft delete it
   if request.method == 'DELETE':
-    announcement = get_announcement(entity_id)
     announcement.soft_delete()
     announcement.save()
     return {}, 200
