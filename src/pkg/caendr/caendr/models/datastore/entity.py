@@ -1,12 +1,13 @@
 import json
 from datetime import datetime, timezone
 from enum     import Enum
+from typing   import Tuple
 
 from google.cloud import datastore
 from caendr.services.logger import logger
 
 from caendr.models.error import NonUniqueEntity, NotFoundError
-from caendr.services.cloud.datastore import get_ds_entity, save_ds_entity, query_ds_entities
+from caendr.services.cloud.datastore import get_ds_entity, save_ds_entity, save_ds_entities, query_ds_entities
 from caendr.utils.tokens import TokenizedString
 
 
@@ -152,10 +153,11 @@ class Entity(object):
 
   ## Saving to Datastore ##
 
-  def save(self):
+  def _format_props_for_ds(self):
     '''
-      Append metadata to the Entity and save it to the datastore.
+      Format this entity's props to be saved in the datastore.
     '''
+
     now = datetime.now(timezone.utc)
 
     # Get serialized dict of all props and meta props
@@ -170,8 +172,32 @@ class Entity(object):
       props['created_on'] = now
     props['modified_on'] = now
 
+    return props
+
+
+  def save(self):
+    '''
+      Append metadata to the Entity and save it to the datastore.
+    '''
+
+    # Format the properties
+    props = self._format_props_for_ds()
+
     # Save the serialized entity in datastore
-    save_ds_entity(self.kind, self.name, exclude_from_indexes=self.exclude_from_indexes, **props)
+    save_ds_entity(self.kind, self.name, properties=props, exclude_from_indexes=self.exclude_from_indexes)
+
+
+  @classmethod
+  def save_batch(cls, *entities: 'Entity'):
+    '''
+      Save multiple Entity objects to the datastore in a single transaction.
+    '''
+
+    # Format the props of each entity, and save in dict with the entity's unique ID
+    entities = { e.name: e._format_props_for_ds() for e in entities }
+
+    # Save all entities in a single datastore call
+    save_ds_entities(cls.kind, entities, exclude_from_indexes=cls.exclude_from_indexes)
 
 
 
