@@ -153,7 +153,13 @@ label {
                     }
                 },
                 {"data": "trait_name_caendr"},
-                {"data": "description_long"},
+                {
+                    "data": "description_long",
+                    // TODO: Should this be Markdown?
+                    // "render": function(data, type, row) {
+                    //     return markdownToHTML(data);
+                    // },
+                },
                 {
                     "data": "Upload Date",
                     "render": function(data, type, row) {

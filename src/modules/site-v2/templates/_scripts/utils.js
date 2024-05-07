@@ -107,7 +107,7 @@ function create_node(html) {
 
 // Convert text from Markdown to HTML using Toast UI
 // This protects against code injection
-function markdown_to_html(text) {
+function markdownToHTML(text) {
   const editor = new toastui.Editor({
     el: document.createElement('div'),
     initialValue: text,
@@ -145,7 +145,7 @@ function flash_message(message, full_msg_link=null, full_msg_body=null) {
 
   // Create as a new DOM node, and insert the desired message as formatted (cleaned) HTML
   const node = create_node(raw_html);
-  node.firstElementChild.innerHTML = markdown_to_html(message);
+  node.firstElementChild.innerHTML = markdownToHTML(message);
 
   // If both full message fields are provided, add as a link & collapse dropdown
   if (full_msg_link && full_msg_body) {
