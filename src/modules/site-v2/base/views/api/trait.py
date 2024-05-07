@@ -153,7 +153,16 @@ def validate_endpoint_type(endpoint_prefix):
       if not validate_user():
         abort(403)
 
-      return f(*args, **kwargs)
+      # On the "private" endpoint, only consider traits belonging to the current user
+      if EndpointType.matches( request.endpoint, EndpointType.PRIVATE ):
+        user_filter = get_current_user()
+      else:
+        user_filter = None
+
+      # Filter to accepted
+      status_filter = None
+
+      return f(*args, user_filter=user_filter, status_filter=status_filter, **kwargs)
 
     return inner
   return decorator
@@ -173,7 +182,7 @@ def validate_endpoint_type(endpoint_prefix):
 @validate_endpoint_type('query_list_sql')
 @query_traits_error_handler('Failed to retrieve the list of traits')
 @jsonify_request
-def query_list_sql():
+def query_list_sql(user_filter=None, status_filter=None):
   '''
     Query the trait database using SQL-style pagination.
 
@@ -191,15 +200,6 @@ def query_list_sql():
     the current user will return no results, since the two user filters are exclusive.
     This is still a syntactically valid request, but it is semantically invalid.
   '''
-
-  # On the "private" endpoint, only consider traits belonging to the current user
-  if EndpointType.matches( request.endpoint, EndpointType.PRIVATE ):
-    current_user_filter = get_current_user()
-  else:
-    current_user_filter = None
-
-  # On the "private" and "all" endpoints, include private (unpublished) traits in the query
-  include_private_traits = EndpointType.matches_any( request.endpoint, { EndpointType.PRIVATE, EndpointType.ALL } )
 
   # Get search parameters
   selected_tags  = get_clean(request.json, 'selected_tags', [])
@@ -222,8 +222,7 @@ def query_list_sql():
   # The filters here determine which traits are part of the "full" query,
   # based on the request endpoint
   query = query_phenotype_metadata(
-    include_private=include_private_traits,
-    dataset=filter_dataset, user=current_user_filter,
+    dataset=filter_dataset, user=user_filter
   )
 
   # Filter by search values, if provided
@@ -260,7 +259,7 @@ def query_list_sql():
 @validate_endpoint_type('query_list_datatable')
 @query_traits_error_handler('Failed to retrieve the list of traits')
 @jsonify_request
-def query_list_datatable():
+def query_list_datatable(user_filter=None, status_filter=None):
   '''
     Query the trait database using DataTable-style pagination.
 
@@ -278,15 +277,6 @@ def query_list_datatable():
     the current user will return no results, since the two user filters are exclusive.
     This is still a syntactically valid request, but it is semantically invalid.
   '''
-
-  # On the private endpoint, only consider traits belonging to the current user
-  if EndpointType.matches( request.endpoint, EndpointType.PRIVATE ):
-    current_user_filter = get_current_user()
-  else:
-    current_user_filter = None
-
-  # On the "private" and "all" endpoints, include private (unpublished) traits in the query
-  include_private_traits = EndpointType.matches_any( request.endpoint, { EndpointType.PRIVATE, EndpointType.ALL } )
 
   # Load full search object from request
   search_raw = get_clean(request.args, 'search[value]', '')
@@ -326,8 +316,7 @@ def query_list_datatable():
   # The filters here determine which traits are part of the "full" query,
   # based on the request endpoint
   query = query_phenotype_metadata(
-    include_private=include_private_traits,
-    dataset=filter_dataset, user=current_user_filter,
+    dataset=filter_dataset, user=user_filter,
   )
 
   # Count the full size of the query
