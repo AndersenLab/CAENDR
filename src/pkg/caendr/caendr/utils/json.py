@@ -4,6 +4,7 @@ import datetime
 
 from functools import wraps
 from flask import request, jsonify, Request
+from werkzeug.exceptions import HTTPException
 
 from caendr.models.error import JSONParseError
 
@@ -16,7 +17,15 @@ def jsonify_request(func):
     if request:
       is_tsv = request.args.get('output') == 'tsv'
       if request.endpoint.endswith(func.__name__) and not is_tsv:
-        return jsonify(func(*args, **kwargs))
+
+        # Try converting the whole result to JSON
+        try:
+          return jsonify(func(*args, **kwargs))
+
+        # If wrapped function aborts, convert into a JSON response with the given error code
+        except HTTPException as ex:
+          return { 'message': ex.description }, ex.code
+
     return func(*args, **kwargs)
   return jsonify_the_request
 
