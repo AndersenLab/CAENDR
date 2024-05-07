@@ -45,8 +45,8 @@ class EndpointType(Enum):
     return f'{ api_trait_bp.name }.{ endpoint_prefix }_{ endpoint_type.value }'
 
   @classmethod
-  def matches(cls, endpoint, endpoint_type):
-    return endpoint.split('_')[-1] == endpoint_type.value
+  def matches(cls, endpoint: str, endpoint_type):
+    return endpoint.endswith(endpoint_type.value)
 
   @classmethod
   def matches_any(cls, endpoint, endpoint_type_set):
