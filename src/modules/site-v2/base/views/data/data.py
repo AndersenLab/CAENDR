@@ -6,7 +6,7 @@ from extensions import cache
 from config     import config
 
 from caendr.models.error           import EnvVarError, FileUploadError
-from caendr.models.datastore       import Species
+from caendr.models.datastore       import Species, TraitFile
 from caendr.services.cloud.storage import get_blob
 from caendr.services.logger        import logger
 from caendr.services.validate      import validate_file, StrainValidator, NumberValidator
@@ -118,6 +118,22 @@ def submit_trait_form():
 
     # Data
     'form': form,
+  })
+
+
+@data_bp.route('/trait/<id>')
+@jwt_required()
+def trait(id):
+  """ Trait Page"""
+  trait_ds = TraitFile.get_ds(id)
+  return render_template('data/trait.html', **{
+    # Page Info
+    'title': f'Trait {trait_ds.trait_name_display_1}',
+    'tool_alt_parent_breadcrumb': {"title": "Traits", "url": '/'}, # TODO: Update this to the correct URL
+
+    # Data
+    'trait_name': ', '.join(trait_ds.display_name),
+    'trait': trait_ds.serialize(),
   })
 
 #
