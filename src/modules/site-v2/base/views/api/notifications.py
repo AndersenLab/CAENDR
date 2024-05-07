@@ -102,6 +102,46 @@ def announcement_list():
   }
 
 
+@api_notifications_bp.route('/announcements/order', methods=['POST'])
+@admin_required()
+@jsonify_request
+def announcements_reorder():
+  '''
+    Change the order of the given announcements.
+
+    Expects body as mapping from announcement ID to new order.
+    Any announcements not given in the body will not be changed.
+
+    It is on the caller to ensure the new order is consistent, i.e. that no two announcements
+    have the same order.  In this case, their order will be undefined.
+
+    TODO: Should this function just take a list of IDs in the desired order,
+          and assign the order field "implicitly"?
+  '''
+
+  # Retrieve all announcements in the request body, aborting if any lookup fails
+  try:
+    announcements = [
+      (Announcement.get_ds(announcement_id, silent=False), new_order)
+        for (announcement_id, new_order) in request.json.items()
+    ]
+  except NotFoundError as ex:
+    abort(422, description=ex.description)
+  except Exception as ex:
+    abort(400)
+
+  # Update all the orders locally
+  for announcement, new_order in announcements:
+    announcement['order'] = new_order
+
+  # Save new order in one batch transaction
+  # If this fails, it should all fail together
+  Announcement.save_batch(*[announcement for (announcement, new_order) in announcements])
+
+  # Return success
+  return {}
+
+
 @api_notifications_bp.route('/announcement',                    methods=['POST'])
 @api_notifications_bp.route('/announcement/<string:entity_id>', methods=['GET', 'PATCH', 'DELETE'])
 @admin_required()
