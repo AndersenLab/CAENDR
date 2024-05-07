@@ -15,6 +15,7 @@
           <caption class="visually-hidden">A list of announcements.</caption>
           <thead class="table-secondary align-middle">
             <tr>
+              <th scope="col" class="col-1 text-center">Order</th>
               <th scope="col" class="col-1 text-center">Active</th>
               <th scope="col" class="col-1 text-center">Text</th>
               <th scope="col" class="col-1 text-center">URLs</th>
@@ -158,8 +159,15 @@
           }
         },
       },
-      "ordering": false,
+      "columnDefs": [
+        { "targets": "_all", "orderable": false }
+      ],
       "columns": [
+        {
+          "data": "order",
+          "visible": false,
+          "orderable": true,
+        },
         {
           "data": "active",
           "render": function(data, type, row) {

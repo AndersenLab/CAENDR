@@ -23,6 +23,13 @@ class OrderableEntity(Entity):
     }
 
 
+  def serialize(self, **kwargs):
+    # TODO: Is there a better way to express "bottom of the order"?
+    props = super().serialize(**kwargs)
+    props.setdefault('order', 99999)
+    return props
+
+
   @classmethod
   def query_ds(cls, *args, **kwargs):
     results = super().query_ds(*args, **kwargs)
