@@ -194,7 +194,7 @@
             return `<i class="bi bi-arrows-expand" aria-hidden="true"></i>`;
           },
           "sClass": "optionsToolbar reorderColumn text-center",
-          'sWidth': '8%',
+          "sWidth": "8%",
         },
         {
           "data": "active",
@@ -202,11 +202,10 @@
             return data ? `<i class="bi bi-check-circle-fill" aria-hidden="true"></i>` : "";
           },
           "sClass": "optionsToolbar text-center",
-          'sWidth': '8%',
+          "sWidth": "8%",
         },
         {
           "data": "content",
-          'sWidth': '32%',
           "render": function(data, type, row) {
             // Cap text length
             if (data.length > tableTextMaxLength) {
@@ -215,22 +214,23 @@
             // Protect against code injection
             return $('<div />').text(data).html().replace('\n', '<br>');
           },
+          "sWidth": "32%",
         },
         {
           "data": "url_list",
           "render": function(data, type, row) {
             return data.replaceAll('\n', '<br>');
           },
-          'sWidth': '22%',
           "sClass": "text-start",
+          "sWidth": "22%",
         },
         {
           "data": "style",
-          'sWidth': '10%',
           "createdCell": function( cell, cellData, rowData, rowIndex, colIndex ) {
             cell.classList.add(`bg-${ alertClassMap[ cellData ] }`);
             cell.classList.add('bg-opacity-25');
           },
+          "sWidth": "10%",
         },
         {
           "render": function(data, type, row) {
@@ -240,7 +240,7 @@
             `;
           },
           "sClass": "optionsToolbar text-center",
-          'sWidth': '10%',
+          "sWidth": "10%",
         },
         {
           "data": "name",
@@ -252,7 +252,7 @@
             `;
           },
           "sClass": "optionsToolbar text-center",
-          'sWidth': '10%',
+          "sWidth": "10%",
         },
       ]
     });
