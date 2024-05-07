@@ -1,0 +1,125 @@
+{% extends "_layouts/default.html" %}
+
+{% block content %}
+<div class="container px-5 pb-5">
+    <div class="row">
+        <div class="col-md-8">
+            <table class="table table-responsiv table-bordered">
+                <caption class="visually-hidden">Trait Information</caption>
+                <thead></thead>
+                <tbody>
+                    <tr>
+                        <td class="table-secondary text-center" colspan="2"><strong>About User and Lab</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="col-3">Submitter</td>
+                        <td>{{trait.submitter}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-3">Submitter Email</td>
+                        <td>{{trait.submitter_email if trait.submitter_email is not none else ''}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-3">Source Lab</td>
+                        <td>{{trait.source_lab}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-3">Institution</td>
+                        <td>{{trait.institution}}</td>
+                    </tr>
+                    <tr>
+                        <td class="table-secondary text-center" colspan="2"><strong>Trait Information</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="col-3">Species</td>
+                        <td>{{trait.species|capitalize|replace('_', '. ')}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-3">User Trait Name</td>
+                        <td>{{trait.trait_name_user}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-3">Display Name 1</td>
+                        <td>{{trait.trait_name_display_1}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-3">Display Name 2</td>
+                        <td>{{trait.trait_name_display_2}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-3">Display Name 3</td>
+                        <td>{{trait.trait_name_display_3}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-3">Short Description</td>
+                        <td>{{trait.description_short}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-3">Long Description</td>
+                        <td>{{trait.description_long}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-3">Categories</td>
+                        <td>{{trait.tags|join(', ')}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-3">Unit of Measurement</td>
+                        <td>{{trait.units}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-3">Protocols</td>
+                        <td>{{trait.protocols}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-3">Publication</td>
+                        <td><a href="{{trait.publication}}" target="_blank">{{trait.publication}}</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <a class="col-2 mx-5 btn btn-secondary text-light" href="{{url_for('data.submit_trait_form')}}">Edit Trait</a>
+        <a class="col-2 mx-5 btn btn-secondary text-light" href="#" id="publishBtn">Publish Trait</a>
+    </div>
+</div>
+<div class="modal fade" id="publishModal" tabindex="-1" role="dialog" aria-labelledby="publishModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="publishModalTitle">Publish Trait</h5>
+                <button type="button" class="close btn-close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to publish this trait to public Phenotype Database?</p>
+                <div class="d-flex justify-content-around p-2">
+                    <button type="button" class="btn btn-info close">
+                        <i class="bi bi-slash-circle-fill"></i>
+                        No, go back.
+                    </button>
+                    <button type="button" class="btn btn-primary">
+                        <i class="bi bi-trash3-fill"></i>
+                        Yes, publish it.
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    $(document).ready(function() {
+        
+        $("#publishBtn").on('click', function() {
+            $('#publishModal').modal('show')
+        })
+
+        $('.close').on('click', function() {
+            $('#publishModal').modal('hide')
+        })
+
+    })
+</script>
+{% endblock%}
