@@ -159,6 +159,7 @@
           }
         },
       },
+      "autoWidth": false,
       "columnDefs": [
         { "targets": "_all", "orderable": false }
       ],
@@ -173,7 +174,7 @@
           "render": function(data, type, row) {
             return data ? `<i class="bi bi-check-circle-fill" aria-hidden="true"></i>` : "";
           },
-          "sClass": "optionsToolbar",
+          "sClass": "optionsToolbar text-center",
           'sWidth': '10%',
         },
         {
@@ -211,7 +212,7 @@
               <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Edit</a>
             `;
           },
-          "sClass": "optionsToolbar",
+          "sClass": "optionsToolbar text-center",
           'sWidth': '10%',
         },
         {
@@ -223,7 +224,7 @@
               </button>
             `;
           },
-          "sClass": "optionsToolbar",
+          "sClass": "optionsToolbar text-center",
           'sWidth': '10%',
         },
       ]
