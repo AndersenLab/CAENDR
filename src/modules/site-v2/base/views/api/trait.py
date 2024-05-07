@@ -37,6 +37,7 @@ class EndpointType(Enum):
 
   PUBLIC  = 'public'
   PRIVATE = 'private'
+  QUEUE   = 'queue'
   ALL     = 'all'
 
   @classmethod
@@ -130,6 +131,10 @@ def validate_user():
   elif EndpointType.matches( request.endpoint, EndpointType.PRIVATE ):
     return get_current_user() is not None
 
+  # On the "queue" endpoint, user must be an admin
+  elif EndpointType.matches( request.endpoint, EndpointType.QUEUE ):
+    return user_is_admin()
+
   # On the "all" endpoint, user must be an admin
   elif EndpointType.matches( request.endpoint, EndpointType.ALL ):
     return user_is_admin()
@@ -176,6 +181,7 @@ def validate_endpoint_type(endpoint_prefix):
 
 @api_trait_bp.route('/list/sql/public',  endpoint='query_list_sql_public',  methods=['POST'])
 @api_trait_bp.route('/list/sql/private', endpoint='query_list_sql_private', methods=['POST'])
+@api_trait_bp.route('/list/sql/queue',   endpoint='query_list_sql_queue',   methods=['POST'])
 @api_trait_bp.route('/list/sql/all',     endpoint='query_list_sql_all',     methods=['POST'])
 @cache.memoize(60*60)
 @jwt_required(optional=True)
@@ -253,6 +259,7 @@ def query_list_sql(user_filter=None, status_filter=None):
 
 @api_trait_bp.route('/list/datatable/public',  endpoint='query_list_datatable_public',  methods=['GET'])
 @api_trait_bp.route('/list/datatable/private', endpoint='query_list_datatable_private', methods=['GET'])
+@api_trait_bp.route('/list/datatable/queue',   endpoint='query_list_datatable_queue',   methods=['GET'])
 @api_trait_bp.route('/list/datatable/all',     endpoint='query_list_datatable_all',     methods=['GET'])
 @cache.memoize(60*60)
 @jwt_required(optional=True)
