@@ -280,20 +280,19 @@
 
         // Signal that table is updating
         beforeSend: function() {
-          console.log('Updating...');
           table.processing(true);
         },
 
         // On success, clear the processing indicator
         success: function(result) {
-          console.log('Success!');
           table.processing(false);
         },
 
-        // On failure, print error message
+        // On failure, show error message
         error: function(error) {
-          console.error('Failure: ', error)
           table.processing(false);
+          console.error('Error updating announcement order: ', error)
+          flash_message('Failed to update announcement order. Please reload the page and try again.', 'Full error message', error.responseJSON.message);
         }
       })
     });
