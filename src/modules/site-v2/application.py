@@ -368,8 +368,9 @@ def register_announcement_handlers(app):
     '''
 
     # Make sure this request can show announcements
+    # If not, we have to return an empty object, since this is a context processor
     if not can_show_announcements(request, check_session_flags=True):
-      return
+      return {}
 
     # Make sure site announcements set exists
     # Store as a set to help prevent flashing duplicate announcements
