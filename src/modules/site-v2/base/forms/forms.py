@@ -124,11 +124,10 @@ class RecoverUserForm(FlaskForm):
 
 class AnnouncementForm(FlaskForm):
   """ Edit form for site announcements """
-  # active   = BooleanField('Active', widget=CheckboxInput())
   active   = BooleanField('Active')
   content  = StringField('Content', [Optional()])
   url_list = TextAreaField('URL Patterns', [Optional()])
-  style    = SelectField('Style', choices=[(x.name, x.value) for x in AnnouncementType])
+  style    = SelectField('Style', [Optional()], choices=[(x.name, x.value) for x in AnnouncementType])
 
 class MarkdownForm(FlaskForm):
   """ markdown editing form """
