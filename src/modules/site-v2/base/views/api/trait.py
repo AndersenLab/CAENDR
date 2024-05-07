@@ -228,7 +228,7 @@ def query_list_sql(user_filter=None, status_filter=None):
   # The filters here determine which traits are part of the "full" query,
   # based on the request endpoint
   query = query_phenotype_metadata(
-    dataset=filter_dataset, user=user_filter
+    dataset=filter_dataset, user=user_filter, status=status_filter,
   )
 
   # Filter by search values, if provided
@@ -323,7 +323,7 @@ def query_list_datatable(user_filter=None, status_filter=None):
   # The filters here determine which traits are part of the "full" query,
   # based on the request endpoint
   query = query_phenotype_metadata(
-    dataset=filter_dataset, user=user_filter,
+    dataset=filter_dataset, user=user_filter, status=status_filter,
   )
 
   # Count the full size of the query

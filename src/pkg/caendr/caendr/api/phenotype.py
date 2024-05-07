@@ -1,22 +1,22 @@
 import bleach
-import os
 from typing import Optional, Union, Iterable
 
 from sqlalchemy import or_, func
 
-from caendr.models.datastore import Species, User
-from caendr.models.sql import PhenotypeMetadata
+from caendr.models.datastore          import Species, User
+from caendr.models.status             import PublishStatus
+from caendr.models.sql                import PhenotypeMetadata
 from caendr.services.cloud.postgresql import rollback_on_error
 
 
 
 def query_phenotype_metadata(
     include_values:  bool = False,
-    include_private: bool = False,
-    is_bulk_file: Optional[bool]                = None,
-    dataset:      Optional[str]                 = None,
-    species:      Optional[Union[Species, str]] = None,
-    user:         Optional[Union[User, str]]    = None,
+    is_bulk_file: Optional[bool]                    = None,
+    dataset:      Optional[str]                     = None,
+    species:      Optional[Union[Species, str]]     = None,
+    status:       Optional[Iterable[PublishStatus]] = None,
+    user:         Optional[Union[User, str]]        = None,
 ):
     """
       Create a trait metadata SQL query, with some optional initial filters.
@@ -35,10 +35,6 @@ def query_phenotype_metadata(
     # Create the initial query
     query = PhenotypeMetadata.query
 
-    # TODO: Filter by public (published) / private (unpublished)
-    if not include_private:
-      pass
-
     # Optionally query by bulk file
     if is_bulk_file is not None:
       query = query.filter_by(is_bulk_file=bool(is_bulk_file))
@@ -47,10 +43,9 @@ def query_phenotype_metadata(
     if dataset is not None:
       query = query.filter_by(dataset=dataset)
 
-    # Optionally query by species
-    # None values handled in function
-    query = filter_trait_query_by_species(query, species)
-    query = filter_trait_query_by_user(query, user)
+    # Optionally query by other fields
+    # Null filter values handled in function
+    query = filter_trait_query(query, species=species, status=status, user=user)
 
     # Include phenotype values for traits
     if include_values:
@@ -99,10 +94,11 @@ def order_trait_query_by_name(query):
 
 def filter_trait_query(
     query,
-    search_val: Optional[str]                 = None,
-    tags:       Optional[Iterable[str]]       = None,
-    species:    Optional[Union[Species, str]] = None,
-    user:       Optional[Union[User, str]]    = None,
+    search_val: Optional[str]                     = None,
+    tags:       Optional[Iterable[str]]           = None,
+    species:    Optional[Union[Species, str]]     = None,
+    status:     Optional[Iterable[PublishStatus]] = None,
+    user:       Optional[Union[User, str]]        = None,
   ):
   '''
     Combined filtering function.
@@ -110,6 +106,7 @@ def filter_trait_query(
   query = filter_trait_query_by_text(query, search_val)
   query = filter_trait_query_by_tags(query, tags)
   query = filter_trait_query_by_species(query, species)
+  query = filter_trait_query_by_status(query, status)
   query = filter_trait_query_by_user(query, user)
   return query
 
@@ -186,6 +183,25 @@ def filter_trait_query_by_species(query, species: Optional[Union[Species, str]])
 
     # Filter by the species name
     query = query.filter_by(species_name=species.name)
+
+  # Return the (possibly filtered) query
+  return query
+
+
+# def filter_trait_query_by_status(query, status: Optional[Iterable[PublishStatus]], exclude: Optional[Iterable[PublishStatus]]):
+def filter_trait_query_by_status(query, status: Optional[Iterable[PublishStatus]]):
+  '''
+    Filter by publish status.
+  '''
+  if status is not None:
+
+    # Validate status filters
+    for s in status:
+      if not isinstance(s, PublishStatus):
+        raise ValueError(f'Expected values of type PublishStatus, got {s}')
+
+    # Filter by the species name
+    query = query.filter( PhenotypeMetadata.publish_status.in_(s.name for s in status) )
 
   # Return the (possibly filtered) query
   return query
