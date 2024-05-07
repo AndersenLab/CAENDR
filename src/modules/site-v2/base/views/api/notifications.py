@@ -167,10 +167,22 @@ def announcement(announcement: Announcement = None, form_data = None, no_cache: 
   # POST Request
   # Create a new announcement, and return its unique ID
   if request.method == 'POST':
+
+    # Create and save the new announcement
     new_announcement = Announcement(**{
       prop: form_data.get(prop) for prop in Announcement.get_props_set()
     })
     new_announcement.save()
+
+    # Try explicitly placing the new announcement at the bottom of the list
+    # If this fails, it will get a default order value, so we can ignore errors
+    try:
+      new_announcement['order'] = len(Announcement.query_ds(deleted=False))
+      new_announcement.save()
+    except Exception as ex:
+      pass
+
+    # Return the ID of the new announcement
     return { 'id': new_announcement.name }
 
   # PATCH Request
@@ -195,6 +207,7 @@ def announcement(announcement: Announcement = None, form_data = None, no_cache: 
   # Lookup the desired announcement and soft delete it
   if request.method == 'DELETE':
     announcement.soft_delete()
+    announcement['order'] = None
     announcement.save()
     return {}, 200
 
