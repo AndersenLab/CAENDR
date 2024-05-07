@@ -60,6 +60,7 @@ def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
              'modified_on':          md.modified_on,
              'dataset':              md['dataset'],
              'is_bulk_file':         md['is_bulk_file'],
+             'publish_status':       md['publish_status'].name,
             } 
     else:
       yield {
@@ -85,4 +86,5 @@ def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
         'modified_on':          md.modified_on,
         'dataset':              md['dataset'],
         'is_bulk_file':         md['is_bulk_file'],
+        'publish_status':       md['publish_status'].name,
       }

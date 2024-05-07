@@ -32,6 +32,7 @@ class PhenotypeMetadata(DictSerializable, db.Model):
   modified_on = db.Column(db.Date())
   dataset = db.Column(db.String(), nullable=True)
   is_bulk_file = db.Column(db.Boolean(), nullable=False)
+  publish_status = db.Column(db.String, nullable=False)
   phenotype_values = db.relationship(
                       'PhenotypeDatabase', 
                       backref='phenotype_db.metadata_id', 
