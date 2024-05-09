@@ -15,6 +15,7 @@ from caendr.services.cloud.postgresql import rollback_on_error_handler
 
 from caendr.models.datastore import Entity, TraitFile, Species, User
 from caendr.models.error     import NotFoundError, PublishStatusError
+from caendr.models.status    import PublishStatus
 from caendr.models.trait     import Trait
 from caendr.models.sql       import PhenotypeMetadata
 from caendr.utils.json       import jsonify_request
@@ -166,8 +167,17 @@ def validate_endpoint_type(endpoint_prefix):
       else:
         user_filter = None
 
-      # Filter to accepted
-      status_filter = None
+      # On the "public" endpoint, only consider public traits
+      if EndpointType.matches( request.endpoint, EndpointType.PUBLIC ):
+        status_filter = { PublishStatus.CANONICAL, PublishStatus.ACCEPTED }
+
+      # On the "queue" endpoint, only consider traits that have been submitted but are not yet public
+      elif EndpointType.matches( request.endpoint, EndpointType.QUEUE ):
+        status_filter = { PublishStatus.SUBMITTED }
+
+      # On all other endpoints, don't filter by status
+      else:
+        status_filter = None
 
       return f(*args, user_filter=user_filter, status_filter=status_filter, **kwargs)
 
