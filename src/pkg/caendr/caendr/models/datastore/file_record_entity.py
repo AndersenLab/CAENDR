@@ -24,6 +24,7 @@ class FileRecordEntity(Entity, ABC):
     return {
       *super().get_props_set(),
       'filename',
+      'hashed_filename',
     }
 
 
@@ -79,6 +80,26 @@ class FileRecordEntity(Entity, ABC):
     if not (isinstance(v, str) or v is None):
       raise ValueError(f'Cannot set prop "filename" to "{v}" (type {type(v)}): must be a string')
     return self._set_raw_prop('filename', v)
+  
+  @property
+  def hashed_filename(self) -> TokenizedString:
+    '''
+      The hashed name of the file. Returns as a `TokenizedString`.
+    '''
+    if self._get_raw_prop('hashed_filename') is None:
+      return None
+    return TokenizedString( self._get_raw_prop('hashed_filename') )
+  
+  @hashed_filename.setter
+  def hashed_filename(self, v):
+    '''
+      Save the hashed name of the file itself. Saves internally as a raw string.
+    '''
+    if isinstance(v, TokenizedString):
+      v = v.raw_string
+    if not (isinstance(v, str) or v is None):
+      raise ValueError(f'Cannot set prop "hashed_filename" to "{v}" (type {type(v)}): must be a string')
+    return self._set_raw_prop('hashed_filename', v)
 
 
   #
@@ -92,6 +113,15 @@ class FileRecordEntity(Entity, ABC):
     if check_if_exists and not self.check_exists(**kwargs):
       return None
     return generate_blob_uri( self.bucket, self.prefix.get_string(**kwargs), self['filename'].get_string(**kwargs), schema=schema )
+
+
+  def get_filepath_hashed(self, schema: BlobURISchema = None, check_if_exists: bool = False, **kwargs) -> str:
+    '''
+      Construct the full path for the file with hashed name, using the provided keyword arguments to fill out the template.
+    '''
+    if check_if_exists and not self.check_exists(**kwargs):
+      return None
+    return generate_blob_uri( self.bucket, self.prefix.get_string(**kwargs), self['hashed_filename'].get_string(**kwargs), schema=schema )
 
 
   def get_filepath_template(self, schema: BlobURISchema = None) -> TokenizedString:

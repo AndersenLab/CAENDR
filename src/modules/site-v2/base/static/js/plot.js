@@ -249,9 +249,9 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
       // Create tooltips for data points
       function setTooltips() {
          dots.attr('data-tippy-content', (d,i)=> {
-           return `<p><strong>${d[2]}</strong></p>
-           x = ${d[0].toFixed(4)}
-           <br>y = ${d[1].toFixed(4)}`;
+           return `<p><strong>${d[0]}</strong></p>
+           x = ${d[1].toFixed(4)}
+           <br>y = ${d[2].toFixed(4)}`;
          });
         tippy(dots.nodes(), {
           arrow: false,
@@ -468,18 +468,19 @@ function render_ranked_barplot(container_selector, data, config={}) {
     .data(data)
     .enter()
     .append("rect")
-      .attr("x", (d) => xScale( d[0] ) )
-      .attr("y", (d) => yScale( Math.max(d[1], 0) ) )
+      .attr("x", (d) => xScale(d[0]))
+      .attr("y", (d) => yScale(Math.max(d[1], 0)))
       .attr("width", xScale.bandwidth())
-      .attr("height", (d) => bar_height( Math.abs(d[1]) ))
+      .attr("height", (d) => bar_height(Math.abs(d[1])))
       .attr("fill", fill_color)
+      .attr("tabindex", "0")
 
   // Create tooltips for bars
   function setTooltips() {
     bars.attr('data-tippy-content', (d, i) => {
       return `
-            <p><strong>${d[1]}</strong></p>
-            Value = ${d[0].toFixed(4)}
+            <p><strong>${d[0]}</strong></p>
+            Value = ${d[1].toFixed(4)}
             `;
     });
     tippy(bars.nodes(), {

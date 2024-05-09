@@ -17,7 +17,7 @@
       <span class="bi bi-arrow-down-circle-fill" aria-hidden="true"> </span> 
        Download Input Data
     </a>
-    <a class="btn btn-secondary text-light" href="{{ url_for('genetic_mapping.results', id=id) }}" role="button">
+    <a class="btn btn-secondary text-light" href="{{ url_for('genetic_mapping.results', report_id=report_id) }}" role="button">
       <span class="bi bi-list-task" aria-hidden="true"> </span> 
        View Result Files
     </a>
@@ -30,7 +30,7 @@
          Download Report
       </a>
       {% if report_url %}
-        <a target='_blank' class="btn btn-secondary text-light" href="{{ url_for('genetic_mapping.report_fullscreen', id=id) }}" role="button">
+        <a target='_blank' class="btn btn-secondary text-light" href="{{ url_for('genetic_mapping.report_fullscreen', report_id=report_id) }}" role="button">
       {% else %}
         <a class="btn btn-secondary text-light" href="" role="button" disabled>
       {% endif %}
@@ -50,7 +50,7 @@
   {% if mapping_status == 'COMPLETE' %}
       <div id="report_frame">
         {% if report_url %}
-        <iframe defer loading="lazy" src="{{ url_for('genetic_mapping.report_fullscreen', id=id) }}" frameborder=0 style="width:100%; height:100vh" title="Nemascan mapping report results"></iframe>
+        <iframe defer loading="lazy" src="{{ url_for('genetic_mapping.report_fullscreen', report_id=report_id) }}" frameborder=0 style="width:100%; height:100vh" title="Nemascan mapping report results"></iframe>
 
         {% else %}
         <div class="spinner">

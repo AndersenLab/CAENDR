@@ -112,6 +112,7 @@ class TokenizedString():
     'SVA',
     'STRAIN',
     'GENOME',
+    'USER_ID',
   }
 
   @classmethod

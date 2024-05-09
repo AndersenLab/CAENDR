@@ -109,7 +109,7 @@
                 <h4 class="h5">Species:</strong></h4>
                 <p class="species"><em>{{ report['species']|replace('_', '. ')}}</em></h4>
                 <h4 class="h5">Name:</h4>
-                <p>{{ report['trait_2_name'] }}</p>
+                <p>{{ render_trait_name_multiline(report['trait_2_name_display'][0], report['trait_2_name_display'][1], report['trait_2_name_display'][2]) }}</p>
                 <h4 class="h5">Description:</h4>
                 <p>{{ report['trait_2']['description_short'] or report['trait_2']['description_long'] }}</p>
                 <!-- Submit to database button for when that feature is ready -->
@@ -124,7 +124,7 @@
             <!-- Download TSV button -->
             <div class="col-12 col-md-5 col-xl-12 p-3 mb-3 mb-xl-5 d-print-none">
                 <div class="d-grid gap-2">
-                    <a class="btn btn-secondary text-white" role="button" href="{{ url_for('phenotype_database.report', id=report.id, file_ext='tsv') }}"
+                    <a class="btn btn-secondary text-white" role="button" href="{{ url_for('phenotype_database.report', report_id=report.id, file_ext='tsv') }}"
                         ><i class="bi bi-file-earmark-spreadsheet-fill"></i> Download TSV</a>
                     <a class="btn btn-secondary text-white" role="button" onClick="download_report_as_pdf()" target="_blank"
                         ><i class="bi bi-file-earmark-pdf-fill"></i> Print Report</a>
