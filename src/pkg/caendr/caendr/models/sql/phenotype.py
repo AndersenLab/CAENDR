@@ -1,4 +1,4 @@
-from caendr.services.cloud.postgresql     import db
+from caendr.services.cloud.postgresql     import db, rollback_on_error
 from caendr.models.sql.dict_serializable  import DictSerializable
 
 class PhenotypeDatabase(DictSerializable, db.Model):
@@ -20,4 +20,15 @@ class PhenotypeDatabase(DictSerializable, db.Model):
         Adds trait data to the Phenotype Database table
     """
     db.session.bulk_insert_mappings(PhenotypeDatabase, trait_data)
+    db.session.commit()
+
+  @classmethod
+  @rollback_on_error
+  def delete_by_metadata_id(cls, metadata_id):
+    """
+        Deletes entries from the Phenotype Database table for the given trait
+    """
+
+    del_statement = PhenotypeDatabase.__table__.delete().where(PhenotypeDatabase.metadata_id == metadata_id)
+    db.session.execute(del_statement)
     db.session.commit()
