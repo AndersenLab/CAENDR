@@ -14,7 +14,7 @@ from caendr.api.phenotype import query_phenotype_metadata, get_trait, filter_tra
 from caendr.services.cloud.postgresql import rollback_on_error_handler
 
 from caendr.models.datastore import Entity, TraitFile, Species, User
-from caendr.models.error     import NotFoundError
+from caendr.models.error     import NotFoundError, PublishStatusError
 from caendr.models.trait     import Trait
 from caendr.models.sql       import PhenotypeMetadata
 from caendr.utils.json       import jsonify_request
@@ -441,6 +441,15 @@ def submit_trait(trait: Trait):
   '''
     Submit a trait file for admin review.
   '''
+
+  # Try updating the trait status, aborting if the state transition is invalid
+  try:
+    trait.submit()
+  except PublishStatusError as ex:
+    logger.error(ex.description)
+    abort(422, description=f'Cannot submit trait {trait.name}: current status is {ex.from_state}')
+
+  # Return success
   return {}
 
 
@@ -452,6 +461,15 @@ def accept_trait(trait: Trait):
   '''
     Accept a new trait into the public database.
   '''
+
+  # Try updating the trait status, aborting if the state transition is invalid
+  try:
+    trait.accept()
+  except PublishStatusError as ex:
+    logger.error(ex.description)
+    abort(422, description=f'Cannot accept trait {trait.name}: current status is {ex.from_state}')
+
+  # Return success
   return {}
 
 
@@ -464,6 +482,15 @@ def reject_trait(trait: Trait):
     Reject a trait file from entering the public database.
     The trait will be returned to the submitting user.
   '''
+
+  # Try updating the trait status, aborting if the state transition is invalid
+  try:
+    trait.reject()
+  except PublishStatusError as ex:
+    logger.error(ex.description)
+    abort(422, description=f'Cannot reject trait {trait.name}: current status is {ex.from_state}')
+
+  # Return success
   return {}
 
 
@@ -480,4 +507,13 @@ def retract_trait(trait: Trait):
 
     This is a rather extreme option, so it should only be used when absolutely necessary.
   '''
+
+  # Try updating the trait status, aborting if the state transition is invalid
+  try:
+    trait.retract()
+  except PublishStatusError as ex:
+    logger.error(ex.description)
+    abort(422, description=f'Cannot retract trait {trait.name}: current status is {ex.from_state}')
+
+  # Return success
   return {}
