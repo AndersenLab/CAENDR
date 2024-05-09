@@ -93,6 +93,24 @@ class PublishStatus(Enum):
   RETRACTED = 'RETRACTED'  # Alternative to deleted -- item remains public, but should not be used
 
 
+  @classmethod
+  def _transition_map(cls):
+    '''
+      Map of allowed state transitions.
+    '''
+    return {
+
+      # Once the owner has uploaded an item, they can submit it for review
+      PublishStatus.UPLOADED:  { PublishStatus.SUBMITTED },
+
+      # After review, an item may be accepted, rejected outright, or sent back to the owner
+      PublishStatus.SUBMITTED: { PublishStatus.ACCEPTED, PublishStatus.REJECTED, PublishStatus.UPLOADED },
+
+      # Once an item has been accepted, it can only be retracted
+      PublishStatus.ACCEPTED:  { PublishStatus.RETRACTED },
+    }
+
+
   @property
   def is_public(self):
     return self in { PublishStatus.ACCEPTED, PublishStatus.CANONICAL }
@@ -108,3 +126,19 @@ class PublishStatus(Enum):
   @property
   def from_public(self):
     return not self.from_caendr
+
+  @classmethod
+  def is_valid_transition(cls, from_state: 'PublishStatus', to_state: 'PublishStatus'):
+    '''
+      Check whether the `from_state` can transition to the `to_state`.
+    '''
+
+    # Validate argument types
+    if not isinstance(from_state, cls):
+      raise ValueError(f'Expected from_state to be a "{cls.__name__}" object, got "{from_state}" instead.')
+    if not isinstance(to_state, cls):
+      raise ValueError(f'Expected to_state to be a "{cls.__name__}" object, got "{from_state}" instead.')
+
+    # Check that the state transition is valid
+    return to_state in cls._transition_map().get(from_state, {})
+
