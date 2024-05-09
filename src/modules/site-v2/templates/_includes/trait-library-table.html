@@ -47,8 +47,8 @@
           <th scope="col" class="col-1 text-center">Display Name</th>
           <th scope="col" class="col-1 text-center py-4">Species</th>
           <th scope="col" class="col-1 text-center">Upload Date</th>
-          {% if trait_library_table_mode == 'full'%}
           <th scope="col" class="col-1 text-center">Public Database</th>
+          {% if trait_library_table_mode == 'full'%}
           <th scope="col" class="col-1 text-center">Phenotype Analysis</th>
           <th scope="col" class="col-1 text-center">Genetic Mapping</th>
           {% elif trait_library_table_mode == 'select' %}
@@ -72,6 +72,16 @@
 <script type="module">
   {% include '_scripts/utils.js' %}       {#/* defines: flash_message, first_letter_caps */#}
   {% include '_scripts/trait_utils.js' %} {#/* defines: traitNameHTML, traitNameString, queryTraitByName */#}
+
+
+  // Map publish status values to BS colors
+  const statusClassMap = {
+    "{{ PublishStatus.SUBMITTED.name }}": "primary",
+    "{{ PublishStatus.ACCEPTED.name }}":  "success",
+    "{{ PublishStatus.REJECTED.name }}":  "danger",
+    "{{ PublishStatus.RETRACTED.name }}": "danger",
+  };
+
 
   $(document).ready(function() {
 
@@ -132,17 +142,29 @@
             return formatDate(data);
           },
         },
-
-        {% if trait_library_table_mode == 'full' %}
         {
+          "data": "publish_status",
           "render": function(data, type, row) {
+            {%- if trait_library_table_mode == 'full' %}
             const url = "{{ url_for('phenotype_database.phenotype_database') }}";
-            return `
-              <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Publish</a>
-            `;
+            if (data === "{{ PublishStatus.UPLOADED.name }}") {
+              return `
+                <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Publish</a>
+              `;
+            }
+            {%- endif %}
+            return data;
           },
           "sClass": "optionsToolbar",
+          "createdCell": function( cell, cellData, rowData, rowIndex, colIndex ) {
+            if (cellData in statusClassMap) {
+              cell.classList.add(`bg-${ statusClassMap[ cellData ] }`);
+              cell.classList.add('bg-opacity-25');
+            }
+          },
         },
+
+        {% if trait_library_table_mode == 'full' %}
         {
           "render": function(data, type, row) {
             const url = "{{ url_for('phenotype_database.submit_start', trait='TRAIT_NAME', dataset='TRAIT_SET') }}".replace("TRAIT_NAME", row.trait_name_caendr).replace("TRAIT_SET", row.dataset);
