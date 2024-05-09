@@ -5,12 +5,13 @@ from typing    import Type
 from flask     import abort, redirect, request, url_for, flash, jsonify
 from flask_wtf import FlaskForm
 
-from base.utils.auth            import user_is_admin
+from base.utils.auth            import get_current_user, user_is_admin
 from base.utils.tools           import lookup_report, get_upload_err_msg
 from constants                  import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 from caendr.models.datastore    import DatasetRelease, Species
 from caendr.models.error        import NotFoundError, ReportLookupError, EmptyReportDataError, EmptyReportResultsError, FileUploadError, DataValidationError
+from caendr.models.trait        import Trait
 from caendr.models.job_pipeline import JobPipeline
 from caendr.services.logger     import logger
 from caendr.utils.local_files   import LocalUploadFile
@@ -144,6 +145,50 @@ def parse_job_id(pipeline_class: Type[JobPipeline], fetch=True, check_data_exist
 
     return decorator
   return wrapper
+
+
+
+def parse_trait(kw_name_id: str = 'trait_id', kw_name_entity: str = 'trait', validate_owner: bool = False):
+  '''
+    Given a trait ID as a keyword argument, lookup and inject the trait with that ID.
+  '''
+  def wrapper(f):
+    @wraps(f)
+    def decorator(*args, **kwargs):
+
+      # Extract the entity ID from the keywords using the given name
+      entity_id = kwargs.get(kw_name_id)
+      kwargs = { key: val for key, val in kwargs.items() if key != kw_name_id }
+
+      # If no ID given, optionally raise error
+      if entity_id is None:
+        abort(404)
+
+      # If ID given, try retrieving entity from datastore
+      else:
+        try:
+          e = Trait.from_id(entity_id)
+
+        # If not found, abort with 404
+        except NotFoundError as ex:
+          logger.error(f'Could not find trait with ID {entity_id}: {ex}')
+          abort(404, description = f'Could not find a trait with the given ID.')
+
+        # General error: include default message
+        except Exception as ex:
+          logger.error(f'Error retrieving trait with ID {entity_id}: {ex}')
+          abort(500, description = 'Something went wrong')
+
+      # Validate that trait is owned by current user, if applicable
+      if validate_owner and not e.file.belongs_to_user( get_current_user() ):
+        abort(404)
+
+      # Inject retrieved entity into function call
+      return f(*args, **{kw_name_entity: e}, **kwargs)
+
+    return decorator
+  return wrapper
+
 
 
 

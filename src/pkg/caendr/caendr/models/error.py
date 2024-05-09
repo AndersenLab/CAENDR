@@ -92,7 +92,10 @@ class NotFoundError(InternalError):
       try:
         self.kind = lookup_class.kind
       except:
-        self.kind = lookup_class
+        try:
+          self.kind = lookup_class.__tablename__ + ' entry'
+        except:
+          self.kind = lookup_class
     else:
       self.kind = 'object'
 

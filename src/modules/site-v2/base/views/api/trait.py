@@ -7,13 +7,15 @@ from flask import request, Blueprint, abort, jsonify
 from caendr.services.logger import logger
 from extensions import cache, compress
 
-from base.utils.auth import jwt_required, get_current_user, user_is_admin
+from base.utils.auth import jwt_required, get_current_user, user_is_admin, admin_required
+from base.utils.view_decorators import parse_trait
 
 from caendr.api.phenotype import query_phenotype_metadata, get_trait, filter_trait_query, get_trait_categories
 from caendr.services.cloud.postgresql import rollback_on_error_handler
 
 from caendr.models.datastore import Entity, TraitFile, Species, User
 from caendr.models.error     import NotFoundError
+from caendr.models.trait     import Trait
 from caendr.models.sql       import PhenotypeMetadata
 from caendr.utils.json       import jsonify_request
 
@@ -424,3 +426,58 @@ def query_trait_categories():
     Get list of trait categories.
   """
   return get_trait_categories()
+
+
+
+#
+# Submission Queue ("Review") Endpoints
+#
+
+@api_trait_bp.route('/review/<string:trait_id>/submit', methods=['POST'])
+@jwt_required()
+@parse_trait(validate_owner=True)
+@jsonify_request
+def submit_trait(trait: Trait):
+  '''
+    Submit a trait file for admin review.
+  '''
+  return {}
+
+
+@api_trait_bp.route('/review/<trait_id>/accept', methods=['POST'])
+@admin_required()
+@parse_trait()
+@jsonify_request
+def accept_trait(trait: Trait):
+  '''
+    Accept a new trait into the public database.
+  '''
+  return {}
+
+
+@api_trait_bp.route('/review/<trait_id>/reject', methods=['POST'])
+@admin_required()
+@parse_trait()
+@jsonify_request
+def reject_trait(trait: Trait):
+  '''
+    Reject a trait file from entering the public database.
+    The trait will be returned to the submitting user.
+  '''
+  return {}
+
+
+@api_trait_bp.route('/review/<trait_id>/retract', methods=['POST'])
+@admin_required()
+@parse_trait()
+@jsonify_request
+def retract_trait(trait: Trait):
+  '''
+    Retract a published trait in the public database.
+
+    The trait will not be removed or deleted; rather, it will be marked as retracted.
+    This maintains consistency with any reports that depend on the trait.
+
+    This is a rather extreme option, so it should only be used when absolutely necessary.
+  '''
+  return {}

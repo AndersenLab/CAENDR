@@ -2,6 +2,7 @@ import pandas as pd
 from typing import Optional
 
 from caendr.models.datastore import TraitFile
+from caendr.models.error     import NotFoundError
 from caendr.models.sql       import PhenotypeMetadata, PhenotypeDatabase
 from caendr.utils.data       import dataframe_cols_to_dict
 
@@ -35,7 +36,7 @@ class Trait():
 
     # Trait file id -- retrieve from datastore
     elif trait_file_id:
-      self.file = TraitFile.get_ds(trait_file_id)
+      self.file = TraitFile.get_ds(trait_file_id, silent=False)
 
     # Special case: Zhang bulk file -- retrieve to single bulk file entry
     # TODO: We might be able to generalize this if we enforce that every dataset has to either
@@ -76,7 +77,7 @@ class Trait():
     # Get the SQL row with the given trait ID
     sql_row = PhenotypeMetadata.query.get(trait_id)
     if sql_row is None:
-      raise ValueError(f'Invalid trait ID {trait_id}')
+      raise NotFoundError(PhenotypeMetadata, {'id': trait_id})
 
     # Construct a Trait object using the data in the SQL row
     return cls(
