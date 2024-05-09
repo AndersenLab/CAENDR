@@ -16,6 +16,7 @@ from config import config
 import pytz
 
 from caendr.models.error import BasicAuthError
+from caendr.models.status import JobStatus, PublishStatus
 from caendr.services.cloud.postgresql import db, health_database_status
 from base.utils.markdown import render_markdown, render_ext_markdown
 
@@ -283,6 +284,13 @@ def configure_jinja(app):
       'feature_flags': {
         'PHENOTYPE_DB_ENABLED': get_env_var('PHENOTYPE_DB_ENABLED', var_type=bool, can_be_none=True),
       },
+    }
+
+  @app.context_processor
+  def inject_enum_classes():
+    return {
+      'JobStatus':     JobStatus,
+      'PublishStatus': PublishStatus,
     }
 
   #  2021-04-14 17:26:51.348674+00:00
