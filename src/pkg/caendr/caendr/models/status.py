@@ -89,6 +89,9 @@ class PublishStatus(Enum):
   # Public status value for CaeNDR admins
   CANONICAL = 'CANONICAL'  # Item is submitted by CaeNDR admin, bypassing approval process
 
+  # Special values
+  RETRACTED = 'RETRACTED'  # Alternative to deleted -- item remains public, but should not be used
+
 
   @property
   def is_public(self):
