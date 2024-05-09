@@ -1,7 +1,10 @@
 from datetime import datetime, timezone
 
-from caendr.services.cloud.postgresql import db
+from caendr.services.cloud.postgresql import db, rollback_on_error
 from caendr.models.sql.dict_serializable import DictSerializable
+
+from caendr.models.status import PublishStatus
+
 
 class PhenotypeMetadata(DictSerializable, db.Model):
   """
@@ -83,7 +86,23 @@ class PhenotypeMetadata(DictSerializable, db.Model):
       created_on = datetime.now(timezone.utc),
       modified_on = datetime.now(timezone.utc),
       dataset = trait_obj['dataset'],
-      is_bulk_file = trait_obj['is_bulk_file']
+      is_bulk_file = trait_obj['is_bulk_file'],
+      publish_status = trait_obj['publish_status'],
     )
     db.session.add(new_trait)
+    db.session.commit()
+
+
+  @rollback_on_error
+  def set_status(self, new_status: PublishStatus):
+    '''
+      Set the `publish_status` of this entry and commit the change.
+    '''
+
+    # Validate argument type
+    if not isinstance(new_status, PublishStatus):
+      raise ValueError(f'Cannot set publish_status to {new_status}')
+
+    # Set to the name field and commit
+    self.publish_status = new_status.name
     db.session.commit()

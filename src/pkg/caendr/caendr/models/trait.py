@@ -1,8 +1,12 @@
 import pandas as pd
 from typing import Optional
 
+from caendr.services.logger import logger
+
 from caendr.models.datastore import TraitFile
 from caendr.models.error     import NotFoundError
+from caendr.models.error     import PublishStatusError
+from caendr.models.status    import PublishStatus
 from caendr.models.sql       import PhenotypeMetadata, PhenotypeDatabase
 from caendr.utils.data       import dataframe_cols_to_dict
 
@@ -147,3 +151,72 @@ class Trait():
 
     # For bulk files, store the single trait name, otherwise convert the display_name fields to a list
     return (self.name,) if self.file['is_bulk_file'] else self.file.display_name
+
+
+  #
+  # Updating Status
+  #
+
+  def __change_publish_status(self, to_state: PublishStatus):
+    '''
+      Change the publish status of this trait in both the Datastore and the SQL table.
+      Validates that the new state is a valid transition from the current one.
+    '''
+
+    # Validate state transition
+    # This handles argument type-checking
+    if not PublishStatus.is_valid_transition(self.file['publish_status'], to_state):
+      raise PublishStatusError(self.file['publish_status'], to_state)
+
+    # Try changing the status on the TraitFile object
+    try:
+      self.file.change_publish_state(to_state)
+      self.file.save()
+
+    # Intercept errors to log, then continue propagating
+    # If changing the file fails, we don't want to touch the SQL table
+    except Exception as ex:
+      logger.error(f'Failed to update PublishStatus of trait {self.name}: {ex}')
+      raise
+
+    # Try changing the status in the SQL table
+    try:
+      PhenotypeMetadata.query.get(self.file.name).set_status(PublishStatus.SUBMITTED)
+
+    # If the datastore entity was updated but the SQL table wasn't, log a critical error
+    # and continue propagating the error
+    except Exception as ex:
+      logger.critical(
+        f'Failed to update SQL table {PhenotypeMetadata.__tablename__} entry {self.name}'
+        f'to match new PublishStatus of corresponding {TraitFile.kind} entity.'
+        f'The datastore and the SQL table may now be out-of-sync.'
+      )
+      raise
+
+
+  def submit(self):
+    '''
+      Submit this trait for review.
+    '''
+    return self.__change_publish_status(PublishStatus.SUBMITTED)
+
+
+  def accept(self):
+    '''
+      Accept this trait into the public database.
+    '''
+    return self.__change_publish_status(PublishStatus.ACCEPTED)
+
+
+  def reject(self):
+    '''
+      Reject this trait from entering the public database.
+    '''
+    return self.__change_publish_status(PublishStatus.UPLOADED)
+
+
+  def retract(self):
+    '''
+      Retract this trait in the public database.
+    '''
+    return self.__change_publish_status(PublishStatus.RETRACTED)
