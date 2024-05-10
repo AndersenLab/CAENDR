@@ -4,6 +4,7 @@ from typing import Optional
 from caendr.models.datastore import TraitFile
 from caendr.models.sql       import PhenotypeMetadata, PhenotypeDatabase
 from caendr.utils.data       import dataframe_cols_to_dict
+from caendr.api.phenotype    import get_trait
 
 from caendr.services.cloud.postgresql import db
 
@@ -57,9 +58,9 @@ class Trait():
       raise ValueError('Could not identify a unique trait from the given information')
 
     # Store the dataset value of the trait file
-    if dataset and self.file['dataset'] and dataset != self.file['dataset']:
-      raise ValueError('Mismatched dataset values')
-    self.dataset = self.file['dataset']
+    # if dataset and self.file['dataset'].value and dataset != self.file['dataset'].value:
+    #   raise ValueError('Mismatched dataset values')
+    self.dataset = self.file['dataset'].value
 
 
   #
@@ -127,4 +128,4 @@ class Trait():
     '''
 
     # For bulk files, store the single trait name, otherwise convert the display_name fields to a list
-    return (self.name,) if self.file['is_bulk_file'] else self.file.display_name
+    return (Trait.from_sql(get_trait(self.name)).name,) if self.file['is_bulk_file'] else self.file.display_name

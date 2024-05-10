@@ -286,7 +286,7 @@ class PhenotypeReport(ReportEntity, HashableEntity):
       raise ValueError()
 
     # Use the Trait object to compute the display name
-    return list(trait.display_name)
+    return [trait.name,] if trait.dataset == 'zhang' else list(trait.display_name)
 
 
   @classmethod
