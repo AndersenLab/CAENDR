@@ -171,8 +171,8 @@ label {
                 {
                     "data": "Analyze",
                     "render": function(data, type, row) {
-                        const trait_name = row.trait_name_caendr;
-                        const url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", trait_name).replace("TRAIT_SET", 'zhang');
+                        const trait_id = row.id;
+                        const url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", trait_id).replace("TRAIT_SET", 'zhang');
                         return `
                             <div id="trait-data-${row.trait_name_caendr}" class="ps-3 pt-0">
                                 <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
