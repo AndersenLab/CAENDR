@@ -463,7 +463,7 @@ def submit_trait(trait: Trait):
   return {}
 
 
-@api_trait_bp.route('/review/<trait_id>/accept', methods=['POST'])
+@api_trait_bp.route('/review/<string:trait_id>/accept', methods=['POST'])
 @admin_required()
 @parse_trait()
 @jsonify_request
@@ -483,7 +483,7 @@ def accept_trait(trait: Trait):
   return {}
 
 
-@api_trait_bp.route('/review/<trait_id>/reject', methods=['POST'])
+@api_trait_bp.route('/review/<string:trait_id>/reject', methods=['POST'])
 @admin_required()
 @parse_trait()
 @jsonify_request
@@ -504,7 +504,7 @@ def reject_trait(trait: Trait):
   return {}
 
 
-@api_trait_bp.route('/review/<trait_id>/retract', methods=['POST'])
+@api_trait_bp.route('/review/<string:trait_id>/retract', methods=['POST'])
 @admin_required()
 @parse_trait()
 @jsonify_request
