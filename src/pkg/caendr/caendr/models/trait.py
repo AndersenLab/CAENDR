@@ -181,7 +181,7 @@ class Trait():
 
     # Try changing the status in the SQL table
     try:
-      PhenotypeMetadata.query.get(self.file.name).set_status(PublishStatus.SUBMITTED)
+      PhenotypeMetadata.query.get(self.file.name).set_status(to_state)
 
     # If the datastore entity was updated but the SQL table wasn't, log a critical error
     # and continue propagating the error
