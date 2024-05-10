@@ -1,0 +1,251 @@
+{% if table_id is not defined %}
+  {% set table_id = "queue-table" %}
+{% endif %}
+
+{% set offcanvas_id = table_id + '-phenotype-offcanvas' %}
+
+
+{% block custom_head %}
+<style>
+  .input-wrapper {
+    position: relative;
+  }
+  .input-wrapper i {
+    position: absolute;
+    top: 20%;
+    right: 5px;
+    color: grey
+  }
+
+  #tagsFilter, #tags {
+    text-transform: capitalize;
+  }
+
+  label {
+    white-space: normal;
+    word-wrap: break-word;
+  }
+
+  .dropdown-column {
+    width: 1.5em !important;
+  }
+</style>
+{% endblock %}
+
+
+{# Main Table #}
+<div>
+  <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}" />
+  {% include "_includes/phenotype-search-bar.html" %}
+
+  <div class="table-responsive">
+    <table id="{{ table_id }}" class="table p-0 text-center w-100">
+      <caption class="visually-hidden">A list of phenotype traits.</caption>
+      <thead class="table-secondary align-middle">
+        <tr>
+          <th scope="col" class="col-1 text-center dropdown-column"></th>
+          <th scope="col" class="col-1 text-center">Display Name</th>
+          <th scope="col" class="col-1 text-center">Short Description</th>
+          <th scope="col" class="col-1 text-center py-4">Species</th>
+          <th scope="col" class="col-1 text-center">User</th>
+          <th scope="col" class="col-1 text-center">Upload Date</th>
+          <th scope="col" class="col-1 text-center">Edit</th>
+          <th scope="col" class="col-1 text-center">Accept</th>
+          <th scope="col" class="col-1 text-center">Reject</th>
+        </tr>
+      </thead>
+      <tbody class="table-group-divider align-middle"></tbody>
+    </table>
+  </div>
+
+  <div class="offcanvas offcanvas-end offcanvasPhenotype" tabindex="-1" id="{{ offcanvas_id }}"
+    aria-labelledby="{{ offcanvas_id }}-label">
+    {% include "_includes/phenotype-offcanvas-content.html" %}
+  </div>
+</div>
+{# /Main Table #}
+
+
+
+{% block script %}
+<script type="module">
+  {% include '_scripts/utils.js' %}       {#/* defines: flash_message, first_letter_caps */#}
+  {% include '_scripts/trait_utils.js' %} {#/* defines: traitNameHTML, traitNameString, queryTraitByName */#}
+
+
+  $(document).ready(function() {
+
+    // Set standard header token for AJAX
+    $.ajaxSetup({
+      beforeSend: function(xhr, settings) {
+        if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+          xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
+        }
+      }
+    });
+
+    // Create main table as a DataTable
+    const table = $('#{{ table_id }}').DataTable( {
+      "sDom": "tpr",
+      "processing": true,
+      "serverSide": true,
+      "ajax": {
+        url: "{{ url_for('api_trait.query_list_datatable_queue') }}",
+        data: function(d) {
+          d.dataset = 'public';
+        },
+      },
+      "autoWidth": false,
+      "ordering": false,
+      "columns": [
+        {
+          "render": function(data, type, row) {
+            return `
+              <button type="button" class="btn btn-link text-dark fw-normal d-block w-100 row-toggle"
+                  aria-expanded="false" aria-controls="full-info-${row.trait_name_caendr}"
+                  aria-label="Show more details for trait ${traitNameString(row.trait_name_display_1, row.trait_name_display_2, row.trait_name_display_3)}"
+              ><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+            `;
+          },
+          "sClass": "p-0 m-0 dropdown-column",
+        },
+        {
+          "render": function(data, type, row) {
+            return traitNameHTML( row.trait_name_display_1, row.trait_name_display_2, row.trait_name_display_3 );
+          },
+          "width": '15%',
+        },
+        {
+          "data": "description_short",
+          "width": '15%',
+        },
+        {
+          "data": "species_name",
+          "render": function(data, type, row) {
+            return first_letter_caps(data).replace('_', '. ').italics();
+          },
+          "width": '10%',
+        },
+        {
+          "data": "submitted_by",
+          "width": '10%',
+        },
+        {
+          "data": "created_on",
+          "render": function(data, type, row) {
+            return formatDate(data);
+          },
+          "width": '15%',
+        },
+        {
+          "render": function(data, type, row) {
+            return `
+              <i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Edit
+            `;
+          },
+          "sClass": "optionsToolbar",
+          'sWidth': '10%',
+        },
+        {
+          "render": function(data, type, row) {
+            return `
+              <button type="button" class="btn btn-link">
+                <i class="bi bi-check-circle-fill" aria-hidden="true"></i>Accept
+              </button>
+            `;
+          },
+          "sClass": "optionsToolbar",
+          'sWidth': '10%',
+        },
+        {
+          "render": function(data, type, row) {
+            return `
+              <button type="button" class="btn btn-link">
+                <i class="bi bi-trash3-fill" aria-hidden="true"></i>Reject
+              </button>
+            `;
+          },
+          "sClass": "optionsToolbar",
+          'sWidth': '10%',
+        },
+      ],
+    });
+
+
+    /* Child Rows (Dropdowns) */
+
+    function format_child_row(data) {
+      return `
+        <div class="ms-5 pt-5 px-5 pb-2">
+            <h3 class="h5 text-dark">Full Description</h3>
+            <p>${data.description_long}</p>
+        </div>
+        <div class="d-flex justify-content-end me-1 pb-3 optionsToolbar">
+            <a class="trait-detail-button" href="#"
+              data-bs-toggle="offcanvas" data-bs-target="#{{ offcanvas_id }}" data-value="${data.trait_name_caendr}"
+              aria-controls="{{ offcanvas_id }}"
+            ><i class="bi bi-arrow-right" aria-hidden="true"></i>View Full Details</a>
+        </div>
+      `;
+    };
+
+    // Add event listener for opening and closing row details
+    table.on('click', '.row-toggle', function (e) {
+        const tr = e.target.closest('tr');
+        const row = table.row(tr);
+
+        if (row.child.isShown()) {
+          row.child.hide();
+          e.target.closest('button').setAttribute('aria-expanded', 'false')
+        } else {
+          row.child(format_child_row(row.data())).show();
+          row.child().attr('id', `full-info-${row.data().trait_name_caendr}`)
+          e.target.closest('button').setAttribute('aria-expanded', 'true')
+        }
+
+        update_arrows('#{{ table_id }} .row-toggle');
+    });
+
+    function update_arrows(selector) {
+      $(`${selector}[aria-expanded="true"]` ).html('<i class="bi bi-chevron-down"  aria-hidden="true"></i>');
+      $(`${selector}[aria-expanded="false"]`).html('<i class="bi bi-chevron-right" aria-hidden="true"></i>');
+    };
+
+
+    /* Offcanvas (Sidebar) */
+
+    // Fetch data for a trait and fill out side bar
+    $(document).on('click', '.trait-detail-button', function() {
+      queryTraitByName($(this).data('value'), $('#csrf_token').val())
+        .then((response) => {
+          fillOutModal(response)
+        })
+        .fail((error) => {
+          console.error(error)
+          $('#{{ offcanvas_id }} .btn-close').click()
+          flashErrorResponse(error.responseJSON, 'There was a problem retrieving this trait. Please try again later.')
+        })
+    })
+
+    function fillOutModal(trait) {
+      document.dispatchEvent(new CustomEvent('phenotype-offcanvas-content', {
+        detail: { offcanvas_id: '{{offcanvas_id}}', trait: trait },
+      }));
+    }
+
+
+    /* Searching / Filtering Handlers */
+
+    // Update search based on search widget
+    document.addEventListener('{{ table_id }}-search', async ({detail}) => {
+      try {
+        table.search( JSON.stringify(detail) ).draw()
+      } catch(err) {
+        console.error(err)
+        flash_message(`Failed to retrieve the list of traits: ${err.statusText}`)
+      }
+    });
+
+  });
+</script>
+{% endblock %}
