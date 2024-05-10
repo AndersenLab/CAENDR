@@ -65,12 +65,75 @@
 </div>
 {# /Main Table #}
 
+{# Confirm Accept Modal #}
+<div class="modal fade" id="confirm-accept-modal" tabindex="-1" aria-labelledby="confirm-accept-modal-label" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="confirm-accept-modal-label">Accept Trait</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>You are about to publish the following trait into the public Phenotype Database:</p>
+        <div id="confirm-accept-modal-body-container" class="text-center mb-2"></div>
+        <p>This action is not reversable!</p>
+      </div>
+      <div class="modal-footer">
+        <button id="confirm-accept-button" type="button" class="btn btn-success" data-bs-dismiss="modal">Accept</button>
+      </div>
+    </div>
+  </div>
+</div>
+{# /Confirm Accept Modal #}
+
+{# Confirm Reject Modal #}
+<div class="modal fade" id="confirm-reject-modal" tabindex="-1" aria-labelledby="confirm-reject-modal-label" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="confirm-reject-modal-label">Reject Trait</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>You are about to reject the following trait from entering the public Phenotype Database:</p>
+        <div id="confirm-reject-modal-body-container" class="text-center mb-2"></div>
+        <!-- <p>This trait will be sent back to the user for potential revisions.</p> -->
+      </div>
+      <div class="modal-footer">
+        <button id="confirm-reject-button" type="button" class="btn btn-danger" data-bs-dismiss="modal">Reject</button>
+      </div>
+    </div>
+  </div>
+</div>
+{# /Confirm Reject Modal #}
+
 
 
 {% block script %}
+<!-- Dispatch custom events to trigger functions in the module script -->
+<script>
+  function fillAcceptModal(trait_id) {
+    document.dispatchEvent(new CustomEvent('fill-accept-modal', {
+      'detail': {trait_id}
+    }));
+  }
+
+  function fillRejectModal(trait_id) {
+    document.dispatchEvent(new CustomEvent('fill-reject-modal', {
+      'detail': {trait_id}
+    }));
+  }
+</script>
+
+
+<!-- The main script -->
 <script type="module">
   {% include '_scripts/utils.js' %}       {#/* defines: flash_message, first_letter_caps */#}
   {% include '_scripts/trait_utils.js' %} {#/* defines: traitNameHTML, traitNameString, queryTraitByName */#}
+
+
+  // Initialize empty object to store currently displayed traits
+  let traits = {}
 
 
   $(document).ready(function() {
@@ -93,6 +156,15 @@
         url: "{{ url_for('api_trait.query_list_datatable_queue') }}",
         data: function(d) {
           d.dataset = 'public';
+        },
+
+        // Intercept successful call to store the retrieved values
+        dataSrc: function(resp) {
+          traits = {};
+          for (const trait of resp.data) {
+            traits[trait.id] = trait;
+          };
+          return resp.data;
         },
       },
       "autoWidth": false,
@@ -147,9 +219,10 @@
           'sWidth': '10%',
         },
         {
+          "data": "id",
           "render": function(data, type, row) {
             return `
-              <button type="button" class="btn btn-link">
+              <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#confirm-accept-modal" onclick="fillAcceptModal('${data}')">
                 <i class="bi bi-check-circle-fill" aria-hidden="true"></i>Accept
               </button>
             `;
@@ -158,9 +231,10 @@
           'sWidth': '10%',
         },
         {
+          "data": "id",
           "render": function(data, type, row) {
             return `
-              <button type="button" class="btn btn-link">
+              <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#confirm-reject-modal" onclick="fillRejectModal('${data}')">
                 <i class="bi bi-trash3-fill" aria-hidden="true"></i>Reject
               </button>
             `;
@@ -245,6 +319,82 @@
         flash_message(`Failed to retrieve the list of traits: ${err.statusText}`)
       }
     });
+
+
+    /* Accept Trait */
+
+    document.addEventListener('fill-accept-modal', ({detail}) => {
+      document.getElementById('confirm-accept-modal-body-container').innerHTML = traitNameHTML(
+        traits[detail.trait_id].trait_name_display_1,
+        traits[detail.trait_id].trait_name_display_2,
+        traits[detail.trait_id].trait_name_display_3,
+      );
+      document.getElementById('confirm-accept-button').onclick = (e) => {
+        acceptTrait(detail.trait_id);
+      };
+    })
+
+    function acceptTrait(trait_id) {
+      $.ajax({
+        url: "{{ url_for('api_trait.accept_trait', trait_id='TRAIT_ID') }}".replace("TRAIT_ID", trait_id),
+        type: "POST",
+
+        // Flash a success message and refresh the table
+        success: (result) => {
+          flash_message('The trait was successfully published!', null, null, 'success');
+          table.ajax.reload();
+        },
+
+        // Log and flash any error(s)
+        error: (error) => {
+          console.error('ERROR: ', error)
+          const resp = error.responseJSON
+          if (resp && resp.message) {
+            flash_message(resp.message, resp.full_msg_link, resp.full_msg_body);
+          } else {
+            flash_message('There was a problem publishing this trait. Please try again later.');
+          }
+        }
+      });
+    }
+
+
+    /* Reject Trait */
+
+    document.addEventListener('fill-reject-modal', ({detail}) => {
+      document.getElementById('confirm-reject-modal-body-container').innerHTML = traitNameHTML(
+        traits[detail.trait_id].trait_name_display_1,
+        traits[detail.trait_id].trait_name_display_2,
+        traits[detail.trait_id].trait_name_display_3,
+      );
+      document.getElementById('confirm-reject-button').onclick = (e) => {
+        rejectTrait(detail.trait_id);
+      };
+    })
+
+    function rejectTrait(trait_id) {
+      $.ajax({
+        url: "{{ url_for('api_trait.reject_trait', trait_id='TRAIT_ID') }}".replace("TRAIT_ID", trait_id),
+        type: "POST",
+
+        // Flash a success message and refresh the table
+        success: (result) => {
+          flash_message('The trait was successfully rejected!', null, null, 'success');
+          table.ajax.reload();
+        },
+
+        // Log and flash any error(s)
+        error: (error) => {
+          console.error('ERROR: ', error)
+          const resp = error.responseJSON
+          if (resp && resp.message) {
+            flash_message(resp.message, resp.full_msg_link, resp.full_msg_body);
+          } else {
+            flash_message('There was a problem rejecting this trait. Please try again later.');
+          }
+        }
+      });
+    }
 
   });
 </script>
