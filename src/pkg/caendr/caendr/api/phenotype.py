@@ -76,3 +76,6 @@ def filter_trait_query_by_tags(query, tags):
       PhenotypeMetadata.tags.ilike(f"%{bleach.clean(tag)}%") for tag in tags
     ))
   return query
+
+def get_phenotype_values_for_trait(trait_id):
+  return PhenotypeMetadata.query.get(trait_id).phenotype_values

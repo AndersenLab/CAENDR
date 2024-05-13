@@ -7,6 +7,7 @@ from config     import config
 
 from caendr.models.error           import EnvVarError, FileUploadError
 from caendr.models.datastore       import Species, TraitFile
+from caendr.api.phenotype          import get_phenotype_values_for_trait
 from caendr.services.cloud.storage import get_blob
 from caendr.services.logger        import logger
 from caendr.services.validate      import validate_file, StrainValidator, NumberValidator
@@ -127,6 +128,7 @@ def trait(id):
   """ Trait Page"""
   trait_ds = TraitFile.get_ds(id)
   trait_name = ' '.join(trait_ds.display_name)
+  phenotype_values = get_phenotype_values_for_trait(id)
   return render_template('data/trait.html', **{
     # Page Info}
     'title': f'Trait {trait_name}',
@@ -135,6 +137,7 @@ def trait(id):
     # Data
     'trait_name': trait_name,
     'trait': trait_ds.serialize(),
+    'file_content': phenotype_values,
   })
 
 @data_bp.route('/trait/<id>/edit')

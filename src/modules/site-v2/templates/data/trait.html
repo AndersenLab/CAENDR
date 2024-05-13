@@ -3,7 +3,8 @@
 {% block content %}
 <div class="container px-5 pb-5">
     <div class="row">
-        <div class="col-md-8">
+        <div class="col-md-6">
+            <h2 class="text-center">Trait Data</h2>
             <table class="table table-responsiv table-bordered">
                 <caption class="visually-hidden">Trait Information</caption>
                 <thead></thead>
@@ -76,6 +77,28 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+        <div class="col-md-6 px-4">
+            <h2 class="text-center">Trait File Content</h2>
+            <div class="p-0 overflow-auto" style="height:46rem">
+                <table class="table table-responsive table-hover table-bordered">
+                <caption class="visually-hidden">Trait File Content</caption>
+                    <thead class="table-secondary align-middle" style="position:sticky;top:0;">
+                        <tr>
+                            <th scope="col">Strain</th>
+                            <th scope="col">Trait Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in file_content %}
+                        <tr>
+                            <td>{{row.strain_name}}</td>
+                            <td>{{row.trait_value}}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
     <div class="row mt-3">
