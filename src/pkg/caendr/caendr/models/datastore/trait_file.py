@@ -116,7 +116,7 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
 
       Combines `trait_name_display_1`, `trait_name_display_2`, and `trait_name_display_3` into a single tuple.
     '''
-    return self['trait_name_display_1'], self['trait_name_display_2'], self['trait_name_display_3']
+    return self['trait_name_display_1'], self['trait_name_display_2'] or '', self['trait_name_display_3'] or ''
 
   @property
   def dataset(self):

@@ -136,7 +136,7 @@
                 formData.append('species', species)
                 $.ajax({
                     type: "POST",
-                    url: "{{ url_for('data.parse_trait_file') }}",
+                    url: "{{ url_for('data.validate_and_parse_trait_file') }}",
                     data: formData,
                     contentType: false,
                     processData: false,
@@ -164,7 +164,7 @@
             $('#file-content').parent().removeClass('d-none')
             $('#file-content').empty()
             // Create table header
-            const thead =  `<thead class="table-secondary" style="position:sticky;top:0;">
+            const thead =  `<thead class="table-secondary align-middle" style="position:sticky;top:0;">
                                <tr>
                                  <th scope="col">${file[0].col_1}</th>
                                  <th scope="col">${file[0].col_2}</th>
