@@ -116,6 +116,7 @@ def submit_trait_form():
     # Page Info
     'title': 'Phenotype Database Trait Submission',
     'tool_alt_parent_breadcrumb': {"title": "Submit Trait", "url": url_for('data.submit_trait_start')},
+    'new_submission': True,
 
     # Data
     'form': form,
@@ -140,19 +141,37 @@ def trait(id):
     'file_content': phenotype_values,
   })
 
-@data_bp.route('/trait/<id>/edit')
+@data_bp.route('/trait/<id>/edit', methods=['GET', 'PUT'])
 @jwt_required()
-def edit_trait(id, file=None):
+def edit_trait(id):
   """ Edit Trait Page"""
-  trait_ds = TraitFile.get_ds(id)
-  return render_template('data/edit-trait.html', **{
+  trait_ds = TraitFile.get_ds(id).serialize()
+  form_data = {
+    'species':              trait_ds.get('species'),
+    'trait_name_user':      trait_ds.get('trait_name_user'),
+    'trait_name_display_1': trait_ds.get('trait_name_display_1'),
+    'trait_name_display_2': trait_ds.get('trait_name_display_2'),
+    'trait_name_display_3': trait_ds.get('trait_name_display_3'),
+    'description_short':    trait_ds.get('description_short'),
+    'description_long':     trait_ds.get('description_long'),
+    'unit':                 trait_ds.get('unit'),
+    'tags':                 trait_ds.get('tags'),
+    'username':             trait_ds.get('username'),
+    'institution':          trait_ds.get('institution'),
+    'source_lab':           trait_ds.get('source_lab'),
+    'protocols':            trait_ds.get('protocols'),
+    'publication':          trait_ds.get('publication')
+  }
+  form = TraitSubmissionForm(data=form_data)
+  return render_template('data/submit-trait-form.html', **{
     # Page Info
-    'title': f'Edit Trait {trait_ds.trait_name_display_1}',
-    'tool_alt_parent_breadcrumb': {"title": "Traits", "url": '/'}, # TODO: Update this to the correct URL
+    'title': trait_ds['trait_name_display_1'],
+    # 'tool_alt_parent_breadcrumb': {"title": "Submit Trait", "url": url_for('data.submit_trait_start')},
+    'new_submission': False,
 
     # Data
-    'trait_name': ', '.join(trait_ds.display_name),
-    'trait': trait_ds.serialize(),
+    'form': form,
+    'phenotype_values': [ v.to_json() for v in get_phenotype_values_for_trait(id) ]
   })
 
 

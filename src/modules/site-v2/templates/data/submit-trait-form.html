@@ -37,7 +37,7 @@
         </div>
         <hr>
         <h3 class="pb-3">Trait Information</h3>
-        <div id="info" class="d-flex flex-row p-2 my-4">
+        <div id="info" class="d-flex flex-row p-2 my-4 ">
             <i class="bi bi-info-circle-fill p-3 align-self-center"></i>
             <div>
                 <p class="mb-1"><strong>Step 1.</strong> Select species. This step is necessary to allow for file upload and preview.</p>
@@ -45,7 +45,6 @@
                 <p class="mb-1"><strong>Step 3.</strong> Verify the preview data to ensure that it meets the format requirements.</p>
 
             </div>
-            <!-- <p>Select species and upload a file to preview your data and check if it meets the required format. <strong>Please note:</strong> you need to select species to preview your file.</p> -->
         </div>
         <div class="row my-5">
             <div class="col-md-3">{{ render_field(form.species) }}</div>
@@ -79,7 +78,7 @@
         </div>
         <div class="row my-5">
         </div>
-        <button type="submit" id="submit-trait" value="Submit Form" class="btn btn-secondary text-light" aria-label="submit">Add Trait</button>
+        <button type="submit" id="submit-trait" value="Submit Form" class="btn btn-secondary text-light" aria-label="submit">{{'Add Trait' if new_submission else 'Update'}}</button>
     </form>
 </div> <!-- /Container -->
 
@@ -90,7 +89,31 @@
 <script>
     {% include '_scripts/utils.js' %} {#/* defines: flash_message */#}
 
+    const newSubmission = {{ new_submission|tojson }};
+    const phenotypes = {{ phenotype_values|tojson }};
+
+    // Create the file content for display
+    const fileContent = () => {
+        const data = []
+        data.push({'col_1': 'Strain', 'col_2': 'Trait Value'})
+        for (row of phenotypes) {
+            data.push({'col_1': row.strain_name, 'col_2': row.trait_value})
+        }
+        return data
+    }
+
     $(document).ready(function() {
+
+        // Update the page display if it's "Edit" page
+        if (!newSubmission) {
+            $('#username').prop('disabled', true)
+            $('#speciesSelect').prop('disabled', true)
+            $('#speciesSelect').val()
+            $('#file').prop('disabled', true)
+            $('#file-upload').prop('disabled', true)
+            display_file_content(fileContent())
+
+        }
         
         // Add 'required' class to labels
         $('.label-group').each(function() {
