@@ -11,7 +11,7 @@ from caendr.services.cloud.storage import get_blob
 from caendr.services.logger        import logger
 from caendr.services.validate      import validate_file, StrainValidator, NumberValidator
 from caendr.utils.local_files      import LocalUploadFile
-from base.utils.auth               import jwt_required, get_current_user
+from base.utils.auth               import jwt_required, get_current_user, admin_required
 from base.utils.trait              import add_trait
 from base.forms                    import TraitSubmissionForm
 from constants                     import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
@@ -126,9 +126,25 @@ def submit_trait_form():
 def trait(id):
   """ Trait Page"""
   trait_ds = TraitFile.get_ds(id)
+  trait_name = ' '.join(trait_ds.display_name)
   return render_template('data/trait.html', **{
+    # Page Info}
+    'title': f'Trait {trait_name}',
+    'tool_alt_parent_breadcrumb': {"title": "Traits", "url": '/'}, # TODO: Update this to the correct URL
+
+    # Data
+    'trait_name': trait_name,
+    'trait': trait_ds.serialize(),
+  })
+
+@data_bp.route('/trait/<id>/edit')
+@jwt_required()
+def edit_trait(id, file=None):
+  """ Edit Trait Page"""
+  trait_ds = TraitFile.get_ds(id)
+  return render_template('data/edit-trait.html', **{
     # Page Info
-    'title': f'Trait {trait_ds.trait_name_display_1}',
+    'title': f'Edit Trait {trait_ds.trait_name_display_1}',
     'tool_alt_parent_breadcrumb': {"title": "Traits", "url": '/'}, # TODO: Update this to the correct URL
 
     # Data
@@ -136,12 +152,13 @@ def trait(id):
     'trait': trait_ds.serialize(),
   })
 
+
 #
 # File Upload
 #
 @data_bp.route('/trait/parse-file', methods=['POST'])
 @jwt_required()
-def parse_trait_file():
+def validate_and_parse_trait_file():
   """ Parse the trait file and return the data """
   try:
     with LocalUploadFile(request.files.get('file'), valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS) as file:
@@ -156,11 +173,8 @@ def parse_trait_file():
         return jsonify({ 'message': ex.msg }), 500
       
       # Parse the file
-      with open(file) as f:
-        file_content = []
-        for idx, row in enumerate( csv.reader(f, delimiter='\t') ):
-          file_content.append({'col_1': row[0], 'col_2': row[1]})
-        return jsonify(file_content), 200
+      file_content = parse_trait_file(file)
+      return jsonify(file_content), 200
       
   except FileUploadError as ex:
     return jsonify({ 'message': ex.description }), ex.code
@@ -169,3 +183,11 @@ def parse_trait_file():
     logger.error(f'Failed to parse the file: {ex}')
     return jsonify({ 'message': 'Failed to parse the file. Please try again later.' }), 500
 
+
+def parse_trait_file(file):
+  """ Parse a trait file into a list of dictionaries """
+  with open(file) as f:
+    file_content = []
+    for idx, row in enumerate( csv.reader(f, delimiter='\t') ):
+      file_content.append({'col_1': row[0], 'col_2': row[1]})
+    return file_content
