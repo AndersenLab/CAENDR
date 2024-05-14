@@ -3,7 +3,7 @@ boto3
 cachelib
 click==6.7
 feedgen==0.9.0
-Flask==1.1.2
+Flask==2.2.5
 Flask_Caching==1.3.3
 Flask_Compress==1.13
 Flask-Dance==3.0.0
@@ -29,14 +29,14 @@ google_cloud_logging
 google-cloud-run
 grpcio
 gunicorn
-httplib2==0.18.0
+httplib2==0.19.0
 itsdangerous==2.0.1
 logzero==1.3.1
 Markdown==2.6.11
 pandas==1.1.3
 peewee==2.10.2
 psycopg2-binary>=2.9.1
-pyarrow==0.17.1
+pyarrow==14.0.1
 pyOpenSSL==22.1.0
 pytabix
 python_dateutil==2.7.3
@@ -45,14 +45,14 @@ pytz==2017.3
 PyYAML>=4.2b1
 requests
 rich
-sentry-sdk==1.7.2
+sentry-sdk==1.14.0
 setuptools>=40.3.0
 scipy
 simplejson==3.13.2
 SQLAlchemy==1.3.18
 unicode_slugify==0.1.3
-Werkzeug==1.0.0
+Werkzeug==3.0.3
 WTForms==2.1
 bleach==4.1.0
-Jinja2==3.0.3
+Jinja2==3.1.4
 
