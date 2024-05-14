@@ -7,3 +7,4 @@ from .etl import admin_etl_op_bp
 from .gene_browser_tracks import admin_gene_browser_tracks_bp
 from .content import admin_content_bp
 from  .system import admin_system_bp
+from .traits import admin_traits_bp
