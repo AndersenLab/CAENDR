@@ -1,5 +1,6 @@
 import yaml
 import csv
+from datetime import datetime
 
 from flask      import render_template, Blueprint, redirect, url_for, request, flash, jsonify
 from extensions import cache
@@ -120,6 +121,7 @@ def submit_trait_form():
 
     # Data
     'form': form,
+    'phenotype_values': None,
   })
 
 
@@ -171,7 +173,11 @@ def edit_trait(id):
 
     # Data
     'form': form,
-    'phenotype_values': [ v.to_json() for v in get_phenotype_values_for_trait(id) ]
+    'phenotype_values': [ v.to_json() for v in get_phenotype_values_for_trait(id) ],
+    'file': {
+      'name': trait_ds['filename'],
+      'created_on': datetime.strftime(trait_ds['created_on'], "%Y-%m-%d"),
+    }
   })
 
 

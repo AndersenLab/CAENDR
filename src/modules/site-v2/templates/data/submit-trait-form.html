@@ -30,13 +30,14 @@
     <form id="form-submit" method="POST" enctype="multipart/form-data">
         {{ form.csrf_token }}
         <div class="row my-5">
-            <h3 class="pb-3">About You and Lab</h3>
+            <h3 class="pb-3">{{'About You and Lab' if new_submission else 'About User and Lab'}}</h3>
             <div class="col-md-4">{{ render_field(form.username) }}</div>
             <div class="col-md-4">{{ render_field(form.institution) }}</div>
             <div class="col-md-4">{{ render_field(form.source_lab, has_popover=true, content='Please enter the worm lab code for your lab as found on https://cgc.umn.edu/laboratories') }}</div>
         </div>
         <hr>
         <h3 class="pb-3">Trait Information</h3>
+        {% if new_submission %}
         <div id="info" class="d-flex flex-row p-2 my-4 ">
             <i class="bi bi-info-circle-fill p-3 align-self-center"></i>
             <div>
@@ -46,15 +47,42 @@
 
             </div>
         </div>
+        {% endif %}
         <div class="row my-5">
+            {% if new_submission %}
             <div class="col-md-3">{{ render_field(form.species) }}</div>
             <div class="col-md-3 d-flex">
                 {% call render_field(form.file, has_popover=true, content="Example file") %}
                 {% endcall %}
             </div>
             <button class="col-md-2 btn btn-secondary text-light align-self-baseline" disabled style="height:2.3rem; margin-top:2rem" type="button" id="file-upload">Upload File</button>
-            <div class="col-md-3 p-0 mx-4 d-none border border-1 rounded overflow-auto" style="height:30vh">
-                <table class="table table-hover mb-0" id="file-content"></table>
+            {% else %}
+            <div class="col-md-6 table-responsive">
+                <h4>File Info</h4>
+                <table class="table table-bordered">
+                    <thead></thead>
+                    <tbody>
+                        <tr>
+                            <td>Species</td>
+                            <td>{{form.species.data|capitalize|replace('_', '. ')}}</td>
+                        </tr>
+                        <tr>
+                            <td>File Name:</td>
+                            <td>{{file.name}}</td>
+                        </tr>
+                        <tr>
+                            <td>Upload Date:</td>
+                            <td>{{file.created_on}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+            <div class="col-md-3 p-0 mx-4 d-none" id="file-container">
+                <h4>File Content</h4>
+                <div class="border border-1 rounded overflow-auto" style="height:30vh">
+                    <table class="table table-hover mb-0" id="file-content"></table>
+                </div>
             </div>
         </div>
         <hr>
@@ -107,10 +135,7 @@
         // Update the page display if it's "Edit" page
         if (!newSubmission) {
             $('#username').prop('disabled', true)
-            $('#speciesSelect').prop('disabled', true)
-            $('#speciesSelect').val()
-            $('#file').prop('disabled', true)
-            $('#file-upload').prop('disabled', true)
+
             display_file_content(fileContent())
 
         }
@@ -141,7 +166,7 @@
 
         $('#file').on('change', function() {
             $('#file-content').empty()
-            $('#file-content').parent().addClass('d-none')
+            $('#file-container').addClass('d-none')
         })
 
         // Upload the file and display the content
@@ -170,7 +195,7 @@
                     error: function(error){
                         console.error(error)
                         $('#file-content').empty()
-                        $('#file-content').parent().addClass('d-none')
+                        $('#file-container').addClass('d-none')
                         $('html').animate({
                             scrollTop: $('body').offset().top
                         }, 100);
@@ -184,7 +209,7 @@
         }
 
         function display_file_content(file) {
-            $('#file-content').parent().removeClass('d-none')
+            $('#file-container').removeClass('d-none')
             $('#file-content').empty()
             // Create table header
             const thead =  `<thead class="table-secondary align-middle" style="position:sticky;top:0;">
