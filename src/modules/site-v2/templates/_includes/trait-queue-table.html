@@ -256,7 +256,7 @@
         </div>
         <div class="d-flex justify-content-end me-1 pb-3 optionsToolbar">
             <a class="trait-detail-button" href="#"
-              data-bs-toggle="offcanvas" data-bs-target="#{{ offcanvas_id }}" data-value="${data.trait_name_caendr}"
+              data-bs-toggle="offcanvas" data-bs-target="#{{ offcanvas_id }}" data-value="${data.id}"
               aria-controls="{{ offcanvas_id }}"
             ><i class="bi bi-arrow-right" aria-hidden="true"></i>View Full Details</a>
         </div>
@@ -273,7 +273,7 @@
           e.target.closest('button').setAttribute('aria-expanded', 'false')
         } else {
           row.child(format_child_row(row.data())).show();
-          row.child().attr('id', `full-info-${row.data().trait_name_caendr}`)
+          row.child().attr('id', `full-info-${row.data().id}`)
           e.target.closest('button').setAttribute('aria-expanded', 'true')
         }
 
