@@ -2,7 +2,7 @@ import yaml
 import csv
 from datetime import datetime
 
-from flask      import render_template, Blueprint, redirect, url_for, request, flash, jsonify
+from flask      import render_template, Blueprint, redirect, url_for, request, flash, jsonify, abort
 from extensions import cache
 from config     import config
 
@@ -13,7 +13,7 @@ from caendr.services.cloud.storage import get_blob
 from caendr.services.logger        import logger
 from caendr.services.validate      import validate_file, StrainValidator, NumberValidator
 from caendr.utils.local_files      import LocalUploadFile
-from base.utils.auth               import jwt_required, get_current_user, admin_required
+from base.utils.auth               import jwt_required, get_current_user, user_is_admin
 from base.utils.trait              import add_trait
 from base.forms                    import TraitSubmissionForm
 from constants                     import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
@@ -147,10 +147,14 @@ def trait(id):
 @jwt_required()
 def edit_trait(id):
   """ Edit Trait Page"""
+  user = get_current_user()
   trait_ds = TraitFile.get_ds(id).serialize()
+  if user.username != trait_ds['username'] and not user_is_admin():
+    return abort(401)
+
   form_data = {
     'species':              trait_ds.get('species'),
-    'trait_name_user':      trait_ds.get('trait_name_user'),
+    'trait_name_user':      trait_ds.get('trait_name_caendr') if trait_ds['from_caendr'] else trait_ds.get('trait_name_user'),
     'trait_name_display_1': trait_ds.get('trait_name_display_1'),
     'trait_name_display_2': trait_ds.get('trait_name_display_2'),
     'trait_name_display_3': trait_ds.get('trait_name_display_3'),
