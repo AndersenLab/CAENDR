@@ -36,8 +36,16 @@
                         <td>{{trait.species|capitalize|replace('_', '. ')}}</td>
                     </tr>
                     <tr>
+                        <td>File Name</td>
+                        <td>{{trait.filename}}</td>
+                    </tr>
+                    <tr>
+                        <td> Upload Date</td>
+                        <td>{{trait.created_on.year}}-{{trait.created_on.month}}-{{trait.created_on.day}}</td>
+                    </tr>
+                    <tr>
                         <td class="col-3">User Trait Name</td>
-                        <td>{{trait.trait_name_user}}</td>
+                        <td>{{trait.trait_name_caendr if trait.from_caendr else trait.trait_name_user}}</td>
                     </tr>
                     <tr>
                         <td class="col-3">Display Name 1</td>
