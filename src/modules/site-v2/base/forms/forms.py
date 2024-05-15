@@ -340,9 +340,9 @@ class StrainListForm(Form):
 
 class TraitSubmissionForm(FlaskForm):
   """ The trait submission form """
-  file = FileField('Select file', render_kw={'accept': ','.join({ f'.{ext}' for ext in TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS})}, validators=[Required()])
+  file = FileField('Select file', render_kw={'accept': ','.join({ f'.{ext}' for ext in TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS})})
   species = SpeciesSelectField(validators=[Required()])
-  trait_name_user = StringField('Internal Trait Name', validators=[Required(), Length(min=3, max=50)])
+  trait_name_user = StringField('Internal Trait Name', validators=[Required(), Length(min=3, max=100)])
   trait_name_display_1 = StringField('Display Name 1', validators=[Required(), Length(min=3, max=50)])
   trait_name_display_2 = StringField('Display Name 2')
   trait_name_display_3 = StringField('Display Name 3')
@@ -355,8 +355,3 @@ class TraitSubmissionForm(FlaskForm):
   source_lab = StringField('Source Lab', validators=[Required(), Length(min=1, max=4)])
   protocols = TextAreaField('Protocols', validators=[Length(min=0, max=200)])
   publication = TextAreaField('Publications', validators=[Length(min=0, max=200)])
-
-
-
-
-

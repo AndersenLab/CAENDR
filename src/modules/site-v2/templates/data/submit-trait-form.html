@@ -106,7 +106,14 @@
         </div>
         <div class="row my-5">
         </div>
-        <button type="submit" id="submit-trait" value="Submit Form" class="btn btn-secondary text-light" aria-label="submit">{{'Add Trait' if new_submission else 'Update'}}</button>
+        {% if new_submission %}
+        <button type="submit" id="submit-trait" value="Submit Form" class="btn btn-secondary text-light disabled" aria-label="submit">Add Trait</button>
+        {% else %}
+        <div class="d-flex justify-content-around">
+            <button type="submit" id="update-trait" data-value="{{trait_id}}" class="btn btn-secondary text-light">Save for Later</button>
+            <button type="submit" id="publish-trait" class="btn btn-secondary text-light">Save and Publish</button>
+        </div>
+        {% endif %}
     </form>
 </div> <!-- /Container -->
 
@@ -135,9 +142,7 @@
         // Update the page display if it's "Edit" page
         if (!newSubmission) {
             $('#username').prop('disabled', true)
-
             display_file_content(fileContent())
-
         }
         
         // Add 'required' class to labels
@@ -149,6 +154,14 @@
             }
             if ($(this).children('label').text().includes('file')) {
                 $(this).children('label').addClass('required')
+            }
+        })
+
+        $('.form-control').on('change', function() {
+            if(formFilled()) {
+                $('#submit-trait').removeClass('disabled')
+            } else {
+                $('#submit-trait').addClass('disabled')
             }
         })
 
@@ -208,6 +221,31 @@
             }
         }
 
+        $('#update-trait').on('click', function(e) {
+            e.preventDefault()
+            const formData = new FormData($('#form-submit')[0]);
+            const traitId = $(this).data('value');
+            let url = "{{ url_for('data.edit_trait', id='ID') }}";
+            url = url.replace('ID', traitId);
+            $.ajax({
+                type: "PUT",
+                url: url,
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    console.log(response)
+                },
+                error: function(error){
+                    console.error(error)
+                    if (error.responseJSON && error.responseJSON.message) {
+                        $('.alert').remove()
+                        flash_message(error.responseJSON.message)
+                    }         
+                }
+            })       
+        })
+
         function display_file_content(file) {
             $('#file-container').removeClass('d-none')
             $('#file-content').empty()
@@ -229,6 +267,22 @@
                          </tr>`
             }
             $('#file-content').append(`<tbody>${body}</tbody>`)
+        }
+
+        function formFilled() {
+            let filled = true;
+            $('#username, #institution, #source_lab, #species, #trait_name_user, #trait_name_display_1, #description_short, #description_long').each(function() {
+                if ($(this).val() == '') {
+                    filled = false;
+                }
+            });
+            if (!$('input:checkbox:checked').length) {
+                filled = false;
+            }
+            if ($('#file').val() == '') {
+                filled = false;
+            }
+            return filled;
         }
     })
 
