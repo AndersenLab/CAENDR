@@ -109,9 +109,9 @@
         {% if new_submission %}
         <button type="submit" id="submit-trait" value="Submit Form" class="btn btn-secondary text-light disabled" aria-label="submit">Add Trait</button>
         {% else %}
-        <div class="d-flex justify-content-around">
-            <button type="submit" id="update-trait" data-value="{{trait_id}}" class="btn btn-secondary text-light">Save for Later</button>
-            <button type="submit" id="publish-trait" class="btn btn-secondary text-light">Save and Publish</button>
+        <div class="d-flex">
+            <button type="submit" id="update-trait" data-value="{{trait_id}}" class="btn btn-secondary text-light mx-5">Save for Later</button>
+            <button type="submit" id="publish-trait" class="btn btn-primary text-light mx-5">Save and Publish</button>
         </div>
         {% endif %}
     </form>
@@ -227,6 +227,8 @@
             const traitId = $(this).data('value');
             let url = "{{ url_for('data.edit_trait', id='ID') }}";
             url = url.replace('ID', traitId);
+            let redirectURL = "{{ url_for('data.trait', id='ID') }}";
+            redirectURL = redirectURL.replace('ID', traitId);
             $.ajax({
                 type: "PUT",
                 url: url,
@@ -234,7 +236,7 @@
                 contentType: false,
                 processData: false,
                 success: function(response) {
-                    console.log(response)
+                    window.location.href = redirectURL;
                 },
                 error: function(error){
                     console.error(error)

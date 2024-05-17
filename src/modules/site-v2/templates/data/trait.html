@@ -5,7 +5,7 @@
     <div class="row">
         <div class="col-md-6">
             <h2 class="text-center">Trait Data</h2>
-            <table class="table table-responsiv table-bordered">
+            <table class="table table-responsive table-bordered">
                 <caption class="visually-hidden">Trait Information</caption>
                 <thead></thead>
                 <tbody>
@@ -38,6 +38,10 @@
                     <tr>
                         <td>File Name</td>
                         <td>{{trait.filename}}</td>
+                    </tr>
+                    <tr>
+                        <td>File</td>
+                        <td><a href="{{url_for('data.download_trait_file', id=trait.name)}}" class="btn btn-secondary text-light">Download File</a></td>
                     </tr>
                     <tr>
                         <td> Upload Date</td>
@@ -86,7 +90,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="col-md-6 px-4">
+        <div class="col-md-4 px-4">
             <h2 class="text-center">Trait File Content</h2>
             <div class="p-0 overflow-auto" style="height:46rem">
                 <table class="table table-responsive table-hover table-bordered">
@@ -111,7 +115,7 @@
     </div>
     <div class="row mt-3">
         <a class="col-2 mx-5 btn btn-secondary text-light" href="{{url_for('data.edit_trait', id=trait.name)}}">Edit Trait</a>
-        <a class="col-2 mx-5 btn btn-secondary text-light" href="#" id="publishBtn">Publish Trait</a>
+        <a class="col-2 mx-5 btn btn-primary text-light" href="#" id="publishBtn">Publish Trait</a>
     </div>
 </div>
 <div class="modal fade" id="publishModal" tabindex="-1" role="dialog" aria-labelledby="publishModalTitle" aria-hidden="true">

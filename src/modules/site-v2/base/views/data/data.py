@@ -1,23 +1,28 @@
 import yaml
 import csv
+import os
 from datetime import datetime
 
-from flask      import render_template, Blueprint, redirect, url_for, request, flash, jsonify, abort
+from flask      import render_template, Blueprint, redirect, url_for, request, flash, jsonify, abort, send_file
 from extensions import cache
 from config     import config
 
 from caendr.models.error           import EnvVarError, FileUploadError
 from caendr.models.datastore       import Species, TraitFile
 from caendr.api.phenotype          import get_phenotype_values_for_trait
-from caendr.services.cloud.storage import get_blob
+from caendr.services.cloud.storage import get_blob, download_blob_to_file
 from caendr.services.logger        import logger
 from caendr.services.validate      import validate_file, StrainValidator, NumberValidator
 from caendr.utils.local_files      import LocalUploadFile
+from caendr.utils.env              import get_env_var
+from caendr.utils.data             import get_file_format
 from base.utils.auth               import jwt_required, get_current_user, user_is_admin
-from base.utils.trait              import add_trait
+from base.utils.trait              import add_trait, update_trait_metadata
 from base.forms                    import TraitSubmissionForm
 from constants                     import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
+MODULE_DB_OPERATIONS_BUCKET_NAME = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
+UPLOADS_DIR = os.path.join('.', 'uploads')
 
 
 data_bp = Blueprint(
@@ -102,7 +107,7 @@ def submit_trait_form():
 
     # Validate form fields
     if not form.validate_on_submit():
-      flash('Please fill out all required fields.', 'warning')
+      flash(f'Please fill out all required fields: {form.errors}', 'warning')
     
     else:
       # Add the trait to the database
@@ -115,12 +120,12 @@ def submit_trait_form():
 
   return render_template('data/submit-trait-form.html', **{
     # Page Info
-    'title': 'Phenotype Database Trait Submission',
+    'title':                      'Phenotype Database Trait Submission',
     'tool_alt_parent_breadcrumb': {"title": "Submit Trait", "url": url_for('data.submit_trait_start')},
-    'new_submission': True,
+    'new_submission':             True,
 
     # Data
-    'form': form,
+    'form':             form,
     'phenotype_values': None,
   })
 
@@ -128,18 +133,18 @@ def submit_trait_form():
 @data_bp.route('/trait/<id>')
 @jwt_required()
 def trait(id):
-  """ Trait Page"""
+  """ Trait Page """
   trait_ds = TraitFile.get_ds(id)
   trait_name = ' '.join(trait_ds.display_name)
   phenotype_values = get_phenotype_values_for_trait(id)
   return render_template('data/trait.html', **{
     # Page Info}
-    'title': f'Trait {trait_name}',
+    'title':                      f'Trait {trait_name}',
     'tool_alt_parent_breadcrumb': {"title": "Traits", "url": '/'}, # TODO: Update this to the correct URL
 
     # Data
-    'trait_name': trait_name,
-    'trait': trait_ds.serialize(),
+    'trait_name':   trait_name,
+    'trait':        trait_ds.serialize(),
     'file_content': phenotype_values,
   })
 
@@ -151,6 +156,19 @@ def edit_trait(id):
   trait_ds = TraitFile.get_ds(id).serialize()
   if user.username != trait_ds['username'] and not user_is_admin():
     return abort(401)
+  
+  # Handle Trait Update
+  if request.method == 'PUT':
+    form = TraitSubmissionForm(request.form)
+    form.species.data = trait_ds['species']
+    form.username.data = trait_ds['username']
+
+    # Validate form fields
+    if not form.validate_on_submit():
+      return jsonify({'message': f'Please fill out all required fields: {form.errors}'}), 500
+    else:
+      update_trait_metadata(id, form.data)
+      return jsonify({'status': 'OK'}), 200
 
   form_data = {
     'species':              trait_ds.get('species'),
@@ -171,17 +189,19 @@ def edit_trait(id):
   form = TraitSubmissionForm(data=form_data)
   return render_template('data/submit-trait-form.html', **{
     # Page Info
-    'title': trait_ds['trait_name_display_1'],
+    'title':          trait_ds['trait_name_display_1'],
     # 'tool_alt_parent_breadcrumb': {"title": "Submit Trait", "url": url_for('data.submit_trait_start')},
     'new_submission': False,
 
     # Data
-    'form': form,
+    'form':             form,
     'phenotype_values': [ v.to_json() for v in get_phenotype_values_for_trait(id) ],
-    'file': {
-      'name': trait_ds['filename'],
-      'created_on': datetime.strftime(trait_ds['created_on'], "%Y-%m-%d"),
-    }
+    'file':             {
+                          'name': trait_ds['filename'],
+                          'created_on': datetime.strftime(trait_ds['created_on'], "%Y-%m-%d"),
+                        },
+    'trait_id':         id,
+    'user_is_admin':    user_is_admin(),
   })
 
 
@@ -214,6 +234,20 @@ def validate_and_parse_trait_file():
   except Exception as ex:
     logger.error(f'Failed to parse the file: {ex}')
     return jsonify({ 'message': 'Failed to parse the file. Please try again later.' }), 500
+  
+
+@data_bp.route('/trait/<id>/download-file')
+@jwt_required()
+def download_trait_file(id):
+  """ Download the trait file """
+  user = get_current_user()
+  trait_ds = TraitFile.get_ds(id)
+  if user.username != trait_ds['username'] and not user_is_admin():
+    return abort(401)
+  
+  file = download_blob_to_file(MODULE_DB_OPERATIONS_BUCKET_NAME, trait_ds.get_filepath()[1], destination=UPLOADS_DIR, filename=trait_ds['filename'].raw_string)
+  mimetype = get_file_format('tsv')['mimetype']
+  return send_file(file, mimetype=mimetype)
 
 
 def parse_trait_file(file):

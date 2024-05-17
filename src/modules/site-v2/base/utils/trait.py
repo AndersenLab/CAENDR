@@ -168,4 +168,38 @@ def rollback_submission_on_error(trait_id, blob_name=None):
       
     # Delete the file data from Phenotype Database SQL table
     PhenotypeDatabase.delete_by_metadata_id(tf.name)
+
+def update_trait_metadata(id, form_data):
+  """ Update Trait metadata in datastore and SQL table """
+  try:
+    tf = TraitFile.get_ds(id)
+    props_to_update = {
+      'trait_name_user':      bleach.clean(form_data['trait_name_user']),
+      'trait_name_display_1': bleach.clean(form_data['trait_name_display_1']),
+      'trait_name_display_2': bleach.clean(form_data['trait_name_display_2']),
+      'trait_name_display_3': bleach.clean(form_data['trait_name_display_3']),
+      'description_short':    bleach.clean(form_data['description_short']),
+      'description_long':     bleach.clean(form_data['description_long']),
+      'units':                bleach.clean(form_data['units']),
+      'tags':                 [ bleach.clean(tag) for tag in form_data['tags'] ],
+      'institution':          bleach.clean(form_data['institution']),
+      'source_lab':           bleach.clean(form_data['source_lab']),
+      'protocols':            bleach.clean(form_data['protocols']),        
+      'publication':          bleach.clean(form_data['publication']),
+    }
+    tf.set_properties(**props_to_update)
+    tf.save()
+  except Exception as ex:
+    logger.error(f'Failed to update the trait file {tf.name}: {ex}')
+    return {'message': 'Failed to update the trait. Please try again later.'}, 500
+  
+  try:
+    trait_sql = get_trait(id)
+    if trait_sql:
+      trait_sql.update(**props_to_update)
+  except Exception as ex:
+    # TODO: Rollback the changes in Datastore
+    logger.error(f'Failed to update the trait metadata in SQL table: {ex}')
+    return {'message': 'Failed to update the trait. Please try again later.'}, 500
+  
       
