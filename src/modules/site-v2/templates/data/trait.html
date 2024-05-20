@@ -132,7 +132,7 @@
                         <i class="bi bi-slash-circle-fill"></i>
                         No, go back.
                     </button>
-                    <button type="button" class="btn btn-primary">
+                    <button type="button" id="submit" class="btn btn-primary">
                         <i class="bi bi-trash3-fill"></i>
                         Yes, publish it.
                     </button>
@@ -145,6 +145,8 @@
 
 {% block script %}
 <script>
+    const traitId = {{trait.name|tojson|safe}}
+
     $(document).ready(function() {
         
         $("#publishBtn").on('click', function() {
@@ -153,6 +155,31 @@
 
         $('.close').on('click', function() {
             $('#publishModal').modal('hide')
+        })
+
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
+                }
+            }
+        });
+
+        $('#submit').on('click', function(e) {
+            e.preventDefault()
+            let url = "{{url_for('api_trait.submit_trait', trait_id='ID')}}"
+            url = url.replace('ID', traitId);
+            $.ajax({
+                url: url,
+                type: 'POST',
+                success: function(response) {
+                    console.log(response)
+                },
+                error: function(error) {
+                    console.log(error)
+                }
+            })
+        
         })
 
     })

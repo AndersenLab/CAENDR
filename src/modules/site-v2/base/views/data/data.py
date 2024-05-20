@@ -18,7 +18,7 @@ from caendr.utils.env              import get_env_var
 from caendr.utils.data             import get_file_format
 from base.utils.auth               import jwt_required, get_current_user, user_is_admin
 from base.utils.trait              import add_trait, update_trait_metadata
-from base.forms                    import TraitSubmissionForm
+from base.forms                    import TraitSubmissionForm, EmptyForm
 from constants                     import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 MODULE_DB_OPERATIONS_BUCKET_NAME = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
@@ -79,6 +79,7 @@ def protocols():
 # Submit Trait
 #
 @data_bp.route('/trait/start-submit')
+@cache.memoize(60*60)
 @jwt_required()
 def submit_trait_start():
   """ Submit Trait start page """
@@ -91,6 +92,7 @@ def submit_trait_start():
 # Submit Trait Form
 #
 @data_bp.route('/trait/create', methods=['GET', 'POST'])
+@cache.memoize(60*60)
 @jwt_required()
 def submit_trait_form():
   """ Trait Submission Form """
@@ -131,6 +133,7 @@ def submit_trait_form():
 
 
 @data_bp.route('/trait/<id>')
+@cache.memoize(60*60)
 @jwt_required()
 def trait(id):
   """ Trait Page """
@@ -146,9 +149,11 @@ def trait(id):
     'trait_name':   trait_name,
     'trait':        trait_ds.serialize(),
     'file_content': phenotype_values,
+    'form':         EmptyForm(),
   })
 
 @data_bp.route('/trait/<id>/edit', methods=['GET', 'PUT'])
+@cache.memoize(60*60)
 @jwt_required()
 def edit_trait(id):
   """ Edit Trait Page"""
@@ -237,6 +242,7 @@ def validate_and_parse_trait_file():
   
 
 @data_bp.route('/trait/<id>/download-file')
+@cache.memoize(60*60)
 @jwt_required()
 def download_trait_file(id):
   """ Download the trait file """

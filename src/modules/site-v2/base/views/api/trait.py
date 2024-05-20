@@ -5,6 +5,7 @@ from extensions import cache
 from caendr.models.datastore import TraitFile, Species
 from caendr.models.error     import NotFoundError
 from caendr.utils.json       import jsonify_request
+from base.utils.auth         import jwt_required
 
 
 api_trait_bp = Blueprint(
@@ -56,3 +57,10 @@ def query_species(species_name):
       for tf in TraitFile.query_ds(ignore_errs=True, filters=['species', '=', species.name])
       if filter_trait_files(tf)
   ]
+
+
+@api_trait_bp.route('/review/<string:trait_id>/submit', methods=['POST'])
+@cache.memoize(60*60)
+@jwt_required()
+def submit_trait(trait_id):
+  pass
