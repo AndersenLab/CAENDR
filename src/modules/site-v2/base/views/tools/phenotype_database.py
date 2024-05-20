@@ -197,7 +197,7 @@ def submit_traits():
   # Try looking up the specified trait
   if initial_trait_name:
     try:
-      initial_trait = Trait(dataset=initial_trait_set, trait_name=initial_trait_name)
+      initial_trait = Trait.from_id(initial_trait_name)
     except NotFoundError:
       flash('That trait could not be found.', 'danger')
       initial_trait = None
