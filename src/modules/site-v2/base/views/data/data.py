@@ -17,7 +17,7 @@ from caendr.utils.local_files      import LocalUploadFile
 from caendr.utils.env              import get_env_var
 from caendr.utils.data             import get_file_format
 from base.utils.auth               import jwt_required, get_current_user, user_is_admin
-from base.utils.trait              import add_trait, update_trait_metadata
+from base.utils.trait              import add_trait, update_trait_metadata, user_is_trait_owner
 from base.forms                    import TraitSubmissionForm, EmptyForm
 from constants                     import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
@@ -146,10 +146,12 @@ def trait(id):
     'tool_alt_parent_breadcrumb': {"title": "MTL", "url": '/'}, # TODO: Update this to the correct URL
 
     # Data
-    'trait_name':   trait_name,
-    'trait':        trait_ds.serialize(),
-    'file_content': phenotype_values,
-    'form':         EmptyForm(),
+    'trait_name':    trait_name,
+    'trait':         trait_ds.serialize(),
+    'file_content':  phenotype_values,
+    'form':          EmptyForm(),
+    'user_is_owner': user_is_trait_owner(trait_ds.serialize(), get_current_user()),
+
   })
 
 @data_bp.route('/trait/<string:id>/edit', methods=['GET', 'PUT'])
@@ -159,7 +161,7 @@ def edit_trait(id):
   """ Edit Trait Page"""
   user = get_current_user()
   trait_ds = TraitFile.get_ds(id).serialize()
-  if user.email != trait_ds['submitter_email'] and not user_is_admin():
+  if user_is_trait_owner(trait_ds, user) and not user_is_admin():
     return abort(401)
   
   # Handle Trait Update
@@ -254,7 +256,7 @@ def download_trait_file(id):
   """ Download the trait file """
   user = get_current_user()
   trait_ds = TraitFile.get_ds(id)
-  if user.username != trait_ds['username'] and not user_is_admin():
+  if user_is_trait_owner(trait_ds.serialize(), user) and not user_is_admin():
     return abort(401)
   
   file = download_blob_to_file(MODULE_DB_OPERATIONS_BUCKET_NAME, trait_ds.get_filepath()[1], destination=UPLOADS_DIR, filename=trait_ds['filename'].raw_string)

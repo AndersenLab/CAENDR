@@ -204,5 +204,10 @@ def update_trait_metadata(id, form_data):
     return {'message': 'Failed to update the trait. Please try again later.'}, 500
   
   return {'message': 'Trait updated successfully.'}, 200
+
+
+def user_is_trait_owner(trait, user) -> bool:
+  """ Check if the user is the owner of the trait """
+  return user.email == trait['submitter_email']
   
       
