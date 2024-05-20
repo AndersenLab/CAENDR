@@ -59,6 +59,7 @@ def query_species(species_name):
   ]
 
 
+# TODO: Merge this with Vince's code
 @api_trait_bp.route('/review/<string:trait_id>/submit', methods=['POST'])
 @cache.memoize(60*60)
 @jwt_required()
