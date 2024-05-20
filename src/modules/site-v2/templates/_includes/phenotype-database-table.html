@@ -306,8 +306,9 @@ label {
     function filterTable(arr) {
         for (let i = 0; i < arr.length; i++) {
             const speciesName = arr[i].species_name.charAt(0).toUpperCase() + arr[i].species_name.replace('_', '. ').slice(1)
-            const traitName = arr[i].trait_name_caendr
-            let url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", traitName).replace("TRAIT_SET", 'caendr')
+            const traitID = arr[i].id
+            const dataset = arr[i].dataset
+            let url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", traitID).replace("TRAIT_SET", dataset)
             const createdOn = formatDate(arr[i].created_on)
             let tagsHTML = ''
             if (arr[i].tags !== null && arr[i].tags.length) {
