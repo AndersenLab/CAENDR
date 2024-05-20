@@ -99,8 +99,8 @@ def submit_trait_form():
   form = TraitSubmissionForm()
   user = get_current_user()
 
-  if hasattr(user, 'username') and not form.username.data:
-    form.username.data = user.username
+  if hasattr(user, 'email') and not form.email.data:
+    form.email.data = user.email
 
   # Handle form submission
   if request.method == 'POST':
@@ -118,7 +118,7 @@ def submit_trait_form():
         flash(resp['message'], 'danger')
       else:
         flash('Trait submitted successfully.', 'success')
-        return redirect(url_for('data.submit_trait_start'))
+        return redirect(url_for('data.trait', id=resp['trait_id']))
 
   return render_template('data/submit-trait-form.html', **{
     # Page Info
@@ -132,7 +132,7 @@ def submit_trait_form():
   })
 
 
-@data_bp.route('/trait/<id>')
+@data_bp.route('/trait/<string:id>')
 @cache.memoize(60*60)
 @jwt_required()
 def trait(id):
@@ -152,21 +152,21 @@ def trait(id):
     'form':         EmptyForm(),
   })
 
-@data_bp.route('/trait/<id>/edit', methods=['GET', 'PUT'])
+@data_bp.route('/trait/<string:id>/edit', methods=['GET', 'PUT'])
 @cache.memoize(60*60)
 @jwt_required()
 def edit_trait(id):
   """ Edit Trait Page"""
   user = get_current_user()
   trait_ds = TraitFile.get_ds(id).serialize()
-  if user.username != trait_ds['username'] and not user_is_admin():
+  if user.email != trait_ds['submitter_email'] and not user_is_admin():
     return abort(401)
   
   # Handle Trait Update
   if request.method == 'PUT':
     form = TraitSubmissionForm(request.form)
     form.species.data = trait_ds['species']
-    form.username.data = trait_ds['username']
+    form.email.data = trait_ds['submitter_email']
 
     # Validate form fields
     if not form.validate_on_submit():
@@ -185,7 +185,7 @@ def edit_trait(id):
     'description_long':     trait_ds.get('description_long'),
     'unit':                 trait_ds.get('unit'),
     'tags':                 trait_ds.get('tags'),
-    'username':             trait_ds.get('username'),
+    'email':                trait_ds.get('submitter_email'),
     'institution':          trait_ds.get('institution'),
     'source_lab':           trait_ds.get('source_lab'),
     'protocols':            trait_ds.get('protocols'),
@@ -241,7 +241,7 @@ def validate_and_parse_trait_file():
     return jsonify({ 'message': 'Failed to parse the file. Please try again later.' }), 500
   
 
-@data_bp.route('/trait/<id>/download-file')
+@data_bp.route('/trait/<string:id>/download-file')
 @cache.memoize(60*60)
 @jwt_required()
 def download_trait_file(id):

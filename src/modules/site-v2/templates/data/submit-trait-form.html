@@ -31,7 +31,7 @@
         {{ form.csrf_token }}
         <div class="row my-5">
             <h3 class="pb-3">{{'About You and Lab' if new_submission else 'About User and Lab'}}</h3>
-            <div class="col-md-4">{{ render_field(form.username) }}</div>
+            <div class="col-md-4">{{ render_field(form.email) }}</div>
             <div class="col-md-4">{{ render_field(form.institution) }}</div>
             <div class="col-md-4">{{ render_field(form.source_lab, has_popover=true, content='Please enter your lab code as found at https://cgc.umn.edu/laboratories') }}</div>
         </div>

@@ -136,7 +136,7 @@ def add_trait(form_data, user):
     logger.error(f'Failed to upload the file data to the database: {ex}')
     return {'message': 'Failed to submit a form. Please try again later.'}, 500
   
-  return {'message': 'Trait submitted successfully.'}, 200
+  return {'message': 'Trait submitted successfully.', 'trait_id': tf.name}, 200
 
 
 def rollback_submission_on_error(trait_id, blob_name=None):
@@ -168,7 +168,7 @@ def rollback_submission_on_error(trait_id, blob_name=None):
       
     # Delete the file data from Phenotype Database SQL table
     PhenotypeDatabase.delete_by_metadata_id(tf.name)
-    
+
 
 def update_trait_metadata(id, form_data):
   """ Update Trait metadata in datastore and SQL table """

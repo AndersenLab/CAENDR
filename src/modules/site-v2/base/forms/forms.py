@@ -350,7 +350,7 @@ class TraitSubmissionForm(FlaskForm):
   description_long = TextAreaField('Long Description', validators=[Required(), Length(min=10)])
   units = StringField('Unit of Measurement', validators=[Length(min=0, max=10)])
   tags = MultiCheckboxField("Categories", choices=TRAIT_CATEGORY_OPTIONS, validators=[Required()])
-  username = StringField('Username', validators=[Required(), Length(min=3, max=50)])
+  email = StringField('Email', validators=[Email(), Required(), Length(min=3, max=50)])
   institution = StringField('Institution', validators=[Required(), Length(min=3, max=50)])
   source_lab = StringField('Source Lab', validators=[Required(), Length(min=1, max=4)])
   protocols = TextAreaField('Protocols', validators=[Length(min=0, max=200)])
