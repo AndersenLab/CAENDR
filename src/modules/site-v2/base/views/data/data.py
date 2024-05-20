@@ -171,9 +171,15 @@ def edit_trait(id):
     # Validate form fields
     if not form.validate_on_submit():
       return jsonify({'message': f'Please fill out all required fields: {form.errors}'}), 500
+    
+    # Update the trait metadata
     else:
-      update_trait_metadata(id, form.data)
-      return jsonify({'status': 'OK'}), 200
+      resp, code = update_trait_metadata(id, form.data)
+      if code != 200:
+        flash(resp['message'], 'danger')
+      else:
+        flash(resp['message'], 'success')
+        return jsonify( resp ), code
 
   form_data = {
     'species':              trait_ds.get('species'),

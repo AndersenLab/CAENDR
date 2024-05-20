@@ -203,4 +203,6 @@ def update_trait_metadata(id, form_data):
     logger.error(f'Failed to update the trait metadata in SQL table: {ex}')
     return {'message': 'Failed to update the trait. Please try again later.'}, 500
   
+  return {'message': 'Trait updated successfully.'}, 200
+  
       
