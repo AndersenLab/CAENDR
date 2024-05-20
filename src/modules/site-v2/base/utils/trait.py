@@ -168,6 +168,7 @@ def rollback_submission_on_error(trait_id, blob_name=None):
       
     # Delete the file data from Phenotype Database SQL table
     PhenotypeDatabase.delete_by_metadata_id(tf.name)
+    
 
 def update_trait_metadata(id, form_data):
   """ Update Trait metadata in datastore and SQL table """

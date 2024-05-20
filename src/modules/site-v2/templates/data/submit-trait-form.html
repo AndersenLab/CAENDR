@@ -110,8 +110,7 @@
         <button type="submit" id="submit-trait" value="Submit Form" class="btn btn-secondary text-light disabled" aria-label="submit">Add Trait</button>
         {% else %}
         <div class="d-flex">
-            <button type="submit" id="update-trait" data-value="{{trait_id}}" class="btn btn-secondary text-light mx-5">Save for Later</button>
-            <button type="submit" id="publish-trait" class="btn btn-primary text-light mx-5">Save and Publish</button>
+            <button type="submit" id="update-trait" data-value="{{trait_id}}" class="btn btn-secondary text-light mx-5">Save</button>
         </div>
         {% endif %}
     </form>
@@ -247,6 +246,33 @@
                 }
             })       
         })
+
+        $('#publish-trait').on('click', function(e) {
+            e.preventDefault()
+            const formData = new FormData($('#form-submit')[0]);
+            const traitId = $(this).data('value');
+            let url = "{{url_for('api_trait.submit_trait', trait_id='ID')}}"
+            url = url.replace('ID', traitId);
+            let redirectURL = '/' // TODO: Update to correct URL
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    window.location.href = redirectURL;
+                },
+                error: function(error){
+                    console.error(error)
+                    if (error.responseJSON && error.responseJSON.message) {
+                        $('.alert').remove()
+                        flash_message(error.responseJSON.message)
+                    }         
+                }
+            })       
+        })
+
 
         function display_file_content(file) {
             $('#file-container').removeClass('d-none')

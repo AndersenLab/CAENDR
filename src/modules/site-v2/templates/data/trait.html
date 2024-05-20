@@ -169,11 +169,12 @@
             e.preventDefault()
             let url = "{{url_for('api_trait.submit_trait', trait_id='ID')}}"
             url = url.replace('ID', traitId);
+            let redirectURL = '/' // TODO: Update to correct URL
             $.ajax({
                 url: url,
                 type: 'POST',
                 success: function(response) {
-                    console.log(response)
+                    window.location.href = redirectURL;
                 },
                 error: function(error) {
                     console.log(error)

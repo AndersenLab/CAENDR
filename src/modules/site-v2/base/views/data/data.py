@@ -142,8 +142,8 @@ def trait(id):
   phenotype_values = get_phenotype_values_for_trait(id)
   return render_template('data/trait.html', **{
     # Page Info}
-    'title':                      f'Trait {trait_name}',
-    'tool_alt_parent_breadcrumb': {"title": "Traits", "url": '/'}, # TODO: Update this to the correct URL
+    'title':                      trait_ds['trait_name_display_1'],
+    'tool_alt_parent_breadcrumb': {"title": "MTL", "url": '/'}, # TODO: Update this to the correct URL
 
     # Data
     'trait_name':   trait_name,
@@ -194,15 +194,15 @@ def edit_trait(id):
   form = TraitSubmissionForm(data=form_data)
   return render_template('data/submit-trait-form.html', **{
     # Page Info
-    'title':          trait_ds['trait_name_display_1'],
-    # 'tool_alt_parent_breadcrumb': {"title": "Submit Trait", "url": url_for('data.submit_trait_start')},
-    'new_submission': False,
+    'title':                      'Edit Trait',
+    'tool_alt_parent_breadcrumb': { "title": trait_ds['trait_name_display_1'], "url": url_for('data.trait', id=trait_ds['name']) },
+    'new_submission':             False,
 
     # Data
     'form':             form,
     'phenotype_values': [ v.to_json() for v in get_phenotype_values_for_trait(id) ],
     'file':             {
-                          'name': trait_ds['filename'],
+                          'name':       trait_ds['filename'],
                           'created_on': datetime.strftime(trait_ds['created_on'], "%Y-%m-%d"),
                         },
     'trait_id':         id,
