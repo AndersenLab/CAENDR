@@ -1,5 +1,14 @@
 {% extends "_layouts/default.html" %}
 
+{% block custom_head %}
+<style>
+.infoButton {
+    height: 20px;
+    width: 20px;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container px-5 pb-5">
     <div class="row">
@@ -13,26 +22,32 @@
                         <td class="table-secondary text-center" colspan="2"><strong>About User and Lab</strong></td>
                     </tr>
                     <tr>
-                        <td class="col-3">Submitter</td>
+                        <td class="col-4">Submitter</td>
                         <td>{{trait.submitter}}</td>
                     </tr>
                     <tr>
-                        <td class="col-3">Submitter Email</td>
+                        <td class="col-4">Submitter Email</td>
                         <td>{{trait.submitter_email if trait.submitter_email is not none else ''}}</td>
                     </tr>
                     <tr>
-                        <td class="col-3">Source Lab</td>
+                        <td class="col-4">
+                            Source Lab
+                            <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
+                            data-bs-trigger="focus" data-bs-title="More information"
+                            data-bs-content="The lab code as found at https://cgc.umn.edu/laboratories" aria-label="More infomation about source lab"><i
+                            class="bi bi-info lh-1" aria-hidden="true"></i></a>
+                        </td>
                         <td>{{trait.source_lab}}</td>
                     </tr>
                     <tr>
-                        <td class="col-3">Institution</td>
+                        <td class="col-4">Institution</td>
                         <td>{{trait.institution}}</td>
                     </tr>
                     <tr>
                         <td class="table-secondary text-center" colspan="2"><strong>Trait Information</strong></td>
                     </tr>
                     <tr>
-                        <td class="col-3">Species</td>
+                        <td class="col-4">Species</td>
                         <td>{{trait.species|capitalize|replace('_', '. ')}}</td>
                     </tr>
                     <tr>
@@ -48,19 +63,43 @@
                         <td>{{trait.created_on.year}}-{{trait.created_on.month}}-{{trait.created_on.day}}</td>
                     </tr>
                     <tr>
-                        <td class="col-3">User Trait Name</td>
+                        <td class="col-4">
+                            User Trait Name
+                            <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
+                            data-bs-trigger="focus" data-bs-title="More information"
+                            data-bs-content="This is the name used internally by your laboratory to refer to this trait. Please note that this name will not be shared publicly with other users and will only be displayed to you." aria-label="More infomation about user trait name"><i
+                            class="bi bi-info lh-1" aria-hidden="true"></i></a>
+                        </td>
                         <td>{{trait.trait_name_caendr if trait.from_caendr else trait.trait_name_user}}</td>
                     </tr>
                     <tr>
-                        <td class="col-3">Display Name 1</td>
+                        <td class="col-4">
+                            Display Name 1
+                            <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
+                            data-bs-trigger="focus" data-bs-title="More information"
+                            data-bs-content="This name will be shared with other users in the phenotype database and will be used to represent your trait throughout the site." aria-label="More infomation about display name 1"><i
+                            class="bi bi-info lh-1" aria-hidden="true"></i></a>
+                        </td>
                         <td>{{trait.trait_name_display_1}}</td>
                     </tr>
                     <tr>
-                        <td class="col-3">Display Name 2</td>
+                        <td class="col-4">
+                            Display Name 2
+                            <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
+                            data-bs-trigger="focus" data-bs-title="More information"
+                            data-bs-content="This field can be used to provide additional information that is important for the user to know about the trait." aria-label="More infomation about display name 2"><i
+                            class="bi bi-info lh-1" aria-hidden="true"></i></a>
+                        </td>
                         <td>{{trait.trait_name_display_2}}</td>
                     </tr>
                     <tr>
-                        <td class="col-3">Display Name 3</td>
+                        <td class="col-4">
+                            Display Name 3
+                            <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
+                            data-bs-trigger="focus" data-bs-title="More information"
+                            data-bs-content="This field can be used to provide additional information that is important for the user to know about the trait." aria-label="More infomation display name 3"><i
+                            class="bi bi-info lh-1" aria-hidden="true"></i></a>
+                        </td>
                         <td>{{trait.trait_name_display_3}}</td>
                     </tr>
                     <tr>
@@ -72,19 +111,25 @@
                         <td>{{trait.description_long}}</td>
                     </tr>
                     <tr>
-                        <td class="col-3">Categories</td>
+                        <td class="col-4">
+                            Categories
+                            <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
+                            data-bs-trigger="focus" data-bs-title="More information"
+                            data-bs-content="These are the best categories that describe the trait. Please note that at least one category is required." aria-label="More infomation about categories"><i
+                            class="bi bi-info lh-1" aria-hidden="true"></i></a>
+                        </td>
                         <td>{{trait.tags|join(', ')}}</td>
                     </tr>
                     <tr>
-                        <td class="col-3">Unit of Measurement</td>
+                        <td class="col-4">Unit of Measurement</td>
                         <td>{{trait.units}}</td>
                     </tr>
                     <tr>
-                        <td class="col-3">Protocols</td>
+                        <td class="col-4">Protocols</td>
                         <td>{{trait.protocols}}</td>
                     </tr>
                     <tr>
-                        <td class="col-3">Publication</td>
+                        <td class="col-4">Publication</td>
                         <td><a href="{{trait.publication}}" target="_blank">{{trait.publication}}</a></td>
                     </tr>
                 </tbody>
@@ -113,7 +158,7 @@
             </div>
         </div>
     </div>
-    <div class="row mt-3">
+    <div class="row mt-4">
         <a class="col-2 mx-5 btn btn-secondary text-light" href="{{url_for('data.edit_trait', id=trait.name)}}">Edit Trait</a>
         <a class="col-2 mx-5 btn btn-primary text-light" href="#" id="publishBtn">Publish Trait</a>
     </div>
