@@ -107,7 +107,8 @@
         {% if new_submission %}
         <button type="submit" id="submit-trait" value="Submit Form" class="btn btn-secondary text-light disabled" aria-label="submit">Add Trait</button>
         {% else %}
-        <button type="submit" id="update-trait" data-value="{{trait_id}}" class="btn btn-secondary text-light mx-5">Save</button>
+        <button type="button" id="go-back" data-value="{{trait_id}}" class="btn btn-secondary text-light mx-5">Go back</button>
+        <button type="submit" id="update-trait" data-value="{{trait_id}}" class="btn btn-primary text-light mx-5">Save</button>
         {% endif %}
     </form>
 </div> <!-- /Container -->
@@ -158,6 +159,13 @@
             } else {
                 $('#submit-trait').addClass('disabled')
             }
+        })
+
+        $('#go-back').on('click', function() {
+            const traitId = $(this).data('value');
+            let url = "{{ url_for('data.trait', id='ID') }}";
+            url = url.replace('ID', traitId);
+            window.location.href = url
         })
 
         $.ajaxSetup({
