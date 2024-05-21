@@ -259,9 +259,9 @@ def download_trait_file(id):
   if user_is_trait_owner(trait_ds.serialize(), user) and not user_is_admin():
     return abort(401)
   
-  file = download_blob_to_file(MODULE_DB_OPERATIONS_BUCKET_NAME, trait_ds.get_filepath()[1], destination=UPLOADS_DIR, filename=trait_ds['filename'].raw_string)
+  file = download_blob_to_file(MODULE_DB_OPERATIONS_BUCKET_NAME, trait_ds.get_filepath()[1], destination=UPLOADS_DIR)
   mimetype = get_file_format('tsv')['mimetype']
-  return send_file(file, mimetype=mimetype)
+  return send_file(file, mimetype=mimetype, as_attachment=True, attachment_filename=trait_ds['filename'].raw_string)
 
 
 def parse_trait_file(file):
