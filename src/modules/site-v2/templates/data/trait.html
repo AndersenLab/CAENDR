@@ -60,7 +60,7 @@
                     </tr>
                     <tr>
                         <td> Upload Date</td>
-                        <td>{{trait.created_on.year}}-{{trait.created_on.month}}-{{trait.created_on.day}}</td>
+                        <td>{{ "%04d-%02d-%02d" | format(trait.created_on.year, trait.created_on.month, trait.created_on.day) }}</td>
                     </tr>
                     <tr>
                         <td class="col-4">
