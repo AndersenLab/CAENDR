@@ -104,14 +104,10 @@
         <div class="row my-5">
             <div class="col-md-4 text-break">{{ render_field(form.tags, has_popover=true, content='Please select the best categories to describe your trait. Please note that at least one category is required.') }}</div>
         </div>
-        <div class="row my-5">
-        </div>
         {% if new_submission %}
         <button type="submit" id="submit-trait" value="Submit Form" class="btn btn-secondary text-light disabled" aria-label="submit">Add Trait</button>
         {% else %}
-        <div class="d-flex">
-            <button type="submit" id="update-trait" data-value="{{trait_id}}" class="btn btn-secondary text-light mx-5">Save</button>
-        </div>
+        <button type="submit" id="update-trait" data-value="{{trait_id}}" class="btn btn-secondary text-light mx-5">Save</button>
         {% endif %}
     </form>
 </div> <!-- /Container -->

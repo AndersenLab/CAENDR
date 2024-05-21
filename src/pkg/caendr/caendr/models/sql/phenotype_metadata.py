@@ -76,9 +76,11 @@ class PhenotypeMetadata(DictSerializable, db.Model):
     db.session.add(new_trait)
     db.session.commit()
 
+
   def delete(self):
     db.session.delete(self)
     db.session.commit()
+
 
   def update(self, **kwargs):
     for k, v in kwargs.items():
@@ -86,5 +88,4 @@ class PhenotypeMetadata(DictSerializable, db.Model):
         v = ', '.join(v)
       setattr(self, k, v)
     setattr(self, 'modified_on', datetime.now(timezone.utc))
-
     db.session.commit()
