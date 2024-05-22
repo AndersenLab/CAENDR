@@ -231,7 +231,7 @@ def validate_and_parse_trait_file():
       try:
         species = Species.from_name(request.form.get('species'))
         validate_file(file, [
-                              StrainValidator( 'strain', species=species, force_unique=True, force_unique_msgs={} ),
+                              StrainValidator( 'strain', species=species, force_unique=True, force_unique_msgs={}, strain_issues=None ),
                               NumberValidator( None, accept_float=True, accept_na=True ),
                             ])
       except Exception as ex:
