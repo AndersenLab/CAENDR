@@ -6,6 +6,14 @@
     height: 20px;
     width: 20px;
 }
+#info {
+        background-color: var(--bs-footerBg);
+        max-width: 650px;
+    }
+#info i {
+    color: #0719BC;
+    font-size: 1.5rem
+}
 </style>
 {% endblock %}
 
@@ -155,6 +163,14 @@
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div id="info" class="d-flex flex-row p-2 my-4 ">
+            <i class="bi bi-info-circle-fill p-3 align-self-center"></i>
+            <div>
+                <p class="mb-1"><strong>Please Note:</strong> Publishing your trait will post it so that all CaeNDR users can have access to the trait data, create summary plots, and/or compare your trait to other traits also posted publicly on CaeNDR. Please ensure that the data are accurate and be as descriptive as possible in your descriptions of the trait.</p>
             </div>
         </div>
     </div>
