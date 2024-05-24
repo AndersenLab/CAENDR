@@ -143,7 +143,7 @@ def trait(id):
   return render_template('data/trait.html', **{
     # Page Info}
     'title':                      trait_ds['trait_name_display_1'],
-    'tool_alt_parent_breadcrumb': {"title": "MTL", "url": '/'}, # TODO: Update this to the correct URL
+    'tool_alt_parent_breadcrumb': {"title": "MTL", "url": url_for('data.my_trait_library')},
 
     # Data
     'trait_name':    trait_name,
