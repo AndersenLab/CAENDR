@@ -126,7 +126,11 @@
                             data-bs-content="These are the best categories that describe the trait. Please note that at least one category is required." aria-label="More infomation about categories"><i
                             class="bi bi-info lh-1" aria-hidden="true"></i></a>
                         </td>
-                        <td>{{trait.tags|join(', ')}}</td>
+                        <td>
+                            {% for tag in trait.tags %}
+                            <p class="m-1">{{tag|replace('/', ' • ')}}</p>
+                            {% endfor %}
+                        </td>
                     </tr>
                     <tr>
                         <td class="col-4">Unit of Measurement</td>
