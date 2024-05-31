@@ -23,6 +23,7 @@ from .dataset_release     import DatasetRelease       # Subclasses SpeciesSpecif
 from .browser_track       import BrowserTrackDefault  # Subclasses FileRecordEntity (from BrowserTrack)
 from .browser_track       import BrowserTrackTemplate # Subclasses FileRecordEntity (from BrowserTrack)
 from .trait_file          import TraitFile            # Subclasses FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEntity
+from .trait_file          import DatasetType
 
 # Job template classes
 from .job_entity          import JobEntity           # Subclasses StatusEntity; imports Container

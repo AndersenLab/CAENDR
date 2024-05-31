@@ -1,4 +1,5 @@
 from typing import Tuple, Optional
+from enum import Enum
 
 from caendr.utils.env import get_env_var
 
@@ -10,11 +11,15 @@ from caendr.utils.tokens           import TokenizedString
 DB_BUCKET_NAME = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
 
 
+class DatasetType(Enum):
+  """ Identifier for trait files folder in GCP Buckets """
+  CAENDR  = 'caendr'
+  PUBLIC  = 'public'
+  ZHANG   = 'zhang'
 
 class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEntity):
 
   kind = 'trait_file'
-
 
   #
   # Properties
@@ -74,9 +79,9 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
 
   @property
   def prefix(self):
-    if self.dataset == 'public':
-      return TokenizedString(join_path('trait_files', self['dataset'], '${SPECIES}', '${USER_ID}'))
-    return TokenizedString(join_path('trait_files', self['dataset'], '${SPECIES}'))
+    if self.dataset == DatasetType.PUBLIC:
+      return TokenizedString(join_path('trait_files', self['dataset'].value, '${SPECIES}', '${USER_ID}'))
+    return TokenizedString(join_path('trait_files', self['dataset'].value, '${SPECIES}'))
 
 
   #
@@ -85,7 +90,7 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
 
   # The species is always determined by this entity itself, so we fill it in instead of letting the calling function supply it
   def get_filepath(self, schema: BlobURISchema = None, check_if_exists: bool = False):
-    if self.dataset == 'public':
+    if self.dataset == DatasetType.PUBLIC:
       return super().get_filepath_hashed(schema=schema, check_if_exists=check_if_exists, SPECIES=self['species'].name, USER_ID=self['username'])
     return super().get_filepath(schema=schema, check_if_exists=check_if_exists, SPECIES=self['species'].name)
 
@@ -111,3 +116,13 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
       Combines `trait_name_display_1`, `trait_name_display_2`, and `trait_name_display_3` into a single tuple.
     '''
     return self['trait_name_display_1'], self['trait_name_display_2'], self['trait_name_display_3']
+
+  @property
+  def dataset(self):
+    return self._get_enum_prop(DatasetType, 'dataset', None)
+  
+  @dataset.setter
+  def dataset(self, val):
+    if isinstance(val, str):
+      val = val.upper()
+    return self._set_enum_prop(DatasetType, 'dataset', val)

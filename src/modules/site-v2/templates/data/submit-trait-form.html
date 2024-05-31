@@ -124,6 +124,10 @@
         // Upload the file and display the content
         $('#file-upload').on('click', function(e) {
             e.preventDefault()
+            handleFileUpload()
+        })
+
+        function handleFileUpload() {
             const file = $('#file')[0].files[0]
             const species = $('#speciesSelect').val()
             if (file && species) {
@@ -153,8 +157,8 @@
                         }         
                     }
                 })            
-            }            
-        })
+            }
+        }
 
         function display_file_content(file) {
             $('#file-content').parent().removeClass('d-none')
