@@ -10,6 +10,7 @@ from config     import config
 from caendr.api.phenotype          import get_trait_categories
 from caendr.models.error           import EnvVarError, FileUploadError
 from caendr.models.datastore       import Species, TraitFile
+from caendr.models.trait           import Trait
 from caendr.api.phenotype          import get_phenotype_values_for_trait
 from caendr.services.cloud.storage import get_blob, download_blob_to_file
 from caendr.services.logger        import logger
@@ -19,6 +20,7 @@ from caendr.utils.env              import get_env_var
 from caendr.utils.data             import get_file_format
 from base.utils.auth               import jwt_required, get_current_user, user_is_admin
 from base.utils.trait              import add_trait, update_trait_metadata, user_is_trait_owner
+from base.utils.view_decorators    import parse_trait
 from base.forms                    import TraitSubmissionForm, EmptyForm
 from constants                     import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
@@ -148,7 +150,7 @@ def submit_trait_form():
         flash(resp['message'], 'danger')
       else:
         flash('Trait submitted successfully.', 'success')
-        return redirect(url_for('data.trait', id=resp['trait_id']))
+        return redirect(url_for('data.trait', trait_id=resp['trait_id']))
 
   return render_template('data/submit-trait-form.html', **{
     # Page Info
@@ -162,33 +164,43 @@ def submit_trait_form():
   })
 
 
-@data_bp.route('/trait/<string:id>')
+
+#
+# View & Edit Trait
+#
+
+
+@data_bp.route('/trait/<string:trait_id>')
 @cache.memoize(60*60)
 @jwt_required()
-def trait(id):
-  """ Trait Page """
-  trait_ds = TraitFile.get_ds(id)
-  trait_name = ' '.join(trait_ds.display_name)
-  phenotype_values = get_phenotype_values_for_trait(id)
+@parse_trait()
+def trait(trait: Trait):
+  """
+    View / Review Trait Page
+  """
+  phenotype_values = get_phenotype_values_for_trait(trait.sql_row.id)
   return render_template('data/trait.html', **{
-    # Page Info}
-    'title':                      trait_ds['trait_name_display_1'],
-    'tool_alt_parent_breadcrumb': {"title": "MTL", "url": url_for('data.my_trait_library')},
+    # Page Info
+    'title':                      trait.display_name[0],
+    'tool_alt_parent_breadcrumb': {"title": "My Trait Library", "url": url_for('data.my_trait_library')},
 
     # Data
-    'trait_name':    trait_name,
-    'trait':         trait_ds.serialize(),
+    'trait_name':    ' '.join(trait.display_name),
+    'trait':         { **trait.file.serialize(), 'name': trait.file.name },
     'file_content':  phenotype_values,
     'form':          EmptyForm(),
-    'user_is_owner': user_is_trait_owner(trait_ds.serialize(), get_current_user()),
-
+    'user_is_owner': trait.file.belongs_to_user(get_current_user()),
+    # 'user_is_owner': user_is_trait_owner(trait.file.serialize(), get_current_user()),
   })
+
 
 @data_bp.route('/trait/<string:id>/edit', methods=['GET', 'PUT'])
 @cache.memoize(60*60)
 @jwt_required()
 def edit_trait(id):
-  """ Edit Trait Page"""
+  """
+    Edit Trait Page
+  """
   user = get_current_user()
   trait_ds = TraitFile.get_ds(id).serialize()
   if user_is_trait_owner(trait_ds, user) and not user_is_admin():
@@ -233,7 +245,7 @@ def edit_trait(id):
   return render_template('data/submit-trait-form.html', **{
     # Page Info
     'title':                      'Edit Trait',
-    'tool_alt_parent_breadcrumb': { "title": trait_ds['trait_name_display_1'], "url": url_for('data.trait', id=trait_ds['name']) },
+    'tool_alt_parent_breadcrumb': { "title": trait_ds['trait_name_display_1'], "url": url_for('data.trait', trait_id=trait_ds['name']) },
     'new_submission':             False,
 
     # Data
@@ -246,6 +258,7 @@ def edit_trait(id):
     'trait_id':         id,
     'user_is_admin':    user_is_admin(),
   })
+
 
 
 #
