@@ -105,6 +105,7 @@
           d.dataset = 'public';
         },
       },
+      "autoWidth": false,
       "ordering": false,
       "columns": [
         {
@@ -117,30 +118,34 @@
             `;
           },
           "sClass": "p-0 m-0 dropdown-column",
+          "sWidth": "6%",
         },
         {
           "data": "trait_name_user",
           "render": function(data, type, row) {
             return data || row.id;
           },
+          "sWidth": "20%",
         },
         {
           "render": function(data, type, row) {
             return traitNameHTML( row.trait_name_display_1, row.trait_name_display_2, row.trait_name_display_3 );
           },
-          "width": '20%',
+          "sWidth": "20%",
         },
         {
           "data": "species_name",
           "render": function(data, type, row) {
             return first_letter_caps(data).replace('_', '. ').italics();
           },
+          "sWidth": "12%",
         },
         {
           "data": "created_on",
           "render": function(data, type, row) {
             return formatDate(data);
           },
+          "sWidth": "12%",
         },
         {
           "data": "publish_status",
