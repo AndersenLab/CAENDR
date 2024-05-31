@@ -17,6 +17,14 @@
 </style>
 {% endblock %}
 
+
+{%- set status = trait['publish_status'] %}
+{%- set canEdit    = (reviewing and status == PublishStatus.SUBMITTED.value) or (user_is_owner and status == PublishStatus.UPLOADED.value ) %}
+{%- set canAccept  = (reviewing and status == PublishStatus.SUBMITTED.value) %}
+{%- set canPublish = (user_is_owner and status == PublishStatus.UPLOADED.value ) %}
+{%- set canRetract = status == PublishStatus.ACCEPTED.value %}
+
+
 {% block content %}
 <div class="container px-5 pb-5">
     <div class="d-flex">
@@ -182,13 +190,30 @@
     </div>
     {%- endif %}
 
+    {%- if user_is_owner or reviewing %}
     <div class="row mt-4">
+        {%- if canEdit %}
         <a class="col-2 mx-5 btn btn-primary text-light" href="{{url_for('data.edit_trait', id=trait.name, return_to=request.endpoint.rsplit('.')[-1])}}">Edit Trait</a>
-        {% if user_is_owner %}
-        <button id="publishBtn" type="button" class="col-2 mx-5 btn btn-primary text-light">Publish Trait</button>
-        {% endif %}
+        {%- endif %}
+
+        {%- if canAccept %}
+        <button id="acceptBtn" type="button" class="col-2 mx-5 btn btn-success text-light" data-bs-toggle="modal" data-bs-target="#acceptModal">Accept Trait</button>
+        <button id="rejectBtn" type="button" class="col-2 mx-5 btn btn-danger  text-light" data-bs-toggle="modal" data-bs-target="#rejectModal">Reject Trait</button>
+        {%- endif %}
+        {%- if canRetract %}
+        <button id="retractBtn" type="button" class="col-2 mx-5 btn btn-danger   text-light" data-bs-toggle="modal" data-bs-target="#retractModal">Retract Trait</button>
+        {%- endif %}
+
+        {%- if canPublish %}
+        <button id="publishBtn" type="button" class="col-2 mx-5 btn btn-success text-light">Publish Trait</button>
+        {%- elif user_is_owner and not reviewing %}
+        <div><i>This trait has already been submitted for review.</i></div>
+        {%- endif %}
     </div>
+    {%- endif %}
 </div>
+
+{%- if user_is_owner %}
 <div class="modal fade" id="publishModal" tabindex="-1" role="dialog" aria-labelledby="publishModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -197,7 +222,7 @@
                 <button type="button" class="close btn-close" data-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to publish this trait to public Phenotype Database?</p>
+                <p>Are you sure you want to publish this trait to the public Phenotype Database?</p>
                 <div class="d-flex justify-content-around p-2">
                     <button type="button" class="btn btn-info close">
                         <i class="bi bi-slash-circle-fill"></i>
@@ -212,6 +237,82 @@
         </div>
     </div>
 </div>
+{%- endif %}
+
+{%- if canAccept %}
+<div class="modal fade" id="acceptModal" tabindex="-1" role="dialog" aria-labelledby="acceptModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="acceptModalTitle">Accept Trait</h5>
+                <button type="button" class="close btn-close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to accept this trait to the public Phenotype Database?  This action is not reversible.</p>
+                <div class="d-flex justify-content-around p-2">
+                    <button type="button" class="btn btn-info close">
+                        <i class="bi bi-slash-circle-fill"></i>
+                        No, go back.
+                    </button>
+                    <button type="button" id="accept-button" class="btn btn-primary">
+                        <i class="bi bi-trash3-fill"></i>
+                        Yes, accept it.
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rejectModalTitle">Reject Trait</h5>
+                <button type="button" class="close btn-close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to reject this trait from the public Phenotype Database?  This will return the trait to the submitting user.</p>
+                <div class="d-flex justify-content-around p-2">
+                    <button type="button" class="btn btn-info close">
+                        <i class="bi bi-slash-circle-fill"></i>
+                        No, go back.
+                    </button>
+                    <button type="button" id="reject-button" class="btn btn-danger">
+                        <i class="bi bi-trash3-fill"></i>
+                        Yes, reject it.
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{%- endif %}
+
+{%- if canRetract %}
+<div class="modal fade" id="retractModal" tabindex="-1" role="dialog" aria-labelledby="retractModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="retractModalTitle">Retract Trait</h5>
+                <button type="button" class="close btn-close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to retract this trait from the public Phenotype Database?  This action is not reversible.</p>
+                <div class="d-flex justify-content-around p-2">
+                    <button type="button" class="btn btn-info close">
+                        <i class="bi bi-slash-circle-fill"></i>
+                        No, go back.
+                    </button>
+                    <button type="button" id="retract-button" class="btn btn-danger">
+                        <i class="bi bi-trash3-fill"></i>
+                        Yes, retract it.
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{%- endif %}
 {% endblock %}
 
 {% block script %}
@@ -230,6 +331,9 @@
 
         $('.close').on('click', function() {
             $('#publishModal').modal('hide')
+            $('#acceptModal').modal('hide')
+            $('#rejectModal').modal('hide')
+            $('#retractModal').modal('hide')
         })
 
         $('#submit').on('click', function(e) {
@@ -249,6 +353,64 @@
                 },
             })
         })
+
+        {%- if canAccept %}
+        $('#accept-button').on('click', function(e) {
+            e.preventDefault()
+            $.ajax({
+                url: "{{ url_for('api_trait.accept_trait', trait_id=trait.name) }}",
+                type: "POST",
+
+                success: function(response) {
+                    window.location.href = "{{ url_for('admin_traits.trait_queue') }}";
+                },
+
+                error: function(error) {
+                    console.error('ERROR: ', error)
+                    $('.close').click()
+                    flashErrorResponse(error.responseJSON, 'There was a problem accepting this trait. Please try again later.')
+                },
+            })
+        })
+
+        $('#reject-button').on('click', function(e) {
+            e.preventDefault()
+            $.ajax({
+                url: "{{ url_for('api_trait.reject_trait', trait_id=trait.name) }}",
+                type: "POST",
+
+                success: function(response) {
+                    window.location.href = "{{ url_for('admin_traits.trait_queue') }}";
+                },
+
+                error: function(error) {
+                    console.error('ERROR: ', error)
+                    $('.close').click()
+                    flashErrorResponse(error.responseJSON, 'There was a problem rejecting this trait. Please try again later.')
+                },
+            })
+        })
+        {%- endif %}
+
+        {%- if canRetract %}
+        $('#retract-button').on('click', function(e) {
+            e.preventDefault()
+            $.ajax({
+                url: "{{ url_for('api_trait.retract_trait', trait_id=trait.name) }}",
+                type: "POST",
+
+                success: function(response) {
+                    window.location.href = "{{ url_for('admin_traits.trait_queue') }}";
+                },
+
+                error: function(error) {
+                    console.error('ERROR: ', error)
+                    $('.close').click()
+                    flashErrorResponse(error.responseJSON, 'There was a problem retracting this trait. Please try again later.')
+                },
+            })
+        })
+        {%- endif %}
 
         var tableHeight = $('#trait-info').outerHeight();
         $('#file-content-div').outerHeight(tableHeight);
