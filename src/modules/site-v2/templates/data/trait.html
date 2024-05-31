@@ -211,11 +211,15 @@
 {% endblock %}
 
 {% block script %}
+{% from "_scripts/submit-job.js" import ajax_setup %}
 <script>
     const traitId = {{trait.name|tojson|safe}}
 
     $(document).ready(function() {
-        
+
+        // Set headers for AJAX requests
+        {{ ajax_setup(form.csrf_token._value()) }}
+
         $("#publishBtn").on('click', function() {
             $('#publishModal').modal('show')
         })
@@ -223,14 +227,6 @@
         $('.close').on('click', function() {
             $('#publishModal').modal('hide')
         })
-
-        $.ajaxSetup({
-            beforeSend: function(xhr, settings) {
-                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
-                xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
-                }
-            }
-        });
 
         $('#submit').on('click', function(e) {
             e.preventDefault()
