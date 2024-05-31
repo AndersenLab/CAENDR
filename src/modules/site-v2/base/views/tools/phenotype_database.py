@@ -133,8 +133,7 @@ def submit_traits():
 def submit(form_data, no_cache=False):
 
   # Make sure these keys exist in the form data, even if they weren't provided in the submission
-  form_data['trait_2']         = form_data.get('trait_2',         None)
-  form_data['trait_2_dataset'] = form_data.get('trait_2_dataset', None)
+  form_data['trait_2'] = form_data.get('trait_2', None)
 
   # Try submitting the job & getting a JSON status message
   response, code = try_submit(PhenotypeReport.kind, get_current_user(), form_data, no_cache)

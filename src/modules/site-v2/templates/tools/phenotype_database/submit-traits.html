@@ -122,10 +122,7 @@
 
 
     function get_trait_id(id) {
-        return [
-            document.getElementById(`${id}-selector`).dataset.trait,
-            document.getElementById(`${id}-selector`).dataset.set,
-        ]
+        return document.getElementById(`${id}-selector`).dataset.trait;
     }
 
 
@@ -204,9 +201,9 @@
 
 
     function updateSubmitButton() {
-        const [trait_1, trait_1_dataset] = get_trait_id('trait-1');
+        const trait_1 = get_trait_id('trait-1');
         {%- if two_traits %}
-        const [trait_2, trait_2_dataset] = get_trait_id('trait-2');
+        const trait_2 = get_trait_id('trait-2');
         {%- endif %}
         const canSubmit = trait_1 != null {% if two_traits %} && trait_2 != null{% endif %};
         document.getElementById('submit-button').classList.toggle('disabled', !canSubmit);
@@ -214,9 +211,9 @@
 
 
     function submit() {
-        const [trait_1, trait_1_dataset] = get_trait_id('trait-1');
+        const trait_1 = get_trait_id('trait-1');
         {%- if two_traits %}
-        const [trait_2, trait_2_dataset] = get_trait_id('trait-2');
+        const trait_2 = get_trait_id('trait-2');
         {%- endif %}
 
         if (trait_1 == null {% if two_traits %} || trait_2 == null {% endif %}) {
@@ -230,9 +227,9 @@
 
         data = {
             species,
-            trait_1, trait_1_dataset,
+            trait_1,
             {%- if two_traits %}
-            trait_2, trait_2_dataset,
+            trait_2,
             {%- endif %}
         }
 
