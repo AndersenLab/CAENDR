@@ -1,0 +1,125 @@
+{% if table_id is not defined %}
+  {% set table_id = "phenotype-table" %}
+{% endif %}
+
+
+<div id="{{ table_id }}-search-container" class="d-flex flex-wrap justify-content-between my-5">
+
+  <!-- Keyword Search -->
+  <div class="col-12 col-md-3 mx-1 mb-3 mb-md-0">
+    <form>
+      <label for="{{ table_id }}-trait-search" class="form-label"><i class="bi bi-search"></i> Search:</label>
+      <div class="input-wrapper">
+        <input id="{{ table_id }}-trait-search" name="trait-search" type="text" class="form-control">
+        <i class="bi bi-x-circle-fill" id="{{ table_id }}-clear-search"></i>
+      </div>
+    </form>
+  </div>
+  <!-- /Keyword Search -->
+
+  <!-- Tag Search -->
+  <div class="col-12 col-md-8 mx-1 align-self-end mb-0">
+    <div id="{{ table_id }}-tags-filter" class="d-flex flex-wrap justify-content-center justify-content-md-end mt-3 mt-md-0" role="menu">
+      {% for tag in categories %}
+      <div class="d-flex align-items-center mx-2 mb-3">
+        <input id="{{ table_id }}-tag-{{ tag }}" type="checkbox" class="custom-control-input me-1 filterCheckbox" value="{{tag}}">
+        <label class="custom-check-label" for="{{tag}}">{{tag|replace('/', ' • ')}}</label>
+      </div>
+      {% endfor %}
+      <div class="d-flex mx-2 mb-3">
+        <a id="{{ table_id }}-clear-all-tags" class="fw-bold" role="button">Clear All<i class="bi bi-x-circle-fill ms-1" aria-hidden="true"></i></a>
+      </div>
+    </div>
+  </div>
+  <!-- /Tag Search -->
+
+</div>
+
+
+<script type="module">
+
+
+  // Main search function
+  function search() {
+
+    // Compile list of checked tags
+    const checkedTagsSelector = $("#{{ table_id }}-tags-filter .filterCheckbox:checked")
+    let selectedTags = []
+    if (checkedTagsSelector.length) {
+      selectedTags = checkedTagsSelector.map(function() {
+        return $(this).val()
+      }).get()
+    }
+
+    // Broadcast the new search terms
+    document.dispatchEvent(new CustomEvent('{{ table_id }}-search', {
+      "detail": {
+        "search_val":    $("#{{ table_id }}-trait-search").val(),
+        "selected_tags": selectedTags,
+      },
+    }));
+  }
+
+
+  // Update checked tags via event
+  document.addEventListener("{{table_id}}-update-tag", ({detail}) => {
+    const filterTag = $("#{{ table_id }}-tags-filter input[type=checkbox]").filter(function() {
+      console.log( $(this).attr('value'), detail.tagVal );
+      return $(this).attr('value') === detail.tagVal;
+    })
+    filterTag.prop('checked', true);
+    search();
+  })
+
+
+  $(document).ready(function() {
+
+    /* Category Tags */
+
+    // Handle the Categories filter
+    $(document).on( "change", "#{{ table_id }}-tags-filter input[type=checkbox]", function () {
+      if ($(this).attr('id') !== '{{ table_id }}-select-all') {
+        $('#{{ table_id }}-select-all').prop('checked', false)
+      }
+      search();
+    });
+
+    // Select all categories
+    $('#{{ table_id }}-select-all').on('change', function() {
+      if ($(this).is(':checked')) {
+        $('#{{ table_id }}-tags-filter .filterCheckbox').prop('checked', true);
+      } else {
+        $('#{{ table_id }}-tags-filter .filterCheckbox').prop('checked', false);
+      }
+    });
+
+    // Clear all categories
+    $("#{{ table_id }}-clear-all-tags").on('click', function() {
+      $('#{{ table_id }}-tags-filter input[type=checkbox]').prop('checked', false);
+      search();
+    });
+
+
+    /* Search Bar */
+
+    // Handle search bar
+    $("#{{ table_id }}-trait-search").on('keyup', function() {
+      search();
+    })
+
+    // Clear search bar and reset the table
+    $("#{{ table_id }}-clear-search").on('click', function() {
+      $("#{{ table_id }}-trait-search").val('')
+      search()
+    })
+
+
+    /* Misc */
+
+    // Prevent 'enter' key from reloading the page
+    $('#{{ table_id }}-trait-search').closest('form').on('submit', function(e) {
+      e.preventDefault();
+    });
+
+  });
+</script>
