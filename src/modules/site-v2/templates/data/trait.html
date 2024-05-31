@@ -213,7 +213,6 @@
 {% block script %}
 {% from "_scripts/submit-job.js" import ajax_setup %}
 <script>
-    const traitId = {{trait.name|tojson|safe}}
 
     $(document).ready(function() {
 
@@ -230,17 +229,16 @@
 
         $('#submit').on('click', function(e) {
             e.preventDefault()
-            let url = "{{url_for('api_trait.submit_trait', trait_id='ID')}}"
-            url = url.replace('ID', traitId);
-            let redirectURL = "{{url_for('data.my_trait_library')}}"
             $.ajax({
-                url: url,
-                type: 'POST',
+                url: "{{ url_for('api_trait.submit_trait', trait_id=trait.name) }}",
+                type: "POST",
+
                 success: function(response) {
-                    window.location.href = redirectURL;
+                    window.location.href = "{{ url_for('data.my_trait_library') }}";
                 },
+
                 error: function(error) {
-                    console.log(error)
+                    console.error('ERROR: ', error)
                     $('.close').click()
                     if (error.responseJSON && error.responseJSON.message) {
                         $('.alert').remove()
