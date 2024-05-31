@@ -87,7 +87,7 @@ class PhenotypeMetadata(DictSerializable, db.Model):
       modified_on          = datetime.now(timezone.utc),
       dataset              = trait_obj['dataset'].value,
       is_bulk_file         = trait_obj['is_bulk_file'],
-      publish_status       = trait_obj['publish_status'],
+      publish_status       = trait_obj['publish_status'].value,
     )
     db.session.add(new_trait)
     db.session.commit()
