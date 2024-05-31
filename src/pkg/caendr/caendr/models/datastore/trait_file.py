@@ -57,7 +57,7 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
 
 
   def serialize(self, **kwargs):
-    return {
+    props = {
       **super().serialize(**kwargs),
 
       # Add Python property values & function lookups
@@ -67,6 +67,12 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
       'is_public':       self.is_public,
       'from_caendr':     self.from_caendr,
     }
+
+    # Make dataset lowercase
+    if props.get('dataset') is not None:
+      props['dataset'] = props['dataset'].lower()
+
+    return props
 
 
   #
