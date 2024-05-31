@@ -56,12 +56,11 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
     }
 
 
-  def serialize(self, include_meta=True):
+  def serialize(self, **kwargs):
     return {
-      **super().serialize(include_meta=include_meta),
+      **super().serialize(**kwargs),
 
       # Add Python property values & function lookups
-      'name':            self.name,
       'uri':             self.get_filepath(schema=BlobURISchema.HTTPS),
       'submitter':       self.get_user_full_name() if self.from_public else 'CaeNDR',
       'submitter_email': self.get_user_email() if self.from_public else None,
