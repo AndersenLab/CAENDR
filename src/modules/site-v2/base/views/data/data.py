@@ -150,7 +150,7 @@ def submit_trait_form():
         flash(resp['message'], 'danger')
       else:
         flash('Trait submitted successfully.', 'success')
-        return redirect(url_for('data.trait', trait_id=resp['trait_id']))
+        return redirect(url_for('data.view_trait', trait_id=resp['trait_id']))
 
   return render_template('data/submit-trait-form.html', **{
     # Page Info
@@ -170,18 +170,28 @@ def submit_trait_form():
 #
 
 
-@data_bp.route('/trait/<string:trait_id>')
+@data_bp.route('/trait/<string:trait_id>/view',   endpoint='view_trait')
+@data_bp.route('/trait/<string:trait_id>/review', endpoint='review_trait')
 @cache.memoize(60*60)
 @jwt_required()
-@parse_trait()
+@parse_trait(validate_owner=True, allow_admin=True)
 def trait(trait: Trait):
   """
     View / Review Trait Page
   """
+
+  # Track which endpoint was called
+  reviewing = request.endpoint.endswith('review_trait')
+
+  # Validate admin on review endpoint
+  if reviewing and not user_is_admin():
+    abort(404)
+
   phenotype_values = get_phenotype_values_for_trait(trait.sql_row.id)
   return render_template('data/trait.html', **{
     # Page Info
-    'title':                      trait.display_name[0],
+    'title': ('Review' if reviewing else 'View') + ' Trait',
+    'subtitle': trait.display_name[0],
     'tool_alt_parent_breadcrumb': {"title": "My Trait Library", "url": url_for('data.my_trait_library')},
 
     # Data
@@ -191,6 +201,8 @@ def trait(trait: Trait):
     'form':          EmptyForm(),
     'user_is_owner': trait.file.belongs_to_user(get_current_user()),
     # 'user_is_owner': user_is_trait_owner(trait.file.serialize(), get_current_user()),
+
+    'reviewing': reviewing,
   })
 
 
@@ -245,7 +257,7 @@ def edit_trait(id):
   return render_template('data/submit-trait-form.html', **{
     # Page Info
     'title':                      'Edit Trait',
-    'tool_alt_parent_breadcrumb': { "title": trait_ds['trait_name_display_1'], "url": url_for('data.trait', trait_id=trait_ds['name']) },
+    'tool_alt_parent_breadcrumb': { "title": trait_ds['trait_name_display_1'], "url": url_for('data.view_trait', trait_id=trait_ds['name']) },
     'new_submission':             False,
 
     # Data

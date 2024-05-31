@@ -154,7 +154,7 @@
           "data": "publish_status",
           "render": function(data, type, row) {
             {%- if trait_library_table_mode == 'full' %}
-            const url = "{{ url_for('data.trait', trait_id='TRAIT_ID') }}".replace("TRAIT_ID", row.id);
+            const url = "{{ url_for('data.view_trait', trait_id='TRAIT_ID') }}".replace("TRAIT_ID", row.id);
             if (data === "{{ PublishStatus.UPLOADED.name }}") {
               return `
                 <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Edit and Publish</a>

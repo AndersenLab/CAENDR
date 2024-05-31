@@ -447,7 +447,7 @@ def query_trait_categories():
 
 @api_trait_bp.route('/review/<string:trait_id>/submit', methods=['POST'])
 @jwt_required()
-@parse_trait(validate_owner=True)
+@parse_trait(validate_owner=True, allow_admin=False)
 @jsonify_request
 def submit_trait(trait: Trait):
   '''

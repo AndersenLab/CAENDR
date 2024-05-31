@@ -168,7 +168,7 @@
         },
         {
           "render": function(data, type, row) {
-            const url = "{{ url_for('data.trait', trait_id='TRAIT_ID') }}".replace("TRAIT_ID", row.id);
+            const url = "{{ url_for('data.review_trait', trait_id='TRAIT_ID') }}".replace("TRAIT_ID", row.id);
             return `
               <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Review</a>
             `;

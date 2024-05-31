@@ -163,7 +163,7 @@
 
         $('#go-back').on('click', function() {
             const traitId = $(this).data('value');
-            let url = "{{ url_for('data.trait', trait_id='ID') }}";
+            let url = "{{ url_for('data.view_trait', trait_id='ID') }}";
             url = url.replace('ID', traitId);
             window.location.href = url
         })
@@ -230,7 +230,7 @@
             const traitId = $(this).data('value');
             let url = "{{ url_for('data.edit_trait', id='ID') }}";
             url = url.replace('ID', traitId);
-            let redirectURL = "{{ url_for('data.trait', trait_id='ID') }}";
+            let redirectURL = "{{ url_for('data.view_trait', trait_id='ID') }}";
             redirectURL = redirectURL.replace('ID', traitId);
             $.ajax({
                 type: "PUT",
