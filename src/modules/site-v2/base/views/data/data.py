@@ -214,7 +214,7 @@ def edit_trait(id):
     Edit Trait Page
   """
   user = get_current_user()
-  trait_ds = TraitFile.get_ds(id).serialize()
+  trait_ds = TraitFile.get_ds(id).serialize(include_name=True)
   if user_is_trait_owner(trait_ds, user) and not user_is_admin():
     return abort(401)
   
