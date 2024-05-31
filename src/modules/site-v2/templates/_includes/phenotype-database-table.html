@@ -122,7 +122,13 @@ label {
                     }
                 },
                 {"data": "trait_name_caendr"},
-                {"data": "description_long"},
+                {
+                    "data": "description_long",
+                    // TODO: Should this be Markdown?
+                    // "render": function(data, type, row) {
+                    //     return markdownToHTML(data);
+                    // },
+                },
                 {
                     "data": "created_on",
                     "render": function(data, type, row) {
@@ -185,7 +191,7 @@ label {
                     $('#{{ offcanvas_id }} .btn-close').click()
                     flashErrorResponse(error.responseJSON, 'There was a problem retrieving this trait. Please try again later.')
                 })
-        })
+            })
 
 
         // Filter table by tag links

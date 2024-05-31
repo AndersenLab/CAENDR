@@ -1,4 +1,6 @@
 import json
+from typing import Any, Dict, Tuple
+
 from caendr.services.logger import logger
 from caendr.utils.json import dump_json
 
@@ -10,6 +12,11 @@ def delete_ds_entity_by_ref(kind, id):
   key = dsClient.key(kind, id)
   dsClient.delete(key)
 
+
+
+#
+# Loading from Datastore
+#
 
 def get_ds_entity(kind, name):
   ''' Returns item by kind and name from google datastore '''
@@ -28,26 +35,67 @@ def get_ds_entity(kind, name):
     return None
 
 
-def save_ds_entity(kind, name, **kwargs):
-  ''' Saves an entity to the datastore, optionally preventing indexing of select properties '''
-  try:
-    exclude = kwargs.pop('exclude_from_indexes')
-  except KeyError:
-    exclude = False
 
-  if exclude:
-    m = datastore.Entity(key=dsClient.key(kind, name), exclude_from_indexes=exclude)
-  else:
-    m = datastore.Entity(key=dsClient.key(kind, name))
+#
+# Saving to Datastore
+#
 
-  for key, value in kwargs.items():
+
+def make_ds_entity(kind: str, name: str, properties: Dict[str, Any] = None, exclude_from_indexes: Tuple[str, ...] = ()):
+  '''
+    Create a datastore entity object with the given kind, name, and properties,
+    optionally preventing indexing of select properties.
+  '''
+
+  # Properties should default to empty dict
+  if properties is None:
+    properties = {}
+
+  # Initialize the entity object
+  m = datastore.Entity(key=dsClient.key(kind, name), exclude_from_indexes=exclude_from_indexes)
+
+  # Add all the given properties to the object
+  for key, value in properties.items():
     if isinstance(value, dict):
       m[key] = 'JSON:' + dump_json(value)
     else:
       m[key] = value
 
+  # Return the newly created object
+  return m
+
+
+def save_ds_entity(kind: str, name: str, properties: Dict[str, Any] = None, exclude_from_indexes: Tuple[str, ...] = ()):
+  '''
+    Save an entity to the datastore, optionally preventing indexing of select properties.
+  '''
+  m = make_ds_entity(kind, name, properties=properties, exclude_from_indexes=exclude_from_indexes)
   logger.debug(f"store: {kind} - {name}")
-  dsClient.put(m)
+  return dsClient.put(m)
+
+
+def save_ds_entities(kind: str, entities: Dict[str, Dict[str, Any]], exclude_from_indexes: Tuple[str, ...] = ()):
+  '''
+    Save multiple entities to the datastore in a single transaction,
+    optionally preventing indexing of select properties.
+
+      - `entities` (dict): Key = unique name of entity, value = set of properties
+  '''
+
+  # Cast the dict of {name: properties} for the entities to entity objects
+  ms = [
+    make_ds_entity(kind, name, properties=properties, exclude_from_indexes=exclude_from_indexes)
+      for (name, properties) in entities.items()
+  ]
+
+  # Save in one request
+  return dsClient.put_multi(ms)
+
+
+
+#
+# Querying Datastore
+#
 
 
 def query_ds_entities(kind, filters=None, projection=(), order=None, limit=None, keys_only=False):

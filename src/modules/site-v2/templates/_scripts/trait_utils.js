@@ -32,7 +32,7 @@ function queryTraitByName(trait_id, csrf_token=null) {
   // Construct the data object, using the optional CSRF token if provided
   let data = {trait_id};
   if (csrf_token !== null) data['csrf_token'] = csrf_token;
-
+  
   // Return the AJAX request as a Promise object
   return $.ajax({
       type:        "POST",
