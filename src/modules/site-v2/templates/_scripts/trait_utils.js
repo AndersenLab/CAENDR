@@ -36,7 +36,7 @@ function queryTraitByName(trait_id, csrf_token=null) {
   // Return the AJAX request as a Promise object
   return $.ajax({
       type:        "POST",
-      url:         "{{ url_for('phenotype_database.get_traits_json') }}",
+      url:         "{{ url_for('api_trait.query_trait_metadata') }}",
       data:        JSON.stringify(data),
       contentType: "application/json",
       dataType:    "json",

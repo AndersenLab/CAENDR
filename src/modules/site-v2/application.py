@@ -4,7 +4,7 @@ import requests
 
 from datetime import datetime
 from caendr.services.logger import logger
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, flash, g, session
 from flask_wtf.csrf import CSRFProtect
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -17,7 +17,7 @@ import pytz
 
 from caendr.models.error import BasicAuthError
 from caendr.services.cloud.postgresql import db, health_database_status
-from base.utils.markdown import render_markdown, render_ext_markdown
+from base.utils.markdown import render_markdown, render_ext_markdown, render_markdown_inline
 
 
 
@@ -128,6 +128,7 @@ def create_app(config=config):
   configure_jinja(app)
   configure_ssl(app)
 
+  register_announcement_handlers(app)
   password_protect_site(app)
 
   # app.teardown_request(close_active_connections)
@@ -274,7 +275,8 @@ def configure_jinja(app):
       get_env=get_env,
       basename=os.path.basename,
       render_markdown=render_markdown,
-      render_ext_markdown=render_ext_markdown
+      render_ext_markdown=render_ext_markdown,
+      render_markdown_inline=render_markdown_inline,
     )
 
   @app.context_processor
@@ -308,6 +310,87 @@ def configure_jinja(app):
   @app.template_filter('percent')
   def _jinja2_filter_percent(n):
     return f'{round(n * 100, 2)}%'
+
+  @app.template_filter('markdown')
+  def _jinja2_filter_markdown(text):
+    return render_markdown_inline(text)
+
+
+def register_announcement_handlers(app):
+  '''
+    Add site-wide announcements to relevant requests.
+  '''
+  from caendr.models.datastore import Announcement
+
+  def can_show_announcements(request, response=None, check_session_flags=False) -> bool:
+    '''
+      Helper function to determine whether a request should flash the active site-wide announcements.
+
+      Announcements only possible for a non-redirecting GET request that returns HTML, excluding static files.
+      Additionally, specific endpoints can block announcements using the block_announcements decorator
+      or the block_announcements_from_bp function.
+    '''
+
+    # Request conditions: Must be a GET request to a non-static path
+    conditions = [
+      request.endpoint  != 'static',
+      request.method    == 'GET',
+    ]
+
+    # Response conditions: Must return HTML, and must not be redirecting
+    if response:
+      conditions += [
+        response.mimetype == 'text/html',
+        not (response.status_code >= 300 and response.status_code < 400),
+      ]
+
+    # Sessions flag(s)
+    if check_session_flags:
+      conditions += [
+        not getattr(g, 'block_site_announcements', False),
+      ]
+
+    # Check all conditions
+    return all(conditions)
+
+  @app.context_processor
+  def inject_announcements():
+    '''
+      Before rendering any Jinja template, queue up and flash all the site-wide announcements
+      that apply to this URL.
+
+      This has to happen before the template is rendered, otherwise announcements will be queued
+      for the *next* page load.
+
+      This function is registered as a Jinja template context processor, so it will only be run
+      before a Jinja template is rendered.  This prevents announcements from bleeding over to the
+      next request if e.g. a redirect or a static HTML file is returned instead.
+    '''
+
+    # Make sure this request can show announcements
+    # If not, we have to return an empty object, since this is a context processor
+    if not can_show_announcements(request, check_session_flags=True):
+      return {}
+
+    # Make sure site announcements set exists
+    # Store as a set to help prevent flashing duplicate announcements
+    if not hasattr(g, 'site_announcements'):
+      g.site_announcements = set()
+
+    # Queue up all the active announcements that apply to this path
+    for a in Announcement.query_ds(filters=[("active", "=", True)], deleted=False):
+      if a.matches_path(request.path):
+        g.site_announcements.add(a)
+
+    # Flash all the announcements that apply to this path
+    # We have to do this before the template is rendered, otherwise they'll be queued for the *next* page
+    for a in g.site_announcements:
+      flash(a['content'], a['style'].get_bootstrap_color())
+
+    # Since this is a context processor, we have to return a dict of variables to add to the
+    # Jinja template rendering context
+    # In this case, we don't need to add any
+    return {}
 
 
 def register_errorhandlers(app):
