@@ -40,7 +40,7 @@ def add_trait(form_data, user):
       'trait_name_user':      bleach.clean(form_data.trait_name_user.data),
       'trait_name_display_1': bleach.clean(form_data.trait_name_display_1.data),
       'trait_name_display_2': bleach.clean(form_data.trait_name_display_2.data),
-      'trait_name_display_3': bleach.clean(form_data.trait_name_display_2.data),
+      'trait_name_display_3': bleach.clean(form_data.trait_name_display_3.data),
       'filename':             bleach.clean(form_data.file.data.filename),
       'species':              bleach.clean(form_data.species.data),
       'description_short':    bleach.clean(form_data.description_short.data),
