@@ -5,7 +5,7 @@ import re
 
 from flask import Markup
 
-from caendr.models.datastore import DeletableEntity
+from caendr.models.datastore import DeletableEntity, OrderableEntity
 from caendr.utils.data       import unique_id
 
 
@@ -26,7 +26,7 @@ class AnnouncementType(Enum):
 
 
 
-class Announcement(DeletableEntity):
+class Announcement(DeletableEntity, OrderableEntity):
   kind = 'announcement'
 
   exclude_from_indexes = ('content', 'url_list')

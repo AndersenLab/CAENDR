@@ -102,6 +102,46 @@ def announcement_list():
   }
 
 
+@api_notifications_bp.route('/announcements/order', methods=['POST'])
+@admin_required()
+@jsonify_request
+def announcements_reorder():
+  '''
+    Change the order of the given announcements.
+
+    Expects body as mapping from announcement ID to new order.
+    Any announcements not given in the body will not be changed.
+
+    It is on the caller to ensure the new order is consistent, i.e. that no two announcements
+    have the same order.  In this case, their order will be undefined.
+
+    TODO: Should this function just take a list of IDs in the desired order,
+          and assign the order field "implicitly"?
+  '''
+
+  # Retrieve all announcements in the request body, aborting if any lookup fails
+  try:
+    announcements = [
+      (Announcement.get_ds(announcement_id, silent=False), new_order)
+        for (announcement_id, new_order) in request.json.items()
+    ]
+  except NotFoundError as ex:
+    abort(422, description=ex.description)
+  except Exception as ex:
+    abort(400)
+
+  # Update all the orders locally
+  for announcement, new_order in announcements:
+    announcement['order'] = new_order
+
+  # Save new order in one batch transaction
+  # If this fails, it should all fail together
+  Announcement.save_batch(*[announcement for (announcement, new_order) in announcements])
+
+  # Return success
+  return {}
+
+
 @api_notifications_bp.route('/announcement',                    methods=['POST'])
 @api_notifications_bp.route('/announcement/<string:entity_id>', methods=['GET', 'PATCH', 'DELETE'])
 @admin_required()
@@ -127,10 +167,22 @@ def announcement(announcement: Announcement = None, form_data = None, no_cache: 
   # POST Request
   # Create a new announcement, and return its unique ID
   if request.method == 'POST':
+
+    # Create and save the new announcement
     new_announcement = Announcement(**{
       prop: form_data.get(prop) for prop in Announcement.get_props_set()
     })
     new_announcement.save()
+
+    # Try explicitly placing the new announcement at the bottom of the list
+    # If this fails, it will get a default order value, so we can ignore errors
+    try:
+      new_announcement['order'] = len(Announcement.query_ds(deleted=False))
+      new_announcement.save()
+    except Exception as ex:
+      pass
+
+    # Return the ID of the new announcement
     return { 'id': new_announcement.name }
 
   # PATCH Request
@@ -155,6 +207,7 @@ def announcement(announcement: Announcement = None, form_data = None, no_cache: 
   # Lookup the desired announcement and soft delete it
   if request.method == 'DELETE':
     announcement.soft_delete()
+    announcement['order'] = None
     announcement.save()
     return {}, 200
 

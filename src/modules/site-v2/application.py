@@ -377,15 +377,12 @@ def register_announcement_handlers(app):
     if not hasattr(g, 'site_announcements'):
       g.site_announcements = set()
 
-    # Queue up all the active announcements that apply to this path
+    # Track and flash all the active announcements that apply to this path
+    # Announcements are ordered, so by default query_ds returns them in the correct order
     for a in Announcement.query_ds(filters=[("active", "=", True)], deleted=False):
       if a.matches_path(request.path):
         g.site_announcements.add(a)
-
-    # Flash all the announcements that apply to this path
-    # We have to do this before the template is rendered, otherwise they'll be queued for the *next* page
-    for a in g.site_announcements:
-      flash(a['content'], a['style'].get_bootstrap_color())
+        flash(a['content'], a['style'].get_bootstrap_color())
 
     # Since this is a context processor, we have to return a dict of variables to add to the
     # Jinja template rendering context

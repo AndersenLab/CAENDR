@@ -18,7 +18,7 @@ class DatastoreCache(BaseCache):
     expires = time() + timeout
     try:
       value = base64.b64encode(pickle.dumps(value))
-      save_ds_entity(self.kind, self.key_prefix + "/" + key, value=value, expires=expires, exclude_from_indexes=['value'])
+      save_ds_entity(self.kind, self.key_prefix + "/" + key, properties={'value': value, 'expires': expires}, exclude_from_indexes=['value'])
       return True
     except:
       return False
@@ -57,5 +57,5 @@ class DatastoreCache(BaseCache):
 
   def set_many(self, mapping, timeout):
     for k, v in mapping.items():
-      save_ds_entity(self.kind, k, value=v)
+      save_ds_entity(self.kind, k, properties={'value': v})
 

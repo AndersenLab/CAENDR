@@ -1,5 +1,17 @@
 {% extends "_layouts/default.html" %}
 
+{% block custom_head %}
+<script src="https://cdn.datatables.net/rowreorder/1.5.0/js/dataTables.rowReorder.js"></script>
+<script src="https://cdn.datatables.net/rowreorder/1.5.0/js/rowReorder.dataTables.js"></script>
+<link href="https://cdn.datatables.net/rowreorder/1.5.0/css/rowReorder.dataTables.css" rel="stylesheet"/>
+
+<style>
+  .reorderColumn {
+    cursor: move;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row pb-3">
   <div class="col-md-10"></div>
@@ -10,11 +22,13 @@
 
 <div class="row">
   <div class="col-md-12">
-    <div class="table-responsive">
+    <div class="table-responsive position-relative">
       <table class="table accordion p-0 text-center w-100" id="announcements-table">
           <caption class="visually-hidden">A list of announcements.</caption>
           <thead class="table-secondary align-middle">
             <tr>
+              <th scope="col" class="col-1 text-center">Order</th>
+              <th scope="col" class="col-1 text-center">Order</th>
               <th scope="col" class="col-1 text-center">Active</th>
               <th scope="col" class="col-1 text-center">Text</th>
               <th scope="col" class="col-1 text-center">URLs</th>
@@ -158,19 +172,40 @@
           }
         },
       },
-      "ordering": false,
+      "autoWidth": false,
+      "rowId": function(data) {
+        return `announcements-row-${data.name}`;
+      },
+      "rowReorder": {
+        "dataSrc": "order",
+      },
+      "columnDefs": [
+        { "targets": "_all", "orderable": false }
+      ],
       "columns": [
+        {
+          "data": "order",
+          "visible": false,
+          "orderable": true,
+        },
+        {
+          "data": "order",
+          "render": function(data, type, row) {
+            return `<i class="bi bi-arrows-expand" aria-hidden="true"></i>`;
+          },
+          "sClass": "optionsToolbar reorderColumn text-center",
+          "sWidth": "8%",
+        },
         {
           "data": "active",
           "render": function(data, type, row) {
             return data ? `<i class="bi bi-check-circle-fill" aria-hidden="true"></i>` : "";
           },
-          "sClass": "optionsToolbar",
-          'sWidth': '10%',
+          "sClass": "optionsToolbar text-center",
+          "sWidth": "8%",
         },
         {
           "data": "content",
-          'sWidth': '35%',
           "render": function(data, type, row) {
             // Cap text length
             if (data.length > tableTextMaxLength) {
@@ -179,22 +214,23 @@
             // Protect against code injection
             return $('<div />').text(data).html().replace('\n', '<br>');
           },
+          "sWidth": "32%",
         },
         {
           "data": "url_list",
           "render": function(data, type, row) {
             return data.replaceAll('\n', '<br>');
           },
-          'sWidth': '25%',
           "sClass": "text-start",
+          "sWidth": "22%",
         },
         {
           "data": "style",
-          'sWidth': '10%',
           "createdCell": function( cell, cellData, rowData, rowIndex, colIndex ) {
             cell.classList.add(`bg-${ alertClassMap[ cellData ] }`);
             cell.classList.add('bg-opacity-25');
           },
+          "sWidth": "10%",
         },
         {
           "render": function(data, type, row) {
@@ -203,8 +239,8 @@
               <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Edit</a>
             `;
           },
-          "sClass": "optionsToolbar",
-          'sWidth': '10%',
+          "sClass": "optionsToolbar text-center",
+          "sWidth": "10%",
         },
         {
           "data": "name",
@@ -215,10 +251,50 @@
               </button>
             `;
           },
-          "sClass": "optionsToolbar",
-          'sWidth': '10%',
+          "sClass": "optionsToolbar text-center",
+          "sWidth": "10%",
         },
       ]
+    });
+
+
+    // When table rows are re-ordered, persist this change
+    table.on('row-reorder', function (e, diff, edit) {
+
+      // Create a mapping from announcement ID to new position
+      newRowOrders = {}
+      for (row of diff) {
+        newRowOrders[row.node.id.replace(/^(announcements-row-)/, "")] = row.newPosition
+      }
+
+      // POST request to update order
+      $.ajax({
+        type: "POST",
+        url:  "{{ url_for('notifications.announcements_reorder') }}",
+        headers: {
+          'X-CSRF-TOKEN': "{{ form.csrf_token._value() }}",
+        },
+        contentType: 'application/json; charset=utf-8',
+        dataType:    'json',
+        data:        JSON.stringify(newRowOrders),
+
+        // Signal that table is updating
+        beforeSend: function() {
+          table.processing(true);
+        },
+
+        // On success, clear the processing indicator
+        success: function(result) {
+          table.processing(false);
+        },
+
+        // On failure, show error message
+        error: function(error) {
+          table.processing(false);
+          console.error('Error updating announcement order: ', error)
+          flash_message('Failed to update announcement order. Please reload the page and try again.', 'Full error message', error.responseJSON.message);
+        }
+      })
     });
 
   });
