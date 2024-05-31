@@ -64,7 +64,7 @@ class Trait():
       raise ValueError('Could not identify a unique trait from the given information')
 
     # Store the dataset value of the trait file
-    # if dataset and self.file['dataset'].value and dataset != self.file['dataset'].value:
+    # if dataset and self.file['dataset'] and not (dataset == self.file['dataset'] or dataset == self.file['dataset'].value):
     #   raise ValueError('Mismatched dataset values')
     self.dataset = self.file['dataset'].value
 
