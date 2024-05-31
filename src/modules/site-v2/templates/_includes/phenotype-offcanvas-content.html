@@ -1,48 +1,169 @@
-<div class="d-flex">
-    <div class="col-4">
-        <h2 class="h6 text-dark mb-3">Capture Date</h2>
-        <p id="captureDate"></p>
-    </div>
-    <div class="col-4">
-        <h2 class="h6 text-dark mb-3">Upload Date</h2>
-        <p id="createdOn"></p>
-    </div>
-    <div class="col-4">
-        <h2 class="h6 text-dark mb-3">Last Updated</h2>
-        <p id="modifiedOn"></p>
-    </div>
+{% if offcanvas_id is not defined %}
+    {% set offcanvas_id = "phenotype-offcanvas" %}
+{% endif %}
+
+<div id='{{ offcanvas_id }}-spinner' class="d-flex flex-column align-items-center d-none">
+    <div class="m-5 spinner-border" style="width: 4rem; height: 4rem;" role="status"></div>
 </div>
-<div>
-    <h2 class="h6 text-dark mb-3">Species</h2>
-    <p><em id="species"></em></p>
-    <h2 class="h6 text-dark mb-3">WormBaseGeneID</h2>
-    <p id="wbgeneID"></p>
-    <h2 class="h6 text-dark mb-3">Source Lab</h2>
-    <p id="sourceLab"></p>
-    <h2 class="h6 text-dark mb-3">Institution</h2>
-    <p id="institution"></p>
-    <h2 class="h6 text-dark mb-3">Submitted By</h2>
-    <p id="submittedBy"></p>
-    <h2 class="h6 text-dark mb-3">Full Description</h2>
-    <p id="descriptionLong"></p>
-    <h2 class="h6 text-dark mb-3">Protocol</h2>
-    <p id="protocol"><a href="#" target="_blank"></a></p>
-    <h2 class="h6 text-dark mb-3">Publication</h2>
-    <p id="publication"><a href="#" target="_blank"></a></p>
-    <h2 class="h6 text-dark mb-3">Categories</h2>
-    <div id="tags" class="d-flex flex-column px-4"></div>
-    <div class="mt-5">
-        <h2 class="h6 text-dark mb-3">Values</h2>
-        <div class="my-4 border border-1 rounded overflow-auto" style="height:30vh">
-            <table class="table table-hover mb-0" id="values">
-                <thead class="table-secondary" style="position:sticky;top:0;">
-                    <tr>
-                        <th scope="col">Strain</th>
-                        <th scope="col">Value</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+
+<div id="{{ offcanvas_id }}-header" class="offcanvas-header">
+    <div>
+        <h1 class="h5">
+            <span id="{{ offcanvas_id }}-header-1" class="d-block mb-1"></span>
+            <span id="{{ offcanvas_id }}-header-2" class="d-block text-dark fw-normal"></span>
+            <span class="d-block text-dark fw-normal"><em id="{{ offcanvas_id }}-header-3"></em></span>
+        </h1>
+    </div>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+</div>
+
+<div id="{{ offcanvas_id }}-body" class="offcanvas-body p-4">
+    <div class="d-flex">
+        <div class="col-4">
+            <h2 class="h6 text-dark mb-3">Capture Date</h2>
+            <p id="{{offcanvas_id}}-captureDate"></p>
+        </div>
+        <div class="col-4">
+            <h2 class="h6 text-dark mb-3">Upload Date</h2>
+            <p id="{{offcanvas_id}}-createdOn"></p>
+        </div>
+        <div class="col-4">
+            <h2 class="h6 text-dark mb-3">Last Updated</h2>
+            <p id="{{offcanvas_id}}-modifiedOn"></p>
+        </div>
+    </div>
+    <div>
+        <h2 class="h6 text-dark mb-3">Species</h2>
+        <p><em id="{{offcanvas_id}}-species"></em></p>
+        <h2 class="h6 text-dark mb-3">WormBaseGeneID</h2>
+        <p id="{{offcanvas_id}}-wbgeneID"></p>
+        <h2 class="h6 text-dark mb-3">Source Lab</h2>
+        <p id="{{offcanvas_id}}-sourceLab"></p>
+        <h2 class="h6 text-dark mb-3">Institution</h2>
+        <p id="{{offcanvas_id}}-institution"></p>
+        <h2 class="h6 text-dark mb-3">Submitted By</h2>
+        <p id="{{offcanvas_id}}-submittedBy"></p>
+        <h2 class="h6 text-dark mb-3">Full Description</h2>
+        <p id="{{offcanvas_id}}-descriptionLong"></p>
+        <h2 class="h6 text-dark mb-3">Protocol</h2>
+        <p id="{{offcanvas_id}}-protocol"><a href="#" target="_blank"></a></p>
+        <h2 class="h6 text-dark mb-3">Publication</h2>
+        <p id="publication"><a href="#" target="_blank"></a></p>
+        <h2 class="h6 text-dark mb-3">Categories</h2>
+        <div id="{{offcanvas_id}}-tags" class="d-flex flex-column px-4"></div>
+        <div class="mt-5">
+            <h2 class="h6 text-dark mb-3">Values</h2>
+            <div class="my-4 border border-1 rounded overflow-auto" style="height:30vh">
+                <table class="table table-hover mb-0" id="{{offcanvas_id}}-values">
+                    <thead class="table-secondary" style="position:sticky;top:0;">
+                        <tr>
+                            <th scope="col">Strain</th>
+                            <th scope="col">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+
+<script type="module">
+    {% include '_scripts/utils.js' %} {#/* defines: format_date */#}
+
+    // Add event listener
+    // Only fills out offcanvas content if the ID matches
+    document.addEventListener('phenotype-offcanvas-content', ({detail}) => {
+        if (detail.offcanvas_id == '{{ offcanvas_id }}') {
+            fillOutModal(detail.trait);
+        }
+    });
+
+    // Main update function
+    function fillOutModal(trait) {
+
+        // Fill out header
+        $('#{{ offcanvas_id }}-header-1').text(trait.trait_name_display_1)
+        $('#{{ offcanvas_id }}-header-2').text(trait.trait_name_display_2)
+        $('#{{ offcanvas_id }}-header-3').text(trait.trait_name_display_3)
+
+        // Fill out basic fields
+        manageVal(trait.capture_date,     '#{{ offcanvas_id }}-captureDate', true)
+        manageVal(trait.created_on,       '#{{ offcanvas_id }}-createdOn',   true)
+        manageVal(trait.modified_on,      '#{{ offcanvas_id }}-modifiedOn',  true)
+        manageVal(trait.species_name,     '#{{ offcanvas_id }}-species')
+        manageVal(trait.wbgene_id,        '#{{ offcanvas_id }}-wbgeneID')
+        manageVal(trait.source_lab,       '#{{ offcanvas_id }}-sourceLab')
+        manageVal(trait.institution,      '#{{ offcanvas_id }}-institution')
+        manageVal(trait.submitted_by,     '#{{ offcanvas_id }}-submittedBy')
+        manageVal(trait.description_long, '#{{ offcanvas_id }}-descriptionLong')
+        manageVal(trait.protocols,        '#{{ offcanvas_id }}-protocol',    false, true)
+        manageVal(trait.publication,      '#{{ offcanvas_id }}-publication', false, true)
+
+        // Fill out tags
+        $('#{{ offcanvas_id }}-tags').empty()
+        if (trait.tags !== null || (trait.tags && trait.tags.length)) {
+            $('#{{ offcanvas_id }}-tags').prev().show()
+            $('#{{ offcanvas_id }}-tags').append(displayTags(trait.tags.split(', ')))
+        } else {
+            $('#{{ offcanvas_id }}-tags').prev().hide()
+        }
+
+        // Fill out data values
+        $('#{{ offcanvas_id }}-values > tbody').empty()
+        if (trait.phenotype_values.length) {
+            $('#{{ offcanvas_id }}-values').parent().prev().show()
+            $('#{{ offcanvas_id }}-values').parent().show()
+            $('#{{ offcanvas_id }}-values > tbody').append(populateValues(trait.phenotype_values))
+        } else {
+            $('#{{ offcanvas_id }}-values').parent().prev().hide()
+            $('#{{ offcanvas_id }}-values').parent().hide()
+        }
+    }
+
+    // The function populates phenotype values in the table inside the side bar.
+    function populateValues(arr) {
+        let result = ''
+        for (let i = 0; i < arr.length; i++) {
+            result += `<tr><td>${arr[i].strain_name}</td><td>${arr[i].trait_value}</td></tr>`
+        }
+        return result
+    }
+
+    // The function populates Categories field in the side bar
+    function displayTags(arr) {
+        if (arr == null) return;
+        let result = ''
+        for (let tag of arr) {
+            result += `<div class="mb-3">${tag.replaceAll('/', ' • ')}</div>`
+        }
+        return result
+    }
+
+    // The function manages the fields in the side bar.
+    // If a field has a value the field will be displayed, if not - it will be hidden
+    function manageVal(d, id, isDate=false, isLink=false) {
+        if (id === '#{{ offcanvas_id }}-species') {
+            d = d[0].toUpperCase() + '. ' + d.slice(2)
+        }
+        const hasValue = !(d === null || d === 'N/A' || !d.length )
+        if (hasValue && isDate) {
+            $(id).parent().show()
+            $(id).text(formatDate(d))
+        } else if (!hasValue && isDate) {
+            $(id).parent().hide()
+        } else if (hasValue && isLink) {
+            $(id).prev().show()
+            $(`${id} > a`).text(d)
+        } else if (!hasValue && isLink) {
+            $(`${id} > a`).text('')
+            $(id).prev().hide()
+        } else if (hasValue && !isDate && !isLink) {
+            $(id).prev().show()
+            $(id).text(d)
+        } else if (!hasValue && !isDate && !isLink) {
+            $(id).text('')
+            $(id).prev().hide()
+        }
+    }
+</script>

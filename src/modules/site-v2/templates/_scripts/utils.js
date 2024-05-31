@@ -107,7 +107,7 @@ function create_node(html) {
 
 // Convert text from Markdown to HTML using Toast UI
 // This protects against code injection
-function markdown_to_html(text) {
+function markdownToHTML(text) {
   const editor = new toastui.Editor({
     el: document.createElement('div'),
     initialValue: text,
@@ -145,7 +145,7 @@ function flash_message(message, full_msg_link=null, full_msg_body=null) {
 
   // Create as a new DOM node, and insert the desired message as formatted (cleaned) HTML
   const node = create_node(raw_html);
-  node.firstElementChild.innerHTML = markdown_to_html(message);
+  node.firstElementChild.innerHTML = markdownToHTML(message);
 
   // If both full message fields are provided, add as a link & collapse dropdown
   if (full_msg_link && full_msg_body) {
@@ -174,4 +174,41 @@ function flash_message(message, full_msg_link=null, full_msg_body=null) {
   node.innerHTML = node.innerHTML.replace('{{ species.short_name }}', '<i>{{ species.short_name }}</i>')
   {%- endfor %}
   {%- endif %}
+}
+
+
+function flashErrorResponse(responseJSON, backupMessage, scrollToTop = true) {
+
+  // Optionally scroll to the top of the page to highlight the error message
+  if (scrollToTop) {
+    $('html').animate({
+      scrollTop: $('body').offset().top,
+    }, 100);
+  }
+
+  // If the response JSON contains a message, flash all the details it has
+  if (responseJSON && responseJSON.message) {
+    flash_message(responseJSON.message, responseJSON.full_msg_link, responseJSON.full_msg_body);
+  }
+
+  // Otherwise, flash a backup message
+  else {
+    flash_message(backupMessage);
+  }
+}
+
+
+/* Format a date as YYYY-MM-DD.
+ */
+function formatDate(d) {
+  if(d === null) return 'N/A'
+  const date = new Date(d)
+  const month = (date.getMonth()+1).toString().padStart(2, '0')
+  const day = date.getDate().toString().padStart(2, '0')
+  return `${date.getFullYear()}-${month}-${day}`
+}
+
+
+function first_letter_caps(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
