@@ -227,7 +227,7 @@ def edit_trait(id):
 
   form_data = {
     'species':              trait_ds.get('species'),
-    'trait_name_user':      trait_ds.get('trait_name_caendr') if trait_ds['from_caendr'] else trait_ds.get('trait_name_user'),
+    'trait_name_user':      trait_ds.get('trait_name_caendr') if trait_ds.get('from_caendr') else trait_ds.get('trait_name_user'),
     'trait_name_display_1': trait_ds.get('trait_name_display_1'),
     'trait_name_display_2': trait_ds.get('trait_name_display_2'),
     'trait_name_display_3': trait_ds.get('trait_name_display_3'),
