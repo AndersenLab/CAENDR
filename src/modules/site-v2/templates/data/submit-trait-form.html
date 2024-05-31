@@ -163,8 +163,7 @@
 
         $('#go-back').on('click', function() {
             const traitId = $(this).data('value');
-            let url = "{{ url_for('data.view_trait', trait_id='ID') }}";
-            url = url.replace('ID', traitId);
+            const url = "{{ url_for('data.' + return_to, trait_id='ID') }}".replace('ID', traitId);
             window.location.href = url
         })
 

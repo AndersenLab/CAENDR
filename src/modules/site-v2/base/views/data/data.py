@@ -237,6 +237,13 @@ def edit_trait(id):
         flash(resp['message'], 'success')
         return jsonify( resp ), code
 
+  # Get the endpoint to return to, and validate it creates a legitimate URL
+  return_to = request.args.get('return_to', 'view_trait')
+  try:
+    test_url = url_for(f'data.{return_to}', trait_id=trait_ds['name'])
+  except:
+    return_to = 'view_trait'
+
   form_data = {
     'species':              trait_ds.get('species'),
     'trait_name_user':      trait_ds.get('trait_name_caendr') if trait_ds.get('from_caendr') else trait_ds.get('trait_name_user'),
@@ -257,7 +264,7 @@ def edit_trait(id):
   return render_template('data/submit-trait-form.html', **{
     # Page Info
     'title':                      'Edit Trait',
-    'tool_alt_parent_breadcrumb': { "title": trait_ds['trait_name_display_1'], "url": url_for('data.view_trait', trait_id=trait_ds['name']) },
+    'tool_alt_parent_breadcrumb': { "title": trait_ds['trait_name_display_1'], "url": url_for(f'data.{return_to}', trait_id=trait_ds['name']) },
     'new_submission':             False,
 
     # Data
@@ -269,6 +276,8 @@ def edit_trait(id):
                         },
     'trait_id':         id,
     'user_is_admin':    user_is_admin(),
+
+    'return_to': return_to,
   })
 
 
