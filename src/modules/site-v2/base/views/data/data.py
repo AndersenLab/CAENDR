@@ -7,6 +7,7 @@ from flask      import render_template, Blueprint, redirect, url_for, request, f
 from extensions import cache
 from config     import config
 
+from caendr.api.phenotype          import get_trait_categories
 from caendr.models.error           import EnvVarError, FileUploadError
 from caendr.models.datastore       import Species, TraitFile
 from caendr.api.phenotype          import get_phenotype_values_for_trait
@@ -73,6 +74,35 @@ def protocols():
       'protocols': yaml.safe_load(content),
     }
     return render_template('data/protocols.html', **params)
+
+
+
+#
+# Trait Library
+#
+
+
+@data_bp.route('/trait/library', methods=['GET'])
+@jwt_required()
+def my_trait_library():
+
+  # Get the list of unique tags
+  try:
+    categories = get_trait_categories()
+
+  except Exception as ex:
+    logger.error(f'Failed to retrieve the list of traits: {ex}')
+    abort(500, description='Failed to retrieve the list of traits')
+
+  return render_template('data/trait-library.html', **{
+    # Page info
+    'title': 'My Trait Library',
+
+    # Data
+    'categories': categories,
+    'form': EmptyForm(),
+  })
+
 
 
 #

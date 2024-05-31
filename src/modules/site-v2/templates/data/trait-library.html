@@ -1,0 +1,12 @@
+{% extends "_layouts/default-nocontainer.html" %}
+{% block content %}
+
+<div class="container">
+    <div class="col mt-5">
+        {% with trait_library_table_mode = 'full' %}
+        {% include "_includes/trait-library-table.html" %}
+        {% endwith %}
+    </div>
+</div> <!-- /Container -->
+
+{% endblock %}
