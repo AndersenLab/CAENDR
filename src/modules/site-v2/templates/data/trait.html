@@ -22,7 +22,7 @@
 {%- set canEdit    = (reviewing and status == PublishStatus.SUBMITTED.value) or (user_is_owner and status == PublishStatus.UPLOADED.value ) %}
 {%- set canAccept  = (reviewing and status == PublishStatus.SUBMITTED.value) %}
 {%- set canPublish = (user_is_owner and status == PublishStatus.UPLOADED.value ) %}
-{%- set canRetract = status == PublishStatus.ACCEPTED.value %}
+{%- set canRetract = (reviewing and status == PublishStatus.ACCEPTED.value) %}
 
 
 {% block content %}
@@ -200,13 +200,19 @@
         <button id="acceptBtn" type="button" class="col-2 mx-5 btn btn-success text-light" data-bs-toggle="modal" data-bs-target="#acceptModal">Accept Trait</button>
         <button id="rejectBtn" type="button" class="col-2 mx-5 btn btn-danger  text-light" data-bs-toggle="modal" data-bs-target="#rejectModal">Reject Trait</button>
         {%- endif %}
+
         {%- if canRetract %}
         <button id="retractBtn" type="button" class="col-2 mx-5 btn btn-danger   text-light" data-bs-toggle="modal" data-bs-target="#retractModal">Retract Trait</button>
+        {%- elif user_is_owner and not reviewing and status == PublishStatus.ACCEPTED.value %}
+        <div><i>
+            This trait has been submitted to the public <a href="{{ url_for('phenotype_database.phenotype_database') }}">Phenotype Database</a>.
+            If you discover an error with the data, please reach out to <a href="mailto:{{ help_email }}">{{ help_email }}</a> for assistance.
+        </i></div>
         {%- endif %}
 
         {%- if canPublish %}
         <button id="publishBtn" type="button" class="col-2 mx-5 btn btn-success text-light">Publish Trait</button>
-        {%- elif user_is_owner and not reviewing %}
+        {%- elif user_is_owner and not reviewing and status == PublishStatus.SUBMITTED.value %}
         <div><i>This trait has already been submitted for review.</i></div>
         {%- endif %}
     </div>

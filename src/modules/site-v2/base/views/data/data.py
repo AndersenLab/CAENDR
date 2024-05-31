@@ -9,9 +9,10 @@ from config     import config
 
 from caendr.api.phenotype          import get_trait_categories
 from caendr.models.error           import EnvVarError, FileUploadError
-from caendr.models.datastore       import Species, TraitFile
+from caendr.models.datastore       import Species, TraitFile, User
 from caendr.models.trait           import Trait
 from caendr.api.phenotype          import get_phenotype_values_for_trait
+from caendr.services.cloud.secret  import get_secret
 from caendr.services.cloud.storage import get_blob, download_blob_to_file
 from caendr.services.logger        import logger
 from caendr.services.validate      import validate_file, StrainValidator, NumberValidator
@@ -26,6 +27,8 @@ from constants                     import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 MODULE_DB_OPERATIONS_BUCKET_NAME = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
 UPLOADS_DIR = os.path.join('.', 'uploads')
+
+SITE_OWNER = User.get_ds(get_secret('SITE_OWNER_USER_ID'))
 
 
 data_bp = Blueprint(
@@ -210,6 +213,7 @@ def trait(trait: Trait):
     # 'user_is_owner': user_is_trait_owner(trait.file.serialize(), get_current_user()),
 
     'reviewing': reviewing,
+    'help_email': SITE_OWNER['email'],
   })
 
 
