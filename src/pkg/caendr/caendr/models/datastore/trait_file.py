@@ -61,11 +61,12 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
       **super().serialize(include_meta=include_meta),
 
       # Add Python property values & function lookups
-      'name':        self.name,
-      'uri':         self.get_filepath(schema=BlobURISchema.HTTPS),
-      'submitter':   self.get_user_full_name() if self.from_public else 'CaeNDR',
-      'is_public':   self.is_public,
-      'from_caendr': self.from_caendr,
+      'name':            self.name,
+      'uri':             self.get_filepath(schema=BlobURISchema.HTTPS),
+      'submitter':       self.get_user_full_name() if self.from_public else 'CaeNDR',
+      'submitter_email': self.get_user_email() if self.from_public else None,
+      'is_public':       self.is_public,
+      'from_caendr':     self.from_caendr,
     }
 
 
@@ -115,7 +116,7 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
 
       Combines `trait_name_display_1`, `trait_name_display_2`, and `trait_name_display_3` into a single tuple.
     '''
-    return self['trait_name_display_1'], self['trait_name_display_2'], self['trait_name_display_3']
+    return self['trait_name_display_1'], self['trait_name_display_2'] or '', self['trait_name_display_3'] or ''
 
   @property
   def dataset(self):

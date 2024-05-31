@@ -210,7 +210,7 @@ class StrainValidator(ColumnValidator):
     Check that column is a valid strain name for the desired species.
   '''
 
-  def __init__(self, *args, species, force_unique=False, force_unique_msgs=None, **kwargs):
+  def __init__(self, *args, species, force_unique=False, force_unique_msgs=None, strain_issues=False, **kwargs):
     super().__init__(*args, **kwargs)
 
     # Store species value
@@ -223,7 +223,7 @@ class StrainValidator(ColumnValidator):
     # Get the list of all valid strain names for this species
     # Pull from strain names & isotype names, to allow for isotypes with no strain of the same name
     self._valid_names_species = {
-      *query_strains(all_strain_names=True, species=species.name),
+      *query_strains(all_strain_names=True, species=species.name, issues=strain_issues),
       *get_distinct_isotypes(species=species.name),
     }
 

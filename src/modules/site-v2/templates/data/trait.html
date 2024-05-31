@@ -1,0 +1,261 @@
+{% extends "_layouts/default.html" %}
+
+{% block custom_head %}
+<style>
+.infoButton {
+    height: 20px;
+    width: 20px;
+}
+#info {
+        background-color: var(--bs-footerBg);
+        max-width: 650px;
+    }
+#info i {
+    color: #0719BC;
+    font-size: 1.5rem
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container px-5 pb-5">
+    <div class="d-flex">
+        <div class="w-50 me-4">
+            <h2 class="text-center">Trait Data</h2>
+            <table class="table table-responsive table-bordered" id='trait-info'>
+                <caption class="visually-hidden">Trait Information</caption>
+                <thead></thead>
+                <tbody>
+                    <tr>
+                        <td class="table-secondary text-center" colspan="2"><strong>About User and Lab</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="col-4">Submitter</td>
+                        <td>{{trait.submitter}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-4">Submitter Email</td>
+                        <td>{{trait.submitter_email if trait.submitter_email is not none else ''}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-4">
+                            Source Lab
+                            <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
+                            data-bs-trigger="focus" data-bs-title="More information"
+                            data-bs-content="The lab code as found at https://cgc.umn.edu/laboratories" aria-label="More infomation about source lab"><i
+                            class="bi bi-info lh-1" aria-hidden="true"></i></a>
+                        </td>
+                        <td>{{trait.source_lab}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-4">Institution</td>
+                        <td>{{trait.institution}}</td>
+                    </tr>
+                    <tr>
+                        <td class="table-secondary text-center" colspan="2"><strong>Trait Information</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="col-4">Species</td>
+                        <td>{{trait.species|capitalize|replace('_', '. ')}}</td>
+                    </tr>
+                    <tr>
+                        <td>File Name</td>
+                        <td>{{trait.filename}}</td>
+                    </tr>
+                    <tr>
+                        <td>File</td>
+                        <td><a href="{{url_for('data.download_trait_file', id=trait.name)}}" class="btn btn-secondary text-light">Download File</a></td>
+                    </tr>
+                    <tr>
+                        <td> Upload Date</td>
+                        <td>{{ "%04d-%02d-%02d" | format(trait.created_on.year, trait.created_on.month, trait.created_on.day) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-4">
+                            User Trait Name
+                            <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
+                            data-bs-trigger="focus" data-bs-title="More information"
+                            data-bs-content="This is the name used internally by your laboratory to refer to this trait. Please note that this name will not be shared publicly with other users and will only be displayed to you." aria-label="More infomation about user trait name"><i
+                            class="bi bi-info lh-1" aria-hidden="true"></i></a>
+                        </td>
+                        <td>{{trait.trait_name_caendr if trait.from_caendr else trait.trait_name_user}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-4">
+                            Display Name 1
+                            <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
+                            data-bs-trigger="focus" data-bs-title="More information"
+                            data-bs-content="This name will be shared with other users in the phenotype database and will be used to represent your trait throughout the site." aria-label="More infomation about display name 1"><i
+                            class="bi bi-info lh-1" aria-hidden="true"></i></a>
+                        </td>
+                        <td>{{trait.trait_name_display_1}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-4">
+                            Display Name 2
+                            <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
+                            data-bs-trigger="focus" data-bs-title="More information"
+                            data-bs-content="This field can be used to provide additional information that is important for the user to know about the trait." aria-label="More infomation about display name 2"><i
+                            class="bi bi-info lh-1" aria-hidden="true"></i></a>
+                        </td>
+                        <td>{{trait.trait_name_display_2}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-4">
+                            Display Name 3
+                            <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
+                            data-bs-trigger="focus" data-bs-title="More information"
+                            data-bs-content="This field can be used to provide additional information that is important for the user to know about the trait." aria-label="More infomation display name 3"><i
+                            class="bi bi-info lh-1" aria-hidden="true"></i></a>
+                        </td>
+                        <td>{{trait.trait_name_display_3}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-3">Short Description</td>
+                        <td>{{trait.description_short}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-3">Long Description</td>
+                        <td>{{trait.description_long}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-4">
+                            Categories
+                            <a class="btn btn-secondary rounded-circle infoButton" role="button" tabindex="0" data-bs-toggle="popover"
+                            data-bs-trigger="focus" data-bs-title="More information"
+                            data-bs-content="These are the best categories that describe the trait. Please note that at least one category is required." aria-label="More infomation about categories"><i
+                            class="bi bi-info lh-1" aria-hidden="true"></i></a>
+                        </td>
+                        <td>
+                            {% for tag in trait.tags %}
+                            <p class="m-1">{{tag|replace('/', ' • ')}}</p>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="col-4">Unit of Measurement</td>
+                        <td>{{trait.units}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-4">Protocols</td>
+                        <td>{{trait.protocols}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-4">Publication</td>
+                        <td><a href="{{trait.publication}}" target="_blank">{{trait.publication}}</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="ms-4">
+            <h2 class="text-center">Trait File Content</h2>
+            <div class="p-0 overflow-auto" id="file-content-div">
+                <table class="table table-responsive table-hover table-bordered">
+                <caption class="visually-hidden">Trait File Content</caption>
+                    <thead class="table-secondary align-middle" style="position:sticky;top:0;">
+                        <tr>
+                            <th scope="col">Strain</th>
+                            <th scope="col">Trait Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in file_content %}
+                        <tr>
+                            <td>{{row.strain_name}}</td>
+                            <td>{{row.trait_value}}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div id="info" class="d-flex flex-row p-2 my-4 ">
+            <i class="bi bi-info-circle-fill p-3 align-self-center"></i>
+            <div>
+                <p class="mb-1"><strong>Please Note:</strong> Publishing your trait will post it so that all CaeNDR users can have access to the trait data, create summary plots, and/or compare your trait to other traits also posted publicly on CaeNDR. Please ensure that the data are accurate and be as descriptive as possible in your descriptions of the trait.</p>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <a class="col-2 mx-5 btn btn-secondary text-light" href="{{url_for('data.edit_trait', id=trait.name)}}">Edit Trait</a>
+        {% if user_is_owner %}
+        <a class="col-2 mx-5 btn btn-primary text-light" href="#" id="publishBtn">Publish Trait</a>
+        {% endif %}
+    </div>
+</div>
+<div class="modal fade" id="publishModal" tabindex="-1" role="dialog" aria-labelledby="publishModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="publishModalTitle">Publish Trait</h5>
+                <button type="button" class="close btn-close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to publish this trait to public Phenotype Database?</p>
+                <div class="d-flex justify-content-around p-2">
+                    <button type="button" class="btn btn-info close">
+                        <i class="bi bi-slash-circle-fill"></i>
+                        No, go back.
+                    </button>
+                    <button type="button" id="submit" class="btn btn-primary">
+                        <i class="bi bi-trash3-fill"></i>
+                        Yes, publish it.
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    const traitId = {{trait.name|tojson|safe}}
+
+    $(document).ready(function() {
+        
+        $("#publishBtn").on('click', function() {
+            $('#publishModal').modal('show')
+        })
+
+        $('.close').on('click', function() {
+            $('#publishModal').modal('hide')
+        })
+
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
+                }
+            }
+        });
+
+        $('#submit').on('click', function(e) {
+            e.preventDefault()
+            let url = "{{url_for('api_trait.submit_trait', trait_id='ID')}}"
+            url = url.replace('ID', traitId);
+            let redirectURL = "{{url_for('data.my_trait_library')}}"
+            $.ajax({
+                url: url,
+                type: 'POST',
+                success: function(response) {
+                    window.location.href = redirectURL;
+                },
+                error: function(error) {
+                    console.log(error)
+                    $('.close').click()
+                    if (error.responseJSON && error.responseJSON.message) {
+                        $('.alert').remove()
+                        flash_message(error.responseJSON.message)
+                    }   
+                }
+            })
+        })
+
+        var tableHeight = $('#trait-info').outerHeight();
+        $('#file-content-div').outerHeight(tableHeight);
+    })
+</script>
+{% endblock%}

@@ -19,6 +19,7 @@ from caendr.models.status    import PublishStatus
 from caendr.models.trait     import Trait
 from caendr.models.sql       import PhenotypeMetadata
 from caendr.utils.json       import jsonify_request
+from base.utils.auth         import jwt_required
 
 
 api_trait_bp = Blueprint(
@@ -442,6 +443,7 @@ def query_trait_categories():
 #
 # Submission Queue ("Review") Endpoints
 #
+
 
 @api_trait_bp.route('/review/<string:trait_id>/submit', methods=['POST'])
 @jwt_required()
