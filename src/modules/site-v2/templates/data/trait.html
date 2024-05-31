@@ -170,6 +170,8 @@
             </div>
         </div>
     </div>
+
+    {%- if not reviewing and trait['publish_status'] == PublishStatus.UPLOADED.value %}
     <div class="row mt-4">
         <div id="info" class="d-flex flex-row p-2 my-4 ">
             <i class="bi bi-info-circle-fill p-3 align-self-center"></i>
@@ -178,6 +180,8 @@
             </div>
         </div>
     </div>
+    {%- endif %}
+
     <div class="row mt-4">
         <a class="col-2 mx-5 btn btn-primary text-light" href="{{url_for('data.edit_trait', id=trait.name, return_to=request.endpoint.rsplit('.')[-1])}}">Edit Trait</a>
         {% if user_is_owner %}
