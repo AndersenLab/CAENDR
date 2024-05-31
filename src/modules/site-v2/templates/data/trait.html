@@ -181,7 +181,7 @@
     <div class="row mt-4">
         <a class="col-2 mx-5 btn btn-secondary text-light" href="{{url_for('data.edit_trait', id=trait.name)}}">Edit Trait</a>
         {% if user_is_owner %}
-        <a class="col-2 mx-5 btn btn-primary text-light" href="#" id="publishBtn">Publish Trait</a>
+        <button id="publishBtn" type="button" class="col-2 mx-5 btn btn-primary text-light">Publish Trait</button>
         {% endif %}
     </div>
 </div>
@@ -213,6 +213,7 @@
 {% block script %}
 {% from "_scripts/submit-job.js" import ajax_setup %}
 <script>
+    {% include '_scripts/utils.js' %}       {#/* defines: flashErrorResponse */#}
 
     $(document).ready(function() {
 
@@ -240,11 +241,8 @@
                 error: function(error) {
                     console.error('ERROR: ', error)
                     $('.close').click()
-                    if (error.responseJSON && error.responseJSON.message) {
-                        $('.alert').remove()
-                        flash_message(error.responseJSON.message)
-                    }   
-                }
+                    flashErrorResponse(error.responseJSON, 'There was a problem publishing this trait. Please try again later.')
+                },
             })
         })
 
