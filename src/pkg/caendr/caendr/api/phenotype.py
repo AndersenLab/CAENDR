@@ -221,3 +221,12 @@ def get_trait_categories(query = None):
   # Flatten the list of lists into a set, and sort the result
   tags_list = { tg for tr_tag in tags for tg in tr_tag }
   return sorted(tags_list)
+
+
+
+#
+# Phenotype Values
+#
+
+def get_phenotype_values_for_trait(trait_id):
+  return PhenotypeMetadata.query.get(trait_id).phenotype_values

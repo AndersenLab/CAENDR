@@ -63,30 +63,40 @@ class PhenotypeMetadata(DictSerializable, db.Model):
 
   def add(self, trait_obj):
     new_trait = PhenotypeMetadata(
-      id = trait_obj.name,
-      trait_name_user = trait_obj['trait_name_user'],
+      id                   = trait_obj.name,
+      trait_name_user      = trait_obj['trait_name_user'],
       trait_name_display_1 = trait_obj['trait_name_display_1'],
       trait_name_display_2 = trait_obj['trait_name_display_2'],
       trait_name_display_3 = trait_obj['trait_name_display_3'],
-      species_name = trait_obj['species'].name,
-      wbgene_id = 'N/A',
-      description_short = trait_obj['description_short'],
-      description_long = trait_obj['description_long'],
-      units = trait_obj['units'],
-      publication = trait_obj['publication'],
-      protocols = trait_obj['protocols'],
-      source_lab = trait_obj['source_lab'],
-      institution = trait_obj['institution'],
-      submitted_by = trait_obj.get_user_full_name(),
-      tags = ', '.join(trait_obj['tags']),
-      created_on = datetime.now(timezone.utc),
-      modified_on = datetime.now(timezone.utc),
-      dataset = trait_obj['dataset'].value,
-      is_bulk_file = trait_obj['is_bulk_file']
+      species_name         = trait_obj['species'].name,
+      wbgene_id            = 'N/A',
+      description_short    = trait_obj['description_short'],
+      description_long     = trait_obj['description_long'],
+      units                = trait_obj['units'],
+      publication          = trait_obj['publication'],
+      protocols            = trait_obj['protocols'],
+      source_lab           = trait_obj['source_lab'],
+      institution          = trait_obj['institution'],
+      submitted_by         = trait_obj.get_user_full_name(),
+      tags                 = ', '.join(trait_obj['tags']),
+      created_on           = datetime.now(timezone.utc),
+      modified_on          = datetime.now(timezone.utc),
+      dataset              = trait_obj['dataset'].value,
+      is_bulk_file         = trait_obj['is_bulk_file']
     )
     db.session.add(new_trait)
     db.session.commit()
 
+
   def delete(self):
     db.session.delete(self)
+    db.session.commit()
+
+
+  def update(self, **kwargs):
+    for k, v in kwargs.items():
+      if isinstance(v, list):
+        v = ', '.join(v)
+      setattr(self, k, v)
+    setattr(self, 'modified_on', datetime.now(timezone.utc))
     db.session.commit()

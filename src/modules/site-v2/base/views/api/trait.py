@@ -16,6 +16,7 @@ from caendr.models.datastore import Entity, TraitFile, Species, User
 from caendr.models.error     import NotFoundError
 from caendr.models.sql       import PhenotypeMetadata
 from caendr.utils.json       import jsonify_request
+from base.utils.auth         import jwt_required
 
 
 api_trait_bp = Blueprint(
@@ -428,3 +429,13 @@ def query_trait_categories():
     Get list of trait categories.
   """
   return get_trait_categories()
+
+
+
+
+# TODO: Merge this with Vince's code
+@api_trait_bp.route('/review/<string:trait_id>/submit', methods=['POST'])
+@cache.memoize(60*60)
+@jwt_required()
+def submit_trait(trait_id):
+  pass
