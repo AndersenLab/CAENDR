@@ -128,8 +128,8 @@ class Trait():
 
     # Construct a Trait object using the data in the SQL row
     return cls(
-      trait_name = sql_row.trait_name_caendr,
-      dataset    = sql_row.dataset,
+      trait_name    = sql_row.trait_name_caendr,
+      trait_file_id = sql_row.id,
     )
 
 
