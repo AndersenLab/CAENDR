@@ -12,7 +12,7 @@ from flask import (render_template,
 from extensions import cache, compress
 from sqlalchemy import or_, func
 
-from caendr.api.phenotype import query_phenotype_metadata, get_trait, filter_trait_query_by_text, filter_trait_query_by_tags
+from caendr.api.phenotype import query_phenotype_metadata, get_trait_categories
 from caendr.services.cloud.postgresql import rollback_on_error_handler
 
 from caendr.services.logger import logger
@@ -20,10 +20,11 @@ from caendr.utils.env       import get_env_var
 
 from base.forms                 import EmptyForm
 from base.utils.auth            import jwt_required, get_current_user, user_is_admin
-from base.utils.tools           import lookup_report, list_reports, try_submit
+from base.utils.tools           import list_reports, try_submit
+from base.utils.view_decorators import parse_job_id, validate_form
 
 from caendr.models.datastore    import PhenotypeReport, Species
-from caendr.models.error        import ReportLookupError, EmptyReportDataError, EmptyReportResultsError, NotFoundError, DataValidationError
+from caendr.models.error        import NotFoundError
 from caendr.models.job_pipeline import PhenotypePipeline
 from caendr.models.status       import JobStatus
 from caendr.models.sql          import PhenotypeMetadata
@@ -55,42 +56,11 @@ def phenotype_database():
     Phenotype Database table (non-bulk)
   """
   form = EmptyForm()
-  
-  # Get the list of traits for non-bulk files
+
+  # Get the list of unique tags
   try:
-    query = query_phenotype_metadata()
+    categories = get_trait_categories()
 
-    # Get the list of unique tags
-    tags = [ tr.tags.split(', ') for tr in query if tr.tags ]
-    tags_list = [tg for tr_tag in tags for tg in tr_tag]
-    unique_tags = list(set(tags_list))
-
-    if request.method == 'POST':
-      selected_tags = request.json.get('selected_tags', [])
-      search_val = request.json.get('search_val', '')
-      page = int(request.json.get('page', 1))
-      current_page = int(request.json.get('current_page', 1))
-      per_page = 10
-
-      # Filter by search value and tags, if provided
-      query = filter_trait_query_by_text(query, search_val)
-      query = filter_trait_query_by_tags(query, selected_tags)
-
-      # Paginate the query, rolling back on error
-      with rollback_on_error_handler():
-        pagination = query.paginate(page=page, per_page=per_page)
-
-      json_data = [ tr.to_json() for tr in pagination.items ]
-      pagination_data = {
-        'has_next':     pagination.has_next,
-        'has_prev':     pagination.has_prev,
-        'prev_num':     pagination.prev_num,
-        'next_num':     pagination.next_num,
-        'total_pages':  pagination.pages,
-        'current_page': current_page
-      }
-      return jsonify({'data': json_data, 'pagination': pagination_data })
-        
   except Exception as ex:
     logger.error(f'Failed to retrieve the list of traits: {ex}')
     abort(500, description='Failed to retrieve the list of traits')
@@ -101,72 +71,10 @@ def phenotype_database():
     "tool_alt_parent_breadcrumb": { "title": "Tools", "url": url_for('tools.tools') },
 
     # Data
-    'categories': unique_tags,
+    'categories': categories,
     'form': form
   })
 
-
-@phenotype_database_bp.route('/traits-zhang')
-@cache.memoize(60*60)
-@compress.compressed()
-def get_zhang_traits_json():
-  """
-    Phenotype Database table (bulk)
-    Fetch table content by request for each page and render the data for Datatables()
-  """
-  try:
-    # get parameters for query
-    draw = request.args.get('draw', type=int)
-    start = request.args.get('start', type=int)
-    length = request.args.get('length', type=int)
-    search_value = bleach.clean(request.args.get('search[value]', '')).lower()
-
-    query = query_phenotype_metadata(is_bulk_file=True)
-    total_records = query.count()
-
-    # Filter by search value, if provided
-    query = filter_trait_query_by_text(query, search_value)
-
-    # Query PhenotypeMetadata (include phenotype values for each trait)
-    with rollback_on_error_handler():
-      data = query.offset(start).limit(length).from_self().\
-        join(PhenotypeMetadata.phenotype_values).all()
-
-    json_data = [ trait.to_json_with_values() for trait in data ]
-
-    filtered_records = query.count()
-
-    response_data = {
-        "draw": draw,
-        "recordsTotal": total_records,
-        "recordsFiltered": filtered_records,
-        "data": json_data
-    }
-
-  except Exception as ex:
-    logger.error(f'Failed to retrieve the list of traits: {ex}')
-    response_data = []
-  return jsonify(response_data)
-
-@phenotype_database_bp.route('/traits-list', methods=['POST'])
-@cache.memoize(60*60)
-@compress.compressed()
-def get_traits_json():
-  """
-    Get traits data for non-bulk files in JSON format (include phenotype values)
-  """
-  trait_id = request.json.get('trait_id')
-  err_msg = f'Failed to retrieve metadata for trait {trait_id}'
-
-  if trait_id:
-    try:
-      trait = get_trait(trait_id).to_json_with_values()
-      return jsonify(trait)
-
-    except Exception as ex:
-      logger.error(f'{err_msg}: {ex}')
-      
-  return jsonify({ 'message': err_msg }), 404
 
 
 #
@@ -190,14 +98,13 @@ def submit_traits():
 
   # Check for URL vars specifying an initial trait
   # These will be inherited from submit_start
-  initial_trait_name = request.args.get('trait')
-  initial_trait_set  = request.args.get('dataset')
+  initial_trait_id = request.args.get('trait')
 
   # Try looking up the specified trait
-  if initial_trait_name:
+  if initial_trait_id:
     try:
-      initial_trait = Trait(dataset=initial_trait_set, trait_name=initial_trait_name)
-    except NotFoundError:
+      initial_trait = Trait.from_id(initial_trait_id)
+    except (NotFoundError, ValueError):
       flash('That trait could not be found.', 'danger')
       initial_trait = None
   else:
@@ -223,25 +130,15 @@ def submit_traits():
 
 @phenotype_database_bp.route('/submit', methods=["POST"])
 @jwt_required()
-def submit():
+@validate_form(None, from_json=True)
+def submit(form_data, no_cache=False):
 
-  # Read & clean fields from JSON data
-  data = {
-    field: bleach.clean(request.json.get(field))
-      for field in {'species', 'trait_1', 'trait_1_dataset'}
-  }
-
-  # Read & clean values for trait 2, if given
-  trait_2         = request.json.get('trait_2')
-  trait_2_dataset = request.json.get('trait_2_dataset')
-  data['trait_2']         = bleach.clean(trait_2)         if trait_2         is not None else None
-  data['trait_2_dataset'] = bleach.clean(trait_2_dataset) if trait_2_dataset is not None else None
-
-  # If user is admin, allow them to bypass cache with URL variable
-  no_cache = bool(user_is_admin() and request.args.get("nocache", False))
+  # Make sure these keys exist in the form data, even if they weren't provided in the submission
+  form_data['trait_2']         = form_data.get('trait_2',         None)
+  form_data['trait_2_dataset'] = form_data.get('trait_2_dataset', None)
 
   # Try submitting the job & getting a JSON status message
-  response, code = try_submit(PhenotypeReport.kind, get_current_user(), data, no_cache)
+  response, code = try_submit(PhenotypeReport.kind, get_current_user(), form_data, no_cache)
 
   # If there was an error, flash it
   if code != 200 and int(request.args.get('reloadonerror', 1)):
@@ -259,7 +156,7 @@ def submit():
 @phenotype_database_bp.route('/my-results',  methods=['GET'], endpoint='my_results')
 @jwt_required()
 def list_results():
-  show_all = request.path.endswith('all-results')
+  show_all = request.endpoint.endswith('all_results')
   user = get_current_user()
 
   # Only show malformed Entities to admin users
@@ -292,10 +189,11 @@ def list_results():
   })
 
 
-@phenotype_database_bp.route("/report/<id>",                     methods=['GET'])
-@phenotype_database_bp.route("/report/<id>/download/<file_ext>", methods=['GET'])
+@phenotype_database_bp.route("/report/<report_id>",                     methods=['GET'])
+@phenotype_database_bp.route("/report/<report_id>/download/<file_ext>", methods=['GET'])
 @jwt_required()
-def report(id, file_ext=None):
+@parse_job_id(PhenotypePipeline)
+def report(job: PhenotypePipeline, data, result, file_ext=None):
 
   # Validate file extension, if provided
   if file_ext:
@@ -304,42 +202,6 @@ def report(id, file_ext=None):
       abort(404)
   else:
     file_format = None
-
-  # Fetch requested phenotype report
-  # Ensures the report exists and the user has permission to view it
-  try:
-    job: PhenotypePipeline = lookup_report(PhenotypeReport.kind, id)
-
-  # If the report lookup request is invalid, show an error message
-  except ReportLookupError as ex:
-    flash(ex.msg, 'danger')
-    abort(ex.code)
-
-  # Try getting & parsing the report data file and results
-  # If result is None, job hasn't finished computing yet
-  try:
-    data, result = job.fetch()
-
-  # Error reading one of the report files
-  except (EmptyReportDataError, EmptyReportResultsError) as ex:
-    logger.error(f'Error fetching Phenotype report {ex.id}: {ex.description}')
-    return abort(404, description = ex.description)
-
-  # Error with the submission data
-  # This should only be possible if a report was somehow created with invalid data, e.g. not enough traits
-  except DataValidationError as ex:
-    flash(ex.msg, 'error')
-    return abort(400, description = ex.msg)
-
-  # General error
-  except Exception as ex:
-    logger.error(f'Error fetching Phenotype report {id}: {ex}')
-    return abort(400, description = 'Something went wrong')
-
-  # No data file found
-  if data is None:
-    logger.error(f'Error fetching Phenotype report {id}: Input data does not exist')
-    return abort(404)
 
   # If a file format was specified, return a downloadable file with the results
   if file_format is not None:

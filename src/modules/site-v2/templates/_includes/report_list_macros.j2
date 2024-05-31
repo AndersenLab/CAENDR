@@ -6,7 +6,7 @@
   {%- set render_value = item[column.field] if (column.field and item[column.field]) else column.value %}
   <td {% if column.get('class') %}class="data-{{column.get('class')}}"{% endif %} {% if column.get('order') %}data-order="{{ item[column.get('order')] }}"{% endif %}>
     {%- if create_link %}
-      <a href="{{ url_for(tool_name + '.report', id=item.id) }}">
+      <a href="{{ url_for(tool_name + '.report', report_id=item.id) }}">
     {%- endif %}
       {%- if column.render %} {{ column.render(render_value) }} {% else %} {{ render_value }} {% endif %}
     {%- if create_link %}

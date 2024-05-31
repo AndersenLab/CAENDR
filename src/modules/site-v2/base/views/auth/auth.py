@@ -23,9 +23,15 @@ from caendr.models.datastore import User
 from caendr.services.cloud.secret import get_secret
 from base.views.auth.oauth import transfer_cart
 
+from base.utils.announcements import block_announcements_from_bp
+
+
 
 PASSWORD_PEPPER = get_secret('PASSWORD_PEPPER')
 auth_bp = Blueprint('auth', __name__, template_folder='templates')
+
+block_announcements_from_bp(auth_bp)
+
 
 @auth_bp.route('/')
 def auth():

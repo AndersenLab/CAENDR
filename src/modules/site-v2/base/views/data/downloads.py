@@ -3,6 +3,8 @@ from flask import render_template, Blueprint, url_for, send_file, abort, Respons
 from base.utils.auth import jwt_required
 from extensions import cache
 
+from base.utils.view_decorators import parse_species, parse_species_and_release
+
 from caendr.api.strain import get_bam_bai_download_link, fetch_bam_bai_download_script, generate_bam_bai_download_script
 from caendr.models.datastore import DatasetRelease, Species
 from caendr.models.error import NotFoundError
@@ -49,13 +51,8 @@ def download_script(species_name, release_version):
 @data_downloads_bp.route('/download/<string:species_name>/<string:strain_name>/<string:ext>')
 @cache.memoize(60*60)
 @jwt_required()
-def download_bam_bai_file(species_name='', strain_name='', ext=''):
-
-  # Parse the species & release from the URL
-  try:
-    species = Species.from_name(species_name, from_url=True)
-  except NotFoundError:
-    return abort(404)
+@parse_species
+def download_bam_bai_file(species: Species, strain_name='', ext=''):
 
   # Get the download link for this strain
   signed_download_url = get_bam_bai_download_link(species, strain_name, ext) or ''
@@ -71,14 +68,8 @@ def download_bam_bai_file(species_name='', strain_name='', ext=''):
 
 @data_downloads_bp.route('/download/<string:species_name>/latest/bam-bai-download-script',                   methods=['GET'])
 @data_downloads_bp.route('/download/<string:species_name>/<string:release_version>/bam-bai-download-script', methods=['GET'])
-def download_bam_bai_script(species_name, release_version=None):
-
-  # Parse the species & release from the URL
-  try:
-    species = Species.from_name(species_name, from_url=True)
-    release = DatasetRelease.from_name(release_version, species_name=species.name)
-  except NotFoundError:
-    return abort(404)
+@parse_species_and_release
+def download_bam_bai_script(species: Species, release: DatasetRelease):
 
   # Compute the desired filename from the species & release
   filename = BAM_BAI_DOWNLOAD_SCRIPT_NAME.get_string(**{

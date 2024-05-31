@@ -347,7 +347,7 @@ $("#hcalc").on("click", function(e) {
             window.location = "{{ url_for('heritability_calculator.user_results') }}";
             return;
           } else {
-            url = "{{ url_for('heritability_calculator.report', id='') }}" + result.id;
+            url = "{{ url_for('heritability_calculator.report', report_id='') }}" + result.id;
             console.log(url);
             window.location = url;
             return;

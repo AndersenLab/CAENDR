@@ -3,7 +3,9 @@ from typing import Optional
 
 from caendr.models.datastore import TraitFile
 from caendr.models.sql       import PhenotypeMetadata, PhenotypeDatabase
+from caendr.models.error     import NotFoundError
 from caendr.utils.data       import dataframe_cols_to_dict
+from caendr.api.phenotype    import get_trait
 
 from caendr.services.cloud.postgresql import db
 
@@ -57,14 +59,34 @@ class Trait():
       raise ValueError('Could not identify a unique trait from the given information')
 
     # Store the dataset value of the trait file
-    if dataset and self.file['dataset'] and dataset != self.file['dataset']:
-      raise ValueError('Mismatched dataset values')
-    self.dataset = self.file['dataset']
+    # if dataset and self.file['dataset'].value and dataset != self.file['dataset'].value:
+    #   raise ValueError('Mismatched dataset values')
+    self.dataset = self.file['dataset'].value
+
+    self.sql_row = PhenotypeMetadata.query.filter_by(trait_name_caendr = self.name, dataset = self.dataset).one()
 
 
   #
   # Constructors
   #
+
+  @staticmethod
+  def from_id(trait_id: str) -> 'Trait':
+    '''
+      Instantiate a `Trait` object from a unique trait ID.
+      The given ID must exist in the PhenotypeMetadata SQL table, otherwise a `ValueError` will be raised.
+    '''
+
+    # Get the SQL row with the given trait ID
+    sql_row = PhenotypeMetadata.query.get(trait_id)
+    if sql_row is None:
+      raise ValueError(f'Invalid trait ID {trait_id}')
+
+    # Construct a Trait object using the data in the SQL row
+    return Trait(
+      trait_name = sql_row.trait_name_caendr,
+      dataset    = sql_row.dataset,
+    )
 
   @staticmethod
   def from_dataset(dataset: str, trait_name: Optional[str] = None) -> 'Trait':
@@ -85,6 +107,24 @@ class Trait():
     return Trait(
       dataset    = sql_row.dataset,
       trait_name = sql_row.trait_name_caendr,
+    )
+  
+  @classmethod
+  def from_id(cls, trait_id: str) -> 'Trait':
+    '''
+      Instantiate a `Trait` object from a unique trait ID.
+      The given ID must exist in the PhenotypeMetadata SQL table, otherwise a `ValueError` will be raised.
+    '''
+
+    # Get the SQL row with the given trait ID
+    sql_row = PhenotypeMetadata.query.get(trait_id)
+    if sql_row is None:
+      raise NotFoundError(PhenotypeMetadata, {'id': trait_id})
+
+    # Construct a Trait object using the data in the SQL row
+    return cls(
+      trait_name = sql_row.trait_name_caendr,
+      dataset    = sql_row.dataset,
     )
 
 
@@ -127,4 +167,4 @@ class Trait():
     '''
 
     # For bulk files, store the single trait name, otherwise convert the display_name fields to a list
-    return (self.name,) if self.file['is_bulk_file'] else self.file.display_name
+    return (self.sql_row.trait_name_caendr,) if self.file['is_bulk_file'] else self.file.display_name

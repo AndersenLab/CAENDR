@@ -58,7 +58,7 @@ def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
              'capture_date':         md['capture_date'],
              'created_on':           md.created_on,
              'modified_on':          md.modified_on,
-             'dataset':              md['dataset'],
+             'dataset':              md['dataset'].value,
              'is_bulk_file':         md['is_bulk_file'],
             } 
     else:
@@ -83,6 +83,6 @@ def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
       'capture_date':         md['capture_date'],
       'created_on':           md.created_on,
       'modified_on':          md.modified_on,
-      'dataset':              md['dataset'],
+      'dataset':              md['dataset'].value,
       'is_bulk_file':         md['is_bulk_file'],
       }

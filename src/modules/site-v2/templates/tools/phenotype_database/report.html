@@ -124,7 +124,7 @@
             <!-- Download TSV button -->
             <div class="col-12 col-md-5 col-xl-12 p-3 mb-3 mb-xl-5 d-print-none">
                 <div class="d-grid gap-2">
-                    <a class="btn btn-secondary text-white" role="button" href="{{ url_for('phenotype_database.report', id=report.id, file_ext='tsv') }}"
+                    <a class="btn btn-secondary text-white" role="button" href="{{ url_for('phenotype_database.report', report_id=report.id, file_ext='tsv') }}"
                         ><i class="bi bi-file-earmark-spreadsheet-fill"></i> Download TSV</a>
                     <a class="btn btn-secondary text-white" role="button" onClick="download_report_as_pdf()" target="_blank"
                         ><i class="bi bi-file-earmark-pdf-fill"></i> Print Report</a>
@@ -228,6 +228,11 @@ try {
         fill_color:    '#0719BC',
         bins_per_tick: 2,
         x_label:       trait_label,
+        tooltip_id:    'tooltip-single-histogram',
+        tooltip_template: (d, labels) => `
+            <p class="tooltip-head"><b>Strain: ${d[0]}</b></p>
+            <p class="tooltip-body">${labels[0]}: ${d[1]}</p>
+        `,
     });
 } catch (err) {
     console.error(`Could not construct histogram. ${err}`)
@@ -238,6 +243,11 @@ try {
         width:         1200,
         fill_color:    '#0719BC',
         y_label:       trait_label,
+        tooltip_id:    'tooltip-single-barplot',
+        tooltip_template: (d) => `
+            <p class="tooltip-head"><b>${d[0]}</b></p>
+            <p class="tooltip-body">Value = ${d[1].toFixed(4)}</p>
+        `,
     });
 } catch (err) {
     console.error(`Could not construct ranked bar plot. ${err}`)
@@ -262,6 +272,12 @@ try {
         y_label:       `${trait_label_2}`,
         opacity:       0.5,
         opacity_hover: 1,
+        tooltip_id:    'tooltip-double-scatterplot',
+        tooltip_template: (d, labels) => `
+            <p class="tooltip-head"><b>${d[0]}</b></p>
+            <p class="tooltip-body">x = ${d[1].toFixed(4)}</p>
+            <p class="tooltip-body">y = ${d[2].toFixed(4)}</p>
+        `,
     });
 } catch (err) {
     console.error(`Could not construct scatterplot. ${err}`)

@@ -1,3 +1,4 @@
+import bleach
 import os
 import markdown
 import requests
@@ -8,6 +9,11 @@ from flask import Markup, render_template_string
 
 
 MODULE_SITE_BUCKET_PUBLIC_NAME = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME')
+
+
+
+def render_markdown_inline(content):
+  return Markup(markdown.markdown(bleach.clean(content)))
 
 
 def render_markdown(filename, directory="base/static/content/markdown"):

@@ -27,6 +27,7 @@ from wtforms.validators import (Required,
                                 Optional,
                                 ValidationError)
 from wtforms.fields.html5 import EmailField
+from wtforms.widgets import CheckboxInput
 
 
 from constants import PRICES, SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS, TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS, TRAIT_CATEGORY_OPTIONS
@@ -37,6 +38,7 @@ from caendr.services.database_operation import get_db_op_form_options
 from caendr.services.indel_primer import get_indel_primer_chrom_choices
 from caendr.services.markdown import get_content_type_form_options
 from caendr.models.datastore import User, Species, DatasetRelease, TraitFile
+from caendr.models.datastore.announcement import AnnouncementType
 from caendr.api.strain import query_strains
 from base.forms.validators import (validate_duplicate_strain, 
                                    validate_duplicate_isotype, 
@@ -118,6 +120,14 @@ class RecoverUserForm(FlaskForm):
   """ The account recovery email form """
   email = EmailField('Email Address', [Required(), Email(), Length(min=6, max=320)])
   recaptcha = RecaptchaField()
+
+
+class AnnouncementForm(FlaskForm):
+  """ Edit form for site announcements """
+  active   = BooleanField('Active')
+  content  = StringField('Content', [Optional()])
+  url_list = TextAreaField('URL Patterns', [Optional()])
+  style    = SelectField('Style', [Optional()], choices=[(x.name, x.value) for x in AnnouncementType])
 
 class MarkdownForm(FlaskForm):
   """ markdown editing form """

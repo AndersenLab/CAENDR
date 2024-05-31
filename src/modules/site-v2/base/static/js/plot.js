@@ -411,6 +411,12 @@ function render_ranked_barplot(container_selector, data, config={}) {
   // Read values from config, filling in default values when not supplied
   const fill_color    = config['fill_color']    || 'black';
 
+  // Create a template function for the tooltip
+  // By default, show label & value for each axis
+  const tooltip_id       = config['tooltip_id']       || null;
+  const tooltip_template = config['tooltip_template'] || ((d) => `
+    <p class="tooltip-body">${d[0]}: ${d[1]}</p>
+  `);
 
   // Sort data
   data.sort(function(b, a) {

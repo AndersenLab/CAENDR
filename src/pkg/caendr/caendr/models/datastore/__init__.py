@@ -12,6 +12,7 @@ from .species             import Species, SPECIES_LIST # Imports WormbaseVersion
 # Abstract template classes (add basic field(s) & functionality)
 from .file_record_entity  import FileRecordEntity
 from .hashable_entity     import HashableEntity
+from .orderable_entity    import OrderableEntity
 from .publishable_entity  import PublishableEntity
 from .species_entity      import SpeciesEntity       # Imports Species
 from .status_entity       import StatusEntity
@@ -38,6 +39,7 @@ from .nemascan_mapping    import NemascanReport      # Subclasses ReportEntity, 
 from .phenotype_report    import PhenotypeReport     # Subclasses ReportEntity, HashableEntity; imports TraitFile
 
 # Other
+from .announcement        import Announcement
 from .profile             import Profile
 from .markdown            import Markdown
 from .cart                import Cart                # Subclasses DeletableEntity
@@ -69,6 +71,7 @@ def get_class_by_kind(kind):
     HeritabilityReport.kind: HeritabilityReport,
     NemascanReport.kind:     NemascanReport,
 
+    Announcement.kind:       Announcement,
     GeneBrowserTracks.kind:  GeneBrowserTracks,
     Markdown.kind:           Markdown,
     Species.kind:            Species,

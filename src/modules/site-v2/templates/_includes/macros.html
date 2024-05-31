@@ -45,6 +45,8 @@
       {% if form_prefix %}<span class="input-group-addon">{{ form_prefix }}</span>{% endif %}
       {% if field.type == 'RadioField' %}
         {{ field(**kwargs) }}
+      {% elif field.type == 'BooleanField' %}
+        {{ field(**kwargs) }}
       {% elif field.type == 'FileField' %}
         <div class="hstack gap-2 mb-4">
           {{ field(class_="form-control", required=kwargs.get('required', field.flags.required), **kwargs) }}
