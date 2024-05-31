@@ -38,6 +38,7 @@ from .nemascan_mapping    import NemascanReport      # Subclasses ReportEntity, 
 from .phenotype_report    import PhenotypeReport     # Subclasses ReportEntity, HashableEntity; imports TraitFile
 
 # Other
+from .announcement        import Announcement
 from .profile             import Profile
 from .markdown            import Markdown
 from .cart                import Cart                # Subclasses DeletableEntity
@@ -69,6 +70,7 @@ def get_class_by_kind(kind):
     HeritabilityReport.kind: HeritabilityReport,
     NemascanReport.kind:     NemascanReport,
 
+    Announcement.kind:       Announcement,
     GeneBrowserTracks.kind:  GeneBrowserTracks,
     Markdown.kind:           Markdown,
     Species.kind:            Species,

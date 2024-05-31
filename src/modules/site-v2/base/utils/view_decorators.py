@@ -9,7 +9,7 @@ from base.utils.auth            import user_is_admin
 from base.utils.tools           import lookup_report, get_upload_err_msg
 from constants                  import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
-from caendr.models.datastore    import DatasetRelease, Species
+from caendr.models.datastore    import DatasetRelease, Species, Entity
 from caendr.models.error        import NotFoundError, ReportLookupError, EmptyReportDataError, EmptyReportResultsError, FileUploadError, DataValidationError
 from caendr.models.job_pipeline import JobPipeline
 from caendr.services.logger     import logger
@@ -147,7 +147,54 @@ def parse_job_id(pipeline_class: Type[JobPipeline], fetch=True, check_data_exist
 
 
 
-def validate_form(form_class: Type[FlaskForm], from_json: bool = False, err_msg: str = None, flash_err_msg: bool = True):
+def parse_entity_id(entity_class: Type[Entity], required: bool = True, kw_name_id: str = 'entity_id', kw_name_entity: str = 'entity'):
+  '''
+    Given an entity ID as a keyword argument, lookup and inject the entity with that ID.
+  '''
+  def wrapper(f):
+    @wraps(f)
+    def decorator(*args, **kwargs):
+
+      # Extract the entity ID from the keywords using the given name
+      entity_id = kwargs.get(kw_name_id)
+      kwargs = { key: val for key, val in kwargs.items() if key != kw_name_id }
+
+      # If no ID given, optionally raise error
+      if entity_id is None:
+        if required:
+          abort(404)
+        else:
+          e = None
+
+      # If ID given, try retrieving entity from datastore
+      else:
+        try:
+          e = entity_class.get_ds(entity_id)
+
+        # If not found, abort with 404
+        except NotFoundError as ex:
+          logger.error(f'Could not find {entity_class.kind} with ID {entity_id}: {ex}')
+          abort(404, description = f'Could not find an {entity_class.kind} object with the given ID.')
+
+        # General error: include default message
+        except Exception as ex:
+          logger.error(f'Error retrieving {entity_class.kind} with ID {entity_id}: {ex}')
+          abort(500, description = 'Something went wrong')
+
+        # If entity does not exist, abort with 404
+        if e is None:
+          logger.error(f'Could not find {entity_class.kind} with ID {entity_id}')
+          abort(404, description = f'Could not find an {entity_class.kind} object with the given ID.')
+
+      # Inject retrieved entity into function call
+      return f(*args, **{kw_name_entity: e}, **kwargs)
+
+    return decorator
+  return wrapper
+
+
+
+def validate_form(form_class: Type[FlaskForm], from_json: bool = False, err_msg: str = None, flash_err_msg: bool = True, methods = None):
   '''
     Parse the request form into the given form type, validate the fields, and inject the data as a dict.
 
@@ -164,6 +211,8 @@ def validate_form(form_class: Type[FlaskForm], from_json: bool = False, err_msg:
       - `from_json`: If `True`, use the request `.get_json()` as the fields instead.
       - `err_msg`: An error message to add to the response if validation fails.
       - `flash_err_msg`: If `True`, flashes the `err_msg` in addition to returning it.
+      - `methods`: A list of request methods to expect a form from. If `None`, checks for a form in all requests;
+                   otherwise, does not try to extract a form from any request method not in the list.
   '''
 
   def wrapper(f):
@@ -180,6 +229,11 @@ def validate_form(form_class: Type[FlaskForm], from_json: bool = False, err_msg:
 
       # If user is admin, allow them to bypass cache with URL variable
       no_cache = bool(user_is_admin() and request.args.get("nocache", False))
+
+      # If a list of methods is provided, make sure the current request method is in it
+      # If it's not, then there should not be any form data for this request
+      if methods is not None and request.method not in methods:
+        return f(*args, form_data=None, no_cache=no_cache, **kwargs)
 
       # Pull the raw data from either the form or the JSON body
       raw_data = request.get_json() if from_json else request.form

@@ -235,7 +235,7 @@ class Entity(object):
     return ( (k, self[k]) for k in props if self[k] is not None )
 
 
-  def serialize(self, include_meta=True):
+  def serialize(self, include_meta=True, include_name=False):
     '''
       Get a `dict` of all props in the entity, mapped to serializable values.
 
@@ -251,6 +251,10 @@ class Entity(object):
       props.update({
         prop: getattr(self, prop) for prop in self.get_props_set_meta()
       })
+
+    # Add unique ID ("name"), if applicable
+    if include_name:
+      props['name'] = self.name
 
     # Map non-serializable values to raw strings
     # TODO: Can we pull this out somewhere?

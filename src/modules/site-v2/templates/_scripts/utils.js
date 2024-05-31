@@ -105,6 +105,17 @@ function create_node(html) {
 }
 
 
+// Convert text from Markdown to HTML using Toast UI
+// This protects against code injection
+function markdownToHTML(text) {
+  const editor = new toastui.Editor({
+    el: document.createElement('div'),
+    initialValue: text,
+  });
+  return editor.getHTML();
+}
+
+
 function save_svg(selector, filename=null) {
   const svg_el = document.querySelector(selector);
   const data = (new XMLSerializer()).serializeToString(svg_el);
@@ -132,10 +143,9 @@ function flash_message(message, full_msg_link=null, full_msg_body=null) {
   const raw_html = `{% include '_includes/alert.html' %}`;
   {%- endwith %}
 
-  // Create as a new DOM node, and insert the desired message as text
-  // Inserting as text protects against code injection
+  // Create as a new DOM node, and insert the desired message as formatted (cleaned) HTML
   const node = create_node(raw_html);
-  node.firstElementChild.innerText = message;
+  node.firstElementChild.innerHTML = markdownToHTML(message);
 
   // If both full message fields are provided, add as a link & collapse dropdown
   if (full_msg_link && full_msg_body) {
