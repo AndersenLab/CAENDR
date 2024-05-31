@@ -76,6 +76,9 @@
 
   // Map publish status values to BS colors
   const statusClassMap = {
+    {%- if trait_library_table_mode == 'select' %}
+    "{{ PublishStatus.UPLOADED.name }}":  "info",
+    {%- endif %}
     "{{ PublishStatus.SUBMITTED.name }}": "primary",
     "{{ PublishStatus.ACCEPTED.name }}":  "success",
     "{{ PublishStatus.REJECTED.name }}":  "danger",
