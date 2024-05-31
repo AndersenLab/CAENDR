@@ -3,7 +3,7 @@ from enum import Enum
 from functools import wraps
 import json
 
-from flask import request, Blueprint, abort, jsonify
+from flask import request, Blueprint, abort, jsonify, url_for
 from caendr.services.logger import logger
 from extensions import cache, compress
 
@@ -12,6 +12,8 @@ from base.utils.view_decorators import parse_trait
 
 from caendr.api.phenotype import query_phenotype_metadata, get_trait, filter_trait_query, get_trait_categories
 from caendr.services.cloud.postgresql import rollback_on_error_handler
+from caendr.services.cloud.secret import get_secret
+from caendr.services.email import send_email, TRAIT_REVIEW_SUBMIT_EMAIL_TEMPLATE_USER, TRAIT_REVIEW_SUBMIT_EMAIL_TEMPLATE_ADMIN, TRAIT_REVIEW_ACCEPT_EMAIL_TEMPLATE_USER
 
 from caendr.models.datastore import Entity, TraitFile, Species, User
 from caendr.models.error     import NotFoundError, PublishStatusError
@@ -26,6 +28,9 @@ api_trait_bp = Blueprint(
   'api_trait', __name__
 )
 
+
+NO_REPLY_EMAIL     = get_secret('NO_REPLY_EMAIL')
+SITE_OWNER_USER_ID = get_secret('SITE_OWNER_USER_ID')
 
 
 #
@@ -461,8 +466,46 @@ def submit_trait(trait: Trait):
     logger.error(ex.description)
     abort(422, description=f'Cannot submit trait {trait.name}: current status is {ex.from_state}')
 
-  # Return success
-  return {}
+  # Send notification email to site owner & submitting user
+  try:
+    send_email({
+      'from':    f'CaeNDR <{NO_REPLY_EMAIL}>',
+      'to':      User.get_ds( SITE_OWNER_USER_ID, silent=False )['email'],
+      'subject': f'New trait submission',
+      'text':    TRAIT_REVIEW_SUBMIT_EMAIL_TEMPLATE_ADMIN.format(**{
+        'trait_name':  '\n'.join(trait.display_name),
+        'user_name':   trait.file.get_user_full_name(),
+        'review_link': url_for('data.review_trait', trait_id = trait.file.name, _external=True),
+      }),
+    })
+    emailed_site_owner = True
+
+  except Exception as ex:
+    logger.error(f'Unable to email site owner about new trait submission: {ex}')
+    emailed_site_owner = False
+
+  # Send notification email to submitting user
+  try:
+    send_email({
+      'from':    f'CaeNDR <{NO_REPLY_EMAIL}>',
+      'to':      trait.file.get_user_email(),
+      'subject': f'Thank you for your submission!',
+      'text':    TRAIT_REVIEW_SUBMIT_EMAIL_TEMPLATE_USER.format(**{
+        'trait_name': '\n'.join(trait.display_name),
+      }),
+    })
+    emailed_submitting_user = True
+
+  except Exception as ex:
+    logger.error(f'Unable to email submitting user about new trait submission: {ex}')
+    emailed_submitting_user = False
+
+  # Return what succeeded
+  return {
+    'submitted_trait':         True,
+    'emailed_site_owner':      emailed_site_owner,
+    'emailed_submitting_user': emailed_submitting_user
+  }
 
 
 @api_trait_bp.route('/review/<string:trait_id>/accept', methods=['POST'])
@@ -481,8 +524,27 @@ def accept_trait(trait: Trait):
     logger.error(ex.description)
     abort(422, description=f'Cannot accept trait {trait.name}: current status is {ex.from_state}')
 
-  # Return success
-  return {}
+  # Send notification email to submitting user
+  try:
+    send_email({
+      'from':    f'CaeNDR <{NO_REPLY_EMAIL}>',
+      'to':      trait.file.get_user_email(),
+      'subject': f'Your trait has been accepted!',
+      'text':    TRAIT_REVIEW_ACCEPT_EMAIL_TEMPLATE_USER.format(**{
+        'trait_name': '\n'.join(trait.display_name),
+      }),
+    })
+    emailed_submitting_user = True
+
+  except Exception as ex:
+    logger.error(f'Unable to email submitting user about new trait submission: {ex}')
+    emailed_submitting_user = False
+
+  # Return what succeeded
+  return {
+    'submitted_trait':         True,
+    'emailed_submitting_user': emailed_submitting_user
+  }
 
 
 @api_trait_bp.route('/review/<string:trait_id>/reject', methods=['POST'])
@@ -502,6 +564,8 @@ def reject_trait(trait: Trait):
     logger.error(ex.description)
     abort(422, description=f'Cannot reject trait {trait.name}: current status is {ex.from_state}')
 
+  # TODO: Send a notification email?
+
   # Return success
   return {}
 
@@ -520,12 +584,16 @@ def retract_trait(trait: Trait):
     This is a rather extreme option, so it should only be used when absolutely necessary.
   '''
 
+  # TODO: Should there be more guards around this?
+
   # Try updating the trait status, aborting if the state transition is invalid
   try:
     trait.retract()
   except PublishStatusError as ex:
     logger.error(ex.description)
     abort(422, description=f'Cannot retract trait {trait.name}: current status is {ex.from_state}')
+
+  # TODO: Send a notification email?
 
   # Return success
   return {}
