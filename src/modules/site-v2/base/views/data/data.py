@@ -187,12 +187,19 @@ def trait(trait: Trait):
   if reviewing and not user_is_admin():
     abort(404)
 
+  # Set the "parent" page based on the endpoint
+  # The review endpoint leads back to the admin submission queue, the view endpoint leads to the user's trait library
+  if reviewing:
+    tool_alt_parent_breadcrumb = {"title": "Trait Submission Queue", "url": url_for('admin_traits.trait_queue')}
+  else:
+    tool_alt_parent_breadcrumb = {"title": "My Trait Library", "url": url_for('data.my_trait_library')}
+
   phenotype_values = get_phenotype_values_for_trait(trait.sql_row.id)
   return render_template('data/trait.html', **{
     # Page Info
     'title': ('Review' if reviewing else 'View') + ' Trait',
     'subtitle': trait.display_name[0],
-    'tool_alt_parent_breadcrumb': {"title": "My Trait Library", "url": url_for('data.my_trait_library')},
+    'tool_alt_parent_breadcrumb': tool_alt_parent_breadcrumb,
 
     # Data
     'trait_name':    ' '.join(trait.display_name),
