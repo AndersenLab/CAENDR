@@ -35,9 +35,9 @@ def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
           if idx == 0:
             continue
           else:
-           trait_name = '_'.join(row[:3])
-           wbgene_id = row[1]
-           yield {
+            trait_name = '_'.join(row[:3])
+            wbgene_id = row[1]
+            yield {
              'id':                   f'{file_name}_{idx}',
              'trait_name_caendr':    trait_name,
              'trait_name_user':      md['trait_name_user'],
@@ -60,29 +60,31 @@ def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
              'modified_on':          md.modified_on,
              'dataset':              md['dataset'].value,
              'is_bulk_file':         md['is_bulk_file'],
+             'publish_status':       md['publish_status'].name,
             } 
     else:
       yield {
-      'id':                   file_name,
-      'trait_name_caendr':    md['trait_name_caendr'],
-      'trait_name_user':      md['trait_name_user'],
-      'trait_name_display_1': md['trait_name_display_1'],
-      'trait_name_display_2': md['trait_name_display_2'],
-      'trait_name_display_3': md['trait_name_display_3'],
-      'species_name':         md.species.name,
-      'wbgene_id':            'N/A',
-      'description_short':    md['description_short'],
-      'description_long':     md['description_long'],
-      'units':                md['units'],
-      'publication':          md['publication'],
-      'protocols':            md['protocols'],
-      'source_lab':           md['source_lab'],
-      'institution':          md['institution'],
-      'submitted_by':         md.get_user().full_name,
-      'tags':                 tags,
-      'capture_date':         md['capture_date'],
-      'created_on':           md.created_on,
-      'modified_on':          md.modified_on,
-      'dataset':              md['dataset'].value,
-      'is_bulk_file':         md['is_bulk_file'],
+        'id':                   file_name,
+        'trait_name_caendr':    md['trait_name_caendr'],
+        'trait_name_user':      md['trait_name_user'],
+        'trait_name_display_1': md['trait_name_display_1'],
+        'trait_name_display_2': md['trait_name_display_2'],
+        'trait_name_display_3': md['trait_name_display_3'],
+        'species_name':         md.species.name,
+        'wbgene_id':            'N/A',
+        'description_short':    md['description_short'],
+        'description_long':     md['description_long'],
+        'units':                md['units'],
+        'publication':          md['publication'],
+        'protocols':            md['protocols'],
+        'source_lab':           md['source_lab'],
+        'institution':          md['institution'],
+        'submitted_by':         md.get_user().full_name,
+        'tags':                 tags,
+        'capture_date':         md['capture_date'],
+        'created_on':           md.created_on,
+        'modified_on':          md.modified_on,
+        'dataset':              md['dataset'].value,
+        'is_bulk_file':         md['is_bulk_file'],
+        'publish_status':       md['publish_status'].name,
       }

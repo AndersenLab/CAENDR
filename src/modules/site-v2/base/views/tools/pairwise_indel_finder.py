@@ -12,7 +12,6 @@ from caendr.models.datastore.browser_track import BrowserTrackDefault
 from caendr.models.datastore import Species, IndelPrimerReport, DatasetRelease
 from caendr.models.error import NotFoundError, NonUniqueEntity
 from caendr.models.job_pipeline import IndelFinderPipeline
-from caendr.models.status import JobStatus
 from caendr.services.dataset_release import get_dataset_release
 from caendr.services.cloud.storage import BlobURISchema
 from caendr.utils.bio import parse_chrom_interval
@@ -162,8 +161,6 @@ def list_results():
     # Table info
     'species_list': Species.all(),
     'items': list_reports(IndelPrimerReport, None if show_all else user, filter_errs),
-
-    'JobStatus': JobStatus,
   })
 
 

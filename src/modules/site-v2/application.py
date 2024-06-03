@@ -16,6 +16,7 @@ from config import config
 import pytz
 
 from caendr.models.error import BasicAuthError
+from caendr.models.status import JobStatus, PublishStatus
 from caendr.services.cloud.postgresql import db, health_database_status
 from base.utils.markdown import render_markdown, render_ext_markdown, render_markdown_inline
 
@@ -60,6 +61,7 @@ from base.views.admin import admin_etl_op_bp
 from base.views.admin import admin_gene_browser_tracks_bp
 from base.views.admin import admin_content_bp
 from base.views.admin import admin_system_bp
+from base.views.admin import admin_traits_bp
 
 
 # Maintenance
@@ -215,6 +217,7 @@ def register_blueprints(app):
   app.register_blueprint(admin_gene_browser_tracks_bp, url_prefix='/admin/gene_browser_tracks')
   app.register_blueprint(admin_content_bp, url_prefix='/admin/content')
   app.register_blueprint(admin_system_bp, url_prefix='/admin/system')
+  app.register_blueprint(admin_traits_bp, url_prefix='/admin/traits')
   
   # Healthchecks/Maintenance
   app.register_blueprint(maintenance_bp, url_prefix='/tasks')
@@ -285,6 +288,13 @@ def configure_jinja(app):
       'feature_flags': {
         'PHENOTYPE_DB_ENABLED': get_env_var('PHENOTYPE_DB_ENABLED', var_type=bool, can_be_none=True),
       },
+    }
+
+  @app.context_processor
+  def inject_enum_classes():
+    return {
+      'JobStatus':     JobStatus,
+      'PublishStatus': PublishStatus,
     }
 
   #  2021-04-14 17:26:51.348674+00:00

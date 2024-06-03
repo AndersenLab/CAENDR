@@ -136,11 +136,11 @@ function download_from_href(href, filename) {
 /* Flash a message to the user without reloading the page.
  * This function is roundabout to prevent code injection.
  */
-function flash_message(message, full_msg_link=null, full_msg_body=null) {
+function flash_message(message, full_msg_link=null, full_msg_body=null, category='danger') {
 
   // Define the template for an alert popup using a static string
-  {%- with msg='', category='danger' %}
-  const raw_html = `{% include '_includes/alert.html' %}`;
+  {%- with msg='', category='CATEGORY' %}
+  const raw_html = `{% include '_includes/alert.html' %}`.replaceAll('CATEGORY', category);
   {%- endwith %}
 
   // Create as a new DOM node, and insert the desired message as formatted (cleaned) HTML

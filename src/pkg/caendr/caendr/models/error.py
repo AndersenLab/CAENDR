@@ -92,7 +92,10 @@ class NotFoundError(InternalError):
       try:
         self.kind = lookup_class.kind
       except:
-        self.kind = lookup_class
+        try:
+          self.kind = lookup_class.__tablename__ + ' entry'
+        except:
+          self.kind = lookup_class
     else:
       self.kind = 'object'
 
@@ -297,4 +300,18 @@ class ForeignResourceUndefinedError(InternalError):
     except:
       species_name = species
     self.description = f'Foreign resource template {resource_id} ({resource_type}) is not defined for species {species_name}'
+    super().__init__()
+
+
+class PublishStatusError(InternalError):
+  '''
+    Raised on an attempted invalid `PublishStatus` state transition, as defined in the `PublishStatus` class.
+
+    Tracks the `from_state` and `to_state`, and composes a description based on them.
+  '''
+  from caendr.models.status import PublishStatus
+  def __init__(self, from_state: PublishStatus, to_state: PublishStatus):
+    self.from_state  = from_state
+    self.to_state    = to_state
+    self.description = f'Invalid status transition: {from_state.value} -> {to_state.value}'
     super().__init__()

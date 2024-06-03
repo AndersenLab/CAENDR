@@ -26,7 +26,6 @@ from base.utils.view_decorators import parse_job_id, validate_form
 from caendr.models.datastore    import PhenotypeReport, Species
 from caendr.models.error        import NotFoundError
 from caendr.models.job_pipeline import PhenotypePipeline
-from caendr.models.status       import JobStatus
 from caendr.models.sql          import PhenotypeMetadata
 from caendr.models.trait        import Trait
 from caendr.utils.data          import get_file_format, convert_data_to_download_file
@@ -184,8 +183,6 @@ def list_results():
     # Table info
     'species_list': Species.all(),
     'items': list_reports(PhenotypeReport, user = None if show_all else user, filter_errs=filter_errs),
-
-    'JobStatus': JobStatus,
   })
 
 
@@ -224,6 +221,4 @@ def report(job: PhenotypePipeline, data, result, file_ext=None):
     'result': result,
     'ready':  True,
     'error':  job.get_error(),
-
-    'JobStatus': JobStatus,
   })
