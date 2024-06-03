@@ -1,7 +1,7 @@
 import os
 
 from caendr.services.logger import logger
-from caendr.utils.env import get_env_var
+from caendr.utils.env import get_env_var, get_env_var_with_fallback
 
 from caendr.models.datastore import ReportEntity, HashableEntity, Species
 from caendr.services.dataset_release import get_dataset_release
@@ -9,7 +9,7 @@ from caendr.services.dataset_release import get_dataset_release
 
 
 # Get environment variables
-MODULE_SITE_BUCKET_PUBLIC_NAME = get_env_var('MODULE_SITE_BUCKET_PUBLIC_NAME')
+MODULE_SITE_BUCKET_PUBLIC_NAME = get_env_var_with_fallback('MODULE_SITE_BUCKET_PUBLIC_NAME_OVERRIDE', 'MODULE_SITE_BUCKET_PUBLIC_NAME')
 SOURCE_FILENAME                = get_env_var('INDEL_PRIMER_SOURCE_FILENAME', as_template=True)
 
 

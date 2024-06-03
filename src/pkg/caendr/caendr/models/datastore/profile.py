@@ -2,10 +2,12 @@ import os
 
 from caendr.services.logger import logger
 
+from caendr.utils.env import get_env_var, get_env_var_with_fallback
+
 from caendr.models.datastore import Entity
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
 
-MODULE_SITE_BUCKET_PUBLIC_NAME = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME')
+MODULE_SITE_BUCKET_PUBLIC_NAME = get_env_var_with_fallback('MODULE_SITE_BUCKET_PUBLIC_NAME_OVERRIDE', 'MODULE_SITE_BUCKET_PUBLIC_NAME')
 PROFILE_PHOTO_PATH_PREFIX = 'profile/photos'
 
 

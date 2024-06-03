@@ -3,12 +3,14 @@ import os
 import markdown
 import requests
 
+from caendr.utils.env  import get_env_var_with_fallback
+
 from caendr.services.logger import logger
 from caendr.models.error import ExternalMarkdownRenderError
 from flask import Markup, render_template_string
 
 
-MODULE_SITE_BUCKET_PUBLIC_NAME = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME')
+MODULE_SITE_BUCKET_PUBLIC_NAME = get_env_var_with_fallback('MODULE_SITE_BUCKET_PUBLIC_NAME_OVERRIDE', 'MODULE_SITE_BUCKET_PUBLIC_NAME')
 
 
 
