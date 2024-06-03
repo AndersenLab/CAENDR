@@ -3,6 +3,7 @@
 
 {% block content %}
 
+<h2>My Results</h2>
 <div class="container px-5 pb-5">
   <div class="row row-cols-1 row-cols-md-3 g-5">
     <!-- Card Column -->
@@ -10,8 +11,8 @@
       <div class="card h-100 shadow text-center pt-5 mt-5 mx-auto cardBorderBottom" style="min-height:20rem;">
         <i class="bi bi-journal-text text-info" aria-hidden="true"></i>
         <div class="card-body">
-          <h2 class="h4 text-dark"><a class="stretched-link" href="{{ url_for('genetic_mapping.my_results') }}">My
-              Mapping Results</a></h2>
+          <h3 class="h4 text-dark"><a class="stretched-link" href="{{ url_for('genetic_mapping.my_results') }}">My
+              Mapping Results</a></h3>
         </div>
       </div>
     </div>
@@ -21,8 +22,8 @@
       <div class="card h-100 shadow text-center pt-5 mt-5 cardBorderBottom" style="min-height:20rem;">
         <i class="bi bi-journal-text text-info" aria-hidden="true"></i>
         <div class="card-body">
-          <h2 class="h4 text-dark"><a class="stretched-link"
-              href="{{ url_for('pairwise_indel_finder.my_results')   }}">My Primer Reports</a></h2>
+          <h3 class="h4 text-dark"><a class="stretched-link"
+              href="{{ url_for('pairwise_indel_finder.my_results')   }}">My Primer Reports</a></h3>
         </div>
       </div>
     </div>
@@ -32,8 +33,8 @@
       <div class="card h-100 shadow text-center pt-5 mt-5 cardBorderBottom" style="min-height:20rem;">
         <i class="bi bi-journal-text text-info" aria-hidden="true"></i>
         <div class="card-body">
-          <h2 class="h4 text-dark"><a class="stretched-link"
-              href="{{ url_for('heritability_calculator.my_results') }}">My Heritability Reports</a></h2>
+          <h3 class="h4 text-dark"><a class="stretched-link"
+              href="{{ url_for('heritability_calculator.my_results') }}">My Heritability Reports</a></h3>
         </div>
       </div>
     </div>
@@ -43,12 +44,32 @@
           <div class="card h-100 shadow text-center pt-5 mt-5 cardBorderBottom" style="min-height:20rem;">
             <i class="bi bi-journal-text text-info" aria-hidden="true"></i>
             <div class="card-body">
-              <h2 class="h4 text-dark"><a class="stretched-link"
-                  href="{{ url_for('phenotype_database.my_results') }}">My Phenotype Analysis Reports</a></h2>
+              <h3 class="h4 text-dark"><a class="stretched-link"
+                  href="{{ url_for('phenotype_database.my_results') }}">My Phenotype Analysis Reports</a></h3>
             </div>
           </div>
         </div>
         <!-- /Card Column -->
+  </div>
+  <!-- /Row -->
+</div> <!-- /Container -->
+
+
+<h2 class="pt-5">My Data</h2>
+<div class="container px-5 pb-5">
+  <div class="row row-cols-1 row-cols-md-3 g-5">
+    <!-- Card Column -->
+    <div class="col mb-3">
+      <div class="card h-100 shadow text-center pt-5 mt-5 mx-auto cardBorderBottom" style="min-height:20rem;">
+        <i class="bi bi-journal-text text-info" aria-hidden="true"></i>
+        <div class="card-body">
+          <h3 class="h4 text-dark"><a class="stretched-link" href="{{ url_for('data.my_trait_library') }}">
+            My Trait Library
+          </a></h3>
+        </div>
+      </div>
+    </div>
+    <!-- /Card Column -->
   </div>
   <!-- /Row -->
 </div> <!-- /Container -->

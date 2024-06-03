@@ -97,7 +97,7 @@ def user_account():
 @user_bp.route("/my-results", methods=["GET"])
 @jwt_required()
 def user_results():
-  title = 'My Results'
+  title = 'My Results & Data'
   user = get_current_user()
   return render_template('user/my-results.html', **locals())
 
