@@ -73,3 +73,13 @@
   .card-header {
     font-size: calc(var(--bs-body-font-size) * 1.125);
   }
+
+
+  .navbar-dropdown-link-with-icon {
+    text-indent: -1.5rem;
+    margin-left: 1.5rem;
+  }
+
+  .navbar-dropdown-link-with-icon > i {
+    text-indent: 0;
+  }
