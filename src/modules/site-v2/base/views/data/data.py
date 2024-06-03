@@ -120,7 +120,8 @@ def submit_trait_start():
   """ Submit Trait start page """
   return render_template('data/submit-trait-start.html', **{
     'title': 'Submit Trait',
-    'disable_parent_breadcrumb': True
+    'disable_parent_breadcrumb': True,
+    'form': EmptyForm(),
   })
 
 #

@@ -194,7 +194,7 @@
         {% elif trait_library_table_mode == 'select' %}
         {
           "render": function(data, type, row) {
-            const url = `{{ trait_library_table_select_link | safe }}`.replace("TRAIT_NAME", row.id).replace("TRAIT_SET", row.dataset);
+            const url = `{{ trait_library_table_select_link | safe }}`.replace("TRAIT_ID", row.id);
             return `
               <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Select</a>
             `;
