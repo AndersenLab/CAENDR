@@ -47,8 +47,8 @@
           <th scope="col" class="col-1 text-center">Display Name</th>
           <th scope="col" class="col-1 text-center py-4">Species</th>
           <th scope="col" class="col-1 text-center">Upload Date</th>
-          {% if trait_library_table_mode == 'full'%}
           <th scope="col" class="col-1 text-center">Public Database</th>
+          {% if trait_library_table_mode == 'full'%}
           <th scope="col" class="col-1 text-center">Phenotype Analysis</th>
           <th scope="col" class="col-1 text-center">Genetic Mapping</th>
           {% elif trait_library_table_mode == 'select' %}
@@ -73,6 +73,16 @@
   {% include '_scripts/utils.js' %}       {#/* defines: flash_message, first_letter_caps */#}
   {% include '_scripts/trait_utils.js' %} {#/* defines: traitNameHTML, traitNameString, queryTraitByName */#}
 
+
+  // Map publish status values to BS colors
+  const statusClassMap = {
+    "{{ PublishStatus.SUBMITTED.name }}": "primary",
+    "{{ PublishStatus.ACCEPTED.name }}":  "success",
+    "{{ PublishStatus.REJECTED.name }}":  "danger",
+    "{{ PublishStatus.RETRACTED.name }}": "danger",
+  };
+
+
   $(document).ready(function() {
 
     // Set standard header token for AJAX
@@ -92,7 +102,7 @@
       "ajax": {
         url: "{{ url_for('api_trait.query_list_datatable_private') }}",
         data: function(d) {
-          d.dataset = 'caendr';
+          d.dataset = 'public';
         },
       },
       "ordering": false,
@@ -101,7 +111,7 @@
           "render": function(data, type, row) {
             return `
               <button type="button" class="btn btn-link text-dark fw-normal d-block w-100 row-toggle"
-                  aria-expanded="false" aria-controls="full-info-${row.trait_name_caendr}"
+                  aria-expanded="false" aria-controls="full-info-${row.id}"
                   aria-label="Show more details for trait ${traitNameString(row.trait_name_display_1, row.trait_name_display_2, row.trait_name_display_3)}"
               ><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
             `;
@@ -111,7 +121,7 @@
         {
           "data": "trait_name_user",
           "render": function(data, type, row) {
-            return data || row.trait_name_caendr;
+            return data || row.id;
           },
         },
         {
@@ -132,20 +142,32 @@
             return formatDate(data);
           },
         },
+        {
+          "data": "publish_status",
+          "render": function(data, type, row) {
+            {%- if trait_library_table_mode == 'full' %}
+            const url = "{{ url_for('phenotype_database.phenotype_database') }}";
+            if (data === "{{ PublishStatus.UPLOADED.name }}") {
+              return `
+                <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Publish</a>
+              `;
+            }
+            {%- endif %}
+            return data;
+          },
+          "sClass": "optionsToolbar",
+          "createdCell": function( cell, cellData, rowData, rowIndex, colIndex ) {
+            if (cellData in statusClassMap) {
+              cell.classList.add(`bg-${ statusClassMap[ cellData ] }`);
+              cell.classList.add('bg-opacity-25');
+            }
+          },
+        },
 
         {% if trait_library_table_mode == 'full' %}
         {
           "render": function(data, type, row) {
-            const url = "{{ url_for('phenotype_database.phenotype_database') }}";
-            return `
-              <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Publish</a>
-            `;
-          },
-          "sClass": "optionsToolbar",
-        },
-        {
-          "render": function(data, type, row) {
-            const url = "{{ url_for('phenotype_database.submit_start', trait='TRAIT_NAME', dataset='TRAIT_SET') }}".replace("TRAIT_NAME", row.trait_name_caendr).replace("TRAIT_SET", row.dataset);
+            const url = "{{ url_for('phenotype_database.submit_start', trait='TRAIT_NAME', dataset='TRAIT_SET') }}".replace("TRAIT_NAME", row.id).replace("TRAIT_SET", row.dataset);
             return `
               <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
             `;
@@ -164,7 +186,7 @@
         {% elif trait_library_table_mode == 'select' %}
         {
           "render": function(data, type, row) {
-            const url = `{{ trait_library_table_select_link | safe }}`.replace("TRAIT_NAME", row.trait_name_caendr).replace("TRAIT_SET", row.dataset);
+            const url = `{{ trait_library_table_select_link | safe }}`.replace("TRAIT_NAME", row.id).replace("TRAIT_SET", row.dataset);
             return `
               <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Select</a>
             `;
@@ -186,7 +208,7 @@
         </div>
         <div class="d-flex justify-content-end me-1 pb-3 optionsToolbar">
             <a class="trait-detail-button" href="#"
-              data-bs-toggle="offcanvas" data-bs-target="#{{ offcanvas_id }}" data-value="${data.trait_name_caendr}"
+              data-bs-toggle="offcanvas" data-bs-target="#{{ offcanvas_id }}" data-value="${data.id}"
               aria-controls="{{ offcanvas_id }}"
             ><i class="bi bi-arrow-right" aria-hidden="true"></i>View Full Details</a>
         </div>
@@ -203,7 +225,7 @@
           e.target.closest('button').setAttribute('aria-expanded', 'false')
         } else {
           row.child(format_child_row(row.data())).show();
-          row.child().attr('id', `full-info-${row.data().trait_name_caendr}`)
+          row.child().attr('id', `full-info-${row.data().id}`)
           e.target.closest('button').setAttribute('aria-expanded', 'true')
         }
 

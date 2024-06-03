@@ -13,7 +13,6 @@ from base.utils.view_decorators import parse_job_id, validate_form
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
 from caendr.models.datastore import Species, NemascanReport
 from caendr.models.job_pipeline import NemascanPipeline
-from caendr.models.status import JobStatus
 from caendr.utils.env import get_env_var
 
 
@@ -111,8 +110,6 @@ def list_results():
     # Table info
     'species_list': Species.all(),
     'items': list_reports(NemascanReport, None if show_all else user, filter_errs),
-
-    'JobStatus': JobStatus,
   })
 
 

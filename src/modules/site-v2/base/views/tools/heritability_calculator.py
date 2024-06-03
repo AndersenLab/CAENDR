@@ -20,7 +20,6 @@ from base.utils.view_decorators import parse_job_id, validate_form
 
 from caendr.models.datastore import Species, HeritabilityReport
 from caendr.models.job_pipeline import HeritabilityPipeline
-from caendr.models.status import JobStatus
 from caendr.models.job_pipeline import HeritabilityPipeline
 from caendr.api.strain import get_strains
 from caendr.utils.data import unique_id, get_object_hash
@@ -112,8 +111,6 @@ def list_results():
     # Table info
     'species_list': Species.all(),
     'items': list_reports(HeritabilityReport, None if show_all else user, filter_errs),
-
-    'JobStatus': JobStatus,
   })
 
 
@@ -186,6 +183,4 @@ def report(job: HeritabilityPipeline, data, result):
 
     'data_url': job.report.input_filepath(schema=BlobURISchema.HTTPS),
     'logs_url': url_for('heritability_calculator.view_logs', report_id = job.report.id),
-
-    'JobStatus': JobStatus,
   })
