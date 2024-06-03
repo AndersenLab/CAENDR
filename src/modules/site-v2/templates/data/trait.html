@@ -239,6 +239,13 @@
                         Yes, publish it.
                     </button>
                 </div>
+                {%- if session["is_admin"] %}
+                {# If user is admin, allow them to skip the email notification for development purposes #}
+                <label class="mt-3">
+                    <input id="no-email-checkbox" type="checkbox" class="track-select normal-track" value="no_email" />
+                    <i>Skip notification email to site owner? (For development purposes only.)</i>
+                </label>
+                {%- endif %}
             </div>
         </div>
     </div>
@@ -344,8 +351,18 @@
 
         $('#submit').on('click', function(e) {
             e.preventDefault()
+
+            {%- if session["is_admin"] %}
+            // If user is admin, allow them to skip the email notification for development purposes
+            const url = $('#no-email-checkbox').prop('checked')
+                ? "{{ url_for('api_trait.submit_trait', trait_id=trait.name, no_email=1) }}"
+                : "{{ url_for('api_trait.submit_trait', trait_id=trait.name) }}"
+            {%- else %}
+            const url = "{{ url_for('api_trait.submit_trait', trait_id=trait.name) }}";
+            {%- endif %}
+
             $.ajax({
-                url: "{{ url_for('api_trait.submit_trait', trait_id=trait.name) }}",
+                url: url,
                 type: "POST",
 
                 success: function(response) {

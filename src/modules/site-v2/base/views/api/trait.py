@@ -466,9 +466,9 @@ def submit_trait(trait: Trait):
     logger.error(ex.description)
     abort(422, description=f'Cannot submit trait {trait.name}: current status is {ex.from_state}')
 
-  # Send notification email to site owner & submitting user
+  # Send notification email to site owner
   try:
-    send_email({
+    email_data = {
       'from':    f'CaeNDR <{NO_REPLY_EMAIL}>',
       'to':      User.get_ds( SITE_OWNER_USER_ID, silent=False )['email'],
       'subject': f'New trait submission',
@@ -477,8 +477,19 @@ def submit_trait(trait: Trait):
         'user_name':   trait.file.get_user_full_name(),
         'review_link': url_for('data.review_trait', trait_id = trait.file.name, _external=True),
       }),
-    })
-    emailed_site_owner = True
+    }
+
+    # If this user is an admin, allow them to include a "no_email" URL var that skips the notification
+    # This should only be used for development purposes, to avoid spam
+    no_email = request.args.get('no_email', False)
+    if no_email and user_is_admin():
+      logger.warning(f'Skipping notification to CaeNDR owner for new trait submission (flag "no_email" = "{no_email}"). Intended email contents: {email_data}')
+      emailed_site_owner = False
+
+    # Otherwise, send the email
+    else:
+      send_email(email_data)
+      emailed_site_owner = True
 
   except Exception as ex:
     logger.error(f'Unable to email site owner about new trait submission: {ex}')
