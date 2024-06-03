@@ -1,8 +1,10 @@
 import os
 
+from caendr.utils.env import get_env_var_with_fallback
+
 from caendr.models.datastore import Entity
 
-MODULE_SITE_BUCKET_PUBLIC_NAME = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME')
+MODULE_SITE_BUCKET_PUBLIC_NAME = get_env_var_with_fallback('MODULE_SITE_BUCKET_PUBLIC_NAME_OVERRIDE', 'MODULE_SITE_BUCKET_PUBLIC_NAME')
 PROTOCOL_PDF_PATH_PREFIX = 'protocol/pdf'
 
 
