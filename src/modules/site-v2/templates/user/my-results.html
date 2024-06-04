@@ -1,6 +1,9 @@
 {% extends "_layouts/default.html" %}
 {% from "_includes/macros.html" import render_field %}
 
+{%- set bi_results_icon = 'journal-text' %}
+{%- set bi_data_icon    = 'file-spreadsheet' %}
+
 {% block content %}
 
 <h2>My Results</h2>
@@ -9,7 +12,7 @@
     <!-- Card Column -->
     <div class="col mb-3">
       <div class="card h-100 shadow text-center pt-5 mt-5 mx-auto cardBorderBottom" style="min-height:20rem;">
-        <i class="bi bi-journal-text text-info" aria-hidden="true"></i>
+        <i class="bi bi-{{ bi_results_icon }} text-info" aria-hidden="true"></i>
         <div class="card-body">
           <h3 class="h4 text-dark"><a class="stretched-link" href="{{ url_for('genetic_mapping.my_results') }}">My
               Mapping Results</a></h3>
@@ -20,7 +23,7 @@
     <!-- Card Column -->
     <div class="col mb-3">
       <div class="card h-100 shadow text-center pt-5 mt-5 cardBorderBottom" style="min-height:20rem;">
-        <i class="bi bi-journal-text text-info" aria-hidden="true"></i>
+        <i class="bi bi-{{ bi_results_icon }} text-info" aria-hidden="true"></i>
         <div class="card-body">
           <h3 class="h4 text-dark"><a class="stretched-link"
               href="{{ url_for('pairwise_indel_finder.my_results')   }}">My Primer Reports</a></h3>
@@ -31,7 +34,7 @@
     <!-- Card Column -->
     <div class="col mb-3">
       <div class="card h-100 shadow text-center pt-5 mt-5 cardBorderBottom" style="min-height:20rem;">
-        <i class="bi bi-journal-text text-info" aria-hidden="true"></i>
+        <i class="bi bi-{{ bi_results_icon }} text-info" aria-hidden="true"></i>
         <div class="card-body">
           <h3 class="h4 text-dark"><a class="stretched-link"
               href="{{ url_for('heritability_calculator.my_results') }}">My Heritability Reports</a></h3>
@@ -42,7 +45,7 @@
     <!-- Card Column -->
     <div class="col mb-3">
       <div class="card h-100 shadow text-center pt-5 mt-5 cardBorderBottom" style="min-height:20rem;">
-        <i class="bi bi-journal-text text-info" aria-hidden="true"></i>
+        <i class="bi bi-{{ bi_results_icon }} text-info" aria-hidden="true"></i>
         <div class="card-body">
           <h3 class="h4 text-dark"><a class="stretched-link"
               href="{{ url_for('phenotype_database.my_results') }}">My Phenotype Analysis Reports</a></h3>
@@ -61,7 +64,7 @@
     <!-- Card Column -->
     <div class="col mb-3">
       <div class="card h-100 shadow text-center pt-5 mt-5 mx-auto cardBorderBottom" style="min-height:20rem;">
-        <i class="bi bi-journal-text text-info" aria-hidden="true"></i>
+        <i class="bi bi-{{ bi_data_icon }} text-info" aria-hidden="true"></i>
         <div class="card-body">
           <h3 class="h4 text-dark"><a class="stretched-link" href="{{ url_for('data.my_trait_library') }}">
             My Trait Library
