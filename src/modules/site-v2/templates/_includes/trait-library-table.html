@@ -50,7 +50,7 @@
           <th scope="col" class="col-1 text-center">Publish Status</th>
           {% if trait_library_table_mode == 'full'%}
           <th scope="col" class="col-1 text-center">Phenotype Analysis</th>
-          <th scope="col" class="col-1 text-center">Genetic Mapping</th>
+          {# <th scope="col" class="col-1 text-center">Genetic Mapping</th> #}
           {% elif trait_library_table_mode == 'select' %}
           <th scope="col" class="col-1 text-center">Select</th>
           {% endif %}
@@ -181,6 +181,7 @@
           },
           "sClass": "optionsToolbar",
         },
+        {#
         {
           "render": function(data, type, row) {
             const url = "{{ url_for('genetic_mapping.genetic_mapping') }}";
@@ -190,6 +191,7 @@
           },
           "sClass": "optionsToolbar",
         },
+        #}
         {% elif trait_library_table_mode == 'select' %}
         {
           "render": function(data, type, row) {
