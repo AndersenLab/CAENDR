@@ -174,7 +174,7 @@
         {% if trait_library_table_mode == 'full' %}
         {
           "render": function(data, type, row) {
-            const url = "{{ url_for('phenotype_database.submit_start', trait='TRAIT_NAME', dataset='TRAIT_SET') }}".replace("TRAIT_NAME", row.id).replace("TRAIT_SET", row.dataset);
+            const url = "{{ url_for('phenotype_database.submit_start', trait='TRAIT_NAME') }}".replace("TRAIT_NAME", row.id);
             return `
               <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
             `;
