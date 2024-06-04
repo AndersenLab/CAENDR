@@ -47,7 +47,7 @@
           <th scope="col" class="col-1 text-center">Display Name</th>
           <th scope="col" class="col-1 text-center py-4">Species</th>
           <th scope="col" class="col-1 text-center">Upload Date</th>
-          <th scope="col" class="col-1 text-center">Public Database</th>
+          <th scope="col" class="col-1 text-center">Publish Status</th>
           {% if trait_library_table_mode == 'full'%}
           <th scope="col" class="col-1 text-center">Phenotype Analysis</th>
           <th scope="col" class="col-1 text-center">Genetic Mapping</th>
@@ -82,9 +82,7 @@
 
   // Map publish status values to BS colors
   const statusClassMap = {
-    {%- if trait_library_table_mode == 'select' %}
     "{{ PublishStatus.UPLOADED.name }}":  "info",
-    {%- endif %}
     "{{ PublishStatus.SUBMITTED.name }}": "primary",
     "{{ PublishStatus.ACCEPTED.name }}":  "success",
     "{{ PublishStatus.REJECTED.name }}":  "danger",
@@ -132,7 +130,10 @@
         {
           "data": "trait_name_user",
           "render": function(data, type, row) {
-            return data || row.id;
+            const url = "{{ url_for('data.view_trait', trait_id='TRAIT_ID') }}".replace("TRAIT_ID", row.id);
+            return `
+              <a href="${ url }">${ data || row.id }</a>
+            `;
           },
           "sWidth": "20%",
         },
@@ -159,15 +160,7 @@
         {
           "data": "publish_status",
           "render": function(data, type, row) {
-            {%- if trait_library_table_mode == 'full' %}
-            const url = "{{ url_for('data.view_trait', trait_id='TRAIT_ID') }}".replace("TRAIT_ID", row.id);
-            if (data === "{{ PublishStatus.UPLOADED.name }}") {
-              return `
-                <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Edit and Publish</a>
-              `;
-            }
-            {%- endif %}
-            return data;
+            return first_letter_caps(data);
           },
           "sClass": "optionsToolbar",
           "createdCell": function( cell, cellData, rowData, rowIndex, colIndex ) {
@@ -215,12 +208,16 @@
     /* Child Rows (Dropdowns) */
 
     function format_child_row(data) {
+      const url = "{{ url_for('data.view_trait', trait_id='TRAIT_ID') }}".replace("TRAIT_ID", data.id);
       return `
         <div class="ms-5 pt-5 px-5 pb-2">
             <h3 class="h5 text-dark">Full Description</h3>
             <p>${data.description_long}</p>
         </div>
-        <div class="d-flex justify-content-end me-1 pb-3 optionsToolbar">
+        <div class="d-flex gap-4 justify-content-end me-1 pb-3 optionsToolbar">
+            <a href="${url}">
+              <i class="bi bi-pencil-square" aria-hidden="true"></i>Edit and Publish
+            </a>
             <a class="trait-detail-button" href="#"
               data-bs-toggle="offcanvas" data-bs-target="#{{ offcanvas_id }}" data-value="${data.id}"
               aria-controls="{{ offcanvas_id }}"
