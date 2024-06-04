@@ -11,7 +11,7 @@
                 class="bi bi-arrow-right-circle-fill me-1" aria-hidden="true"></i>Start an Analysis</a>
     </div>
     <div class="col mt-5">
-        {% with analyze_link = url_for("phenotype_database.submit_start", trait="TRAIT_NAME") %}
+        {% with analyze_link = url_for("phenotype_database.submit_start", trait="TRAIT_ID") %}
         {% include "_includes/phenotype-database-table.html" %}
         {% endwith %}
     </div>

@@ -149,7 +149,7 @@ label {
                 {
                     "data": "id",
                     "render": function(data, type, row) {
-                        const url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", data);
+                        const url = '{{ analyze_link | safe }}'.replace("TRAIT_ID", data);
                         return `
                             <div id="trait-data-${data}" class="ps-3 pt-0">
                                 <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
@@ -251,7 +251,7 @@ label {
                 }
             }
 
-            const url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", traitID);
+            const url = '{{ analyze_link | safe }}'.replace("TRAIT_ID", traitID);
             
             let html = `
                     <tr class="py-3 dislayedRow">
