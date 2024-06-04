@@ -33,13 +33,15 @@
     <div class="modal-dialog modal-fullscreen modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="phenotypeDBModalLabel">Phenotype Database</h5>
+                <h5 class="modal-title" id="phenotypeDBModalLabel">Select a Trait to Analyze</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="container my-3">
                     {% with analyze_link = 'javascript:select_trait(null, \"TRAIT_ID\")' %}
+                    {% with phenotype_database_include_mtl_tab = true %}
                     {% include "_includes/phenotype-database-table.html" %}
+                    {% endwith %}
                     {% endwith %}
                 </div>
                 <!-- Offcanvas -->

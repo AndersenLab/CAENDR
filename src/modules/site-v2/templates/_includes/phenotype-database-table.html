@@ -25,15 +25,31 @@ label {
 {% set offcanvas_id = 'phenotype-offcanvas' %}
 
 
+{# Tabs #}
 <nav>
     <div class="nav nav-tabs border-1" id="nav-tab" role="tablist">
+
+        <!-- Public Tabs -->
         <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button"
             role="tab" aria-controls="nav-home" aria-selected="true">Traits</button>
         <button class="nav-link" id="nav-zhang-tab" data-bs-toggle="tab" data-bs-target="#nav-zhang" type="button"
             role="tab" aria-controls="nav-zhang" aria-selected="false">Zhang et al. Traits</button>
+
+        {%- if phenotype_database_include_mtl_tab %}
+        <!-- Spacer -->
+        <div class="flex-grow-1"></div>
+
+        <!-- Private Tab(s) -->
+        <button class="nav-link" id="nav-mtl-tab" data-bs-toggle="tab" data-bs-target="#nav-mtl" type="button"
+            role="tab" aria-controls="nav-mtl" aria-selected="false">My Trait Library</button>
+        {%- endif %}
     </div>
 </nav>
+{# /Tabs #}
+
 <div class="tab-content py-2" id="nav-tabContent">
+
+    {# Home Tab #}
     <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
         <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}" />
         {% include "_includes/phenotype-search-bar.html" %}
@@ -60,6 +76,9 @@ label {
             </ul>
         </nav>
     </div>
+    {# /Home Tab #}
+
+    {# Zhang Tab #}
     <div class="tab-pane fade" id="nav-zhang" role="tabpanel" aria-labelledby="nav-zhang-tab">
         <div class="table-responsive">
             <table class="table p-0 text-center w-100" id="zhangTraits">
@@ -79,6 +98,21 @@ label {
             </table>
         </div>
     </div>
+    {# /Zhang Tab #}
+
+    {%- if phenotype_database_include_mtl_tab %}
+    {# My Trait Library Tab #}
+    <div class="tab-pane fade" id="nav-mtl" role="tabpanel" aria-labelledby="nav-mtl-tab">
+        {%- with table_id = 'mtl-table' %}
+        {%- with trait_library_table_mode = 'select' %}
+        {%- with trait_library_table_select_link = analyze_link %}
+        {% include "_includes/trait-library-table.html" %}
+        {%- endwith %}
+        {%- endwith %}
+        {%- endwith %}
+    </div>
+    {# /My Trait Library Tab #}
+    {%- endif %}
 </div>
 
 <!-- Offcanvas -->
