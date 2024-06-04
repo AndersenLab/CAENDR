@@ -38,7 +38,7 @@
             </div>
             <div class="modal-body">
                 <div class="container my-3">
-                    {% with analyze_link = 'javascript:select_trait(null, \"TRAIT_ID\")' %}
+                    {% with analyze_link = 'javascript:select_trait(null, \"TRAIT_ID\", \"TRAIT_TAB\")' %}
                     {% with phenotype_database_include_mtl_tab = true %}
                     {% include "_includes/phenotype-database-table.html" %}
                     {% endwith %}
@@ -114,9 +114,20 @@
         // Set headers for AJAX requests
         {{ ajax_setup(form.csrf_token._value()) }}
 
+        {# Set the initial trait, if provided #}
         {%- if initial_trait is not none %}
+
+        // Determine the source of the initial trait
+        {%- if belongs_to_user %}
+        const trait_tab = 'mtl';
+        {%- elif initial_trait.dataset == 'zhang' %}
+        const trait_tab = 'zhang';
+        {%- else %}
+        const trait_tab = 'home';
+        {%- endif %}
+
         // Set the initial trait
-        {{ select_trait('trait-1', trait_obj=initial_trait) }}
+        {{ select_trait('trait-1', trait_obj=initial_trait, trait_tab_var="trait_tab") }}
         {%- endif %}
 
         updateSubmitButton();
@@ -128,7 +139,7 @@
     }
 
 
-    function select_trait(id=null, trait=null) {
+    function select_trait(id=null, trait=null, trait_tab=null) {
 
         // Unless a selector is specifically named,
         // default to last selector to open the phenotype db modal
@@ -141,7 +152,7 @@
                 // Response check prevents infinite recursion
                 .then((response) => {
                     if (response !== null && typeof response === 'string') throw Error(`Invalid response for trait ${id}: "${response}"`);
-                    select_trait(id, response);
+                    select_trait(id, response, trait_tab);
                 })
                 .fail((error) => {
                     // If an error message was received, display it, otherwise use a fallback message
@@ -159,7 +170,7 @@
             if (trait === null) {
                 {{ select_trait('trait-1') }}
             } else {
-                {{ select_trait('trait-1', 'trait') }}
+                {{ select_trait('trait-1', 'trait', trait_tab_var="trait_tab") }}
             }
         }
 
@@ -168,7 +179,7 @@
             if (trait === null) {
                 {{ select_trait('trait-2') }}
             } else {
-                {{ select_trait('trait-2', 'trait') }}
+                {{ select_trait('trait-2', 'trait', trait_tab_var="trait_tab") }}
             }
         }
 

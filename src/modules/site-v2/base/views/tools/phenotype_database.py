@@ -103,6 +103,8 @@ def submit_traits():
   if initial_trait_id:
     try:
       initial_trait = Trait.from_id(initial_trait_id)
+      belongs_to_user = initial_trait.file.belongs_to_user( get_current_user() )
+
     except (NotFoundError, ValueError):
       flash('That trait could not be found.', 'danger')
       initial_trait = None
@@ -124,6 +126,7 @@ def submit_traits():
     ],
 
     'initial_trait': initial_trait,
+    'belongs_to_user': belongs_to_user,
   })
 
 

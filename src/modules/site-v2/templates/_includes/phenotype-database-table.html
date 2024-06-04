@@ -105,7 +105,7 @@ label {
     <div class="tab-pane fade" id="nav-mtl" role="tabpanel" aria-labelledby="nav-mtl-tab">
         {%- with table_id = 'mtl-table' %}
         {%- with trait_library_table_mode = 'select' %}
-        {%- with trait_library_table_select_link = analyze_link %}
+        {%- with trait_library_table_select_link = analyze_link.replace("TRAIT_TAB", "mtl") %}
         {% include "_includes/trait-library-table.html" %}
         {%- endwith %}
         {%- endwith %}
@@ -183,7 +183,7 @@ label {
                 {
                     "data": "id",
                     "render": function(data, type, row) {
-                        const url = '{{ analyze_link | safe }}'.replace("TRAIT_ID", data);
+                        const url = '{{ analyze_link | safe }}'.replace("TRAIT_ID", data).replace("TRAIT_TAB", "zhang");
                         return `
                             <div id="trait-data-${data}" class="ps-3 pt-0">
                                 <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
@@ -285,7 +285,7 @@ label {
                 }
             }
 
-            const url = '{{ analyze_link | safe }}'.replace("TRAIT_ID", traitID);
+            const url = '{{ analyze_link | safe }}'.replace("TRAIT_ID", traitID).replace("TRAIT_TAB", "home");
             
             let html = `
                     <tr class="py-3 dislayedRow">
