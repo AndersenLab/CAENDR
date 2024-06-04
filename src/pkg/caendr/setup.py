@@ -23,6 +23,7 @@ setup(
     'gspread==3.6.0',
     'gtfparse==0.0.6',
     'logzero==1.3.1',
+    'Markdown==2.6.11',
     'oauth2client',
     'numpy==1.19.5',
     'pandas==1.1.3',
