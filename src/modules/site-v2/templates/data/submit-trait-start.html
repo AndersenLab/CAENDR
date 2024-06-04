@@ -33,7 +33,9 @@
                     {% with table_id = 'mtl-table' %}
                     {% with trait_library_table_mode = 'select' %}
                     {% with trait_library_table_select_link = url_for('data.view_trait', trait_id='TRAIT_ID') %}
+                    {% with trait_library_table_unsubmitted_only = true %}
                     {% include "_includes/trait-library-table.html" %}
+                    {% endwith %}
                     {% endwith %}
                     {% endwith %}
                     {% endwith %}

@@ -181,6 +181,10 @@ def validate_endpoint_type(endpoint_prefix):
       elif EndpointType.matches( request.endpoint, EndpointType.QUEUE ):
         status_filter = { PublishStatus.SUBMITTED }
 
+      # On the "private" endpoint, allow optional request arg to restrict to unsubmitted traits
+      elif EndpointType.matches( request.endpoint, EndpointType.PRIVATE ) and request.args.get('unsubmitted_only', False):
+        status_filter = { PublishStatus.UPLOADED }
+
       # On all other endpoints, don't filter by status
       else:
         status_filter = None
