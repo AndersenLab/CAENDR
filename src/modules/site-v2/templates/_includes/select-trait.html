@@ -11,7 +11,7 @@
 
 
 {%- macro render_select_trait(id) %}
-<div class="col d-flex justify-content-center align-items-center h-100 text-bg-light border-0 rounded-2 shadow-sm p-3 pe-2 mb-5">
+<div class="col d-flex justify-content-center align-items-center h-100 text-bg-light border-0 rounded-2 shadow-sm p-4 mb-5">
 
   {# Selector Body (Empty) #}
   <div class="col" id="{{id}}-container-empty">
@@ -22,7 +22,7 @@
   {# /Selector Body (Empty) #}
 
   {# Selector Body (Trait Selected) #}
-  <div id="{{id}}-container-selected" class="d-none align-self-start">
+  <div id="{{id}}-container-selected" class="d-none align-self-start w-100">
 
     {# Button(s) #}
     <div class="d-flex justify-content-end">
@@ -34,12 +34,12 @@
 
     {# Selector #}
     <div id="{{id}}-selector" class="mt-5">
-      <h3 class="h5">Species:</h3>
-      <p><em id="{{id}}-species"></em></p>
-      <h3 class="h5">Trait Name:</h3>
-      <p id="{{id}}-trait-name"></p>
-      <h3 class="h5">Short Description:</h3>
-      <p id="{{id}}-trait-desc"></p>
+      <h3 class="h5 mt-4">Species:</h3>
+      <p class="mx-3"><em id="{{id}}-species"></em></p>
+      <h3 class="h5 mt-4">Trait Name:</h3>
+      <p id="{{id}}-trait-name" class="mx-3"></p>
+      <h3 class="h5 mt-4">Short Description:</h3>
+      <p id="{{id}}-trait-desc" class="mx-3"></p>
     </div>
     {# /Selector #}
 
