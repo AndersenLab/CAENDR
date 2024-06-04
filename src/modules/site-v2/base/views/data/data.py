@@ -7,7 +7,6 @@ from flask      import render_template, Blueprint, redirect, url_for, request, f
 from extensions import cache
 from config     import config
 
-from caendr.api.phenotype          import get_trait_categories
 from caendr.models.error           import EnvVarError, FileUploadError
 from caendr.models.datastore       import Species, TraitFile, User
 from caendr.models.trait           import Trait
@@ -79,34 +78,6 @@ def protocols():
       'protocols': yaml.safe_load(content),
     }
     return render_template('data/protocols.html', **params)
-
-
-
-#
-# Trait Library
-#
-
-
-@data_bp.route('/trait/library', methods=['GET'])
-@jwt_required()
-def my_trait_library():
-
-  # Get the list of unique tags
-  try:
-    categories = get_trait_categories()
-
-  except Exception as ex:
-    logger.error(f'Failed to retrieve the list of traits: {ex}')
-    abort(500, description='Failed to retrieve the list of traits')
-
-  return render_template('data/trait-library.html', **{
-    # Page info
-    'title': 'My Trait Library',
-
-    # Data
-    'categories': categories,
-    'form': EmptyForm(),
-  })
 
 
 
@@ -196,7 +167,7 @@ def trait(trait: Trait):
   if reviewing:
     tool_alt_parent_breadcrumb = {"title": "Trait Submission Queue", "url": url_for('admin_traits.trait_queue')}
   else:
-    tool_alt_parent_breadcrumb = {"title": "My Trait Library", "url": url_for('data.my_trait_library')}
+    tool_alt_parent_breadcrumb = {"title": "My Trait Library", "url": url_for('user.my_trait_library')}
 
   phenotype_values = get_phenotype_values_for_trait(trait.sql_row.id)
   return render_template('data/trait.html', **{
