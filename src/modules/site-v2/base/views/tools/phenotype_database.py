@@ -99,6 +99,10 @@ def submit_traits():
   # These will be inherited from submit_start
   initial_trait_id = request.args.get('trait')
 
+  # Initialize variable to track whether initial trait belongs to user
+  # Used to tell them whether it came from their MTL or not
+  belongs_to_user = False
+
   # Try looking up the specified trait
   if initial_trait_id:
     try:
