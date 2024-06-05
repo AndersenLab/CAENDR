@@ -110,6 +110,8 @@ def add_trait(form_data, user):
         for idx, row in enumerate( csv.reader(f, delimiter='\t') ):
           if idx == 0:
             continue
+          if row[1] == 'NA':
+            continue
           else:
             trait_data = {
               'trait_name':  tf['trait_name_user'],
