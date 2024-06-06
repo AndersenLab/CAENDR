@@ -117,7 +117,7 @@ def populate_andersenlab_trait_files():
         'publication':       get_field_from_record(record, 'Publication'),
         'protocols':         get_field_from_record(record, 'Protocol'),
         'institution':       get_field_from_record(record, 'Institution'),
-        'username':          get_field_from_record(record, 'Captured_By_UserID'),
+        'username':          get_field_from_record(record, 'Captured_By_UserID', type_=str),
         'capture_date':      get_field_from_record(record, 'Capture_Date'),
 
         # CaeNDR lab-specific fields
