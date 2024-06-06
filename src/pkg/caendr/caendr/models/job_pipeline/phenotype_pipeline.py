@@ -63,9 +63,9 @@ class PhenotypePipeline(JobPipeline):
       props['trait_2_name_caendr']  = trait_2.name
       props['trait_2_name_display'] = PhenotypeReport.compute_display_name(trait_2)
 
-      # Compute hash from unique trait names
+      # Compute hash from unique trait IDs
       # Sort before combining, so either order will produce the same hash
-      hash_source = ' '.join(sorted([props.get('trait_1_name_caendr', trait_1.name), props.get('trait_2_name_caendr', trait_2.name)]))
+      hash_source = ' '.join(sorted([ trait_1.trait_id, trait_2.trait_id ]))
 
       # Check that both traits have the same species
       # The front-end interface should prevent this, but if a job is somehow submitted with
