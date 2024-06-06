@@ -106,7 +106,7 @@ class Trait():
       Resulting dataframe will have the columns `strain_name` and `trait_value`.
     '''
     return pd.read_sql_query(
-      PhenotypeDatabase.query.filter( PhenotypeDatabase.trait_name == self.name ).statement, con=db.engine
+      PhenotypeDatabase.query.filter( PhenotypeDatabase.metadata_id == self.trait_id ).statement, con=db.engine
     )
 
   def query_values_dict(self):
