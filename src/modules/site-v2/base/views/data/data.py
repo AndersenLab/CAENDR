@@ -19,7 +19,7 @@ from caendr.services.validate      import validate_file, StrainValidator, Number
 from caendr.utils.local_files      import LocalUploadFile
 from caendr.utils.env              import get_env_var
 from caendr.utils.data             import get_file_format
-from base.utils.auth               import jwt_required, get_current_user, user_is_admin
+from base.utils.auth               import jwt_required, get_current_user, user_is_admin, check_feature_flag
 from base.utils.trait              import add_trait, update_trait_metadata
 from base.utils.view_decorators    import parse_trait
 from base.forms                    import TraitSubmissionForm, EmptyForm, format_form_errors
@@ -88,6 +88,7 @@ def protocols():
 @data_bp.route('/trait/start-submit')
 @cache.memoize(60*60)
 @jwt_required()
+@check_feature_flag('PHENOTYPE_DB_ENABLED')
 def submit_trait_start():
   """ Submit Trait start page """
   return render_template('data/submit-trait-start.html', **{
@@ -102,6 +103,7 @@ def submit_trait_start():
 @data_bp.route('/trait/create', methods=['GET', 'POST'])
 @cache.memoize(60*60)
 @jwt_required()
+@check_feature_flag('PHENOTYPE_DB_ENABLED')
 def submit_trait_form():
   """ Trait Submission Form """
   form = TraitSubmissionForm()
@@ -155,6 +157,7 @@ def submit_trait_form():
 @data_bp.route('/trait/<string:trait_id>/review', endpoint='review_trait')
 @cache.memoize(60*60)
 @jwt_required()
+@check_feature_flag('PHENOTYPE_DB_ENABLED')
 @parse_trait(validate_owner=True, allow_admin=True)
 def trait(trait: Trait):
   """
@@ -197,6 +200,7 @@ def trait(trait: Trait):
 @data_bp.route('/trait/<string:trait_id>/edit', methods=['GET', 'PUT'])
 @cache.memoize(60*60)
 @jwt_required()
+@check_feature_flag('PHENOTYPE_DB_ENABLED')
 @parse_trait(validate_owner=True, allow_admin=True)
 def edit_trait(trait: Trait):
   """
@@ -278,6 +282,7 @@ def edit_trait(trait: Trait):
 #
 @data_bp.route('/trait/parse-file', methods=['POST'])
 @jwt_required()
+@check_feature_flag('PHENOTYPE_DB_ENABLED')
 def validate_and_parse_trait_file():
   """ Parse the trait file and return the data """
   try:
@@ -307,6 +312,7 @@ def validate_and_parse_trait_file():
 @data_bp.route('/trait/<string:id>/download-file')
 @cache.memoize(60*60)
 @jwt_required()
+@check_feature_flag('PHENOTYPE_DB_ENABLED')
 def download_trait_file(id):
   """ Download the trait file """
   user = get_current_user()

@@ -19,7 +19,7 @@ from caendr.services.logger import logger
 from caendr.utils.env       import get_env_var
 
 from base.forms                 import EmptyForm
-from base.utils.auth            import jwt_required, get_current_user, user_is_admin
+from base.utils.auth            import jwt_required, get_current_user, user_is_admin, check_feature_flag_bp
 from base.utils.tools           import list_reports, try_submit
 from base.utils.view_decorators import parse_job_id, validate_form
 
@@ -37,10 +37,7 @@ phenotype_database_bp = Blueprint(
 )
 
 
-@phenotype_database_bp.before_request
-def check_bp_enabled():
-  if not (get_env_var('PHENOTYPE_DB_ENABLED', var_type=bool, can_be_none=True) or user_is_admin()):
-    abort(404)
+check_feature_flag_bp(phenotype_database_bp, 'PHENOTYPE_DB_ENABLED')
 
 
 
