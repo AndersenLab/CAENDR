@@ -293,8 +293,13 @@
             const formData = new FormData($('#form-submit')[0]);
             const traitId = $(this).data('value');
             const url = "{{ url_for('data.edit_trait', trait_id='TRAIT_ID') }}".replace('TRAIT_ID', traitId);
-            let redirectURL = "{{ url_for('data.view_trait', trait_id='ID') }}";
-            redirectURL = redirectURL.replace('ID', traitId);
+
+            {%- if return_to %}
+            const redirectURL = "{{ url_for('data.' + return_to, trait_id='ID') }}".replace('ID', traitId);
+            {%- else %}
+            const redirectURL = "{{ url_for('data.view_trait', trait_id='ID') }}".replace('ID', traitId);
+            {%- endif %}
+
             $.ajax({
                 type: "PUT",
                 url: url,
