@@ -42,6 +42,8 @@
       </div>
     </div>
     <!-- /Card Column -->
+
+    {%- if feature_flags.PHENOTYPE_DB_ENABLED %}
     <!-- Card Column -->
     <div class="col mb-3">
       <div class="card h-100 shadow text-center pt-5 mt-5 cardBorderBottom" style="min-height:20rem;">
@@ -53,14 +55,22 @@
       </div>
     </div>
     <!-- /Card Column -->
+    {%- endif %}
   </div>
   <!-- /Row -->
 </div> <!-- /Container -->
 
 
+{#
+  NOTE: If more cards are added to this section, this feature flag check can be removed.
+        Since the MTL is the only card here, this check prevents a stranded / empty header.
+#}
+{%- if feature_flags.PHENOTYPE_DB_ENABLED %}
 <h2 class="pt-5">My Data</h2>
 <div class="container px-5 pb-5">
   <div class="row row-cols-1 row-cols-md-3 g-5">
+
+    {%- if feature_flags.PHENOTYPE_DB_ENABLED %}
     <!-- Card Column -->
     <div class="col mb-3">
       <div class="card h-100 shadow text-center pt-5 mt-5 mx-auto cardBorderBottom" style="min-height:20rem;">
@@ -73,7 +83,10 @@
       </div>
     </div>
     <!-- /Card Column -->
+    {%- endif %}
+
   </div>
   <!-- /Row -->
 </div> <!-- /Container -->
+{%- endif %}
 {% endblock %}
