@@ -219,7 +219,12 @@ def edit_trait(trait: Trait):
 
     # Validate form fields
     if not form.validate_on_submit():
-      return jsonify({'message': f'Please fill out all required fields: {form.errors}'}), 500
+      return jsonify({
+        'message': 'There were errors with your submission.',
+        'full_msg_link': 'See all errors.',
+        'full_msg_body': '\n'.join( format_form_errors(form) ),
+        'errors': form.errors,
+      }), 400
 
     # Update the trait metadata
     else:

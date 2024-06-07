@@ -27,7 +27,7 @@
 
     {% from "_includes/macros.html" import render_field %}
 
-    <form id="form-submit" method="POST" enctype="multipart/form-data">
+    <form id="form-submit" method="POST" enctype="multipart/form-data" data-value="{{trait_id}}">
         {{ form.csrf_token }}
         <div class="row my-5">
             <h3 class="pb-3">{{'About You and Lab' if new_submission else 'About User and Lab'}}</h3>
@@ -288,60 +288,46 @@
             }
         }
 
-        $('#update-trait').on('click', function(e) {
+        // Form submission
+        $('#form-submit').on('submit', function(e) {
             e.preventDefault()
+
+            // Get form data
             const formData = new FormData($('#form-submit')[0]);
             const traitId = $(this).data('value');
-            const url = "{{ url_for('data.edit_trait', trait_id='TRAIT_ID') }}".replace('TRAIT_ID', traitId);
 
-            {%- if return_to %}
-            const redirectURL = "{{ url_for('data.' + return_to, trait_id='ID') }}".replace('ID', traitId);
+            // Compute the request endpoint values
+            {%- if new_submission %}
+            const requestURL  = "{{ url_for('data.submit_trait_form', trait_id='TRAIT_ID') }}".replace('TRAIT_ID', traitId);
+            const requestType = "POST";
             {%- else %}
-            const redirectURL = "{{ url_for('data.view_trait', trait_id='ID') }}".replace('ID', traitId);
+            const requestURL  = "{{ url_for('data.edit_trait', trait_id='TRAIT_ID') }}".replace('TRAIT_ID', traitId);
+            const requestType = "PUT";
             {%- endif %}
 
-            $.ajax({
-                type: "PUT",
-                url: url,
-                data: formData,
-                contentType: false,
-                processData: false,
-                success: function(response) {
-                    window.location.href = redirectURL;
-                },
-                error: function(error){
-                    console.error(error)
-                    if (error.responseJSON && error.responseJSON.message) {
-                        $('.alert').remove()
-                        flash_message(error.responseJSON.message)
-                    }         
-                }
-            })       
-        })
-
-
-        $('#submit-trait').on('click', function(e) {
-            e.preventDefault()
-            const formData = new FormData($('#form-submit')[0]);
-            const traitId = $(this).data('value');
-            const url = "{{ url_for('data.submit_trait_form', trait_id='TRAIT_ID') }}".replace('TRAIT_ID', traitId);
-
+            // Compute the URL to redirect to after a successful submission
             {%- if return_to %}
             const redirectURL = "{{ url_for('data.' + return_to, trait_id='TRAIT_ID') }}".replace('TRAIT_ID', traitId);
             {%- else %}
             const redirectURL = "{{ url_for('data.view_trait', trait_id='TRAIT_ID') }}".replace('TRAIT_ID', traitId);
             {%- endif %}
 
+            // Perform the AJAX call
             $.ajax({
-                type: "POST",
-                url: url,
+                url:  requestURL,
+                type: requestType,
                 data: formData,
                 contentType: false,
                 processData: false,
+
+                // On successful submission, redirect to the previous URL
                 success: function(response) {
                     window.location.href = redirectURL;
                 },
+
+                // On error, flash errors and add individual messages to fields
                 error: function(error){
+                    $('.alert').remove()
                     flashErrorResponse(error.responseJSON, 'There was an error submitting your trait.')
 
                     // Loop through all fields that might have errors
