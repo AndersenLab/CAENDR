@@ -52,7 +52,7 @@
             {% if new_submission %}
             <div class="col-md-3">{{ render_field(form.species) }}</div>
             <div class="col-md-3 d-flex">
-                {% call render_field(form.file, has_popover=true, content="Example file") %}
+                {% call render_field(form.file, has_popover=true, content="Phenotype data should be organized into two columns (strain, trait value). Only tsv (tab-separated value) files are accepted now.") %}
                 {% endcall %}
             </div>
             <button class="col-md-2 btn btn-secondary text-light align-self-baseline" disabled style="height:2.3rem; margin-top:2rem" type="button" id="file-upload">Upload File</button>
