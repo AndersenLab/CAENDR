@@ -231,8 +231,7 @@
             e.preventDefault()
             const formData = new FormData($('#form-submit')[0]);
             const traitId = $(this).data('value');
-            let url = "{{ url_for('data.edit_trait', id='ID') }}";
-            url = url.replace('ID', traitId);
+            const url = "{{ url_for('data.edit_trait', trait_id='TRAIT_ID') }}".replace('TRAIT_ID', traitId);
             let redirectURL = "{{ url_for('data.view_trait', trait_id='ID') }}";
             redirectURL = redirectURL.replace('ID', traitId);
             $.ajax({

@@ -9,6 +9,7 @@ from config     import config
 
 from caendr.models.error           import EnvVarError, FileUploadError
 from caendr.models.datastore       import Species, TraitFile, User
+from caendr.models.status          import PublishStatus
 from caendr.models.trait           import Trait
 from caendr.api.phenotype          import get_phenotype_values_for_trait
 from caendr.services.cloud.secret  import get_secret
@@ -188,32 +189,32 @@ def trait(trait: Trait):
   })
 
 
-@data_bp.route('/trait/<string:id>/edit', methods=['GET', 'PUT'])
+@data_bp.route('/trait/<string:trait_id>/edit', methods=['GET', 'PUT'])
 @cache.memoize(60*60)
 @jwt_required()
-def edit_trait(id):
+@parse_trait(validate_owner=True, allow_admin=True)
+def edit_trait(trait: Trait):
   """
     Edit Trait Page
   """
-  user = get_current_user()
-  trait_file = TraitFile.get_ds(id)
-  trait_ds = trait_file.serialize(include_name=True)
-  if trait_file.belongs_to_user(user) and not user_is_admin():
+
+  # Submitting user can only edit trait before submitting
+  if not user_is_admin() and trait.file['publish_status'] != PublishStatus.UPLOADED:
     return abort(401)
-  
+
   # Handle Trait Update
   if request.method == 'PUT':
     form = TraitSubmissionForm(request.form)
-    form.species.data = trait_ds['species']
-    form.email.data = trait_ds['submitter_email']
+    form.species.data = trait.file['species'].name
+    form.email.data   = trait.file.get_user_email() if trait.file.from_public else None
 
     # Validate form fields
     if not form.validate_on_submit():
       return jsonify({'message': f'Please fill out all required fields: {form.errors}'}), 500
-    
+
     # Update the trait metadata
     else:
-      resp, code = update_trait_metadata(id, form.data)
+      resp, code = update_trait_metadata(trait.trait_id, form.data)
       if code != 200:
         flash(resp['message'], 'danger')
       else:
@@ -223,41 +224,43 @@ def edit_trait(id):
   # Get the endpoint to return to, and validate it creates a legitimate URL
   return_to = request.args.get('return_to', 'view_trait')
   try:
-    test_url = url_for(f'data.{return_to}', trait_id=trait_ds['name'])
+    test_url = url_for(f'data.{return_to}', trait_id=trait.trait_id)
   except:
     return_to = 'view_trait'
 
+  trait_serialized = trait.file.serialize(include_name=True)
   form_data = {
-    'species':              trait_ds.get('species'),
-    'trait_name_user':      trait_ds.get('trait_name_caendr') if trait_ds.get('from_caendr') else trait_ds.get('trait_name_user'),
-    'trait_name_display_1': trait_ds.get('trait_name_display_1'),
-    'trait_name_display_2': trait_ds.get('trait_name_display_2'),
-    'trait_name_display_3': trait_ds.get('trait_name_display_3'),
-    'description_short':    trait_ds.get('description_short'),
-    'description_long':     trait_ds.get('description_long'),
-    'unit':                 trait_ds.get('unit'),
-    'tags':                 trait_ds.get('tags'),
-    'email':                trait_ds.get('submitter_email'),
-    'institution':          trait_ds.get('institution'),
-    'source_lab':           trait_ds.get('source_lab'),
-    'protocols':            trait_ds.get('protocols'),
-    'publication':          trait_ds.get('publication')
+    'species':              trait_serialized.get('species'),
+    'trait_name_user':      trait_serialized.get('trait_name_caendr') if trait_serialized.get('from_caendr') else trait_serialized.get('trait_name_user'),
+    'trait_name_display_1': trait_serialized.get('trait_name_display_1'),
+    'trait_name_display_2': trait_serialized.get('trait_name_display_2'),
+    'trait_name_display_3': trait_serialized.get('trait_name_display_3'),
+    'description_short':    trait_serialized.get('description_short'),
+    'description_long':     trait_serialized.get('description_long'),
+    'unit':                 trait_serialized.get('unit'),
+    'tags':                 trait_serialized.get('tags'),
+    'email':                trait_serialized.get('submitter_email'),
+    'institution':          trait_serialized.get('institution'),
+    'source_lab':           trait_serialized.get('source_lab'),
+    'protocols':            trait_serialized.get('protocols'),
+    'publication':          trait_serialized.get('publication')
   }
   form = TraitSubmissionForm(data=form_data)
+
   return render_template('data/submit-trait-form.html', **{
     # Page Info
     'title':                      'Edit Trait',
-    'tool_alt_parent_breadcrumb': { "title": trait_ds['trait_name_display_1'], "url": url_for(f'data.{return_to}', trait_id=trait_ds['name']) },
+    'tool_alt_parent_breadcrumb': { "title": trait.file['trait_name_display_1'], "url": url_for(f'data.{return_to}', trait_id=trait.trait_id) },
     'new_submission':             False,
 
     # Data
     'form':             form,
-    'phenotype_values': [ v.to_json() for v in get_phenotype_values_for_trait(id) ],
+    'phenotype_values': [ v.to_json() for v in get_phenotype_values_for_trait(trait.trait_id) ],
     'file':             {
-                          'name':       trait_ds['filename'],
-                          'created_on': datetime.strftime(trait_ds['created_on'], "%Y-%m-%d"),
+                          'name':       trait.file['filename'],
+                          'created_on': datetime.strftime(trait.file.created_on, "%Y-%m-%d"),
                         },
-    'trait_id':         id,
+    'trait_id':         trait.trait_id,
     'user_is_admin':    user_is_admin(),
 
     'return_to': return_to,
