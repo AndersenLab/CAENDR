@@ -22,7 +22,7 @@ from caendr.utils.data             import get_file_format
 from base.utils.auth               import jwt_required, get_current_user, user_is_admin
 from base.utils.trait              import add_trait, update_trait_metadata
 from base.utils.view_decorators    import parse_trait
-from base.forms                    import TraitSubmissionForm, EmptyForm
+from base.forms                    import TraitSubmissionForm, EmptyForm, format_form_errors
 from constants                     import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 MODULE_DB_OPERATIONS_BUCKET_NAME = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
@@ -117,8 +117,13 @@ def submit_trait_form():
 
     # Validate form fields
     if not form.validate_on_submit():
-      flash(f'Please fill out all required fields: {form.errors}', 'warning')
-    
+      return jsonify({
+        'message': 'There were errors with your submission.',
+        'full_msg_link': 'See all errors.',
+        'full_msg_body': '\n'.join( format_form_errors(form) ),
+        'errors': form.errors,
+      }), 400
+
     else:
       # Add the trait to the database
       resp, code = add_trait(form, user)
