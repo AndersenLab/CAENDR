@@ -310,16 +310,16 @@ def query_list_datatable(user_filter=None, status_filter=None):
   # Load full search object from request
   search_raw = get_clean(request.args, 'search[value]', '')
   if search_raw:
-    try:
-      search_full = json.loads(search_raw)
-    except:
-      abort(422, description="Invalid search")
+  #   try:
+  #     search_full = json.loads(search_raw)
+  #   except:
+  #     abort(422, description="Invalid search")
 
     # Treat non-dict values as search strings
     # Use the original raw string here so JSON casting doesn't change the value
     # (e.g. JSON "true" becoming Python "True")
-    if not isinstance(search_full, dict):
-      search_full = { 'search_val': search_raw }
+    # if not isinstance(search_full, dict):
+    search_full = { 'search_val': search_raw }
 
   else:
     search_full = {}
