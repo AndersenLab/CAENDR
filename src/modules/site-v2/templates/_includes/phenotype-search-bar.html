@@ -64,8 +64,7 @@
   // Update checked tags via event
   document.addEventListener("{{table_id}}-update-tag", ({detail}) => {
     const filterTag = $("#{{ table_id }}-tags-filter input[type=checkbox]").filter(function() {
-      console.log( $(this).attr('value'), detail.tagVal );
-      return $(this).attr('value') === detail.tagVal;
+      return $(this).attr('value').toLowerCase() === detail.tagVal.toLowerCase();
     })
     filterTag.prop('checked', true);
     search();
