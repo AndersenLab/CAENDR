@@ -235,7 +235,7 @@ def get_trait_categories(query = None):
   tags = filter(None, ( tr.get_tags() for tr in query ))
 
   # Flatten the list of lists into a set, and sort the result
-  tags_list = { tg for tr_tag in tags for tg in tr_tag }
+  tags_list = { tg.title() for tr_tag in tags for tg in tr_tag }
   return sorted(tags_list)
 
 

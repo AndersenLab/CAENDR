@@ -62,7 +62,7 @@ class PhenotypeMetadata(DictSerializable, db.Model):
       If no tag set defined, returns None.
     '''
     if self.tags:
-      return { tg.strip() for tg in self.tags.split(',') }
+      return { tg.strip().lower() for tg in self.tags.split(',') }
 
 
   def add(self, trait_obj):
