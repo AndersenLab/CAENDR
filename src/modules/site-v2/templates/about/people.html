@@ -42,7 +42,11 @@
                             <h3 class="h5 card-title">{{ p.first_name }} {{ p.last_name }}</h3>
                             <p class="card-text">
                                 <small>{{ p.title }}</small>
-                                {% if p.email %}
+                            {% if p.org %}
+                                <br>
+                                <small>{{ p.org }}</small>
+                            {% endif %}
+                            {% if p.email %}
                             <p><i class="bi bi-envelope-fill detailsLink"></i> <a href="mailto:{{ p.email }}">{{ p.email
                                     }}</a></p>
                             {% endif %}
