@@ -77,7 +77,6 @@ def people():
     if hasattr(item, 'title') and item.title.lower() == 'co-director':
       p = profiles[Profile.STAFF.code].pop(i)
       profiles[Profile.STAFF.code].insert(0, p)
-      break
 
   return render_template('about/people.html', **{
     'title': "People",
