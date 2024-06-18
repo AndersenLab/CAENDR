@@ -46,9 +46,9 @@ def try_get_sv_strains(species):
 @jwt_required()
 def get_tracks():
 
-  # Get the Divergent Regions browser track
+  # Get the Hyper-variable Regions browser track
   try:
-    divergent_track = BrowserTrackDefault.query_ds_unique('name', 'Divergent Regions', required=True)
+    divergent_track = BrowserTrackDefault.query_ds_unique('name', 'Hyper-variable Regions', required=True)
 
   # If no track found, log an error message and continue raising with a more descriptive message
   except NotFoundError as ex:
@@ -58,7 +58,7 @@ def get_tracks():
   # If track could not be uniquely identified, log an error and continue with the first result
   # TODO: Should this raise a further error?
   except NonUniqueEntity as ex:
-    logger.error('Could not uniquely identify Divergent Regions track.')
+    logger.error('Could not uniquely identify Hyper-variable Regions track.')
     divergent_track = ex.matches[0]
 
   # If a species was passed, check that the referenced track file exists for this species
