@@ -257,6 +257,7 @@ function render_scatterplot_histograms(container_selector, data, config={}) {
           arrow: false,
           allowHTML: true,
           placement: 'right',
+          appendTo: fullscreenBrowser,
         });
       }
 
@@ -486,6 +487,7 @@ function render_ranked_barplot(container_selector, data, config={}) {
     tippy(bars.nodes(), {
       allowHTML: true,  
       placement: 'top',
+      appendTo: fullscreenBrowser,
     });
   }
 
