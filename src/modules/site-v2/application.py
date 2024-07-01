@@ -214,7 +214,7 @@ def register_blueprints(app):
   app.register_blueprint(admin_profile_bp, url_prefix='/admin/profiles')
   app.register_blueprint(admin_tools_bp, url_prefix='/admin/tools')
   app.register_blueprint(admin_etl_op_bp, url_prefix='/admin/etl')
-  app.register_blueprint(admin_gene_browser_tracks_bp, url_prefix='/admin/gene_browser_tracks')
+  app.register_blueprint(admin_gene_browser_tracks_bp, url_prefix='/admin/gene-browser-tracks')
   app.register_blueprint(admin_content_bp, url_prefix='/admin/content')
   app.register_blueprint(admin_system_bp, url_prefix='/admin/system')
   app.register_blueprint(admin_traits_bp, url_prefix='/admin/traits')
