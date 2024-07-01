@@ -49,7 +49,7 @@ from base.views.about        import about_bp
 from base.views.get_involved import get_involved_bp
 
 # API
-from base.views.api import api_gene_bp, api_notifications_bp, api_trait_bp
+from base.views.api import api_gene_bp, api_notifications_bp, api_tracks_bp, api_trait_bp, api_strains_bp
 
 # Admin
 from base.views.admin import admin_bp
@@ -226,7 +226,9 @@ def register_blueprints(app):
   # API
   app.register_blueprint(api_gene_bp,          url_prefix='/api')
   app.register_blueprint(api_notifications_bp, url_prefix='/api/notifications')
+  app.register_blueprint(api_tracks_bp,        url_prefix='/api/tracks')
   app.register_blueprint(api_trait_bp,         url_prefix='/api/trait')
+  app.register_blueprint(api_strains_bp,       url_prefix='/api/strains')
 
   
   # Auth

@@ -1,5 +1,3 @@
-import re
-
 from caendr.services.logger import logger
 from flask import Response, Blueprint, render_template, request, url_for, jsonify, redirect, flash, abort
 
@@ -8,9 +6,7 @@ from base.utils.auth import jwt_required, admin_required, get_current_user, user
 from base.utils.tools import list_reports, try_submit
 from base.utils.view_decorators import parse_job_id, validate_form
 
-from caendr.models.datastore.browser_track import BrowserTrackDefault
 from caendr.models.datastore import Species, IndelPrimerReport, DatasetRelease
-from caendr.models.error import NotFoundError, NonUniqueEntity
 from caendr.models.job_pipeline import IndelFinderPipeline
 from caendr.services.dataset_release import get_dataset_release
 from caendr.services.cloud.storage import BlobURISchema
@@ -19,7 +15,6 @@ from caendr.utils.constants import CHROM_NUMERIC
 from caendr.utils.data import get_file_format
 
 from caendr.services.indel_primer import (
-    get_sv_strains,
     query_indels_and_mark_overlaps,
 )
 
@@ -30,54 +25,6 @@ pairwise_indel_finder_bp = Blueprint(
   'pairwise_indel_finder', __name__, template_folder='tools'
 )
 
-
-
-def try_get_sv_strains(species):
-  try:
-    return get_sv_strains(species)
-  except:
-    logger.error(f"Couldn't find strain variant annotations for {species}. Make sure the appropriate VCF file exists.")
-    return []
-
-
-## Data Endpoints
-
-@pairwise_indel_finder_bp.route('/tracks', methods=['GET'])
-@jwt_required()
-def get_tracks():
-
-  # Get the Divergent Regions browser track
-  try:
-    divergent_track = BrowserTrackDefault.query_ds_unique('name', 'Divergent Regions', required=True)
-
-  # If no track found, log an error message and continue raising with a more descriptive message
-  except NotFoundError as ex:
-    logger.error(ex.description)
-    raise ex
-
-  # If track could not be uniquely identified, log an error and continue with the first result
-  # TODO: Should this raise a further error?
-  except NonUniqueEntity as ex:
-    logger.error('Could not uniquely identify Divergent Regions track.')
-    divergent_track = ex.matches[0]
-
-  # If a species was passed, check that the referenced track file exists for this species
-  # If not, return a 404 error
-  # If species invalid, ignore (since this is an optional URL variable)
-  species = Species.get(request.args.get('species'), from_url=True)
-  if species and not divergent_track.check_exists_for_species(species):
-      abort(404)
-
-  # Return the track parameters
-  return jsonify(divergent_track['params'])
-
-
-@pairwise_indel_finder_bp.route('/strains', methods=['GET'])
-@jwt_required()
-def get_strains():
-  return jsonify({
-    species: try_get_sv_strains( species ) for species in Species.all().keys()
-  })
 
 
 ## Page Endpoints

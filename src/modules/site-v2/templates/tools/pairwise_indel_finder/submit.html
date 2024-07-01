@@ -176,7 +176,7 @@ $(document).ready(function(){
     form_change();
   });
 
-  fetch_json("{{ url_for('pairwise_indel_finder.get_strains') }}")
+  fetch_json("{{ url_for('api_strains.get_sv_strains') }}")
     .then((data) => {
       strains = data;
     })
@@ -393,7 +393,7 @@ function update_species(species_id) {
 
       // Clear all tracks & reload the divergent regions track
       clear_tracks();
-      fetch_json(`{{ url_for('pairwise_indel_finder.get_tracks') }}?species=${species.name}`)
+      fetch_json(`{{ url_for('api_tracks.get_divergent_regions') }}?species=${species.name}`)
         .then((divergent_track_summary) => {
           divergent_track_name = divergent_track_summary.name;
 
