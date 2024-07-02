@@ -25,15 +25,31 @@ label {
 {% set offcanvas_id = 'phenotype-offcanvas' %}
 
 
+{# Tabs #}
 <nav>
     <div class="nav nav-tabs border-1" id="nav-tab" role="tablist">
+
+        <!-- Public Tabs -->
         <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button"
             role="tab" aria-controls="nav-home" aria-selected="true">Traits</button>
         <button class="nav-link" id="nav-zhang-tab" data-bs-toggle="tab" data-bs-target="#nav-zhang" type="button"
             role="tab" aria-controls="nav-zhang" aria-selected="false">Zhang et al. Traits</button>
+
+        {%- if phenotype_database_include_mtl_tab %}
+        <!-- Spacer -->
+        <div class="flex-grow-1"></div>
+
+        <!-- Private Tab(s) -->
+        <button class="nav-link" id="nav-mtl-tab" data-bs-toggle="tab" data-bs-target="#nav-mtl" type="button"
+            role="tab" aria-controls="nav-mtl" aria-selected="false">My Trait Library</button>
+        {%- endif %}
     </div>
 </nav>
+{# /Tabs #}
+
 <div class="tab-content py-2" id="nav-tabContent">
+
+    {# Home Tab #}
     <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
         <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}" />
         {% include "_includes/phenotype-search-bar.html" %}
@@ -42,6 +58,7 @@ label {
                 <caption class="visually-hidden">A list of phenotype traits.</caption>
                 <thead class="table-secondary align-middle">
                     <tr>
+                        <th scope="col" class="col-1 text-center dropdown-column" style="width:2% !important"></th>
                         <th scope="col" class="col-1 py-4">Species</th>
                         <th scope="col" class="col-1">Trait</th>
                         <th scope="col" class="col-1">Short Description</th>
@@ -60,7 +77,10 @@ label {
             </ul>
         </nav>
     </div>
-    <div class="tab-pane fade" id="nav-zhang" role="tabpanel" aria-labelledby="nav-profile-tab">
+    {# /Home Tab #}
+
+    {# Zhang Tab #}
+    <div class="tab-pane fade" id="nav-zhang" role="tabpanel" aria-labelledby="nav-zhang-tab">
         <div class="table-responsive">
             <table class="table p-0 text-center w-100" id="zhangTraits">
                 <caption class="visually-hidden">A list of Zhang et al. traits.</caption>
@@ -79,6 +99,21 @@ label {
             </table>
         </div>
     </div>
+    {# /Zhang Tab #}
+
+    {%- if phenotype_database_include_mtl_tab %}
+    {# My Trait Library Tab #}
+    <div class="tab-pane fade" id="nav-mtl" role="tabpanel" aria-labelledby="nav-mtl-tab">
+        {%- with table_id = 'mtl-table' %}
+        {%- with trait_library_table_mode = 'select' %}
+        {%- with trait_library_table_select_link = analyze_link.replace("TRAIT_TAB", "mtl") %}
+        {% include "_includes/trait-library-table.html" %}
+        {%- endwith %}
+        {%- endwith %}
+        {%- endwith %}
+    </div>
+    {# /My Trait Library Tab #}
+    {%- endif %}
 </div>
 
 <!-- Offcanvas -->
@@ -149,7 +184,7 @@ label {
                 {
                     "data": "id",
                     "render": function(data, type, row) {
-                        const url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", data);
+                        const url = '{{ analyze_link | safe }}'.replace("TRAIT_ID", data).replace("TRAIT_TAB", "zhang");
                         return `
                             <div id="trait-data-${data}" class="ps-3 pt-0">
                                 <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
@@ -203,6 +238,11 @@ label {
             }));
         })
 
+        // Update the dropdown arrows when one is clicked
+        $('#tableAccordion').on('click', '.row-toggle', function() {
+            update_arrows('#tableAccordion .row-toggle');
+        })
+
     })
 
     // Update search based on search widget
@@ -251,14 +291,19 @@ label {
                 }
             }
 
-            const url = '{{ analyze_link | safe }}'.replace("TRAIT_NAME", traitID);
-            
+            const url = '{{ analyze_link | safe }}'.replace("TRAIT_ID", traitID).replace("TRAIT_TAB", "home");
+
             let html = `
                     <tr class="py-3 dislayedRow">
+                        <td class="p-0 m-0 dropdown-column" style="width:2% !important">
+                            <button type="button" class="btn btn-link text-dark fw-normal d-block w-100 row-toggle"
+                                aria-expanded="false" aria-controls="collapse-${i+1}"
+                                data-bs-toggle="collapse" data-bs-target="#collapse-${i+1}"
+                                aria-label="Show more details for trait ${traitNameString(arr[i].trait_name_display_1, arr[i].trait_name_display_2, arr[i].trait_name_display_3)}"
+                            ><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+                        </td>
                         <td>
-                            <a href="#" class="text-dark fw-normal" data-bs-toggle="collapse"
-                                data-bs-target="#collapse-${i+1}" aria-expanded="false" aria-controls="collapse-${i+1}"><i
-                                    class="bi bi-chevron-right" aria-hidden="true"></i><em>${speciesName}</em></a>
+                            <em class="text-dark fw-normal">${speciesName}</em>
                         </td>
                         <td id="accordionHeading-${i+1}">
                             ${traitNameHTML( arr[i].trait_name_display_1, arr[i].trait_name_display_2, arr[i].trait_name_display_3 )}
@@ -274,7 +319,7 @@ label {
                     </tr>
                     <tr id="collapse-${i+1}" class="text-start accordion-collapse collapse"
                         aria-labelledby="accordionHeading-${i+1}" data-bs-parent="#tableAccordion">
-                        <td colspan="7" style="background-color: var(--bs-gray-200)">
+                        <td colspan="8" style="background-color: var(--bs-gray-200)">
                             <div class="ms-5 pt-5 px-5 pb-2">
                                 <h3 class="h5 text-dark">Full Description</h3>
                                 <p>${arr[i].description_long}</p>
@@ -364,6 +409,11 @@ label {
             detail: { offcanvas_id: '{{offcanvas_id}}', trait: trait },
         }));
     }
+
+    function update_arrows(selector) {
+      $(`${selector}[aria-expanded="true"]` ).html('<i class="bi bi-chevron-down"  aria-hidden="true"></i>');
+      $(`${selector}[aria-expanded="false"]`).html('<i class="bi bi-chevron-right" aria-hidden="true"></i>');
+    };
 
 </script>
 {% endblock %}

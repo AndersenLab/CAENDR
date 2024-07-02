@@ -24,9 +24,9 @@ Or use this bibtex entry
 {% include "_includes/cite-caendr.bibtex" %}
 </code></pre>
 
-## What are hyper-divergent regions? How should I use variants that fall within these regions? 
+## What are hyper-variable regions? How should I use variants that fall within these regions? 
 
-Hyper-divergent regions are genomic intervals that contain sequences not found in the N2 reference strain. They were identified by high levels of variation and low coverage from read alignments. For a more full description, please read [this paper](https://andersenlab.org/publications/2021LeeNatureEE.pdf). We highly recommend that you use the genome browser and view the BAM files for strains of interest. We also released a genomic view track to see where we have classified divergent regions. If you find that your region of interest overlaps with a hyper-divergent region, then we recommend taking any variants as preliminary. Long-read sequencing is required to identify the actual genomic sequences in this region.
+Hyper-variable regions are genomic intervals that contain sequences not found in the N2 reference strain. They were identified by high levels of variation and low coverage from read alignments. For a more full description, please read [this paper](https://andersenlab.org/publications/2021LeeNatureEE.pdf). We highly recommend that you use the genome browser and view the BAM files for strains of interest. We also released a genomic view track to see where we have classified divergent regions. If you find that your region of interest overlaps with a hyper-variable region, then we recommend taking any variants as preliminary. Long-read sequencing is required to identify the actual genomic sequences in this region.
 
 ## How much confidence do we have in the indel variants?
 

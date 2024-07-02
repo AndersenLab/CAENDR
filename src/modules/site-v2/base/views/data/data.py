@@ -8,21 +8,27 @@ from extensions import cache
 from config     import config
 
 from caendr.models.error           import EnvVarError, FileUploadError
-from caendr.models.datastore       import Species, TraitFile
+from caendr.models.datastore       import Species, TraitFile, User
+from caendr.models.status          import PublishStatus
+from caendr.models.trait           import Trait
 from caendr.api.phenotype          import get_phenotype_values_for_trait
+from caendr.services.cloud.secret  import get_secret
 from caendr.services.cloud.storage import get_blob, download_blob_to_file
 from caendr.services.logger        import logger
 from caendr.services.validate      import validate_file, StrainValidator, NumberValidator
 from caendr.utils.local_files      import LocalUploadFile
 from caendr.utils.env              import get_env_var
 from caendr.utils.data             import get_file_format
-from base.utils.auth               import jwt_required, get_current_user, user_is_admin
-from base.utils.trait              import add_trait, update_trait_metadata, user_is_trait_owner
-from base.forms                    import TraitSubmissionForm, EmptyForm
+from base.utils.auth               import jwt_required, get_current_user, user_is_admin, check_feature_flag
+from base.utils.trait              import add_trait, update_trait_metadata
+from base.utils.view_decorators    import parse_trait
+from base.forms                    import TraitSubmissionForm, EmptyForm, format_form_errors
 from constants                     import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 
 MODULE_DB_OPERATIONS_BUCKET_NAME = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
 UPLOADS_DIR = os.path.join('.', 'uploads')
+
+SITE_OWNER = User.get_ds(get_secret('SITE_OWNER_USER_ID'))
 
 
 data_bp = Blueprint(
@@ -75,17 +81,20 @@ def protocols():
     return render_template('data/protocols.html', **params)
 
 
+
 #
 # Submit Trait
 #
 @data_bp.route('/trait/start-submit')
 @cache.memoize(60*60)
 @jwt_required()
+@check_feature_flag('PHENOTYPE_DB_ENABLED')
 def submit_trait_start():
   """ Submit Trait start page """
   return render_template('data/submit-trait-start.html', **{
     'title': 'Submit Trait',
-    'disable_parent_breadcrumb': True
+    'disable_parent_breadcrumb': True,
+    'form': EmptyForm(),
   })
 
 #
@@ -94,6 +103,7 @@ def submit_trait_start():
 @data_bp.route('/trait/create', methods=['GET', 'POST'])
 @cache.memoize(60*60)
 @jwt_required()
+@check_feature_flag('PHENOTYPE_DB_ENABLED')
 def submit_trait_form():
   """ Trait Submission Form """
   form = TraitSubmissionForm()
@@ -109,8 +119,13 @@ def submit_trait_form():
 
     # Validate form fields
     if not form.validate_on_submit():
-      flash(f'Please fill out all required fields: {form.errors}', 'warning')
-    
+      return jsonify({
+        'message': 'There were errors with your submission.',
+        'full_msg_link': 'See all errors.',
+        'full_msg_body': '\n'.join( format_form_errors(form) ),
+        'errors': form.errors,
+      }), 400
+
     else:
       # Add the trait to the database
       resp, code = add_trait(form, user)
@@ -118,7 +133,7 @@ def submit_trait_form():
         flash(resp['message'], 'danger')
       else:
         flash('Trait submitted successfully.', 'success')
-        return redirect(url_for('data.trait', id=resp['trait_id']))
+        return redirect(url_for('data.view_trait', trait_id=resp['trait_id']))
 
   return render_template('data/submit-trait-form.html', **{
     # Page Info
@@ -132,90 +147,139 @@ def submit_trait_form():
   })
 
 
-@data_bp.route('/trait/<string:id>')
+
+#
+# View & Edit Trait
+#
+
+
+@data_bp.route('/trait/<string:trait_id>/view',   endpoint='view_trait')
+@data_bp.route('/trait/<string:trait_id>/review', endpoint='review_trait')
 @cache.memoize(60*60)
 @jwt_required()
-def trait(id):
-  """ Trait Page """
-  trait_ds = TraitFile.get_ds(id)
-  trait_name = ' '.join(trait_ds.display_name)
-  phenotype_values = get_phenotype_values_for_trait(id)
+@check_feature_flag('PHENOTYPE_DB_ENABLED')
+@parse_trait(validate_owner=True, allow_admin=True)
+def trait(trait: Trait):
+  """
+    View / Review Trait Page
+  """
+
+  # Track which endpoint was called
+  reviewing = request.endpoint.endswith('review_trait')
+
+  # Validate admin on review endpoint
+  if reviewing and not user_is_admin():
+    abort(404)
+
+  # Set the "parent" page based on the endpoint
+  # The review endpoint leads back to the admin submission queue, the view endpoint leads to the user's trait library
+  if reviewing:
+    tool_alt_parent_breadcrumb = {"title": "Trait Submission Queue", "url": url_for('admin_traits.trait_queue')}
+  else:
+    tool_alt_parent_breadcrumb = {"title": "My Trait Library", "url": url_for('user.my_trait_library')}
+
+  phenotype_values = get_phenotype_values_for_trait(trait.sql_row.id)
   return render_template('data/trait.html', **{
-    # Page Info}
-    'title':                      trait_ds['trait_name_display_1'],
-    'tool_alt_parent_breadcrumb': {"title": "MTL", "url": url_for('data.my_trait_library')},
+    # Page Info
+    'title': ('Review' if reviewing else 'View') + ' Trait',
+    'subtitle': trait.display_name[0],
+    'tool_alt_parent_breadcrumb': tool_alt_parent_breadcrumb,
 
     # Data
-    'trait_name':    trait_name,
-    'trait':         trait_ds.serialize(),
+    'trait_name':    ' '.join(trait.display_name),
+    'trait':         { **trait.file.serialize(), 'name': trait.file.name },
     'file_content':  phenotype_values,
     'form':          EmptyForm(),
-    'user_is_owner': user_is_trait_owner(trait_ds.serialize(), get_current_user()),
+    'user_is_owner': trait.file.belongs_to_user(get_current_user()),
 
+    'reviewing': reviewing,
+    'help_email': SITE_OWNER['email'],
   })
 
-@data_bp.route('/trait/<string:id>/edit', methods=['GET', 'PUT'])
+
+@data_bp.route('/trait/<string:trait_id>/edit', methods=['GET', 'PUT'])
 @cache.memoize(60*60)
 @jwt_required()
-def edit_trait(id):
-  """ Edit Trait Page"""
-  user = get_current_user()
-  trait_ds = TraitFile.get_ds(id).serialize()
-  if user_is_trait_owner(trait_ds, user) and not user_is_admin():
+@check_feature_flag('PHENOTYPE_DB_ENABLED')
+@parse_trait(validate_owner=True, allow_admin=True)
+def edit_trait(trait: Trait):
+  """
+    Edit Trait Page
+  """
+
+  # Submitting user can only edit trait before submitting
+  if not user_is_admin() and trait.file['publish_status'] != PublishStatus.UPLOADED:
     return abort(401)
-  
+
   # Handle Trait Update
   if request.method == 'PUT':
     form = TraitSubmissionForm(request.form)
-    form.species.data = trait_ds['species']
-    form.email.data = trait_ds['submitter_email']
+    form.species.data = trait.file['species'].name
+    form.email.data   = trait.file.get_user_email() if trait.file.from_public else None
 
     # Validate form fields
     if not form.validate_on_submit():
-      return jsonify({'message': f'Please fill out all required fields: {form.errors}'}), 500
-    
+      return jsonify({
+        'message': 'There were errors with your submission.',
+        'full_msg_link': 'See all errors.',
+        'full_msg_body': '\n'.join( format_form_errors(form) ),
+        'errors': form.errors,
+      }), 400
+
     # Update the trait metadata
     else:
-      resp, code = update_trait_metadata(id, form.data)
+      resp, code = update_trait_metadata(trait.trait_id, form.data)
       if code != 200:
         flash(resp['message'], 'danger')
       else:
         flash(resp['message'], 'success')
         return jsonify( resp ), code
 
+  # Get the endpoint to return to, and validate it creates a legitimate URL
+  return_to = request.args.get('return_to', 'view_trait')
+  try:
+    test_url = url_for(f'data.{return_to}', trait_id=trait.trait_id)
+  except:
+    return_to = 'view_trait'
+
+  trait_serialized = trait.file.serialize(include_name=True)
   form_data = {
-    'species':              trait_ds.get('species'),
-    'trait_name_user':      trait_ds.get('trait_name_caendr') if trait_ds['from_caendr'] else trait_ds.get('trait_name_user'),
-    'trait_name_display_1': trait_ds.get('trait_name_display_1'),
-    'trait_name_display_2': trait_ds.get('trait_name_display_2'),
-    'trait_name_display_3': trait_ds.get('trait_name_display_3'),
-    'description_short':    trait_ds.get('description_short'),
-    'description_long':     trait_ds.get('description_long'),
-    'unit':                 trait_ds.get('unit'),
-    'tags':                 trait_ds.get('tags'),
-    'email':                trait_ds.get('submitter_email'),
-    'institution':          trait_ds.get('institution'),
-    'source_lab':           trait_ds.get('source_lab'),
-    'protocols':            trait_ds.get('protocols'),
-    'publication':          trait_ds.get('publication')
+    'species':              trait_serialized.get('species'),
+    'trait_name_user':      trait_serialized.get('trait_name_caendr') if trait_serialized.get('from_caendr') else trait_serialized.get('trait_name_user'),
+    'trait_name_display_1': trait_serialized.get('trait_name_display_1'),
+    'trait_name_display_2': trait_serialized.get('trait_name_display_2'),
+    'trait_name_display_3': trait_serialized.get('trait_name_display_3'),
+    'description_short':    trait_serialized.get('description_short'),
+    'description_long':     trait_serialized.get('description_long'),
+    'unit':                 trait_serialized.get('unit'),
+    'tags':                 trait_serialized.get('tags'),
+    'email':                trait_serialized.get('submitter_email'),
+    'institution':          trait_serialized.get('institution'),
+    'source_lab':           trait_serialized.get('source_lab'),
+    'protocols':            trait_serialized.get('protocols'),
+    'publication':          trait_serialized.get('publication')
   }
   form = TraitSubmissionForm(data=form_data)
+
   return render_template('data/submit-trait-form.html', **{
     # Page Info
     'title':                      'Edit Trait',
-    'tool_alt_parent_breadcrumb': { "title": trait_ds['trait_name_display_1'], "url": url_for('data.trait', id=trait_ds['name']) },
+    'tool_alt_parent_breadcrumb': { "title": trait.file['trait_name_display_1'], "url": url_for(f'data.{return_to}', trait_id=trait.trait_id) },
     'new_submission':             False,
 
     # Data
     'form':             form,
-    'phenotype_values': [ v.to_json() for v in get_phenotype_values_for_trait(id) ],
+    'phenotype_values': [ v.to_json() for v in get_phenotype_values_for_trait(trait.trait_id) ],
     'file':             {
-                          'name':       trait_ds['filename'],
-                          'created_on': datetime.strftime(trait_ds['created_on'], "%Y-%m-%d"),
+                          'name':       trait.file['filename'],
+                          'created_on': datetime.strftime(trait.file.created_on, "%Y-%m-%d"),
                         },
-    'trait_id':         id,
+    'trait_id':         trait.trait_id,
     'user_is_admin':    user_is_admin(),
+
+    'return_to': return_to,
   })
+
 
 
 #
@@ -223,6 +287,7 @@ def edit_trait(id):
 #
 @data_bp.route('/trait/parse-file', methods=['POST'])
 @jwt_required()
+@check_feature_flag('PHENOTYPE_DB_ENABLED')
 def validate_and_parse_trait_file():
   """ Parse the trait file and return the data """
   try:
@@ -252,11 +317,12 @@ def validate_and_parse_trait_file():
 @data_bp.route('/trait/<string:id>/download-file')
 @cache.memoize(60*60)
 @jwt_required()
+@check_feature_flag('PHENOTYPE_DB_ENABLED')
 def download_trait_file(id):
   """ Download the trait file """
   user = get_current_user()
   trait_ds = TraitFile.get_ds(id)
-  if user_is_trait_owner(trait_ds.serialize(), user) and not user_is_admin():
+  if trait_ds.belongs_to_user(user) and not user_is_admin():
     return abort(401)
   
   file = download_blob_to_file(MODULE_DB_OPERATIONS_BUCKET_NAME, trait_ds.get_filepath()[1], destination=UPLOADS_DIR)

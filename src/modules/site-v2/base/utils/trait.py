@@ -40,7 +40,7 @@ def add_trait(form_data, user):
       'trait_name_user':      bleach.clean(form_data.trait_name_user.data),
       'trait_name_display_1': bleach.clean(form_data.trait_name_display_1.data),
       'trait_name_display_2': bleach.clean(form_data.trait_name_display_2.data),
-      'trait_name_display_3': bleach.clean(form_data.trait_name_display_2.data),
+      'trait_name_display_3': bleach.clean(form_data.trait_name_display_3.data),
       'filename':             bleach.clean(form_data.file.data.filename),
       'species':              bleach.clean(form_data.species.data),
       'description_short':    bleach.clean(form_data.description_short.data),
@@ -109,6 +109,8 @@ def add_trait(form_data, user):
       with open(file) as f:
         for idx, row in enumerate( csv.reader(f, delimiter='\t') ):
           if idx == 0:
+            continue
+          if row[1] == 'NA':
             continue
           else:
             trait_data = {
@@ -204,10 +206,3 @@ def update_trait_metadata(id, form_data):
     return {'message': 'Failed to update the trait. Please try again later.'}, 500
   
   return {'message': 'Trait updated successfully.'}, 200
-
-
-def user_is_trait_owner(trait, user) -> bool:
-  """ Check if the user is the owner of the trait """
-  return user.email == trait['submitter_email']
-  
-      

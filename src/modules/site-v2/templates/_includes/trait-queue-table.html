@@ -49,9 +49,7 @@
           <th scope="col" class="col-1 text-center py-4">Species</th>
           <th scope="col" class="col-1 text-center">User</th>
           <th scope="col" class="col-1 text-center">Upload Date</th>
-          <th scope="col" class="col-1 text-center">Edit</th>
-          <th scope="col" class="col-1 text-center">Accept</th>
-          <th scope="col" class="col-1 text-center">Reject</th>
+          <th scope="col" class="col-1 text-center">Review</th>
         </tr>
       </thead>
       <tbody class="table-group-divider align-middle"></tbody>
@@ -64,48 +62,6 @@
   </div>
 </div>
 {# /Main Table #}
-
-{# Confirm Accept Modal #}
-<div class="modal fade" id="confirm-accept-modal" tabindex="-1" aria-labelledby="confirm-accept-modal-label" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h1 class="modal-title fs-5" id="confirm-accept-modal-label">Accept Trait</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <p>You are about to publish the following trait into the public Phenotype Database:</p>
-        <div id="confirm-accept-modal-body-container" class="text-center mb-2"></div>
-        <p>This action is not reversable!</p>
-      </div>
-      <div class="modal-footer">
-        <button id="confirm-accept-button" type="button" class="btn btn-success" data-bs-dismiss="modal">Accept</button>
-      </div>
-    </div>
-  </div>
-</div>
-{# /Confirm Accept Modal #}
-
-{# Confirm Reject Modal #}
-<div class="modal fade" id="confirm-reject-modal" tabindex="-1" aria-labelledby="confirm-reject-modal-label" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h1 class="modal-title fs-5" id="confirm-reject-modal-label">Reject Trait</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <p>You are about to reject the following trait from entering the public Phenotype Database:</p>
-        <div id="confirm-reject-modal-body-container" class="text-center mb-2"></div>
-        <!-- <p>This trait will be sent back to the user for potential revisions.</p> -->
-      </div>
-      <div class="modal-footer">
-        <button id="confirm-reject-button" type="button" class="btn btn-danger" data-bs-dismiss="modal">Reject</button>
-      </div>
-    </div>
-  </div>
-</div>
-{# /Confirm Reject Modal #}
 
 
 
@@ -180,67 +136,45 @@
             `;
           },
           "sClass": "p-0 m-0 dropdown-column",
+          "width": "6%",
         },
         {
           "render": function(data, type, row) {
             return traitNameHTML( row.trait_name_display_1, row.trait_name_display_2, row.trait_name_display_3 );
           },
-          "width": '15%',
+          "width": "25%",
         },
         {
           "data": "description_short",
-          "width": '15%',
+          "width": "25%",
         },
         {
           "data": "species_name",
           "render": function(data, type, row) {
             return first_letter_caps(data).replace('_', '. ').italics();
           },
-          "width": '10%',
+          "width": "12%",
         },
         {
           "data": "submitted_by",
-          "width": '10%',
+          "width": "12%",
         },
         {
           "data": "created_on",
           "render": function(data, type, row) {
             return formatDate(data);
           },
-          "width": '15%',
+          "width": "10%",
         },
         {
           "render": function(data, type, row) {
+            const url = "{{ url_for('data.review_trait', trait_id='TRAIT_ID') }}".replace("TRAIT_ID", row.id);
             return `
-              <i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Edit
+              <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Review</a>
             `;
           },
           "sClass": "optionsToolbar",
-          'sWidth': '10%',
-        },
-        {
-          "data": "id",
-          "render": function(data, type, row) {
-            return `
-              <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#confirm-accept-modal" onclick="fillAcceptModal('${data}')">
-                <i class="bi bi-check-circle-fill" aria-hidden="true"></i>Accept
-              </button>
-            `;
-          },
-          "sClass": "optionsToolbar",
-          'sWidth': '10%',
-        },
-        {
-          "data": "id",
-          "render": function(data, type, row) {
-            return `
-              <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#confirm-reject-modal" onclick="fillRejectModal('${data}')">
-                <i class="bi bi-trash3-fill" aria-hidden="true"></i>Reject
-              </button>
-            `;
-          },
-          "sClass": "optionsToolbar",
-          'sWidth': '10%',
+          'sWidth': "20%",
         },
       ],
     });

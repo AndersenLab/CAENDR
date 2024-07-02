@@ -6,7 +6,9 @@
     <div class="d-flex flex-wrap justify-content-center my-5">
         <div class="col-8 col-md-4">
             <div class="card text-bg-light text-center border-0 rounded-2 shadow-sm p-5 me-md-5 mb-5" style="min-height:15em;">
-                <h3 class="pt-5"><a href="#" class="stretched-link text-dark">Select from <br/> My Trait Library</a></h3>
+                <button class="btn btn-link stretched-link" data-bs-toggle="modal" data-bs-target="#mtlModal">
+                    <h3 class="pt-5 text-dark">Select from <br/> My Trait Library</h3>
+                </button>
             </div>
         </div>
         <div class="col-8 col-md-4">
@@ -16,5 +18,31 @@
         </div>
     </div><!-- /flex -->
 </div> <!-- /Container -->
+
+
+<!-- Phenotype DB modal -->
+<div class="modal fade" id="mtlModal" tabindex="-1" aria-labelledby="mtlModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mtlModalLabel">My Trait Library</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container my-3">
+                    {% with table_id = 'mtl-table' %}
+                    {% with trait_library_table_mode = 'select' %}
+                    {% with trait_library_table_select_link = url_for('data.view_trait', trait_id='TRAIT_ID') %}
+                    {% with trait_library_table_unsubmitted_only = true %}
+                    {% include "_includes/trait-library-table.html" %}
+                    {% endwith %}
+                    {% endwith %}
+                    {% endwith %}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}

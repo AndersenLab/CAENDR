@@ -33,13 +33,15 @@
     <div class="modal-dialog modal-fullscreen modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="phenotypeDBModalLabel">Phenotype Database</h5>
+                <h5 class="modal-title" id="phenotypeDBModalLabel">Select a Trait to Analyze</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="container my-3">
-                    {% with analyze_link = 'javascript:select_trait(null, \"TRAIT_NAME\")' %}
+                    {% with analyze_link = 'javascript:select_trait(null, \"TRAIT_ID\", \"TRAIT_TAB\")' %}
+                    {% with phenotype_database_include_mtl_tab = true %}
                     {% include "_includes/phenotype-database-table.html" %}
+                    {% endwith %}
                     {% endwith %}
                 </div>
                 <!-- Offcanvas -->
@@ -112,9 +114,20 @@
         // Set headers for AJAX requests
         {{ ajax_setup(form.csrf_token._value()) }}
 
+        {# Set the initial trait, if provided #}
         {%- if initial_trait is not none %}
+
+        // Determine the source of the initial trait
+        {%- if belongs_to_user %}
+        const trait_tab = 'mtl';
+        {%- elif initial_trait.dataset == 'zhang' %}
+        const trait_tab = 'zhang';
+        {%- else %}
+        const trait_tab = 'home';
+        {%- endif %}
+
         // Set the initial trait
-        {{ select_trait('trait-1', trait_obj=initial_trait) }}
+        {{ select_trait('trait-1', trait_obj=initial_trait, trait_tab_var="trait_tab") }}
         {%- endif %}
 
         updateSubmitButton();
@@ -122,14 +135,11 @@
 
 
     function get_trait_id(id) {
-        return [
-            document.getElementById(`${id}-selector`).dataset.trait,
-            document.getElementById(`${id}-selector`).dataset.set,
-        ]
+        return document.getElementById(`${id}-selector`).dataset.trait;
     }
 
 
-    function select_trait(id=null, trait=null) {
+    function select_trait(id=null, trait=null, trait_tab=null) {
 
         // Unless a selector is specifically named,
         // default to last selector to open the phenotype db modal
@@ -142,7 +152,7 @@
                 // Response check prevents infinite recursion
                 .then((response) => {
                     if (response !== null && typeof response === 'string') throw Error(`Invalid response for trait ${id}: "${response}"`);
-                    select_trait(id, response);
+                    select_trait(id, response, trait_tab);
                 })
                 .fail((error) => {
                     // If an error message was received, display it, otherwise use a fallback message
@@ -160,7 +170,7 @@
             if (trait === null) {
                 {{ select_trait('trait-1') }}
             } else {
-                {{ select_trait('trait-1', 'trait') }}
+                {{ select_trait('trait-1', 'trait', trait_tab_var="trait_tab") }}
             }
         }
 
@@ -169,7 +179,7 @@
             if (trait === null) {
                 {{ select_trait('trait-2') }}
             } else {
-                {{ select_trait('trait-2', 'trait') }}
+                {{ select_trait('trait-2', 'trait', trait_tab_var="trait_tab") }}
             }
         }
 
@@ -204,9 +214,9 @@
 
 
     function updateSubmitButton() {
-        const [trait_1, trait_1_dataset] = get_trait_id('trait-1');
+        const trait_1 = get_trait_id('trait-1');
         {%- if two_traits %}
-        const [trait_2, trait_2_dataset] = get_trait_id('trait-2');
+        const trait_2 = get_trait_id('trait-2');
         {%- endif %}
         const canSubmit = trait_1 != null {% if two_traits %} && trait_2 != null{% endif %};
         document.getElementById('submit-button').classList.toggle('disabled', !canSubmit);
@@ -214,9 +224,9 @@
 
 
     function submit() {
-        const [trait_1, trait_1_dataset] = get_trait_id('trait-1');
+        const trait_1 = get_trait_id('trait-1');
         {%- if two_traits %}
-        const [trait_2, trait_2_dataset] = get_trait_id('trait-2');
+        const trait_2 = get_trait_id('trait-2');
         {%- endif %}
 
         if (trait_1 == null {% if two_traits %} || trait_2 == null {% endif %}) {
@@ -230,9 +240,9 @@
 
         data = {
             species,
-            trait_1, trait_1_dataset,
+            trait_1,
             {%- if two_traits %}
-            trait_2, trait_2_dataset,
+            trait_2,
             {%- endif %}
         }
 

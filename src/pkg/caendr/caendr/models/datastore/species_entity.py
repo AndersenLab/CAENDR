@@ -29,8 +29,8 @@ class SpeciesEntity(Entity):
     self._set_raw_prop( 'species', v.name )
 
 
-  def serialize(self, include_meta=True):
-    props = super().serialize(include_meta)
+  def serialize(self, **kwargs):
+    props = super().serialize(**kwargs)
 
     # Replace the species field with its name
     if props.get('species') is not None and isinstance(props['species'], Species):

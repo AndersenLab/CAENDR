@@ -113,7 +113,7 @@ class PublishStatus(Enum):
 
   @property
   def is_public(self):
-    return self in { PublishStatus.ACCEPTED, PublishStatus.CANONICAL }
+    return self in { PublishStatus.ACCEPTED, PublishStatus.RETRACTED, PublishStatus.CANONICAL }
 
   @property
   def is_private(self):

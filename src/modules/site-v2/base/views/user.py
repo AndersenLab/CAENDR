@@ -1,16 +1,17 @@
 from caendr.services.logger import logger
-from flask import request, render_template, Blueprint, redirect, url_for, flash
+from flask import request, render_template, Blueprint, redirect, url_for, flash, abort
 from slugify import slugify
 from datetime import datetime, timezone
 
+from caendr.api.phenotype import get_trait_categories
 from caendr.models.datastore import User
 from caendr.services.cloud.secret import get_secret
 from caendr.services.user import get_local_user_by_email
 
 from caendr.services.email import send_email, PASSWORD_RESET_EMAIL_TEMPLATE
 
-from base.forms import UserRegisterForm, UserUpdateForm, RecoverUserForm, PasswordResetForm
-from base.utils.auth import jwt_required, get_jwt, get_current_user, assign_access_refresh_tokens, magic_link_required, create_one_time_token, use_password_reset_token
+from base.forms import UserRegisterForm, UserUpdateForm, RecoverUserForm, PasswordResetForm, EmptyForm
+from base.utils.auth import jwt_required, get_jwt, get_current_user, assign_access_refresh_tokens, magic_link_required, create_one_time_token, use_password_reset_token, check_feature_flag
 
 NO_REPLY_EMAIL  = get_secret('NO_REPLY_EMAIL')
 PASSWORD_PEPPER = get_secret('PASSWORD_PEPPER')
@@ -97,7 +98,7 @@ def user_account():
 @user_bp.route("/my-results", methods=["GET"])
 @jwt_required()
 def user_results():
-  title = 'My Results'
+  title = 'My Results & Data'
   user = get_current_user()
   return render_template('user/my-results.html', **locals())
 
@@ -143,5 +144,29 @@ def user_reset_password(user):
 
 
 
+#
+# Trait Library
+#
 
- 
+
+@user_bp.route('/my-trait-library', methods=['GET'])
+@jwt_required()
+@check_feature_flag('PHENOTYPE_DB_ENABLED')
+def my_trait_library():
+
+  # Get the list of unique tags
+  try:
+    categories = get_trait_categories()
+
+  except Exception as ex:
+    logger.error(f'Failed to retrieve the list of traits: {ex}')
+    abort(500, description='Failed to retrieve the list of traits')
+
+  return render_template('data/trait-library.html', **{
+    # Page info
+    'title': 'My Trait Library',
+
+    # Data
+    'categories': categories,
+    'form': EmptyForm(),
+  })

@@ -19,7 +19,7 @@ from caendr.services.logger import logger
 from caendr.utils.env       import get_env_var
 
 from base.forms                 import EmptyForm
-from base.utils.auth            import jwt_required, get_current_user, user_is_admin
+from base.utils.auth            import jwt_required, get_current_user, user_is_admin, check_feature_flag_bp
 from base.utils.tools           import list_reports, try_submit
 from base.utils.view_decorators import parse_job_id, validate_form
 
@@ -37,10 +37,7 @@ phenotype_database_bp = Blueprint(
 )
 
 
-@phenotype_database_bp.before_request
-def check_bp_enabled():
-  if not (get_env_var('PHENOTYPE_DB_ENABLED', var_type=bool, can_be_none=True) or user_is_admin()):
-    abort(404)
+check_feature_flag_bp(phenotype_database_bp, 'PHENOTYPE_DB_ENABLED')
 
 
 
@@ -99,10 +96,16 @@ def submit_traits():
   # These will be inherited from submit_start
   initial_trait_id = request.args.get('trait')
 
+  # Initialize variable to track whether initial trait belongs to user
+  # Used to tell them whether it came from their MTL or not
+  belongs_to_user = False
+
   # Try looking up the specified trait
   if initial_trait_id:
     try:
       initial_trait = Trait.from_id(initial_trait_id)
+      belongs_to_user = initial_trait.file.belongs_to_user( get_current_user() )
+
     except (NotFoundError, ValueError):
       flash('That trait could not be found.', 'danger')
       initial_trait = None
@@ -124,6 +127,7 @@ def submit_traits():
     ],
 
     'initial_trait': initial_trait,
+    'belongs_to_user': belongs_to_user,
   })
 
 
@@ -133,8 +137,7 @@ def submit_traits():
 def submit(form_data, no_cache=False):
 
   # Make sure these keys exist in the form data, even if they weren't provided in the submission
-  form_data['trait_2']         = form_data.get('trait_2',         None)
-  form_data['trait_2_dataset'] = form_data.get('trait_2_dataset', None)
+  form_data['trait_2'] = form_data.get('trait_2', None)
 
   # Try submitting the job & getting a JSON status message
   response, code = try_submit(PhenotypeReport.kind, get_current_user(), form_data, no_cache)
