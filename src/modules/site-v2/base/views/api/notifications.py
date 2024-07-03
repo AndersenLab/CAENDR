@@ -189,14 +189,14 @@ def announcement(announcement: Announcement = None, form_data = None, no_cache: 
   # Lookup the desired announcement and update its properties
   if request.method == 'PATCH':
 
-    # Extract the new property values from the form, casting "active" to a bool
+    # Extract the new property values from the form, casting "active" to a bool if necessary
     new_values = {
       prop: form_data.get(prop)
         for prop in Announcement.get_props_set()
         if form_data.get(prop) is not None
     }
-    if form_data.get('active') is not None:
-      new_values['active'] = form_data.get('active') == 'true'
+    if isinstance( form_data.get('active'), str ):
+      new_values['active'] = form_data.get('active').lower() == 'true'
 
     # Update the announcement object
     announcement.set_properties(**new_values)

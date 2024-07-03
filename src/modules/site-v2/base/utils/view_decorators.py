@@ -195,7 +195,7 @@ def parse_entity_id(entity_class: Type[Entity], required: bool = True, kw_name_i
 
 
 
-def parse_trait(kw_name_id: str = 'trait_id', kw_name_entity: str = 'trait', validate_owner: bool = False):
+def parse_trait(kw_name_id: str = 'trait_id', kw_name_entity: str = 'trait', validate_owner: bool = False, allow_admin: bool = True):
   '''
     Given a trait ID as a keyword argument, lookup and inject the trait with that ID.
   '''
@@ -226,8 +226,8 @@ def parse_trait(kw_name_id: str = 'trait_id', kw_name_entity: str = 'trait', val
           logger.error(f'Error retrieving trait with ID {entity_id}: {ex}')
           abort(500, description = 'Something went wrong')
 
-      # Validate that trait is owned by current user, if applicable
-      if validate_owner and not e.file.belongs_to_user( get_current_user() ):
+      # Validate that trait is owned by current user or that current user is an admin, if applicable
+      if validate_owner and not (e.file.belongs_to_user( get_current_user() ) or (allow_admin and user_is_admin())):
         abort(404)
 
       # Inject retrieved entity into function call

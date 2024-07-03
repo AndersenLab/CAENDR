@@ -94,7 +94,7 @@ def lookup_order(invoice_hash):
     return None
 
 
-def get_field_from_record(record, key, fallback=None, nullable=True, null_values=GOOGLE_SHEET_NULL_VALUES):
+def get_field_from_record(record, key, fallback=None, nullable=True, null_values=GOOGLE_SHEET_NULL_VALUES, type_=None):
   '''
     Look up a field in a record, optionally casting null values to `None`.
   '''
@@ -103,6 +103,8 @@ def get_field_from_record(record, key, fallback=None, nullable=True, null_values
     return None
   elif val is None:
     raise ValueError()
+  if type_ is not None:
+    val = type_(val)
   return val
 
 

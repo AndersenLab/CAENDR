@@ -48,7 +48,9 @@
               <li><a class="dropdown-item" href="{{ url_for('data_releases.data_releases') }}"> Data Releases </a></li>
               <li><a class="dropdown-item" href="{{ url_for('data.protocols')     }}"> Protocols </a></li>
               <li><a class="dropdown-item" href="https://docs.google.com/forms/d/e/1FAIpQLSfO0m4UMzTSz79weA2ICkuIHDYnZegqXly4SA15_w3FMuyocQ/viewform" target="_blank"> Submit A Strain <i class="bi bi-box-arrow-right" aria-hidden="true"></i></a><span class="visually-hidden">Link opens in a new tab</span></li>
+              {%- if feature_flags.PHENOTYPE_DB_ENABLED %}
               <li><a class="dropdown-item" href="{{ url_for('data.submit_trait_start')     }}"> Submit Trait </a></li>
+              {%- endif %}
             </ul>
           </div>
           <div class="nav-item dropdown mx-3">
@@ -86,15 +88,15 @@
             <div class="dropdown-menu p-3" aria-labelledby="userMenuDropDown">
               {% if session["is_logged_in"] %}
               <div class="vstack gap-3 px-1 py-2">
-                <a href="{{ url_for('user.user_account') }}"><i class="bi bi-person-fill userMenuIcon"
-                    aria-hidden="true"></i>My
-                  Account</a>
-                <a href="{{ url_for('user.user_results') }}"><i class="bi bi-journal userMenuIcon"
-                    aria-hidden="true"></i>My
-                  Results</a>
-                <a href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right userMenuIcon"
-                    aria-hidden="true"></i> Sign
-                  Out</a>
+                <a href="{{ url_for('user.user_account') }}" class="navbar-dropdown-link-with-icon">
+                  <i class="bi bi-person-fill userMenuIcon" aria-hidden="true"></i>My Account
+                </a>
+                <a href="{{ url_for('user.user_results') }}" class="navbar-dropdown-link-with-icon">
+                  <i class="bi bi-journal userMenuIcon" aria-hidden="true"></i>My Results & Data
+                </a>
+                <a href="{{ url_for('auth.logout') }}" class="navbar-dropdown-link-with-icon">
+                  <i class="bi bi-box-arrow-right userMenuIcon" aria-hidden="true"></i>Sign Out
+                </a>
                 {% if session["is_admin"] %}
                 <hr class="dropdown-divider">
                 <a href="{{ url_for('admin.admin') }}"><i class="bi bi-gear-fill userMenuIcon"

@@ -18,6 +18,7 @@ import pytz
 from caendr.models.error import BasicAuthError
 from caendr.models.status import JobStatus, PublishStatus
 from caendr.services.cloud.postgresql import db, health_database_status
+from base.utils.auth import user_is_admin
 from base.utils.markdown import render_markdown, render_ext_markdown, render_markdown_inline
 
 
@@ -286,9 +287,14 @@ def configure_jinja(app):
 
   @app.context_processor
   def inject_feature_flags():
+    '''
+      Add flags to the rendering context specifying what features should be made available.
+    '''
     return {
       'feature_flags': {
-        'PHENOTYPE_DB_ENABLED': get_env_var('PHENOTYPE_DB_ENABLED', var_type=bool, can_be_none=True),
+
+        # Enable the phenotype database if explicitly specified in env file, or show if user is admin regardless of env var
+        'PHENOTYPE_DB_ENABLED': get_env_var('PHENOTYPE_DB_ENABLED', value=False, var_type=bool, can_be_none=True) or user_is_admin(),
       },
     }
 

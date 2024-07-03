@@ -74,10 +74,9 @@ def people():
 
   # Move director to top of staff list
   for i, item in enumerate(profiles[Profile.STAFF.code]):
-    if hasattr(item, 'title') and item.title.lower() == 'director':
+    if hasattr(item, 'title') and item.title.lower() == 'co-director':
       p = profiles[Profile.STAFF.code].pop(i)
       profiles[Profile.STAFF.code].insert(0, p)
-      break
 
   return render_template('about/people.html', **{
     'title': "People",

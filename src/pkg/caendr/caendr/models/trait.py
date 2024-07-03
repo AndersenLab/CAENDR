@@ -33,42 +33,24 @@ class Trait():
   # Initialization
   #
 
-  def __init__(self, dataset = None, trait_name = None, trait_file_id = None, trait_file = None):
-    self.name = trait_name
+  def __init__(self, trait_id: str, trait_file: Optional[TraitFile] = None, trait_row: Optional[PhenotypeMetadata] = None):
 
-    # Trait file passed directly -- store it as-is
+    # Look up the trait row, or use the one that's provided
+    if trait_row:
+      self.sql_row = trait_row
+    else:
+      self.sql_row = PhenotypeMetadata.query.get( trait_id )
+      if self.sql_row is None:
+        raise NotFoundError(PhenotypeMetadata, {'id': trait_id})
+
+    # Look up the trait file, or use the one that's provided
     if trait_file:
       self.file = trait_file
-
-    # Trait file id -- retrieve from datastore
-    elif trait_file_id:
-      self.file = TraitFile.get_ds(trait_file_id, silent=False)
-
-    # Special case: Zhang bulk file -- retrieve to single bulk file entry
-    # TODO: We might be able to generalize this if we enforce that every dataset has to either
-    #       have a single bulk file (and nothing else), or some number of non-bulk files (and no bulk files).
-    #       We could then query by dataset and check the output to determine what TraitFile to use.
-    elif dataset == 'zhang':
-      self.file = TraitFile.query_ds_unique('dataset', dataset, required=True)
-
-    # Dataset -- query by name and dataset
-    elif dataset:
-      self.file = TraitFile.query_ds(filters=[('trait_name_caendr', '=', trait_name), ('dataset', '=', dataset)])[0]
-
-    # Fallback -- Query by trait name
-    elif trait_name:
-      self.file = TraitFile.query_ds_unique('trait_name_caendr', trait_name, required=True)
-
-    # If none of the above were provided, there's not enough info to uniquely specify the trait
     else:
-      raise ValueError('Could not identify a unique trait from the given information')
-
-    # Store the dataset value of the trait file
-    # if dataset and self.file['dataset'].value and dataset != self.file['dataset'].value:
-    #   raise ValueError('Mismatched dataset values')
-    self.dataset = self.file['dataset'].value
-
-    self.sql_row = PhenotypeMetadata.query.filter_by(trait_name_caendr = self.name, dataset = self.dataset).one()
+      if self.sql_row.is_bulk_file:
+        self.file = TraitFile.get_ds(self.sql_row.id.rsplit('_', 1)[0], silent=False)
+      else:
+        self.file = TraitFile.get_ds(trait_id, silent=False)
 
 
   #
@@ -82,54 +64,35 @@ class Trait():
       The given ID must exist in the PhenotypeMetadata SQL table, otherwise a `ValueError` will be raised.
     '''
 
-    # Get the SQL row with the given trait ID
-    sql_row = PhenotypeMetadata.query.get(trait_id)
-    if sql_row is None:
-      raise NotFoundError(PhenotypeMetadata, {'id': trait_id})
-
-    # Construct a Trait object using the data in the SQL row
-    return cls(
-      trait_name = sql_row.trait_name_caendr,
-      dataset    = sql_row.dataset,
-    )
-
-  @classmethod
-  def from_dataset(cls, dataset: str, trait_name: Optional[str] = None) -> 'Trait':
-    return cls( dataset = dataset, trait_name = trait_name )
+    return cls(trait_id)
 
   @classmethod
   def from_datastore(cls, trait_file: TraitFile, trait_name: Optional[str] = None) -> 'Trait':
+
+    # Make sure a specific trait is selected if using a bulk file
     if trait_file['is_bulk_file'] and trait_name is None:
-      raise ValueError()
+      raise ValueError('The given trait file is a bulk file, so a specific trait name must be provided')
+
+    # Special parsing to get the SQL row for a bulk file
+    if trait_file['is_bulk_file']:
+      sql_row = PhenotypeMetadata.query.filter( PhenotypeMetadata.id.startswith(trait_file.name), PhenotypeMetadata.trait_name_caendr == trait_name ).one()
+    else:
+      sql_row = None
+
+    # Pass ID along with both computed data sources
     return cls(
-      dataset    = trait_file['dataset'],
-      trait_name = trait_name if trait_name else trait_file['trait_name_caendr'],
+      trait_id   = trait_file.name,
       trait_file = trait_file,
+      trait_row  = sql_row,
     )
 
   @classmethod
   def from_sql(cls, sql_row: PhenotypeMetadata) -> 'Trait':
-    return cls(
-      dataset    = sql_row.dataset,
-      trait_name = sql_row.trait_name_caendr,
-    )
-  
-  @classmethod
-  def from_id(cls, trait_id: str) -> 'Trait':
-    '''
-      Instantiate a `Trait` object from a unique trait ID.
-      The given ID must exist in the PhenotypeMetadata SQL table, otherwise a `ValueError` will be raised.
-    '''
 
-    # Get the SQL row with the given trait ID
-    sql_row = PhenotypeMetadata.query.get(trait_id)
-    if sql_row is None:
-      raise NotFoundError(PhenotypeMetadata, {'id': trait_id})
-
-    # Construct a Trait object using the data in the SQL row
+    # Initialize from the SQL row ID value
     return cls(
-      trait_name = sql_row.trait_name_caendr,
-      dataset    = sql_row.dataset,
+      trait_id  = sql_row.id,
+      trait_row = sql_row,
     )
 
 
@@ -143,7 +106,7 @@ class Trait():
       Resulting dataframe will have the columns `strain_name` and `trait_value`.
     '''
     return pd.read_sql_query(
-      PhenotypeDatabase.query.filter( PhenotypeDatabase.trait_name == self.name ).statement, con=db.engine
+      PhenotypeDatabase.query.filter( PhenotypeDatabase.metadata_id == self.trait_id ).statement, con=db.engine
     )
 
   def query_values_dict(self):
@@ -162,8 +125,20 @@ class Trait():
 
 
   #
-  # Computing Display Name
+  # Properties
   #
+
+  @property
+  def trait_id(self):
+    return self.sql_row.id
+
+  @property
+  def name(self):
+    return self.sql_row.trait_name_caendr
+
+  @property
+  def dataset(self):
+    return self.sql_row.dataset
 
   @property
   def display_name(self):
