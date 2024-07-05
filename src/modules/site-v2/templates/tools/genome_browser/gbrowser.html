@@ -140,11 +140,11 @@
           <div id="track-options-container" class="p-3 mb-4 rounded-2 overflow-auto gbrowserTracks">
             <form id="track-options">
               {% for track in default_tracks %}
-              <div id="{{ track.name }}_checkbox_container" class="form-check checkbox default-track-container" style="display: none;">
-                <input id="{{ track.name }}_checkbox" type="checkbox" class="form-check-input track-select normal-track"
-                  value="{{ track.name }}" />
-                <label class="form-check-label" for="{{ track.name }}_checkbox">
-                  {{ track.name }}
+              <div id="{{ track.display_name }}_checkbox_container" class="form-check checkbox default-track-container" style="display: none;">
+                <input id="{{ track.display_name }}_checkbox" type="checkbox" class="form-check-input track-select normal-track"
+                  value="{{ track.display_name }}" />
+                <label class="form-check-label" for="{{ track.display_name }}_checkbox">
+                  {{ track.display_name }}
                 </label>
               </div>
               {% endfor %}
@@ -236,7 +236,7 @@ const browser_options = {
 }
 
 const default_checked_tracks = [
-  {% for track in default_tracks %} {% if track.checked %} "{{ track.name }}", {% endif %} {% endfor %}
+  {% for track in default_tracks %} {% if track.checked %} "{{ track.display_name }}", {% endif %} {% endfor %}
 ];
 
 // Divs used by the gene search

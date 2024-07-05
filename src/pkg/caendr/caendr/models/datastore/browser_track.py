@@ -34,7 +34,7 @@ class BrowserTrack(FileRecordEntity):
   def get_props_set(cls):
     return {
       *super().get_props_set(),
-      'name',
+      'display_name',
       'order',
       'params',
     }
@@ -50,7 +50,7 @@ class BrowserTrack(FileRecordEntity):
     # Include name, order, URL in params dict
     params = {
       **self.__dict__.get('params', {}),
-      'name':  self['name'],
+      'name':  self['display_name'],
       'order': self['order'],
       'url':   self.get_filepath_template(schema=BlobURISchema.HTTPS).raw_string,
     }

@@ -39,7 +39,7 @@ def get_tracks():
   '''
   return jsonify({
     'default': {
-      track['name']: json.dumps( track.serialize() )
+      track['display_name']: json.dumps( track.serialize() )
         for track in BrowserTrackDefault.query_ds()
     },
     'templates': {
