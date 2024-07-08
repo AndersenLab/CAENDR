@@ -193,6 +193,14 @@ def edit_track(track: BrowserTrackDefault = None, form_data = None, no_cache: bo
     track.save()
     return { 'id': track.name }
 
+  # # DELETE Request
+  # # Lookup the desired browser track and soft delete it
+  # if request.method == 'DELETE':
+  #   track.soft_delete()
+  #   track['order'] = None
+  #   track.save()
+  #   return {}, 200
+
   # If somehow the method didn't match any of the above,
   # return a Method Not Allowed error
   abort(405)

@@ -1,6 +1,6 @@
 from caendr.utils.env              import get_env_var
 
-from caendr.models.datastore       import FileRecordEntity, OrderableEntity, DatasetRelease
+from caendr.models.datastore       import FileRecordEntity, DeletableEntity, OrderableEntity, DatasetRelease
 from caendr.services.cloud.storage import BlobURISchema
 from caendr.utils.data             import unique_id
 from caendr.utils.tokens           import TokenizedString
@@ -10,7 +10,7 @@ MODULE_SITE_BUCKET_PRIVATE_NAME = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
 
 
 
-class BrowserTrack(FileRecordEntity, OrderableEntity):
+class BrowserTrack(FileRecordEntity, DeletableEntity, OrderableEntity):
 
   ## Default Release Path ##
 
