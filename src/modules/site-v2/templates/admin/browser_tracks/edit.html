@@ -5,12 +5,16 @@
 <style>
   .multi-checkbox {
     padding-right: 0;
+    margin-bottom: 0;
   }
   .multi-checkbox li {
     display: flex;
     align-items: center;
     gap: 1em;
     padding-bottom: 0.5em;
+  }
+  .single-checkbox {
+    margin-left: 2rem;
   }
 </style>
 {% endblock %}
@@ -39,16 +43,14 @@
 
   <h3 class="fs-4 mb-3 mt-5">Basic Information</h3>
   <div class="row gy-4">
-    <div class='col-12 col-xl-6'>{{ render_field(form.display_name) }}</div>
-    
-    <div class='col-4'>{{ render_field(form.checked, class_='form-check-input d-block') }}</div>
-
+    <div class='col-12 col-xl-8'>{{ render_field(form.display_name) }}</div>
     <div class='col-12'>{{ render_field(form.used_in_tools, class='multi-checkbox') }}</div>
+    <div class='col-12'>{{ render_field(form.checked, class_='form-check-input d-block single-checkbox') }}</div>
   </div>
 
   <h3 class="fs-4 mb-3 mt-5">Data Source</h3>
   <div class="row gy-4">
-    <div class='col-12 col-xl-6'>{{ render_field(form.filename) }}</div>
+    <div class='col-12 col-xl-8'>{{ render_field(form.filename) }}</div>
     <div class='col-12'>{{ render_field(form.availability, class="multi-checkbox") }}</div>
   </div>
 
