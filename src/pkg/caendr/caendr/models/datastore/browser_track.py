@@ -92,6 +92,9 @@ class BrowserTrackDefault(BrowserTrack):
   def prefix(self) -> TokenizedString:
     return super().release_prefix()
 
+  def available_in_release(self, release: DatasetRelease) -> bool:
+    return (self['display_name'] in release['browser_tracks'])
+
 
 
 class BrowserTrackTemplate(BrowserTrack):

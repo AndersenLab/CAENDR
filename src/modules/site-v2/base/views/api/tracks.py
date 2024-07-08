@@ -12,7 +12,7 @@ from flask import (
 
 from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
 
-from caendr.models.datastore import BrowserTrackDefault, BrowserTrackTemplate, Species
+from caendr.models.datastore import BrowserTrackDefault, BrowserTrackTemplate, Species, DatasetRelease
 from caendr.models.error import NotFoundError, NonUniqueEntity
 from caendr.services.cloud.storage import BlobURISchema
 from caendr.utils.data import get_file_format
@@ -24,6 +24,10 @@ api_tracks_bp = Blueprint(
 )
 
 
+
+#
+# Main Endpoint
+#
 
 
 @api_tracks_bp.route('/', methods=['GET'])
@@ -48,6 +52,45 @@ def get_tracks():
     },
   })
 
+
+
+#
+# Alternate Query Endpoint(s)
+#
+
+
+@api_tracks_bp.route('/datatables', methods=['GET', 'POST'])
+@admin_required()
+def query_datatables():
+
+  releases = sorted(
+    [
+      DatasetRelease.from_name( species['release_latest'], name ) for (name, species) in Species.all().items()
+    ],
+    key=lambda release: release['species']['order'],
+  )
+
+  return {
+    'data': [
+      {
+        **track.serialize(include_meta=True, include_name=True),
+        'available_releases': [
+          {
+            'release':   release.name,
+            'species':   release['species'].short_name,
+            'available': track.available_in_release(release),
+          } for release in releases
+        ]
+      }
+      for track in BrowserTrackDefault.query_ds()
+    ],
+  }
+
+
+
+#
+# Specific Tracks
+#
 
 
 @api_tracks_bp.route('/divergent-regions', methods=['GET'])

@@ -21,10 +21,9 @@ admin_gene_browser_tracks_bp = Blueprint(
 @admin_gene_browser_tracks_bp.route('/', methods=["GET"])
 @admin_required()
 def admin_gene_browser_tracks():
-
-  # TODO: Pull list of tracks, not track jobs
-  # gene_browser_track_versions = get_all_gene_browser_tracks(placeholder=False)
-  gene_browser_track_versions = []
+  '''
+    Show a list of all genome browser tracks.
+  '''
 
   return render_template('admin/browser_tracks/list.html', **{
     'title': 'Gene Browser Track Versions',
@@ -32,7 +31,7 @@ def admin_gene_browser_tracks():
       'title': 'Admin', 'url': url_for('admin.admin')
     },
 
-    'gene_browser_track_versions': gene_browser_track_versions,
+    'form': AdminGeneBrowserTracksForm(),
   })
 
 
