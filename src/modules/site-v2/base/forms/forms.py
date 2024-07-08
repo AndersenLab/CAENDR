@@ -213,8 +213,12 @@ class AdminEditBrowserTrackForm(FlaskForm):
   display_name  = StringField('Display Name', [Length(min=3, max=200)])
   filename      = StringField('Filename', [Length(min=3, max=200)])
   checked       = BooleanField('Checked by Default')
+
   availability  = MultiCheckboxField('Availability in Genome Browser', choices=_AVAILABILITY)
+  modify_availability  = BooleanField()
+
   used_in_tools = MultiCheckboxField('Used in Tools', choices=GENOME_BROWSER_TOOLS)
+  modify_used_in_tools = BooleanField()
 
 class AdminEditToolContainerVersion(FlaskForm):
   version = SelectField('Container Version Tag', validators=[Required()])

@@ -85,6 +85,12 @@
     const checked = $('form#form-submit #checked')[0];
     data.set('checked', checked.checked);
 
+    // Set "modify_" boolean values to tell the "PATCH" method API
+    // that the multi-checkbox lists should be updated, even if
+    // their form values are empty (i.e. empty list instead of no change)
+    data.set("modify_availability",  true)
+    data.set("modify_used_in_tools", true)
+
     // Return the form data
     return data;
   }

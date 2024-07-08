@@ -173,6 +173,17 @@ def edit_track(track: BrowserTrackDefault = None, form_data = None, no_cache: bo
     if isinstance( form_data.get('checked'), str ):
       new_values['checked'] = form_data.get('checked').lower() == 'true'
 
+    # If either of the "modify_" bool values are set,
+    # update the corresponding field, even if the form value isn't set
+    # (i.e. default to an empty list rather than not changing)
+
+    if ( form_data.get('modify_used_in_tools') ):
+      new_values['used_in_tools'] = form_data.get('used_in_tools', [])
+
+    if ( form_data.get('availablity') or form_data.get('modify_availability') ):
+      availability = form_data.get('availability', [])
+      # TODO: Actually update the availability
+
     # Update the browser track object
     track.set_properties(**new_values)
     track.save()
