@@ -50,6 +50,14 @@
 
   <h3 class="fs-4 mb-3 mt-5">Data Source</h3>
   <div class="row gy-4">
+    <div class="col-12">
+      <p class="mb-1">
+        Browser tracks are contained in folders matching the following template:
+      </p>
+      <code class="mx-2">
+        {{ file_location }}
+      </code>
+    </div>
     <div class='col-12 col-xl-8'>{{ render_field(form.filename) }}</div>
     <div class='col-12'>{{ render_field(form.availability, class="multi-checkbox") }}</div>
   </div>

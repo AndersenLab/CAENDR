@@ -22,6 +22,20 @@
 
 
 {% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-12">
+      <p>
+        Browser tracks are contained in folders matching the following template:
+      </p>
+      <code class="mx-2">
+        {{ file_location }}
+      </code>
+    </div>
+  </div>
+</div>
+
+
 <div class="pb-3 px-3 w-100 d-flex justify-content-end">
     <a id='create'
       href="{{ url_for('admin_gene_browser_tracks.edit_page') }}"

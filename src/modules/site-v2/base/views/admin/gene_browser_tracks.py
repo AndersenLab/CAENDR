@@ -8,7 +8,7 @@ from base.forms import AdminGeneBrowserTracksForm, AdminEditBrowserTrackForm
 
 # CaeNDR Package imports
 from caendr.models.datastore import BrowserTrackDefault, DatasetRelease, Species
-from caendr.services.cloud.storage import BlobURISchema
+from caendr.services.cloud.storage import BlobURISchema, join_path
 
 from constants import GENOME_BROWSER_TOOLS
 
@@ -41,6 +41,7 @@ def admin_gene_browser_tracks():
     },
 
     'form': AdminEditBrowserTrackForm(),
+    'file_location': join_path(BrowserTrackDefault.release_bucket(), BrowserTrackDefault.release_prefix().raw_string),
     'GENOME_BROWSER_TOOLS': GENOME_BROWSER_TOOLS,
   })
 
@@ -75,6 +76,7 @@ def edit_page(track: BrowserTrackDefault = None):
     'title': ('Edit' if track else 'Create') + ' Browser Track',
     'form':  form,
     'track': track,
+    'file_location': join_path(BrowserTrackDefault.release_bucket(), BrowserTrackDefault.release_prefix().raw_string),
     'filepath': track.get_filepath_template(BlobURISchema.HTTPS).raw_string if track else '',
   })
 
