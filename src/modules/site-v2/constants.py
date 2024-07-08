@@ -38,6 +38,13 @@ REPORT_V2_FILE_LIST = ['alignment_report.html', 'concordance_report.html', 'gatk
 # TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS = { 'csv' }
 TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS = { 'tsv' }
 
+# List of tools that use an IGV genome browser
+# TODO: More general tool config objects? Store in GCP?
+GENOME_BROWSER_TOOLS = [
+  ('genome_browser', 'Genome Browser'),
+  ('pairwise_indel_finder', 'Pairwise Indel Finder'),
+]
+
 TRAIT_CATEGORY_OPTIONS = [
   ('Growth/Physiology', 'Growth • Physiology'), 
   ('Morphology/Development/Lineage/Cell type', 'Morphology • Development • Lineage • Cell type'), 

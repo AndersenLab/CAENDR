@@ -30,7 +30,7 @@ from wtforms.fields.html5 import EmailField
 from wtforms.widgets import CheckboxInput
 
 
-from constants import PRICES, SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS, TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS, TRAIT_CATEGORY_OPTIONS
+from constants import PRICES, SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS, TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS, TRAIT_CATEGORY_OPTIONS, GENOME_BROWSER_TOOLS
 
 from caendr.services.profile import get_profile_role_form_options
 from caendr.services.user import get_user_role_form_options, get_local_user_by_email
@@ -214,6 +214,7 @@ class AdminEditBrowserTrackForm(FlaskForm):
   filename      = StringField('Filename', [Length(min=3, max=200)])
   checked       = BooleanField('Checked by Default')
   availability  = MultiCheckboxField('Availability in Genome Browser', choices=_AVAILABILITY)
+  used_in_tools = MultiCheckboxField('Used in Tools', choices=GENOME_BROWSER_TOOLS)
 
 class AdminEditToolContainerVersion(FlaskForm):
   version = SelectField('Container Version Tag', validators=[Required()])

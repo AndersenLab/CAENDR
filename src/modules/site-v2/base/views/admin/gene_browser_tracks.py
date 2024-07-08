@@ -10,6 +10,8 @@ from base.forms import AdminGeneBrowserTracksForm, AdminEditBrowserTrackForm
 from caendr.models.datastore import BrowserTrackDefault, DatasetRelease, Species
 from caendr.services.cloud.storage import BlobURISchema
 
+from constants import GENOME_BROWSER_TOOLS
+
 # from caendr.services.gene_browser_tracks import get_all_gene_browser_tracks, create_new_gene_browser_track
 
 
@@ -39,6 +41,7 @@ def admin_gene_browser_tracks():
     },
 
     'form': AdminEditBrowserTrackForm(),
+    'GENOME_BROWSER_TOOLS': GENOME_BROWSER_TOOLS,
   })
 
 

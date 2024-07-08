@@ -100,7 +100,24 @@ class BrowserTrackDefault(BrowserTrack):
     return {
       *super().get_props_set(),
       'checked',
+      'used_in_tools',
     }
+
+  @property
+  def used_in_tools(self):
+    # Empty list if not set
+    return self.__dict__.get('used_in_tools', [])
+
+  @used_in_tools.setter
+  def used_in_tools(self, val):
+
+    # Only allow list to be set
+    if not isinstance(val, list):
+      raise TypeError('Must set used_in_tools to a list.')
+
+    # Save prop in object's local dictionary
+    self.__dict__['used_in_tools'] = val
+
 
   @property
   def bucket(self) -> str:

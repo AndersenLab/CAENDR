@@ -43,6 +43,7 @@
             <th scope="col" class="col-1 text-center">Order</th>
             <th scope="col" class="col-1 text-center">Display Name</th>
             <th scope="col" class="col-1 text-center">Filename</th>
+            <th scope="col" class="col-1 text-center">Used in Tools</th>
             <th scope="col" class="col-1 text-center">Availability in Genome Browser</th>
             <th scope="col" class="col-1 text-center">Checked by Default?</th>
             <th scope="col" class="col-1 text-center">Edit</th>
@@ -63,6 +64,12 @@
 <script>
   {% include '_scripts/utils.js' %}       {#/* defines: flash_message */#}
 
+
+  const browser_tools = [
+    {%- for (tool_id, tool_name) in GENOME_BROWSER_TOOLS %}
+    ["{{ tool_id }}", "{{ tool_name }}"],
+    {%- endfor %}
+  ]
 
   // Declare data table at "global" scope
   let table;
@@ -126,13 +133,33 @@
         {
           "data": "display_name",
           "sClass": "optionsToolbar text-start",
-          "width": '24%',
+          "width": '14%',
         },
 
         {
           "data": "filename",
           "sClass": "optionsToolbar text-start font-monospace small",
-          "width": '35%',
+          "width": '25%',
+        },
+
+        {
+          "data": "used_in_tools",
+          "render": function(data, type, row) {
+
+            // Map the available tools to HTML list entries
+            const elements = browser_tools.map(([tool_id, tool_name]) => {
+              const icon = data.includes(tool_id)
+                ? '<i class="bi bi-check-circle-fill" aria-hidden="true"></i>'
+                : '<i class="bi bi-x-circle text-dark" aria-hidden="true"></i>';
+
+              return `<li>${ icon } ${ tool_name }</li>`
+            });
+
+            // Render as a single list
+            return '<ul class="releases-list text-start">' + elements.join('') + '</ul>'
+          },
+          "sClass": "optionsToolbar",
+          "width": '20%',
         },
 
         {
