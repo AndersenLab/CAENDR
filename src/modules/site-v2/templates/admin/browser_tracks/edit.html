@@ -1,0 +1,153 @@
+{% extends "_layouts/default.html" %}
+
+
+{% block style %}
+<style>
+  .multi-checkbox {
+    padding-right: 0;
+  }
+  .multi-checkbox li {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    padding-bottom: 0.5em;
+  }
+</style>
+{% endblock %}
+
+
+{% block content %}
+{% from "_includes/macros.html" import render_field %}
+
+
+
+<form id='form-submit' method="POST" action="{{ kind }}">
+  {{ form.csrf_token }}
+  <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">
+
+  <div class="row">
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+      <button id='save-btn' value="save-btn" type='submit' class="btn btn-primary btn-block">
+        <span class="glyphicon glyphicon-save" aria-hidden="true"></span> 
+        Save
+      </button>
+      <button id='cancel-btn' value="cancel-btn" type='button' class="btn btn-danger btn-block">
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <h3 class="fs-4 mb-3 mt-5">Basic Information</h3>
+  <div class="row gy-4">
+    <div class='col-12 col-xl-6'>{{ render_field(form.display_name) }}</div>
+    
+    <div class='col-4'>{{ render_field(form.checked, class_='form-check-input d-block') }}</div>
+  </div>
+
+  <h3 class="fs-4 mb-3 mt-5">Data Source</h3>
+  <div class="row gy-4">
+    <div class='col-12 col-xl-6'>{{ render_field(form.filename) }}</div>
+    <div class='col-12'>{{ render_field(form.availability, class="multi-checkbox") }}</div>
+  </div>
+
+</form>
+
+{% endblock %}
+
+
+{% block script %}
+
+<script>
+  {% include '_scripts/utils.js' %}       {#/* defines: flash_message */#}
+
+
+  function disableButton() {
+    const btn = document.getElementById('save-btn');
+    btn.disabled = true;
+    btn.innerText = 'Loading...'
+  }
+
+  function enableButton() {
+    const btn = document.getElementById('save-btn');
+    btn.disabled = false;
+    btn.innerText = 'Save'
+  }
+
+
+  function getFormData() {
+    // Get the fields from the form
+    const data = new FormData($('form#form-submit')[0]);
+
+    // Make the "checked" checkmark a boolean
+    // Without this step, checked => "y" and unchecked isn't included
+    const checked = $('form#form-submit #checked')[0];
+    data.set('checked', checked.checked);
+
+    // Return the form data
+    return data;
+  }
+
+
+  $(document).ready(function () {
+
+    // Form Submission
+    $("#save-btn").on("click", function(e) {
+      e.preventDefault();
+      disableButton();
+
+      // Send the appropriate AJAX request
+      $.ajax({
+        {% if track %}
+        type: "PATCH",
+        url:  "{{ url_for('api_tracks.edit_track', entity_id = track.name) }}",
+        {% else %}
+        type: "POST",
+        url:  "{{ url_for('api_tracks.edit_track') }}",
+        {% endif %}
+        headers: {
+          'X-CSRF-TOKEN': "{{ form.csrf_token._value() }}",
+        },
+        processData: false,
+        contentType: false,
+        dataType:    'json',
+        data:        getFormData(),
+
+        // On success, redirect to list page
+        success: function(result) {
+          window.location = "{{ url_for('admin_gene_browser_tracks.admin_gene_browser_tracks') }}";
+        },
+
+        // On failure, print error message
+        error: function(error) {
+          console.error('ERROR saving track: ', error)
+          const resp = error.responseJSON
+          if (resp && resp.message) {
+            flash_message(resp.message, resp.full_msg_link, resp.full_msg_body);
+          } else {
+            flash_message('There was a problem saving your browser track. Please try again later.');
+          }
+          enableButton();
+        }
+      });
+
+    });
+
+  });
+
+</script>
+
+
+<script type="module">
+
+  $(document).ready(function () {
+    $("#cancel-btn").on("click", function(e) {
+      e.preventDefault();
+      window.location = "{{ url_for('admin_gene_browser_tracks.admin_gene_browser_tracks') }}";
+    });
+
+    $(".multi-checkbox input").addClass("form-check-input mt-0");
+  });
+
+</script>
+
+{% endblock %}

@@ -204,6 +204,16 @@ class AdminGeneBrowserTracksForm(FlaskForm):
   wormbase_version = IntegerField('Wormbase Version WS (ex: 276 -> WS276):', validators=[Optional()])
   note = StringField('Notes', [Optional(), Length(min=3, max=200)])
 
+class AdminEditBrowserTrackForm(FlaskForm):
+  _AVAILABILITY = [
+    (species.name, f'<em>{species.short_name}</em> (Release: {species["release_latest"]})')
+      for species in Species.all().values()
+  ]
+
+  display_name  = StringField('Display Name', [Length(min=3, max=200)])
+  filename      = StringField('Filename', [Length(min=3, max=200)])
+  checked       = BooleanField('Checked by Default')
+  availability  = MultiCheckboxField('Availability in Genome Browser', choices=_AVAILABILITY)
 
 class AdminEditToolContainerVersion(FlaskForm):
   version = SelectField('Container Version Tag', validators=[Required()])

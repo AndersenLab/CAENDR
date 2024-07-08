@@ -11,11 +11,14 @@ from flask import (
 )
 
 from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
+from base.utils.view_decorators import parse_entity_id, validate_form
+from base.forms import AdminEditBrowserTrackForm
 
 from caendr.models.datastore import BrowserTrackDefault, BrowserTrackTemplate, Species, DatasetRelease
 from caendr.models.error import NotFoundError, NonUniqueEntity
 from caendr.services.cloud.storage import BlobURISchema
 from caendr.utils.data import get_file_format
+from caendr.utils.json import jsonify_request
 
 
 
@@ -89,8 +92,93 @@ def query_datatables():
 
 
 #
-# Specific Tracks
+# Individual Tracks
 #
+
+
+@api_tracks_bp.route('/track/<string:entity_id>', methods=['GET'])
+@jwt_required()
+@parse_entity_id(BrowserTrackDefault, required=False, kw_name_entity='track')
+@jsonify_request
+def view_track(track: BrowserTrackDefault = None):
+  '''
+    CRUD methods for a single browser track object that do NOT require admin permissions.
+    Note that a JWT is required, i.e. users must be logged in.
+
+    Methods:
+      GET:    Get the data for the given browser track ID.
+  '''
+
+  # GET Request
+  # Return the requested browser track
+  if request.method == 'GET':
+    return track.serialize()
+
+  # If somehow the method didn't match any of the above,
+  # return a Method Not Allowed error
+  abort(405)
+
+
+@api_tracks_bp.route('/track',                    methods=['POST'])
+@api_tracks_bp.route('/track/<string:entity_id>', methods=['PATCH', 'DELETE'])
+@admin_required()
+@parse_entity_id(BrowserTrackDefault, required=False, kw_name_entity='track')
+@validate_form(AdminEditBrowserTrackForm, methods=['POST', 'PATCH'])
+@jsonify_request
+def edit_track(track: BrowserTrackDefault = None, form_data = None, no_cache: bool = False):
+  '''
+    CRUD methods for a single browser track object that require admin permissions.
+
+    Methods:
+      POST:   Create a new browser track.
+      PATCH:  Update an existing browser track.
+      DELETE: Delete an existing browser track.
+  '''
+
+  # POST Request
+  # Create a new browser track, and return its unique ID
+  if request.method == 'POST':
+
+    # Create and save the new browser track
+    new_track = BrowserTrackDefault(**{
+      prop: form_data.get(prop)
+        for prop in BrowserTrackDefault.get_props_set()
+        if form_data.get(prop) is not None
+    })
+    new_track.save()
+
+    # Try explicitly placing the new track at the bottom of the list
+    # If this fails, it will get a default order value, so we can ignore errors
+    try:
+      new_track['order'] = len(BrowserTrackDefault.query_ds())
+      new_track.save()
+    except Exception as ex:
+      pass
+
+    # Return the ID of the new browser track
+    return { 'id': new_track.name }
+
+  # PATCH Request
+  # Lookup the desired announcement and update its properties
+  if request.method == 'PATCH':
+
+    # Extract the new property values from the form, casting "checked" to a bool if necessary
+    new_values = {
+      prop: form_data.get(prop)
+        for prop in BrowserTrackDefault.get_props_set()
+        if form_data.get(prop) is not None
+    }
+    if isinstance( form_data.get('checked'), str ):
+      new_values['checked'] = form_data.get('checked').lower() == 'true'
+
+    # Update the browser track object
+    track.set_properties(**new_values)
+    track.save()
+    return { 'id': track.name }
+
+  # If somehow the method didn't match any of the above,
+  # return a Method Not Allowed error
+  abort(405)
 
 
 @api_tracks_bp.route('/divergent-regions', methods=['GET'])

@@ -22,15 +22,18 @@
 
 
 {% block content %}
-<!-- <div class="row">
-  <div class="col-md-9"></div>
-  <div class="col-md-3">
-    <a id='create' href="{{ url_for('admin_gene_browser_tracks.create_gene_browser_tracks')}}" class="btn btn-primary btn-block"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> New Gene Browser Track Version </a>
-  </div>
-</div> -->
+<div class="pb-3 px-3 w-100 d-flex justify-content-end">
+    <a id='create'
+      href="{{ url_for('admin_gene_browser_tracks.edit_page') }}"
+      class="btn btn-primary btn-block"
+    >
+      <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+      New Gene Browser Track Version
+    </a>
+</div>
 
 <div class="container">
-  <div class="col mt-5">
+  <div class="col">
     <div class="table-responsive">
       <table id="table-browser-tracks" class="table p-0 text-center w-100">
         <caption class="visually-hidden">A list of genome browser tracks.</caption>
@@ -42,6 +45,7 @@
             <th scope="col" class="col-1 text-center">Filename</th>
             <th scope="col" class="col-1 text-center">Availability in Genome Browser</th>
             <th scope="col" class="col-1 text-center">Checked by Default?</th>
+            <th scope="col" class="col-1 text-center">Edit</th>
           </tr>
         </thead>
         <tbody class="table-group-divider align-middle"></tbody>
@@ -158,6 +162,19 @@
           },
           "sClass": "optionsToolbar text-center",
           "sWidth": "8%",
+        },
+
+        {
+          "data": "name",
+          "render": function(data, type, row) {
+            console.log(row)
+            const url = "{{ url_for('admin_gene_browser_tracks.edit_page', entity_id='BROWSER_TRACK_ID') }}".replace('BROWSER_TRACK_ID', data);
+            return `
+              <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Edit</a>
+            `;
+          },
+          "sClass": "optionsToolbar text-center",
+          "sWidth": "10%",
         },
       ]
     });

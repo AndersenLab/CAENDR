@@ -2,6 +2,7 @@ from caendr.utils.env              import get_env_var
 
 from caendr.models.datastore       import FileRecordEntity, DatasetRelease
 from caendr.services.cloud.storage import BlobURISchema
+from caendr.utils.data             import unique_id
 from caendr.utils.tokens           import TokenizedString
 
 
@@ -69,6 +70,11 @@ class BrowserTrack(FileRecordEntity):
       k: v for k, v in val.items() if k not in ['name', 'order', 'url', 'indexURL']
     }
 
+  def _format_props_for_ds(self):
+    props = super()._format_props_for_ds()
+    props['params'] = self.__dict__['params']
+    return props
+
 
   
 
@@ -76,6 +82,18 @@ class BrowserTrack(FileRecordEntity):
 
 class BrowserTrackDefault(BrowserTrack):
   kind = 'browser_track_default'
+
+
+  def __init__(self, name_or_obj = None, *args, **kwargs):
+
+    # If nothing passed for name_or_obj, create a new ID to use for this object
+    if name_or_obj is None:
+      name_or_obj = unique_id()
+      self.set_properties_meta(id = name_or_obj)
+
+    # Initialize from superclass
+    super().__init__(name_or_obj, *args, **kwargs)
+
 
   @classmethod
   def get_props_set(cls):
