@@ -137,7 +137,7 @@ let strains;
 /* IGV Browser */
 const browser_el = document.getElementById('browser');
 const browser_options = {}
-let divergent_track_name;
+let tool_track_names = [];
 const COLORS = {
   INS: 'blue',
   DEL: 'red'
@@ -391,25 +391,34 @@ function update_species(species_id) {
       // Flag the browser as loaded
       loaded = true;
 
-      // Clear all tracks & reload the divergent regions track
+      // Clear all tracks & reload the constant tool track(s)
       clear_tracks();
-      fetch_json(`{{ url_for('api_tracks.get_divergent_regions') }}?species=${species.name}`)
-        .then((divergent_track_summary) => {
-          divergent_track_name = divergent_track_summary.name;
+      fetch_json(`{{ url_for('api_tracks.get_track_parameters', tool_id='pairwise_indel_finder') }}?species=${species.name}`)
+        .then((tracks) => {
 
-          // Replace species tokens in URL
-          divergent_track_summary.url = replace_tokens(divergent_track_summary.url);
+          // Save the track names so we know which ones they are
+          tool_track_names = tracks.map(track => track.name);
 
-          // Set tool-specific display properties
-          divergent_track_summary.height = 40; // Height to view two rows would be 70
-          divergent_track_summary.removable = false;
+          // Add each track to the browser
+          tracks.forEach(track => {
 
-          // Add the track to the browser
-          add_track(divergent_track_name, divergent_track_summary);
+            // Replace species tokens in URL
+            track.url = replace_tokens(track.url);
+
+            // Set tool-specific display properties
+            track.height = 40; // Height to view two rows would be 70
+            track.removable = false;
+
+            // Move these tracks below the strain tracks
+            track.order += 10;
+
+            // Add the track to the browser
+            add_track(track.name, track);
+          });
         })
         .catch((err) => {
           // TODO: Better error handling
-          console.error(`Failed to retrieve divergent regions track: ${err.status} (${err.statusText})`);
+          console.error(`Failed to retrieve IGV Browser tracks: ${err.status} (${err.statusText})`);
         })
 
       // Update browser tracks
@@ -443,7 +452,7 @@ function process_indel_finder_query_results(results) {
 function update_browser_tracks(browser, results) {
 
   // Clear existing strain tracks
-  clear_tracks_except([divergent_track_name]);
+  clear_tracks_except(tool_track_names);
 
   // Load new tracks
   load_tracks(browser, results);

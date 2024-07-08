@@ -20,6 +20,8 @@ from caendr.services.cloud.storage import BlobURISchema
 from caendr.utils.data import get_file_format
 from caendr.utils.json import jsonify_request
 
+from constants import GENOME_BROWSER_TOOLS
+
 
 
 api_tracks_bp = Blueprint(
@@ -181,31 +183,22 @@ def edit_track(track: BrowserTrackDefault = None, form_data = None, no_cache: bo
   abort(405)
 
 
-@api_tracks_bp.route('/divergent-regions', methods=['GET'])
+@api_tracks_bp.route('/parameters/<string:tool_id>', methods=['GET'])
 @jwt_required()
-def get_divergent_regions():
+@jsonify_request
+def get_track_parameters(tool_id: str):
+  '''
+    Get the IGV Browser parameters for all tracks used in the given tool.
+  '''
 
-  # Get the Divergent Regions browser track
-  try:
-    divergent_track = BrowserTrackDefault.query_ds_unique('name', 'Divergent Regions', required=True)
+  # Validate requested tool ID
+  if tool_id not in (tool_id for (tool_id, tool_name) in GENOME_BROWSER_TOOLS):
+    abort(404)
 
-  # If no track found, log an error message and continue raising with a more descriptive message
-  except NotFoundError as ex:
-    logger.error(ex.description)
-    raise ex
-
-  # If track could not be uniquely identified, log an error and continue with the first result
-  # TODO: Should this raise a further error?
-  except NonUniqueEntity as ex:
-    logger.error('Could not uniquely identify Divergent Regions track.')
-    divergent_track = ex.matches[0]
-
-  # If a species was passed, check that the referenced track file exists for this species
-  # If not, return a 404 error
-  # If species invalid, ignore (since this is an optional URL variable)
-  species = Species.get(request.args.get('species'), from_url=True)
-  if species and not divergent_track.check_exists_for_species(species):
-      abort(404)
-
-  # Return the track parameters
-  return jsonify(divergent_track['params'])
+  # Return the IGV browser parameter objects for each track used in the requested tool
+  tracks = [
+    track['params']
+      for track in BrowserTrackDefault.query_ds()
+      if tool_id in track['used_in_tools']
+  ]
+  return tracks
