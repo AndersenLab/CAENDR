@@ -213,3 +213,49 @@ def get_track_parameters(tool_id: str):
       if tool_id in track['used_in_tools']
   ]
   return tracks
+
+
+
+#
+# Other API Methods
+#
+
+
+@api_tracks_bp.route('/order', methods=["POST"])
+@admin_required()
+@jsonify_request
+def reorder():
+  '''
+    Change the order of the given browser tracks.
+
+    Expects body as mapping from browser track ID to new order.
+    Any browser tracks not given in the body will not be changed.
+
+    It is on the caller to ensure the new order is consistent, i.e. that no two tracks
+    have the same order.  In this case, their order will be undefined.
+
+    TODO: Should this function just take a list of IDs in the desired order,
+          and assign the order field "implicitly"?
+  '''
+
+  # Retrieve all browser tracks in the request body, aborting if any lookup fails
+  try:
+    tracks = [
+      (BrowserTrackDefault.get_ds(track_id, silent=False), new_order)
+        for (track_id, new_order) in request.json.items()
+    ]
+  except NotFoundError as ex:
+    abort(422, description=ex.description)
+  except Exception as ex:
+    abort(400)
+
+  # Update all the orders locally
+  for track, new_order in tracks:
+    track['order'] = new_order
+
+  # Save new order in one batch transaction
+  # If this fails, it should all fail together
+  BrowserTrackDefault.save_batch(*[track for (track, new_order) in tracks])
+
+  # Return success
+  return {}

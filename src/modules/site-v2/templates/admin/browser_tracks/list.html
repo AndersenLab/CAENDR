@@ -206,6 +206,46 @@
       ]
     });
 
+
+    // When table rows are re-ordered, persist this change
+    table.on('row-reorder', function (e, diff, edit) {
+
+      // Create a mapping from browser track ID to new position
+      newRowOrders = {}
+      for (row of diff) {
+        newRowOrders[row.node.id.replace(/^(browser-tracks-row-)/, "")] = row.newPosition
+      }
+
+      // POST request to update order
+      $.ajax({
+        type: "POST",
+        url:  "{{ url_for('api_tracks.reorder') }}",
+        headers: {
+          'X-CSRF-TOKEN': "{{ form.csrf_token._value() }}",
+        },
+        contentType: 'application/json; charset=utf-8',
+        dataType:    'json',
+        data:        JSON.stringify(newRowOrders),
+
+        // Signal that table is updating
+        beforeSend: function() {
+          table.processing(true);
+        },
+
+        // On success, clear the processing indicator
+        success: function(result) {
+          table.processing(false);
+        },
+
+        // On failure, show error message
+        error: function(error) {
+          table.processing(false);
+          console.error('Error updating browser track order: ', error)
+          flash_message('Failed to update browser track order. Please reload the page and try again.', 'Full error message', error.responseJSON.message);
+        }
+      })
+    });
+
   });
 </script>
 {% endblock %}
