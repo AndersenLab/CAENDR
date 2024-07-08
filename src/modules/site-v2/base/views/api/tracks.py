@@ -182,7 +182,11 @@ def edit_track(track: BrowserTrackDefault = None, form_data = None, no_cache: bo
 
     if ( form_data.get('availablity') or form_data.get('modify_availability') ):
       availability = form_data.get('availability', [])
-      # TODO: Actually update the availability
+      for species in Species.all().values():
+        release = DatasetRelease.from_name(species_name=species.name)
+        changed = release.set_browser_track(track, species.name in availability)
+        if changed:
+          release.save()
 
     # Update the browser track object
     track.set_properties(**new_values)
