@@ -150,6 +150,11 @@ class DatasetRelease(SpeciesEntity):
     self.__dict__['browser_tracks'] = val
 
 
+  def _format_props_for_ds(self):
+    props = super()._format_props_for_ds()
+    props['report_type'] = props['report_type'].name
+    return props
+
 
 
   @classmethod
