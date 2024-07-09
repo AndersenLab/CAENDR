@@ -177,3 +177,10 @@ def cited_by():
 def contact_us():
   title = "Contact Us"
   return render_template('about/contact-us.html', **locals())
+
+
+@about_bp.route('/collectors')
+@cache.memoize(60*60)
+def collectors():
+  title = "Collectors"
+  return render_template('about/collectors.html', **locals())
