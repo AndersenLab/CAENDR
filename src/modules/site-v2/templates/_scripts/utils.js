@@ -52,8 +52,13 @@ function form_data_to_object(form_id) {
  * points the link to the new blob, and simulates a new click.
  *
  * All future clicks are allowed to use the new blob link directly.
+ *
+ * If the target element defines the attribute "download", that will be used as the filename.
+ * Otherwise, if the response defines a filename in the "Content-Disposition" header,
+ * that filename will be used.
+ * If neither of these conditions are met, the filename will default to "download".
  */
-function force_download(e) {
+function force_download(e, onError=null) {
 
   // Get the current event & target element (cross-browser)
   e = e || window.event;
@@ -77,8 +82,20 @@ function force_download(e) {
 
   // Fetch the provided URL and create a blob object from it
   fetch(el.href)
-    .then(response => response.blob())
-    .then(blob => {
+    .then(async (response) => {
+
+      // If the response produced an error and the caller provided a handler,
+      // delegate to that handler
+      if (onError && !response.ok) {
+        onError(response);
+        return;
+      }
+
+      // Get the download filename from the "Content-Disposition" header, if provided
+      const responseFilename = get_content_disposition_filename(response);
+
+      // Create a blob object from the response
+      const blob = await response.blob();
 
       // Create an object URL for the blob object
       const url = URL.createObjectURL(blob);
@@ -92,8 +109,19 @@ function force_download(e) {
       // If everything succeeds, all future clicks will use the modified href
       // in the existing anchor element. If something fails, all clicks should
       // restart the blob download process, which is is acceptable.
-      download_from_href(el.href, el.download || 'download');
+      download_from_href(el.href, el.download || responseFilename || 'download');
     })
+}
+
+
+/**
+ * Get the "filename" field from a response "Content-Disposition" header.
+ * Adapted from https://stackoverflow.com/questions/40939380/how-to-get-file-name-from-content-disposition
+ */
+function get_content_disposition_filename(response) {
+  const disposition = response?.headers?.get('Content-Disposition', '');
+  const regexp = /filename="?([^";]*)/;
+  return regexp.exec(disposition)[1] ?? '';
 }
 
 
