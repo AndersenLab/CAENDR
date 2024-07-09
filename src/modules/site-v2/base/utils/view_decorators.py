@@ -344,7 +344,9 @@ def display_or_download(valid_formats=None):
         result = f(*args, downloading=file_format is not None, **kwargs)
 
       # If wrapped function raises an error, log it and return an error JSON object
+      # Only intercept the error if this is a download endpoint
       except Exception as err:
+        if file_format is None: raise
         logger.error(err)
 
         # Add full error details for admin users
