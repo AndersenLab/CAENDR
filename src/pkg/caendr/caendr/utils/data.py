@@ -216,3 +216,6 @@ class DownloadFile:
     self.name = name
     self.data = dataframe
     self.csv_args = csv_args
+
+  def convert(self, file_format):
+    return self.data.to_csv(sep=file_format['sep'], **self.csv_args)

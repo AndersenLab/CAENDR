@@ -367,7 +367,7 @@ def display_or_download(valid_formats=None):
 
       # Return the response
       return Response(
-        result.data.to_csv(sep=file_format['sep'], **result.csv_args),
+        result.convert(file_format),
         mimetype = file_format['mimetype'],
         headers  = {
           'Content-Disposition': f'filename={result.name}.{file_ext}',
