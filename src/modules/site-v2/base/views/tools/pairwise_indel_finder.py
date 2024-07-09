@@ -4,7 +4,7 @@ from flask import Response, Blueprint, render_template, request, url_for, jsonif
 from base.forms import PairwiseIndelForm
 from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
 from base.utils.tools import list_reports, try_submit
-from base.utils.view_decorators import parse_job_id, validate_form
+from base.utils.view_decorators import parse_job_id, validate_form, display_or_download
 
 from caendr.models.datastore import Species, IndelPrimerReport, DatasetRelease
 from caendr.models.job_pipeline import IndelFinderPipeline
@@ -12,7 +12,7 @@ from caendr.services.dataset_release import get_dataset_release
 from caendr.services.cloud.storage import BlobURISchema
 from caendr.utils.bio import parse_chrom_interval
 from caendr.utils.constants import CHROM_NUMERIC
-from caendr.utils.data import get_file_format
+from caendr.utils.data import DownloadFile
 
 from caendr.services.indel_primer import (
     query_indels_and_mark_overlaps,
@@ -147,15 +147,8 @@ def submit(form_data, no_cache=False):
 @pairwise_indel_finder_bp.route("/report/<report_id>/download/<file_ext>", methods=['GET'])
 @jwt_required()
 @parse_job_id(IndelFinderPipeline)
-def report(job: IndelFinderPipeline, data, result, file_ext=None):
-
-    # Validate file extension, if provided
-    if file_ext:
-      file_format = get_file_format(file_ext, valid_formats={'csv'})
-      if file_format is None:
-        abort(404)
-    else:
-      file_format = None
+@display_or_download({'csv'})
+def report(job: IndelFinderPipeline, data, result, downloading):
 
     # Report is ready if result exists
     ready = result is not None
@@ -181,17 +174,22 @@ def report(job: IndelFinderPipeline, data, result, file_ext=None):
       job.report.save()
 
 
-    # If a file format was specified, return a downloadable file with the results
-    # TODO: Set a better filename?
-    if file_format is not None:
+    # If a download endpoint is being called, return the results table as a downloadable file
+    if downloading:
+
+      # If report is not ready, download endpoint should return an error
       if not ready:
         abort(404)
-      resp = Response(result['format_table'].to_csv(sep=file_format['sep']), mimetype=file_format['mimetype'])
+
+      # Create a filename from the report
+      # TODO: Set a better filename?
       try:
-        resp.headers['Content-Disposition'] = f'filename={job.report["species"]}_{job.report["strain_1"]}_{job.report["strain_2"]}_{data["site"]}.{file_ext}'
+        filename = f'{job.report["species"]}_{job.report["strain_1"]}_{job.report["strain_2"]}_{data["site"]}'
       except:
-        resp.headers['Content-Disposition'] = f'filename={job.report["id"]}.{file_ext}'
-      return resp
+        filename = job.report['id']
+
+      # Return as a DownloadFile object (required by display_or_download decorator)
+      return DownloadFile( filename, result['format_table'] )
 
 
     # Otherwise, return view page

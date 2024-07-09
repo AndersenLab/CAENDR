@@ -4,6 +4,8 @@ import uuid
 import string
 import numpy  as np
 import pandas as pd
+from dataclasses import dataclass
+from typing      import Any
 
 from collections import Counter
 from caendr.services.logger import logger
@@ -208,3 +210,10 @@ def center_and_scale_data(data):
   mean   = np.mean(data)
   stddev = np.std(data)
   return (data - mean) / stddev
+
+
+
+@dataclass
+class DownloadFile:
+  name: str
+  data: pd.DataFrame

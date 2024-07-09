@@ -1,8 +1,8 @@
 import bleach
 from functools import wraps
-from typing    import Type
+from typing    import Any, Callable, Type, Union
 
-from flask     import abort, redirect, request, url_for, flash, jsonify
+from flask     import Response, abort, redirect, request, url_for, flash, jsonify
 from flask_wtf import FlaskForm
 
 from base.utils.auth            import get_current_user, user_is_admin
@@ -14,6 +14,7 @@ from caendr.models.error        import NotFoundError, ReportLookupError, EmptyRe
 from caendr.models.trait        import Trait
 from caendr.models.job_pipeline import JobPipeline
 from caendr.services.logger     import logger
+from caendr.utils.data          import DownloadFile, get_file_format
 from caendr.utils.local_files   import LocalUploadFile
 
 
@@ -317,6 +318,47 @@ def validate_form(form_class: Type[FlaskForm], from_json: bool = False, err_msg:
         message = get_upload_err_msg(ex.code)
         flash(message, 'danger')
         return jsonify({ 'message': message }), ex.code
+
+    return decorator
+  return wrapper
+
+
+
+def display_or_download(valid_formats=None):
+  def wrapper(f: Callable[[Any], Union[DownloadFile, Any]]):
+
+    @wraps(f)
+    def decorator(*args, file_ext: str = None, **kwargs):
+
+      # Validate file extension, if provided
+      if file_ext:
+        file_format = get_file_format(file_ext, valid_formats=valid_formats)
+        if file_format is None:
+          abort(404)
+      else:
+        file_format = None
+
+      # Call the wrapped function, replacing the file_ext argument
+      # with a more generic "downloading" argument
+      result = f(*args, downloading=file_format is not None, **kwargs)
+
+      # If not downloading, propagate the page response
+      if file_format is None:
+        return result
+
+      # Validate function return type
+      if not isinstance(result, DownloadFile):
+        logger.error(f'Download endpoint function must return a DownloadFile object. Received: {result}')
+        abort(500)
+
+      # Return the response
+      return Response(
+        result.data.to_csv(sep=file_format['sep']),
+        mimetype = file_format['mimetype'],
+        headers  = {
+          'Content-Disposition': f'filename={result.name}.{file_ext}',
+        },
+      )
 
     return decorator
   return wrapper
