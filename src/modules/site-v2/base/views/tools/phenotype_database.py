@@ -11,6 +11,7 @@ from flask import (render_template,
                     Blueprint)
 from extensions import cache, compress
 from sqlalchemy import or_, func
+import pandas as pd
 
 from caendr.api.phenotype import query_phenotype_metadata, get_trait_categories
 from caendr.services.cloud.postgresql import rollback_on_error_handler
@@ -21,14 +22,14 @@ from caendr.utils.env       import get_env_var
 from base.forms                 import EmptyForm
 from base.utils.auth            import jwt_required, get_current_user, user_is_admin, check_feature_flag_bp
 from base.utils.tools           import list_reports, try_submit
-from base.utils.view_decorators import parse_job_id, validate_form
+from base.utils.view_decorators import parse_job_id, validate_form, display_or_download
 
 from caendr.models.datastore    import PhenotypeReport, Species
 from caendr.models.error        import NotFoundError
 from caendr.models.job_pipeline import PhenotypePipeline
 from caendr.models.sql          import PhenotypeMetadata
 from caendr.models.trait        import Trait
-from caendr.utils.data          import get_file_format, convert_data_to_download_file
+from caendr.utils.data          import DownloadFile
 
 
 
@@ -193,26 +194,18 @@ def list_results():
 @phenotype_database_bp.route("/report/<report_id>/download/<file_ext>", methods=['GET'])
 @jwt_required()
 @parse_job_id(PhenotypePipeline)
-def report(job: PhenotypePipeline, data, result, file_ext=None):
+@display_or_download()
+def report(job: PhenotypePipeline, data, result, downloading=False):
 
-  # Validate file extension, if provided
-  if file_ext:
-    file_format = get_file_format(file_ext, valid_formats={'tsv'})
-    if file_format is None:
-      abort(404)
-  else:
-    file_format = None
-
-  # If a file format was specified, return a downloadable file with the results
-  if file_format is not None:
+  # If a download endpoint is being called, return the results table as a downloadable file
+  if downloading:
     columns = ['strain', *data['trait_names']]
     values  = sorted(result['trait_values'], key=lambda v: v[0])
-    resp = Response(convert_data_to_download_file( values, columns, file_ext=file_ext ), mimetype=file_format['mimetype'])
     try:
-      resp.headers['Content-Disposition'] = f'filename={job.report["species"]}_{"_".join(job.report.trait_names)}.{file_ext}'
+      filename = f'{job.report["species"]}_{"_".join(job.report.trait_names)}'
     except:
-      resp.headers['Content-Disposition'] = f'filename={job.report.id}.{file_ext}'
-    return resp
+      filename = f'{job.report.id}'
+    return DownloadFile( filename, pd.DataFrame(values, columns=columns), index=False )
 
   # Otherwise, return view page
   return render_template('tools/phenotype_database/report.html', **{

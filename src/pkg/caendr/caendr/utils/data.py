@@ -212,7 +212,7 @@ def center_and_scale_data(data):
 
 
 class DownloadFile:
-  def __init__(self, name: str, data: pd.DataFrame, **csv_args):
+  def __init__(self, name: str, dataframe: pd.DataFrame, **csv_args):
     self.name = name
-    self.data = data
+    self.data = dataframe
     self.csv_args = csv_args
