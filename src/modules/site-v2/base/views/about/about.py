@@ -183,4 +183,5 @@ def contact_us():
 @cache.memoize(60*60)
 def collectors():
   title = "Collectors"
+  collectors = Profile.query_ds_roles(Profile.COLLAB)
   return render_template('about/collectors.html', **locals())

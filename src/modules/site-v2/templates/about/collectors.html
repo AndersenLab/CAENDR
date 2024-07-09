@@ -1,8 +1,37 @@
 {% extends "_layouts/default.html" %}
 
+{% block custom_head %}
+<style>
+    .card img {
+        width: 150px;
+        height: auto;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row">
-    <p>This resource would not exist if it were not for the amazing efforts of researchers who collect nematodes from nature. The nematode evolution community owes each of them a debt of gratitude for these efforts. CaeNDR would like to formally thank each person (scientist or citizen-scientist) who has collected wild nematodes and contributed them to this resource. Some of the collectors who have contributed the most strains are shown below. Thank you to each of them for their efforts!</p>
-    <h2>Thank you wild worm collectors!</h2>
+    <p class="px-5">This resource would not exist if it were not for the amazing efforts of researchers who collect nematodes from nature. The nematode evolution community owes each of them a debt of gratitude for these efforts. CaeNDR would like to formally thank each person (scientist or citizen-scientist) who has collected wild nematodes and contributed them to this resource. Some of the collectors who have contributed the most strains are shown below. Thank you to each of them for their efforts!</p>
+    <h2 class="text-center">Thank you wild worm collectors!</h2>
+    <div class="row row-cols-1 row-cols-md-3">
+        {% for c in collectors|sort(attribute='last_name') %}
+        <!-- Card Column -->
+        <div class="col mb-3">
+            <div class="card p-0 pt-3 mt-5 h-100 shadow text-center cardBorderBottom" style="min-height:35vh;">
+                <img src="{{ c.img_url }}" class="img-fluid rounded mb-3 mx-auto"
+                    alt="{{ c.first_name }} {{ c.last_name }}">
+                <div class="card-body">
+                    <h3 class="h5 card-title"><a href="{{ c.website }}" target="_blank">{{ c.first_name }} {{
+                            c.last_name }}</a></h3>
+                    <p class="card-text">
+                        <small>{{ c.org }}</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <!-- /Card Column -->
+        {% endfor %}
+    </div>
+
 </div>
 {% endblock %}
