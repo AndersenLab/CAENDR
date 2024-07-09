@@ -51,6 +51,11 @@
                         Phenotype Database and Analysis
                       </a></li>
                       {%- endif %}
+                      {%- if feature_flags.CRISPR_ENABLED %}
+                      <li><a class="dropdown-item" href="{{ url_for('crispr.crispr') }}">
+                        CRISPR
+                      </a></li>
+                      {%- endif %}
                     </ul>
                   </div>
                 </div>

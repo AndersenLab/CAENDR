@@ -9,11 +9,12 @@ from .indel_primer_pipeline       import IndelFinderPipeline
 from .heritability_pipeline       import HeritabilityPipeline
 from .nemascan_pipeline           import NemascanPipeline
 from .phenotype_pipeline          import PhenotypePipeline
+from .crispr_pipeline             import CRISPRPipeline
 
 
 
 # Collect the set of pipeline subclasses
-pipeline_subclasses = frozenset({ DatabaseOperationPipeline, IndelFinderPipeline, HeritabilityPipeline, NemascanPipeline, PhenotypePipeline })
+pipeline_subclasses = frozenset({ DatabaseOperationPipeline, IndelFinderPipeline, HeritabilityPipeline, NemascanPipeline, PhenotypePipeline, CRISPRPipeline })
 
 # Ensure that all kind values are unique
 # TODO: Can this be a unit test?

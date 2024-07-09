@@ -37,6 +37,7 @@ from .indel_primer        import IndelPrimerReport   # Subclasses ReportEntity, 
 from .heritability_report import HeritabilityReport  # Subclasses ReportEntity, HashableEntity
 from .nemascan_mapping    import NemascanReport      # Subclasses ReportEntity, HashableEntity
 from .phenotype_report    import PhenotypeReport     # Subclasses ReportEntity, HashableEntity; imports TraitFile
+from .crispr_report       import CRISPRReport        # Subclasses ReportEntity, HashableEntity
 
 # Other
 from .announcement        import Announcement
@@ -70,6 +71,7 @@ def get_class_by_kind(kind):
     IndelPrimerReport.kind:  IndelPrimerReport,
     HeritabilityReport.kind: HeritabilityReport,
     NemascanReport.kind:     NemascanReport,
+    CRISPRReport.kind:       CRISPRReport,
 
     Announcement.kind:       Announcement,
     GeneBrowserTracks.kind:  GeneBrowserTracks,

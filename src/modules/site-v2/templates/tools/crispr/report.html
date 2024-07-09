@@ -1,0 +1,139 @@
+{% extends "_layouts/default-nocontainer.html" %}
+
+
+{% block custom_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.4.1/jspdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery.print/1.6.0/jQuery.print.min.js" integrity="sha512-i8ERcP8p05PTFQr/s0AZJEtUwLBl18SKlTOZTH0yK5jVU0qL8AIQYbbG5LU+68bdmEqJ6ltBRtCxnmybTbIYpw==" crossorigin="anonymous"></script>
+
+<style type="text/css">
+  .table {
+    border: 1px solid black;
+    font-size: 12px;
+  }
+
+  td, th {
+    border: 1px solid black !important;
+    text-align: left;
+  }
+
+  .table-hover:hover {
+    cursor: crosshair;
+  }
+
+  @media print {
+    h3, #svgchartarea {
+      page-break-before: always;
+    }
+    .table {
+      table-layout: fixed;
+      word-break: break-all;
+    }
+  }
+</style>
+{% endblock %}
+
+
+
+{% block content %}
+
+{% if data %}
+  {% if empty %}
+    <div class="row">
+      <div class="col-12 p-5">
+        <h2 class="text-center">No Results</h2>
+        <div class="col-6 alert alert-warning text-center mt-5 mx-auto animate__animated animate__fadeInDown">
+          <p class="fs-2"><i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i></p>
+          <p class="lead">Unfortunately, no results could be found for this site.</p>
+        </div>
+      </div>{# /col-md-4 #}
+    </div>{# /row #}
+
+  {% else %}
+    <div class="d-flex justify-content-around flex-wrap px-3 mt-5">
+      <div class="col-12 col-md-2 text-bg-light mb-5 py-5 px-3 rounded-2 shadow-sm overflow-auto d-print-none"
+        style="max-height:500px">
+        <h2 class="text-dark">Download Results</h2>
+        <div class="d-grid gap-2 mt-5">
+          <a role="button" id="pdd" class="btn btn-secondary text-light"
+              onClick='getPDF("containerfluid")'>Print to PDF</a>
+          <a role="button" class="btn btn-secondary text-light"
+              href="{{ url_for('crispr.report', report_id=report_id, file_ext='csv') }}"
+              onClick="downloadReport(event)"
+              class="col-sm-4">CSV</a>
+        </div>
+      </div>
+        <div class="col-12 col-md-9 overflow-auto">
+
+          <!-- Options Toolbar -->
+          <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar">
+            <div class="ps-3 pt-0">
+              <a href='{{ url_for("crispr.my_results") }}'><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to My CRISPR Reports</a>
+            </div>
+          </div>
+          <!-- /Options Toolbar -->
+
+          <div id="report">
+            <h2 class="mb-4">
+                CRISPR Details
+            </h2>
+            <div class="table-responsive mb-3">
+              <table class="table info-table">
+                <caption class="visually-hidden">CRISPR details including site, size, type, lengths, temp, and strains</caption>
+                <thead>
+                  <tr>
+                    <th>Indel&nbsp;Site</th>
+                    <th>Indel&nbsp;Size</th>
+                    <th>Variant&nbsp;Type</th>
+                    <th>Primer&nbsp;Lengths</th>
+                    <th>Annealing&nbsp;Temp</th>
+                    <th>Strain&nbsp;1</th>
+                    <th>Strain&nbsp;2</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>{{ data['site'] }}</td>
+                    <td>{{ data['size'] }}</td>
+                    <td>{{ data['svtype'] }}</td>
+                    <td>18-22 bp</td>
+                    <td>55-65 °C</td>
+                    <td>{{ data['strain_1'] }}</td>
+                    <td>{{ data['strain_2'] }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+    </div>
+    <!-- /flex -->
+  {% endif %}
+{% endif %}
+
+{% endblock %}
+
+
+
+{% block script %}
+{% if data and not empty %}
+<script type="text/javascript">
+  {% include '_scripts/utils.js' %}
+
+  const getPDF = function(el) {
+    $("#report").print();
+  }
+
+  $( document ).ready(function() {
+    $("a[href^='http://'], a[href^='https://'], a[href$='pdf']").attr("target","_blank");
+  });
+
+  function downloadReport(event) {
+    force_download(event, async (error) => {
+      const responseJSON = await error.json();
+      flashErrorResponse(responseJSON, "The report download failed. Please try again later.")
+    });
+  }
+
+</script>
+{% endif %}
+{% endblock %}

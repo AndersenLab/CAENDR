@@ -4,7 +4,8 @@ from flask import Blueprint, jsonify
 from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
 
 from caendr.models.datastore      import Species
-from caendr.services.indel_primer import get_sv_strains as get_sv_strains_helper
+from caendr.services.crispr       import get_crispr_strains as get_crispr_strains_helper
+from caendr.services.indel_primer import get_sv_strains     as get_sv_strains_helper
 
 
 
@@ -34,4 +35,22 @@ def get_sv_strains():
   # Return the strains for each species
   return jsonify({
     species: try_get_sv_strains( species ) for species in Species.all().keys()
+  })
+
+
+@api_strains_bp.route('/crispr', methods=['GET'])
+@jwt_required()
+def get_crispr_strains():
+
+  # Helper function to try getting the strain list for a species and print an error message if not available
+  def try_get_crispr_strains(species):
+    try:
+      return get_crispr_strains_helper(species)
+    except Exception as e:
+      logger.error(f"Couldn't find CRISPR strains for {species}. Full error: {e}")
+      return []
+
+  # Return the strains for each species
+  return jsonify({
+    species: try_get_crispr_strains( species ) for species in Species.all().keys()
   })

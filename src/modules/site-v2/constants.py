@@ -43,6 +43,7 @@ TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS = { 'tsv' }
 GENOME_BROWSER_TOOLS = [
   ('genome_browser', 'Genome Browser'),
   ('pairwise_indel_finder', 'Pairwise Indel Finder'),
+  ('crispr', 'CRISPR')
 ]
 
 TRAIT_CATEGORY_OPTIONS = [
