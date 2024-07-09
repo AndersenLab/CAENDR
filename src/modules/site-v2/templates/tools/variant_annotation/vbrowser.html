@@ -244,7 +244,7 @@
 {% from "_includes/strain-listing.html" import unpack_species_list %}
 <script src="{{ url_for('static', filename='js/strains.js') }}"></script>
 <script>
-{% include '_scripts/utils.js' %}       {#/* defines: toggle_input */#}
+{% include '_scripts/utils.js' %}       {#/* defines: toggle_input, flashErrorResponse */#}
 {% include '_scripts/gene-search.js' %} {#/* defines: prep_gene_search, run_gene_search, format_locus_string */#}
 {% include '_scripts/fullscreen.js' %} {#/* fullscreen for tools */#}
 
@@ -357,7 +357,7 @@ function update_selected_strains() {
 
 async function downloadCSV(json_data) {
   const csrfToken = "{{ form.csrf_token._value() }}";
-  const url = "{{ url_for('variant_annotation.download_csv') }}"
+  const url = "{{ url_for('variant_annotation.download_results', file_ext='csv') }}"
   const res = await fetch(url, {
     method: "POST",
     credentials: "include",
@@ -378,9 +378,9 @@ async function downloadCSV(json_data) {
     link.download = `${ species['name'] }_${interval}_sva.csv`;
     link.click();
   } else {
-    const err = await res.json()
-    console.error(err.message)
-    window.location.href = "{{ url_for('variant_annotation.variant_annotation', download_err=True ) }}"
+    const responseJSON = await res.json()
+    flashErrorResponse(responseJSON, 'CSV download failed.')
+    console.error(responseJSON.message)
   }
 
 }

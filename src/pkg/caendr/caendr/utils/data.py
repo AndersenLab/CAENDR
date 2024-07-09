@@ -4,8 +4,6 @@ import uuid
 import string
 import numpy  as np
 import pandas as pd
-from dataclasses import dataclass
-from typing      import Any
 
 from collections import Counter
 from caendr.services.logger import logger
@@ -213,7 +211,8 @@ def center_and_scale_data(data):
 
 
 
-@dataclass
 class DownloadFile:
-  name: str
-  data: pd.DataFrame
+  def __init__(self, name: str, data: pd.DataFrame, **csv_args):
+    self.name = name
+    self.data = data
+    self.csv_args = csv_args

@@ -2,7 +2,7 @@ import bleach
 from functools import wraps
 from typing    import Any, Callable, Type, Union
 
-from flask     import Response, abort, redirect, request, url_for, flash, jsonify
+from flask     import Response, abort, redirect, request, url_for, flash, jsonify, make_response
 from flask_wtf import FlaskForm
 
 from base.utils.auth            import get_current_user, user_is_admin
@@ -340,7 +340,21 @@ def display_or_download(valid_formats=None):
 
       # Call the wrapped function, replacing the file_ext argument
       # with a more generic "downloading" argument
-      result = f(*args, downloading=file_format is not None, **kwargs)
+      try:
+        result = f(*args, downloading=file_format is not None, **kwargs)
+
+      # If wrapped function raises an error, log it and return an error JSON object
+      except Exception as err:
+        logger.error(err)
+
+        # Add full error details for admin users
+        response_body = { 'message': 'Download failed. Please try again later.' }
+        if user_is_admin():
+          response_body['full_msg_link'] = 'See details.'
+          response_body['full_msg_body'] = getattr(err, 'message', str(err))
+
+        # Return the error response
+        return make_response(jsonify(response_body), 500)
 
       # If not downloading, propagate the page response
       if file_format is None:
@@ -353,7 +367,7 @@ def display_or_download(valid_formats=None):
 
       # Return the response
       return Response(
-        result.data.to_csv(sep=file_format['sep']),
+        result.data.to_csv(sep=file_format['sep'], **result.csv_args),
         mimetype = file_format['mimetype'],
         headers  = {
           'Content-Disposition': f'filename={result.name}.{file_ext}',

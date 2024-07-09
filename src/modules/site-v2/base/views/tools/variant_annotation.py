@@ -13,6 +13,7 @@ from flask import (render_template,
                     Blueprint)
 from extensions import cache
 from base.forms import VBrowserForm
+from base.utils.view_decorators import display_or_download
 
 from caendr.api.isotype import get_distinct_isotypes
 from caendr.models.datastore import Species
@@ -21,6 +22,7 @@ from caendr.models.sql import StrainAnnotatedVariant
 from caendr.services.dataset_release import get_latest_dataset_release_version
 from caendr.utils.bio import parse_chrom_interval, parse_chrom_position
 from caendr.utils.constants import CHROM_INTERVAL_REGEX
+from caendr.utils.data import DownloadFile
 
 
 variant_annotation_bp = Blueprint(
@@ -140,22 +142,18 @@ def query_position(species_name=None):
 
 
 
-@variant_annotation_bp.route('/download/csv', methods=['POST'])
-def download_csv():
+@variant_annotation_bp.route('/download/<file_ext>', methods=['POST'])
+@display_or_download({'csv'})
+def download_results(downloading):
+  '''
+    Download the Variant Annotation data in the request body as a file.
+  '''
 
   # Load columns from StrainAnnotatedVariant class
   columns = [ col['id'] for col in StrainAnnotatedVariant.get_column_details() ]
 
-  try:
-    data = request.data
-    pd_obj = pd.read_json(data)
-    csv = pd_obj.to_csv(index=False, sep=",", columns=columns)
+  # Read request body to a DataFrame object
+  dataframe = pd.read_json(request.data)
 
-    res = make_response(csv)
-    res.headers["Content-Disposition"] = "attachment; filename=variant_annotation_data.csv"
-    res.headers["Content-Type"] = "text/csv"
-    return res
-
-  except Exception as err:
-    logger.error(err)
-    return make_response(jsonify({ "message": "CSV download failed." }), 500)
+  # Return the download file
+  return DownloadFile( 'variant_annotation_data', dataframe, columns=columns, index=False )
