@@ -10,7 +10,7 @@ from base.utils.view_decorators import parse_job_id, validate_form
 
 from caendr.models.datastore.browser_track import BrowserTrackDefault
 from caendr.models.datastore import Species, IndelPrimerReport, DatasetRelease
-from caendr.models.error import NotFoundError, NonUniqueEntity
+from caendr.models.error import NotFoundError, NonUniqueEntity, JobAlreadyScheduledError
 from caendr.models.job_pipeline import IndelFinderPipeline
 from caendr.services.dataset_release import get_dataset_release
 from caendr.services.cloud.storage import BlobURISchema
@@ -203,12 +203,29 @@ def submit(form_data, no_cache=False):
 @admin_required()
 @parse_job_id(IndelFinderPipeline, fetch=False)
 def resubmit(job: IndelFinderPipeline):
-  job.schedule(no_cache=True)
-  return jsonify({
-    'ready':     job.is_finished(),
-    'data_hash': job.report.data_hash,
-    'id':        job.report.id,
-  })
+
+  # Try scheduling the job again
+  try:
+    job.schedule(no_cache=True)
+    return jsonify({
+      'ready':     job.is_finished(),
+      'data_hash': job.report.data_hash,
+      'id':        job.report.id,
+    })
+
+  # If this job is currently running, abort
+  except JobAlreadyScheduledError as ex:
+    return jsonify({
+      'message': 'This job is already running.',
+    }), 400
+
+  # Display any other errors to the (admin) user
+  except Exception as ex:
+    return jsonify({
+      'message': 'There was a problem resubmitting this job. Please try again later.',
+      'full_msg_link': 'See details.',
+      'full_msg_body': getattr(ex, 'message', str(ex)),
+    }), 500
 
 
 

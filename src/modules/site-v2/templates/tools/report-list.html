@@ -124,6 +124,8 @@ span.bi {
 {% block script %}
 {% from "_scripts/submit-job.js" import ajax_setup %}
 <script>
+  {% include '_scripts/utils.js' %} {#/* defines: flashErrorResponse */#}
+
 
   const status_colors = {
     "{{ JobStatus.ERROR }}"     : "danger",
@@ -199,6 +201,10 @@ span.bi {
         el.classList.remove('disabled');
         el.innerHTML = `<i class="bi bi-check-circle-fill" aria-hidden="true">`;
         el.onclick = null;
+      })
+      .fail((error) => {
+        el.classList.remove('disabled');
+        flashErrorResponse(error.responseJSON, 'There was a problem resubmitting this job. Please try again later.');
       })
   }
   {%- endif %}
