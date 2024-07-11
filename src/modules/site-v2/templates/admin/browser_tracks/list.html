@@ -41,8 +41,8 @@
       href="{{ url_for('admin_gene_browser_tracks.edit_page') }}"
       class="btn btn-primary btn-block"
     >
-      <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-      New Gene Browser Track Version
+      <span class="bi bi-plus-circle pe-1" aria-hidden="true"></span>
+      New Gene Browser Track
     </a>
 </div>
 
@@ -164,9 +164,9 @@
             const elements = browser_tools.map(([tool_id, tool_name]) => {
               const icon = data.includes(tool_id)
                 ? '<i class="bi bi-check-circle-fill" aria-hidden="true"></i>'
-                : '<i class="bi bi-x-circle text-dark" aria-hidden="true"></i>';
+                : '<i class="bi bi-circle text-muted" aria-hidden="true"></i>';
 
-              return `<li>${ icon } ${ tool_name }</li>`
+              return `<li ${ data.includes(tool_id) ? 'class="text-muted"' : '' }>${ icon } ${ tool_name }</li>`
             });
 
             // Render as a single list
@@ -184,9 +184,9 @@
             const elements = data.map(release => {
               const icon = release.available
                 ? '<i class="bi bi-check-circle-fill" aria-hidden="true"></i>'
-                : '<i class="bi bi-x-circle text-dark" aria-hidden="true"></i>';
+                : '<i class="bi bi-circle text-muted" aria-hidden="true"></i>';
 
-              return `<li>${ icon } <em>${ release.species }</em></li>`
+              return `<li ${ data.includes(tool_id) ? 'class="text-muted"' : ''}>${ icon } <em>${ release.species }</em></li>`
             });
 
             // Render as a single list
