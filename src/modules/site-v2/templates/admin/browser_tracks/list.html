@@ -210,7 +210,6 @@
         {
           "data": "name",
           "render": function(data, type, row) {
-            console.log(row)
             const url = "{{ url_for('admin_gene_browser_tracks.edit_page', entity_id='BROWSER_TRACK_ID') }}".replace('BROWSER_TRACK_ID', data);
             return `
               <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Edit</a>
