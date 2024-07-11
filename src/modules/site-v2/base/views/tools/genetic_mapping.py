@@ -97,6 +97,7 @@ def list_results():
     # Page info
     'title': ('All' if show_all else 'My') + ' Genetic Mappings',
     'tool_alt_parent_breadcrumb': {"title": "Tools", "url": url_for('tools.tools')},
+    'user_is_admin': user_is_admin(),
 
     # Tool info
     'tool_name': 'genetic_mapping',

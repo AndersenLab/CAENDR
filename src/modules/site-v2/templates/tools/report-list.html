@@ -72,6 +72,9 @@ span.bi {
         {{ render_dataTable_result_list_header('Date',   extra_classes='ordering') }}
         {% if all_results %}
         {{ render_dataTable_result_list_header('Owner',  extra_classes='ordering') }}
+        {%- if user_is_admin and rerunnable %}
+        {{ render_dataTable_result_list_header('Rerun',  extra_classes='ordering') }}
+        {%- endif %}
         {% endif %}
       </tr>
     </thead>
@@ -96,6 +99,15 @@ span.bi {
 
             {% if all_results %}
               <td class="data-owner">{{ item.get_display_name() }}</td>
+              {%- if user_is_admin and rerunnable %}
+              <td class="data-rerun optionsToolbar">
+                {%- if item.status == JobStatus.ERROR %}
+                <button role="button" class="btn btn-link" onclick="resubmit(this, '{{ item.name }}')">
+                  <i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i> Rerun
+                </a>
+                {%- endif %}
+              </td>
+              {%- endif %}
             {% endif %}
           </tr>
         {% endif %}
@@ -110,6 +122,7 @@ span.bi {
 {% endblock %}
 
 {% block script %}
+{% from "_scripts/submit-job.js" import ajax_setup %}
 <script>
 
   const status_colors = {
@@ -121,6 +134,11 @@ span.bi {
   }
       
   $(document).ready(function(){
+
+    // Set headers for AJAX requests
+    {%- if form %}
+    {{ ajax_setup(form.csrf_token._value()) }}
+    {%- endif %}
 
     dTable = $('#result-table').DataTable( {
       paging: true,
@@ -136,14 +154,17 @@ span.bi {
         { "sWidth": ({{column.width}} * 36) + '%' },
       {%- endfor %}
         {
-          "sWidth": "10%",
+          "sWidth": "6%",
           "createdCell": function (td, cellData, rowData, row, col) {
             $(td).addClass( 'bg-' + status_colors[cellData.toUpperCase()] + ' bg-opacity-25' )
           }
         },
-        { "sWidth": "22%" },
+        { "sWidth": "20%" },
       {%- if all_results %}
-        { "sWidth": "22%" },
+        { "sWidth": "18%" },
+        {%- if user_is_admin and rerunnable %}
+        { "sWidth": "10%" },
+        {%- endif %}
       {%- endif %}
       ],
       dom: "tipr",
@@ -164,6 +185,23 @@ span.bi {
       location.reload();
       console.log("reload the page!")
     }
+
+
+  {%- if rerunnable and user_is_admin %}
+  function resubmit(el, job_id) {
+    el.classList.add('disabled');
+
+    $.ajax({
+      url:  "{{ url_for(tool_name + '.resubmit', report_id='JOB_ID') }}".replace("JOB_ID", job_id),
+      type: "POST",
+    })
+      .done((result) => {
+        el.classList.remove('disabled');
+        el.innerHTML = `<i class="bi bi-check-circle-fill" aria-hidden="true">`;
+        el.onclick = null;
+      })
+  }
+  {%- endif %}
 
 </script>
 {% endblock %}
