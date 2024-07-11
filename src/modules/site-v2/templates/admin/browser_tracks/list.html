@@ -163,10 +163,10 @@
             // Map the available tools to HTML list entries
             const elements = browser_tools.map(([tool_id, tool_name]) => {
               const icon = data.includes(tool_id)
-                ? '<i class="bi bi-check-circle-fill" aria-hidden="true"></i>'
-                : '<i class="bi bi-circle text-muted" aria-hidden="true"></i>';
+                ? '<i class="bi bi-check-circle-fill" aria-label="Used in tool"></i>'
+                : '<i class="bi bi-circle text-muted" aria-label="Not used in tool"></i>';
 
-              return `<li ${ data.includes(tool_id) ? 'class="text-muted"' : '' }>${ icon } ${ tool_name }</li>`
+              return `<li ${ !data.includes(tool_id) ? 'class="text-muted"' : '' }>${ icon } ${ tool_name }</li>`
             });
 
             // Render as a single list
@@ -183,10 +183,10 @@
             // Map the available releases to HTML list entries
             const elements = data.map(release => {
               const icon = release.available
-                ? '<i class="bi bi-check-circle-fill" aria-hidden="true"></i>'
-                : '<i class="bi bi-circle text-muted" aria-hidden="true"></i>';
+                ? '<i class="bi bi-check-circle-fill" aria-label="Available"></i>'
+                : '<i class="bi bi-circle text-muted" aria-label="Not available"></i>';
 
-              return `<li ${ data.includes(tool_id) ? 'class="text-muted"' : ''}>${ icon } <em>${ release.species }</em></li>`
+              return `<li ${ !release.available ? 'class="text-muted"' : '' }>${ icon } <em>${ release.species }</em></li>`
             });
 
             // Render as a single list
@@ -199,7 +199,9 @@
         {
           "data": "checked",
           "render": function(data, type, row) {
-            return data ? `<i class="bi bi-check-circle-fill" aria-hidden="true"></i>` : "";
+            return data
+              ? `<i class="bi bi-check-circle-fill" aria-label="Checked by default"></i>`
+              : '<i class="visually-hidden" aria-label="Not checked by default"></i>';
           },
           "sClass": "optionsToolbar text-center",
           "sWidth": "8%",
