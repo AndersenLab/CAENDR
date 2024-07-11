@@ -166,7 +166,7 @@
                 ? '<i class="bi bi-check-circle-fill" aria-hidden="true"></i>'
                 : '<i class="bi bi-circle text-muted" aria-hidden="true"></i>';
 
-              return `<li ${ data.includes(tool_id) ? 'class="text-muted"' : '' }>${ icon } ${ tool_name }</li>`
+              return `<li ${ !data.includes(tool_id) ? 'class="text-muted"' : '' }>${ icon } ${ tool_name }</li>`
             });
 
             // Render as a single list
@@ -186,7 +186,7 @@
                 ? '<i class="bi bi-check-circle-fill" aria-hidden="true"></i>'
                 : '<i class="bi bi-circle text-muted" aria-hidden="true"></i>';
 
-              return `<li ${ data.includes(tool_id) ? 'class="text-muted"' : ''}>${ icon } <em>${ release.species }</em></li>`
+              return `<li ${ !release.available ? 'class="text-muted"' : '' }>${ icon } <em>${ release.species }</em></li>`
             });
 
             // Render as a single list
