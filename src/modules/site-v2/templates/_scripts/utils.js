@@ -212,3 +212,14 @@ function formatDate(d) {
 function first_letter_caps(s) {
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 }
+
+
+function joinListAnd(arr) {
+  if (arr.length < 2) {
+    return arr.join('');
+  }
+  if (arr.length === 2) {
+    return arr.join(' and ')
+  }
+  return arr.slice(0, arr.length - 1).join(', ') + ', and ' + arr[arr.length - 1];
+}
