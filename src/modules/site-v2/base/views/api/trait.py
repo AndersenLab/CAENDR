@@ -71,13 +71,19 @@ class EndpointType(Enum):
 def filter_trait_files(tf):
   return tf.is_public and not tf.is_bulk_file
 
+def _clean_recursive(obj):
+  if isinstance(obj, str):
+    return bleach.clean(obj)
+  elif isinstance(obj, list):
+    return [ _clean_recursive(sub_obj) for sub_obj in obj ]
+  elif (obj is None) or isinstance(obj, int) or isinstance(obj, bool):
+    return obj
+  raise ValueError(f'Cannot clean object of type {obj.__class__.__name__}: {obj}')
 
 def get_clean(source, key, value=None, _type=None):
-  v = source.get(key, value)
 
-  # Clean value
-  if   isinstance(v, str):   v = bleach.clean(v)
-  elif isinstance(v, list):  v = [ bleach.clean(x) for x in v ]
+  # Get value from source object and clean recursively
+  v = _clean_recursive( source.get(key, value) )
 
   # Optional typecasting
   if _type and v is not None:
