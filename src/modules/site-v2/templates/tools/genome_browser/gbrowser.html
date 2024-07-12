@@ -254,16 +254,21 @@ const gene_search_selectors = {
 
 $(document).ready(function () {
 
-  // Fetch the list of browser track objects
-  // Retrieves an object with two fields:
-  //   - 'default':   the list of tracks that are not specific to any one strain
-  //   - 'templates': the list of track templates to be filled out with strain data
-  fetch_json("{{ url_for('api_tracks.get_tracks') }}")
+  // Fetch & store the list of browser track objects, then update the species & browser
+  fetch_json("{{ url_for('api_tracks.get_tool_tracks', tool_id='genome_browser') }}")
     .then((data) => {
-      set_trackset(data.default);
-      set_templates(data.templates);
+      set_trackset(data);
+      update_species();
+    })
+    .catch((err) => {
+      // TODO: better error handling?
+      console.error("Failed to retrieve browser tracks.", err);
+    })
 
-      // Once we know the trackset exists, update the species & browser
+  // Fetch & store the list of browser track templates, then update the species & browser
+  fetch_json("{{ url_for('api_tracks.get_track_templates') }}")
+    .then((data) => {
+      set_templates(data);
       update_species();
     })
     .catch((err) => {

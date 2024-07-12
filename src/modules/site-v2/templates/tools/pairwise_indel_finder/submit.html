@@ -393,27 +393,28 @@ function update_species(species_id) {
 
       // Clear all tracks & reload the constant tool track(s)
       clear_tracks();
-      fetch_json(`{{ url_for('api_tracks.get_track_parameters', tool_id='pairwise_indel_finder') }}?species=${species.name}`)
+      fetch_json(`{{ url_for('api_tracks.get_tool_tracks', tool_id='pairwise_indel_finder') }}?species=${species.name}`)
         .then((tracks) => {
 
-          // Save the track names so we know which ones they are
-          tool_track_names = tracks.map(track => track.name);
+          // Save the track names / IDs so we know which ones they are
+          tool_track_names = Object.keys(tracks);
 
           // Add each track to the browser
-          tracks.forEach(track => {
+          Object.keys(tracks).forEach(track_name => {
+            const track_params = JSON.parse(tracks[track_name]).params
 
             // Replace species tokens in URL
-            track.url = replace_tokens(track.url);
+            track_params.url = replace_tokens(track_params.url);
 
             // Set tool-specific display properties
-            track.height = 40; // Height to view two rows would be 70
-            track.removable = false;
+            track_params.height = 40; // Height to view two rows would be 70
+            track_params.removable = false;
 
             // Move these tracks below the strain tracks
-            track.order += 10;
+            track_params.order += 10;
 
             // Add the track to the browser
-            add_track(track.name, track);
+            add_track(track_params.name, track_params);
           });
         })
         .catch((err) => {
