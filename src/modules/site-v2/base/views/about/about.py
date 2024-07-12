@@ -182,6 +182,13 @@ def contact_us():
 @about_bp.route('/collectors')
 @cache.memoize(60*60)
 def collectors():
-  title = "Collectors"
-  collectors = Profile.query_ds_roles(Profile.COLLAB)
-  return render_template('about/collectors.html', **locals())
+  try:
+    strain_listing = [s.to_json() for s in get_isotypes(known_origin=True)]
+  except Exception as ex:
+    logger.error(f'Failed to retrieve strain list: {ex}')
+    strain_listing = None
+  return render_template('about/collectors.html', **{
+    'title'         : "Collectors",
+    'collectors'    : Profile.query_ds_roles(Profile.COLLAB),
+    'strain_listing': strain_listing,
+  })
