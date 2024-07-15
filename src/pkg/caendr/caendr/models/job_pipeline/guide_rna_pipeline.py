@@ -4,7 +4,6 @@ from caendr.models.datastore import GuideRNAReport
 
 # Services
 from caendr.models.status    import JobStatus
-from caendr.utils.bio        import format_chrom_interval
 from caendr.utils.data       import get_object_hash
 
 
