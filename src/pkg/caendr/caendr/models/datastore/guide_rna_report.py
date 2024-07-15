@@ -30,10 +30,7 @@ class GuideRNAReport(ReportEntity, HashableEntity):
 
 
   def fetch_input(self):
-    return {
-      **self.serialize(),
-      'enzyme_display': get_grna_selection_enzymes().get(self['enzyme'], ''),
-    }
+    return self.serialize()
 
   def fetch_output(self):
     return {}
@@ -57,3 +54,15 @@ class GuideRNAReport(ReportEntity, HashableEntity):
       'strain_1',
       'strain_2',
     }
+
+
+  def serialize(self, **kwargs):
+    return {
+      **super().serialize(**kwargs),
+      'enzyme_display': self.enzyme_display,
+    }
+
+
+  @property
+  def enzyme_display(self):
+    return get_grna_selection_enzymes().get(self['enzyme'], '')

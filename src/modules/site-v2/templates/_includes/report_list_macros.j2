@@ -28,6 +28,11 @@
 {%- endmacro %}
 
 
+{%- macro render_column_markdown(data) %}
+  {{ data | markdown_span }}
+{%- endmacro%}
+
+
 {% set report_list_columns = {
     'pairwise_indel_finder': [
       { 'title':  'Site',
@@ -90,6 +95,30 @@
         'width':  0.2,
         'linked': true,
       },
-    ]
+    ],
+    'guide_rna_selection': [
+      { 'title':  'Site',
+        'class':  'site',
+        'field':  'site',
+        'width':  0.4,
+        'order':  'site',
+        'linked': true,
+      },
+      { 'title':  'Strain 1',
+        'class':  's1',
+        'field':  'strain_1',
+        'width':  0.2,
+      },
+      { 'title':  'Strain 2',
+        'class':  's2',
+        'field':  'strain_2',
+        'width':  0.2,
+      },
+      { 'title':  'Enzyme',
+        'field':  'enzyme_display',
+        'width':  0.2,
+        'render': render_column_markdown,
+      },
+    ],
   }
 %}
