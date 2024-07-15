@@ -92,12 +92,12 @@
         <table id="results" class='table table-hover table-striped strain-table'></table>
 
         <!-- Modal -->
-        <div class="modal fade" id="generate-primers-modal" tabindex="-1" aria-labelledby="generate-primers-modal-label"
+        <div class="modal fade" id="generate-report-modal" tabindex="-1" aria-labelledby="generate-report-modal-label"
           aria-hidden="true">
           <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
             <div class="modal-content">
               <div class="modal-header">
-                <h1 class="modal-title fs-5" id="generate-primers-modal-label">Thank You</h1>
+                <h1 class="modal-title fs-5" id="generate-report-modal-label">Thank You</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
@@ -229,9 +229,21 @@ function run_query() {
     success: function(data) {
       results = data["results"]
 
-      // Add the 'generate primers' HTML value to each result
+      // Add the 'generate report' HTML value to each result
       _.each(results, function(x) {
-        x['generate_primers'] = `<div site="${x['CHROM']}:${x["START"]}-${x['END']}" svtype="${x['SVTYPE']}" size="${x["END"]-x["START"]}" class='btn-link generate-primers'>Generate gRNA</div>`
+        x['generate_report'] = `
+          <div class='optionsToolbar'>
+            <button
+              site="${x['CHROM']}:${x["START"]}-${x['END']}"
+              svtype="${x['SVTYPE']}"
+              size="${x["END"]-x["START"]}"
+              class='btn btn-link p-0 generate-report'
+              role='button'
+            >
+              <i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>
+              Find gRNA sites
+            </button>
+          </div>`;
       })
 
       // Handle errors
@@ -542,7 +554,7 @@ function create_or_update_data_table(results) {
         { data: "END",    title: "End",   visible: false },
         { data: "STRAIN", title: "Strain"                },
         { data: "shared", title: "Shared"                },
-        { data: "generate_primers", renderer: "html"     },
+        { data: "generate_report", renderer: "html"     },
       ],
     });
 
@@ -560,11 +572,11 @@ function create_or_update_data_table(results) {
   }
 
   // Activate primer generation links
-  $(".generate-primers").on("click", generate_primers);
+  $(".generate-report").on("click", generate_report);
 }
 
 
-function generate_primers(e) {
+function generate_report(e) {
   $(this).text("Submitting");
 
   // Get strain values and sort - consistent ordering of strains for hashing
@@ -581,7 +593,7 @@ function generate_primers(e) {
   }
 
   // Submit the job, opening results in a new tab if applicable
-  submit_job(data, '#generate-primers-modal', {'new_tab': true, 'propagate_error': false})
+  submit_job(data, '#generate-report-modal', {'new_tab': true, 'propagate_error': false})
     .done(() => {
       $(this).text("Submitted");
       $(this).prop('onclick', null).off('click');
