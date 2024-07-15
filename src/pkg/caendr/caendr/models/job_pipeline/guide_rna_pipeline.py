@@ -4,6 +4,8 @@ from caendr.models.datastore import GuideRNAReport
 
 # Services
 from caendr.models.status    import JobStatus
+from caendr.utils.bio        import format_chrom_interval
+from caendr.utils.data       import get_object_hash
 
 
 
@@ -39,7 +41,12 @@ class GuideRNAPipeline(JobPipeline):
 
   @classmethod
   def parse(cls, data, valid_file_extensions=None):
-    pass
+    strains = ' '.join(sorted([ data.get('strain_1'), data.get('strain_2') or '-' ]))
+    hash_source = f'{data["enzyme"]} {data["species"]} {strains} {data["site"]}'
+    return {
+      'props': data,
+      'hash':  get_object_hash(hash_source, length=32),
+    }
 
 
 
@@ -48,7 +55,7 @@ class GuideRNAPipeline(JobPipeline):
   #
 
   def _parse_input(self, data):
-    pass
+    return data
 
 
 
@@ -58,7 +65,7 @@ class GuideRNAPipeline(JobPipeline):
 
 
   def _parse_output(self, data):
-    pass
+    return data
 
 
 

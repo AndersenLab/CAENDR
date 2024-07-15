@@ -568,15 +568,16 @@ function generate_primers(e) {
   $(this).text("Submitting");
 
   // Get strain values and sort - consistent ordering of strains for hashing
-  const strains = [$("#strain_1").val(), $("#strain_2").val()].sort()
+  const strains = $("#strain_2").val()
+    ? [$("#strain_1").val(), $("#strain_2").val()].sort()
+    : [$("#strain_1").val(), null]
 
   const data = {
     site: $(this).attr("site"),
     strain_1: strains[0],
     strain_2: strains[1],
-    size: $(this).attr("size"),
     species: $("#{{ form.species.elementId }}").val(),
-    svtype: $(this).attr("svtype")
+    enzyme:  $("#{{ form.enzyme.id         }}").val(),
   }
 
   // Submit the job, opening results in a new tab if applicable

@@ -29,10 +29,10 @@ class GuideRNAReport(ReportEntity, HashableEntity):
 
 
   def fetch_input(self):
-    pass
+    return self.serialize()
 
   def fetch_output(self):
-    pass
+    return {}
 
 
 
@@ -45,4 +45,11 @@ class GuideRNAReport(ReportEntity, HashableEntity):
     return {
       *super().get_props_set(),
       'species',
+      'release',
+
+      # Query
+      'enzyme',
+      'site',
+      'strain_1',
+      'strain_2',
     }

@@ -132,6 +132,11 @@ def report(job: GuideRNAPipeline, data, result, downloading=False):
     # Extract the dataframe from the results
     dataframe = result.get('dataframe', None)
 
+    if (data.get('strain_2')):
+      strains = f'{data["strain_1"]} | {data["strain_2"]}'
+    else:
+      strains = data['strain_1']
+
 
     # If a download endpoint is being called, return the results table as a downloadable file
     if downloading:
@@ -144,7 +149,7 @@ def report(job: GuideRNAPipeline, data, result, downloading=False):
         filename = job.report['id']
 
       # Return as a DownloadFile object (required by display_or_download decorator)
-      return DownloadFile( filename, result['format_table'] )
+      return DownloadFile( filename, [] )
 
 
     # Otherwise, return view page
@@ -152,21 +157,17 @@ def report(job: GuideRNAPipeline, data, result, downloading=False):
 
       # Page info
       'title':    f'gRNA Sites {data["site"]}',
-      'subtitle': f'{data["strain_1"]} | {data["strain_2"]}',
+      'subtitle': strains,
       'tool_alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools') },
 
       # GCP data info
       'data_hash': job.report.data_hash,
       'report_id': job.report.id,
 
-      # Data
+      # Data & Results
       'data':  data,
       'empty': False,
-
-      # Results
-      'result':       dataframe,
-      'records':      dataframe.to_dict('records') if (dataframe is not None) else None,
-      'format_table': result.get('format_table'),
+      'result': result,
     })
 
 

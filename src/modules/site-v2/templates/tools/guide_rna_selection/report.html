@@ -81,24 +81,24 @@
                 <caption class="visually-hidden">Guide RNA site details including site, size, type, lengths, temp, and strains</caption>
                 <thead>
                   <tr>
-                    <th>Indel&nbsp;Site</th>
-                    <th>Indel&nbsp;Size</th>
-                    <th>Variant&nbsp;Type</th>
-                    <th>Primer&nbsp;Lengths</th>
-                    <th>Annealing&nbsp;Temp</th>
-                    <th>Strain&nbsp;1</th>
-                    <th>Strain&nbsp;2</th>
+                    <th>CRISPR&nbsp;Enzyme</th>
+                    <th>gRNA&nbsp;Site</th>
+                    <th>Sequence</th>
+                    <th>PAM</th>
+                    <th>Strain(s)&nbsp;Cut</th>
+                    <th>Strain(s)&nbsp;Not&nbsp;Cut</th>
+                    <th>User&nbsp;Validated</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td>{{ data['site'] }}</td>
-                    <td>{{ data['size'] }}</td>
-                    <td>{{ data['svtype'] }}</td>
-                    <td>18-22 bp</td>
-                    <td>55-65 °C</td>
-                    <td>{{ data['strain_1'] }}</td>
-                    <td>{{ data['strain_2'] }}</td>
+                    <td>{{ data['enzyme']            }}</td>
+                    <td>{{ data['site']              }}</td>
+                    <td>{{ result['sequence']        }}</td>
+                    <td>{{ result['pam']             }}</td>
+                    <td>{{ result['strains_cut']     }}</td>
+                    <td>{{ result['strains_not_cut'] }}</td>
+                    <td>{{ result['user_validated']  }}</td>
                   </tr>
                 </tbody>
               </table>
