@@ -17,6 +17,12 @@ MODULE_SITE_BUCKET_PUBLIC_NAME = get_env_var_with_fallback('MODULE_SITE_BUCKET_P
 def render_markdown_inline(content):
   return Markup(markdown.markdown(bleach.clean(content)))
 
+def render_markdown_inline_span(content):
+  rendered_content = markdown.markdown(bleach.clean(content))
+  if rendered_content.startswith('<p>') and rendered_content.endswith('</p>'):
+    rendered_content = '<span>' + rendered_content[ len('<p>') : -len('</p>') ] + '</span>'
+  return Markup( rendered_content )
+
 
 def render_markdown(filename, directory="base/static/content/markdown"):
   path = os.path.join(directory, filename)

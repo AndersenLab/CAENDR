@@ -19,7 +19,7 @@ from caendr.models.error import BasicAuthError
 from caendr.models.status import JobStatus, PublishStatus
 from caendr.services.cloud.postgresql import db, health_database_status
 from base.utils.auth import user_is_admin
-from base.utils.markdown import render_markdown, render_ext_markdown, render_markdown_inline
+from base.utils.markdown import render_markdown, render_ext_markdown, render_markdown_inline, render_markdown_inline_span
 
 
 
@@ -337,6 +337,10 @@ def configure_jinja(app):
   @app.template_filter('markdown')
   def _jinja2_filter_markdown(text):
     return render_markdown_inline(text)
+
+  @app.template_filter('markdown_span')
+  def _jinja2_filter_markdown(text):
+    return render_markdown_inline_span(text)
 
 
 def register_announcement_handlers(app):

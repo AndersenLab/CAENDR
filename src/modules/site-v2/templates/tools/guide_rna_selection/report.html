@@ -16,10 +16,6 @@
     text-align: left;
   }
 
-  td p {
-    margin-bottom: 0;
-  }
-
   .table-hover:hover {
     cursor: crosshair;
   }
@@ -96,7 +92,7 @@
                 </thead>
                 <tbody>
                   <tr>
-                    <td>{{ data['enzyme_display'] | markdown }}</td>
+                    <td>{{ data['enzyme_display'] | markdown_span }}</td>
                     <td>{{ data['site']              }}</td>
                     <td>{{ result['sequence']        }}</td>
                     <td>{{ result['pam']             }}</td>
