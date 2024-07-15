@@ -43,7 +43,7 @@ def crispr():
   return render_template('tools/crispr/crispr.html', **{
 
     # Page info
-    "title": "CRISPR",
+    "title": "Guide RNA Selection",
     "tool_alt_parent_breadcrumb": {
       "title": "Tools",
       "url":   url_for('tools.tools')
