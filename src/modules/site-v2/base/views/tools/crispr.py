@@ -101,7 +101,7 @@ def list_results():
   return render_template('tools/report-list.html', **{
 
     # Page info
-    'title': ('All' if show_all else 'My') + ' CRISPR Reports',
+    'title': ('All' if show_all else 'My') + ' gRNA Site Reports',
     'tool_alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools'), },
 
     # User info
@@ -111,9 +111,9 @@ def list_results():
     'tool_name': 'crispr',
     'all_results': show_all,
     'button_labels': {
-      'tool': 'New CRISPR Search',
-      'all':  'All User Results',
-      'user': 'My CRISPR Reports',
+      'tool': 'New gRNA Site Report',
+      'all':  'All User Reports',
+      'user': 'My gRNA Site Reports',
     },
 
     # Table info
@@ -151,7 +151,7 @@ def report(job: CRISPRPipeline, data, result, downloading=False):
     return render_template("tools/crispr/report.html", **{
 
       # Page info
-      'title':    f'CRISPR Results {data["site"]}',
+      'title':    f'gRNA Sites {data["site"]}',
       'subtitle': f'{data["strain_1"]} | {data["strain_2"]}',
       'tool_alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools') },
 

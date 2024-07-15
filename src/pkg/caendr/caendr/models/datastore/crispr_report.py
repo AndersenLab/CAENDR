@@ -10,7 +10,7 @@ class CRISPRReport(ReportEntity, HashableEntity):
   # Class Variables
   #
 
-  _report_display_name = 'CRISPR'
+  _report_display_name = 'gRNA site'
   _data_id_field       = 'data_hash'
 
   # TODO: Set data hash from trait files? Unique names / IDs?
