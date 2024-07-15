@@ -36,7 +36,7 @@
             <!-- Input Form -->
             <form id='form-submit' method="POST" onchange="form_change()">
               {{ form.csrf_token }}
-              <div class='mb-4'>{{ render_field(form.method) }}</div>
+              <div class='mb-4'>{{ render_field(form.enzyme) }}</div>
               <div class='mb-4'>{{ render_field(form.species,                 onchange="update_species") }}</div>
               <div class="mb-4">{{ render_field(form.strain_1,   disabled='', onchange="update_browser_tracks()") }}</div>
               <div class="mb-4">{{ render_field(form.strain_2,   disabled='', onchange="update_browser_tracks()") }}</div>

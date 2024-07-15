@@ -16,8 +16,8 @@ MODULE_SITE_BUCKET_PRIVATE_NAME = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
 #
 
 
-def get_grna_selection_method_choices():
-  return [('cas9', 'cas9')]
+def get_grna_selection_enzyme_choices():
+  return [('s_pyogenes_cas9', '*S. pyogenes* Cas9')]
 
 
 def get_grna_selection_chrom_choices(): 
@@ -33,5 +33,5 @@ def get_grna_selection_strains(species, release = None):
 # Queries
 #
 
-def query_grna_selection(method, species, strain_1, strain_2, chromosome, start, stop):
+def query_grna_selection(enzyme, species, strain_1, strain_2, chromosome, start, stop):
   return []
