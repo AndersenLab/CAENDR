@@ -42,15 +42,15 @@
       </div>
       <div class="d-flex justify-content-around mt-2">
         <div>
-          <img src='{{ ext_asset("img/icons/elegansMarkerOutline.png") }}' style="height:18px;width:auto;" alt="">
+          <img src='{{ ext_asset("img/icons/elegansMarkerOutline.svg") }}' style="height:18px;width:auto;" alt="">
           <i>C. elegans</i>
         </div>
         <div>
-          <img src='{{ ext_asset("img/icons/briggsaeMarkerOutline.png") }}' style="height:18px;width:auto;" alt="">
+          <img src='{{ ext_asset("img/icons/briggsaeMarkerOutline.svg") }}' style="height:18px;width:auto;" alt="">
           <i>C. briggsae</i>
         </div>
         <div>
-          <img src='{{ ext_asset("img/icons/tropicalisMarkerOutline.png") }}' style="height:18px;width:auto;" alt="">
+          <img src='{{ ext_asset("img/icons/tropicalisMarkerOutline.svg") }}' style="height:18px;width:auto;" alt="">
           <i>C. tropicalis</i>
         </div>
       </div>
@@ -64,20 +64,20 @@
     // Icons
 {% autoescape off %}
 const icon_elegans = L.icon({
-    iconUrl: '{{ ext_asset("img/icons/elegansMarkerOutline.png") }}',
+    iconUrl: '{{ ext_asset("img/icons/elegansMarkerOutline.svg") }}',
     iconSize: [20, 30],
     iconAnchor: [12, 16],
     popupAnchor: [0, -15],
 });
 
 const icon_briggsae = L.icon({
-    iconUrl: '{{ ext_asset("img/icons/briggsaeMarkerOutline.png") }}',
+    iconUrl: '{{ ext_asset("img/icons/briggsaeMarkerOutline.svg") }}',
     iconSize: [20, 30],
     iconAnchor: [12, 16],
     popupAnchor: [0, -15],
 });
 const icon_tropicalis = L.icon({
-    iconUrl: '{{ ext_asset("img/icons/tropicalisMarkerOutline.png") }}',
+    iconUrl: '{{ ext_asset("img/icons/tropicalisMarkerOutline.svg") }}',
     iconSize: [20, 30],
     iconAnchor: [12, 16],
     popupAnchor: [0, -15],
@@ -85,7 +85,7 @@ const icon_tropicalis = L.icon({
 
 
 const icon_hover = L.icon({
-    iconUrl: '{{ ext_asset("img/icons/hoverMarkerOutline.png") }}',
+    iconUrl: '{{ ext_asset("img/icons/hoverMarkerOutline.svg") }}',
     iconSize: [20, 30],
     iconAnchor: [12, 16],
     popupAnchor: [0, -15],
@@ -94,7 +94,7 @@ const icon_hover = L.icon({
 
 const MB_ATTR = 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, METI, TomTom, 2012';
 const MB_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
-const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.svg';
 const OSM_ATTRIB = '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
 const southWest = L.latLng(-200, -200);
