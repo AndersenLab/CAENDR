@@ -80,10 +80,17 @@
             <button class="btn btn-danger text-light p-2 my-5" id="closeButton" onclick="closeFullscreen();"><i class="bi bi-fullscreen-exit text-light" aria-hidden="true"></i> Close Fullscreen</button>
           </div>
         </div>
-        <h2>CRISPR Browser</h2>
+
+        <h2>gRNA Site Browser</h2>
         <div id="browser" class="mt-3 mb-5"></div>
-        <h2>CRISPR Results</h2>
+
+        <p class="my-4">
+          Please find the gRNA sites for your selected CRISPR enzyme.
+        </p>
+
+        <h2>gRNA Sites</h2>
         <table id="results" class='table table-hover table-striped strain-table'></table>
+
         <!-- Modal -->
         <div class="modal fade" id="generate-primers-modal" tabindex="-1" aria-labelledby="generate-primers-modal-label"
           aria-hidden="true">
