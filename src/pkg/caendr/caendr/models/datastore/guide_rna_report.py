@@ -1,4 +1,5 @@
 from caendr.models.datastore import ReportEntity, HashableEntity
+from caendr.services.guide_rna_selection import get_grna_selection_enzymes
 
 
 
@@ -29,7 +30,10 @@ class GuideRNAReport(ReportEntity, HashableEntity):
 
 
   def fetch_input(self):
-    return self.serialize()
+    return {
+      **self.serialize(),
+      'enzyme_display': get_grna_selection_enzymes().get(self['enzyme'], ''),
+    }
 
   def fetch_output(self):
     return {}

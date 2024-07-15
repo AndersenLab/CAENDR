@@ -16,6 +16,14 @@ MODULE_SITE_BUCKET_PRIVATE_NAME = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
 #
 
 
+def get_grna_selection_enzymes():
+  '''
+    Use array as the source of truth so the enzymes can be explicitly ordered.
+  '''
+  return {
+    enzyme_id: enzyme_name for (enzyme_id, enzyme_name) in get_grna_selection_enzyme_choices()
+  }
+
 def get_grna_selection_enzyme_choices():
   return [('s_pyogenes_cas9', '*S. pyogenes* Cas9')]
 
