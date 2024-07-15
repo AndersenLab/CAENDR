@@ -5,4 +5,4 @@ from .genetic_mapping         import genetic_mapping_bp
 from .pairwise_indel_finder   import pairwise_indel_finder_bp
 from .heritability_calculator import heritability_calculator_bp
 from .phenotype_database      import phenotype_database_bp
-from .crispr                  import crispr_bp
+from .guide_rna_selection     import guide_rna_selection_bp

@@ -16,15 +16,15 @@ MODULE_SITE_BUCKET_PRIVATE_NAME = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
 #
 
 
-def get_crispr_method_choices():
+def get_grna_selection_method_choices():
   return [('cas9', 'cas9')]
 
 
-def get_crispr_chrom_choices(): 
+def get_grna_selection_chrom_choices(): 
   return [(x, x) for x in CHROM_NUMERIC.keys()]
 
 
-def get_crispr_strains(species, release = None):
+def get_grna_selection_strains(species, release = None):
   return get_sv_strains(species, release)
 
 
@@ -33,5 +33,5 @@ def get_crispr_strains(species, release = None):
 # Queries
 #
 
-def query_crispr(method, species, strain_1, strain_2, chromosome, start, stop):
+def query_grna_selection(method, species, strain_1, strain_2, chromosome, start, stop):
   return []

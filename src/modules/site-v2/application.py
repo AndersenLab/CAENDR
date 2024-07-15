@@ -44,7 +44,7 @@ from base.views.tools import genetic_mapping_bp
 from base.views.tools import pairwise_indel_finder_bp
 from base.views.tools import heritability_calculator_bp
 from base.views.tools import phenotype_database_bp
-from base.views.tools import crispr_bp
+from base.views.tools import guide_rna_selection_bp
 
 # About & Get Involved
 from base.views.about        import about_bp
@@ -245,7 +245,7 @@ def register_blueprints(app):
   app.register_blueprint(pairwise_indel_finder_bp,   url_prefix='/tools/pairwise-indel-finder')
   app.register_blueprint(heritability_calculator_bp, url_prefix='/tools/heritability-calculator')
   app.register_blueprint(phenotype_database_bp,      url_prefix='/tools/phenotype-database')
-  app.register_blueprint(crispr_bp,                  url_prefix='/tools/crispr')
+  app.register_blueprint(guide_rna_selection_bp,     url_prefix='/tools/guide-rna-selection')
 
   '''
   app.register_blueprint(gene_bp, url_prefix='/gene')
@@ -298,8 +298,8 @@ def configure_jinja(app):
         # Enable the phenotype database if explicitly specified in env file, or show if user is admin regardless of env var
         'PHENOTYPE_DB_ENABLED': get_env_var('PHENOTYPE_DB_ENABLED', value=False, var_type=bool, can_be_none=True) or user_is_admin(),
 
-        # Enable the CRISPR tool if explicitly specified in env file, or show if user is admin regardless of env var
-        'CRISPR_ENABLED':       get_env_var('CRISPR_ENABLED',       value=False, var_type=bool, can_be_none=True) or user_is_admin(),
+        # Enable the gRNA selection tool if explicitly specified in env file, or show if user is admin regardless of env var
+        'GRNA_SELECTION_ENABLED': get_env_var('GRNA_SELECTION_ENABLED', value=False, var_type=bool, can_be_none=True) or user_is_admin(),
       },
     }
 

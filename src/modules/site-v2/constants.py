@@ -41,9 +41,9 @@ TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS = { 'tsv' }
 # List of tools that use an IGV genome browser
 # TODO: More general tool config objects? Store in GCP?
 GENOME_BROWSER_TOOLS = [
-  ('genome_browser', 'Genome Browser'),
+  ('genome_browser',        'Genome Browser'),
   ('pairwise_indel_finder', 'Pairwise Indel Finder'),
-  ('crispr', 'Guide RNA Selection')
+  ('guide_rna_selection',   'Guide RNA Selection')
 ]
 
 TRAIT_CATEGORY_OPTIONS = [

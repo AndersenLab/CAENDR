@@ -2,8 +2,8 @@ from caendr.models.datastore import ReportEntity, HashableEntity
 
 
 
-class CRISPRReport(ReportEntity, HashableEntity):
-  kind = 'crispr_report'
+class GuideRNAReport(ReportEntity, HashableEntity):
+  kind = 'guide_rna_report'
 
 
   #

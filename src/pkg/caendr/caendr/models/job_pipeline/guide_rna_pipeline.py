@@ -1,20 +1,20 @@
 # Parent Class & Models
 from .job_pipeline           import JobPipeline
-from caendr.models.datastore import CRISPRReport
+from caendr.models.datastore import GuideRNAReport
 
 # Services
 from caendr.models.status    import JobStatus
 
 
 
-class CRISPRPipeline(JobPipeline):
+class GuideRNAPipeline(JobPipeline):
 
   #
   # Class variable assignments
   #
 
   # Managed class type assignments
-  _Report_Class = CRISPRReport
+  _Report_Class = GuideRNAReport
   _Task_Class   = None
   _Runner_Class = None
 

@@ -37,8 +37,8 @@
               <li><a class="dropdown-item" href="{{ url_for('phenotype_database.phenotype_database') }}">
                   Phenotype Database and Analysis </a></li>
               {%- endif %}
-              {%- if feature_flags.CRISPR_ENABLED %}
-              <li><a class="dropdown-item" href="{{ url_for('crispr.crispr') }}">
+              {%- if feature_flags.GRNA_SELECTION_ENABLED %}
+              <li><a class="dropdown-item" href="{{ url_for('guide_rna_selection.guide_rna_selection') }}">
                   Guide RNA Selection
               </a></li>
               {%- endif %}

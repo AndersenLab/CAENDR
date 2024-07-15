@@ -57,7 +57,7 @@
           <a role="button" id="pdd" class="btn btn-secondary text-light"
               onClick='getPDF("containerfluid")'>Print to PDF</a>
           <a role="button" class="btn btn-secondary text-light"
-              href="{{ url_for('crispr.report', report_id=report_id, file_ext='csv') }}"
+              href="{{ url_for('guide_rna_selection.report', report_id=report_id, file_ext='csv') }}"
               onClick="downloadReport(event)"
               class="col-sm-4">CSV</a>
         </div>
@@ -67,7 +67,7 @@
           <!-- Options Toolbar -->
           <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar">
             <div class="ps-3 pt-0">
-              <a href='{{ url_for("crispr.my_results") }}'><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to My gRNA Site Reports</a>
+              <a href='{{ url_for("guide_rna_selection.my_results") }}'><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to My gRNA Site Reports</a>
             </div>
           </div>
           <!-- /Options Toolbar -->

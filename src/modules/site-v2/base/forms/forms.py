@@ -36,7 +36,7 @@ from caendr.services.profile import get_profile_role_form_options
 from caendr.services.user import get_user_role_form_options, get_local_user_by_email
 from caendr.services.database_operation import get_db_op_form_options
 from caendr.services.indel_primer import get_indel_primer_chrom_choices
-from caendr.services.crispr import get_crispr_chrom_choices, get_crispr_method_choices
+from caendr.services.guide_rna_selection import get_grna_selection_chrom_choices, get_grna_selection_method_choices
 from caendr.services.markdown import get_content_type_form_options
 from caendr.models.datastore import User, Species, DatasetRelease, TraitFile
 from caendr.models.datastore.announcement import AnnouncementType
@@ -275,10 +275,10 @@ class PairwiseIndelForm(Form):
   stop  = FlexIntegerField('Stop:',  validators=[Required()])
 
 
-class CRISPRSelectionForm(Form):
-  CHROMOSOME_CHOICES = [('', ''), *get_crispr_chrom_choices()]
+class GuideRNASelectionForm(Form):
+  CHROMOSOME_CHOICES = [('', ''), *get_grna_selection_chrom_choices()]
 
-  method = SelectField('Method:', choices=get_crispr_method_choices())
+  method = SelectField('Method:', choices=get_grna_selection_method_choices())
   species = SpeciesSelectField(validators=[Required()])
   strain_1 = StrainSelectField('Strain 1:', choices=[], validators=[Required(), validate_uniq_strains])
   strain_2 = StrainSelectField('Strain 2:', choices=[], validators=[])

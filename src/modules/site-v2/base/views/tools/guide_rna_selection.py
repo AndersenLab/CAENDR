@@ -4,7 +4,7 @@ from flask import Blueprint, render_template, request, url_for, jsonify, redirec
 from caendr.services.logger import logger
 
 # Site Module Imports
-from base.forms                      import CRISPRSelectionForm
+from base.forms                      import GuideRNASelectionForm
 from base.utils.auth                 import jwt_required, admin_required, get_current_user, user_is_admin
 from base.utils.tools                import list_reports, try_submit
 from base.utils.view_decorators      import parse_job_id, validate_form, display_or_download
@@ -16,16 +16,16 @@ from caendr.services.cloud.storage   import BlobURISchema
 from caendr.utils.constants          import CHROM_NUMERIC
 from caendr.utils.data               import DownloadFile
 
-# CRISPR Tool Imports
-from caendr.models.datastore         import CRISPRReport
-from caendr.models.job_pipeline      import CRISPRPipeline
-from caendr.services.crispr          import query_crispr
+# gRNA Selection Tool Imports
+from caendr.models.datastore             import GuideRNAReport
+from caendr.models.job_pipeline          import GuideRNAPipeline
+from caendr.services.guide_rna_selection import query_grna_selection
 
 
 
 # Tools blueprint
-crispr_bp = Blueprint(
-  'crispr', __name__, template_folder='tools'
+guide_rna_selection_bp = Blueprint(
+  'guide_rna_selection', __name__, template_folder='tools'
 )
 
 
@@ -35,12 +35,12 @@ crispr_bp = Blueprint(
 #
 
 
-@crispr_bp.route('', methods=['GET'])
+@guide_rna_selection_bp.route('', methods=['GET'])
 @jwt_required()
-def crispr():
+def guide_rna_selection():
 
   # Construct variables and render template
-  return render_template('tools/crispr/crispr.html', **{
+  return render_template('tools/guide_rna_selection/guide-rna-selection.html', **{
 
     # Page info
     "title": "Guide RNA Selection",
@@ -48,7 +48,7 @@ def crispr():
       "title": "Tools",
       "url":   url_for('tools.tools')
     },
-    "form": CRISPRSelectionForm(request.form),
+    "form": GuideRNASelectionForm(request.form),
 
     # Data
     "chroms":       CHROM_NUMERIC.keys(),
@@ -87,8 +87,8 @@ def crispr():
 #
 
 
-@crispr_bp.route('/all-results', methods=['GET'], endpoint='all_results')
-@crispr_bp.route('/my-results',  methods=['GET'], endpoint='my_results')
+@guide_rna_selection_bp.route('/all-results', methods=['GET'], endpoint='all_results')
+@guide_rna_selection_bp.route('/my-results',  methods=['GET'], endpoint='my_results')
 @jwt_required()
 def list_results():
   show_all = request.endpoint.endswith('all_results')
@@ -108,7 +108,7 @@ def list_results():
     'user':  user,
 
     # Tool info
-    'tool_name': 'crispr',
+    'tool_name': 'guide_rna_selection',
     'all_results': show_all,
     'button_labels': {
       'tool': 'New gRNA Site Report',
@@ -118,16 +118,16 @@ def list_results():
 
     # Table info
     'species_list': Species.all(),
-    'items': list_reports(CRISPRReport, None if show_all else user, filter_errs),
+    'items': list_reports(GuideRNAReport, None if show_all else user, filter_errs),
   })
 
 
-@crispr_bp.route("/report/<report_id>",                     methods=['GET'])
-@crispr_bp.route("/report/<report_id>/download/<file_ext>", methods=['GET'])
+@guide_rna_selection_bp.route("/report/<report_id>",                     methods=['GET'])
+@guide_rna_selection_bp.route("/report/<report_id>/download/<file_ext>", methods=['GET'])
 @jwt_required()
-@parse_job_id(CRISPRPipeline)
+@parse_job_id(GuideRNAPipeline)
 @display_or_download({'csv'})
-def report(job: CRISPRPipeline, data, result, downloading=False):
+def report(job: GuideRNAPipeline, data, result, downloading=False):
 
     # Extract the dataframe from the results
     dataframe = result.get('dataframe', None)
@@ -148,7 +148,7 @@ def report(job: CRISPRPipeline, data, result, downloading=False):
 
 
     # Otherwise, return view page
-    return render_template("tools/crispr/report.html", **{
+    return render_template("tools/guide_rna_selection/report.html", **{
 
       # Page info
       'title':    f'gRNA Sites {data["site"]}',
@@ -176,20 +176,20 @@ def report(job: CRISPRPipeline, data, result, downloading=False):
 #
 
 
-@crispr_bp.route("/query", methods=["POST"])
+@guide_rna_selection_bp.route("/query", methods=["POST"])
 @jwt_required()
-@validate_form(CRISPRSelectionForm)
+@validate_form(GuideRNASelectionForm)
 def query(form_data, no_cache=False):
   '''
     Query a given region.
   '''
 
   # Pass the form fields to the query function & return the result
-  return jsonify({ 'results': query_crispr(**form_data) })
+  return jsonify({ 'results': query_grna_selection(**form_data) })
 
 
 
-@crispr_bp.route('/submit', methods=["POST"])
+@guide_rna_selection_bp.route('/submit', methods=["POST"])
 @jwt_required()
 @validate_form(None, from_json=True)
 def submit(form_data, no_cache=False):
@@ -198,7 +198,7 @@ def submit(form_data, no_cache=False):
   '''
 
   # Try submitting the job & getting a JSON status message
-  response, code = try_submit(CRISPRReport.kind, get_current_user(), form_data, no_cache)
+  response, code = try_submit(GuideRNAReport.kind, get_current_user(), form_data, no_cache)
 
   # If there was an error, flash it
   if code != 200 and int(request.args.get('reloadonerror', 1)):
