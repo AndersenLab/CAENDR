@@ -38,6 +38,10 @@ class PhenotypeReport(ReportEntity, HashableEntity):
     return tuple( trait.query_values_dataframe() for trait in self.traits )
 
 
+  def _make_download_name(self) -> str:
+    return f'{self["species"]}_{"_".join(self.trait_names)}'
+
+
 
   #
   # Properties

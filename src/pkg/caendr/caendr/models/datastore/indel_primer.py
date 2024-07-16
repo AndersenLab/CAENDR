@@ -47,6 +47,10 @@ class IndelPrimerReport(HashableEntity, ReportEntity):
   _output_filename = 'results.tsv'
 
 
+  def _make_download_name(self) -> str:
+    return f'{self["species"]}_{self["strain_1"]}_{self["strain_2"]}_{self["site"]}'
+
+
   #
   # Data Files
   #

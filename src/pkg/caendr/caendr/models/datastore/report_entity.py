@@ -13,6 +13,7 @@ from caendr.models.datastore import Container, User
 
 # Services
 from caendr.services.cloud.storage import check_blob_exists
+from caendr.services.logger        import logger
 
 
 
@@ -86,6 +87,33 @@ class ReportEntity(JobEntity, UserOwnedEntity, GCPReport):
   @classmethod
   def get_report_display_name(cls):
     return cls._report_display_name
+
+
+  #
+  # Download File Name
+  # Format for the filename when result data is downloaded
+  #
+
+  # Subclass may overwrite this function
+  def _make_download_name(self) -> str:
+    return self.id
+
+  # Don't overwrite this function, since it does error handling
+  # Overwrite the private version instead
+  @property
+  def download_name(self) -> str:
+    '''
+      Make a name for the report file when downloaded.
+    '''
+
+    # Try using the private subclassed method
+    try:
+      return self._make_download_name()
+
+    # Fallback to the report ID
+    except Exception as ex:
+      logger.warning(f'Failed to construct download filename for {self.kind} report {self.id}: {ex}')
+      return self.id
 
 
   #

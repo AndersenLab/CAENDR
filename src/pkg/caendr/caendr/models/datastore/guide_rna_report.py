@@ -38,6 +38,10 @@ class GuideRNAReport(ReportEntity, HashableEntity):
     return {}
 
 
+  def _make_download_name(self) -> str:
+    return f'{self["species"]}_{ "_".join(self.strains) }_{self["site"]}'
+
+
 
   #
   # Properties

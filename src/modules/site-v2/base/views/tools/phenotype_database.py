@@ -199,13 +199,13 @@ def report(job: PhenotypePipeline, data, result, downloading=False):
 
   # If a download endpoint is being called, return the results table as a downloadable file
   if downloading:
+
+    # One column for strains, then one column for each trait, with rows sorted by strain
     columns = ['strain', *data['trait_names']]
     values  = sorted(result['trait_values'], key=lambda v: v[0])
-    try:
-      filename = f'{job.report["species"]}_{"_".join(job.report.trait_names)}'
-    except:
-      filename = f'{job.report.id}'
-    return DownloadFile( filename, pd.DataFrame(values, columns=columns), index=False )
+
+    # Return as a DownloadFile object (required by display_or_download decorator)
+    return DownloadFile( job.report.download_name, pd.DataFrame(values, columns=columns), index=False )
 
   # Otherwise, return view page
   return render_template('tools/phenotype_database/report.html', **{

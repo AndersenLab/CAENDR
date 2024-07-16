@@ -136,15 +136,8 @@ def report(job: GuideRNAPipeline, data, result, downloading=False):
     # If a download endpoint is being called, return the results table as a downloadable file
     if downloading:
 
-      # Create a filename from the report
-      # TODO: Set a better filename?
-      try:
-        filename = f'{job.report["species"]}_{ "_".join(job.report.strains) }_{data["site"]}'
-      except:
-        filename = job.report['id']
-
       # Return as a DownloadFile object (required by display_or_download decorator)
-      return DownloadFile( filename, [] )
+      return DownloadFile( job.report.download_name, [] )
 
 
     # Otherwise, return view page

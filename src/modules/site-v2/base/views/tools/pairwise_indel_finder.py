@@ -181,15 +181,8 @@ def report(job: IndelFinderPipeline, data, result, downloading):
       if not ready:
         abort(404)
 
-      # Create a filename from the report
-      # TODO: Set a better filename?
-      try:
-        filename = f'{job.report["species"]}_{job.report["strain_1"]}_{job.report["strain_2"]}_{data["site"]}'
-      except:
-        filename = job.report['id']
-
       # Return as a DownloadFile object (required by display_or_download decorator)
-      return DownloadFile( filename, result['format_table'] )
+      return DownloadFile( job.report.download_name, result['format_table'] )
 
 
     # Otherwise, return view page
