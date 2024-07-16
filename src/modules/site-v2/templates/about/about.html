@@ -2,41 +2,14 @@
 
 {% block custom_head %}
 
-<script src='https://api.mapbox.com/mapbox-gl-js/v2.0.1/mapbox-gl.js'></script> 
-<link href='https://api.mapbox.com/mapbox-gl-js/v2.0.1/mapbox-gl.css' rel='stylesheet' /> 
 <style>
   video {
     width: 100%;
     height: auto;
   }
-  #map {
-    z-index: 0;
-  }
-  
-  .zoomContainer {
-    position: relative;
-    z-index: 1000;
-  }
-
-  #zoomIn, #zoomIn:hover, #zoomIn:active {
-    border-color: var(--bs-gray-100);
-    border-bottom: 1px solid var(--bs-gray);
-    margin-bottom: 1px;
-  }
-  
-  #zoomOut:active {
-    border-color: var(--bs-gray-100)!important;
-  }
-
-  #zoomOut:disabled {
-    border-color: var(--bs-gray-100)!important;
-    color: #666!important;
-  }
 </style>
 
 {% endblock %}
-
-
 
 {% block content %}
 
@@ -103,28 +76,7 @@
     </div>
     <div class="col-12 col-md-6 mb-5">
       <!-- Map -->
-      <div id="map" style="height: 500px; width:100%">
-        <div class="btn-group-vertical shadow-sm m-3 zoomContainer" role="group" aria-hidden="true">
-          <button class="btn text-bg-light d-none d-md-block" id="zoomIn" tabindex="-1"><i
-              class="bi bi-plus-circle"></i></button>
-          <button class="btn text-bg-light d-none d-md-block" id="zoomOut" tabindex="-1"><i
-              class="bi bi-dash-circle"></i></button>
-        </div>
-      </div>
-      <div class="d-flex justify-content-around mt-2">
-        <div>
-          <img src='{{ ext_asset("img/icons/elegansMarkerOutline.svg") }}' style="height:18px;width:auto;" alt="">
-          <i>C. elegans</i>
-        </div>
-        <div>
-          <img src='{{ ext_asset("img/icons/briggsaeMarkerOutline.svg") }}' style="height:18px;width:auto;" alt="">
-          <i>C. briggsae</i>
-        </div>
-        <div>
-          <img src='{{ ext_asset("img/icons/tropicalisMarkerOutline.svg") }}' style="height:18px;width:auto;" alt="">
-          <i>C. tropicalis</i>
-        </div>
-      </div>
+      {% include "_includes/map-static.html" %}
       <!-- /Map -->
     </div>
   </div>
@@ -162,173 +114,4 @@
   </div>
   <!-- /Row -->
 </div>
-{% endblock %}
-
-
-
-{% block script %}
-
-<script>
-
-    // Icons
-{% autoescape off %}
-const icon_elegans = L.icon({
-    iconUrl: '{{ ext_asset("img/icons/elegansMarkerOutline.svg") }}',
-    iconSize: [20, 30],
-    iconAnchor: [12, 16],
-    popupAnchor: [0, -15],
-});
-
-const icon_briggsae = L.icon({
-    iconUrl: '{{ ext_asset("img/icons/briggsaeMarkerOutline.svg") }}',
-    iconSize: [20, 30],
-    iconAnchor: [12, 16],
-    popupAnchor: [0, -15],
-});
-const icon_tropicalis = L.icon({
-    iconUrl: '{{ ext_asset("img/icons/tropicalisMarkerOutline.svg") }}',
-    iconSize: [20, 30],
-    iconAnchor: [12, 16],
-    popupAnchor: [0, -15],
-});
-
-
-const icon_hover = L.icon({
-    iconUrl: '{{ ext_asset("img/icons/hoverMarkerOutline.svg") }}',
-    iconSize: [20, 30],
-    iconAnchor: [12, 16],
-    popupAnchor: [0, -15],
-});
-{% endautoescape %}
-
-const MB_ATTR = 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, METI, TomTom, 2012';
-const MB_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
-const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-const OSM_ATTRIB = '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-
-const southWest = L.latLng(-100, -200);
-const northEast = L.latLng(100, 200);
-const bounds = L.latLngBounds(southWest, northEast);
-
-const map = L.map('map', {minZoom:1, maxZoom:8, maxBounds: bounds, scrollWheelZoom: false, zoomControl: false, attributionControl: false,}).setView([20, -100], 1);
-L.tileLayer(MB_URL, {attribution: MB_ATTR, id: 'mapbox.streets', continuousWorld: false, worldCopyJump: true}).addTo(map);
-
-const Species = Object.freeze({
-  ELEGANS: 'Caenorhabditis elegans',
-  BRIGGSAE: 'Caenorhabditis briggsae',
-  TROPICALIS: 'Caenorhabditis tropicalis'
-});
-
-$(document).ready(function () {
-
-  const data = {{ strain_listing|tojson|safe }}
-
-  /*{# TODO: Error handling if can't retrieve strains #}*/
-  if (data === null) {
-    console.error('Failed to retrieve strains.');
-    return;
-  }
-
-  data.forEach(function(d) {
-    if (d.latitude) {
-      const popup_content = `
-        <div>
-          <ul style="list-style-type:none; padding-left:0px">
-            ${d.isotype ? '<li><b><a href="../isotype/' + d.isotype + '">Isotype: ' + d.isotype + '</a></b></li>': ''}
-            ${d.strain ? '<li>Strain: ' + d.strain + '</li>': ''}
-            ${d.isolation ? '<li>Isolation: ' + d.isolation + '</li>': ''}
-            ${d.elevation ? '<li>Elevation: ' + d.elevation + '</li>': ''}
-            ${d.isolation ? '<li>Location: ' + d.location + '</li>': ''}
-          </ul>
-        </div>
-        `;
-
-      const marker = L.marker([d.latitude, d.longitude], { keyboard: false, alt: "a marker showing the geographic location of a strain", icon: set_marker_color(d.species),
-                                                      species: d.species})
-                                                      .on('mouseover', function(){
-                                                        marker.setIcon(icon_hover)
-                                                      })
-                                                      .on('mouseout', function(){
-                                                        const original_icon = set_marker_color(d.species)
-                                                        marker.setIcon(original_icon)
-                                                      })
-                              
-      marker.bindPopup(popup_content).addTo(map)
-
-      // if (marker.options.species === Species.ELEGANS) {
-      //   elegans.push(marker)
-      // }
-      // if (marker.options.species === Species.BRIGGSAE) {
-      //   briggsae.push(marker)
-      // }
-      // if (marker.options.species === Species.TROPICALIS) {
-      //   tropicalis.push(marker)
-      // }
-    //     p = new mapboxgl.Popup()
-    //         .setHTML(innerHTML)
-    //         .setOffset(popupOffset);
-    //     m = new mapboxgl.Marker()
-    //         .setLngLat([d.longitude, d.latitude])
-    //         .setPopup(p)
-    //         .addTo(map);
-    //   }
-    // })
-    }
-  })
-});
-
-function set_marker_color (species) {
-  if (species === Species.ELEGANS) {
-    return icon_elegans;
-  }
-  if (species === Species.BRIGGSAE) {
-    return icon_briggsae;
-  }
-  if (species === Species.TROPICALIS) {
-    return icon_tropicalis;
-  }
-}
-
-// zoom in function
-// $('#zoomIn').click(function () {
-//   map.setZoom(map.getZoom() + 1)
-// });
-
-// zoom out function
-// $('#zoomOut').click(function () {
-//   map.setZoom(map.getZoom() - 1)
-// });
-
-// custom zoom
-const zoomInButton = document.getElementById("zoomIn");
-const zoomOutButton = document.getElementById("zoomOut");
-const minMapZoom = map.getMinZoom();
-let zoomLevel = map.getZoom();
-zoomOutButton.disabled = true;
-
-  function zoomMapIn() {
-    map.zoomIn();
-    zoomLevel = (zoomLevel + 1);
-    disableButton();
-  }
-
-   function zoomMapOut() {
-    map.zoomOut();
-    zoomLevel = (zoomLevel - 1);
-    disableButton();
-  }
-
-  function disableButton() {
-    if (zoomLevel > minMapZoom) {
-      zoomOutButton.disabled = false;
-    } else {
-      zoomOutButton.disabled = true;
-    }
-  }
-
-  zoomInButton.addEventListener ("click", zoomMapIn);
-  zoomOutButton.addEventListener ("click", zoomMapOut);
-
-</script>
-
 {% endblock %}
