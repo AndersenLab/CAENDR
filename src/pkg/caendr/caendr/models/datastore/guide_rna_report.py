@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from caendr.models.datastore import ReportEntity, HashableEntity
 from caendr.services.guide_rna_selection import get_grna_selection_enzymes
 
@@ -62,6 +64,14 @@ class GuideRNAReport(ReportEntity, HashableEntity):
       'enzyme_display': self.enzyme_display,
     }
 
+
+
+  @property
+  def strains(self) -> Tuple[str]:
+    if self['strain_2']:
+      return (self['strain_1'], self['strain_2'])
+    else:
+      return (self['strain_1'],)
 
   @property
   def enzyme_display(self):

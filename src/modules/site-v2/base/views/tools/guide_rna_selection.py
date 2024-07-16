@@ -132,11 +132,6 @@ def report(job: GuideRNAPipeline, data, result, downloading=False):
     # Extract the dataframe from the results
     dataframe = result.get('dataframe', None)
 
-    if (data.get('strain_2')):
-      strains = f'{data["strain_1"]} | {data["strain_2"]}'
-    else:
-      strains = data['strain_1']
-
 
     # If a download endpoint is being called, return the results table as a downloadable file
     if downloading:
@@ -144,7 +139,7 @@ def report(job: GuideRNAPipeline, data, result, downloading=False):
       # Create a filename from the report
       # TODO: Set a better filename?
       try:
-        filename = f'{job.report["species"]}_{job.report["strain_1"]}_{job.report["strain_2"]}_{data["site"]}'
+        filename = f'{job.report["species"]}_{ "_".join(job.report.strains) }_{data["site"]}'
       except:
         filename = job.report['id']
 
@@ -157,7 +152,7 @@ def report(job: GuideRNAPipeline, data, result, downloading=False):
 
       # Page info
       'title':    f'gRNA Sites {data["site"]}',
-      'subtitle': strains,
+      'subtitle': ' | '.join(job.report.strains),
       'tool_alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools') },
 
       # GCP data info
