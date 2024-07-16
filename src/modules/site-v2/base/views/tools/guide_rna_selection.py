@@ -129,16 +129,10 @@ def list_results():
 @display_or_download({'csv'})
 def report(job: GuideRNAPipeline, data, result, downloading=False):
 
-    # Extract the dataframe from the results
-    dataframe = result.get('dataframe', None)
-
-
     # If a download endpoint is being called, return the results table as a downloadable file
+    # Return as a DownloadFile object (required by display_or_download decorator)
     if downloading:
-
-      # Return as a DownloadFile object (required by display_or_download decorator)
-      return DownloadFile( job.report.download_name, [] )
-
+      return DownloadFile( job.report.download_name, result.get('dataframe'), index=False )
 
     # Otherwise, return view page
     return render_template("tools/guide_rna_selection/report.html", **{
@@ -155,7 +149,7 @@ def report(job: GuideRNAPipeline, data, result, downloading=False):
       # Data & Results
       'data':  data,
       'empty': False,
-      'result': result,
+      'result': result.get('data', {}),
     })
 
 

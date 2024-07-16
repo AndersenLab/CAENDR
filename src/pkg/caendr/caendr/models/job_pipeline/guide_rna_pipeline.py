@@ -1,3 +1,6 @@
+# Python Imports
+import pandas as pd
+
 # Parent Class & Models
 from .job_pipeline           import JobPipeline
 from caendr.models.datastore import GuideRNAReport
@@ -64,7 +67,19 @@ class GuideRNAPipeline(JobPipeline):
 
 
   def _parse_output(self, data):
-    return data
+    values = [
+      ('crispr_enzyme',   self.report.enzyme_display.replace('*', '')),
+      ('site',            self.report['site']),
+      ('sequence',        None),
+      ('pam',             None),
+      ('strains_cut',     None),
+      ('strains_not_cut', None),
+      ('user_validated',  None),
+    ]
+    return {
+      'data': dict(values),
+      'dataframe': pd.DataFrame([v[1] for v in values], index=[v[0] for v in values]).transpose(),
+    }
 
 
 
