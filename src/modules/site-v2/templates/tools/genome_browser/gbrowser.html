@@ -129,8 +129,7 @@
                   <h1 class="modal-title fs-5" id="infoModalLabel">Track Information</h1>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                  {% include "_includes/gbrowser-tracks-info.html" %}
+                <div id="track-info-container" class="modal-body">
                 </div>
               </div>
             </div>
@@ -198,7 +197,7 @@
 <script src="{{ url_for('static', filename='js/strains.js') }}"></script>
 
 <script type="text/javascript">
-{% include '_scripts/utils.js' %}       {#/* defines: fetch_json, toggle_input */#}
+{% include '_scripts/utils.js' %}       {#/* defines: fetch_json, toggle_input, joinListAnd */#}
 {% include '_scripts/igv-browser.js' %}
 {% include '_scripts/gene-search.js' %} {#/* defines: prep_gene_search, run_gene_search, format_locus_string */#}
 {% include '_scripts/fullscreen.js' %} {#/* fullscreen for tools */#}
@@ -235,9 +234,7 @@ const browser_options = {
   locus: "{{ region }}",
 }
 
-const default_checked_tracks = [
-  {% for track in default_tracks %} {% if track.checked %} "{{ track.display_name }}", {% endif %} {% endfor %}
-];
+const default_checked_tracks = [];
 
 // Divs used by the gene search
 const gene_search_selectors = {
@@ -254,16 +251,82 @@ const gene_search_selectors = {
 
 $(document).ready(function () {
 
-  // Fetch the list of browser track objects
-  // Retrieves an object with two fields:
-  //   - 'default':   the list of tracks that are not specific to any one strain
-  //   - 'templates': the list of track templates to be filled out with strain data
-  fetch_json("{{ url_for('api_tracks.get_tracks') }}")
+  // Fetch & store the list of browser track objects, then update the species & browser
+  fetch_json("{{ url_for('api_tracks.get_tool_tracks', tool_id='genome_browser') }}")
     .then((data) => {
-      set_trackset(data.default);
-      set_templates(data.templates);
+      set_trackset(data);
+      update_species();
 
-      // Once we know the trackset exists, update the species & browser
+      // Clear the checked tracks list
+      default_checked_tracks.splice(0, default_checked_tracks.length);
+
+      // Parse the JSON data
+      const parsed_data = {}
+      Object.keys(data).forEach(track_name => {
+        parsed_data[track_name] = JSON.parse(data[track_name])
+      })
+
+      const container = document.getElementById('track-info-container');
+
+      // Loop through tracks in order
+      Object.keys(parsed_data)
+        .sort( (a, b) => parsed_data[a].order - parsed_data[b].order )
+        .forEach(track_name => {
+
+          // Keep a record of which tracks are checked by default
+          if (parsed_data[track_name].checked) {
+            default_checked_tracks.push(track_name);
+          }
+
+          // If there's no description info to display, continue to the next track
+          if (!parsed_data[track_name].information) return;
+
+          // Section header (track name)
+          const header = document.createElement('h2');
+          header.classList.add('h4');
+          header.innerText = track_name;
+
+          // Section body (track information / description)
+          const body = document.createElement('div')
+          body.innerHTML = markdownToHTML(parsed_data[track_name].information)
+
+          // Append the header and body to the container
+          container.appendChild(header);
+          container.appendChild(body);
+        })
+
+      // If one or more tracks are defaults, add a section to the beginning listing them
+      if (default_checked_tracks.length > 0) {
+
+        // Section header
+        const header = document.createElement('h2');
+        header.classList.add('h4');
+        header.innerText = 'Standard Tracks';
+
+        // Section body, listing tracks with commas and "and"
+        // Creating each element and setting innerText protects against code injection
+        const body = document.createElement('p');
+        const trackNames = joinListAnd( default_checked_tracks.map(name => {
+          const code = document.createElement('code');
+          code.innerText = name;
+          return code.outerHTML;
+        }) );
+        body.innerHTML = `The ${ trackNames } tracks are displayed by default.`;
+
+        // Prepend the body and header in reverse order, so the head comes first
+        container.prepend(body);
+        container.prepend(header);
+      }
+    })
+    .catch((err) => {
+      // TODO: better error handling?
+      console.error("Failed to retrieve browser tracks.", err);
+    })
+
+  // Fetch & store the list of browser track templates, then update the species & browser
+  fetch_json("{{ url_for('api_tracks.get_track_templates') }}")
+    .then((data) => {
+      set_templates(data);
       update_species();
     })
     .catch((err) => {

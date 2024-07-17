@@ -44,6 +44,13 @@
   <h3 class="fs-4 mb-3 mt-5">Basic Information</h3>
   <div class="row gy-4">
     <div class='col-12 col-xl-8'>{{ render_field(form.display_name) }}</div>
+
+    {{ form.information.label(class='form-label') }}
+    <div id="{{ form.information.id }}" class="mt-0"></div>
+  </div>
+
+  <h3 class="fs-4 mb-3 mt-5">Usage</h3>
+  <div class="row gy-4">
     <div class='col-12'>{{ render_field(form.used_in_tools, class='multi-checkbox') }}</div>
     <div class='col-12'>{{ render_field(form.checked, class_='form-check-input d-block single-checkbox') }}</div>
   </div>
@@ -71,6 +78,10 @@
 
 <script>
   {% include '_scripts/utils.js' %}       {#/* defines: flash_message */#}
+
+
+  // Declare the MD editor at the "global" scope, so we can get its contents from anywhere
+  let editor;
 
 
   function disableButton() {
@@ -101,12 +112,29 @@
     data.set("modify_availability",  true)
     data.set("modify_used_in_tools", true)
 
+    // Append the Markdown content to the form object
+    const md_content = editor.getMarkdown();
+    data.append('information', md_content);
+
     // Return the form data
     return data;
   }
 
 
   $(document).ready(function () {
+
+    // Markdown editor
+    const Editor = toastui.Editor;
+    editor = new Editor({
+      el: document.querySelector('#{{ form.information.id }}'),
+      height: '200px',
+      initialEditType: 'markdown',
+      previewStyle: 'vertical',
+      initialValue: `{{ track['information'] or '' }}`,
+      toolbarItems: [
+        ['bold', 'italic', 'link'],
+      ],
+    });
 
     // Form Submission
     $("#save-btn").on("click", function(e) {
@@ -158,12 +186,23 @@
 <script type="module">
 
   $(document).ready(function () {
+
+    // Cancel button
     $("#cancel-btn").on("click", function(e) {
       e.preventDefault();
       window.location = "{{ url_for('admin_gene_browser_tracks.admin_gene_browser_tracks') }}";
     });
 
     $(".multi-checkbox input").addClass("form-check-input mt-0");
+
+    // Prevent enter key from submitting form inside Markdown editor
+    // Primarily affects hyperlink insert popup
+    $('#{{ form.information.id }}').keydown(function(event) {
+      if (event.keyCode == 13) {
+        event.preventDefault();
+        return false;
+      }
+    });
   });
 
 </script>

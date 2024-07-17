@@ -48,7 +48,7 @@ def get_tracks():
   '''
   return jsonify({
     'default': {
-      track['display_name']: json.dumps( track.serialize() )
+      track['display_name']: json.dumps( track.serialize(include_meta=False) )
         for track in BrowserTrackDefault.query_ds()
     },
     'templates': {
@@ -206,25 +206,37 @@ def edit_track(track: BrowserTrackDefault = None, form_data = None, no_cache: bo
   abort(405)
 
 
-@api_tracks_bp.route('/parameters/<string:tool_id>', methods=['GET'])
+@api_tracks_bp.route('/tool/<string:tool_id>', methods=['GET'])
 @jwt_required()
 @jsonify_request
-def get_track_parameters(tool_id: str):
+def get_tool_tracks(tool_id: str):
   '''
-    Get the IGV Browser parameters for all tracks used in the given tool.
+    Get all track objects used in the given tool.
   '''
 
   # Validate requested tool ID
   if tool_id not in (tool_id for (tool_id, tool_name) in GENOME_BROWSER_TOOLS):
     abort(404)
 
-  # Return the IGV browser parameter objects for each track used in the requested tool
-  tracks = [
-    track['params']
+  # Return a JSON serialized object for each track used in the requested tool
+  return {
+    track['display_name']: json.dumps( track.serialize(include_meta=False) )
       for track in BrowserTrackDefault.query_ds()
       if tool_id in track['used_in_tools']
-  ]
-  return tracks
+  }
+
+
+@api_tracks_bp.route('/templates', methods=['GET'])
+@jwt_required()
+@jsonify_request
+def get_track_templates():
+  '''
+    Get all track template objects (tracks that are parameterized for strain).
+  '''
+  return {
+    track['template_name']: json.dumps( track.serialize() )
+      for track in BrowserTrackTemplate.query_ds()
+  }
 
 
 

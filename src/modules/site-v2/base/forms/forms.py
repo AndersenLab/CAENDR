@@ -212,8 +212,9 @@ class AdminEditBrowserTrackForm(FlaskForm):
   ]
 
   display_name  = StringField('Display Name', [Length(min=3, max=200)])
+  information   = StringField('Track Information', [Optional()])
   filename      = StringField('Filename', [Length(min=3, max=200)])
-  checked       = BooleanField('Checked by Default in Genome Browser')
+  checked       = BooleanField('Checked by Default in Genome Browser', description="Checked by Default")
 
   availability  = MultiCheckboxField('Availability in Genome Browser', choices=_AVAILABILITY)
   modify_availability  = BooleanField()

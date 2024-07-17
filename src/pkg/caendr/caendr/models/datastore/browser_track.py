@@ -100,6 +100,7 @@ class BrowserTrackDefault(BrowserTrack):
       *super().get_props_set(),
       'checked',
       'used_in_tools',
+      'information',
     }
 
   @property

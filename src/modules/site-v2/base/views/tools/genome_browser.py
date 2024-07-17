@@ -83,7 +83,10 @@ def genome_browser(region="III:11746923-11750250", query=None):
     'form': SpeciesSelectForm(),
 
     # Tracks
-    'default_tracks': sorted(BrowserTrackDefault.query_ds(), key = lambda x: x['order'] ),
+    'default_tracks': sorted(
+      [ track for track in BrowserTrackDefault.query_ds() if 'genome_browser' in track['used_in_tools']],
+      key = lambda x: x['order']
+    ),
     'supported_tracks': {
       species_name: get_dataset_release(species['release_latest'])['browser_tracks']
         for species_name, species in Species.all().items()
