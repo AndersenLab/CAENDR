@@ -132,10 +132,11 @@ class PhenotypePipeline(JobPipeline):
       [ d[strain] for strain in data_keys ] for d in data_dicts
     ])
 
-    # Pre-processing: mean-center and scale the data
-    data_vals = tuple(
-      center_and_scale_data(d) for d in data_vals
-    )
+    # Pre-processing: mean-center and scale the data if comparing two strains
+    if len(data_vals) == 2:
+      data_vals = tuple(
+        center_and_scale_data(d) for d in data_vals
+      )
 
     # Zip the strain names together with the trait values, to get the full dataset array
     data_tuples = list(zip( data_keys, *data_vals ))

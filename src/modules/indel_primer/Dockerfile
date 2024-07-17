@@ -30,9 +30,7 @@ RUN git clone https://www.github.com/andersenlab/vcf-kit && \
     cd vcf-kit && \
     git checkout f433abb637fe59a370f8c654ef406cbabaa36e0a
 
-
 RUN python -m pip install --no-cache-dir -e ./vcf-kit
-RUN vk genome wormbase --ref=WS276
 
 COPY . ./
 

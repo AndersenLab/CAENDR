@@ -123,7 +123,7 @@ cmd = (
   '--region',      INDEL_SITE,
   '--nprimers',    '10',
   '--polymorphic',
-  '--ref',         fasta_path['name'],
+  '--ref',         os.path.join(target_fasta_file_path, target_fasta_file_name),
   '--samples',     f'{INDEL_STRAIN_1},{INDEL_STRAIN_2}',
 
   # VCF file to run tool on
