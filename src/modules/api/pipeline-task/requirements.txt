@@ -7,7 +7,7 @@ google-cloud-datastore==2.2.0
 google-cloud-run
 gunicorn==20.1.0
 python-dotenv==0.19.1
-sentry-sdk==1.7.2
+sentry-sdk==2.8.0
 itsdangerous==2.0.1
 pyOpenSSL==22.1.0
 Jinja2==3.0.3
