@@ -33,7 +33,7 @@ Markdown==2.6.11
 pandas==1.0.5
 peewee==2.10.2
 psycopg2-binary>=2.9.1
-pyarrow==0.17.1
+pyarrow==14.0.1
 pyOpenSSL==22.1.0
 pytabix
 python_dateutil==2.6.1
