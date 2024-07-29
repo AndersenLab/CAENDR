@@ -12,7 +12,7 @@ from flask import (render_template,
 from extensions import cache, compress
 from sqlalchemy import or_, func
 
-from caendr.api.phenotype import query_phenotype_metadata, get_trait_categories
+from caendr.api.phenotype import get_traits_with_metadata, get_trait_categories
 from caendr.services.cloud.postgresql import rollback_on_error_handler
 
 from caendr.services.logger import logger
@@ -71,7 +71,26 @@ def phenotype_database():
     'form': form
   })
 
+#
+# Download Traits
+#
 
+@phenotype_database_bp.route('/download')
+# @cache.memoize(60*60)
+def download_csv():
+  """
+    Download All Phenotype Traits as CSV
+  """
+  file_format = 'csv'
+  # Get the list of unique tags
+  try:
+    traits = get_traits_with_metadata()
+
+  except Exception as ex:
+    logger.error(f'Failed to retrieve the list of traits: {ex}')
+    abort(500, description='Failed to retrieve the list of traits')
+
+  return traits
 
 #
 # Submission Flow
