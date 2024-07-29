@@ -6,6 +6,7 @@ from sqlalchemy import or_, func
 from caendr.models.datastore          import Species, User
 from caendr.models.status             import PublishStatus
 from caendr.models.sql                import PhenotypeMetadata
+from caendr.models.sql                import PhenotypeDatabase
 from caendr.services.cloud.postgresql import rollback_on_error
 
 
@@ -246,3 +247,26 @@ def get_trait_categories(query = None):
 
 def get_phenotype_values_for_trait(trait_id):
   return PhenotypeMetadata.query.get(trait_id).phenotype_values
+
+
+#
+# Fetch all traits and join with Phenotype Metadata
+#
+
+def get_traits_with_metadata():
+  '''
+    Get all traits with metadata.
+  '''
+  query = PhenotypeDatabase.query
+  query = query.with_entities(
+    PhenotypeDatabase.trait_name,
+    PhenotypeDatabase.strain_name,
+    PhenotypeDatabase.trait_value,
+    PhenotypeDatabase.metadata_id,
+    PhenotypeMetadata.submitted_by,
+    PhenotypeMetadata.species_name
+).join(
+    PhenotypeMetadata,
+    PhenotypeDatabase.metadata_id == PhenotypeMetadata.id
+)
+  return query.all()
