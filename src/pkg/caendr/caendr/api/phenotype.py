@@ -1,7 +1,7 @@
 import bleach
 from typing import Optional, Union, Iterable
 
-from sqlalchemy import or_, func
+from sqlalchemy import or_
 
 from caendr.models.datastore          import Species, User
 from caendr.models.status             import PublishStatus
@@ -253,20 +253,31 @@ def get_phenotype_values_for_trait(trait_id):
 # Fetch all traits and join with Phenotype Metadata
 #
 
-def get_traits_with_metadata():
+def get_traits_with_metadata(metadata_colmns: Optional[Iterable[str]] = None):
   '''
     Get all traits with metadata.
   '''
   query = PhenotypeDatabase.query
-  query = query.with_entities(
-    PhenotypeDatabase.trait_name,
-    PhenotypeDatabase.strain_name,
-    PhenotypeDatabase.trait_value,
-    PhenotypeDatabase.metadata_id,
-    PhenotypeMetadata.submitted_by,
-    PhenotypeMetadata.species_name
-).join(
-    PhenotypeMetadata,
-    PhenotypeDatabase.metadata_id == PhenotypeMetadata.id
-)
-  return query.all()
+  if metadata_colmns:
+    
+    # Check if the metadata columns are valid
+    valid_colmns = [col.name for col in PhenotypeMetadata.__table__.columns]
+    for col in metadata_colmns:
+      if col not in valid_colmns:
+        raise ValueError(f'Invalid column name: {col}.')
+    
+    # Join only with given metadata columns
+    query = query.with_entities(
+      PhenotypeDatabase.trait_name,
+      PhenotypeDatabase.strain_name,
+      PhenotypeDatabase.trait_value,
+      PhenotypeDatabase.metadata_id,
+      *metadata_colmns
+    ).join(
+        PhenotypeMetadata,
+        PhenotypeDatabase.metadata_id == PhenotypeMetadata.id
+    )
+  else:
+    # Join with all metadata columns
+    query = query.join(PhenotypeMetadata)
+  return query
