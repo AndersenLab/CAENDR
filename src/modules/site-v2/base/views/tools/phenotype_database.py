@@ -4,6 +4,7 @@ from flask import (render_template,
                     jsonify,
                     flash,
                     abort,
+                    stream_with_context,
                     Response,
                     Blueprint)
 from extensions import cache
@@ -87,12 +88,15 @@ def download_csv():
 
   # Set the column names
   columns = ['submitted_by', 'species_name', 'trait_name', 'strain_name', 'trait_value']
-
-  # Convert the data to a CSV file
-  output = convert_query_to_data_table(traits, columns).to_csv(index=False, sep=file_format['sep'])
+  
+  def generate():
+    yield file_format['sep'].join(columns) + '\n'
+    for row in traits:
+      row = [getattr(row, column) for column in columns]
+      yield file_format['sep'].join(map(str, row)) + '\n'
 
    # Stream the response as a file with the correct filename
-  resp = Response(output, mimetype=file_format['mimetype'])
+  resp = Response(stream_with_context(generate()), mimetype=file_format['mimetype'])
   date_str = date.today().strftime('%Y-%m-%d')
   resp.headers['Content-Disposition'] = f'filename=phenotype_db_{date_str}.csv'
   return resp

@@ -10,7 +10,7 @@
         <a class="btn btn-secondary rounded-pill text-white" role="button" href="{{ url_for('phenotype_database.submit_start') }}"><i
                 class="bi bi-arrow-right-circle-fill me-1" aria-hidden="true"></i>Start an Analysis</a>
         <a class="btn btn-secondary rounded-pill text-white" role="button" href="{{ url_for('phenotype_database.download_csv') }}"><i
-            class="bi bi-arrow-right-circle-fill me-1" aria-hidden="true"></i>Download All Traits</a>
+            class="bi bi-arrow-right-circle-fill me-1" aria-hidden="true"></i>Download Phenotype Data</a>
     </div>
     <div class="col mt-5">
         {% with analyze_link = url_for("phenotype_database.submit_start", trait="TRAIT_ID") %}
