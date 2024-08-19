@@ -1,22 +1,18 @@
-import bleach
 from flask import (render_template,
                     url_for,
                     request,
-                    redirect,
-                    make_response,
                     jsonify,
                     flash,
                     abort,
+                    stream_with_context,
                     Response,
                     Blueprint)
-from extensions import cache, compress
-from sqlalchemy import or_, func
+from extensions import cache
+from datetime   import date
 
-from caendr.api.phenotype import query_phenotype_metadata, get_trait_categories
-from caendr.services.cloud.postgresql import rollback_on_error_handler
+from caendr.api.phenotype import get_traits_with_metadata, get_trait_categories
 
 from caendr.services.logger import logger
-from caendr.utils.env       import get_env_var
 
 from base.forms                 import EmptyForm
 from base.utils.auth            import jwt_required, get_current_user, user_is_admin, check_feature_flag_bp
@@ -26,9 +22,8 @@ from base.utils.view_decorators import parse_job_id, validate_form
 from caendr.models.datastore    import PhenotypeReport, Species
 from caendr.models.error        import NotFoundError
 from caendr.models.job_pipeline import PhenotypePipeline
-from caendr.models.sql          import PhenotypeMetadata
 from caendr.models.trait        import Trait
-from caendr.utils.data          import get_file_format, convert_data_to_download_file
+from caendr.utils.data          import get_file_format, convert_data_to_download_file, convert_query_to_data_table
 
 
 
@@ -71,7 +66,40 @@ def phenotype_database():
     'form': form
   })
 
+#
+# Download Traits
+#
 
+@phenotype_database_bp.route('/download')
+@cache.memoize(60*60)
+def download_csv():
+  """
+    Download All Phenotype Traits as CSV
+  """
+  # Get the list of traits
+  try:
+    metadata_colmns = ['submitted_by', 'species_name']
+    traits = get_traits_with_metadata(metadata_colmns)
+  except Exception as ex:
+    logger.error(f'Failed to retrieve the list of traits: {ex}')
+    abort(500, description='Failed to retrieve the list of traits')
+  
+  file_format = get_file_format('csv', valid_formats=['csv'])
+
+  # Set the column names
+  columns = ['submitted_by', 'species_name', 'trait_name', 'strain_name', 'trait_value']
+  
+  def generate():
+    yield file_format['sep'].join(columns) + '\n'
+    for row in traits:
+      row = [getattr(row, column) for column in columns]
+      yield file_format['sep'].join(map(str, row)) + '\n'
+
+   # Stream the response as a file with the correct filename
+  resp = Response(stream_with_context(generate()), mimetype=file_format['mimetype'])
+  date_str = date.today().strftime('%Y-%m-%d')
+  resp.headers['Content-Disposition'] = f'filename=phenotype_db_{date_str}.csv'
+  return resp
 
 #
 # Submission Flow
