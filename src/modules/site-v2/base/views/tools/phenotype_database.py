@@ -91,7 +91,7 @@ def download_csv():
   
   def generate():
     yield file_format['sep'].join(columns) + '\n'
-    for row in traits:
+    for row in traits.yield_per(1000):
       row = [getattr(row, column) for column in columns]
       yield file_format['sep'].join(map(str, row)) + '\n'
 
