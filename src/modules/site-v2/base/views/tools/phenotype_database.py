@@ -91,9 +91,15 @@ def download_csv():
   
   def generate():
     yield file_format['sep'].join(columns) + '\n'
-    for row in traits.yield_per(100):
-      row = [getattr(row, column) for column in columns]
-      yield file_format['sep'].join(map(str, row)) + '\n'
+    count = 0
+    try:
+      for row in traits.yield_per(1000):
+        row = [getattr(row, column) for column in columns]
+        count += 1
+        logger.info(f'{count} rowsprocessed')
+        yield file_format['sep'].join(map(str, row)) + '\n'
+    except Exception as ex:
+      logger.error(f'Error during CSV generation: {ex}')
 
    # Stream the response as a file with the correct filename
   resp = Response(stream_with_context(generate()), mimetype=file_format['mimetype'])
