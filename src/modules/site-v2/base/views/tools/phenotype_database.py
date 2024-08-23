@@ -91,12 +91,9 @@ def download_csv():
   
   def generate():
     yield file_format['sep'].join(columns) + '\n'
-    count = 0
     try:
       for row in traits.yield_per(1000):
         row = [getattr(row, column) for column in columns]
-        count += 1
-        logger.info(f'{count} rowsprocessed')
         yield file_format['sep'].join(map(str, row)) + '\n'
     except Exception as ex:
       logger.error(f'Error during CSV generation: {ex}')
