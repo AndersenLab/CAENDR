@@ -78,7 +78,7 @@ def get_db_conn_uri():
 
 
 def get_db_timeout():
-    return get_env_var('MODULE_DB_TIMEOUT', 3000, var_type=int)
+    return get_env_var('MODULE_DB_TIMEOUT', 30, var_type=int)
 
 
 def health_database_status():
