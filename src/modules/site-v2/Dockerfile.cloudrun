@@ -61,4 +61,4 @@ COPY ./src/modules/site-v2 ./
 RUN touch .env
 
 CMD export $(cat .env | sed -e '/^\s*$/d' | sed -e '/^\#/d' | xargs) && \
-  gunicorn -b :$PORT main:app
+  gunicorn -b :$PORT --timeout=3000 main:app
