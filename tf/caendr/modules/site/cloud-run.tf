@@ -29,7 +29,6 @@ resource "google_cloud_run_service" "site" {
     spec {
       containers {
         image = data.google_container_registry_image.module_site.image_url
-        timeout_seconds = 4800
         dynamic "env" {
           for_each = local.envs
           content {
