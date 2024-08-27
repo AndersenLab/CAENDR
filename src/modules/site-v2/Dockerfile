@@ -63,4 +63,4 @@ RUN echo "\n\n# GIT_COMMIT automatically added during the makefile build contain
 RUN echo "GIT_COMMIT=$GIT_COMMIT" >> module.env
 
 CMD export $(cat .env | sed -e '/^\s*$/d' | sed -e '/^\#/d' | xargs) && \
-  gunicorn -b :$PORT main:app
+  gunicorn -b :$PORT --timeout=4800 main:app
