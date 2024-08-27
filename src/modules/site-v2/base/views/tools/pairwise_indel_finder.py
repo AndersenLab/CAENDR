@@ -3,14 +3,14 @@ import re
 from caendr.services.logger import logger
 from flask import Response, Blueprint, render_template, request, url_for, jsonify, redirect, flash, abort
 
-from base.forms import PairwiseIndelForm
+from base.forms import PairwiseIndelForm, EmptyForm
 from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
 from base.utils.tools import list_reports, try_submit
 from base.utils.view_decorators import parse_job_id, validate_form
 
 from caendr.models.datastore.browser_track import BrowserTrackDefault
 from caendr.models.datastore import Species, IndelPrimerReport, DatasetRelease
-from caendr.models.error import NotFoundError, NonUniqueEntity
+from caendr.models.error import NotFoundError, NonUniqueEntity, JobAlreadyScheduledError
 from caendr.models.job_pipeline import IndelFinderPipeline
 from caendr.services.dataset_release import get_dataset_release
 from caendr.services.cloud.storage import BlobURISchema
@@ -145,9 +145,11 @@ def list_results():
     # Page info
     'title': ('All' if show_all else 'My') + ' Primer Reports',
     'tool_alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools'), },
+    'form': EmptyForm(),
 
     # User info
     'user':  user,
+    'user_is_admin': user_is_admin(),
 
     # Tool info
     'tool_name': 'pairwise_indel_finder',
@@ -161,6 +163,7 @@ def list_results():
     # Table info
     'species_list': Species.all(),
     'items': list_reports(IndelPrimerReport, None if show_all else user, filter_errs),
+    'rerunnable': True,
   })
 
 
@@ -193,6 +196,36 @@ def submit(form_data, no_cache=False):
 
   # Return the response
   return jsonify( response ), code
+
+
+
+@pairwise_indel_finder_bp.route('/resubmit/<report_id>', methods=['POST'])
+@admin_required()
+@parse_job_id(IndelFinderPipeline, fetch=False)
+def resubmit(job: IndelFinderPipeline):
+
+  # Try scheduling the job again
+  try:
+    job.schedule(no_cache=True)
+    return jsonify({
+      'ready':     job.is_finished(),
+      'data_hash': job.report.data_hash,
+      'id':        job.report.id,
+    })
+
+  # If this job is currently running, abort
+  except JobAlreadyScheduledError as ex:
+    return jsonify({
+      'message': 'This job is already running.',
+    }), 400
+
+  # Display any other errors to the (admin) user
+  except Exception as ex:
+    return jsonify({
+      'message': 'There was a problem resubmitting this job. Please try again later.',
+      'full_msg_link': 'See details.',
+      'full_msg_body': getattr(ex, 'message', str(ex)),
+    }), 500
 
 
 

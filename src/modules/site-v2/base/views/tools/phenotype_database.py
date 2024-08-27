@@ -204,6 +204,7 @@ def list_results():
 
     # User info
     'user':  user,
+    'user_is_admin': user_is_admin(),
 
     # Tool info
     'tool_name': 'phenotype_database',
