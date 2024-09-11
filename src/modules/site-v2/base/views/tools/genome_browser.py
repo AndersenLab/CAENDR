@@ -39,30 +39,6 @@ def get_dataset_release_or_latest(release_version = None):
 
 
 
-@genome_browser_bp.route('/tracks', methods=['GET'])
-def get_tracks():
-  '''
-  Get the list of browser tracks.
-
-  Returns two fields:
-    - 'default':   The list of tracks that are not specific to any one strain
-    - 'templates': The list of track templates to be filled out with strain data
-
-  Templates are returned as JSON strings, so every instantiation of the template is a new copy.
-  '''
-  return jsonify({
-    'default': {
-      track['name']: json.dumps( track.serialize() )
-        for track in BrowserTrackDefault.query_ds()
-    },
-    'templates': {
-      track['template_name']: json.dumps( track.serialize() )
-        for track in BrowserTrackTemplate.query_ds()
-    },
-  })
-
-
-
 @genome_browser_bp.route('/')
 @genome_browser_bp.route('/<region>')
 @genome_browser_bp.route('/<region>/<query>')
@@ -107,7 +83,10 @@ def genome_browser(region="III:11746923-11750250", query=None):
     'form': SpeciesSelectForm(),
 
     # Tracks
-    'default_tracks': sorted(BrowserTrackDefault.query_ds(), key = lambda x: x['order'] ),
+    'default_tracks': sorted(
+      [ track for track in BrowserTrackDefault.query_ds() if 'genome_browser' in track['used_in_tools']],
+      key = lambda x: x['order']
+    ),
     'supported_tracks': {
       species_name: get_dataset_release(species['release_latest'])['browser_tracks']
         for species_name, species in Species.all().items()

@@ -137,7 +137,7 @@ let strains;
 /* IGV Browser */
 const browser_el = document.getElementById('browser');
 const browser_options = {}
-let divergent_track_name;
+let tool_track_names = [];
 const COLORS = {
   INS: 'blue',
   DEL: 'red'
@@ -176,7 +176,7 @@ $(document).ready(function(){
     form_change();
   });
 
-  fetch_json("{{ url_for('pairwise_indel_finder.get_strains') }}")
+  fetch_json("{{ url_for('api_strains.get_sv_strains') }}")
     .then((data) => {
       strains = data;
     })
@@ -391,25 +391,35 @@ function update_species(species_id) {
       // Flag the browser as loaded
       loaded = true;
 
-      // Clear all tracks & reload the divergent regions track
+      // Clear all tracks & reload the constant tool track(s)
       clear_tracks();
-      fetch_json(`{{ url_for('pairwise_indel_finder.get_tracks') }}?species=${species.name}`)
-        .then((divergent_track_summary) => {
-          divergent_track_name = divergent_track_summary.name;
+      fetch_json(`{{ url_for('api_tracks.get_tool_tracks', tool_id='pairwise_indel_finder') }}?species=${species.name}`)
+        .then((tracks) => {
 
-          // Replace species tokens in URL
-          divergent_track_summary.url = replace_tokens(divergent_track_summary.url);
+          // Save the track names / IDs so we know which ones they are
+          tool_track_names = Object.keys(tracks);
 
-          // Set tool-specific display properties
-          divergent_track_summary.height = 40; // Height to view two rows would be 70
-          divergent_track_summary.removable = false;
+          // Add each track to the browser
+          Object.keys(tracks).forEach(track_name => {
+            const track_params = JSON.parse(tracks[track_name]).params
 
-          // Add the track to the browser
-          add_track(divergent_track_name, divergent_track_summary);
+            // Replace species tokens in URL
+            track_params.url = replace_tokens(track_params.url);
+
+            // Set tool-specific display properties
+            track_params.height = 40; // Height to view two rows would be 70
+            track_params.removable = false;
+
+            // Move these tracks below the strain tracks
+            track_params.order += 10;
+
+            // Add the track to the browser
+            add_track(track_params.name, track_params);
+          });
         })
         .catch((err) => {
           // TODO: Better error handling
-          console.error(`Failed to retrieve hyper-variable regions track: ${err.status} (${err.statusText})`);
+          console.error(`Failed to retrieve IGV Browser tracks: ${err.status} (${err.statusText})`);
         })
 
       // Update browser tracks
@@ -443,7 +453,7 @@ function process_indel_finder_query_results(results) {
 function update_browser_tracks(browser, results) {
 
   // Clear existing strain tracks
-  clear_tracks_except([divergent_track_name]);
+  clear_tracks_except(tool_track_names);
 
   // Load new tracks
   load_tracks(browser, results);

@@ -30,7 +30,7 @@ from wtforms.fields.html5 import EmailField
 from wtforms.widgets import CheckboxInput
 
 
-from constants import PRICES, SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS, TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS, TRAIT_CATEGORY_OPTIONS
+from constants import PRICES, SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS, TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS, TRAIT_CATEGORY_OPTIONS, GENOME_BROWSER_TOOLS
 
 from caendr.services.profile import get_profile_role_form_options
 from caendr.services.user import get_user_role_form_options, get_local_user_by_email
@@ -204,6 +204,22 @@ class AdminGeneBrowserTracksForm(FlaskForm):
   wormbase_version = IntegerField('Wormbase Version WS (ex: 276 -> WS276):', validators=[Optional()])
   note = StringField('Notes', [Optional(), Length(min=3, max=200)])
 
+class AdminEditBrowserTrackForm(FlaskForm):
+  _AVAILABILITY = [
+    (species.name, f'<em>{species.short_name}</em> (Release: {species["release_latest"]})')
+      for species in Species.all().values()
+  ]
+
+  display_name  = StringField('Display Name', [Length(min=3, max=200)])
+  information   = StringField('Track Information', [Optional()])
+  filename      = StringField('Filename', [Length(min=3, max=200)])
+  checked       = BooleanField('Checked by Default in Genome Browser', description="Checked by Default")
+
+  availability  = MultiCheckboxField('Availability in Genome Browser', choices=_AVAILABILITY)
+  modify_availability  = BooleanField()
+
+  used_in_tools = MultiCheckboxField('Used in Tools', choices=GENOME_BROWSER_TOOLS)
+  modify_used_in_tools = BooleanField()
 
 class AdminEditToolContainerVersion(FlaskForm):
   version = SelectField('Container Version Tag', validators=[Required()])

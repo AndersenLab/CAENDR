@@ -10,6 +10,7 @@ from .wormbase            import WormbaseVersion, WormbaseProjectNumber
 from .species             import Species, SPECIES_LIST # Imports WormbaseVersion, WormbaseProjectNumber
 
 # Abstract template classes (add basic field(s) & functionality)
+from .deletable_entity    import DeletableEntity
 from .file_record_entity  import FileRecordEntity
 from .hashable_entity     import HashableEntity
 from .orderable_entity    import OrderableEntity
@@ -19,16 +20,15 @@ from .status_entity       import StatusEntity
 from .user_owned_entity   import UserOwnedEntity     # Imports User
 
 # Tracking file(s)
-from .dataset_release     import DatasetRelease       # Subclasses SpeciesSpecificEntity; Imports Species
-from .browser_track       import BrowserTrackDefault  # Subclasses FileRecordEntity (from BrowserTrack)
-from .browser_track       import BrowserTrackTemplate # Subclasses FileRecordEntity (from BrowserTrack)
+from .dataset_release     import DatasetRelease       # Subclasses SpeciesEntity; Imports Species
+from .browser_track       import BrowserTrackDefault  # Subclasses FileRecordEntity, OrderableEntity, DeletableEntity (from BrowserTrack)
+from .browser_track       import BrowserTrackTemplate # Subclasses FileRecordEntity, OrderableEntity, DeletableEntity (from BrowserTrack)
 from .trait_file          import TraitFile            # Subclasses FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEntity
 from .trait_file          import DatasetType
 
 # Job template classes
 from .job_entity          import JobEntity           # Subclasses StatusEntity; imports Container
 from .report_entity       import ReportEntity        # Subclasses JobEntity, UserOwnedEntity, as well as GCPReport
-from .deletable_entity    import DeletableEntity     
 
 # Jobs
 from .database_operation  import DatabaseOperation   # Subclasses ReportEntity

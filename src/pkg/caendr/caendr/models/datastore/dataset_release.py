@@ -150,6 +150,54 @@ class DatasetRelease(SpeciesEntity):
     self.__dict__['browser_tracks'] = val
 
 
+  def _format_props_for_ds(self):
+    props = super()._format_props_for_ds()
+    props['report_type'] = props['report_type'].name
+    return props
+
+
+  #
+  # Modify supported browser tracks
+  #
+
+  def add_browser_track(self, track) -> bool:
+    '''
+      Add the given `BrowserTrackDefault` to the list of tracks supported
+      in this release.
+
+      Returns `True` if the operation changed this object,
+      i.e. if the track was not yet supported by this release.
+    '''
+    already_exists = track['display_name'] in self['browser_tracks']
+    self['browser_tracks'].append(track['display_name'])
+    return not already_exists
+
+  def remove_browser_track(self, track) -> bool:
+    '''
+      Remove the given `BrowserTrackDefault` from the list of tracks supported
+      in this release.
+
+      Returns `True` if the operation changed this object,
+      i.e. if the track was initially supported by this release.
+    '''
+    if track['display_name'] in self['browser_tracks']:
+      self['browser_tracks'].remove(track['display_name'])
+      return True
+    return False
+
+  def set_browser_track(self, track, value: bool) -> bool:
+    '''
+      Add or remove the given `BrowserTrackDefault` from the list of tracks
+      supported in this release, based on the given value.
+
+      Returns `True` if the operation changed this object.
+    '''
+    if value:
+      return self.add_browser_track(track)
+    else:
+      return self.remove_browser_track(track)
+
+
 
 
   @classmethod

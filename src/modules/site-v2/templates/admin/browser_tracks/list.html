@@ -1,41 +1,267 @@
 {% extends "_layouts/default.html" %}
 
+
+{% block style %}
+<style>
+  .releases-list {
+    padding-left: 1em;
+    padding-right: 0.5em;
+    margin-bottom: 0;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .releases-list li {
+    display: block;
+    text-indent: -0.5em;
+    margin-left: 0.5em;
+    padding-bottom: 0.25em;
+  }
+</style>
+{% endblock %}
+
+
 {% block content %}
-<!-- <div class="row">
-  <div class="col-md-9"></div>
-  <div class="col-md-3">
-    <a id='create' href="{{ url_for('admin_gene_browser_tracks.create_gene_browser_tracks')}}" class="btn btn-primary btn-block"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> New Gene Browser Track Version </a>
+<div class="container">
+  <div class="row">
+    <div class="col-12">
+      <p>
+        Browser tracks are contained in folders matching the following template:
+      </p>
+      <code class="mx-2">
+        {{ file_location }}
+      </code>
+    </div>
   </div>
-</div> -->
+</div>
 
-<div class="row">
-  <div class="col-md-12">
-    <table class='table'>
-      <thead>
-        <tr>
-          <th class='col-md-2'><strong> Wormbase Version </strong></th>
-          <th class='col-md-1'><strong> Status </strong></th>
-          <th class='col-md-3'><strong> Note </strong></th>
-          <th class='col-md-1'><strong> Username </strong></th>
-          <th class='col-md-1'><strong> Created On </strong></th>
-          <th class='col-md-1'><strong> Modified On </strong></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for tracks in gene_browser_track_versions|sort(attribute='created_on', reverse=True) %}
+
+<div class="pb-3 px-3 w-100 d-flex justify-content-end">
+    <a id='create'
+      href="{{ url_for('admin_gene_browser_tracks.edit_page') }}"
+      class="btn btn-primary btn-block"
+    >
+      <span class="bi bi-plus-circle pe-1" aria-hidden="true"></span>
+      New Gene Browser Track
+    </a>
+</div>
+
+<div class="container">
+  <div class="col">
+    <div class="table-responsive">
+      <table id="table-browser-tracks" class="table p-0 text-center w-100">
+        <caption class="visually-hidden">A list of genome browser tracks.</caption>
+        <thead class="table-secondary align-middle">
           <tr>
-            <td> {{ tracks['wormbase_version'] }} </td>
-            <td> {{ tracks['status'] }} </td>
-            <td> {{ tracks['note'] }} </td>
-            <td> {{ tracks['username'] }} </td>
-            <td> {{ tracks['created_on']|date_format }} </td>
-            <td> {{ tracks['modified_on']|date_format }} </td>
+            <th scope="col" class="col-1 text-center">Order</th>
+            <th scope="col" class="col-1 text-center">Order</th>
+            <th scope="col" class="col-1 text-center">Display Name</th>
+            <th scope="col" class="col-1 text-center">Filename</th>
+            <th scope="col" class="col-1 text-center">Used in Tools</th>
+            <th scope="col" class="col-1 text-center">Availability in Genome Browser</th>
+            <th scope="col" class="col-1 text-center">Checked by Default?</th>
+            <th scope="col" class="col-1 text-center">Edit</th>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-	</div> <!-- /col-md-12 -->
-</div> <!-- /row -->
+        </thead>
+        <tbody class="table-group-divider align-middle"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
 
+{% endblock %}
+
+
+
+{% block script %}
+<script>
+  {% include '_scripts/utils.js' %}       {#/* defines: flash_message */#}
+
+
+  const browser_tools = [
+    {%- for (tool_id, tool_name) in GENOME_BROWSER_TOOLS %}
+    ["{{ tool_id }}", "{{ tool_name }}"],
+    {%- endfor %}
+  ]
+
+  // Declare data table at "global" scope
+  let table;
+
+
+  $(document).ready(function() {
+
+    $.ajaxSetup({
+      beforeSend: function(xhr, settings) {
+        if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+          xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
+        }
+      }
+    });
+
+    // Render table with Datatables
+    table = $('#table-browser-tracks').DataTable( {
+      "sDom": "tpr",
+      "processing": true,
+      "ajax": {
+        url: "{{ url_for('api_tracks.query_datatables') }}",
+
+        // On error, flash message
+        error: function(error) {
+          console.error('ERROR retrieving browser tracks: ', error);
+          const resp = error.responseJSON
+          if (resp && resp.message) {
+            flash_message(resp.message, resp.full_msg_link, resp.full_msg_body);
+          } else {
+            flash_message('There was a problem retrieving the list of browser tracks. Please try again later.');
+          }
+        },
+      },
+      "autoWidth": false,
+      "rowId": function(data) {
+        return `browser-tracks-row-${data.name}`;
+      },
+      "rowReorder": {
+        "dataSrc": "order",
+      },
+      "columnDefs": [
+        { "targets": "_all", "orderable": false }
+      ],
+      "columns": [
+
+        // Drag & drop reordering
+        {
+          "data": "order",
+          "visible": false,
+          "orderable": true,
+        },
+        {
+          "data": "order",
+          "render": function(data, type, row) {
+            return `<i class="bi bi-arrows-expand" aria-hidden="true"></i>`;
+          },
+          "sClass": "optionsToolbar reorderColumn text-center",
+          "sWidth": "8%",
+        },
+
+        {
+          "data": "display_name",
+          "sClass": "optionsToolbar text-start",
+          "width": '14%',
+        },
+
+        {
+          "data": "filename",
+          "sClass": "optionsToolbar text-start font-monospace small",
+          "width": '25%',
+        },
+
+        {
+          "data": "used_in_tools",
+          "render": function(data, type, row) {
+
+            // Map the available tools to HTML list entries
+            const elements = browser_tools.map(([tool_id, tool_name]) => {
+              const icon = data.includes(tool_id)
+                ? '<i class="bi bi-check-circle-fill" aria-label="Used in tool"></i>'
+                : '<i class="bi bi-circle text-muted" aria-label="Not used in tool"></i>';
+
+              return `<li ${ !data.includes(tool_id) ? 'class="text-muted"' : '' }>${ icon } ${ tool_name }</li>`
+            });
+
+            // Render as a single list
+            return '<ul class="releases-list text-start">' + elements.join('') + '</ul>'
+          },
+          "sClass": "optionsToolbar",
+          "width": '20%',
+        },
+
+        {
+          "data": "available_releases",
+          "render": function(data, type, row) {
+
+            // Map the available releases to HTML list entries
+            const elements = data.map(release => {
+              const icon = release.available
+                ? '<i class="bi bi-check-circle-fill" aria-label="Available"></i>'
+                : '<i class="bi bi-circle text-muted" aria-label="Not available"></i>';
+
+              return `<li ${ !release.available ? 'class="text-muted"' : '' }>${ icon } <em>${ release.species }</em></li>`
+            });
+
+            // Render as a single list
+            return '<ul class="releases-list text-start">' + elements.join('') + '</ul>'
+          },
+          "sClass": "optionsToolbar",
+          "width": '15%',
+        },
+
+        {
+          "data": "checked",
+          "render": function(data, type, row) {
+            return data
+              ? `<i class="bi bi-check-circle-fill" aria-label="Checked by default"></i>`
+              : '<i class="visually-hidden" aria-label="Not checked by default"></i>';
+          },
+          "sClass": "optionsToolbar text-center",
+          "sWidth": "8%",
+        },
+
+        {
+          "data": "name",
+          "render": function(data, type, row) {
+            console.log(row)
+            const url = "{{ url_for('admin_gene_browser_tracks.edit_page', entity_id='BROWSER_TRACK_ID') }}".replace('BROWSER_TRACK_ID', data);
+            return `
+              <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Edit</a>
+            `;
+          },
+          "sClass": "optionsToolbar text-center",
+          "sWidth": "10%",
+        },
+      ]
+    });
+
+
+    // When table rows are re-ordered, persist this change
+    table.on('row-reorder', function (e, diff, edit) {
+
+      // Create a mapping from browser track ID to new position
+      newRowOrders = {}
+      for (row of diff) {
+        newRowOrders[row.node.id.replace(/^(browser-tracks-row-)/, "")] = row.newPosition
+      }
+
+      // POST request to update order
+      $.ajax({
+        type: "POST",
+        url:  "{{ url_for('api_tracks.reorder') }}",
+        headers: {
+          'X-CSRF-TOKEN': "{{ form.csrf_token._value() }}",
+        },
+        contentType: 'application/json; charset=utf-8',
+        dataType:    'json',
+        data:        JSON.stringify(newRowOrders),
+
+        // Signal that table is updating
+        beforeSend: function() {
+          table.processing(true);
+        },
+
+        // On success, clear the processing indicator
+        success: function(result) {
+          table.processing(false);
+        },
+
+        // On failure, show error message
+        error: function(error) {
+          table.processing(false);
+          console.error('Error updating browser track order: ', error)
+          flash_message('Failed to update browser track order. Please reload the page and try again.', 'Full error message', error.responseJSON.message);
+        }
+      })
+    });
+
+  });
+</script>
 {% endblock %}
