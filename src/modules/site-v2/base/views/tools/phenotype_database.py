@@ -92,7 +92,7 @@ def download_csv():
   def generate():
     yield file_format['sep'].join(columns) + '\n'
     try:
-      for row in traits.yield_per(1000):
+      for row in traits.yield_per(100):
         row = [getattr(row, column) for column in columns]
         yield file_format['sep'].join(map(str, row)) + '\n'
     except Exception as ex:
