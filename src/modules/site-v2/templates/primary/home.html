@@ -1,4 +1,13 @@
 {% extends "_layouts/default-nocontainer.html" %}
+
+{% block custom_head %}
+<style>
+  #cite-text {
+    text-align: left !important;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
   <!-- Display Title -->
   <div class="container">
@@ -102,10 +111,10 @@
     <div class="row row-cols-1 row-cols-md-2 g-5 mb-5">
       <div class="col px-5 mb-5">
         <h2 class="mt-5">Cite CaeNDR</h2>
-        <div class="card h-100 shadow text-center pt-5 mt-5 cardBorderBottom">
+        <div class="card h-100 shadow pt-5 mt-5 cardBorderBottom">
           <i class="bi bi-chat-left-quote-fill text-info" aria-hidden="true"></i>
-          <div class="card-body">
-            <h3 class="text-dark">CaeNDR, the <em>Caenorhabditis</em> Natural Diversity Resource</h3>
+          <div class="card-body" id="cite-text">
+            <h3 class="text-dark text-center">CaeNDR, the <em>Caenorhabditis</em> Natural Diversity Resource</h3>
             <p class="card-text">
               {% include "_includes/cite-caendr.html" %}
             </p>
