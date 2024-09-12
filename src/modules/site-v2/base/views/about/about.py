@@ -179,16 +179,16 @@ def contact_us():
   return render_template('about/contact-us.html', **locals())
 
 
-@about_bp.route('/collectors')
+@about_bp.route('/field-researchers')
 @cache.memoize(60*60)
-def collectors():
+def field_researchers():
   try:
     strain_listing = [s.to_json() for s in get_isotypes(known_origin=True)]
   except Exception as ex:
     logger.error(f'Failed to retrieve strain list: {ex}')
     strain_listing = None
-  return render_template('about/collectors.html', **{
-    'title'         : "Collectors",
-    'collectors'    : Profile.query_ds_roles(Profile.COLLAB),
-    'strain_listing': strain_listing,
+  return render_template('about/field-researchers.html', **{
+    'title'            : "Field Researchers",
+    'field_researchers': Profile.query_ds_roles(Profile.COLLAB),
+    'strain_listing'   : strain_listing,
   })
