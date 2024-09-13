@@ -19,19 +19,19 @@
         {% include "_includes/map-static.html" %}
     </div>
     <!-- /Map -->
-    <h2 class="pt-5 text-center">Thank you wild worm collectors!</h2>
+    <h2 class="pt-5 text-center">Thank you wild worm field researchers!</h2>
     <div class="row row-cols-1 row-cols-md-3">
-        {% for c in collectors|sort(attribute='last_name') %}
+        {% for fr in field_researchers|sort(attribute='last_name') %}
         <!-- Card Column -->
         <div class="col mb-3">
             <div class="card p-0 pt-3 mt-5 h-100 shadow text-center cardBorderBottom" style="min-height:35vh;">
-                <img src="{{ c.img_url }}" class="img-fluid rounded mb-3 mx-auto"
-                    alt="{{ c.first_name }} {{ c.last_name }}">
+                <img src="{{ fr.img_url }}" class="img-fluid rounded mb-3 mx-auto"
+                    alt="{{ fr.first_name }} {{ fr.last_name }}">
                 <div class="card-body">
-                    <h3 class="h5 card-title"><a href="{{ c.website }}" target="_blank">{{ c.first_name }} {{
-                            c.last_name }}</a></h3>
+                    <h3 class="h5 card-title"><a href="{{ fr.website }}" target="_blank">{{ fr.first_name }} {{
+                            fr.last_name }}</a></h3>
                     <p class="card-text">
-                        <small>{{ c.org }}</small>
+                        <small>{{ fr.org }}</small>
                     </p>
                 </div>
             </div>
