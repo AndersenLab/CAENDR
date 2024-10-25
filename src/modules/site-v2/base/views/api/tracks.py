@@ -207,7 +207,6 @@ def edit_track(track: BrowserTrackDefault = None, form_data = None, no_cache: bo
 
 
 @api_tracks_bp.route('/tool/<string:tool_id>', methods=['GET'])
-@jwt_required()
 @jsonify_request
 def get_tool_tracks(tool_id: str):
   '''
@@ -227,7 +226,6 @@ def get_tool_tracks(tool_id: str):
 
 
 @api_tracks_bp.route('/templates', methods=['GET'])
-@jwt_required()
 @jsonify_request
 def get_track_templates():
   '''
