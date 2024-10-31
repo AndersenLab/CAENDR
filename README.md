@@ -408,4 +408,13 @@ $ arch -x86_64 brew install openssl
 ```
 
 
+Q: I get an `ImportError` when running the API in VSCode:
+```
+    ImportError: cannot import name 'Literal' from 'typing' (/Users/ ... /.pyenv/versions/3.7.12/lib/python3.7/typing.py)
+```
+
+A: The VSCode extension `debugpy`, version `v2024.12.0`, appears to break on Python 3.7 -- it's not clear if this is a bug, or intentional dropping of support for older versions.
+You can get around this by pinning your extension to `v2024.10.0` -- see [the VSCode docs](https://code.visualstudio.com/updates/v1_30#_install-previous-versions) for instructions.
+
+(If this is a bug, further updates to `debugpy` might fix this issue.  Keep an eye on it, and try the newest version if necessary.)
  

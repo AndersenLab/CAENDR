@@ -7,7 +7,7 @@
         
         {
             "name": "Run Site-v2 (requires a local Postgres instance or cloud-sql-proxy)",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "cwd": "${workspaceFolder}/src/modules/site-v2",
             "console": "integratedTerminal",
@@ -44,7 +44,7 @@
         },
         {
             "name": "Run Site  (requires a local Postgres instance or cloud-sql-proxy)",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "cwd": "${workspaceFolder}/src/modules/site",
             "console": "integratedTerminal",
@@ -79,7 +79,7 @@
         },
         {
             "name": "Script: Create NemaScan Task",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/modules/site/scripts/create-nemascan-mapping-task.py",
             "cwd": "${workspaceFolder}/src/modules/site",
@@ -91,7 +91,7 @@
         },
         {
             "name": "Run API pipeline server",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "cwd": "${workspaceFolder}/src/modules/api/pipeline-task",
             "console": "integratedTerminal",
@@ -121,7 +121,7 @@
         },
         {
             "name": "TEST img_thumb_gen",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/modules/img_thumb_gen/test.py",
             "console": "integratedTerminal",
@@ -135,7 +135,7 @@
         },
         {
             "name": "Run DROP_AND_POPULATE_STRAINS",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/modules/db_operations/main.py",
             "console": "integratedTerminal",
@@ -158,7 +158,7 @@
         },
         {
             "name": "Run DROP_AND_POPULATE_WORMBASE_GENES (WS283)",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/modules/db_operations/main.py",
             "console": "integratedTerminal",
@@ -181,7 +181,7 @@
         },
         {
             "name": "Run DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/modules/db_operations/main.py",
             "console": "integratedTerminal",
@@ -204,7 +204,7 @@
         },
         {
             "name": "Run DROP_AND_POPULATE_PHENOTYPE_METADATA",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/modules/db_operations/main.py",
             "console": "integratedTerminal",
@@ -227,7 +227,7 @@
         },
         {
             "name": "Run DROP_AND_POPULATE_PHENOTYPE_DB",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/modules/db_operations/main.py",
             "console": "integratedTerminal",
@@ -250,7 +250,7 @@
         },
         {
             "name": "Run DROP_AND_POPULATE_PHENOTYPES",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/modules/db_operations/main.py",
             "console": "integratedTerminal",
@@ -273,7 +273,7 @@
         },
         {
             "name": "Run DROP_AND_POPULATE_ALL_TABLES",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/modules/db_operations/main.py",
             "console": "integratedTerminal",
@@ -298,7 +298,7 @@
         },
         {
             "name": "DROP_AND_POPULATE_ALL_TABLES (USE MOCK DATA)",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/modules/db_operations/main.py",
             "console": "integratedTerminal",
@@ -324,7 +324,7 @@
         },
         {
             "name": "Run POPULATE_PHENOTYPES_DATASTORE",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/modules/db_operations/main.py",
             "console": "integratedTerminal",
@@ -346,7 +346,7 @@
         },
         {
             "name": "DB_OP TEST_ECHO",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/modules/db_operations/main.py",
             "console": "integratedTerminal",
@@ -372,7 +372,7 @@
         },
         {
             "name": "DbOp: Recompute Phenotype Report Cached Names",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/modules/db_operations/main.py",
             "console": "integratedTerminal",
@@ -390,7 +390,7 @@
         },
         {
             "name": "Test Indel Finder",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/modules/indel_primer/main.py",
             "console": "integratedTerminal",
@@ -410,7 +410,7 @@
         },
         {
             "name": "Run Site-v2 (local API)",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "cwd": "${workspaceFolder}/src/modules/site-v2",
             "console": "integratedTerminal",
@@ -440,7 +440,7 @@
         },
         {
             "name": "Run API pipeline server (local site)",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "cwd": "${workspaceFolder}/src/modules/api/pipeline-task",
             "console": "integratedTerminal",
