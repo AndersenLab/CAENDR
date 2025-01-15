@@ -98,7 +98,15 @@
                                         </tr>
                                         <tr>
                                             <th scope="row">Alignment Data</th>
-                                            <td></td>
+                                            <td>
+                                                <p style="margin-bottom: 0.5em;">
+                                                    Alignment data are stored as BAM files, which are binary representations of the Sequence Alignment/Map format.
+                                                </p>
+                                                <p style="margin-bottom: 0;">
+                                                    The specifications for these file formats continue to develop.
+                                                    Current specifications for BAM and VCF can be found at <a href="https://samtools.github.io/hts-specs/">hts-specs</a>.
+                                                </p>
+                                            </td>
                                             <td>
                                                 <p style="margin-bottom: 0;">
                                                     This <a href="{{ url_for('data_releases.alignment_data', species_name = species.get_slug(), release_version = release_version) }}">link</a>
@@ -108,10 +116,19 @@
                                         </tr>
                                         <tr>
                                             <th scope="row">Soft-Filtered Variants</th>
-                                            <td>The soft-filtered VCF includes all variants and annotations called by
-                                                the GATK pipeline. The QC status of each variant (INFO
-                                                field=<code>FILTER</code>) and genotype (Format Field=<code>FT</code>)
-                                                is specified by a VCF Field.</td>
+                                            <td>
+                                                <p style="margin-bottom: 0.5em;">
+                                                    Variant information is stored in the VCF format, which is a tab delimited format for storing variant calls and individual genotypes.
+                                                    It is able to store all variant calls from single nucleotide variants to insertions and deletions (~50 bp).
+                                                </p>
+                                                <p style="margin-bottom: 0.5em;">
+                                                    The soft-filtered VCF includes all variants and annotations called by the GATK pipeline.
+                                                    The QC status of each variant (INFO field=<code>FILTER</code>) and genotype (Format Field=<code>FT</code>) is specified by a VCF Field.
+                                                </p>
+                                                <p style="margin-bottom: 0;">
+                                                    The specifications for these file formats continue to develop.
+                                                    Current specifications for BAM and VCF can be found at <a href="https://samtools.github.io/hts-specs/">hts-specs</a>.
+                                                </p>
                                             <td>
                                             {%- call render_download_link_set(files) %}
                                                 <strong>All Strains</strong>
@@ -140,10 +157,19 @@
                                         </tr>
                                         <tr>
                                             <th scope="row">Hard-Filtered Variants</th>
-                                            <td>The hard-filtered VCF includes only high-quality variants after all
-                                                variants and genotypes with a failed QC status are removed. To obtain
-                                                vcf for a single or a subset of strains, use
-                                                <code>bcftools view --samples</code></td>
+                                            <td>
+                                                <p style="margin-bottom: 0.5em;">
+                                                    Variant information is stored in the VCF format, which is a tab delimited format for storing variant calls and individual genotypes.
+                                                    It is able to store all variant calls from single nucleotide variants to insertions and deletions (~50 bp).
+                                                </p>
+                                                <p style="margin-bottom: 0.5em;">
+                                                    The hard-filtered VCF includes only high-quality variants after all variants and genotypes with a failed QC status are removed.
+                                                    To obtain vcf for a single or a subset of strains, use <code>bcftools view --samples</code>.
+                                                </p>
+                                                <p style="margin-bottom: 0;">
+                                                    The specifications for these file formats continue to develop.
+                                                    Current specifications for BAM and VCF can be found at <a href="https://samtools.github.io/hts-specs/">hts-specs</a>.
+                                                </p>
                                             <td>
                                             {%- call render_download_link_set(files) %}
                                                 <strong>All Strains</strong>
@@ -173,10 +199,20 @@
                                         {% if files and files.get('impute_isotype_vcf_gz') %}
                                         <tr>
                                             <th scope="row">Imputed Variants</th>
-                                            <td>The imputed VCF includes all the variants from the hard-filtered Isotype
-                                                VCF, but all missing genotypes have been imputed using <a
-                                                    href="https://faculty.washington.edu/browning/beagle/b5_1.html">Beagle
-                                                    v5.1</a>.</td>
+                                            <td>
+                                                <p style="margin-bottom: 0.5em;">
+                                                    Variant information is stored in the VCF format, which is a tab delimited format for storing variant calls and individual genotypes.
+                                                    It is able to store all variant calls from single nucleotide variants to insertions and deletions (~50 bp).
+                                                </p>
+                                                <p style="margin-bottom: 0.5em;">
+                                                    The imputed VCF includes all the variants from the hard-filtered Isotype VCF, but all missing genotypes have been imputed using
+                                                    <a href="https://faculty.washington.edu/browning/beagle/b5_1.html">Beagle v5.1</a>.
+                                                </p>
+                                                <p style="margin-bottom: 0em;">
+                                                    The specifications for these file formats continue to develop.
+                                                    Current specifications for BAM and VCF can be found at <a href="https://samtools.github.io/hts-specs/">hts-specs</a>.
+                                                </p>
+                                            </td>
                                             <td>
                                                 <strong>Isotypes</strong>
                                                 <br />
