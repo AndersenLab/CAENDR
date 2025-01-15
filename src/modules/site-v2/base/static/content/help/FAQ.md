@@ -28,6 +28,16 @@ Or use this bibtex entry
 
 Hyper-variable regions are genomic intervals that contain sequences not found in the N2 reference strain. They were identified by high levels of variation and low coverage from read alignments. For a more full description, please read [this paper](https://andersenlab.org/publications/2021LeeNatureEE.pdf). We highly recommend that you use the genome browser and view the BAM files for strains of interest. We also released a genomic view track to see where we have classified hyper-variable regions. If you find that your region of interest overlaps with a hyper-variable region, then we recommend taking any variants as preliminary. Long-read sequencing is required to identify the actual genomic sequences in this region.
 
+
+## Does CaeNDR have API access for computationally efficient data downloads?
+
+Amazon Web Services (AWS) Open Data Project is making the CaeNDR data publicly available to the community free of charge. Public Data Sets on AWS provide a centralized repository of public data hosted on Amazon Simple Storage Service (Amazon S3). The data can be seamlessly accessed from AWS services such Amazon Elastic Compute Cloud (Amazon EC2) and Amazon Elastic MapReduce (Amazon EMR), which provide organizations with the highly scalable compute resources needed to take advantage of these large data collections. Researchers pay only for the additional AWS resources they need for further processing or analysis of the data. Learn more about [Public Data Sets on AWS](https://aws.amazon.com/publicdatasets/).
+
+The latest CaeNDR Project data is publicly available in the [CaeNDR Amazon S3 bucket](http://s3.amazonaws.com/caendr).
+
+We are working to implement an API to provide even more seamless data downloads.
+
+
 ## How much confidence do we have in the indel variants?
 
 GATK calls indel variants (1-50 bp) and short structural variants. The variant calling at these sites was not optimized and ran default parameters. These variants should be considered preliminary until confirmed by PCR or long-read sequencing.
