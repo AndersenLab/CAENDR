@@ -29,6 +29,7 @@
                 "SENTRY_URL": "",
                 // "SITE_BASE_URL": "https://localhost:8080",
                 "MODULE_SITE_HOST": "localhost:8080",
+                "NAME_OF_THE_SERVICE_ACCOUNT_FILE": "andersen-lab-dev-330218"
             },
             "args": [
                 "run",

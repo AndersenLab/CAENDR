@@ -23,7 +23,7 @@ LOAD_SECRET_TF_VAR=export $$(cat $(SECRET_ENV_FILE) | sed $(WHITESPACE_REGEX) | 
 TF_SELECT_WORKSPACE=(terraform workspace new $(ENV) || (echo "Switching to existing workspace \"$(ENV)\"" && terraform workspace select $(ENV)))
 
 all: help
-targets: configure cloud-resource-plan cloud-resource-deploy cloud-resource-destroy 
+targets: configure mac_configure cloud-resource-plan cloud-resource-deploy cloud-resource-destroy 
 
 .PHONY : targets
 .DEFAULT : help
@@ -104,6 +104,16 @@ endif
 	gcloud auth application-default login && \
 	gcloud auth configure-docker
 
+mac_configure:
+	brew install terraform
+	brew install google-cloud-sdk
+	brew install cloud-sql-Proxy
+
+	@echo -e "\n$(COLOR_B)Configuring Google Cloud SDK...$(COLOR_N)" && \
+	gcloud init && \
+	gcloud auth login && \
+	gcloud auth application-default login && \
+	gcloud auth configure-docker
 
 #~
 terraform-shell: #~
