@@ -99,7 +99,6 @@ def query_strains(
         return 'N2'
       return query.isotype
       
-  
   return query
 
 
@@ -128,6 +127,7 @@ def get_strains(known_origin=False, issues=False):
   for strain in result:
     # Set an attribute for the reference strain of every strain
     strain.reference_strain = ref_strain_list.get(strain.isotype, None)
+  result = sorted(result, key=lambda x: (x.species, x.to_sortable_isotype(x), x.to_sortable_strain(x)))
   return result
 
 

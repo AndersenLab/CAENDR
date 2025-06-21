@@ -14,6 +14,7 @@ from extensions import cache
 
 from base.utils.statistics import cum_sum_strain_isotype, get_strain_collection_plot, get_mappings_summary_legacy, get_report_sumary_plot_legacy, get_weekly_visits_plot, get_num_registered_users
 
+from caendr.api.strain import get_strains
 from caendr.api.isotype import get_isotypes
 from caendr.models.datastore.species import Species
 from caendr.models.datastore.profile import Profile
@@ -63,6 +64,22 @@ def getting_started():
   })
 
 
+@about_bp.route('/major-strain-contributors')
+@cache.memoize(60*60)
+def major_strain_contributors():
+  title = "Major Strain Contributors"
+  disable_parent_breadcrumb = True
+  try:
+    strain_listing = [s.to_json() for s in get_strains(known_origin=False)]
+  except Exception as ex:
+    logger.error(f'Failed to retrieve strain list: {ex}')
+    strain_listing = None
+  major_strain_contributors = Profile.query_ds_roles(Profile.COLLAB)
+  contributor_labs = [[s.last_name, s.strain_prefix, f"{s.first_name} {s.last_name}"] for s in major_strain_contributors]
+  contributor_labs.sort()
+  contributor_labs = [[x[1], x[2]] for x in contributor_labs]
+  return render_template('about/major-strain-contributors.html', **locals())
+
 @about_bp.route('/people')
 @cache.memoize(60*60)
 def people():
@@ -79,7 +96,7 @@ def people():
       profiles[Profile.STAFF.code].insert(0, p)
 
   return render_template('about/people.html', **{
-    'title': "People",
+    'title': "Staff and SAC",
     'disable_parent_breadcrumb': True,
 
     'Profile': Profile,
@@ -178,17 +195,3 @@ def contact_us():
   title = "Contact Us"
   return render_template('about/contact-us.html', **locals())
 
-
-@about_bp.route('/field-researchers')
-@cache.memoize(60*60)
-def field_researchers():
-  try:
-    strain_listing = [s.to_json() for s in get_isotypes(known_origin=True)]
-  except Exception as ex:
-    logger.error(f'Failed to retrieve strain list: {ex}')
-    strain_listing = None
-  return render_template('about/field-researchers.html', **{
-    'title'            : "Field Researchers",
-    'field_researchers': Profile.query_ds_roles(Profile.COLLAB),
-    'strain_listing'   : strain_listing,
-  })

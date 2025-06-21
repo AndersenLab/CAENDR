@@ -12,6 +12,7 @@ from caendr.models.datastore       import Species, TraitFile, User
 from caendr.models.status          import PublishStatus
 from caendr.models.trait           import Trait
 from caendr.api.phenotype          import get_phenotype_values_for_trait
+from caendr.api.strain             import get_strains
 from caendr.services.cloud.secret  import get_secret
 from caendr.services.cloud.storage import get_blob, download_blob_to_file
 from caendr.services.logger        import logger
@@ -24,6 +25,7 @@ from base.utils.trait              import add_trait, update_trait_metadata
 from base.utils.view_decorators    import parse_trait
 from base.forms                    import TraitSubmissionForm, EmptyForm, format_form_errors
 from constants                     import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
+from extensions                    import compress
 
 MODULE_DB_OPERATIONS_BUCKET_NAME = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
 UPLOADS_DIR = os.path.join('.', 'uploads')
@@ -55,6 +57,25 @@ def download():
   disable_parent_breadcrumb = True
   return render_template('data/download.html', **locals())
 
+#
+# Strain database
+#
+@data_bp.route('/strains')
+@cache.memoize(60*60*24)
+@compress.compressed()
+def get_strains_json():
+  try:
+    strain_listing = [ strain.to_json() for strain in get_strains() ]
+  except Exception:
+    strain_listing = []
+  return jsonify(strain_listing)
+
+@data_bp.route('/strain_database')
+@cache.memoize(60*60)
+def strain_database():
+  title = 'Strain Database'
+  disable_parent_breadcrumb = False
+  return render_template('data/strain_database.html', **locals())
 
 #
 # Protocols

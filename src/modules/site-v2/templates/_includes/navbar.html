@@ -5,11 +5,26 @@
         <a href="/" aria-label="CaeNDR home"><img src="/static/img/caeNDRLogo.png" class="img-fluid" alt=""></a>
       </div>
       <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup"
-        aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-        <div class="navbar-nav col-7 col-md-12 justify-content-center mt-3">
+      aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+      <div class="navbar-nav col-7 col-md-12 justify-content-center mt-3">
+        <div class="nav-item dropdown mx-3">
+          <a class="nav-link dropdown-toggle {{'active' if request.blueprint == 'about'}}" href="#" id="aboutDropdown"
+            role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            About
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="aboutDropdown">
+            <li><a class="dropdown-item" href="{{ url_for('about.about')             }}"> About CaeNDR </a></li>
+            <li><a class="dropdown-item" href="{{ url_for('about.people')            }}"> Staff and SAC </a></li>
+            <li><a class="dropdown-item" href="{{ url_for('about.major_strain_contributors')  }}"> Major Strain Contributors </a></li>
+            <li><a class="dropdown-item" href="{{ url_for('about.cited_by')          }}"> Cited By </a></li>
+            <li><a class="dropdown-item" href="{{ url_for('about.funding')           }}"> Funding </a></li>
+            <li><a class="dropdown-item" href="{{ url_for('about.statistics')        }}"> Statistics </a></li>
+            <li><a class="dropdown-item" href="{{ url_for('about.contact_us')        }}"> Contact Us </a></li>
+          </ul>
+        </div>
           <a class="nav-link {{'active' if request.blueprint == 'request_strains'}} mx-3"
             href="{{ url_for('request_strains.request_strains') }}">Request Strains</a>
           <div class="nav-item dropdown mx-3">
@@ -46,26 +61,12 @@
             </a>
             <ul class="dropdown-menu" aria-labelledby="dataDropdown">
               <li><a class="dropdown-item" href="{{ url_for('data_releases.data_releases') }}"> Data Releases </a></li>
+              <li><a class="dropdown-item" href="{{ url_for('data.strain_database') }}"> Strain Database </a></li>
               <li><a class="dropdown-item" href="{{ url_for('data.protocols')     }}"> Protocols </a></li>
               <li><a class="dropdown-item" href="https://docs.google.com/forms/d/e/1FAIpQLSfO0m4UMzTSz79weA2ICkuIHDYnZegqXly4SA15_w3FMuyocQ/viewform" target="_blank"> Submit A Strain <i class="bi bi-box-arrow-right" aria-hidden="true"></i></a><span class="visually-hidden">Link opens in a new tab</span></li>
               {%- if feature_flags.PHENOTYPE_DB_ENABLED %}
               <li><a class="dropdown-item" href="{{ url_for('data.submit_trait_start')     }}"> Submit Trait </a></li>
               {%- endif %}
-            </ul>
-          </div>
-          <div class="nav-item dropdown mx-3">
-            <a class="nav-link dropdown-toggle {{'active' if request.blueprint == 'about'}}" href="#" id="aboutDropdown"
-              role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              About Us
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="aboutDropdown">
-              <li><a class="dropdown-item" href="{{ url_for('about.about')             }}"> About CaeNDR </a></li>
-              <li><a class="dropdown-item" href="{{ url_for('about.people')            }}"> People </a></li>
-              <li><a class="dropdown-item" href="{{ url_for('about.field_researchers') }}"> Field Researchers </a></li>
-              <li><a class="dropdown-item" href="{{ url_for('about.cited_by')          }}"> Cited By </a></li>
-              <li><a class="dropdown-item" href="{{ url_for('about.funding')           }}"> Funding </a></li>
-              <li><a class="dropdown-item" href="{{ url_for('about.statistics')        }}"> Statistics </a></li>
-              <li><a class="dropdown-item" href="{{ url_for('about.contact_us')        }}"> Contact Us </a></li>
             </ul>
           </div>
           <div class="nav-item dropdown mx-3">

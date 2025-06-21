@@ -1,6 +1,3 @@
-- name: Johns Hopkins Krieger School of Arts & Sciences
-  url: https://krieger.jhu.edu/
-  image: jhu-divisions-krieger.png
 - name: NSF
   url: https://www.nsf.gov
   image: nsf.png

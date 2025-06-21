@@ -53,6 +53,13 @@ class Strain(DictSerializable, db.Model):
   def sort_by_strain(arr):
     return sorted(arr, key=Strain.to_sortable_strain)
 
+  @staticmethod
+  def to_sortable_isotype(strain):
+    m = re.match(STRAIN_NAME_REGEX, strain.strain)
+    if m:
+      return (m.group(1), int(m.group(2)))
+    return ('', 0)
+
 
   @classmethod
   def get_column_names_ordered(cls):

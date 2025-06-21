@@ -21,7 +21,7 @@ def delete_ds_entity_by_ref(kind, id):
 def get_ds_entity(kind, name):
   ''' Returns item by kind and name from google datastore '''
   result = dsClient.get(dsClient.key(kind, name))
-  logger.debug(f"get: {kind} - {name}")
+  # logger.debug(f"get: {kind} - {name}")
   try:
     result_out = {'_exists': True}
     for k, v in result.items():

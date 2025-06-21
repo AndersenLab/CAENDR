@@ -75,10 +75,37 @@ class Profile(Entity):
       'img_blob_path',
       'website',
       'email',
+      'strain_prefix',
+      'funding',
     }
 
 
   ## Special Properties ##
+  # Prop should default to empty string if not set
+  @property
+  def strain_prefix(self):
+    return self.__dict__.get('strain_prefix', "")
+  
+  @strain_prefix.setter
+  def strain_prefix(self, val):
+
+    # Only allow list to be set
+    if not isinstance(val, str):
+      raise TypeError('Must set strain_prefix to a string.')
+    self.__dict__['strain_prefix'] = val
+
+  # Prop should default to empty list if not set
+  @property
+  def funding(self):
+    return self.__dict__.get('funding', [])
+  
+  @funding.setter
+  def funding(self, val):
+
+    # Only allow list to be set
+    if not isinstance(val, list):
+      raise TypeError('Must set funding to a list.')
+    self.__dict__['funding'] = val
 
   # Prop should default to empty list if not set
   @property
@@ -116,6 +143,11 @@ class Profile(Entity):
       return generate_blob_uri(Profile.get_bucket_name(), self.img_blob_path, schema=BlobURISchema.HTTPS)
 
     return None
+
+  # Prop should default to empty list if not set
+  # @property
+  # def funding(self):
+  #   return self.__dict__.get('funding', [])
 
 
   ## Querying ##

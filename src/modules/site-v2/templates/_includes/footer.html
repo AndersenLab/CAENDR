@@ -15,6 +15,15 @@
       <div class="col-12 col-md-6 d-flex flex-row justify-content-evenly justify-content-md-between">
           <div class="col-3 mb-5">
             <nav class="nav flex-column">
+              <h3 class="h5 text-dark">About</h3>
+              <a class="nav-link ps-0" href="{{ url_for('about.about')             }}"> About CaeNDR </a>
+              <a class="nav-link ps-0" href="{{ url_for('about.people')            }}"> Staff and SAC </a>
+              <a class="nav-link ps-0" href="{{ url_for('about.major_strain_contributors') }}"> Major Strain Contributors </a>
+              <a class="nav-link ps-0" href="{{ url_for('about.contact_us')        }}"> Contact Us </a>
+            </nav>
+          </div>
+          <div class="col-3 mb-5">
+            <nav class="nav flex-column">
               <h3 class="h5 text-dark">Tools</h3>
               <a class="nav-link ps-0" href="{{ url_for('genome_browser.genome_browser')                   }}">
                 Genome Browser
@@ -37,20 +46,12 @@
             <nav class="nav flex-column">
               <h3 class="h5 text-dark">Data</h3>
               <a class="nav-link ps-0" href="{{ url_for('data_releases.data_releases') }}"> Download Data </a>
+              <a class="nav-link ps-0" href="{{ url_for('data.strain_database') }}"> Strain Database </a>
               <a class="nav-link ps-0" href="{{ url_for('data.protocols')     }}"> Protocols </a>
               <a class="nav-link ps-0"
                 href="https://docs.google.com/forms/d/e/1FAIpQLSfO0m4UMzTSz79weA2ICkuIHDYnZegqXly4SA15_w3FMuyocQ/viewform"
                 target="_blank"> Submit A Strain <i class="bi bi-box-arrow-right" aria-hidden="true"></i></a><span
                 class="visually-hidden">Link opens in a new tab</span>
-            </nav>
-          </div>
-          <div class="col-3 mb-5">
-            <nav class="nav flex-column">
-              <h3 class="h5 text-dark">About Us</h3>
-              <a class="nav-link ps-0" href="{{ url_for('about.about')             }}"> About CaeNDR </a>
-              <a class="nav-link ps-0" href="{{ url_for('about.people')            }}"> People </a>
-              <a class="nav-link ps-0" href="{{ url_for('about.field_researchers') }}"> Field Researchers </a>
-              <a class="nav-link ps-0" href="{{ url_for('about.contact_us')        }}"> Contact Us </a>
             </nav>
           </div>
       </div>
