@@ -123,11 +123,7 @@ function get_track(track_name) {
 
   // If not, generate the track from a template
   else {
-    if (track_name.endsWith('bam')) {
-      track = fill_track_template('bam', track_name.substring(0, track_name.length - 4));
-    } else {
-      track = fill_track_template('vcf', track_name);
-    }
+    track = fill_track_template(track_name.substring(track_name.length - 3, track_name.length), track_name.substring(0, track_name.length - 4));
   }
 
   // Get track params

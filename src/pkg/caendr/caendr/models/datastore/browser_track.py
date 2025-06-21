@@ -5,7 +5,9 @@ from caendr.services.cloud.storage import BlobURISchema
 from caendr.utils.data             import unique_id
 from caendr.utils.tokens           import TokenizedString
 
+from caendr.services.logger import logger
 
+AWS_OPEN_DATA_BUCKET = get_env_var('AWS_OPEN_DATA_BUCKET')
 MODULE_SITE_BUCKET_PRIVATE_NAME = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
 
 
@@ -52,13 +54,20 @@ class BrowserTrack(FileRecordEntity, DeletableEntity, OrderableEntity):
       **self.__dict__.get('params', {}),
       'name':  self['display_name'],
       'order': self['order'],
-      'url':   self.get_filepath_template(schema=BlobURISchema.HTTPS).raw_string,
     }
 
     # Add indexURL if defined
+    if self.__class__ == BrowserTrackTemplate and params['name'].endswith('_bam'):
+      params['url'] = f"https://{self.bucket}/{self.prefix}/${{SPECIES}}/${{STRAIN}}.bam"
+    elif self.__class__ == BrowserTrackTemplate and params['name'].endswith('_vcf'):
+      params['url'] = f"https://{self.bucket}/{self.prefix}/${{SPECIES}}/${{STRAIN}}.vcf.gz"
+    else:
+      params['url'] = self.get_filepath_template(schema=BlobURISchema.HTTPS).raw_string
+
     if self.__class__ == BrowserTrackTemplate and self['index_suffix']:
       params['indexURL'] = params['url'] + self['index_suffix']
 
+    logger.debug(f"{params}")
     return params
 
 
@@ -146,17 +155,18 @@ class BrowserTrackTemplate(BrowserTrack):
 
   @property
   def bucket(self) -> str:
-    if self['is_bam']:
-      return MODULE_SITE_BUCKET_PRIVATE_NAME
-    else:
-      return super().release_bucket()
+    # if self['is_bam']:
+    return AWS_OPEN_DATA_BUCKET
+    # else:
+      # return super().release_bucket()
 
   @property
   def prefix(self) -> TokenizedString:
     if self['is_bam']:
       return TokenizedString('bam')
     else:
-      return DatasetRelease.get_path_template()
+      return TokenizedString('vcf')
+      # return DatasetRelease.get_path_template()
 
   def __repr__(self):
     return f"<{self.kind}:{getattr(self, 'template_name', 'no-name')}>"

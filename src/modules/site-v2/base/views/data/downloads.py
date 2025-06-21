@@ -5,7 +5,7 @@ from extensions import cache
 
 from base.utils.view_decorators import parse_species, parse_species_and_release
 
-from caendr.api.strain import get_bam_bai_download_link, fetch_bam_bai_download_script, generate_bam_bai_download_script
+from caendr.api.strain import get_bam_bai_vcf_download_link, fetch_bam_bai_download_script, generate_bam_bai_download_script
 from caendr.models.datastore import DatasetRelease, Species
 from caendr.models.error import NotFoundError
 from caendr.services.dataset_release import get_all_dataset_releases, find_dataset_release
@@ -53,10 +53,10 @@ def download_script(species_name, release_version):
 @cache.memoize(60*60)
 @jwt_required()
 @parse_species
-def download_bam_bai_file(species: Species, strain_name='', ext=''):
+def download_bam_bai_vcf_file(species: Species, strain_name='', ext=''):
 
   # Get the download link for this strain
-  signed_download_url = get_bam_bai_download_link(species, strain_name, ext) or ''
+  signed_download_url = get_bam_bai_vcf_download_link(species, strain_name, ext) or ''
 
   return render_template('data/download-redirect.html', **{
     'title': f'{strain_name}.{ext}',

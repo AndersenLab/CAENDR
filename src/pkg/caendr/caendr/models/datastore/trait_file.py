@@ -1,10 +1,12 @@
+from collections import OrderedDict
 from typing import Tuple, Optional
 from enum import Enum
 
+from logzero import logger
 from caendr.utils.env import get_env_var
 
 from caendr.models.datastore       import FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEntity
-from caendr.services.cloud.storage import BlobURISchema, join_path
+from caendr.services.cloud.storage import BlobURISchema, join_path, generate_blob_uri
 from caendr.utils.tokens           import TokenizedString
 
 
@@ -53,6 +55,7 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
 
       # Other
       'is_bulk_file',
+      'downloadable',
     }
 
 
@@ -73,6 +76,10 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
       props['dataset'] = props['dataset'].lower()
 
     return props
+
+  @staticmethod
+  def all():
+      return TRAITS_LIST
 
 
   #
@@ -100,6 +107,8 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
       return super().get_filepath_hashed(schema=schema, check_if_exists=check_if_exists, SPECIES=self['species'].name, USER_ID=self['username'])
     return super().get_filepath(schema=schema, check_if_exists=check_if_exists, SPECIES=self['species'].name)
 
+  def render_filepath(self):
+    return self.get_filepath(schema=BlobURISchema.HTTPS)
 
   #
   # Source properties
@@ -112,6 +121,14 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
   @is_bulk_file.setter
   def is_bulk_file(self, val):
     return self._set_raw_prop('is_bulk_file', bool(val))
+
+  @property
+  def downloadable(self):
+    return self._get_raw_prop('downloadable', False)
+
+  @downloadable.setter
+  def downloadable(self, val):
+    return self._set_raw_prop('downloadable', bool(val))
 
 
   @property
@@ -132,3 +149,10 @@ class TraitFile(FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEnt
     if isinstance(val, str):
       val = val.upper()
     return self._set_enum_prop(DatasetType, 'dataset', val)
+
+
+# Load species list
+TRAITS_LIST = {
+    e.name: e for e in TraitFile.query_ds()
+}
+TRAITS_LIST: 'OrderedDict[str, TraitFile]' = OrderedDict(sorted(TRAITS_LIST.items(), key=lambda e: str(e[1].filename)))

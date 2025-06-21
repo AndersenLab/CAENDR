@@ -21,6 +21,9 @@ AWS_OPEN_DATA_BUCKET             = get_env_var('AWS_OPEN_DATA_BUCKET')
 
 BAM_BAI_DOWNLOAD_SCRIPT_NAME     = get_env_var('BAM_BAI_DOWNLOAD_SCRIPT_NAME', as_template=True)
 BAM_BAI_PREFIX                   = get_env_var('BAM_BAI_PREFIX', as_template=True)
+VCF_TBI_PREFIX                   = get_env_var('VCF_TBI_PREFIX', as_template=True)
+GVCF_PREFIX                      = get_env_var('GVCF_PREFIX', as_template=True)
+PREFICES = {"bam": BAM_BAI_PREFIX, "bam.bai": BAM_BAI_PREFIX, "vcf.gz": VCF_TBI_PREFIX, "vcf.gz.tbi": VCF_TBI_PREFIX, "g.vcf.gz": GVCF_PREFIX}
 
 # TODO: This is still here so functions that haven't been updated will still work.
 bam_prefix = 'bam/c_elegans'
@@ -159,21 +162,22 @@ def get_strain_img_url(strain_name, species, thumbnail=True):
     return None
 
 
-def get_bam_bai_download_link(species, strain_name, ext, signed=False):
+def get_bam_bai_vcf_download_link(species, strain_name, ext, signed=False):
   '''
-    Get the URL to download a BAM or BAI file for a given strain.
+    Get the URL to download a BAM, BAI, VCF, TBI, or gVCF file for a given strain.
 
     Args:
       species: The Species object that this strain is under
       strain_name: The name of the strain to download
-      ext: The extension of the desired file. Should be either 'bam' or 'bam.bai'.
+      ext: The extension of the desired file. Should be either 'bam', 'bam.bai', 'vcf.gz', 'vcf.gz.tbi', or 'g.vcf.gz'
       signed (bool): Whether the generated URL should be signed. Defaults to False.
   '''
 
   bucket_name = AWS_OPEN_DATA_BUCKET
-  bam_prefix  = BAM_BAI_PREFIX.get_string(SPECIES=species.name)
+  file_prefix  = PREFICES[ext].get_string(SPECIES=species.name)
 
-  return "/".join(["https:/", bucket_name, bam_prefix, f'{strain_name}.{ext}'])
+  #return generate_blob_uri( bucket_name, bam_prefix, f'{strain_name}.{ext}', schema=BlobURISchema.sign(signed) )
+  return "/".join(["https:/", bucket_name, file_prefix, f'{strain_name}.{ext}'])
 
 # Is this deprecated?
 def fetch_bam_bai_download_script(species, release, reload=False):
@@ -243,6 +247,8 @@ def generate_bam_bai_download_script(species, release, signed=False):
     bai_fname = f'{strain}.bam.bai'
 
     # Generate download URLs
+    # bam_url = generate_blob_uri(bucket_name, bam_prefix, bam_fname, **sign_dict)
+    # bai_url = generate_blob_uri(bucket_name, bam_prefix, bai_fname, **sign_dict)
     bam_url = "/".join(["https:/", bucket_name, bam_prefix, bam_fname])
     bai_url = "/".join(["https:/", bucket_name, bam_prefix, bai_fname])
 
@@ -293,3 +299,6 @@ def upload_bam_bai_download_script(species, release, signed=False):
       os.remove(local_filename)
     except FileNotFoundError:
       pass
+
+
+

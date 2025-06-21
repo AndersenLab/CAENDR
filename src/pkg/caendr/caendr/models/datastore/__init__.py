@@ -24,6 +24,7 @@ from .dataset_release     import DatasetRelease       # Subclasses SpeciesEntity
 from .browser_track       import BrowserTrackDefault  # Subclasses FileRecordEntity, OrderableEntity, DeletableEntity (from BrowserTrack)
 from .browser_track       import BrowserTrackTemplate # Subclasses FileRecordEntity, OrderableEntity, DeletableEntity (from BrowserTrack)
 from .trait_file          import TraitFile            # Subclasses FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEntity
+from .annotation_file     import AnnotationFile       # Subclasses FileRecordEntity, SpeciesEntity
 from .trait_file          import DatasetType
 
 # Job template classes

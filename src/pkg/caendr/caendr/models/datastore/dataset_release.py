@@ -362,6 +362,14 @@ class DatasetRelease(SpeciesEntity):
     'hard_filter_vcf_gz_tbi':            'variation/WI.$RELEASE.hard-filter.vcf.gz.tbi',
     'hard_filter_isotype_vcf_gz':        'variation/WI.$RELEASE.hard-filter.isotype.vcf.gz',
     'hard_filter_isotype_vcf_gz_tbi':    'variation/WI.$RELEASE.hard-filter.isotype.vcf.gz.tbi',
+    'annovar_isotype_vcf_gz':            'variation/WI.$RELEASE.annovar.isotype.vcf.gz',
+    'annovar_isotype_vcf_gz_tbi':        'variation/WI.$RELEASE.annovar.isotype.vcf.gz.tbi',
+    'csq_isotype_vcf_gz':                'variation/WI.$RELEASE.csq.isotype.vcf.gz',
+    'csq_isotype_vcf_gz_tbi':            'variation/WI.$RELEASE.csq.isotype.vcf.gz.tbi',
+    'snpeff_isotype_vcf_gz':             'variation/WI.$RELEASE.snpeff.isotype.vcf.gz',
+    'snpeff_isotype_vcf_gz_tbi':         'variation/WI.$RELEASE.snpeff.isotype.vcf.gz.tbi',
+    'vep_isotype_vcf_gz':                'variation/WI.$RELEASE.vep.isotype.vcf.gz',
+    'vep_isotype_vcf_gz_tbi':            'variation/WI.$RELEASE.vep.isotype.vcf.gz.tbi',
     'impute_isotype_vcf_gz':             'variation/WI.$RELEASE.impute.isotype.vcf.gz',
     'impute_isotype_vcf_gz_tbi':         'variation/WI.$RELEASE.impute.isotype.vcf.gz.tbi',
 
@@ -376,6 +384,7 @@ class DatasetRelease(SpeciesEntity):
     'sweep_summary_tsv':                 'haplotype/sweep_summary.tsv',
 
     'transposon_calls':                  '${RELEASE}_${SPECIES}_transposon_calls.bed',
+    'genetic_map':                       '${SPECIES}_genetic_map.tsv',
   }, cutoff_date=20200101)
 
   V1 = ReportType('V1', {

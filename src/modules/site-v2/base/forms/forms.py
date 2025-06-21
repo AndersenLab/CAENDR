@@ -37,7 +37,7 @@ from caendr.services.user import get_user_role_form_options, get_local_user_by_e
 from caendr.services.database_operation import get_db_op_form_options
 from caendr.services.indel_primer import get_indel_primer_chrom_choices
 from caendr.services.markdown import get_content_type_form_options
-from caendr.models.datastore import User, Species, DatasetRelease, TraitFile
+from caendr.models.datastore import User, Species, DatasetRelease
 from caendr.models.datastore.announcement import AnnouncementType
 from caendr.api.strain import query_strains
 from base.forms.validators import (validate_duplicate_strain, 

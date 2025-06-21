@@ -22,15 +22,18 @@ from base.utils.view_decorators import parse_species_and_release
 
 from caendr.api.strain import query_strains
 from caendr.api.isotype import get_isotypes
-from caendr.models.datastore import DatasetRelease, Species
-from caendr.models.sql import Strain, StrainAnnotatedVariant
+from caendr.models.datastore import DatasetRelease, Species, TraitFile
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
 from caendr.services.dataset_release import get_all_dataset_releases, get_browser_tracks_path, get_release_bucket, find_dataset_release
 from caendr.utils.env import get_env_var
 
 
 BAM_BAI_DOWNLOAD_SCRIPT_NAME = get_env_var('BAM_BAI_DOWNLOAD_SCRIPT_NAME', as_template=True)
-
+MODULE_DB_OPERATIONS_BUCKET_NAME = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME', as_template=True)
+DB_RELEASE_FILEPATH = get_env_var('MODULE_DB_OPERATIONS_RELEASE_FILEPATH', as_template=True)
+GENE_GFF_FILENAME = get_env_var('GENE_GFF_FILENAME', as_template=True)
+GENE_GTF_FILENAME = get_env_var('GENE_GTF_FILENAME', as_template=True)
+GENE_IDS_FILENAME = get_env_var('GENE_IDS_FILENAME', as_template=True)
 
 releases_bp = Blueprint(
   'data_releases', __name__, template_folder='templates'
@@ -74,6 +77,33 @@ def data_release_list(species: Species, release: DatasetRelease):
     'release_path': release.get_versioned_path_template().get_string(SPECIES = species.name),
     'fasta_path': release.get_fasta_filepath(schema=BlobURISchema.HTTPS) if release.check_fasta_file_exists() else None,
     'fasta_name': release.get_fasta_filename(),
+    'gene_gff_path': generate_blob_uri(
+      MODULE_DB_OPERATIONS_BUCKET_NAME.get_string(), 
+      DB_RELEASE_FILEPATH.get_string(**{
+        'SPECIES': species.name,
+        'RELEASE': release.version,
+        }),
+        GENE_GFF_FILENAME.get_string(),
+        schema=BlobURISchema.HTTPS),
+    'gene_gff_name': GENE_GFF_FILENAME.get_string(),
+    'gene_gtf_path': generate_blob_uri(
+      MODULE_DB_OPERATIONS_BUCKET_NAME.get_string(), 
+      DB_RELEASE_FILEPATH.get_string(**{
+        'SPECIES': species.name,
+        'RELEASE': release.version,
+        }),
+        GENE_GTF_FILENAME.get_string(),
+        schema=BlobURISchema.HTTPS),
+    'gene_gtf_name': GENE_GTF_FILENAME.get_string(),
+    'gene_ids_path': generate_blob_uri(
+      MODULE_DB_OPERATIONS_BUCKET_NAME.get_string(), 
+      DB_RELEASE_FILEPATH.get_string(**{
+        'SPECIES': species.name,
+        'RELEASE': release.version,
+        }),
+        GENE_IDS_FILENAME.get_string(),
+        schema=BlobURISchema.HTTPS),
+    'gene_ids_name': GENE_IDS_FILENAME.get_string(),
   }
 
   # Get list of files based on species
@@ -94,9 +124,19 @@ def data_release_list(species: Species, release: DatasetRelease):
   # Special case:
   # Only show the Divergent Regions BED file if it defines a valid track for this species + release,
   # even if the file exists.
-  if files and 'Hyper-variable Regions' not in release['browser_tracks']:
+  if files and 'Hyper-divergent Regions' not in release['browser_tracks']:
     files['divergent_regions_strain_bed']    = None
     files['divergent_regions_strain_bed_gz'] = None
+
+  # Check for downloadable trait files
+  trait_files = [tf for tf in TraitFile.all().values() if tf.downloadable and tf.species.name == species.name]
+  if len(trait_files) == 0:
+    trait_files = None
+  else:
+    for t in trait_files:
+      logger.error(t.get_filepath(schema=BlobURISchema.HTTPS))
+        
+  files['trait_files'] = trait_files
 
   # Render the page
   return render_template('data/releases.html', **{
@@ -175,6 +215,33 @@ def alignment_data(species: Species, release: DatasetRelease):
   # DATASET_RELEASE, WORMBASE_VERSION = list(filter(lambda x: x[0] == release_version, RELEASES))[0]
   # REPORTS = ["alignment"]
 
+
+# ======================= #
+#   VCF Data Page   #
+# ======================= #
+@releases_bp.route('/<string:species_name>/latest/vcf')
+@releases_bp.route('/<string:species_name>/<string:release_version>/vcf')
+@cache.memoize(60*60)
+@parse_species_and_release
+def vcf_data(species: Species, release: DatasetRelease):
+
+  # Pre-2020 releases don't have data organized the same way
+  # TODO: Error page? Redirect to main release page?
+  if release.report_type == DatasetRelease.V1:
+    return
+
+  # Post-2020 releases
+  return render_template('data/vcf.html', **{
+    'title': "VCF Data",
+    'subtitle': species.short_name,
+    'alt_parent_breadcrumb': {"title": "Data", "url": url_for('data.data')},
+
+    'species':  species,
+    'RELEASE':  release,
+    'RELEASES': get_all_dataset_releases(order='-version', species=species.name),
+
+    'strain_listing': query_strains(release_version=release['version'], species=species.name),
+  })
 
 
 # =========================== #

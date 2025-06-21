@@ -3,9 +3,9 @@ from caendr.models.error import NotFoundError, NonUniqueEntity
 from caendr.utils.data import unique_id
 
 class PRICES:
-  DIVERGENT_SET = 160
-  STRAIN_SET = 640
-  STRAIN = 15
+  DIVERGENT_SET = 200
+  STRAIN_SET = 800
+  STRAIN = 18
   SHIPPING = 65
 
 

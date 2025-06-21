@@ -25,7 +25,7 @@
             type="button" role="tab" aria-controls="nav-home" aria-selected="true">New</button>
           <button class="nav-link" id="nav-about-tab" data-bs-toggle="tab" data-bs-target="#nav-about" type="button"
             role="tab" aria-controls="nav-about" aria-selected="false">About</button>
-          <button class="nav-link disabled" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false">Release Notes</button>
+          <button class="nav-link disabled" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false" style="display:none;">Release Notes</button>
         </div>
       </nav>
       <div class="tab-content" id="nav-tabContent">
@@ -318,6 +318,7 @@ function update_species(species_id) {
 
   // If no species selected, prompt user to select one; otherwise show the IGV browser
   $('#select-species-prompt').toggle(species_empty);
+  $('#nav-linkTwo-tab').toggle(!species_empty);
   $('#browser-container').toggle(!species_empty);
   $('#fullscreen-btn').toggle(!species_empty);
 

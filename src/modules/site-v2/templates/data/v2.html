@@ -108,15 +108,24 @@
                                                 </p>
                                             </td>
                                             {% if release_version == current_release %}
-                                            <td>
-                                                This <a href="{{ url_for('data_releases.alignment_data', species_name = species.get_slug(), release_version = release_version) }}">link</a>
-                                                contains all alignment data as BAM or BAI files.
-                                            </td>
+                                            <td>This <a
+                                                    href="{{ url_for('data_releases.alignment_data', species_name = species.get_slug(), release_version = release_version) }}">link</a>
+                                                contains all alignment data as BAM or BAI files.</td>
                                             {% endif %}
                                             {% if release_version != current_release %}
-                                            <td>
-                                                Alignment data are only provided for the latest release version.
-                                            </td>
+                                            <td>Alignment data are only provided for the latest release version.</td>
+                                            {% endif %}
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">Variant Data</th>
+                                            <td>Strain-level variant information is stored in the VCF and genomic VCF format. The gVCF format contains information for every base regardless of whether a variant is present or not and is suitable for compiling and joint calling variants across a custom strain set. These files were produced by <a href="https://yanglab.westlake.edu.cn/software/gcta/#Overview">GCTA</a>.</td>
+                                            {% if release_version == current_release %}
+                                            <td>This <a
+                                                    href="{{ url_for('data_releases.vcf_data', species_name = species.get_slug(), release_version = release_version) }}">link</a>
+                                                contains all genomic variant data as VCF, TBI, or gVCF files.</td>
+                                            {% endif %}
+                                            {% if release_version != current_release %}
+                                            <td>Individual strain genomic variant files are only provided for the latest release version.</td>
                                             {% endif %}
                                         </tr>
                                         <tr>
@@ -201,6 +210,92 @@
                                             {%- endcall %}
                                             </td>
                                         </tr>
+                                        {% if files and (files.get('annovar_isotype_vcf_gz') or files.get('csq_isotype_vcf_gz') or files.get('snpeff_isotype_vcf_gz') or files.get('vep_isotype_vcf_gz')) %}
+                                        <tr>
+                                            <th scope="row">Annotated Variants</th>
+                                            <td>
+                                                <p style="margin-bottom: 0.5em;">
+                                                    Variant information is stored in the VCF format, which is a tab delimited format for storing variant calls and individual genotypes.
+                                                    It is able to store all variant calls from single nucleotide variants to insertions and deletions (~50 bp).
+                                                </p>
+                                                <p style="margin-bottom: 0.5em;">
+                                                    The annotated VCFs include all the variants from the hard-filtered Isotype VCF and have been annotated using 4 different tools: 
+                                                    <a href="https://academic.oup.com/nar/article/38/16/e164/1749458">ANNOVAR</a>, <a href="https://academic.oup.com/bioinformatics/article/33/13/2037/3000373">CSQ</a>, 
+                                                    <a href="https://pcingola.github.io/SnpEff/snpeff/introduction/">SnpEff</a>, and <a href="https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0974-4">VEP</a>.
+                                                </p>
+                                                <p style="margin-bottom: 0em;">
+                                                    The specifications for these file formats continue to develop.
+                                                    Current specifications for BAM and VCF can be found at <a href="https://samtools.github.io/hts-specs/">hts-specs</a>.
+                                                </p>
+                                            </td>
+                                            <td>
+                                                <strong>ANNOVAR</strong>
+                                                <br />
+                                                {% if files.get('annovar_isotype_vcf_gz') %}
+                                                    {{ render_download_link(
+                                                        'annovar_isotype_vcf_gz',
+                                                        wi_prefix + '.annovar.isotype.vcf.gz'
+                                                    ) }}
+                                                    {{ render_download_link(
+                                                        'annovar_isotype_vcf_gz_tbi',
+                                                        wi_prefix + '.annovar.isotype.vcf.gz.tbi'
+                                                    ) }}
+                                                {% endif %}
+                                                {% if not files.get('annovar_isotype_vcf_gz') %}
+                                                    This annotation is not available in this release.
+                                                {% endif %}
+                                                        
+                                                <strong>CSQ</strong>
+                                                <br />
+                                                {% if files.get('csq_isotype_vcf_gz') %}
+                                                    {{ render_download_link(
+                                                        'csq_isotype_vcf_gz',
+                                                        wi_prefix + '.csq.isotype.vcf.gz'
+                                                    ) }}
+                                                    {{ render_download_link(
+                                                        'csq_isotype_vcf_gz_tbi',
+                                                        wi_prefix + '.csq.isotype.vcf.gz.tbi'
+                                                    ) }}
+                                                {% endif %}
+                                                {% if not files.get('csq_isotype_vcf_gz') %}
+                                                    This annotation is not available in this release.
+                                                {% endif %}
+                                                      
+                                                <strong>SnpEff</strong>
+                                                <br />
+                                                {% if files.get('snpeff_isotype_vcf_gz') %}
+                                                    {{ render_download_link(
+                                                        'snpeff_isotype_vcf_gz',
+                                                        wi_prefix + '.snpeff.isotype.vcf.gz'
+                                                    ) }}
+                                                    {{ render_download_link(
+                                                        'snpeff_isotype_vcf_gz_tbi',
+                                                        wi_prefix + '.snpeff.isotype.vcf.gz.tbi'
+                                                    ) }}
+                                                {% endif %}
+                                                {% if not files.get('snpeff_isotype_vcf_gz') %}
+                                                    This annotation is not available in this release.
+                                                {% endif %}
+                                                      
+                                                <strong>VEP</strong>
+                                                <br />
+                                                {% if files.get('vep_isotype_vcf_gz') %}
+                                                    {{ render_download_link(
+                                                        'vep_isotype_vcf_gz',
+                                                        wi_prefix + '.vep.isotype.vcf.gz'
+                                                    ) }}
+                                                    {{ render_download_link(
+                                                        'vep_isotype_vcf_gz_tbi',
+                                                        wi_prefix + '.vep.isotype.vcf.gz.tbi'
+                                                    ) }}
+                                                {% endif %}
+                                                {% if not files.get('vep_isotype_vcf_gz') %}
+                                                    This annotation is not available in this release.
+                                                {% endif %}
+                                                      
+                                            </td>
+                                        </tr>
+                                        {% endif %}
                                         {% if files and files.get('impute_isotype_vcf_gz') %}
                                         <tr>
                                             <th scope="row">Imputed Variants</th>
@@ -219,7 +314,7 @@
                                                 </p>
                                             </td>
                                             <td>
-                                                <strong>Isotypes</strong>
+                                                <strong>Imputed</strong>
                                                 <br />
                                                 {{ render_download_link(
                                                     'impute_isotype_vcf_gz',
@@ -247,6 +342,32 @@
                                             {% endif %}
                                         </tr>
                                         <tr>
+                                            <th scope="row">Gene models</th>
+                                            <td>Gene models constructed from the reference genome.</td>
+                                            <td class="text-center">
+                                                {% if gene_gtf_path %}
+                                                <a class="btn btn-primary text-light" href="{{ gene_gtf_path }}">{{ gene_gtf_name }}</a>
+                                                {% else %}
+                                                The gene GTF file is not included in this release
+                                                {% endif %}
+                                                <br />
+                                                <br />
+                                                {% if gene_gff_path %}
+                                                <a class="btn btn-primary text-light" href="{{ gene_gff_path }}">{{ gene_gff_name }}</a>
+                                                {% else %}
+                                                The gene GFF file is not included in this release
+                                                {% endif %}
+                                                <br />
+                                                <br />
+                                                {% if gene_ids_path %}
+                                                <a class="btn btn-primary text-light" href="{{ gene_ids_path }}">{{ gene_ids_name }}</a>
+                                                {% else %}
+                                                The gene IDs file is not included in this release
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% if species.name == "c_elegans" %}
+                                        <tr>
                                             <th scope="row">Transposon Calls</th>
                                             <td>
                                                 We have performed transposon calling for <i>C. elegans</i> isotype
@@ -265,6 +386,37 @@
                                             {% else %}
                                             <td>
                                                 {{ file_prefix }}_transposon_calls.bed is not included in this release
+                                            </td>
+                                            {% endif %}
+                                            {%- else %}
+                                            <td>
+                                                {{ render_download_link_set(null) }}
+                                            </td>
+                                            {%- endif %}
+                                        </tr>
+                                        {%- endif %}
+                                        <tr>
+                                            <th scope="row">Genetic Map</th>
+                                            <td>
+                                                {% if species.name == 'c_elegans' %}
+                                                We have compiled a map of genetic in strain N2 from Rockman & Kruglyak, 2009.
+                                                {% endif %}
+                                                {% if species.name == 'c_briggsae' %}
+                                                We have compiled a map of genetic in strain QX1410 from Stevens, 2021.
+                                                {% endif %}
+                                                {% if species.name == 'c_tropicalis' %}
+                                                We have compiled a map of genetic in strain NIC58 from Noble, 2021.
+                                                {% endif %}
+                                            </td>
+                                            {%- if files %}
+                                            {% if files.get('genetic_map') %}
+                                            <td class="text-center">
+                                                <a class="btn btn-primary text-light" href="{{ files.get('genetic_map') }}"
+                                                >{{ species.name }}_genetic_map.tsv</a>
+                                            </td>
+                                            {% else %}
+                                            <td>
+                                                {{ species.name }}_genetic_map.tsv is not included in this release
                                             </td>
                                             {% endif %}
                                             {%- else %}
@@ -318,6 +470,7 @@
                                             {%- endcall %}
                                             </td>
                                         </tr>
+                                        {% if species.name == "c_elegans" %}
                                         <tr>
                                             <th scope="row">Sweep Haplotypes</th>
                                             <td>
@@ -338,16 +491,18 @@
                                             {%- endcall %}
                                             </td>
                                         </tr>
+                                        {% endif %}
+                                        {% if species.name != "c_briggsae" %}
                                         <tr>
-                                            <th scope="row">Hyper-Variable Regions</th>
+                                            <th scope="row">Hyper-Divergent Regions</th>
                                             <td>
-                                                The hyper-variable regions are characterized by higher-than-average
+                                                The hyper-divergent regions are characterized by higher-than-average
                                                 density of small variants and large genomic spans where short sequence
                                                 reads fail to align to the reference genome.
-                                                The <i>C. elegans</i> hyper-variable regions were identified as described
+                                                The <i>C. elegans</i> hyper-divergent regions were identified as described
                                                 in <a href="https://andersenlab.org/publications/2021LeeNatureEE.pdf">Lee
                                                 <i>et al.</i></a>.
-                                                <i>C. briggsae</i> and <i>C. tropicalis</i> hyper-variable regions will
+                                                <i>C. briggsae</i> and <i>C. tropicalis</i> hyper-divergent regions will
                                                 be released in the future.
                                             </td>
                                             <td>
@@ -372,6 +527,27 @@
                                             {%- endcall %}
                                             </td>
                                         </tr>
+                                        {% endif %}
+
+                                        {% if files and files.get('trait_files') %}
+                                        {% for traitfile in files.get('trait_files') %}
+                                        <tr>
+                                            {% if traitfile.trait_name_caendr == files.get('trait_files')[0].trait_name_caendr %}
+                                            <th scope="row">Phenotype Trait Files</th>
+                                            {% endif %}
+                                            {% if traitfile.trait_name_caendr != files.get('trait_files')[0].trait_name_caendr %}
+                                            <th scope="row"></th>
+                                            {% endif %}
+                                            <td>
+                                                {{ traitfile.description_long }}
+                                            </td>
+                                            <td>
+                                                <a href="{{ traitfile.render_filepath() }}">{{ traitfile.filename }}</a>
+                                            </td>
+                                        </tr>                                        
+                                        {% endfor %}
+                                        {% endif %}
+
                                         {% if release_version == current_release %}
                                         <tr>
                                             <th scope="row">Download BAMs Script</th>

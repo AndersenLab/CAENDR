@@ -4,6 +4,7 @@ from caendr.services.cloud.datastore import query_ds_entities, get_ds_entity, de
 from caendr.models.datastore import DatasetRelease
 from caendr.models.datastore.browser_track import BrowserTrack
 from caendr.models.sql import Strain
+from caendr.models.datastore import Species
 from caendr.models.error import UnprocessableEntity, BadRequestError, NotFoundError
 
 
@@ -119,9 +120,12 @@ def get_release_summary(release: str):
   strain_count = Strain.query.filter((Strain.release <= release) & (Strain.issues == False)).count()
   strain_count_sequenced = Strain.query.filter((Strain.release <= release) & (Strain.issues == False) & (Strain.sequenced == True)).count()
   isotype_count = Strain.query.with_entities(Strain.isotype).filter((Strain.isotype != None), (Strain.release <= release), (Strain.issues == False)).group_by(Strain.isotype).count()
+  project_num = Species.project_num
   
   return {
     'strain_count': strain_count,
     'strain_count_sequenced': strain_count_sequenced,
-    'isotype_count': isotype_count
+    'isotype_count': isotype_count,
+    'isotype_count': isotype_count,
+    'bioproject': project_num,
   }

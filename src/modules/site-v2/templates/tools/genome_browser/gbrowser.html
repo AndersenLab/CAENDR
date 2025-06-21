@@ -34,7 +34,7 @@
         <div class="nav nav-tabs border-0" id="nav-tab" role="tablist">
           <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home"
             type="button" role="tab" aria-controls="nav-home" aria-selected="true">Browse</button>
-          <button class="nav-link disabled" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false">Release Notes</button>
+          <button class="nav-link disabled" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false" style="display:none;">Release Notes</button>
         </div>
       </nav>
       <div class="tab-content" id="nav-tabContent">
@@ -96,7 +96,7 @@
                     <td>
                       <div class="form-check">
                         <input type="checkbox" class="form-check-input track-select isotype-item sample-track"
-                          value="{{ strain.strain }}" />
+                          value="{{ strain.strain }}_vcf" />
                         <label class="form-check-label">VCF</label>
                       </div>
                     </td>
@@ -427,6 +427,7 @@ function update_species(species_id) {
 
   // If no species selected, prompt user to select one; otherwise show the IGV browser
   $('#select-species-prompt').toggle(species_empty);
+  $('#nav-linkTwo-tab').toggle(!species_empty);
   $('#browser-container').toggle(!species_empty);
   $('#options-toolbar > *').toggle(!species_empty);
 
