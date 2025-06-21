@@ -101,7 +101,7 @@ container-build:
 	echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
 	@echo -e "\n$(COLOR_B)Building container image...$(COLOR_N)" && \
-	docker buildx build --pull --platform=linux/amd64 --build-arg GIT_COMMIT=$(GIT_COMMIT) $(MODULE_DIR) -t gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${MODULE_NAME}:${MODULE_VERSION} && \
+	docker buildx build --pull --platform=linux/amd64 --build-arg GIT_COMMIT=$(GIT_COMMIT) $(MODULE_DIR) -t us-east4-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT_ID}/caendr-site-v2/${MODULE_NAME}:${MODULE_VERSION} && \
 	echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
 	@echo -e "\n$(COLOR_B)Removing local caendr package source copy$(COLOR_N)" && \
@@ -118,7 +118,7 @@ publish-auto: container-auto container-publish
 
 container-publish:
 	@echo -e "\n$(COLOR_B)Publishing container image to gcr...$(COLOR_N)"
-	docker push gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${MODULE_NAME}:${MODULE_VERSION}
+	docker push us-east4-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT_ID}/caendr-site-v2/${MODULE_NAME}:${MODULE_VERSION}
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
 
@@ -130,5 +130,5 @@ print-module-env: verify-env
 
 print-ver:
 	@echo -e "$(COLOR_P)****************************************************************************$(COLOR_N)"
-	@echo -e " CONTAINER: $(COLOR_W)gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${MODULE_NAME}:${MODULE_VERSION}$(COLOR_N)"
+	@echo -e " CONTAINER: $(COLOR_W)us-east4-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT_ID}/caendr-site-v2/${MODULE_NAME}:${MODULE_VERSION}$(COLOR_N)"
 	@echo -e "$(COLOR_P)****************************************************************************$(COLOR_N)"
