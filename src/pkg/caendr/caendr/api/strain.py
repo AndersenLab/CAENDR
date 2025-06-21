@@ -17,6 +17,7 @@ from caendr.utils.env import get_env_var
 MODULE_IMG_THUMB_GEN_SOURCE_PATH = get_env_var('MODULE_IMG_THUMB_GEN_SOURCE_PATH', as_template=True)
 MODULE_SITE_BUCKET_PHOTOS_NAME   = get_env_var('MODULE_SITE_BUCKET_PHOTOS_NAME')
 MODULE_SITE_BUCKET_PRIVATE_NAME  = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
+AWS_OPEN_DATA_BUCKET             = get_env_var('AWS_OPEN_DATA_BUCKET')
 
 BAM_BAI_DOWNLOAD_SCRIPT_NAME     = get_env_var('BAM_BAI_DOWNLOAD_SCRIPT_NAME', as_template=True)
 BAM_BAI_PREFIX                   = get_env_var('BAM_BAI_PREFIX', as_template=True)
@@ -169,15 +170,15 @@ def get_bam_bai_download_link(species, strain_name, ext, signed=False):
       signed (bool): Whether the generated URL should be signed. Defaults to False.
   '''
 
-  bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
+  bucket_name = AWS_OPEN_DATA_BUCKET
   bam_prefix  = BAM_BAI_PREFIX.get_string(SPECIES=species.name)
 
-  return generate_blob_uri( bucket_name, bam_prefix, f'{strain_name}.{ext}', schema=BlobURISchema.sign(signed) )
+  return "/".join(["https:/", bucket_name, bam_prefix, f'{strain_name}.{ext}'])
 
-
+# Is this deprecated?
 def fetch_bam_bai_download_script(species, release, reload=False):
 
-  bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
+  bucket_name = AWS_OPEN_DATA_BUCKET
   bam_prefix  = BAM_BAI_PREFIX.get_string(**{
     'SPECIES': species.name,
     'RELEASE': release.version,
@@ -210,14 +211,14 @@ def generate_bam_bai_download_script(species, release, signed=False):
       Generator that yields the file line by line.
   '''
 
-  bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
+  bucket_name = AWS_OPEN_DATA_BUCKET
 
   # Package keyword args for signing URLs into a dict
-  sign_dict = {
-    'schema':      BlobURISchema.sign(signed),
-    'expiration':  timedelta(days=7),
-    'credentials': get_google_storage_credentials(),
-  }
+  # sign_dict = {
+  #   'schema':      BlobURISchema.sign(signed),
+  #   'expiration':  timedelta(days=7),
+  #   'credentials': get_google_storage_credentials(),
+  # }
 
   # Get the location of the BAM files in the bucket for this species/release
   bam_prefix = BAM_BAI_PREFIX.get_string(**{
@@ -242,8 +243,8 @@ def generate_bam_bai_download_script(species, release, signed=False):
     bai_fname = f'{strain}.bam.bai'
 
     # Generate download URLs
-    bam_url = generate_blob_uri(bucket_name, bam_prefix, bam_fname, **sign_dict)
-    bai_url = generate_blob_uri(bucket_name, bam_prefix, bai_fname, **sign_dict)
+    bam_url = "/".join(["https:/", bucket_name, bam_prefix, bam_fname])
+    bai_url = "/".join(["https:/", bucket_name, bam_prefix, bai_fname])
 
     # Add download statements
     if bam_url:

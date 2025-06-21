@@ -89,6 +89,7 @@ def data_release_list(species: Species, release: DatasetRelease):
     params.update(data_v02(params, files))
   elif release.report_type == DatasetRelease.V1:
     params.update(data_v01(params, files))
+  params['current_release'] = get_all_dataset_releases(order='-version', species=species.name)[0].version
 
   # Special case:
   # Only show the Divergent Regions BED file if it defines a valid track for this species + release,

@@ -107,12 +107,17 @@
                                                     Current specifications for BAM and VCF can be found at <a href="https://samtools.github.io/hts-specs/">hts-specs</a>.
                                                 </p>
                                             </td>
+                                            {% if release_version == current_release %}
                                             <td>
-                                                <p style="margin-bottom: 0;">
-                                                    This <a href="{{ url_for('data_releases.alignment_data', species_name = species.get_slug(), release_version = release_version) }}">link</a>
-                                                    contains all alignment data as BAM or BAI files.
-                                                </p>
+                                                This <a href="{{ url_for('data_releases.alignment_data', species_name = species.get_slug(), release_version = release_version) }}">link</a>
+                                                contains all alignment data as BAM or BAI files.
                                             </td>
+                                            {% endif %}
+                                            {% if release_version != current_release %}
+                                            <td>
+                                                Alignment data are only provided for the latest release version.
+                                            </td>
+                                            {% endif %}
                                         </tr>
                                         <tr>
                                             <th scope="row">Soft-Filtered Variants</th>
@@ -367,6 +372,7 @@
                                             {%- endcall %}
                                             </td>
                                         </tr>
+                                        {% if release_version == current_release %}
                                         <tr>
                                             <th scope="row">Download BAMs Script</th>
                                             <td>You can batch download individual strain BAMs using this script.</td>
@@ -378,6 +384,7 @@
                                                 </a>
                                             </td>
                                         </tr>
+                                        {% endif %}
                                     </tbody>
                                 </table>
                             </div>

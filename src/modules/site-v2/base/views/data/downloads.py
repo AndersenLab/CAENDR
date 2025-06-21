@@ -28,6 +28,7 @@ def download_script_strain_v2(release_version):
   return download_script(release_version)
 
 
+# Is this deprecated?
 @data_downloads_bp.route('/species/<string:species_name>/release/<string:release_version>/download/download_isotype_bams.sh')
 @cache.cached(timeout=60*60*24)
 @jwt_required()
