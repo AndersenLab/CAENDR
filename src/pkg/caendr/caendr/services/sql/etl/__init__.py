@@ -3,9 +3,10 @@ import shutil
 from logzero import logger
 
 # Local imports
-from .table_config import StrainConfig, WormbaseGeneSummaryConfig, WormbaseGeneConfig, StrainAnnotatedVariantConfig, PhenotypeDatabaseConfig, PhenotypeMetadataConfig
+from .table_config import StrainConfig, WormbaseGeneSummaryConfig, WormbaseGeneConfig, StrainAnnotatedVariantConfig, AnnovarAnnotatedVariantConfig, CsqAnnotatedVariantConfig, SnpEffAnnotatedVariantConfig, VepAnnotatedVariantConfig, PhenotypeDatabaseConfig, PhenotypeMetadataConfig
 
 from caendr.models.datastore import Species
+from caendr.models.sql       import ALL_SQL_TABLES
 from caendr.utils.constants  import DEFAULT_BATCH_SIZE
 from caendr.utils.data       import batch_generator
 
@@ -18,6 +19,10 @@ TABLE_CONFIG = {
         WormbaseGeneSummaryConfig,
         WormbaseGeneConfig,
         StrainAnnotatedVariantConfig,
+        AnnovarAnnotatedVariantConfig,
+        CsqAnnotatedVariantConfig,
+        SnpEffAnnotatedVariantConfig,
+        VepAnnotatedVariantConfig,
         PhenotypeDatabaseConfig,
         PhenotypeMetadataConfig
     ]
@@ -74,8 +79,9 @@ class ETLManager:
     #
 
     def all_tables(self):
-        return list(self.db.metadata.tables.values())
-
+        # return list(self.db.metadata.tables.values())
+        return ALL_SQL_TABLES
+    
     @staticmethod
     def print_tables(*tables):
         if not len(tables):

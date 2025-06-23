@@ -1,17 +1,17 @@
 from typing import Dict, List
 
-from caendr.utils.env              import get_env_var
+from caendr.utils.env              import get_env_var, get_env_var_with_fallback
 from caendr.services.cloud.secret  import get_secret
 from caendr.services.logger        import logger
 
 # Local imports
 from .strains                      import fetch_andersen_strains
 from .wormbase                     import parse_gene_gtf, parse_gene_gff_summary
-from .strain_annotated_variants    import parse_strain_variant_annotation_data
+from .strain_annotated_variants    import parse_strain_variant_annotation_data, parse_annovar_variant_annotation_data, parse_csq_variant_annotation_data, parse_snpeff_variant_annotation_data, parse_vep_variant_annotation_data
 from .phenotype_db                 import parse_phenotypedb_traits_data, parse_phenotypedb_bulk_trait_file
 from .phenotype_metadata           import parse_phenotype_metadata
 
-from caendr.models.sql             import Strain, WormbaseGeneSummary, WormbaseGene, StrainAnnotatedVariant, PhenotypeDatabase, PhenotypeMetadata
+from caendr.models.sql             import Strain, WormbaseGeneSummary, WormbaseGene, StrainAnnotatedVariant, AnnovarAnnotatedVariant, CsqAnnotatedVariant, SnpEffAnnotatedVariant, VepAnnotatedVariant, PhenotypeDatabase, PhenotypeMetadata
 from caendr.models.datastore       import Species, TraitFile
 from caendr.services.cloud.storage import BlobURISchema
 from caendr.models.datastore       import Species
@@ -22,17 +22,23 @@ from caendr.models.error           import ForeignResourceMissingError
 
 # Bucket(s)
 MODULE_DB_OPERATIONS_BUCKET_NAME = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
+MODULE_SITE_BUCKET_PUBLIC_NAME = get_env_var_with_fallback('MODULE_SITE_BUCKET_PUBLIC_NAME_OVERRIDE', 'MODULE_SITE_BUCKET_PUBLIC_NAME')
 
 # Filepaths
-RELEASE_FILEPATH   = get_env_var('MODULE_DB_OPERATIONS_RELEASE_FILEPATH', as_template=True)
-SVA_FILEPATH       = get_env_var('MODULE_DB_OPERATIONS_SVA_FILEPATH',     as_template=True)
+RELEASE_FILEPATH   = get_env_var('MODULE_DB_OPERATIONS_RELEASE_FILEPATH',   as_template=True)
+SVA_FILEPATH       = get_env_var('MODULE_DB_OPERATIONS_SVA_FILEPATH',       as_template=True)
+NEWSVA_FILEPATH    = get_env_var('MODULE_DB_OPERATIONS_NEWSVA_FILEPATH',    as_template=True)
 PHENOTYPE_FILEPATH = get_env_var('MODULE_DB_OPERATIONS_PHENOTYPE_FILEPATH', as_template=True)
 
 # Filenames
-GENE_GFF_FILENAME = get_env_var('GENE_GFF_FILENAME',  as_template=True)
-GENE_GTF_FILENAME = get_env_var('GENE_GTF_FILENAME',  as_template=True)
-GENE_IDS_FILENAME = get_env_var('GENE_IDS_FILENAME',  as_template=True)
-SVA_FILENAME      = get_env_var('SVA_CSVGZ_FILENAME', as_template=True)
+GENE_GFF_FILENAME    = get_env_var('GENE_GFF_FILENAME',  as_template=True)
+GENE_GTF_FILENAME    = get_env_var('GENE_GTF_FILENAME',  as_template=True)
+GENE_IDS_FILENAME    = get_env_var('GENE_IDS_FILENAME',  as_template=True)
+SVA_FILENAME         = get_env_var('SVA_CSVGZ_FILENAME', as_template=True)
+SVA_ANNOVAR_FILENAME = get_env_var('SVA_ANNOVAR_FILENAME', as_template=True)
+SVA_CSQ_FILENAME     = get_env_var('SVA_CSQ_FILENAME', as_template=True)
+SVA_SNPEFF_FILENAME  = get_env_var('SVA_SNPEFF_FILENAME', as_template=True)
+SVA_VEP_FILENAME     = get_env_var('SVA_VEP_FILENAME', as_template=True)
 
 
 # Get list of Google Sheet IDs for each species
@@ -154,6 +160,38 @@ StrainAnnotatedVariantConfig = TableConfig(
   ParseConfig(
     parse_strain_variant_annotation_data,
     LocalDatastoreFileTemplate( 'SVA_CSVGZ', MODULE_DB_OPERATIONS_BUCKET_NAME, SVA_FILEPATH, SVA_FILENAME ),
+  ),
+)
+
+AnnovarAnnotatedVariantConfig = TableConfig(
+  AnnovarAnnotatedVariant,
+  ParseConfig(
+    parse_annovar_variant_annotation_data,
+    LocalDatastoreFileTemplate( 'ANNOVAR', MODULE_SITE_BUCKET_PUBLIC_NAME, NEWSVA_FILEPATH, SVA_ANNOVAR_FILENAME ),
+  ),
+)
+
+CsqAnnotatedVariantConfig = TableConfig(
+  CsqAnnotatedVariant,
+  ParseConfig(
+    parse_csq_variant_annotation_data,
+    LocalDatastoreFileTemplate( 'CSQ', MODULE_SITE_BUCKET_PUBLIC_NAME, NEWSVA_FILEPATH, SVA_CSQ_FILENAME ),
+  ),
+)
+
+SnpEffAnnotatedVariantConfig = TableConfig(
+  SnpEfffAnnotatedVariant,
+  ParseConfig(
+    parse_snpeff_variant_annotation_data,
+    LocalDatastoreFileTemplate( 'SNPEFF', MODULE_SITE_BUCKET_PUBLIC_NAME, NEWSVA_FILEPATH, SVA_SNPEFF_FILENAME ),
+  ),
+)
+
+VepAnnotatedVariantConfig = TableConfig(
+  VepAnnotatedVariant,
+  ParseConfig(
+    parse_vep_variant_annotation_data,
+    LocalDatastoreFileTemplate( 'VEP', MODULE_SITE_BUCKET_PUBLIC_NAME, NEWSVA_FILEPATH, SVA_VEP_FILENAME ),
   ),
 )
 

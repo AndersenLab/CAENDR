@@ -6,17 +6,21 @@ class DbOp(Enum):
     All possible database operation types.
   '''
 
-  DROP_AND_POPULATE_STRAINS                   = 'DROP_AND_POPULATE_STRAINS'
-  DROP_AND_POPULATE_WORMBASE_GENES            = 'DROP_AND_POPULATE_WORMBASE_GENES'
-  DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS = 'DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS'
-  DROP_AND_POPULATE_PHENOTYPE_DB              = 'DROP_AND_POPULATE_PHENOTYPE_DB'
-  DROP_AND_POPULATE_PHENOTYPE_METADATA        = 'DROP_AND_POPULATE_PHENOTYPE_METADATA'
-  DROP_AND_POPULATE_PHENOTYPES                = 'DROP_AND_POPULATE_PHENOTYPES'
-  DROP_AND_POPULATE_ALL_TABLES                = 'DROP_AND_POPULATE_ALL_TABLES'
-  POPULATE_PHENOTYPES_DATASTORE               = 'POPULATE_PHENOTYPES_DATASTORE'
-  TEST_ECHO                                   = 'TEST_ECHO'
-  TEST_MOCK_DATA                              = 'TEST_MOCK_DATA'
-  RECOMPUTE_PHENOTYPE_REPORT_CACHED_NAMES     = 'RECOMPUTE_PHENOTYPE_REPORT_CACHED_NAMES'
+  DROP_AND_POPULATE_STRAINS                    = 'DROP_AND_POPULATE_STRAINS'
+  DROP_AND_POPULATE_WORMBASE_GENES             = 'DROP_AND_POPULATE_WORMBASE_GENES'
+  DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS  = 'DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS'
+  DROP_AND_POPULATE_ANNOVAR_ANNOTATED_VARIANTS = 'DROP_AND_POPULATE_ANNOVAR_ANNOTATED_VARIANTS'
+  DROP_AND_POPULATE_CSQ_ANNOTATED_VARIANTS     = 'DROP_AND_POPULATE_CSQ_ANNOTATED_VARIANTS'
+  DROP_AND_POPULATE_SNPEFF_ANNOTATED_VARIANTS  = 'DROP_AND_POPULATE_SNPEFF_ANNOTATED_VARIANTS'
+  DROP_AND_POPULATE_VEP_ANNOTATED_VARIANTS     = 'DROP_AND_POPULATE_VEP_ANNOTATED_VARIANTS'
+  DROP_AND_POPULATE_PHENOTYPE_DB               = 'DROP_AND_POPULATE_PHENOTYPE_DB'
+  DROP_AND_POPULATE_PHENOTYPE_METADATA         = 'DROP_AND_POPULATE_PHENOTYPE_METADATA'
+  DROP_AND_POPULATE_PHENOTYPES                 = 'DROP_AND_POPULATE_PHENOTYPES'
+  DROP_AND_POPULATE_ALL_TABLES                 = 'DROP_AND_POPULATE_ALL_TABLES'
+  POPULATE_PHENOTYPES_DATASTORE                = 'POPULATE_PHENOTYPES_DATASTORE'
+  TEST_ECHO                                    = 'TEST_ECHO'
+  TEST_MOCK_DATA                               = 'TEST_MOCK_DATA'
+  RECOMPUTE_PHENOTYPE_REPORT_CACHED_NAMES      = 'RECOMPUTE_PHENOTYPE_REPORT_CACHED_NAMES'
 
 
   def get_title(op):
@@ -28,17 +32,21 @@ class DbOp(Enum):
       raise ValueError()
 
     titles = {
-      DbOp.DROP_AND_POPULATE_STRAINS:                   'Rebuild strain table from google sheet',
-      DbOp.DROP_AND_POPULATE_WORMBASE_GENES:            'Rebuild wormbase gene table from external sources',
-      DbOp.DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS: 'Rebuild Strain Annotated Variant table from .csv.gz file',
-      DbOp.DROP_AND_POPULATE_PHENOTYPE_DB:              'Rebuild Phenotype Database table from datastore file records',
-      DbOp.DROP_AND_POPULATE_PHENOTYPE_METADATA:        'Rebuild Phenotype Metadata table from datastore TraitFile entities',
-      DbOp.DROP_AND_POPULATE_PHENOTYPES:                'Rebuild all Phenotype trait tables from datastore',
-      DbOp.DROP_AND_POPULATE_ALL_TABLES:                'Rebuild All Tables',
-      DbOp.POPULATE_PHENOTYPES_DATASTORE:               'Create / update datastore trait file records from Google Sheet',
-      DbOp.TEST_ECHO:                                   'Test ETL - Echo',
-      DbOp.TEST_MOCK_DATA:                              'Test ETL - Mock Data',
-      DbOp.RECOMPUTE_PHENOTYPE_REPORT_CACHED_NAMES:     'Recompute cached trait display names in Phenotype Report entities'
+      DbOp.DROP_AND_POPULATE_STRAINS:                    'Rebuild strain table from google sheet',
+      DbOp.DROP_AND_POPULATE_WORMBASE_GENES:             'Rebuild wormbase gene table from external sources',
+      DbOp.DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS:  'Rebuild Strain Annotated Variant table from .csv.gz file',
+      DbOp.DROP_AND_POPULATE_ANNOVAR_ANNOTATED_VARIANTS: 'Rebuild Strain Annovar Variant table from .csv.gz file',
+      DbOp.DROP_AND_POPULATE_CSQ_ANNOTATED_VARIANTS:     'Rebuild Strain CSQ Variant table from .csv.gz file',
+      DbOp.DROP_AND_POPULATE_SNPEFF_ANNOTATED_VARIANTS:  'Rebuild Strain SnpEff Variant table from .csv.gz file',
+      DbOp.DROP_AND_POPULATE_VEP_ANNOTATED_VARIANTS:     'Rebuild Strain VEP Variant table from .csv.gz file',
+      DbOp.DROP_AND_POPULATE_PHENOTYPE_DB:               'Rebuild Phenotype Database table from datastore file records',
+      DbOp.DROP_AND_POPULATE_PHENOTYPE_METADATA:         'Rebuild Phenotype Metadata table from datastore TraitFile entities',
+      DbOp.DROP_AND_POPULATE_PHENOTYPES:                 'Rebuild all Phenotype trait tables from datastore',
+      DbOp.DROP_AND_POPULATE_ALL_TABLES:                 'Rebuild All Tables',
+      DbOp.POPULATE_PHENOTYPES_DATASTORE:                'Create / update datastore trait file records from Google Sheet',
+      DbOp.TEST_ECHO:                                    'Test ETL - Echo',
+      DbOp.TEST_MOCK_DATA:                               'Test ETL - Mock Data',
+      DbOp.RECOMPUTE_PHENOTYPE_REPORT_CACHED_NAMES:      'Recompute cached trait display names in Phenotype Report entities'
     }
 
     return titles.get(op, '???')

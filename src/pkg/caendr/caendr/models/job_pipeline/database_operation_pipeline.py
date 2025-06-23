@@ -11,7 +11,7 @@ from caendr.models.task      import DatabaseOperationTask
 from caendr.models.datastore import Species
 from caendr.models.error     import DataFormatError, PreflightCheckError
 from caendr.models.sql       import DbOp
-from caendr.services.sql.etl import StrainConfig, WormbaseGeneConfig, WormbaseGeneSummaryConfig, StrainAnnotatedVariantConfig, PhenotypeDatabaseConfig
+from caendr.services.sql.etl import StrainConfig, WormbaseGeneConfig, WormbaseGeneSummaryConfig, StrainAnnotatedVariantConfig, AnnovarAnnotatedVariantConfig, CsqAnnotatedVariantConfig, SnpEffAnnotatedVariantConfig, VepAnnotatedVariantConfig, PhenotypeDatabaseConfig
 from caendr.utils.local_files import ForeignResourceTemplate
 from caendr.utils.env        import get_env_var
 
@@ -33,6 +33,18 @@ REQUIRED_RESOURCES: Dict[DbOp, List[ForeignResourceTemplate]] = {
   DbOp.DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS: [
     *StrainAnnotatedVariantConfig.all_resources,
   ],
+  DbOp.DROP_AND_POPULATE_ANNOVAR_ANNOTATED_VARIANTS: [
+    *AnnovarAnnotatedVariantConfig.all_resources,
+  ],
+  DbOp.DROP_AND_POPULATE_CSQ_ANNOTATED_VARIANTS: [
+    *CsqAnnotatedVariantConfig.all_resources,
+  ],
+  DbOp.DROP_AND_POPULATE_SNPEFF_ANNOTATED_VARIANTS: [
+    *SnpEffAnnotatedVariantConfig.all_resources,
+  ],
+  DbOp.DROP_AND_POPULATE_VEP_ANNOTATED_VARIANTS: [
+    *VepAnnotatedVariantConfig.all_resources,
+  ],
   DbOp.DROP_AND_POPULATE_PHENOTYPE_DB: [
     # TODO: Should this actually check for every single file specified in the datastore? Can it flag & skip some files?
     # *PhenotypeDatabaseConfig.all_resources,
@@ -42,6 +54,10 @@ REQUIRED_RESOURCES: Dict[DbOp, List[ForeignResourceTemplate]] = {
     *WormbaseGeneConfig.all_resources,
     *WormbaseGeneSummaryConfig.all_resources,
     *StrainAnnotatedVariantConfig.all_resources,
+    *AnnovarAnnotatedVariantConfig.all_resources,
+    *CsqAnnotatedVariantConfig.all_resources,
+    *SnpEffAnnotatedVariantConfig.all_resources,
+    *VepAnnotatedVariantConfig.all_resources,
   ],
   DbOp.POPULATE_PHENOTYPES_DATASTORE: [
     # TODO: Should this actually check for every single file specified in the datastore? Can it flag & skip some files?
