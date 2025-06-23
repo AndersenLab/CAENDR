@@ -1,6 +1,8 @@
-{% from "_includes/macros.html" import render_download_link, render_download_link_set with context %}
+{% from "_includes/macros.html" import render_download_link, render_download_link_set, render_table with context %}
 {% set file_prefix = release_version + '_' + species.name %}
 {% set wi_prefix   = 'WI.' + release_version %}
+
+
 
 <div class="row">
     <div class="col mt-3">
@@ -63,6 +65,18 @@
                             </div>
                         </div>
                     </div>
+                    {% if files and files.get('Isotype changelog') %}
+                    <div class="row">
+                        <p>
+                        <button class="btn btn-primary" type='button' data-bs-toggle="collapse" href="#changeLog" aria-expanded="false" aria-controls="changeLog">
+                        Isotype changelog
+                        </button>
+                        </p>
+                        <div class="collapse" id="changeLog">
+                            {{ render_table(files.get('Isotype changelog').get('header'), files.get('Isotype changelog').get('rows'), "table table-hover table-striped") }}
+                        </div>
+                    </div>
+                    {% endif %}
                     <!-- /Row -->
                     <div class="row">
                         <div class="col mt-5">

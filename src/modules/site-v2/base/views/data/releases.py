@@ -124,19 +124,20 @@ def data_release_list(species: Species, release: DatasetRelease):
   # Special case:
   # Only show the Divergent Regions BED file if it defines a valid track for this species + release,
   # even if the file exists.
-  if files and 'Hyper-divergent Regions' not in release['browser_tracks']:
+  if files or 'Hyper-divergent Regions' not in release['browser_tracks']:
     files['divergent_regions_strain_bed']    = None
     files['divergent_regions_strain_bed_gz'] = None
 
   # Check for downloadable trait files
   trait_files = [tf for tf in TraitFile.all().values() if tf.downloadable and tf.species.name == species.name]
-  if len(trait_files) == 0:
-    trait_files = None
-  else:
-    for t in trait_files:
-      logger.error(t.get_filepath(schema=BlobURISchema.HTTPS))
-        
-  files['trait_files'] = trait_files
+  if files and len(trait_files) > 0:
+    files['trait_files'] = trait_files
+
+  if files and 'Isotype changelog' in files:
+    r = requests.get(files['Isotype changelog'])
+    if r.status_code == 200:
+      parsed_changelog = [line.rstrip().split('\t') for line in r.text.split("\n")]
+      files['Isotype changelog'] = {"header": parsed_changelog[0], "rows": parsed_changelog[1:]}
 
   # Render the page
   return render_template('data/releases.html', **{

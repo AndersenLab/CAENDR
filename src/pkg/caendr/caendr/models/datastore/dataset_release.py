@@ -385,6 +385,7 @@ class DatasetRelease(SpeciesEntity):
 
     'transposon_calls':                  '${RELEASE}_${SPECIES}_transposon_calls.bed',
     'genetic_map':                       '${SPECIES}_genetic_map.tsv',
+    'Isotype changelog':                 '${SPECIES}_isotype_differences.tsv',
   }, cutoff_date=20200101)
 
   V1 = ReportType('V1', {
