@@ -1,8 +1,9 @@
 import os
 from flask import Flask
 from dotenv import load_dotenv
+from caendr.utils.env import load_env
 
-load_dotenv('.env')
+load_env('.env')
 load_dotenv('module.env')
 
 from caendr.utils import monitor
