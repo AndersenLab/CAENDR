@@ -10,7 +10,7 @@
 10. [What are Grantham scores?](#grantham)
 11. [What are BLOSUM62 scores?](#blosum)
 12. [What is the percent protein metric?](#percent-protein)
-13. [What is the divergent column?](#divergent-column)
+13. [What is the divergent column of the annotation tool?](#divergent-column)
 14. [How does CaeNDR decide on pricing?](#pricing)
 
 ## <a id="cite"></a>How do I cite CaeNDR?
@@ -124,7 +124,7 @@ BLOSUM62 (BLOcks SUbstitution Matrix) scores represent the log-odds of observing
 
 The percent protein metric is a calculation of where in the protein a variant is present. The percent protein is calculated based on the nucleotide position of a variant in relation to the entire coding sequence, and accounts for Watson-Crick strandedness. All the coding regions for a transcript are summed, then the difference in the nucleotide position of a variant in relation to the position of where the first coding region begins is calculated and then divided by the total number of nucleotides in the coding region for a transcript. 
 
-### <a id="divergent-column"></a>What is the divergent column?
+### <a id="divergent-column"></a>What is the divergent column of the annotation?
 
 Previous studies in the Andersen Laboratory have identified punctuated genomic regions that have extreme genetic variation in selfing Caenorhabditis species. These regions are referred to as hyper-divergent regions (HDRs). To learn more, please read this <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8202730/">paper</a>. HDRs are different for each wild strain, therefore, we have added resolution on if a variant call falls in a HDR for a given wild strain. If the divergent column has a value of YES, this indicates that the variation position is in a HDR for the strains that have the alt allele. Inversely, if the divergent column has a value of NO, this indicates that the variant position is not in a HDR for the strains that have the alt allele. Given the extreme genomic divergence in HDRs, we recommend taking variant calls in HDRs as preliminary, as it is necessary to have long-read sequencing to identify the actual genomic sequences in these regions.
 

@@ -284,7 +284,7 @@ class OrderForm(Form):
   building = StringField('Building, Room Number', [Length(min=0, max=50)])
   city = StringField('City', [Length(min=4, max=50)])
   state = StringField('State', [Length(min=2, max=20)])
-  zipcode = StringField('Zipcode', [Length(min=5, max=20)])
+  zipcode = StringField('Zip Code', [Length(min=5, max=20)])
   phone = StringField('Phone', [Length(min=3, max=35)])
   shipping_service = SelectField('Shipping', choices=SHIPPING_OPTIONS)
   shipping_account = StringField('UPS/FEDEX Account Number')
