@@ -180,7 +180,7 @@ CsqAnnotatedVariantConfig = TableConfig(
 )
 
 SnpEffAnnotatedVariantConfig = TableConfig(
-  SnpEfffAnnotatedVariant,
+  SnpEffAnnotatedVariant,
   ParseConfig(
     parse_snpeff_variant_annotation_data,
     LocalDatastoreFileTemplate( 'SNPEFF', MODULE_SITE_BUCKET_PUBLIC_NAME, NEWSVA_FILEPATH, SVA_SNPEFF_FILENAME ),

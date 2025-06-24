@@ -394,7 +394,7 @@ def get_row(row, key, nullable=False, map=None):
 
   # Return early if value is null
   # Maps R's 'NA' value to None, if applicable
-  if val is None or (nullable and val == 'NA'):
+  if val is None or (nullable and (val == 'NA' or val == 'N/A')):
     return None
 
   # If mapping function provided and val exists, apply it

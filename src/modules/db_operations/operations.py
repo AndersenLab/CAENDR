@@ -181,7 +181,7 @@ def drop_and_populate_vep_annotated_variants(app, db, species, reload_files=True
 
   # Drop relevant table
   logger.info(f"Dropping table...")
-  etl_manager.clear_tables(VEPAnnotatedVariant, species_list=species)
+  etl_manager.clear_tables(VepAnnotatedVariant, species_list=species)
 
   # Fetch and load data using ETL Manager
   logger.info("Loading VEP annotated variants...")
