@@ -86,7 +86,7 @@ clean-venv:
 
 
 #~
-container: #~
+#container: #~
 #~ Removes the virtual environment and python cache, regenerates the module .env file, 
 #~ copies the code for the shared/caendr package into the module directory, and
 #~ builds the container for the module and tags it with the name and version from module.env

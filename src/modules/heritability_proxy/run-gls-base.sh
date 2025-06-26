@@ -9,7 +9,7 @@ fi
 echo "Env: ${ENV}"
 source ../../../env/${ENV}/global.env
 
-IMAGE_URI=gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/heritability:v0.03-debug
+IMAGE_URI=us-east4-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT_ID}/caendr-site-v2/heritability:v0.04
 
 docker pull $IMAGE_URI
 

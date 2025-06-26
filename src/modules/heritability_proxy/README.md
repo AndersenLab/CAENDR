@@ -4,8 +4,8 @@ The Heritability tool requires two Docker Images to run.
 
 ## 1. Heritability Starter 
 
-This image is built from the repo: northwestern-mti/calc_heritability/Dockerfile 
-and it is deployed to GCR: gcr.io/$GOOGLE_PROJECT_ID/heritability
+This image is built from the repo: andersenlab/calc_heritability/Dockerfile 
+and it is deployed to GCR: us-east4-docker.pkg.dev/$GOOGLE_PROJECT_ID/caendr-site-v2/heritability
 
 THis image is ENVIRONMENT specific, and it should be built for DEV/QA/PROD.
 
@@ -18,13 +18,13 @@ export ENV=development
 
 ## 2. Heritability Google Life Sciences Base
 
-This image is built from the repo: northwestern-mti/calc_heritability/env/Dockerfile
-and it is deployed to dockerhub: northwesternmti/heritability_gls_base
+This image is built from the repo: andersenlab/calc_heritability/env/Dockerfile
+and it is deployed to dockerhub: andersenlab/heritability_gls_base
 
 This image is shared across environments (DEV/QA/PROD).
 
-This image is refererenced internally by northwestern-mti/calc_heritability/nextflow.config 
-under the GCP process with `container = northwesternmti/heritability_gls_base:latest`
+This image is refererenced internally by andersenlab/calc_heritability/nextflow.config 
+under the GCP process with `container = andersenlab/heritability_gls_base:latest`
 
 Push Image to Docker Hub
 ```bash

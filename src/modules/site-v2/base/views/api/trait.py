@@ -234,7 +234,7 @@ def query_list_sql(user_filter=None, status_filter=None):
     the current user will return no results, since the two user filters are exclusive.
     This is still a syntactically valid request, but it is semantically invalid.
   '''
-
+  logger.error(request.json)
   # Get search parameters
   selected_tags  = get_clean(request.json, 'selected_tags', [])
   search_val     = get_clean(request.json, 'search_val',    '').lower()

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GIT_URL=git@github.com:northwestern-mti/calc_heritability.git 
+GIT_URL=git@github.com:andersenlab/calc_heritability.git 
 GIT_BRANCH=main
 
 echo "Env: ${ENV}"
@@ -15,9 +15,9 @@ set +a
 source ../../../env/${ENV}/global.env
 
 # this requires reading the respective global.env above
-IMAGE_URI=gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${HERITABILITY_CONTAINER_NAME}:${HERITABILITY_CONTAINER_VERSION}
+IMAGE_URI=us-east4-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT_ID}/caendr-site-v2/${HERITABILITY_CONTAINER_NAME}:${HERITABILITY_CONTAINER_VERSION}
 
-if [ -d calc_heritability] ]; then
+if [[ -d calc_heritability ]]; then
     echo "Found cloned repo: $GIT_REPO_URL."
 else
     git clone -b $GIT_BRANCH --depth 1 $GIT_URL

@@ -39,7 +39,7 @@ make configure
 
 build container image:
 ```
-make build
+make container
 ```
 
 test container
