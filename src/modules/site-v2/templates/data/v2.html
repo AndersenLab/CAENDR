@@ -357,7 +357,17 @@
                                         </tr>
                                         <tr>
                                             <th scope="row">Gene models</th>
-                                            <td>Gene models constructed from the reference genome.</td>
+                                            <td>
+                                                {% if species.name == "c_elegans" %}
+                                                Gene models constructed using XXX and the reference genome CGC1.
+                                                {% endif %}
+                                                {% if species.name == "c_briggsae" %}
+                                                Gene models constructed using XXX and the reference genome QC1410.
+                                                {% endif %}
+                                                {% if species.name == "c_tropicalis" %}
+                                                Gene models constructed using XXX and the reference genome NIC58.
+                                                {% endif %}
+                                            </td>
                                             <td class="text-center">
                                                 {% if gene_gtf_path %}
                                                 <a class="btn btn-primary text-light" href="{{ gene_gtf_path }}">{{ gene_gtf_name }}</a>
@@ -413,13 +423,13 @@
                                             <th scope="row">Genetic Map</th>
                                             <td>
                                                 {% if species.name == 'c_elegans' %}
-                                                We have compiled a map of genetic in strain N2 from Rockman & Kruglyak, 2009.
+                                                We have compiled a map of genetic in strain N2 from <a href="https://pubmed.ncbi.nlm.nih.gov/19283065/">Rockman & Kruglyak, 2009</a>.
                                                 {% endif %}
                                                 {% if species.name == 'c_briggsae' %}
-                                                We have compiled a map of genetic in strain QX1410 from Stevens, 2021.
+                                                We have compiled a map of genetic in strain QX1410 from <a href="https://pubmed.ncbi.nlm.nih.gov/35348662/">Stevens, 2022</a>.
                                                 {% endif %}
                                                 {% if species.name == 'c_tropicalis' %}
-                                                We have compiled a map of genetic in strain NIC58 from Noble, 2021.
+                                                We have compiled a map of genetic in strain NIC58 from <a href="https://pubmed.ncbi.nlm.nih.gov/33427200/">Noble, 2021</a>.
                                                 {% endif %}
                                             </td>
                                             {%- if files %}
@@ -510,14 +520,9 @@
                                         <tr>
                                             <th scope="row">Hyper-Divergent Regions</th>
                                             <td>
-                                                The hyper-divergent regions are characterized by higher-than-average
-                                                density of small variants and large genomic spans where short sequence
-                                                reads fail to align to the reference genome.
-                                                The <i>C. elegans</i> hyper-divergent regions were identified as described
-                                                in <a href="https://andersenlab.org/publications/2021LeeNatureEE.pdf">Lee
-                                                <i>et al.</i></a>.
-                                                <i>C. briggsae</i> and <i>C. tropicalis</i> hyper-divergent regions will
-                                                be released in the future.
+                                                The hyper-divergent regions are characterized by higher-than-average density of small 
+                                                variants and large genomic spans where short sequence reads fail to align to the reference 
+                                                genome. For more information, see the <a href="{{ url_for('primary.help_item', filename='FAQ', _anchor='divergent-column') }}">FAQ</a>.
                                             </td>
                                             <td>
                                             {%- call render_download_link_set(files) %}
