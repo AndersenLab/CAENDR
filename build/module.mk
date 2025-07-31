@@ -117,7 +117,7 @@ publish: container container-publish
 publish-auto: container-auto container-publish
 
 container-publish:
-	@echo -e "\n$(COLOR_B)Publishing container image to gcr...$(COLOR_N)"
+	@echo -e "\n$(COLOR_B)Publishing container image to the google artifact registry...$(COLOR_N)"
 	docker push us-east4-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT_ID}/caendr-site-v2/${MODULE_NAME}:${MODULE_VERSION}
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
