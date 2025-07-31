@@ -124,7 +124,7 @@ def data_release_list(species: Species, release: DatasetRelease):
   # Special case:
   # Only show the Divergent Regions BED file if it defines a valid track for this species + release,
   # even if the file exists.
-  if files or 'Hyper-divergent Regions' not in release['browser_tracks']:
+  if files and 'Hyper-divergent Regions' not in release['browser_tracks']:
     files['divergent_regions_strain_bed']    = None
     files['divergent_regions_strain_bed_gz'] = None
 
