@@ -3,7 +3,8 @@
 
 # Base Docker Image spawn by google lifesciences to run nextflow pipeline
 # same image is used by each environment (DEV/TEST/PROD)
-IMAGE_URI=andersenlab/heritability-gls-base:latest
+VERSION=v0.01
+IMAGE_URI=andersenlab/heritability-gls-base:${VERSION}
 GIT_URL=https://github.com/andersenlab/calc_heritability
 # NOTE: GIT_BRANCH can be a branch, tag, or commit hash
 GIT_BRANCH=release_20250625
@@ -17,9 +18,11 @@ if [ ! -d "calc_heritability" ]; then
 fi
 
 # build docker image for /env/Dockerfile
-if [ "Darwin" == uname ]; then
+if [[ $OSTYPE == "darwin"* ]]; then
+    echo "docker buildx build --platform=linux/amd64 --no-cache -t $IMAGE_URI -f calc_heritability/env/Dockerfile ./calc_heritability/env"
     docker buildx build --platform=linux/amd64 --no-cache -t $IMAGE_URI -f calc_heritability/env/Dockerfile ./calc_heritability/env
 else
+    echo "docker build --no-cache -t $IMAGE_URI -f calc_heritability/env/Dockerfile ./calc_heritability/env"
     docker build --no-cache -t $IMAGE_URI -f calc_heritability/env/Dockerfile ./calc_heritability/env
 fi
 

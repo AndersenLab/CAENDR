@@ -195,6 +195,7 @@ class IndelFinderPipeline(JobPipeline):
       'INDEL_SITE':     self.report['site'],
       'RESULT_BUCKET':  result_bucket,
       'RESULT_BLOB':    result_blob,
+      "QUEUE_REGION":   self.get_queue_region(),
     }
 
   def construct_run_params(self):

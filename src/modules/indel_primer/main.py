@@ -1,20 +1,23 @@
 import os
 import sys
+import pathlib
 
 # Important: We have to load the environment before CaeNDR package imports,
 # so global environment variables are available to the CaeNDR package
 # TODO: Now that CaeNDR package automatically loads this on initialization,
 #       this line isn't necessary - is it better to keep it or remove it?
 from caendr.utils.env import load_env
-load_env()
+load_env("{}/.env".format(pathlib.Path(__file__).parent.resolve()))
+from caendr.services.logger import logger
+from caendr.utils.env import get_env_var, env_log_string
+
+logger.warning(get_env_var('USER_OWNED_ENTITY_CACHE_AGE_SECONDS'))
 
 from subprocess import Popen, PIPE, STDOUT
-from caendr.services.logger import logger
 
 from caendr.utils import monitor
 from caendr.models.datastore import IndelPrimerReport
 from caendr.services.cloud.storage import download_blob_to_file, upload_blob_from_file, BlobURISchema, make_secure_filename
-from caendr.utils.env import get_env_var, env_log_string
 
 from vcfkit.utils.reference import get_genome_directory
 
@@ -114,8 +117,6 @@ if not os.path.exists(os.path.join( target_vcf_file_path, target_vcf_file_name )
 
 # Prepare command for VCF-kit Indel Primer tool
 cmd = (
-  'conda', 'run', '-n', 'indel-primer',
-
   # Run VCF-kit indel primer tool
   'vk', 'primer', 'indel',
 

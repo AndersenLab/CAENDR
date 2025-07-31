@@ -124,10 +124,11 @@ class NemascanPipeline(JobPipeline):
       **self.report.get_data_paths(schema=BlobURISchema.GS),
 
       # Define vars for this job
-      'SPECIES':     self.report['species'],
-      'VCF_VERSION': Species.get(self.report['species'])['release_latest'],
-      'USERNAME':    self.report['username'],
-      'EMAIL':       self.report['email'],
+      'SPECIES':      self.report['species'],
+      'VCF_VERSION':  Species.get(self.report['species'])['release_latest'],
+      'USERNAME':     self.report['username'],
+      'EMAIL':        self.report['email'],
+      "QUEUE_REGION": self.get_queue_region(),
     }
 
   def construct_run_params(self):

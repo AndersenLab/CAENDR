@@ -29,6 +29,10 @@ REQUIRED_RESOURCES: Dict[DbOp, List[ForeignResourceTemplate]] = {
   DbOp.DROP_AND_POPULATE_WORMBASE_GENES: [
     *WormbaseGeneConfig.all_resources,
     *WormbaseGeneSummaryConfig.all_resources,
+    *AnnovarAnnotatedVariantConfig.all_resources,
+    *CsqAnnotatedVariantConfig.all_resources,
+    *SnpEffAnnotatedVariantConfig.all_resources,
+    *VepAnnotatedVariantConfig.all_resources,
   ],
   DbOp.DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS: [
     *StrainAnnotatedVariantConfig.all_resources,
@@ -192,6 +196,7 @@ class DatabaseOperationPipeline(JobPipeline):
       'EMAIL':              self.report.get_user_email(),
       'OPERATION_ID':       self.report.id,
       'SPECIES_LIST':       species_list,
+      "QUEUE_REGION":       self.get_queue_region(),
     }
 
 

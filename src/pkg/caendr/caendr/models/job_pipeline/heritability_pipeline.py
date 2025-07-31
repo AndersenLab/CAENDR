@@ -190,6 +190,7 @@ class HeritabilityPipeline(JobPipeline):
 
       'DATA_BUCKET':    data_bucket,
       'DATA_BLOB_PATH': data_blob,
+      "QUEUE_REGION":   self.get_queue_region(),
     }
 
   def construct_run_params(self):

@@ -27,6 +27,10 @@ class Task(object):
   # Should be overwritten in subclasses
   queue = None
 
+  ## The region the queue will be created in
+  # Should be overwritten in subclasses
+  queue_region = None
+
   # The kind of Entity associated with this Task type
   # Should be overwritten in subclasses
   kind = None
@@ -126,7 +130,10 @@ class Task(object):
     if self.queue is None:
       raise ValueError(f'Target queue is undefined for task of type "{self.name}".')
 
-    return add_task( self.queue, self.queue_url, dict(self) )
+    if self.queue_region is None:
+      raise ValueError(f'Target queue region is undefined for task of type "{self.name}".')
+
+    return add_task( self.queue, self.queue_region, self.queue_url, dict(self) )
 
 
 
@@ -162,6 +169,7 @@ class MockDataTask(Task):
 class DatabaseOperationTask(Task):
   name  = 'db_op_task'
   queue = os.environ.get('MODULE_DB_OPERATIONS_TASK_QUEUE_NAME')
+  queue_region = os.environ.get('MODULE_DB_OPERATIONS_TASK_QUEUE_REGION')
   kind  = DatabaseOperation.kind
 
   @classmethod
@@ -177,6 +185,7 @@ class DatabaseOperationTask(Task):
 class HeritabilityTask(Task):
   name  = 'heritability_task'
   queue = os.environ.get('HERITABILITY_TASK_QUEUE_NAME')
+  queue_region = os.environ.get('HERITABILITY_TASK_QUEUE_REGION')
   kind  = HeritabilityReport.kind
 
   @classmethod
@@ -191,6 +200,7 @@ class HeritabilityTask(Task):
 class IndelPrimerTask(Task):
   name  = 'indel_primer_task'
   queue = os.environ.get('INDEL_PRIMER_TASK_QUEUE_NAME')
+  queue_region = os.environ.get('INDEL_PRIMER_TASK_QUEUE_REGION')
   kind  = IndelPrimerReport.kind
 
   @classmethod
@@ -211,6 +221,7 @@ class IndelPrimerTask(Task):
 class NemascanTask(Task):
   name  = 'nemascan_task'
   queue = os.environ.get('NEMASCAN_TASK_QUEUE_NAME')
+  queue_region = os.environ.get('NEMASCAN_TASK_QUEUE_REGION')
   kind  = NemascanReport.kind
 
   @classmethod

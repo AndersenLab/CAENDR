@@ -239,12 +239,26 @@ class JobPipeline(ABC):
     '''
     return self._Task_Class.queue if self._Task_Class else None
 
+  @property
+  def queue_region(self):
+    '''
+      Get the queue region specified by the associated Task class.
+    '''
+    return self._Task_Class.queue_region if self._Task_Class else None
+
   @classmethod
   def get_queue(cls):
     '''
       Class-level method for getting queue name.
     '''
     return cls._Task_Class.queue if cls._Task_Class else None
+
+  @classmethod
+  def get_queue_region(cls):
+    '''
+      Class-level method for getting queue region.
+    '''
+    return cls._Task_Class.queue_region if cls._Task_Class else None
 
 
 

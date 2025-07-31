@@ -3,7 +3,7 @@ from caendr.services.cloud.postgresql import health_database_status
 from caendr.services.logger import logger
 
 from caendr.models.datastore import Species, PhenotypeReport
-from caendr.models.sql import DbOp, WormbaseGene, WormbaseGeneSummary, Strain, StrainAnnotatedVariant, AnnovarAnnotatedVariant, CsqAnnotatedVariant, SnpEffAnnotatedVariant, VepAnnotatedVariant, PhenotypeDatabase, PhenotypeMetadata
+from caendr.models.sql import DbOp, WormbaseGene, WormbaseGeneSummary, Strain, StrainAnnotatedVariant, AnnovarAnnotatedVariant, CsqAnnotatedVariant, SnpEffAnnotatedVariant, VepAnnotatedVariant, PhenotypeDatabase, PhenotypeMetadata, Homolog
 from caendr.services.sql.db import backup_external_db
 from caendr.services.sql.etl import ETLManager
 
@@ -89,6 +89,7 @@ def drop_and_populate_wormbase_genes(app, db, species, reload_files=True):
 
   # Drop relevant tables
   logger.info(f"Dropping tables...")
+  etl_manager.drop_tables( StrainAnnotatedVariant, Homolog, species_list=species )
   etl_manager.clear_tables( WormbaseGeneSummary, WormbaseGene, species_list=species )
 
   # Fetch and load data using ETL Manager
