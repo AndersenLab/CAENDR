@@ -343,8 +343,24 @@
                                         {% endif %}
                                         <tr>
                                             <th scope="row">Reference Genome FASTA ({{ RELEASE.wormbase_version }})</th>
-                                            <td>The reference genome build from Wormbase used for alignment and
-                                                annotation.</td>
+                                            {% if species.name == "c_elegans" %}
+                                            <td>
+                                                The reference genome build from Wormbase used for alignment and
+                                                annotation.
+                                            </td>
+                                            {% endif %}
+                                            {% if species.name == "c_briggsae" %}
+                                            <td>
+                                                The reference genome build from <a href="https://pubmed.ncbi.nlm.nih.gov/35348662/">Stevens, 2022</a> used for alignment and
+                                                annotation.
+                                            </td>
+                                            {% endif %}
+                                            {% if species.name == "c_tropicalis" %}
+                                            <td>
+                                                The reference genome build from <a href="https://pubmed.ncbi.nlm.nih.gov/33427200/">Noble, 2021</a> used for alignment and
+                                                annotation.
+                                            </td>
+                                            {% endif %}
                                             {% if fasta_path %}
                                             <td class="text-center">
                                                 <a class="btn btn-primary text-light" href="{{ fasta_path }}">{{ fasta_name }}</a>
@@ -359,13 +375,13 @@
                                             <th scope="row">Gene models</th>
                                             <td>
                                                 {% if species.name == "c_elegans" %}
-                                                Gene models constructed using XXX and the reference genome CGC1.
+                                                Gene models were constructed using a combination of BRAKER (short-read) and StringTie + TransDecoder (long-read) followed by QC with AGAT using the reference genome CGC1.
                                                 {% endif %}
                                                 {% if species.name == "c_briggsae" %}
-                                                Gene models constructed using XXX and the reference genome QC1410.
+                                                Gene models were constructed using a combination of BRAKER (short-read) and StringTie + TransDecoder (long-read) followed by QC with AGAT using the reference genome QX1410.
                                                 {% endif %}
                                                 {% if species.name == "c_tropicalis" %}
-                                                Gene models constructed using XXX and the reference genome NIC58.
+                                                Gene models were constructed using a combination of BRAKER (short-read) and StringTie + TransDecoder (long-read) followed by QC with AGAT and manual curation with Apollo using the reference genome NIC58.
                                                 {% endif %}
                                             </td>
                                             <td class="text-center">
@@ -423,13 +439,13 @@
                                             <th scope="row">Genetic Map</th>
                                             <td>
                                                 {% if species.name == 'c_elegans' %}
-                                                We have compiled a map of genetic in strain N2 from <a href="https://pubmed.ncbi.nlm.nih.gov/19283065/">Rockman & Kruglyak, 2009</a>.
+                                                A genetic map generated from a cross between N2 and CB4856 (<a href="https://pubmed.ncbi.nlm.nih.gov/19283065/">Rockman & Kruglyak, 2009</a>).
                                                 {% endif %}
                                                 {% if species.name == 'c_briggsae' %}
-                                                We have compiled a map of genetic in strain QX1410 from <a href="https://pubmed.ncbi.nlm.nih.gov/35348662/">Stevens, 2022</a>.
+                                                A genetic map generated from a cross between QX1410 and VX34 (<a href="https://pubmed.ncbi.nlm.nih.gov/35348662/">Stevens, 2022</a>).
                                                 {% endif %}
                                                 {% if species.name == 'c_tropicalis' %}
-                                                We have compiled a map of genetic in strain NIC58 from <a href="https://pubmed.ncbi.nlm.nih.gov/33427200/">Noble, 2021</a>.
+                                                A genetic map generated from a cross between NIC58 and JU1373 (<a href="https://pubmed.ncbi.nlm.nih.gov/33427200/">Noble, 2021</a>).
                                                 {% endif %}
                                             </td>
                                             {%- if files %}
