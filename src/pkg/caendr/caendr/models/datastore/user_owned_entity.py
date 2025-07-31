@@ -4,7 +4,7 @@ from caendr.models.datastore import Entity, User
 from caendr.utils.env import get_env_var
 
 
-USER_OWNED_ENTITY_CACHE_AGE_SECONDS = get_env_var('USER_OWNED_ENTITY_CACHE_AGE_SECONDS', var_type=int)
+USER_OWNED_ENTITY_CACHE_AGE_SECONDS = get_env_var('USER_OWNED_ENTITY_CACHE_AGE_SECONDS', 3600, var_type=int)
 
 
 
