@@ -224,3 +224,53 @@ class ETLManager:
                 species_list: List of species to clear the rows of. If `None`, clears *all* rows from the given table.
         '''
         return self.clear_tables([table], species_list=species_list)
+
+    def drop_tables(self, *tables, species_list = None):
+        '''
+            Drops rows from one or more tables in the SQL db.
+
+            Expects tables to be provided in dependency order:
+            E.g., if table B contains a foreign key into table A, they should be provided as [... A, ..., B, ...]
+
+            Args:
+                *tables: List of tables to be cleared. If none are provided, clears all tables.
+                species_list: List of species to clear the rows of. If `None`, clears *all* rows from the given tables.
+        '''
+
+        # If dropping all species, can perform bulk drop/create operations
+        if species_list is None:
+            logger.info(f'Dropping { self.print_tables(*tables) }...')
+            self.__drop_all(*tables)
+
+        # Otherwise, delete individual rows from tables
+        else:
+            logger.info(f'Dropping species [{", ".join(species_list)}] from { self.print_tables(*tables) }...')
+            if tables is None:
+                tables = self.all_tables()
+
+            # Make sure all tables exist
+            self.__create_all(*tables)
+
+            # Loop through tables in reverse order, so rows that depend on earlier tables are dropped first
+            for table in tables[::-1]:
+                logger.info(f'Initial size of table { table.__tablename__ }: { table.query.count() }')
+
+                for species_name in species_list:
+                    self.__drop_species_rows(table, species_name)
+
+                # Log size of table after drop
+                logger.info(f'Size of table { table.__tablename__ } after dropping [{", ".join(species_list)}]: { table.query.count() }')
+
+        # Commit changes
+        self.db.session.commit()
+
+
+    def drop_table(self, table, species_list = None):
+        '''
+            Clear rows from a table in the SQL db.
+
+            Args:
+                *tables: The table to be cleared.
+                species_list: List of species to clear the rows of. If `None`, clears *all* rows from the given table.
+        '''
+        return self.drop_tables([table], species_list=species_list)
