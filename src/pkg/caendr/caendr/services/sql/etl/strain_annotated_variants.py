@@ -147,7 +147,7 @@ def parse_annovar_variant_annotation_data(species: Species, **files: LocalDatast
         yield {
 
           # These two fields form the primary key, i.e. the combination of both must be unique within the table
-          'id':                 f"{file_name}_{idx}",
+          'id':                 idx,
           'species_name':       species.name,
 
           'chrom':              row['chrom'],
@@ -215,7 +215,7 @@ def parse_csq_variant_annotation_data(species: Species, **files: LocalDatastoreF
         yield {
 
           # These two fields form the primary key, i.e. the combination of both must be unique within the table
-          'id':                 f"{file_name}_{idx}",
+          'id':                 idx,
           'species_name':       species.name,
 
           'chrom':              row['chrom'],
@@ -284,7 +284,7 @@ def parse_vep_variant_annotation_data(species: Species, **files: LocalDatastoreF
         yield {
 
           # These two fields form the primary key, i.e. the combination of both must be unique within the table
-          'id':                 f"{file_name}_{idx}",
+          'id':                 idx,
           'species_name':       species.name,
 
           'chrom':              row['chrom'],
@@ -352,7 +352,7 @@ def parse_snpeff_variant_annotation_data(species: Species, **files: LocalDatasto
         yield {
 
           # These two fields form the primary key, i.e. the combination of both must be unique within the table
-          'id':                 f"{file_name}_{idx}",
+          'id':                 idx,
           'species_name':       species.name,
 
           'chrom':              row['chrom'],

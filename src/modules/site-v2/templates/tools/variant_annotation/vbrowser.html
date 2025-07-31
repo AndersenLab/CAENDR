@@ -25,7 +25,8 @@
         <div class="nav nav-tabs border-0" id="nav-tab" role="tablist">
           <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home"
             type="button" role="tab" aria-controls="nav-home" aria-selected="true">New</button>
-          <button class="nav-link disabled" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false" style="display:none;">Release Notes</button>
+            <button class="nav-link" id="nav-linkTool-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false">About Annotations</button>
+            <button class="nav-link disabled" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false" style="display:none;">Release Notes</button>
         </div>
       </nav>
       <div class="tab-content" id="nav-tabContent">
@@ -35,6 +36,9 @@
           <div class="text-bg-light mb-5 p-3 p-md-5 rounded-2 shadow-sm">
              <!-- Input Form -->
       <form id="form-submit">
+        <!-- Annotation tools -->
+        <div class='mb-4'>{{ render_field(form.annotationtool, onchange="update_annotation") }}</div>
+        <!-- /Annotation tools -->
         <!-- Species -->
         <div class='mb-4'>{{ render_field(form.species, onchange="update_species") }}</div>
         <!-- /Species -->
@@ -111,13 +115,6 @@
                       <input class="toggle-col-chk" type="checkbox" name="toggle_all_cols" id="toggle_all_cols" />
                       <label id="toggle_all_cols_label" for="toggle_all_cols"> Select All</label>
                     </div>
-                    {% for col in columns %}
-                    <div class="col-entry">
-                      <input class="toggle-col-chk" type="checkbox" name="toggle_{{ col['id'] }}"
-                        id="toggle_{{ col['id'] }}" data-column="{{ col['id'] }}" />
-                      <label for="toggle_{{ col['id'] }}"> {{ col['name'] }} </label>
-                    </div>
-                    {% endfor %}
                   </div>
                 </form>
               </div>
@@ -161,22 +158,6 @@
           </div>
         </div>
         <!-- /Strain List -->
-        <!-- Horizontal checkboxes -->
-        <div class="hstack gap-2 mb-4">
-          <label for="checkboxGroup" class="form-label">Variant Impact:</label>
-          <div class="hstack gap-2" id="checkboxGroup">
-            <div class="form-check">
-              <input class="form-check-input toggle-impact-chk" type="checkbox" name="impact_high" id="impact_high"
-                checked />
-              <label id="form-check-label impact_high_label" for="impact_high">High</label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input toggle-impact-chk" type="checkbox" name="impact_low" id="impact_low" />
-              <label id="form-check-label impact_low_label" for="impact_low">Low</label>
-            </div>
-          </div>
-        </div>
-        <!-- /Horiztonal checkboxes -->
       </form>
       <!-- /Input Form -->
               </div>
@@ -197,7 +178,7 @@
       </div>
       <!-- /Options Toolbar -->
       <!-- Select Species Prompt -->
-      {% include '_includes/select-species-prompt.html' %}
+      {% include '_includes/select-annotation-prompt.html' %}
       <!-- /Select Species Prompt -->
       <!-- Annotation Table -->
       <div id="variant-table-container" class="col mx-auto" style="max-width:65vw;">
@@ -215,18 +196,9 @@
           <table id="variant-table" class="table-striped table-hover" style="width:100%;">
             <caption class="visually-hidden">List of variant annotations</caption>
             <thead>
-              <tr class="header">
-                {% for col in columns %}
-                <th class="data-{{col['id']}} sorting"><strong> {{ col['name'] }} </strong></th>
-                {% endfor %}
-              </tr>
+              <tr></tr>
             </thead>
             <tbody>
-              <tr>
-                {% for col in columns %}
-                <td class="data-{{col['id']}}"> </td>
-                {% endfor %}
-              </tr>
             </tbody>
           </table>
         </div>
@@ -242,6 +214,7 @@
 
 {% block script %}
 {% from "_includes/strain-listing.html" import unpack_species_list %}
+{% from "_includes/macros.html" import unpack_annotation_list %}
 <script src="{{ url_for('static', filename='js/strains.js') }}"></script>
 <script>
 {% include '_scripts/utils.js' %}       {#/* defines: toggle_input */#}
@@ -260,10 +233,6 @@ let typingTimer;                //timer identifier
 let dTable = null;
 const selected_strains = new Set();
 
-// Initialize impact variables to match their checkboxes
-let impactHigh = $("#impact_high").prop('checked');
-let impactLow  = $("#impact_low").prop('checked');
-
 let toggle_strain_lock = false;
 
 let result_data = {};
@@ -271,9 +240,9 @@ let cachedTargets = {};
 
 // Species dictionary & selected species
 const species_list = {{ unpack_species_list(species_list, species_fields) }};
-var species = null
+var species = null;
 
-const columnList = JSON.parse('{{ columns | tojson }}');
+const all_columnList = JSON.parse('{{ columns | tojson }}');
 
 const strainListing = JSON.parse('{{ strain_listing | tojson }}');
 
@@ -286,6 +255,33 @@ const gene_search_selectors = {
 }
 
 
+// Track changes to selected annotation tools
+function update_annotation(annotation_id) {
+
+  const annotation_empty = annotation_id == null || annotation_id == '';
+
+  // If no annotation selected, prompt user to select one; otherwise show results table
+  $('#select-annotation-prompt').toggle(annotation_empty);
+  $('#variant-table-container').toggle(!annotation_empty);
+
+  // Enable or disable form inputs that depend on annotation being defined
+  toggle_input("speciesSelect", !annotation_empty);
+
+  // If no annotation tool selected, end the update function here
+  if (annotation_empty) return;
+
+  // Clear the gene and interval searches on switching annotationtool, to help avoid confusion
+  clear_gene_search();
+  clear_interval_search();
+
+  // Clear any previous variant data from the data table
+  clearDataTable();
+
+
+  remake_data_table();
+  init_data_table();
+  select_default_columns();
+}
 
 /* Species */
 
@@ -295,9 +291,7 @@ function update_species(species_id) {
   const species_empty = species_id == null || species_id == '';
 
   // If no species selected, prompt user to select one; otherwise show results table
-  $('#select-species-prompt').toggle(species_empty);
   $('#nav-linkTwo-tab').toggle(!species_empty);
-  $('#variant-table-container').toggle(!species_empty);
   $('#options-toolbar > *').toggle(!species_empty);
 
   // Enable or disable form inputs that depend on species being defined
@@ -472,20 +466,6 @@ function filter_rows_by_strains() {
   showTable();
 }
 
-function filter_rows_by_impact() {
-    /* build regex from strain set and filter */
-    let r = "Linker";
-    if (impactHigh) {
-      r += "|HIGH";
-    } 
-    if (impactLow) {
-      r += "|LOW";
-    }
-    $('#variant-table').dataTable().fnFilter(r, 'variant_impact:name', true, false);
-}
-
-
-
 
 /* Result Table -- General Columns */
 
@@ -549,6 +529,8 @@ function renderTargetConsequenceCol(data, type, row) {
 }
 
 function renderTargetConsequenceTable(data) {
+  const tool_id = $('#speciesSelect').val();
+  const columnList = all_columnList[tool_id];
   let result = "<div class='instruction-well'><table class='table table-striped table-condensed table-hover' style='width:80%;margin-left:10%;font-size:0.8rem;'><thead>";
   const numRows = Object.keys(data.id).length;
   for (let col1 of columnList) {
@@ -576,6 +558,7 @@ function renderTargetConsequenceTable(data) {
 function fetchTargetConsequence(el, q) {
   const tr = el.closest('tr');
   const row = dTable.row(tr);
+  const tool_id = $('#annotationSelect').val();
 
   if (cachedTargets[q]) {
     row.child(renderTargetConsequenceTable(cachedTargets[q])).show();
@@ -585,7 +568,7 @@ function fetchTargetConsequence(el, q) {
       type: "POST",
       contentType: 'application/json',
       dataType: 'json',
-      url: "{{ url_for('variant_annotation.query_position') }}/" + species.name,
+      url: "{{ url_for('variant_annotation.query_position') }}" + tool_id + "/" + species.name,
       data: JSON.stringify({query: q}),
       success:function(result) {
         cachedTargets[q] = result;
@@ -620,6 +603,9 @@ function expandTargetConsequence(el, pos) {
 /* Table Data */
 
 function populateDataTable() {
+  const tool_id = $('#annotationSelect').val();
+	const columnList = all_columnList[tool_id];
+
   // clear the table before populating it with more data
   dTable.clear();
   if (Object.keys(result_data).length == 0){
@@ -631,7 +617,6 @@ function populateDataTable() {
     const row_data = columnList.map(col => processCol(result_data[col['id']][variant], col['id']))
     $('#variant-table').dataTable().fnAddData(row_data);
   }
-  filter_rows_by_impact();
   filter_rows_by_strains();
   dTable.columns.adjust().draw();
 }
@@ -645,11 +630,39 @@ function clearDataTable() {
 
 
 
-
 /* Initialization - Helper functions */
+function remake_data_table() {
+  console.log("remaking data table");
+  const tool_id = $('#annotationSelect').val();
+  const columnList = all_columnList[tool_id];
+  console.log(tool_id);
+  console.log(columnList);
 
+  $("#variant-table thead tr th").remove();
+  thead = $("#variant-table thead tr");
+  columnList.map((col, idx) => {
+    var th = $("<th class='sorting data-" + col['id'] + "'><strong>" + col["name"] + "</strong></th>");
+    thead.append(th);
+  });
+
+  var col_select = $("#col-select .form-group");
+  columnList.map((col, idx) => {
+    col_select.append("<div class='col-entry'><input class='toggle-col-chk' type='checkbox' name='toggle_" + col['id'] + "' id='toggle_" + col['id'] + "' data-column='" + col['id'] + "' /><label for='toggle_" + col['id'] + "'> " + col['name'] + " </label></div>");
+  })
+
+  $(".toggle-col-chk").change(function() {
+    const state = $(this).prop('checked');
+    const colName = $(this).attr('data-column') + ':name';
+    const column = dTable.column(colName);
+    column.visible(state);
+    dTable.columns.adjust().draw();
+  });
+}
 
 function init_data_table() {
+  console.log("initializing data table");
+  const tool_id = $('#annotationSelect').val();
+  const columnList = all_columnList[tool_id]; 
   const colDefs = columnList.map((col, idx) => {
     let render = null;
     
@@ -661,7 +674,7 @@ function init_data_table() {
     }
   
     return { 
-      "name": col.id, 
+      "name": col['id'], 
       "render": render,
       "targets": idx,
       "visible": col['default_visibility'],
@@ -691,6 +704,8 @@ function init_data_table() {
 
 /* Set all columns to their default visibility values */
 function select_default_columns() {
+  const tool_id = $('#annotationSelect').val();
+  const columnList = all_columnList[tool_id];
 
   /* Set checkboxes */
   columnList.forEach((col, idx) => {
@@ -715,13 +730,10 @@ $(document).ready(function() {
 
   // Get the default species from the selector
   update_species();
+  update_annotation();
 
   (function($) {
 
-    init_data_table();
-
-    select_default_columns();
-    
     const csrf_token = "{{ form.csrf_token._value() }}";
 
     const height = $('#col-select').height() + 'px';
@@ -740,17 +752,6 @@ $(document).ready(function() {
     /* Strain search */
     $('#strain-filter').keyup(function() {
         filter_strains('#vbrowser-strain-list-table', species['name'], $(this).val().split(','))
-    });
-
-    /* Filter by impact */
-    $("#impact_high").change(function(e) {
-      impactHigh = $(this).prop('checked');
-      setTimeout(filter_rows_by_impact, 50);
-    });
-
-    $("#impact_low").change(function(e) {
-      impactLow = $(this).prop('checked');
-      setTimeout(filter_rows_by_impact, 50);
     });
 
     /* select/deselect all strains checkbox handler */
@@ -788,6 +789,8 @@ $(document).ready(function() {
     /* select/deselect all columns handler */
     $("#toggle_all_cols").change(function(e) {
       const state = $(this).prop('checked');
+      const tool_id = $('#annotationSelect').val();
+      const columnList = all_columnList[tool_id];
       $(".toggle-col-chk").each(function(idx, e) {
         e.checked = state;
       });
@@ -823,6 +826,7 @@ $(document).ready(function() {
         toggleDisableForm(false);
         return;
       }
+      const tool_id = $('#annotationSelect').val();
       const data = {
         query: $("#interval").val()
       };
@@ -832,7 +836,7 @@ $(document).ready(function() {
 				type: "POST",
         contentType: 'application/json',
         dataType: 'json',
-				url: "{{ url_for('variant_annotation.query_interval') }}/" + species.name,
+				url: "{{ url_for('variant_annotation.query_interval') }}/" + tool_id + "/" + species.name,
 				data: JSON.stringify(data),
 				success:function(result) {
           const has_results = !!Object.keys(result).length;
@@ -867,17 +871,23 @@ $(document).ready(function() {
 // For viewing tool in fullscreen
 let fullscreenBrowser = document.getElementById("result-table");
 
-  // Setting up Release Notes link
-  $('#nav-linkTwo-tab').click(function() {
-    const species = $('#speciesSelect').val()
-    let url = "{{ url_for('data_releases.data_release_list', species_name='SPECIES') }}";
-    if (species) {
-        url = url.replace("SPECIES", species);
-    } else {
-        throw Error('No species selected.');
-    }
-    window.location.href = url;
-  });
+// Setting up Release Notes link
+$('#nav-linkTwo-tab').click(function() {
+  const species = $('#speciesSelect').val()
+  let url = "{{ url_for('data_releases.data_release_list', species_name='SPECIES') }}";
+  if (species) {
+      url = url.replace("SPECIES", species);
+  } else {
+      throw Error('No species selected.');
+  }
+  window.location.href = url;
+});
+
+// Setting up Annotation tool info link
+$('#nav-linkTool-tab').click(function() {
+  let url = "{{ url_for('primary.help_item') }}" + "#tool-differences";
+  window.location.href = url;
+});
 
 </script>
 {% endblock %}

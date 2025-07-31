@@ -26,6 +26,26 @@
   </script>
 {% endmacro %}
 
+{%- macro update_annotation_field(el, onchange=None) -%}
+  {{el}}.classList.toggle('fst-italic', {{el}}.value);
+  if ({{el}}.value && !{{el}}.options[0].value) {{el}}.options[0].disabled = true;
+  {% if onchange %}{{ onchange }}({{el}}.value);{% endif %}
+{%- endmacro -%}
+
+{% macro render_annotation_field(field, onchange=None) %}
+  {% set _ = kwargs.update({'aria-label': 'Choose annotation tool'})  %}
+  {{ field(class="form-control", onchange=update_annotation_field('this', onchange), required=true, **kwargs) }}
+  <script>
+    // Reset the selector every time the page is shown
+    // This includes from browser back/forward, and is necessary to reset species
+    addEventListener("pageshow", (event) => {
+      const selector = document.getElementById('{{ field.elementId }}');
+      selector.value = '';
+      {#/* toggle_input(selector.options[0], false); // Un-comment to disable "Choose" from start. Is this compatible with all browsers? */#}
+    });
+  </script>
+{% endmacro %}
+
 {% macro render_field(field, form_prefix=None, form_suffix=None, make_err_container=false, has_popover=false, content=None) %}
   <div class="form-group {% if field.errors %}has-error{% endif %}">
     <div class="label-group d-flex">
@@ -57,6 +77,8 @@
         </div>
       {% elif field.type == 'SpeciesSelectField' %}
         {{ render_species_field(field, **kwargs) }}
+      {% elif field.type == 'AnnotationSelectField' %}
+        {{ render_annotation_field(field, **kwargs) }}
       {% else %}
         {{ field(class="form-control", required=kwargs.get('required', field.flags.required), **kwargs) }}
       {% endif %}
@@ -184,3 +206,14 @@
   <em>Unable to retrieve files.</em>
 {%- endif %}
 {%- endmacro %}
+
+
+{% macro unpack_annotation_list(annotation_list) %}{
+  {%- for name, annotation in annotation_list.items() %}
+  '{{ name }}': {
+    {% for key in dict(annotation) -%}
+      '{{ key }}': '{{ annotation[key] }}',
+    {% endfor -%}
+  },
+  {%- endfor %}
+}{% endmacro %}
