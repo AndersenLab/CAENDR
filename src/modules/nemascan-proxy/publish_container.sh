@@ -71,14 +71,14 @@ fi
 echo "Publishing with tag '${tag}'";
 
 
-# Clone git project
-if [ -n "${reload_git}" ]; then
-    rm -rf ./${NEMASCAN_SOURCE_GITHUB_REPO}
-fi
-git clone --depth 1 git@github.com:${NEMASCAN_SOURCE_GITHUB_ORG}/${NEMASCAN_SOURCE_GITHUB_REPO}.git
+# # Clone git project
+# if [ -n "${reload_git}" ]; then
+#     rm -rf ./${NEMASCAN_SOURCE_GITHUB_REPO}
+# fi
+# git clone --depth 1 git@github.com:${NEMASCAN_SOURCE_GITHUB_ORG}/${NEMASCAN_SOURCE_GITHUB_REPO}.git
 
 
 # Build and push container
-echo "Building container gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${NEMASCAN_NXF_CONTAINER_NAME}:${tag}"
-docker build --no-cache --platform linux/amd64 -t gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${NEMASCAN_NXF_CONTAINER_NAME}:${tag} -f ${NEMASCAN_SOURCE_GITHUB_REPO}/Dockerfile ./${NEMASCAN_SOURCE_GITHUB_REPO}
-docker push gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${NEMASCAN_NXF_CONTAINER_NAME}:${tag}
+echo "Building container us-east4-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT_ID}/caendr-site-v2/${NEMASCAN_NXF_CONTAINER_NAME}:${tag}"
+docker build --no-cache --platform linux/amd64 -t us-east4-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT_ID}/caendr-site-v2/${NEMASCAN_NXF_CONTAINER_NAME}:${tag} -f ${NEMASCAN_SOURCE_GITHUB_REPO}/Dockerfile ./${NEMASCAN_SOURCE_GITHUB_REPO}
+docker push us-east4-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT_ID}/caendr-site-v2/${NEMASCAN_NXF_CONTAINER_NAME}:${tag}

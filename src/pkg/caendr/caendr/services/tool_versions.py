@@ -17,11 +17,11 @@ MODULE_DB_OPERATIONS_CONTAINER_VERSION = os.environ.get('MODULE_DB_OPERATIONS_CO
 DOCKER_HUB_REPO_NAME = os.environ.get('DOCKER_HUB_REPO_NAME')
 GOOGLE_CLOUD_PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID')
 
-GCR_REPO_NAME = f'gcr.io/{GOOGLE_CLOUD_PROJECT_ID}'
+GCR_REPO_NAME = f'us-east4-docker.pkg.dev/{GOOGLE_CLOUD_PROJECT_ID}/caendr-site-v2'
 
 def get_available_version_tags(container):
   versions = []
-  if hasattr(container, 'container_repo') and container.container_repo.startswith('gcr.io/'):
+  if hasattr(container, 'container_repo') and container.container_repo.startswith('us-east4-docker.pkg.dev/'):
     return get_available_version_tags_gcr(container)
   return get_available_version_tags_dockerhub(container)
 

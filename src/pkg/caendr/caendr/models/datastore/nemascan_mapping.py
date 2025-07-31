@@ -44,6 +44,10 @@ class NemascanReport(HashableEntity, ReportEntity):
     return 'results'
 
   def get_data_paths(self, schema: BlobURISchema):
+    logger.debug(str({
+      **super().get_data_paths(schema=schema),
+      'TRAIT_FILE': self.input_filepath(schema=schema),
+    }))
     return {
       **super().get_data_paths(schema=schema),
       'TRAIT_FILE': self.input_filepath(schema=schema),
