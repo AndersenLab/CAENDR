@@ -97,11 +97,14 @@
                 {{ render_field(form.name) }}
                 {{ render_field(form.email) }}
                 {{ render_field(form.phone) }}
-                {{ render_field(form.address) }}
+                {{ render_field(form.institution) }}
                 {{ render_field(form.building) }}
+                {{ render_field(form.address) }}
+                {{ render_field(form.address2) }}
                 {{ render_field(form.city) }}
                 {{ render_field(form.state) }}
                 {{ render_field(form.zipcode) }}
+                {{ render_field(form.country) }}
                 {{ render_field(form.shipping_service) }}
                 {{ render_field(form.shipping_account) }}
             </div>
@@ -215,7 +218,7 @@ $(document).ready(function() {
         $('#paymentInfoModal').modal('hide')
     })
 
-    $('#name, #email, #phone, #address, #shipping_account').keyup(function() {
+    $('#name, #email, #phone, #institution, #building, #address, #address2, #city, #state, #zipcode, #country, #shipping_account').keyup(function() {
         if(formFilled()) {
             $('#checkout').prop('disabled', false)
         } else {
@@ -289,7 +292,7 @@ $(document).ready(function() {
 
 function formFilled() {
     let filled = true;
-    $('#name, #email, #phone, #address').each(function() {
+    $('#name, #email, #phone, #address, #city, #zipcode, #shipping_account').each(function() {
         if ($(this).val() == '' || !$('#eula').is(':checked')) {
             filled = false
         } else if ($(this).val() != '' && $('#shipping_service').val() != 'Flat Rate Shipping') {

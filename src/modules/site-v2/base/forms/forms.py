@@ -37,7 +37,7 @@ from caendr.services.user import get_user_role_form_options, get_local_user_by_e
 from caendr.services.database_operation import get_db_op_form_options
 from caendr.services.indel_primer import get_indel_primer_chrom_choices
 from caendr.services.markdown import get_content_type_form_options
-from caendr.models.datastore import User, Species, DatasetRelease
+from caendr.models.datastore import User, Species, DatasetRelease, AnnotationFile
 from caendr.models.datastore.announcement import AnnouncementType
 from caendr.api.strain import query_strains
 from base.forms.validators import (validate_duplicate_strain, 
@@ -76,6 +76,19 @@ class SpeciesSelectField(SelectField):
     self.exclude_species = exclude_species
     return super().__init__('Species:', id=SpeciesSelectField.elementId, choices=[ ('', "Choose"), *species_choices ], **kwargs)
 
+class AnnotationSelectField(SelectField):
+  """
+  Special dropdown selector field for selecting an annotation tool.
+  """
+  type = 'AnnotationSelectField'
+  elementId = 'annotationSelect'
+
+  # Automatically validates that species choice is in this list
+  CHOICES = [(name, value.display_name) for name, value in AnnotationFile.all().items()]
+
+  def __init__(self, **kwargs):
+    annotation_choices = AnnotationSelectField.CHOICES
+    return super().__init__('Annotation Tool:', id=AnnotationSelectField.elementId, choices=[ ('', "Choose"), *annotation_choices ], **kwargs)
 
 class EmptyForm(FlaskForm):
   pass
@@ -102,6 +115,7 @@ class MappingForm(FileUploadForm):
 
 class VBrowserForm(FlaskForm):
   species = SpeciesSelectField()
+  annotationtool = AnnotationSelectField()
 
 
 class BasicLoginForm(FlaskForm):
@@ -279,12 +293,15 @@ class OrderForm(Form):
   """ The strain order form """
   sector = SelectField('Sector', choices=SECTOR_OPTIONS, default="academia")
   name = StringField('Name', [Required(), Length(min=3, max=100)])
-  email = StringField('Email', [Email(), Length(min=3, max=100)])
-  address = StringField('Address', [Length(min=10, max=50)])
+  email = StringField('Email', [Email(), Length(min=5, max=100)])
+  institution = StringField('Institution', [Length(min=0, max=50)])
   building = StringField('Building, Room Number', [Length(min=0, max=50)])
+  address = StringField('Address', [Length(min=5, max=50)])
+  address2 = StringField('Address 2', [Length(min=0, max=50)])
   city = StringField('City', [Length(min=4, max=50)])
   state = StringField('State', [Length(min=2, max=20)])
   zipcode = StringField('Zip Code', [Length(min=5, max=20)])
+  country = StringField('Country', [Length(min=5, max=20)])
   phone = StringField('Phone', [Length(min=3, max=35)])
   shipping_service = SelectField('Shipping', choices=SHIPPING_OPTIONS)
   shipping_account = StringField('UPS/FEDEX Account Number')

@@ -63,7 +63,7 @@ def get_google_order_sheet():
 def add_to_order_ws(row):
   """ Stores order info in a google sheet. """
   ws = get_google_order_sheet()
-  index = sum([1 for x in ws.col_values(1) if x]) + 1
+  index = sum([1 for x in ws.col_values(3) if x]) + 1
 
   header_row = filter(len, ws.row_values(1))
   values = []
@@ -77,6 +77,9 @@ def add_to_order_ws(row):
       values.append("")
 
   row = map(str, row)
+  num_rows = ws.row_count
+  num_cols = ws.col_count
+  ws.resize(rows=num_rows + 1, cols=num_cols) 
   ws.insert_row(values, index)
 
 
