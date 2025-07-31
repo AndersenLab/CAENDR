@@ -58,7 +58,7 @@ def parse_gene_gtf(species: Species, GENE_GTF: LocalDatastoreFile, GENE_IDS: Loc
   gene_gtf = gene_gtf.assign(pos=(((gene_gtf.end - gene_gtf.start)/2) + gene_gtf.start).map(int))
 
   # Remove optional "Gene" prefix from gene IDs to match the wormbase_gene_summary table
-  gene_gtf.gene_id = gene_gtf.gene_id.apply(lambda x: remove_prefix(x, 'Gene:'))
+  gene_gtf.gene_id = gene_gtf.gene_id.apply(lambda x: remove_prefix(remove_prefix(x, 'Gene:'), 'gene:'))
 
   # Convert empty markers to None
   gene_gtf.frame = gene_gtf.frame.apply(lambda x: x if x != "." else None)
