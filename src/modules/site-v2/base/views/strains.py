@@ -243,10 +243,15 @@ def order_page_post():
         order_obj['items'] = '\n'.join(sorted([f"name: {item['name']}, species: {item['species']}, price: {item['price']}" for item in cartItems]))
         order_obj['invoice_hash'] = str(uuid.uuid4()).split("-")[0]
         order_obj["order_confirmation_link"] = url_for('request_strains.order_confirmation', invoice_hash=order_obj['invoice_hash'], _external=True)
+        address = []
+        for item in ['institution', 'building', 'address', 'address2', 'city', 'state', 'zipcode', 'country']:
+          if order_obj[item]:
+            address.append(str(order_obj[item]))
+        order_obj["address"] = "\n".join(address)
         send_email({
           "from": f'CaeNDR <{NO_REPLY_EMAIL}>',
           "to": [order_obj["email"]],
-          "cc": config.get("CC_EMAILS"),
+          "bcc": config.get("CC_EMAILS"),
           "subject": "CaeNDR Order #" + str(order_obj["invoice_hash"]),
           "text": ORDER_SUBMISSION_EMAIL_TEMPLATE.format(**order_obj),
         })
