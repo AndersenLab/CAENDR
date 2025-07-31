@@ -18,7 +18,7 @@ class WormbaseGene(DictSerializable, db.Model):
   transcript_biotype = db.Column(db.String(), index=True)
   exon_id = db.Column(db.String(30), nullable=True, index=True)
   exon_number = db.Column(db.Integer(), nullable=True)
-  protein_id = db.Column(db.String(30), nullable=True, index=True)
+  protein_id = db.Column(db.String(50), nullable=True, index=True)
   arm_or_center = db.Column(db.String(12), index=True)
   
   __tablename__ = 'wormbase_gene'
