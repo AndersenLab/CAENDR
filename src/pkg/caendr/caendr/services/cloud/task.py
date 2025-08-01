@@ -18,8 +18,7 @@ taskClient = tasks_v2.CloudTasksClient()
 
 def add_task(queue, queue_region, url, payload, delay_seconds=None, task_name=None):
   parent = taskClient.queue_path(GOOGLE_CLOUD_PROJECT_ID, queue_region, queue)
-  logger.debug(f"{queue} {queue_region} {url} {payload} {parent}")
-  
+
   task = {
     "http_request": { 
       "http_method": tasks_v2.HttpMethod.POST,
@@ -30,7 +29,6 @@ def add_task(queue, queue_region, url, payload, delay_seconds=None, task_name=No
   if payload is not None:
     if isinstance(payload, dict):
       payload = json.dumps(payload)
-      logger.debug(payload)
       task["http_request"]["headers"] = {"Content-type": "application/json"}
 
     converted_payload = payload.encode()
@@ -45,7 +43,6 @@ def add_task(queue, queue_region, url, payload, delay_seconds=None, task_name=No
   if task_name is not None:
     task["name"] = f"{parent}/tasks/{task_name}"
 
-  logger.debug(task)
   try:
     response = taskClient.create_task(request={"parent": parent, "task": task})
     logger.debug(f"Created task {response.name}")
@@ -56,7 +53,6 @@ def add_task(queue, queue_region, url, payload, delay_seconds=None, task_name=No
       raise DuplicateTaskError()
     else:
       response = None
-  logger.debug(response)
   return response
 
 

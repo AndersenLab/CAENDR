@@ -69,6 +69,7 @@ def get_runner_from_operation_name(operation_name: str) -> Tuple[GCPCloudRunRunn
   for cls in pipeline_subclasses:
     try:
       results.append( cls._Runner_Class.from_operation_name(cls.get_kind(), operation_name) )
+      results[-1].queue_region = cls.get_queue_region()
     except:
       pass
 

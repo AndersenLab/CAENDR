@@ -18,6 +18,7 @@ from caendr.utils.local_files      import LocalUploadFile
 
 
 NEMASCAN_CONTAINER_NAME = get_env_var('NEMASCAN_NXF_CONTAINER_NAME')
+NEMASCAN_TASK_QUEUE_REGION = get_env_var('NEMASCAN_TASK_QUEUE_REGION')
 
 
 
@@ -94,7 +95,9 @@ class NemascanPipeline(JobPipeline):
       'files': [local_file],
     }
 
-
+  @classmethod
+  def get_queue_region(cls):
+    return NEMASCAN_TASK_QUEUE_REGION
 
   #
   # Parsing Input & Output

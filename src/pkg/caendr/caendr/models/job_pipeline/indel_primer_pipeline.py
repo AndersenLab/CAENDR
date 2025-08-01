@@ -17,7 +17,7 @@ from caendr.utils.env              import get_env_var
 
 
 INDEL_PRIMER_CONTAINER_NAME = get_env_var('INDEL_PRIMER_CONTAINER_NAME')
-
+INDEL_PRIMER_TASK_QUEUE_REGION = get_env_var('INDEL_PRIMER_TASK_QUEUE_REGION')
 
 
 class IndelFinderPipeline(JobPipeline):
@@ -64,6 +64,9 @@ class IndelFinderPipeline(JobPipeline):
       'files': [data_file],
     }
 
+  @classmethod
+  def get_queue_region(cls):
+    return INDEL_PRIMER_TASK_QUEUE_REGION
 
 
   #

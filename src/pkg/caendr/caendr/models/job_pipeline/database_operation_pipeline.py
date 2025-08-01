@@ -18,7 +18,7 @@ from caendr.utils.env        import get_env_var
 
 
 DB_OPERATIONS_CONTAINER_NAME = get_env_var('MODULE_DB_OPERATIONS_CONTAINER_NAME')
-
+MODULE_DB_OPERATIONS_TASK_QUEUE_REGION = get_env_var('MODULE_DB_OPERATIONS_TASK_QUEUE_REGION')
 
 
 # Get lists of required files from TableConfig objects
@@ -140,6 +140,9 @@ class DatabaseOperationPipeline(JobPipeline):
       },
     }
 
+  @classmethod
+  def get_queue_region(cls):
+    return MODULE_DB_OPERATIONS_TASK_QUEUE_REGION
 
 
   # Database operations are always linked to unique executions (i.e. not cached),

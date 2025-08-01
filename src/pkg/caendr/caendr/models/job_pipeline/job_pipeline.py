@@ -239,13 +239,6 @@ class JobPipeline(ABC):
     '''
     return self._Task_Class.queue if self._Task_Class else None
 
-  @property
-  def queue_region(self):
-    '''
-      Get the queue region specified by the associated Task class.
-    '''
-    return self._Task_Class.queue_region if self._Task_Class else None
-
   @classmethod
   def get_queue(cls):
     '''
@@ -258,8 +251,7 @@ class JobPipeline(ABC):
     '''
       Class-level method for getting queue region.
     '''
-    return cls._Task_Class.queue_region if cls._Task_Class else None
-
+    pass
 
 
   #
@@ -590,7 +582,6 @@ class JobPipeline(ABC):
     # Save the full execution name to the report object, so it can be looked up later
     self.report['operation_name'] = self.runner.get_full_execution_name(exec_id)
     self.report.save()
-
     # Return the execution ID
     return exec_id
 

@@ -20,6 +20,7 @@ from caendr.services.cloud.storage import download_blob_as_dataframe, BlobURISch
 
 
 HERITABILITY_CONTAINER_NAME = get_env_var('HERITABILITY_CONTAINER_NAME')
+HERITABILITY_TASK_QUEUE_REGION = get_env_var('HERITABILITY_TASK_QUEUE_REGION')
 
 
 
@@ -105,6 +106,9 @@ class HeritabilityPipeline(JobPipeline):
       'files': [local_file],
     }
 
+  @classmethod
+  def get_queue_region(cls):
+    return HERITABILITY_TASK_QUEUE_REGION
 
 
   #

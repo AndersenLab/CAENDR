@@ -16,7 +16,6 @@ GOOGLE_CLOUD_ZONE           = get_env_var('GOOGLE_CLOUD_ZONE')
 SERVICE_ACCOUNT_NAME        = get_env_var('MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME')
 
 
-parent_id = f"projects/{GOOGLE_CLOUD_PROJECT_NUMBER}/locations/{GOOGLE_CLOUD_REGION}"
 sa_email  = f"{SERVICE_ACCOUNT_NAME}@{GOOGLE_CLOUD_PROJECT_ID}.iam.gserviceaccount.com"
 
 
@@ -51,6 +50,11 @@ def create_job(SERVICE, name, task_count, timeout, max_retries, container, updat
     }
   }
 
+  for i in range(len(container['env'])):
+    if container['env'][i]['name'] == 'QUEUE_REGION':
+      queue_region = container['env'][i]['value']
+  parent_id = f"projects/{GOOGLE_CLOUD_PROJECT_NUMBER}/locations/{queue_region}"
+
   # If desired, create/update the job
   if update_if_exists:
     try:
@@ -69,7 +73,7 @@ def create_job(SERVICE, name, task_count, timeout, max_retries, container, updat
 
 
 @use_service('run', 'v2')
-def run_job(SERVICE, name):
+def run_job(SERVICE, name, queue_region):
   '''
     Run a CloudRun job.
 
@@ -79,6 +83,7 @@ def run_job(SERVICE, name):
     Returns:
       A request object that can be executed using .execute()
   '''
+  parent_id = f"projects/{GOOGLE_CLOUD_PROJECT_NUMBER}/locations/{queue_region}"
   return SERVICE.projects().locations().jobs().run( name=f'{parent_id}/jobs/{name}' ).execute()
 
 

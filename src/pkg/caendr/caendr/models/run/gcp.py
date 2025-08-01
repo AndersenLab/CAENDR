@@ -101,6 +101,7 @@ class GCPRunner(Runner):
     '''
       The name of this job in GCP.
     '''
+    parent_id = f"projects/{GOOGLE_CLOUD_PROJECT_NUMBER}/locations/{self.queue_region}"
     return parent_id
 
   @property
@@ -393,6 +394,8 @@ class GCPCloudRunRunner(GCPRunner):
         ValueError: The given report is invalid.
     '''
 
+    self.queue_region = env['QUEUE_REGION']
+
     # Create a CloudRun job for this task
     try:
       create_response = self._create(command, env, container_uri, params)
@@ -469,7 +472,7 @@ class GCPCloudRunRunner(GCPRunner):
     '''
       Initiate the CloudRun Job associated with this task.
     '''
-    response = run_job(self.job_name)
+    response = run_job(self.job_name, self.queue_region)
 
     # Publish a Pub/Sub message to periodically check this job's status
     pub_sub_id = None

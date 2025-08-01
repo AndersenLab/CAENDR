@@ -12,19 +12,19 @@ from .discovery import use_service
 
 
 GOOGLE_CLOUD_PROJECT_NUMBER = os.environ.get('GOOGLE_CLOUD_PROJECT_NUMBER')
-GOOGLE_CLOUD_REGION = os.environ.get('GOOGLE_CLOUD_REGION')
+# GOOGLE_CLOUD_REGION = os.environ.get('GOOGLE_CLOUD_REGION')
 MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME')
 
 #sa_private_key_b64 = get_secret(MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME)
 #gls_service = authenticate_google_service(sa_private_key_b64, None, 'lifesciences', 'v2beta')
 # gls_service = discovery.build('lifesciences', 'v2beta', credentials=GoogleCredentials.get_application_default())
 
-parent_id = f"projects/{GOOGLE_CLOUD_PROJECT_NUMBER}/locations/{GOOGLE_CLOUD_REGION}"
 
 
 
 @use_service('lifesciences', 'v2beta')
 def start_pipeline(SERVICE, task_id, pipeline_request):
+  parent_id = f"projects/{GOOGLE_CLOUD_PROJECT_NUMBER}/locations/{GOOGLE_CLOUD_REGION}"
   req_body = get_json_from_class(pipeline_request)
   logger.debug(f'[TASK {task_id}] Starting Pipeline Request: {req_body}')
 
