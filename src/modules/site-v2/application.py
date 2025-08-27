@@ -407,6 +407,17 @@ def register_announcement_handlers(app):
     # In this case, we don't need to add any
     return {}
 
+  @app.template_filter('unique_announcements')
+  def _jinja2_unique_announcements(announcements):
+    seen = set()
+    unique = []
+    for announcement in announcements:
+      if len(announcement) > 1:
+        announcement = tuple(announcement)
+      if announcement not in seen:
+        unique.append(announcement)
+        seen.add(announcement)
+    return unique
 
 def register_errorhandlers(app):
   def render_error(e="generic"):

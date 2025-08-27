@@ -1,5 +1,5 @@
 <div id="alert-container">
-{% for category, msg in get_flashed_messages(with_categories=true) %}
+{% for category, msg in get_flashed_messages(with_categories=true)|unique_announcements %}
     {% include '_includes/alert.html' %}
 {% endfor %}
 </div>
