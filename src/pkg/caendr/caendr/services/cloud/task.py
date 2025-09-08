@@ -44,7 +44,7 @@ def add_task(queue, queue_region, url, payload, delay_seconds=None, task_name=No
     task["name"] = f"{parent}/tasks/{task_name}"
 
   try:
-    response = taskClient.create_task(request={"parent": parent, "task": task})
+    response = taskClient.create_task(request={"parent": parent, "task": task}, timeout=None)
     logger.debug(f"Created task {response.name}")
   except Exception as e:
     logger.error(f"Failed to create task {e}")

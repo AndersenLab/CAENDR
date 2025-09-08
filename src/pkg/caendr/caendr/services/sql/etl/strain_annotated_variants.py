@@ -106,6 +106,7 @@ def parse_strain_variant_annotation_data(species: Species, SVA_CSVGZ: LocalDatas
 
 
 def parse_annovar_variant_annotation_data(species: Species, **files: LocalDatastoreFile):
+
   logger.info(f'Parsing extracted Annovar variant annotation CSV file')
 
   for file_name, file_path in files.items():
@@ -123,7 +124,7 @@ def parse_annovar_variant_annotation_data(species: Species, **files: LocalDatast
           continue
 
         # If testing, finish early
-        if os.getenv("USE_MOCK_DATA") and idx > 10:
+        if os.getenv("USE_MOCK_DATA") and idx > 1000000:
           logger.warn("USE_MOCK_DATA Early Return!!!")
           return
 

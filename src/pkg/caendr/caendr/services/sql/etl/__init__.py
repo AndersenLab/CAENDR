@@ -154,7 +154,11 @@ class ETLManager:
         if len(tables) == 0:
             self.db.drop_all(app=self.app)
         else:
-            self.db.metadata.drop_all(bind=self.db.engine, checkfirst=True, tables=[ t.__table__ for t in tables ])
+            for t in tables:
+                truncate_stmt = f"TRUNCATE TABLE {t.__tablename__} RESTART IDENTITY CASCADE"
+                self.db.session.execute(truncate_stmt)
+                self.db.session.commit()
+            # self.db.metadata.drop_all(bind=self.db.engine, checkfirst=True, tables=[ t.__table__ for t in tables ])
 
     def __create_all(self, *tables):
         '''
