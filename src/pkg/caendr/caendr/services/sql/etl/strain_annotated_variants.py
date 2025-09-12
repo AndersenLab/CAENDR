@@ -166,6 +166,7 @@ def parse_annovar_variant_annotation_data(species: Species, **files: LocalDatast
           'grantham':           get_row(row, 'grantham_score',  nullable=True, map=int),
           'percent_protein':    get_row(row, 'percent_protein', nullable=True, map=float),
           'gene':               row.get('gene_name'),
+          'divergent':          row.get('divergent') == 'YES',
           'variant_impact':     row.get('impact'),
           'release':            species.release_sva,
         }
@@ -303,6 +304,7 @@ def parse_vep_variant_annotation_data(species: Species, **files: LocalDatastoreF
           'grantham':           get_row(row, 'grantham_score',  nullable=True, map=int),
           'percent_protein':    get_row(row, 'percent_protein', nullable=True, map=float),
           'gene':               row.get('gene_name'),
+          'divergent':          row.get('divergent') == 'YES',
           'variant_impact':     row.get('impact'),
           'release':            species.release_sva,
         }
@@ -372,7 +374,6 @@ def parse_snpeff_variant_annotation_data(species: Species, **files: LocalDatasto
           'percent_protein':    get_row(row, 'percent_protein', nullable=True, map=float),
           'gene':               row.get('gene_name'),
           'locus':               row.get('locus'),
-          'divergent':          row.get('divergent') == 'YES',
           'variant_impact':     row.get('impact'),
           'release':            species.release_sva,
         }

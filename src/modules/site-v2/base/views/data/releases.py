@@ -17,14 +17,12 @@ from caendr.services.logger import logger
 from config import config
 from extensions import cache
 from base.forms import VBrowserForm
-from base.utils.auth import jwt_required
 from base.utils.view_decorators import parse_species_and_release
 
 from caendr.api.strain import query_strains
-from caendr.api.isotype import get_isotypes
 from caendr.models.datastore import DatasetRelease, Species, TraitFile
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
-from caendr.services.dataset_release import get_all_dataset_releases, get_browser_tracks_path, get_release_bucket, find_dataset_release
+from caendr.services.dataset_release import get_all_dataset_releases, get_browser_tracks_path
 from caendr.utils.env import get_env_var
 
 
@@ -73,9 +71,9 @@ def data_release_list(species: Species, release: DatasetRelease):
     'species':  species,
     'RELEASE':  release,
     'RELEASES': get_all_dataset_releases(order='-version', species=species.name),
-    'release_bucket': get_release_bucket(),
+    'release_bucket': release.get_release_bucket(),
     'release_path': release.get_versioned_path_template().get_string(SPECIES = species.name),
-    'fasta_path': release.get_fasta_filepath(schema=BlobURISchema.HTTPS) if release.check_fasta_file_exists() else None,
+    'fasta_path': release.get_fasta_filepath(schema=release.BlobURISchema.HTTPS) if release.check_fasta_file_exists() else None,
     'fasta_name': release.get_fasta_filename(),
     'gene_gff_path': generate_blob_uri(
       MODULE_DB_OPERATIONS_BUCKET_NAME.get_string(), 
