@@ -157,6 +157,7 @@ class AnnovarAnnotatedVariant(GeneralAnnotatedVariant, db.Model):
   percent_protein = db.Column(db.Float(), nullable=True)
   gene = db.Column(db.String(), index=True, nullable=True)
   variant_impact = db.Column(db.String(), nullable=True)
+  divergent = db.Column(db.Boolean(), nullable=True)
   release = db.Column(db.String(), nullable=True)
 
   __tablename__ = 'annovar_annotated_variants'
@@ -172,6 +173,7 @@ class AnnovarAnnotatedVariant(GeneralAnnotatedVariant, db.Model):
     "blosum",
     "grantham",
     "variant_impact",
+    "divergent"
   ]
   
   def __repr__(self):
@@ -195,6 +197,7 @@ class AnnovarAnnotatedVariant(GeneralAnnotatedVariant, db.Model):
       {'id': 'percent_protein', 'name': 'Percent Protein'},
       {'id': 'gene', 'name': 'Gene'},
       {'id': 'variant_impact', 'name': 'Variant Impact'},
+      {'id': 'divergent', 'name': 'Hyper-divergent Region'},
       {'id': 'release', 'name': 'Release Date'}
     ]
   
@@ -269,7 +272,7 @@ class CsqAnnotatedVariant(GeneralAnnotatedVariant, db.Model):
       {'id': 'grantham', 'name': 'Grantham Score'},
       {'id': 'percent_protein', 'name': 'Percent Protein'},
       {'id': 'gene', 'name': 'Gene'},
-      {'id': 'divergent', 'name': 'Divergent'},
+      {'id': 'divergent', 'name': 'Hyper-divergent Region'},
       {'id': 'release', 'name': 'Release Date'}
     ]
 
@@ -306,7 +309,6 @@ class SnpEffAnnotatedVariant(GeneralAnnotatedVariant, db.Model):
   gene = db.Column(db.String(), index=True, nullable=True)
   locus = db.Column(db.String(), index=True, nullable=True)
   variant_impact = db.Column(db.String(), nullable=True)
-  divergent = db.Column(db.Boolean(), nullable=True)
   release = db.Column(db.String(), nullable=True)
 
   __tablename__ = 'snpeff_annotated_variants'
@@ -347,7 +349,6 @@ class SnpEffAnnotatedVariant(GeneralAnnotatedVariant, db.Model):
       {'id': 'gene', 'name': 'Gene'},
       {'id': 'locus', 'name': 'Locus'},
       {'id': 'variant_impact', 'name': 'Variant Impact'},
-      {'id': 'divergent', 'name': 'Divergent'},
       {'id': 'release', 'name': 'Release Date'}
     ]
 
@@ -383,6 +384,7 @@ class VepAnnotatedVariant(GeneralAnnotatedVariant, db.Model):
   percent_protein = db.Column(db.Float(), nullable=True)
   gene = db.Column(db.String(), index=True, nullable=True)
   variant_impact = db.Column(db.String(), nullable=True)
+  divergent = db.Column(db.Boolean(), nullable=True)
   release = db.Column(db.String(), nullable=True)
 
   __tablename__ = 'vep_annotated_variants'
@@ -421,6 +423,7 @@ class VepAnnotatedVariant(GeneralAnnotatedVariant, db.Model):
       {'id': 'percent_protein', 'name': 'Percent Protein'},
       {'id': 'gene', 'name': 'Gene'},
       {'id': 'variant_impact', 'name': 'Variant Impact'},
+      {'id': 'divergent', 'name': 'Hyper-divergent Region'},
       {'id': 'release', 'name': 'Release Date'}
     ]
   
