@@ -10,7 +10,9 @@ from caendr.models.sql       import ALL_SQL_TABLES
 from caendr.utils.constants  import DEFAULT_BATCH_SIZE
 from caendr.utils.data       import batch_generator
 
+from psycopg2 import OperationalError
 
+batch_retries = 3
 
 # Gather table configurations into a single dict
 TABLE_CONFIG = {
@@ -131,9 +133,18 @@ class ETLManager:
             # Load & insert table data in batches, to help reduce local memory footprint
             logger.info(f'Inserting data for {species.name} into table {config.table_name}...')
             for i, g in enumerate(batch_generator( config.parse_for_species(species) )):
+                retries = 0
                 logger.debug(f'Processing {species.name} batch {i} (rows {i * DEFAULT_BATCH_SIZE}-{(i+1) * DEFAULT_BATCH_SIZE})...')
-                self.db.session.bulk_insert_mappings(config.table, g)
-                self.db.session.commit()
+                while retries < batch_retries:
+                    try:
+                        self.db.session.bulk_insert_mappings(config.table, g)
+                        self.db.session.commit()
+                        break
+                    except OperationalError:
+                        retries += 1
+                        logger.debug(f"Encountered an operational error, starting retry {retries}.")
+                if retries == batch_retries:
+                    raise OperationalError("The database unexpectedly closed the connection, {batch_retries} retries failed to resolve the issue.")
                 logger.debug(f'Finished inserting {species.name} batch {i}.')
 
         # Print how many entries were added
