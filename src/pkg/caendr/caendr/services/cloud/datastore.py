@@ -70,7 +70,6 @@ def save_ds_entity(kind: str, name: str, properties: Dict[str, Any] = None, excl
     Save an entity to the datastore, optionally preventing indexing of select properties.
   '''
   m = make_ds_entity(kind, name, properties=properties, exclude_from_indexes=exclude_from_indexes)
-  logger.debug(f"store: {kind} - {name}")
   return dsClient.put(m)
 
 

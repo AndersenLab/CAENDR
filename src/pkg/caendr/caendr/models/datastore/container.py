@@ -49,7 +49,6 @@ class Container(Entity):
 
     # If matching version(s) found, return the most recent
     if len(matches):
-      logger.debug(matches)
       return matches[0]
 
     # Otherwise, raise an error

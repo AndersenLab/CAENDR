@@ -71,7 +71,7 @@ def data_release_list(species: Species, release: DatasetRelease):
     'species':  species,
     'RELEASE':  release,
     'RELEASES': get_all_dataset_releases(order='-version', species=species.name),
-    'release_bucket': release.get_release_bucket(),
+    'release_bucket': species['release_latest'],
     'release_path': release.get_versioned_path_template().get_string(SPECIES = species.name),
     'fasta_path': release.get_fasta_filepath(schema=release.BlobURISchema.HTTPS) if release.check_fasta_file_exists() else None,
     'fasta_name': release.get_fasta_filename(),

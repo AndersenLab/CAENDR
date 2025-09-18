@@ -32,7 +32,6 @@ monitor.init_sentry("indel_primer")
 
 # Source locations in GCP
 MODULE_SITE_BUCKET_PRIVATE_NAME = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
-INDEL_TOOL_PATH                 = get_env_var('INDEL_TOOL_PATH')
 
 # Indel parameters
 INDEL_SITE     = get_env_var('INDEL_SITE')
@@ -99,7 +98,8 @@ if not os.path.exists(os.path.join( target_fasta_file_path, target_fasta_file_na
 
 # Generate local name for VCF file
 target_vcf_file_path = INDEL_CACHE_DIR
-target_vcf_file_name = IndelPrimerReport.get_source_filename(SPECIES, RELEASE) + '.vcf.gz'
+target_vcf_file_name = IndelPrimerReport.get_source_filename(RELEASE) + '.vcf.gz'
+source_vcf_file_path = IndelPrimerReport.get_source_filepath(SPECIES)
 
 # Create a folder at the desired path if one does not yet exist
 if not os.path.exists(target_vcf_file_path):
@@ -107,8 +107,8 @@ if not os.path.exists(target_vcf_file_path):
 
 # Download VCF file & VCF Index file
 if not os.path.exists(os.path.join( target_vcf_file_path, target_vcf_file_name )):
-  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, INDEL_TOOL_PATH, target_vcf_file_name,          destination=target_vcf_file_path)
-  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, INDEL_TOOL_PATH, target_vcf_file_name + '.csi', destination=target_vcf_file_path)
+  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, source_vcf_file_path, target_vcf_file_name,          destination=target_vcf_file_path)
+  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, source_vcf_file_path, target_vcf_file_name + '.csi', destination=target_vcf_file_path)
 
 
 #

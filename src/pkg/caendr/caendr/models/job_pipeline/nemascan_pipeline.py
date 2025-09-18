@@ -19,7 +19,7 @@ from caendr.utils.local_files      import LocalUploadFile
 
 NEMASCAN_CONTAINER_NAME = get_env_var('NEMASCAN_NXF_CONTAINER_NAME')
 NEMASCAN_TASK_QUEUE_REGION = get_env_var('NEMASCAN_TASK_QUEUE_REGION')
-
+NEMASCAN_DATA_BUCKET = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
 
 
 class NemascanPipeline(JobPipeline):
@@ -99,6 +99,10 @@ class NemascanPipeline(JobPipeline):
   def get_queue_region(cls):
     return NEMASCAN_TASK_QUEUE_REGION
 
+  @classmethod
+  def get_data_bucket(cls):
+    return NEMASCAN_DATA_BUCKET
+
   #
   # Parsing Input & Output
   #
@@ -131,7 +135,8 @@ class NemascanPipeline(JobPipeline):
       'VCF_VERSION':  Species.get(self.report['species'])['release_latest'],
       'USERNAME':     self.report['username'],
       'EMAIL':        self.report['email'],
-      "QUEUE_REGION": self.get_queue_region(),
+      'QUEUE_REGION': self.get_queue_region(),
+      'DATA_BUCKET':  self.get_data_bucket(),
     }
 
   def construct_run_params(self):

@@ -18,6 +18,7 @@ from caendr.utils.env              import get_env_var
 
 INDEL_PRIMER_CONTAINER_NAME = get_env_var('INDEL_PRIMER_CONTAINER_NAME')
 INDEL_PRIMER_TASK_QUEUE_REGION = get_env_var('INDEL_PRIMER_TASK_QUEUE_REGION')
+INDEL_DATA_BUCKET = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
 
 
 class IndelFinderPipeline(JobPipeline):
@@ -54,8 +55,8 @@ class IndelFinderPipeline(JobPipeline):
     # Add release information to data object
     data.update({
       'release':         release,
-      'sv_bed_filename': IndelPrimerReport.get_source_filename(data['species'], release) + '.bed.gz',
-      'sv_vcf_filename': IndelPrimerReport.get_source_filename(data['species'], release) + '.vcf.gz',
+      'sv_bed_filename': IndelPrimerReport.get_source_filename(release) + '.bed.gz',
+      'sv_vcf_filename': IndelPrimerReport.get_source_filename(release) + '.vcf.gz',
     })
 
     return {
@@ -67,6 +68,10 @@ class IndelFinderPipeline(JobPipeline):
   @classmethod
   def get_queue_region(cls):
     return INDEL_PRIMER_TASK_QUEUE_REGION
+
+  @classmethod
+  def get_data_bucket(cls):
+    return INDEL_DATA_BUCKET
 
 
   #
@@ -196,6 +201,7 @@ class IndelFinderPipeline(JobPipeline):
       'INDEL_STRAIN_1': self.report['strain_1'],
       'INDEL_STRAIN_2': self.report['strain_2'],
       'INDEL_SITE':     self.report['site'],
+      'DATA_BUCKET':    self.get_data_bucket(),
       'RESULT_BUCKET':  result_bucket,
       'RESULT_BLOB':    result_blob,
       "QUEUE_REGION":   self.get_queue_region(),

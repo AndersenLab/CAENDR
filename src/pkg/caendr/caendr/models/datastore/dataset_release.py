@@ -7,7 +7,7 @@ from caendr.api.gene import remove_prefix
 from caendr.models.datastore import Species, SpeciesEntity
 from caendr.models.error import NotFoundError
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, get_blob_list, check_blob_exists
-from caendr.services.cloud.aws_storage import AWSBlobURISchema, aws_generate_blob_uri, aws_get_blob_list
+from caendr.services.cloud.aws_storage import AWSBlobURISchema, aws_generate_blob_uri, aws_get_blob_list, aws_check_blob_exists
 from caendr.utils.env import get_env_var, get_env_var_with_fallback
 from caendr.utils.tokens import TokenizedString
 
@@ -15,7 +15,7 @@ from caendr.utils.tokens import TokenizedString
 
 V1_V2_Cutoff_Date = 20200101
 
-DATASET_RELEASE_BUCKET_NAME = get_env_var_with_fallback('MODULE_SITE_BUCKET_DATASET_RELEASE_NAME', 'MODULE_SITE_BUCKET_PUBLIC_NAME_OVERRIDE', 'MODULE_SITE_BUCKET_PUBLIC_NAME')
+DATASET_RELEASE_BUCKET_NAME = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
 DATASET_RELEASE_AWS_BUCKET_NAME = get_env_var('AWS_OPEN_DATA_BUCKET')
 
 FASTA_FILENAME_TEMPLATE = get_env_var('FASTA_FILENAME_TEMPLATE', as_template=True)
@@ -62,6 +62,7 @@ class DatasetRelease(SpeciesEntity):
   __bucket_name = DATASET_RELEASE_BUCKET_NAME
   __aws_bucket_name = DATASET_RELEASE_AWS_BUCKET_NAME
   __blob_prefix = kind + '/${SPECIES}'
+  __gcp_blob_prefix = 'tool_release_data/${SPECIES}'
 
 
   def __repr__(self):
@@ -88,16 +89,12 @@ class DatasetRelease(SpeciesEntity):
     if release['species'].name != species_name:
       raise NotFoundError(DatasetRelease, {'name': release_name, 'species': species_name})
 
+    species = Species.from_name(species_name)
+
     if release_name == species['release_latest']:
       release.latest = True
-      release.bucket_name = DatasetRelease.__bucket_name
-      release.generate_blob_uri = generate_blob_uri
-      release.BlobURISchema = BlobURISchema
     else:
       release.latest = False
-      release.bucket_name = DatasetRelease.__aws_bucket_name
-      release.generate_blob_uri = aws_generate_blob_uri
-      release.BlobURISchema = AWSBlobURISchema
 
     return release
 
@@ -116,6 +113,13 @@ class DatasetRelease(SpeciesEntity):
       'browser_tracks',      # List of browser tracks supported for this species & release, by name
     }
 
+
+  @staticmethod
+  def generate_blob_uri(bucket, *path, schema=None, gcp=False):
+    if gcp:
+      return generate_blob_uri(bucket, *path, schema=schema)
+    else:
+      return aws_generate_blob_uri(bucket, *path, schema=schema)
 
 
   @property
@@ -213,20 +217,27 @@ class DatasetRelease(SpeciesEntity):
 
 
 
-  # @classmethod
-  def get_bucket_name(self):
-    if self.latest:
-      return self.__bucket_name
+  @classmethod
+  def get_bucket_name(cls, gcp=False):
+    if gcp:
+      return cls.__bucket_name
     else:
-      return self.__aws_bucket_name
+      return cls.__aws_bucket_name
 
   @classmethod
   def get_blob_prefix(cls):
     return cls.__blob_prefix
+  
+  @classmethod
+  def get_gcp_blob_prefix(cls):
+    return cls.__gcp_blob_prefix
 
   @classmethod
-  def get_path_template(cls):
-    return TokenizedString(cls.get_blob_prefix() + '/${RELEASE}')
+  def get_path_template(cls, gcp=False):
+    if gcp:
+      return TokenizedString(cls.get_gcp_blob_prefix())
+    else:
+      return TokenizedString(cls.get_blob_prefix() + '/${RELEASE}')
 
   def get_versioned_path_template(self):
     return self.get_path_template().set_tokens(RELEASE = self['version'])
@@ -276,26 +287,26 @@ class DatasetRelease(SpeciesEntity):
 
   ## FASTA File Path ##
 
-  # @staticmethod
-  def get_fasta_filepath_template(self, index=False, schema=None):
+  @staticmethod
+  def get_fasta_filepath_template(index=False, schema=None, gcp=False):
     '''
       Get a URI path for FASTA files in the datastore, as one or more tokenized strings (depends on desired schema).
     '''
     # Get the template for the filename
-    filename_template = self.get_fasta_filename_template(include_extension=True, index=index)
+    filename_template = DatasetRelease.get_fasta_filename_template(include_extension=True, index=index)
 
     # Combine with the the dataset release bucket & path to generate a URI
     return TokenizedString.apply(
-      self.generate_blob_uri, self.bucket_name, DatasetRelease.get_path_template(), filename_template, schema=schema
+      DatasetRelease.generate_blob_uri, DatasetRelease.get_bucket_name(gcp), DatasetRelease.get_path_template(gcp=gcp), filename_template, schema=schema, gcp=gcp
     )
 
 
-  def get_fasta_filepath(self, index=False, schema=None) -> Union[str, Tuple[str, ...]]:
+  def get_fasta_filepath(self, index=False, schema=None, gcp=False) -> Union[str, Tuple[str, ...]]:
     '''
       Get a URI path for the FASTA file associated with this release.
     '''
     # Get the template for the full filepath
-    template = self.get_fasta_filepath_template(index=index, schema=schema)
+    template = DatasetRelease.get_fasta_filepath_template(index=index, schema=schema, gcp=gcp)
 
     # Fill in the tokens for singleton & tuple results
     if isinstance(template, TokenizedString):
@@ -306,11 +317,14 @@ class DatasetRelease(SpeciesEntity):
       )
 
 
-  def check_fasta_file_exists(self):
+  def check_fasta_file_exists(self, gcp=False):
     '''
       Check whether this dataset release includes a FASTA file in the datastore.
     '''
-    return self.check_blob_exists( *self.get_fasta_filepath(schema=self.BlobURISchema.PATH) )
+    if gcp:
+      return check_blob_exists( *self.get_fasta_filepath(schema=BlobURISchema.PATH, gcp=gcp),  )
+    else:
+      return aws_check_blob_exists( *self.get_fasta_filepath(schema=AWSBlobURISchema.PATH, gcp=gcp),  )
 
 
 
@@ -320,12 +334,7 @@ class DatasetRelease(SpeciesEntity):
     '''
       Returns a dictionary of variable names for report data files mapped to their public urls in google storage
     '''
-    bucket_name = self.bucket_name
-    if self.latest:
-      local_get_blob_list = get_blob_list
-    else:
-      local_get_blob_list = aws_get_blob_list
-
+    bucket_name = self.__aws_bucket_name
     blob_prefix = self.__blob_prefix
 
     tokens = {
@@ -345,7 +354,7 @@ class DatasetRelease(SpeciesEntity):
     # Get the set of available files for the release
     release_path = TokenizedString.replace_string(f'{blob_prefix}/$RELEASE', **tokens)
     available_files = {
-      remove_prefix(file.name, release_path + '/') for file in local_get_blob_list(bucket_name, release_path)
+      remove_prefix(file.name, release_path + '/') for file in aws_get_blob_list(bucket_name, release_path)
     }
     available_files = {
       file for file in available_files if not file.startswith('/strain') and not file.endswith('/')
@@ -357,7 +366,7 @@ class DatasetRelease(SpeciesEntity):
       blob_name = TokenizedString.replace_string(blob_name, **tokens)
 
       if blob_name in available_files:
-        url_map_filtered[key] = self.generate_blob_uri(bucket_name, release_path, blob_name, schema=self.BlobURISchema.HTTPS)
+        url_map_filtered[key] = aws_generate_blob_uri(bucket_name, release_path, blob_name, schema=AWSBlobURISchema.HTTPS)
       else:
         logger.warning(f'Blob {bucket_name}/{release_path}/{blob_name} does not exist')
     

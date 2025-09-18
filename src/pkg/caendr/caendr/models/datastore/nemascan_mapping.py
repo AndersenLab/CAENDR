@@ -44,10 +44,6 @@ class NemascanReport(HashableEntity, ReportEntity):
     return 'results'
 
   def get_data_paths(self, schema: BlobURISchema):
-    logger.debug(str({
-      **super().get_data_paths(schema=schema),
-      'TRAIT_FILE': self.input_filepath(schema=schema),
-    }))
     return {
       **super().get_data_paths(schema=schema),
       'TRAIT_FILE': self.input_filepath(schema=schema),
@@ -116,12 +112,10 @@ class NemascanReport(HashableEntity, ReportEntity):
     # Get a list of all files with this report's prefix
     logger.debug(f'Looking for a Genetic Mapping HTML report for ID "{self.id}"')
     result = get_blob_list( *self.output_directory(REPORT_DATA_PREFIX, schema=BlobURISchema.PATH) )
-    logger.debug(result)
 
     # Search the list for an HTML file, and return it if found
     # Implicitly returns None if no such file is found
     for file in result:
-      logger.debug(file.name)
       if file.name.endswith('.html'):
         self._set_meta_prop('report_path', file.name)
         return file.name

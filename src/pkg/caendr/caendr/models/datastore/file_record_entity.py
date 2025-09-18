@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 from caendr.models.datastore       import Entity
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, check_blob_exists, get_blob, get_blob_if_exists
+from caendr.services.cloud.aws_storage import AWSBlobURISchema, aws_generate_blob_uri, aws_check_blob_exists, aws_get_blob, aws_get_blob_if_exists
 from caendr.utils.tokens           import TokenizedString
 
 
@@ -103,7 +104,7 @@ class FileRecordEntity(Entity, ABC):
 
 
   #
-  # Constructing filepath
+  # Constructing GCP filepath
   #
 
   def get_filepath(self, schema: BlobURISchema = None, check_if_exists: bool = False, **kwargs) -> str:
@@ -140,6 +141,43 @@ class FileRecordEntity(Entity, ABC):
 
 
   #
+  # Constructing AWS filepath
+  #
+
+  def get_aws_filepath(self, schema: AWSBlobURISchema = None, check_if_exists: bool = False, **kwargs) -> str:
+    '''
+      Construct the full path for the file, using the provided keyword arguments to fill out the template.
+    '''
+    if check_if_exists and not self.aws_check_exists(**kwargs):
+      return None
+    return aws_generate_blob_uri( self.bucket, self.prefix.get_string(**kwargs), self['filename'].get_string(**kwargs), schema=schema )
+
+
+  def get_aws_filepath_hashed(self, schema: AWSBlobURISchema = None, check_if_exists: bool = False, **kwargs) -> str:
+    '''
+      Construct the full path for the file with hashed name, using the provided keyword arguments to fill out the template.
+    '''
+    if check_if_exists and not self.aws_check_exists(**kwargs):
+      return None
+    return aws_generate_blob_uri( self.bucket, self.prefix.get_string(**kwargs), self['filename_hash'].get_string(**kwargs), schema=schema )
+
+
+  def get_aws_filepath_template(self, schema: AWSBlobURISchema = None, gcp=False) -> TokenizedString:
+    '''
+      Construct the full path for the file as a templated string, leaving the tokens un-filled.
+    '''
+    return TokenizedString.apply( aws_generate_blob_uri, self.bucket, self.prefix, self['filename'], schema=schema )
+
+
+  def get_aws_blob(self, check_if_exists = False, **kwargs):
+    '''
+      Download the file as a blob, using the provided keyword arguments to fill out the filepath template.
+    '''
+    f = aws_get_blob_if_exists if check_if_exists else aws_get_blob
+    return f( self.bucket, self.prefix.get_string(**kwargs), self['filename'].get_string(**kwargs) )
+
+
+  #
   # Utils
   #
 
@@ -152,6 +190,20 @@ class FileRecordEntity(Entity, ABC):
   
   def check_exists_for_species(self, species, **tokens):
     return check_blob_exists(
+      self.bucket,
+      self.prefix.get_string( **{**TokenizedString.get_species_tokens(species), **tokens} ),
+      self['filename'].get_string( **{**TokenizedString.get_species_tokens(species), **tokens} )
+    )
+
+  def aws_check_exists(self, **tokens):
+    '''
+      Check whether the file specified by the given tokens exists in the database.
+      Uses the provided keyword arguments to fill out the filepath template, then checks for that filename.
+    '''
+    return aws_check_blob_exists( self.bucket, self.prefix.get_string(**tokens), self['filename'].get_string(**tokens) )
+  
+  def aws_check_exists_for_species(self, species, **tokens):
+    return aws_check_blob_exists(
       self.bucket,
       self.prefix.get_string( **{**TokenizedString.get_species_tokens(species), **tokens} ),
       self['filename'].get_string( **{**TokenizedString.get_species_tokens(species), **tokens} )

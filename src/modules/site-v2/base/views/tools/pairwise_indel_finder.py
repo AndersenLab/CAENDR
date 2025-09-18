@@ -9,7 +9,7 @@ from base.utils.view_decorators import parse_job_id, validate_form
 from caendr.models.datastore import Species, IndelPrimerReport, DatasetRelease
 from caendr.models.job_pipeline import IndelFinderPipeline
 from caendr.services.dataset_release import get_dataset_release
-from caendr.services.cloud.storage import BlobURISchema
+from caendr.services.cloud.aws_storage import AWSBlobURISchema
 from caendr.utils.bio import parse_chrom_interval
 from caendr.utils.constants import CHROM_NUMERIC
 from caendr.utils.data import get_file_format
@@ -49,7 +49,7 @@ def pairwise_indel_finder():
     "species_list": Species.all(),
 
     # Data locations
-    'fasta_url': DatasetRelease.get_fasta_filepath_template(schema=BlobURISchema.HTTPS).get_string_safe(),
+    'fasta_url': DatasetRelease.get_fasta_filepath_template(schema=AWSBlobURISchema.HTTPS, gcp=False).get_string_safe(),
 
     # List of Species class fields to expose to the template
     # Optional - exposes all attributes if not provided

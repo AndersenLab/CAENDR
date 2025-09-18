@@ -26,6 +26,12 @@ storageClient = client('s3')
 # Check blobs
 #
 
+class AWSBlob():
+  
+  def __init__(self, name):
+    self.name = name
+
+
 def join_path(*path: str, sep: str = '/'):
   '''
     Join a list of path elements into a single path.
@@ -37,15 +43,15 @@ def join_path(*path: str, sep: str = '/'):
 
 
 def aws_get_blob(bucket_name: str, *path: str) -> dict:
-  logger.debug(f'get_blob(bucket_name={bucket_name}, path={path})')
-  blob = storageClient.head_object(Bucket=bucket_name, Key=path)
+  logger.debug(f'get_blob(bucket_name={bucket_name}, path={join_path(*path)})')
+  blob = storageClient.head_object(Bucket=bucket_name, Key=join_path(*path))
   return blob
 
 
-def check_blob_exists(bucket_name: str, *path: str) -> bool:
-  logger.debug(f'check_blob_exists(bucket_name={bucket_name}, path={path})')
+def aws_check_blob_exists(bucket_name: str, *path: str) -> bool:
+  logger.debug(f'aws_check_blob_exists(bucket_name={bucket_name}, path={join_path(*path)})')
   try:
-    blob = storageClient.head_object(Bucket=bucket_name, Key=path)
+    blob = storageClient.head_object(Bucket=bucket_name, Key=join_path(*path))
     return True
   except exceptions.ClientError:
     return False
@@ -56,7 +62,7 @@ def aws_get_blob_if_exists(bucket_name: str, *path: str, fallback=None) -> Optio
     Get the given blob if it exists, otherwise return the fallback value.
   '''
   try:
-    blob = storageClient.head_object(Bucket=bucket_name, Key=path)
+    blob = storageClient.head_object(Bucket=bucket_name, Key=join_path(*path))
     return blob
   except exceptions.ClientError:
     return fallback
@@ -69,14 +75,17 @@ def aws_get_blob_list(bucket_name: str, *prefix: str, filter=None) -> List[dict]
   '''
 
   # Get all the blobs in the given bucket
-  items = storageClient.list_objects(Bucket=bucket_name, Prefix=prefix)
-
+  items = storageClient.list_objects(Bucket=bucket_name, Prefix=join_path(*prefix))['Contents']
+  items = [item['Key'] for item in items]
+  logger.debug(items)
   # Apply the filter, if one was given
   if filter is not None:
     items = [ b for b in items if filter(b) ]
 
+  items = [AWSBlob(item) for item in items]
+
   # Return the items as a list
-  return list(items)
+  return items
 
 
 #
@@ -86,8 +95,8 @@ def aws_get_blob_list(bucket_name: str, *prefix: str, filter=None) -> List[dict]
 
 class AWSBlobURISchema(Enum):
   PATH   = ['', '']
-  HTTP   = ['http://', '.' + AWS_REGION + '.amazonaws.com']
-  HTTPS  = ['https://', '.' + AWS_REGION + '.amazonaws.com']
+  HTTP   = ['http://', '.s3.' + AWS_REGION + '.amazonaws.com']
+  HTTPS  = ['https://', '.s3.' + AWS_REGION + '.amazonaws.com']
   GS     = ['s3://', '']
   SIGNED = 'SIGNED'
 

@@ -25,7 +25,6 @@ def get_all_dataset_releases(keys_only=False, order=None, placeholder=True, spec
 
   # Query the db for all dataset releases
   releases = DatasetRelease.query_ds(keys_only=keys_only, order=order)
-  logger.debug(releases)
 
   # If none were found and a placeholder was provided, return the placeholder
   if len(list(releases)) == 0 and placeholder:
