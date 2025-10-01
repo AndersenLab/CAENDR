@@ -49,6 +49,9 @@ REQUIRED_RESOURCES: Dict[DbOp, List[ForeignResourceTemplate]] = {
   DbOp.DROP_AND_POPULATE_VEP_VARIANTS: [
     *VepAnnotatedVariantConfig.all_resources,
   ],
+  DbOp.RESUME_POPULATE_VEP_VARIANTS: [
+    *VepAnnotatedVariantConfig.all_resources,
+  ],
   DbOp.DROP_AND_POPULATE_PHENOTYPE_DB: [
     # TODO: Should this actually check for every single file specified in the datastore? Can it flag & skip some files?
     # *PhenotypeDatabaseConfig.all_resources,

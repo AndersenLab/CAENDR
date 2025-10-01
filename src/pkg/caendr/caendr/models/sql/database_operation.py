@@ -13,6 +13,7 @@ class DbOp(Enum):
   DROP_AND_POPULATE_CSQ_VARIANTS          = 'DROP_AND_POPULATE_CSQ_VARIANTS'
   DROP_AND_POPULATE_SNPEFF_VARIANTS       = 'DROP_AND_POPULATE_SNPEFF_VARIANTS'
   DROP_AND_POPULATE_VEP_VARIANTS          = 'DROP_AND_POPULATE_VEP_VARIANTS'
+  RESUME_POPULATE_VEP_VARIANTS            = 'RESUME_POPULATE_VEP_VARIANTS'
   DROP_AND_POPULATE_PHENOTYPE_DB          = 'DROP_AND_POPULATE_PHENOTYPE_DB'
   DROP_AND_POPULATE_PHENOTYPE_METADATA    = 'DROP_AND_POPULATE_PHENOTYPE_METADATA'
   DROP_AND_POPULATE_PHENOTYPES            = 'DROP_AND_POPULATE_PHENOTYPES'
@@ -39,6 +40,7 @@ class DbOp(Enum):
       DbOp.DROP_AND_POPULATE_CSQ_VARIANTS:          'Rebuild Strain CSQ Variant table from .csv.gz file',
       DbOp.DROP_AND_POPULATE_SNPEFF_VARIANTS:       'Rebuild Strain SnpEff Variant table from .csv.gz file',
       DbOp.DROP_AND_POPULATE_VEP_VARIANTS:          'Rebuild Strain VEP Variant table from .csv.gz file',
+      DbOp.RESUME_POPULATE_VEP_VARIANTS:            'Continue populating Strain VEP Variant table from .csv.gz file',
       DbOp.DROP_AND_POPULATE_PHENOTYPE_DB:          'Rebuild Phenotype Database table from datastore file records',
       DbOp.DROP_AND_POPULATE_PHENOTYPE_METADATA:    'Rebuild Phenotype Metadata table from datastore TraitFile entities',
       DbOp.DROP_AND_POPULATE_PHENOTYPES:            'Rebuild all Phenotype trait tables from datastore',

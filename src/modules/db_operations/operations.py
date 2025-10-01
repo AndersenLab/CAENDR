@@ -38,6 +38,9 @@ def execute_operation(app, db, db_op: DbOp, species=None, reload_files=True):
   elif db_op == DbOp.DROP_AND_POPULATE_VEP_VARIANTS:
     drop_and_populate_vep_variants(app, db, species, reload_files=reload_files)
 
+  elif db_op == DbOp.RESUME_POPULATE_VEP_VARIANTS:
+    resume_populate_vep_variants(app, db, species, reload_files=reload_files)
+
   elif db_op == DbOp.DROP_AND_POPULATE_PHENOTYPE_DB:
     drop_and_populate_phenotype_db(app, db, species, reload_files=reload_files)
 
@@ -187,6 +190,20 @@ def drop_and_populate_vep_variants(app, db, species, reload_files=True):
   # Fetch and load data using ETL Manager
   logger.info("Loading VEP annotated variants...")
   etl_manager.load_tables(VepAnnotatedVariant, species_list=species)
+
+
+def resume_populate_vep_variants(app, db, species, reload_files=True):
+
+  # Print operation & species info
+  spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
+  logger.info(f'Resuming populating VEP variants. Species list: [ {", ".join(spec_strings)} ]')
+
+  # Initialize ETL Manager
+  etl_manager = ETLManager(app, db, reload_files=reload_files)
+
+  # Fetch and load data using ETL Manager
+  logger.info("Loading VEP annotated variants...")
+  etl_manager.resume_load_table(VepAnnotatedVariant, species_list=species)
 
 
 def drop_and_populate_phenotype_db(app, db, species, reload_files=True):
