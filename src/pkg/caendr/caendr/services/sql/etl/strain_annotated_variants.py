@@ -144,6 +144,10 @@ def parse_annovar_variant_annotation_data(species: Species, **files: LocalDatast
           target_consequence = int(consequence[1:])
           consequence = None
 
+        divergent = row.get('divergent')
+        if divergent is not None:
+          divergent = divergent == 'YES'
+          
         # Yield the row as a dict
         yield {
 
@@ -166,6 +170,7 @@ def parse_annovar_variant_annotation_data(species: Species, **files: LocalDatast
           'grantham':           get_row(row, 'grantham_score',  nullable=True, map=int),
           'percent_protein':    get_row(row, 'percent_protein', nullable=True, map=float),
           'gene':               row.get('gene_name'),
+          'divergent':          divergent,
           'variant_impact':     row.get('impact'),
           'divergent':          row.get('divergent') == "YES",
           'release':            species.release_sva,
@@ -213,6 +218,10 @@ def parse_csq_variant_annotation_data(species: Species, **files: LocalDatastoreF
           target_consequence = int(consequence[1:])
           consequence = None
 
+        divergent = row.get('divergent')
+        if divergent is not None:
+          divergent = divergent == 'YES'
+
         # Yield the row as a dict
         yield {
 
@@ -236,7 +245,7 @@ def parse_csq_variant_annotation_data(species: Species, **files: LocalDatastoreF
           'grantham':           get_row(row, 'grantham_score',  nullable=True, map=int),
           'percent_protein':    get_row(row, 'percent_protein', nullable=True, map=float),
           'gene':               row.get('gene_name'),
-          'divergent':          row.get('divergent') == 'YES',
+          'divergent':          divergent,
           'release':            species.release_sva,
         }
 
@@ -282,6 +291,10 @@ def parse_vep_variant_annotation_data(species: Species, **files: LocalDatastoreF
           target_consequence = int(consequence[1:])
           consequence = None
 
+        divergent = row.get('divergent')
+        if divergent is not None:
+          divergent = divergent == 'YES'
+
         # Yield the row as a dict
         yield {
 
@@ -304,6 +317,7 @@ def parse_vep_variant_annotation_data(species: Species, **files: LocalDatastoreF
           'grantham':           get_row(row, 'grantham_score',  nullable=True, map=int),
           'percent_protein':    get_row(row, 'percent_protein', nullable=True, map=float),
           'gene':               row.get('gene_name'),
+          'divergent':          divergent,
           'variant_impact':     row.get('impact'),
           'divergent':          row.get('divergent') == 'YES',
           'release':            species.release_sva,
@@ -369,7 +383,6 @@ def parse_snpeff_variant_annotation_data(species: Species, **files: LocalDatasto
 
           'amino_acid_change':  row.get('AA'),
           'strains':            row.get('strain'),
-          'blosum':             get_row(row, 'blosum_score',    nullable=True, map=int),
           'grantham':           get_row(row, 'grantham_score',  nullable=True, map=int),
           'percent_protein':    get_row(row, 'percent_protein', nullable=True, map=float),
           'gene':               row.get('gene_name'),

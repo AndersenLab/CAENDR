@@ -1,7 +1,7 @@
 #!/bin/bash
 
 GIT_URL=git@github.com:andersenlab/calc_heritability.git 
-GIT_BRANCH=main
+GIT_BRANCH=${ENV}
 
 echo "Env: ${ENV}"
 

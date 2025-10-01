@@ -5,6 +5,7 @@ from caendr.services.logger import logger
 from caendr.utils.json import dump_json
 
 from google.cloud import datastore
+from google.cloud.datastore.query import PropertyFilter
 
 dsClient = datastore.Client()
 
@@ -70,7 +71,6 @@ def save_ds_entity(kind: str, name: str, properties: Dict[str, Any] = None, excl
     Save an entity to the datastore, optionally preventing indexing of select properties.
   '''
   m = make_ds_entity(kind, name, properties=properties, exclude_from_indexes=exclude_from_indexes)
-  logger.debug(f"store: {kind} - {name}")
   return dsClient.put(m)
 
 
@@ -109,7 +109,7 @@ def query_ds_entities(kind, filters=None, projection=(), order=None, limit=None,
     query.order = order
   if filters:
     for var, op, val in filters:
-      query.add_filter(var, op, val)
+      query.add_filter(filter=PropertyFilter(var, op, val))
   if limit:
     return query.fetch(limit=limit)
   else:

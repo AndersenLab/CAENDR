@@ -34,19 +34,19 @@ REQUIRED_RESOURCES: Dict[DbOp, List[ForeignResourceTemplate]] = {
     *SnpEffAnnotatedVariantConfig.all_resources,
     *VepAnnotatedVariantConfig.all_resources,
   ],
-  DbOp.DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS: [
+  DbOp.DROP_AND_POPULATE_STRAIN_VARIANTS: [
     *StrainAnnotatedVariantConfig.all_resources,
   ],
-  DbOp.DROP_AND_POPULATE_ANNOVAR_ANNOTATED_VARIANTS: [
+  DbOp.DROP_AND_POPULATE_ANNOVAR_VARIANTS: [
     *AnnovarAnnotatedVariantConfig.all_resources,
   ],
-  DbOp.DROP_AND_POPULATE_CSQ_ANNOTATED_VARIANTS: [
+  DbOp.DROP_AND_POPULATE_CSQ_VARIANTS: [
     *CsqAnnotatedVariantConfig.all_resources,
   ],
-  DbOp.DROP_AND_POPULATE_SNPEFF_ANNOTATED_VARIANTS: [
+  DbOp.DROP_AND_POPULATE_SNPEFF_VARIANTS: [
     *SnpEffAnnotatedVariantConfig.all_resources,
   ],
-  DbOp.DROP_AND_POPULATE_VEP_ANNOTATED_VARIANTS: [
+  DbOp.DROP_AND_POPULATE_VEP_VARIANTS: [
     *VepAnnotatedVariantConfig.all_resources,
   ],
   DbOp.DROP_AND_POPULATE_PHENOTYPE_DB: [
@@ -212,10 +212,10 @@ class DatabaseOperationPipeline(JobPipeline):
         'MEMORY_LIMITS':   { 'memory': '512Mi', 'cpu': '1' },
       }
     elif self.report.get_data_id(as_str=True) in [
-        "DROP_AND_POPULATE_ANNOVAR_ANNOTATED_VARIANTS",
-        "DROP_AND_POPULATE_CSQ_ANNOTATED_VARIANTS",
-        "DROP_AND_POPULATE_SNPEFF_ANNOTATED_VARIANTS",
-        "DROP_AND_POPULATE_VEP_ANNOTATED_VARIANTS"]:
+        "DROP_AND_POPULATE_ANNOVAR_VARIANTS",
+        "DROP_AND_POPULATE_CSQ_VARIANTS",
+        "DROP_AND_POPULATE_SNPEFF_VARIANTS",
+        "DROP_AND_POPULATE_VEP_VARIANTS"]:
       op_specific_params = {
         'TIMEOUT':         '604800s',
         'MEMORY_LIMITS':   { 'memory': '32Gi', 'cpu': '8' },

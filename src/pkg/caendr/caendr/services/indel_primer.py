@@ -45,16 +45,18 @@ COLUMNS = ["CHROM", "START", "STOP", "?", "TYPE", "STRAND", ""]
 
 def get_bed_url(species, release = None, secure = True):
   release = release or Species.from_name(species).release_pif
-  filename = IndelPrimerReport.get_source_filename(species, release)
+  filename = IndelPrimerReport.get_source_filename(release)
+  filepath = IndelPrimerReport.get_source_filepath(species)
   return generate_blob_uri(
-    MODULE_SITE_BUCKET_PRIVATE_NAME, INDEL_PRIMER_TOOL_PATH, f'{filename}.bed.gz', schema = BlobURISchema.http(secure=secure)
+    MODULE_SITE_BUCKET_PRIVATE_NAME, filepath, f'{filename}.bed.gz', schema = BlobURISchema.http(secure=secure)
   )
 
 def get_vcf_url(species, release = None, secure = True):
   release = release or Species.from_name(species).release_pif
-  filename = IndelPrimerReport.get_source_filename(species, release)
+  filename = IndelPrimerReport.get_source_filename(release)
+  filepath = IndelPrimerReport.get_source_filepath(species)
   return generate_blob_uri(
-    MODULE_SITE_BUCKET_PRIVATE_NAME, INDEL_PRIMER_TOOL_PATH, f'{filename}.vcf.gz', schema = BlobURISchema.http(secure=secure)
+    MODULE_SITE_BUCKET_PRIVATE_NAME, filepath, f'{filename}.vcf.gz', schema = BlobURISchema.http(secure=secure)
   )
 
 
@@ -62,12 +64,13 @@ def download_vcf_index_file(species, release = None):
   '''
     Download the VCF index file for the indel primer tool, keeping the same name used in datastore.
   '''
-  filename = IndelPrimerReport.get_source_filename(species, release) + '.vcf.gz.csi'
-  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, INDEL_PRIMER_TOOL_PATH, filename)
+  filename = IndelPrimerReport.get_source_filename(release) + '.vcf.gz.csi'
+  filepath = IndelPrimerReport.get_source_filepath(species)
+  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, filepath, filename)
 
 
 def get_sv_strains(species, release = None):
-  logger.debug('get_sv_strains')
+  logger.debug(f'get_sv_strains for {species}')
 
   # Use the given release if provided, otherwise default to species value
   release = release or Species.from_name(species).release_pif

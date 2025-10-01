@@ -7,13 +7,13 @@ from caendr.utils.env import get_env_var, get_env_var_with_fallback
 from caendr.models.datastore import Entity
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
 
-MODULE_SITE_BUCKET_PUBLIC_NAME = get_env_var_with_fallback('MODULE_SITE_BUCKET_PUBLIC_NAME_OVERRIDE', 'MODULE_SITE_BUCKET_PUBLIC_NAME')
+MODULE_SITE_BUCKET_PHOTOS_NAME = get_env_var('MODULE_SITE_BUCKET_PHOTOS_NAME')
 PROFILE_PHOTO_PATH_PREFIX = 'profile/photos'
 
 
 class Profile(Entity):
   kind = 'profile'
-  __bucket_name = MODULE_SITE_BUCKET_PUBLIC_NAME
+  __bucket_name = MODULE_SITE_BUCKET_PHOTOS_NAME
   __blob_prefix = PROFILE_PHOTO_PATH_PREFIX
 
   @classmethod

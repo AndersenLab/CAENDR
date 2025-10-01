@@ -23,20 +23,20 @@ def execute_operation(app, db, db_op: DbOp, species=None, reload_files=True):
   elif db_op == DbOp.DROP_AND_POPULATE_WORMBASE_GENES:
     drop_and_populate_wormbase_genes(app, db, species, reload_files=reload_files)
 
-  elif db_op == DbOp.DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS:
-    drop_and_populate_strain_annotated_variants(app, db, species, reload_files=reload_files)
+  elif db_op == DbOp.DROP_AND_POPULATE_STRAIN_VARIANTS:
+    drop_and_populate_strain_variants(app, db, species, reload_files=reload_files)
 
-  elif db_op == DbOp.DROP_AND_POPULATE_ANNOVAR_ANNOTATED_VARIANTS:
-    drop_and_populate_annovar_annotated_variants(app, db, species, reload_files=reload_files)
+  elif db_op == DbOp.DROP_AND_POPULATE_ANNOVAR_VARIANTS:
+    drop_and_populate_annovar_variants(app, db, species, reload_files=reload_files)
 
-  elif db_op == DbOp.DROP_AND_POPULATE_CSQ_ANNOTATED_VARIANTS:
-    drop_and_populate_csq_annotated_variants(app, db, species, reload_files=reload_files)
+  elif db_op == DbOp.DROP_AND_POPULATE_CSQ_VARIANTS:
+    drop_and_populate_csq_variants(app, db, species, reload_files=reload_files)
 
-  elif db_op == DbOp.DROP_AND_POPULATE_SNPEFF_ANNOTATED_VARIANTS:
-    drop_and_populate_snpeff_annotated_variants(app, db, species, reload_files=reload_files)
+  elif db_op == DbOp.DROP_AND_POPULATE_SNPEFF_VARIANTS:
+    drop_and_populate_snpeff_variants(app, db, species, reload_files=reload_files)
 
-  elif db_op == DbOp.DROP_AND_POPULATE_VEP_ANNOTATED_VARIANTS:
-    drop_and_populate_vep_annotated_variants(app, db, species, reload_files=reload_files)
+  elif db_op == DbOp.DROP_AND_POPULATE_VEP_VARIANTS:
+    drop_and_populate_vep_variants(app, db, species, reload_files=reload_files)
 
   elif db_op == DbOp.DROP_AND_POPULATE_PHENOTYPE_DB:
     drop_and_populate_phenotype_db(app, db, species, reload_files=reload_files)
@@ -99,11 +99,11 @@ def drop_and_populate_wormbase_genes(app, db, species, reload_files=True):
   # etl_manager.load_orthologs(db)
 
 
-def drop_and_populate_strain_annotated_variants(app, db, species, reload_files=True):
+def drop_and_populate_strain_variants(app, db, species, reload_files=True):
 
   # Print operation & species info
   spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
-  logger.info(f'Dropping and populating strain annotated variants. Species list: [ {", ".join(spec_strings)} ]')
+  logger.info(f'Dropping and populating strain variants. Species list: [ {", ".join(spec_strings)} ]')
 
   # Initialize ETL Manager
   etl_manager = ETLManager(app, db, reload_files=reload_files)
@@ -117,11 +117,11 @@ def drop_and_populate_strain_annotated_variants(app, db, species, reload_files=T
   etl_manager.load_tables(StrainAnnotatedVariant, species_list=species)
 
 
-def drop_and_populate_annovar_annotated_variants(app, db, species, reload_files=True):
+def drop_and_populate_annovar_variants(app, db, species, reload_files=True):
 
   # Print operation & species info
   spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
-  logger.info(f'Dropping and populating Annovar annotated variants. Species list: [ {", ".join(spec_strings)} ]')
+  logger.info(f'Dropping and populating Annovar variants. Species list: [ {", ".join(spec_strings)} ]')
 
   # Initialize ETL Manager
   etl_manager = ETLManager(app, db, reload_files=reload_files)
@@ -135,11 +135,11 @@ def drop_and_populate_annovar_annotated_variants(app, db, species, reload_files=
   etl_manager.load_tables(AnnovarAnnotatedVariant, species_list=species)
 
 
-def drop_and_populate_csq_annotated_variants(app, db, species, reload_files=True):
+def drop_and_populate_csq_variants(app, db, species, reload_files=True):
 
   # Print operation & species info
   spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
-  logger.info(f'Dropping and populating CSQ annotated variants. Species list: [ {", ".join(spec_strings)} ]')
+  logger.info(f'Dropping and populating CSQ variants. Species list: [ {", ".join(spec_strings)} ]')
 
   # Initialize ETL Manager
   etl_manager = ETLManager(app, db, reload_files=reload_files)
@@ -153,11 +153,11 @@ def drop_and_populate_csq_annotated_variants(app, db, species, reload_files=True
   etl_manager.load_tables(CsqAnnotatedVariant, species_list=species)
 
 
-def drop_and_populate_snpeff_annotated_variants(app, db, species, reload_files=True):
+def drop_and_populate_snpeff_variants(app, db, species, reload_files=True):
 
   # Print operation & species info
   spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
-  logger.info(f'Dropping and populating SnpEff annotated variants. Species list: [ {", ".join(spec_strings)} ]')
+  logger.info(f'Dropping and populating SnpEff variants. Species list: [ {", ".join(spec_strings)} ]')
 
   # Initialize ETL Manager
   etl_manager = ETLManager(app, db, reload_files=reload_files)
@@ -171,11 +171,11 @@ def drop_and_populate_snpeff_annotated_variants(app, db, species, reload_files=T
   etl_manager.load_tables(SnpEffAnnotatedVariant, species_list=species)
 
 
-def drop_and_populate_vep_annotated_variants(app, db, species, reload_files=True):
+def drop_and_populate_vep_variants(app, db, species, reload_files=True):
 
   # Print operation & species info
   spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
-  logger.info(f'Dropping and populating VEP annotated variants. Species list: [ {", ".join(spec_strings)} ]')
+  logger.info(f'Dropping and populating VEP variants. Species list: [ {", ".join(spec_strings)} ]')
 
   # Initialize ETL Manager
   etl_manager = ETLManager(app, db, reload_files=reload_files)

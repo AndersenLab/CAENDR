@@ -9,8 +9,8 @@ from caendr.services.dataset_release import get_dataset_release
 
 
 # Get environment variables
-MODULE_SITE_BUCKET_PUBLIC_NAME = get_env_var_with_fallback('MODULE_SITE_BUCKET_PUBLIC_NAME_OVERRIDE', 'MODULE_SITE_BUCKET_PUBLIC_NAME')
 SOURCE_FILENAME                = get_env_var('INDEL_PRIMER_SOURCE_FILENAME', as_template=True)
+SOURCE_FILEPATH                = get_env_var('INDEL_PRIMER_TOOL_PATH', as_template=True)
 
 
 
@@ -52,13 +52,7 @@ class IndelPrimerReport(HashableEntity, ReportEntity):
   #
 
   @classmethod
-  def get_source_filename(cls, species, release):
-
-    # Validate species
-    if species is None:
-      raise ValueError('Please provide a species for Indel Primer source filename.')
-    # elif species not in SPECIES_LIST.keys():
-    #   raise ValueError(f'Cannot construct Indel Primer filename for unknown species "{species}".')
+  def get_source_filename(cls, release):
 
     # Validate release
     if release is None:
@@ -66,8 +60,22 @@ class IndelPrimerReport(HashableEntity, ReportEntity):
 
     # Fill in template with vars
     return SOURCE_FILENAME.get_string(**{
-      'SPECIES': species,
       'RELEASE': release,
+    })
+
+
+  @classmethod
+  def get_source_filepath(cls, species):
+
+    # Validate species
+    if species is None:
+      raise ValueError('Please provide a species for Indel Primer source filename.')
+    # elif species not in SPECIES_LIST.keys():
+    #   raise ValueError(f'Cannot construct Indel Primer filename for unknown species "{species}".')
+
+    # Fill in template with vars
+    return SOURCE_FILEPATH.get_string(**{
+      'SPECIES': species,
     })
 
 
@@ -89,7 +97,7 @@ class IndelPrimerReport(HashableEntity, ReportEntity):
 
     # Get DatasetRelease object and use to construct the FASTA filepath
     release_obj = get_dataset_release(release)
-    return release_obj.get_fasta_filepath(index=index, schema=schema)
+    return release_obj.get_fasta_filepath(index=index, schema=schema, gcp=True)
 
 
   @staticmethod

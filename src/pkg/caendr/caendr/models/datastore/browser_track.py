@@ -1,9 +1,9 @@
-from caendr.utils.env              import get_env_var
+from caendr.utils.env                  import get_env_var
 
-from caendr.models.datastore       import FileRecordEntity, DeletableEntity, OrderableEntity, DatasetRelease
-from caendr.services.cloud.storage import BlobURISchema
-from caendr.utils.data             import unique_id
-from caendr.utils.tokens           import TokenizedString
+from caendr.models.datastore           import FileRecordEntity, DeletableEntity, OrderableEntity, DatasetRelease
+from caendr.services.cloud.aws_storage import AWSBlobURISchema
+from caendr.utils.data                 import unique_id
+from caendr.utils.tokens               import TokenizedString
 
 from caendr.services.logger import logger
 
@@ -21,7 +21,7 @@ class BrowserTrack(FileRecordEntity, DeletableEntity, OrderableEntity):
     '''
       Get the default bucket for the browser track files, determined by dataset release.
     '''
-    return DatasetRelease.get_bucket_name()
+    return DatasetRelease.get_bucket_name(gcp=False)
 
   @staticmethod
   def release_prefix():
@@ -57,17 +57,17 @@ class BrowserTrack(FileRecordEntity, DeletableEntity, OrderableEntity):
     }
 
     # Add indexURL if defined
-    if self.__class__ == BrowserTrackTemplate and params['name'].endswith('_bam'):
-      params['url'] = f"https://{self.bucket}/{self.prefix}/${{SPECIES}}/${{STRAIN}}.bam"
-    elif self.__class__ == BrowserTrackTemplate and params['name'].endswith('_vcf'):
-      params['url'] = f"https://{self.bucket}/{self.prefix}/${{SPECIES}}/${{STRAIN}}.vcf.gz"
-    else:
-      params['url'] = self.get_filepath_template(schema=BlobURISchema.HTTPS).raw_string
+    # if self.__class__ == BrowserTrackTemplate and params['name'].endswith('_bam'):
+    #   params['url'] = f"https://{self.bucket}/{self.prefix}/${{SPECIES}}/${{STRAIN}}.bam"
+    # elif self.__class__ == BrowserTrackTemplate and params['name'].endswith('_vcf'):
+    #   params['url'] = f"https://{self.bucket}/{self.prefix}/${{SPECIES}}/${{STRAIN}}.vcf.gz"
+    # else:
+    #   params['url'] = self.get_filepath_template(schema=BlobURISchema.HTTPS).raw_string
+    params['url'] = self.get_aws_filepath_template(schema=AWSBlobURISchema.HTTPS).raw_string
 
     if self.__class__ == BrowserTrackTemplate and self['index_suffix']:
       params['indexURL'] = params['url'] + self['index_suffix']
 
-    logger.debug(f"{params}")
     return params
 
 

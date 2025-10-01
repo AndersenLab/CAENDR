@@ -11,6 +11,7 @@ from caendr.models.error import BadRequestError
 from caendr.models.sql import Strain
 from caendr.services.cloud.postgresql import db, rollback_on_error
 from caendr.services.cloud.storage import get_blob, download_blob_to_file, upload_blob_from_file, get_google_storage_credentials, generate_blob_uri, BlobURISchema
+from caendr.services.cloud.aws_storage import aws_generate_blob_uri, AWSBlobURISchema
 from caendr.utils.data import unique_id
 from caendr.utils.env import get_env_var
 
@@ -175,9 +176,9 @@ def get_bam_bai_vcf_download_link(species, strain_name, ext, signed=False):
 
   bucket_name = AWS_OPEN_DATA_BUCKET
   file_prefix  = PREFICES[ext].get_string(SPECIES=species.name)
+  logger.debug(file_prefix)
 
-  #return generate_blob_uri( bucket_name, bam_prefix, f'{strain_name}.{ext}', schema=BlobURISchema.sign(signed) )
-  return "/".join(["https:/", bucket_name, file_prefix, f'{strain_name}.{ext}'])
+  return aws_generate_blob_uri( bucket_name, file_prefix, f'{strain_name}.{ext}', schema=AWSBlobURISchema.HTTPS )
 
 # Is this deprecated?
 def fetch_bam_bai_download_script(species, release, reload=False):
@@ -218,11 +219,11 @@ def generate_bam_bai_download_script(species, release, signed=False):
   bucket_name = AWS_OPEN_DATA_BUCKET
 
   # Package keyword args for signing URLs into a dict
-  # sign_dict = {
-  #   'schema':      BlobURISchema.sign(signed),
+  sign_dict = {
+    'schema':      AWSBlobURISchema.HTTPS,
   #   'expiration':  timedelta(days=7),
   #   'credentials': get_google_storage_credentials(),
-  # }
+  }
 
   # Get the location of the BAM files in the bucket for this species/release
   bam_prefix = BAM_BAI_PREFIX.get_string(**{
@@ -247,10 +248,8 @@ def generate_bam_bai_download_script(species, release, signed=False):
     bai_fname = f'{strain}.bam.bai'
 
     # Generate download URLs
-    # bam_url = generate_blob_uri(bucket_name, bam_prefix, bam_fname, **sign_dict)
-    # bai_url = generate_blob_uri(bucket_name, bam_prefix, bai_fname, **sign_dict)
-    bam_url = "/".join(["https:/", bucket_name, bam_prefix, bam_fname])
-    bai_url = "/".join(["https:/", bucket_name, bam_prefix, bai_fname])
+    bam_url = aws_generate_blob_uri(bucket_name, bam_prefix, bam_fname, **sign_dict)
+    bai_url = aws_generate_blob_uri(bucket_name, bam_prefix, bai_fname, **sign_dict)
 
     # Add download statements
     if bam_url:

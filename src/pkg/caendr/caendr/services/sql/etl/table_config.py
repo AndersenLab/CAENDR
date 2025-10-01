@@ -22,7 +22,7 @@ from caendr.models.error           import ForeignResourceMissingError
 
 # Bucket(s)
 MODULE_DB_OPERATIONS_BUCKET_NAME = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
-MODULE_SITE_BUCKET_PUBLIC_NAME = get_env_var_with_fallback('MODULE_SITE_BUCKET_PUBLIC_NAME_OVERRIDE', 'MODULE_SITE_BUCKET_PUBLIC_NAME')
+AWS_BUCKET_NAME = get_env_var('AWS_OPEN_DATA_BUCKET')
 
 # Filepaths
 RELEASE_FILEPATH   = get_env_var('MODULE_DB_OPERATIONS_RELEASE_FILEPATH',   as_template=True)
@@ -167,7 +167,7 @@ AnnovarAnnotatedVariantConfig = TableConfig(
   AnnovarAnnotatedVariant,
   ParseConfig(
     parse_annovar_variant_annotation_data,
-    LocalDatastoreFileTemplate( 'ANNOVAR', MODULE_SITE_BUCKET_PUBLIC_NAME, NEWSVA_FILEPATH, SVA_ANNOVAR_FILENAME ),
+    LocalDatastoreFileTemplate( 'ANNOVAR', AWS_BUCKET_NAME, NEWSVA_FILEPATH, SVA_ANNOVAR_FILENAME, gcp=False ),
   ),
 )
 
@@ -175,7 +175,7 @@ CsqAnnotatedVariantConfig = TableConfig(
   CsqAnnotatedVariant,
   ParseConfig(
     parse_csq_variant_annotation_data,
-    LocalDatastoreFileTemplate( 'CSQ', MODULE_SITE_BUCKET_PUBLIC_NAME, NEWSVA_FILEPATH, SVA_CSQ_FILENAME ),
+    LocalDatastoreFileTemplate( 'CSQ', AWS_BUCKET_NAME, NEWSVA_FILEPATH, SVA_CSQ_FILENAME, gcp=False ),
   ),
 )
 
@@ -183,7 +183,7 @@ SnpEffAnnotatedVariantConfig = TableConfig(
   SnpEffAnnotatedVariant,
   ParseConfig(
     parse_snpeff_variant_annotation_data,
-    LocalDatastoreFileTemplate( 'SNPEFF', MODULE_SITE_BUCKET_PUBLIC_NAME, NEWSVA_FILEPATH, SVA_SNPEFF_FILENAME ),
+    LocalDatastoreFileTemplate( 'SNPEFF', AWS_BUCKET_NAME, NEWSVA_FILEPATH, SVA_SNPEFF_FILENAME, gcp=False ),
   ),
 )
 
@@ -191,7 +191,7 @@ VepAnnotatedVariantConfig = TableConfig(
   VepAnnotatedVariant,
   ParseConfig(
     parse_vep_variant_annotation_data,
-    LocalDatastoreFileTemplate( 'VEP', MODULE_SITE_BUCKET_PUBLIC_NAME, NEWSVA_FILEPATH, SVA_VEP_FILENAME ),
+    LocalDatastoreFileTemplate( 'VEP', AWS_BUCKET_NAME, NEWSVA_FILEPATH, SVA_VEP_FILENAME, gcp=False ),
   ),
 )
 
