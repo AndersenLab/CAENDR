@@ -1,15 +1,16 @@
 import os
 import pathlib
 
-from caendr.services.logger        import logger
+from caendr.services.logger            import logger
 
-from .foreign_resource             import ForeignResource, ForeignResourceTemplate
+from .foreign_resource                 import ForeignResource, ForeignResourceTemplate
 
-from caendr.models.datastore       import Species, FileRecordEntity
-from caendr.models.error           import NotFoundError, ForeignResourceMissingError, ForeignResourceUndefinedError
-from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, download_blob_to_file, join_path, check_blob_exists
-from caendr.utils.tokens           import TokenizedString
-from caendr.utils.file             import get_zipped_file_ext
+from caendr.models.datastore           import Species, FileRecordEntity
+from caendr.models.error               import NotFoundError, ForeignResourceMissingError, ForeignResourceUndefinedError
+from caendr.services.cloud.storage     import BlobURISchema, generate_blob_uri, download_blob_to_file, join_path, check_blob_exists
+from caendr.services.cloud.aws_storage import AWSBlobURISchema, aws_generate_blob_uri, aws_download_blob_to_file, aws_check_blob_exists
+from caendr.utils.tokens               import TokenizedString
+from caendr.utils.file                 import get_zipped_file_ext
 
 
 
@@ -31,7 +32,7 @@ class LocalDatastoreFile(os.PathLike, ForeignResource):
   # Instantiation
   #
 
-  def __init__(self, resource_id: str, bucket: str, *path: str, local_path: str = None, metadata: dict = None):
+  def __init__(self, resource_id: str, bucket: str, *path: str, local_path: str = None, metadata: dict = None, gcp: bool = True):
 
     # Validate path length
     if not len(path):
@@ -44,6 +45,7 @@ class LocalDatastoreFile(os.PathLike, ForeignResource):
     self._bucket   = bucket
     self._path     = path
     self._metadata = metadata or {}
+    self.__gcp     = gcp
 
     # Get the file extension as the last section of the path after a '.', ignoring '.gz'
     # If there is no file extension (e.g. 'foobar.gz' or just 'foobar'), set to empty string
@@ -60,10 +62,16 @@ class LocalDatastoreFile(os.PathLike, ForeignResource):
   #
 
   def __repr__(self):
-    return f'Datastore file "{self.resource_id}": ' + join_path( *self.get_datastore_uri(schema=BlobURISchema.PATH) )
+    if self.__gcp:
+      return f'Datastore file "{self.resource_id}": ' + join_path( *self.get_datastore_uri(schema=BlobURISchema.PATH) )
+    else:
+      return f'Datastore file "{self.resource_id}": ' + join_path( *self.get_aws_datastore_uri(schema=AWSBlobURISchema.PATH) )
 
   def __print_locations(self):
-    return f'{self.get_local_filepath()}  <-  {self.get_datastore_uri(schema=BlobURISchema.HTTPS)}'
+    if self.__gcp:
+      return f'{self.get_local_filepath()}  <-  {self.get_datastore_uri(schema=BlobURISchema.HTTPS)}'
+    else:
+      return f'{self.get_local_filepath()}  <-  {self.get_aws_datastore_uri(schema=AWSBlobURISchema.HTTPS)}'
 
 
   #
@@ -94,7 +102,16 @@ class LocalDatastoreFile(os.PathLike, ForeignResource):
     return generate_blob_uri(self._bucket, *self._path, schema=schema)
 
   def exists_in_ds(self):
-    return check_blob_exists(self._bucket, *self._path)
+    if self.__gcp:
+      return check_blob_exists(self._bucket, *self._path)
+    else:
+      return aws_check_blob_exists(self._bucket, *self._path)
+
+  def get_aws_datastore_uri(self, schema: AWSBlobURISchema = None):
+    '''
+      Get a path to the file in the datastore.
+    '''
+    return aws_generate_blob_uri(self._bucket, *self._path, schema=schema)
 
 
   #
@@ -150,7 +167,10 @@ class LocalDatastoreFile(os.PathLike, ForeignResource):
     else:
       try:
         logger.info(f'Downloading datastore file [{self.resource_id}]:\n\t{ self.__print_locations() }')
-        download_blob_to_file(self._bucket, *self._path, destination=self._local_path, filename=self.get_local_filename())
+        if self.__gcp:
+          download_blob_to_file(self._bucket, *self._path, destination=self._local_path, filename=self.get_local_filename())
+        else:
+          aws_download_blob_to_file(self._bucket, *self._path, destination=self._local_path, filename=self.get_local_filename())
         logger.info(f'Completed download of file [{self.resource_id}]:\n\t{ self.__print_locations() }')
 
       # If not found, wrap error
@@ -178,17 +198,18 @@ class LocalDatastoreFileTemplate(ForeignResourceTemplate):
   # Default directory to store files locally
   _DEFAULT_LOCAL_PATH = TokenizedString(os.path.join(LOCAL_DIR, '${SPECIES}'))
 
-  def __init__(self, resource_id: str, bucket: str, *path: TokenizedString, exists_for_species=None, metadata=None):
+  def __init__(self, resource_id: str, bucket: str, *path: TokenizedString, exists_for_species=None, metadata=None, gcp: bool = True):
     super().__init__(resource_id)
     self._bucket = bucket
     self._path   = path
 
     self.__exists_for_species = exists_for_species
     self.__metadata = metadata or {}
+    self.__gcp = gcp
 
 
   @staticmethod
-  def from_file_record_entity(record: FileRecordEntity):
+  def from_file_record_entity(record: FileRecordEntity, gcp: bool = True):
     '''
       Factory method to instantiate a template from a `FileRecordEntity` object.
       Uses the file as the foreign resource, and the `Entity` as the metadata.
@@ -200,11 +221,14 @@ class LocalDatastoreFileTemplate(ForeignResourceTemplate):
       species = None
 
     # Create the template object
-    return LocalDatastoreFileTemplate( record.name, *record.get_filepath(schema=BlobURISchema.PATH), exists_for_species=species, metadata=record )
+    if gcp:
+      return LocalDatastoreFileTemplate( record.name, *record.get_filepath(schema=BlobURISchema.PATH), exists_for_species=species, metadata=record, gcp=gcp )
+    else:
+      return LocalDatastoreFileTemplate( record.name, *record.get_filepath(schema=AWSBlobURISchema.PATH), exists_for_species=species, metadata=record, gcp=gcp )
 
 
   @staticmethod
-  def from_file_record_entities(entity_class, filter = None):
+  def from_file_record_entities(entity_class, filter = None, gcp = True):
     '''
       Factory method to instantiate multiple templates from all Datastore entities of the given class.
 
@@ -218,7 +242,7 @@ class LocalDatastoreFileTemplate(ForeignResourceTemplate):
     if filter is None:
       filter = lambda x: True
     return [
-      LocalDatastoreFileTemplate.from_file_record_entity(record) for record in entity_class.query_ds() if filter(record)
+      LocalDatastoreFileTemplate.from_file_record_entity(record, gcp=gcp) for record in entity_class.query_ds() if filter(record)
     ]
 
 
@@ -243,6 +267,7 @@ class LocalDatastoreFileTemplate(ForeignResourceTemplate):
       *self._build_path(species=species, tokens=tokens),
       local_path = self._DEFAULT_LOCAL_PATH.get_string( **{**TokenizedString.get_species_tokens(species), **tokens} ),
       metadata   = self.__metadata,
+      gcp        = self.__gcp, 
     )
 
 
@@ -251,7 +276,10 @@ class LocalDatastoreFileTemplate(ForeignResourceTemplate):
   #
 
   def get_print_uri(self, species: Species) -> str:
-    return join_path( *self.build(species).get_datastore_uri(schema=BlobURISchema.PATH) )
+    if self.__gcp:
+      return join_path( *self.build(species).get_datastore_uri(schema=BlobURISchema.PATH) )
+    else:
+      return join_path( *self.build(species).get_aws_datastore_uri(schema=AWSBlobURISchema.PATH) )
 
   def check_exists(self, species: Species) -> bool:
     return self.build(species).exists_in_ds()

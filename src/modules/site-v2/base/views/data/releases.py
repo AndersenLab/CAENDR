@@ -22,6 +22,7 @@ from base.utils.view_decorators import parse_species_and_release
 from caendr.api.strain import query_strains
 from caendr.models.datastore import DatasetRelease, Species, TraitFile
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
+from caendr.services.cloud.aws_storage import AWSBlobURISchema, aws_generate_blob_uri
 from caendr.services.dataset_release import get_all_dataset_releases, get_browser_tracks_path
 from caendr.utils.env import get_env_var
 
@@ -73,7 +74,7 @@ def data_release_list(species: Species, release: DatasetRelease):
     'RELEASES': get_all_dataset_releases(order='-version', species=species.name),
     'release_bucket': species['release_latest'],
     'release_path': release.get_versioned_path_template().get_string(SPECIES = species.name),
-    'fasta_path': release.get_fasta_filepath(schema=release.BlobURISchema.HTTPS) if release.check_fasta_file_exists() else None,
+    'fasta_path': release.get_fasta_filepath(schema=AWSBlobURISchema.HTTPS) if release.check_fasta_file_exists() else None,
     'fasta_name': release.get_fasta_filename(),
     'gene_gff_path': generate_blob_uri(
       MODULE_DB_OPERATIONS_BUCKET_NAME.get_string(), 
@@ -105,12 +106,12 @@ def data_release_list(species: Species, release: DatasetRelease):
   }
 
   # Get list of files based on species
-  try:
-    files = release.get_report_data_urls_map(species.name)
-  except Exception as ex:
-    files = None
-    logger.error(f'Failed to retrieve release files: {ex}')
-    flash('Unable to retrieve release files at this time. Please try again later.', 'danger')
+  # try:
+  files = release.get_report_data_urls_map(species.name)
+  # except Exception as ex:
+  #   files = None
+  #   logger.error(f'Failed to retrieve release files: {ex}')
+  #   flash('Unable to retrieve release files at this time. Please try again later.', 'danger')
 
   # Update params object with version-specific fields
   if release.report_type == DatasetRelease.V2:

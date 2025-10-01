@@ -70,7 +70,7 @@ def download_vcf_index_file(species, release = None):
 
 
 def get_sv_strains(species, release = None):
-  logger.debug('get_sv_strains')
+  logger.debug(f'get_sv_strains for {species}')
 
   # Use the given release if provided, otherwise default to species value
   release = release or Species.from_name(species).release_pif

@@ -2,6 +2,7 @@ import io
 import os
 import datetime
 from enum import Enum
+import requests
 from typing import Optional, List
 from werkzeug.utils import secure_filename
 
@@ -16,20 +17,39 @@ from caendr.models.error import CloudStorageUploadError, NotFoundError
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.service_account import get_service_account_credentials
 from caendr.utils.data import unique_id
+from caendr.utils.env import get_env_var
 
-AWS_OPEN_DATA_BUCKET = os.environ.get('AWS_OPEN_DATA_BUCKET')
-AWS_REGION = os.environ.get('AWS_REGION')
+AWS_OPEN_DATA_BUCKET = get_env_var('AWS_OPEN_DATA_BUCKET')
+AWS_REGION = get_env_var('AWS_REGION')
+AWS_ACCESS_KEY_ID = get_secret('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = get_secret('AWS_SECRET_ACCESS_KEY')
 
-storageClient = client('s3')
+storageClient = client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+
+buffersize = 2 ** 20
 
 #
 # Check blobs
 #
 
 class AWSBlob():
+  __buffersize = 10000000
   
-  def __init__(self, name):
+  def __init__(self, name = None, bucket = None, path = None):
     self.name = name
+    self.bucket = bucket
+    self.path = path
+
+  def exists(self):
+    return self.name is not None
+  
+  def download_to_file(self, target_file):
+    response = storageClient.get_object(Bucket=self.bucket, Key=join_path(self.path))
+    buffer = response['body'].read(self.__buffersize)
+    while buffer:
+      target_file.write(buffer)
+      buffer = response['body'].read(self.__buffersize)
+
 
 
 def join_path(*path: str, sep: str = '/'):
@@ -44,7 +64,11 @@ def join_path(*path: str, sep: str = '/'):
 
 def aws_get_blob(bucket_name: str, *path: str) -> dict:
   logger.debug(f'get_blob(bucket_name={bucket_name}, path={join_path(*path)})')
-  blob = storageClient.head_object(Bucket=bucket_name, Key=join_path(*path))
+  try:
+    blob = storageClient.head_object(Bucket=bucket_name, Key=join_path(*path))
+    blob = AWSBlob(name=blob, bucket=bucket_name, path=path)
+  except exceptions.ClientError:
+    blob = AWSBlob()
   return blob
 
 
@@ -63,7 +87,7 @@ def aws_get_blob_if_exists(bucket_name: str, *path: str, fallback=None) -> Optio
   '''
   try:
     blob = storageClient.head_object(Bucket=bucket_name, Key=join_path(*path))
-    return blob
+    return AWSBlob(name=blob, bucket=bucket_name, path=path)
   except exceptions.ClientError:
     return fallback
 
@@ -76,13 +100,11 @@ def aws_get_blob_list(bucket_name: str, *prefix: str, filter=None) -> List[dict]
 
   # Get all the blobs in the given bucket
   items = storageClient.list_objects(Bucket=bucket_name, Prefix=join_path(*prefix))['Contents']
-  items = [item['Key'] for item in items]
-  logger.debug(items)
+  items = [AWSBlob(name=item['Key'], bucket=bucket_name, path=prefix + (item['Key'],)) for item in items]
+
   # Apply the filter, if one was given
   if filter is not None:
     items = [ b for b in items if filter(b) ]
-
-  items = [AWSBlob(item) for item in items]
 
   # Return the items as a list
   return items
@@ -149,3 +171,73 @@ def aws_generate_blob_uri(bucket: str, *path: str, schema: AWSBlobURISchema = AW
 
     # Otherwise, use the prefix from the enum
     return f'{ schema.value[0] }{ bucket }{ schema.value[1]}/{ path }'
+
+
+def make_secure_filename(*options):
+  '''
+    Loop through a list of possible filenames, returning the first that's safe.
+    If no option in the list is safe, or if no options provided, returns a randomized (safe) string.
+  '''
+  for option in options:
+    try:
+      fname = secure_filename(option)
+      if fname:
+        return fname
+    except:
+      pass
+  return secure_filename(unique_id())
+
+
+def aws_download_blob_to_file(bucket_name, *path, destination='', filename=None):
+  '''
+    Downloads a blob and saves it locally.
+
+    Validates the `filename` argument using Werkzeug `secure_filename`.
+    Does NOT validate `destination` the same way.
+
+    If you want to download a blob into a specific folder, use `destination`.
+    You'll have to make sure the path is secure.
+
+    Arguments:
+      - `bucket_name`: The name of the bucket where the blob is located
+      - `*path`: The path to the file within the bucket (incl. the filename itself)
+      - `destination`: The local folder to download the blob to. Optional.
+      - `filename`:
+          A local name for the downloaded blob. May be changed by Werkzeug `secure_filename`.
+          If not provided, uses the name of the file in datastore (i.e. the right-most component of the `path`).
+
+    Returns:
+      The local filepath / filename for the downloaded blob.
+      Note that this may be different from the passed filename, if that name was not secure.
+
+    Raises:
+      NotFoundError: The desired blob does not exist.
+  '''
+
+  # If no filename provided, try using the final component of blob path
+  target_filename = os.path.join(destination, make_secure_filename(filename, path[-1].split('/')[-1]))
+
+  source_filename = "https://" + bucket_name + ".s3." + AWS_REGION + ".amazonaws.com/" + "/".join(path)
+  try:
+    with requests.get(source_filename, stream=True) as r:
+      r.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)
+
+      # Open the local file in binary write mode.
+      with open(target_filename, 'wb') as f:
+        
+        # Iterate over the response content in chunks and write to the file.
+        for chunk in r.iter_content(chunk_size=buffersize):  # Adjust chunk_size as needed
+          f.write(chunk)
+
+  except requests.exceptions.RequestException as e:
+    print(f"Error downloading file: {e}")
+
+  # # Retrieve the blob, throwing an error if it doesn't exist
+  # blob = aws_get_blob(bucket_name, *path)
+  # if not (blob and blob.exists()):
+  #   raise NotFoundError('blob', {'bucket': bucket_name, 'name': join_path(*path)})
+
+  # # Download the blob to a file and return the filename
+  # blob.download_to_file(open(target_filename, 'wb'))
+  return target_filename
+

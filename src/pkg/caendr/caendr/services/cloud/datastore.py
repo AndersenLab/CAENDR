@@ -5,6 +5,7 @@ from caendr.services.logger import logger
 from caendr.utils.json import dump_json
 
 from google.cloud import datastore
+from google.cloud.datastore.query import PropertyFilter
 
 dsClient = datastore.Client()
 
@@ -108,7 +109,7 @@ def query_ds_entities(kind, filters=None, projection=(), order=None, limit=None,
     query.order = order
   if filters:
     for var, op, val in filters:
-      query.add_filter(var, op, val)
+      query.add_filter(filter=PropertyFilter(var, op, val))
   if limit:
     return query.fetch(limit=limit)
   else:

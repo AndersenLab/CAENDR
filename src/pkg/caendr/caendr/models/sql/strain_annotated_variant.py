@@ -303,7 +303,6 @@ class SnpEffAnnotatedVariant(GeneralAnnotatedVariant, db.Model):
   transcript = db.Column(db.String(), index=True, nullable=True)
   amino_acid_change = db.Column(db.String(), nullable=True)
   strains = db.Column(db.String(), nullable=True)
-  blosum = db.Column(db.Integer(), nullable=True)
   grantham = db.Column(db.Integer(), nullable=True)
   percent_protein = db.Column(db.Float(), nullable=True)
   gene = db.Column(db.String(), index=True, nullable=True)
@@ -321,7 +320,6 @@ class SnpEffAnnotatedVariant(GeneralAnnotatedVariant, db.Model):
     "consequence",
     "amino_acid_change",
     "strains",
-    "blosum",
     "grantham",
     "variant_impact",
     "divergent"
@@ -343,7 +341,6 @@ class SnpEffAnnotatedVariant(GeneralAnnotatedVariant, db.Model):
       {'id': 'transcript', 'name': 'Transcript'},
       {'id': 'amino_acid_change', 'name': 'Amino Acid Change'},
       {'id': 'strains', 'name': 'Strains'},
-      {'id': 'blosum', 'name': 'BLOSUM Score'},
       {'id': 'grantham', 'name': 'Grantham Score'},
       {'id': 'percent_protein', 'name': 'Percent Protein'},
       {'id': 'gene', 'name': 'Gene'},

@@ -1,7 +1,10 @@
 from caendr.models.datastore import HashableEntity, ReportEntity
 
 from caendr.services.cloud.storage import BlobURISchema
+from caendr.utils.env              import get_env_var
 
+
+PRIVATE_BUCKET_NAME = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
 
 
 class HeritabilityReport(HashableEntity, ReportEntity):
@@ -22,10 +25,15 @@ class HeritabilityReport(HashableEntity, ReportEntity):
   # Path
   #
 
+  # TODO: Move data files to Data bucket
+  @property
+  def _data_bucket(self) -> str:
+    return PRIVATE_BUCKET_NAME
+
   # TODO: Standardize data prefix for all tools
   @property
   def _data_prefix(self):
-    return 'heritability'
+    return 'tool_release_data'
 
   def get_data_paths(self, schema: BlobURISchema):
     return {
