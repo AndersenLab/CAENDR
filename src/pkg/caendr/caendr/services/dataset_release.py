@@ -33,6 +33,8 @@ def get_all_dataset_releases(keys_only=False, order=None, placeholder=True, spec
   if species is not None:
     releases = [ r for r in releases if r['species'].name == species]
 
+  releases = [r for r in releases if not r.disabled]
+
   # Otherwise, return the retrieved releases
   return releases
 

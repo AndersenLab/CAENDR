@@ -43,6 +43,7 @@ def variant_annotation():
   columns = {"": []}
   for name, tool in annotation_tools.items():
     tool_columns = tool.get_column_details()
+    logger.debug(name + " " + " ".join([str([f"{k}={v}" for k, v in entry.items()]) for entry in tool_columns]))
     visibility_func = tool.column_default_visibility
     for col in tool_columns:
       col['default_visibility'] = visibility_func(col)

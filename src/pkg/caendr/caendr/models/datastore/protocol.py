@@ -1,16 +1,16 @@
 import os
 
-from caendr.utils.env import get_env_var_with_fallback
+from caendr.utils.env import get_env_var
 
 from caendr.models.datastore import Entity
 
-MODULE_SITE_BUCKET_PUBLIC_NAME = get_env_var_with_fallback('MODULE_SITE_BUCKET_PUBLIC_NAME_OVERRIDE', 'MODULE_SITE_BUCKET_PUBLIC_NAME')
+AWS_OPEN_DATA_BUCKET = get_env_var('AWS_OPEN_DATA_BUCKET')
 PROTOCOL_PDF_PATH_PREFIX = 'protocol/pdf'
 
 
 class Protocol(Entity):
   kind = 'protocol'
-  __bucket_name = MODULE_SITE_BUCKET_PUBLIC_NAME
+  __bucket_name = AWS_OPEN_DATA_BUCKET
   __blob_prefix = PROTOCOL_PDF_PATH_PREFIX
 
   @classmethod

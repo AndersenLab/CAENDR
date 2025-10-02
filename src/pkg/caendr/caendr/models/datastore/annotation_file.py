@@ -4,13 +4,13 @@ from collections import OrderedDict
 
 from caendr.utils.env import get_env_var
 
-from caendr.models.datastore       import FileRecordEntity, SpeciesEntity
-from caendr.services.cloud.storage import BlobURISchema, join_path
-from caendr.utils.tokens           import TokenizedString
+from caendr.models.datastore           import FileRecordEntity, SpeciesEntity
+from caendr.services.cloud.aws_storage import AWSBlobURISchema, join_path
+from caendr.utils.tokens               import TokenizedString
 from caendr.services.logger import logger
 
 
-MODULE_SITE_BUCKET_PUBLIC_NAME = get_env_var('MODULE_SITE_BUCKET_PUBLIC_NAME')
+AWS_OPEN_DATA_BUCKET = get_env_var('AWS_OPEN_DATA_BUCKET')
 
 
 class AnnotationFile(FileRecordEntity, SpeciesEntity):
@@ -43,7 +43,7 @@ class AnnotationFile(FileRecordEntity, SpeciesEntity):
       **super().serialize(**kwargs),
 
       # Add Python property values & function lookups
-      'uri':             self.get_filepath(schema=BlobURISchema.HTTPS),
+      'uri':             self.get_filepath(schema=AWSBlobURISchema.HTTPS),
     }
     return props
 
@@ -54,14 +54,14 @@ class AnnotationFile(FileRecordEntity, SpeciesEntity):
 
   @property
   def bucket(self):
-    return MODULE_SITE_BUCKET_PUBLIC_NAME
+    return AWS_OPEN_DATA_BUCKET
 
   @property
   def prefix(self):
     return TokenizedString(join_path('dataset_release', '${SPECIES}', '${RELEASE}', 'variation'))
 
   # The species is always determined by this entity itself, so we fill it in instead of letting the calling function supply it
-  def get_filepath(self, schema: BlobURISchema = None, check_if_exists: bool = False):
+  def get_filepath(self, schema: AWSBlobURISchema = None, check_if_exists: bool = False):
     return super().get_filepath(schema=schema, check_if_exists=check_if_exists, SPECIES=self['species'].name, RELEASE=self['species'].release_sva)
 
   @staticmethod
