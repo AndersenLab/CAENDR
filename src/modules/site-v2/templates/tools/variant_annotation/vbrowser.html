@@ -646,6 +646,10 @@ function remake_data_table() {
   });
 
   var col_select = $("#col-select .form-group");
+  while (col_select[0].firstChild) {
+    col_select[0].removeChild(col_select[0].lastChild);
+  }
+  col_select.append("<div class='fw-bold mb-3 col-entry'><input class='toggle-col-chk' type='checkbox' name='toggle_all_cols' id='toggle_all_cols' /><label id='toggle_all_cols_label' for='toggle_all_cols'> Select All</label></div>");
   columnList.map((col, idx) => {
     col_select.append("<div class='col-entry'><input class='toggle-col-chk' type='checkbox' name='toggle_" + col['id'] + "' id='toggle_" + col['id'] + "' data-column='" + col['id'] + "' /><label for='toggle_" + col['id'] + "'> " + col['name'] + " </label></div>");
   })
