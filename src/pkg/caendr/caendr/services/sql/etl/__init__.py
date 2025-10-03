@@ -10,6 +10,7 @@ from caendr.models.sql       import ALL_SQL_TABLES
 from caendr.utils.constants  import DEFAULT_BATCH_SIZE
 from caendr.utils.data       import batch_generator
 
+from sqlalchemy import func, literal_column
 from psycopg2 import OperationalError
 
 batch_retries = 3
@@ -30,6 +31,12 @@ TABLE_CONFIG = {
     ]
 }
 
+
+def query_count(query):
+    ONE = literal_column("1")
+    counter = query.statement.with_only_columns([func.count(ONE)])
+    counter = counter.order_by(None)
+    return query.session.execute(counter).scalar()
 
 
 class ETLManager:
@@ -120,7 +127,7 @@ class ETLManager:
         config = TABLE_CONFIG[table.__tablename__]
 
         # Initialize a count for the number of entries added
-        initial_count = config.table.query.count()
+        initial_count = query_count(config.table.query)
         logger.info(f'Initial count for table {config.table_name}: {initial_count} entries')
 
         # Loop through the name & Species object for each species
@@ -148,9 +155,45 @@ class ETLManager:
                 logger.debug(f'Finished inserting {species.name} batch {i}.')
 
         # Print how many entries were added
-        total_records = config.table.query.count() - initial_count
+        total_records = query_count(config.table.query) - initial_count
         logger.info(f'Inserted {total_records} entries into table {config.table_name}')
 
+
+    def resume_load_table(self, table, species_list = None):
+        '''
+            Load & insert data for a single SQL table, resuming from the current size of the table.
+        '''
+
+        # Get config object for the table
+        config = TABLE_CONFIG[table.__tablename__]
+
+        # Initialize a count for the number of entries added
+        initial_count = query_count(config.table.query)
+        logger.info(f'Initial count for table {config.table_name}: {initial_count} entries')
+
+        # Loop through the name & Species object for each species
+        for species in Species.all().values():
+
+            # Skip any species not in the list
+            if species_list and species.name not in species_list:
+                continue
+
+            # Find number of entries in table for species
+            current_count = query_count(config.table.query.where(table.__table__.c.species_name == species))
+
+            # Load & insert table data in batches, to help reduce local memory footprint
+            logger.info(f'Inserting data for {species.name} into table {config.table_name}...')
+            for i, g in enumerate(batch_generator( config.parse_for_species(species) )):
+                if i * DEFAULT_BATCH_SIZE < current_count:
+                    continue
+                logger.debug(f'Processing {species.name} batch {i} (rows {i * DEFAULT_BATCH_SIZE}-{(i+1) * DEFAULT_BATCH_SIZE})...')
+                self.db.session.bulk_insert_mappings(config.table, g)
+                self.db.session.commit()
+                logger.debug(f'Finished inserting {species.name} batch {i}.')
+
+        # Print how many entries were added
+        total_records = query_count(config.table.query) - initial_count
+        logger.info(f'Inserted {total_records} entries into table {config.table_name}')
 
 
     #
