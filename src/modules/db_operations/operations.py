@@ -29,8 +29,14 @@ def execute_operation(app, db, db_op: DbOp, species=None, reload_files=True):
   elif db_op == DbOp.DROP_AND_POPULATE_ANNOVAR_VARIANTS:
     drop_and_populate_annovar_variants(app, db, species, reload_files=reload_files)
 
+  elif db_op == DbOp.RESUME_POPULATE_ANNOVAR_VARIANTS:
+    resume_populate_annovar_variants(app, db, species, reload_files=reload_files)
+
   elif db_op == DbOp.DROP_AND_POPULATE_CSQ_VARIANTS:
     drop_and_populate_csq_variants(app, db, species, reload_files=reload_files)
+
+  elif db_op == DbOp.RESUME_POPULATE_CSQ_VARIANTS:
+    resume_populate_csq_variants(app, db, species, reload_files=reload_files)
 
   elif db_op == DbOp.DROP_AND_POPULATE_SNPEFF_VARIANTS:
     drop_and_populate_snpeff_variants(app, db, species, reload_files=reload_files)
@@ -138,6 +144,20 @@ def drop_and_populate_annovar_variants(app, db, species, reload_files=True):
   etl_manager.load_tables(AnnovarAnnotatedVariant, species_list=species)
 
 
+def resume_populate_annovar_variants(app, db, species, reload_files=True):
+
+  # Print operation & species info
+  spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
+  logger.info(f'Resuming populating Annovar variants. Species list: [ {", ".join(spec_strings)} ]')
+
+  # Initialize ETL Manager
+  etl_manager = ETLManager(app, db, reload_files=reload_files)
+
+  # Fetch and load data using ETL Manager
+  logger.info("Loading Annovar annotated variants...")
+  etl_manager.resume_load_table(AnnovarAnnotatedVariant, species_list=species)
+
+
 def drop_and_populate_csq_variants(app, db, species, reload_files=True):
 
   # Print operation & species info
@@ -154,6 +174,20 @@ def drop_and_populate_csq_variants(app, db, species, reload_files=True):
   # Fetch and load data using ETL Manager
   logger.info("Loading CSQ annotated variants...")
   etl_manager.load_tables(CsqAnnotatedVariant, species_list=species)
+
+
+def resume_populate_csq_variants(app, db, species, reload_files=True):
+
+  # Print operation & species info
+  spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
+  logger.info(f'Resuming populating CSQ variants. Species list: [ {", ".join(spec_strings)} ]')
+
+  # Initialize ETL Manager
+  etl_manager = ETLManager(app, db, reload_files=reload_files)
+
+  # Fetch and load data using ETL Manager
+  logger.info("Loading CSQ annotated variants...")
+  etl_manager.resume_load_table(CsqAnnotatedVariant, species_list=species)
 
 
 def drop_and_populate_snpeff_variants(app, db, species, reload_files=True):

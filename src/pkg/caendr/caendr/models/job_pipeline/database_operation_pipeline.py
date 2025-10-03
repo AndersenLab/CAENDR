@@ -40,7 +40,13 @@ REQUIRED_RESOURCES: Dict[DbOp, List[ForeignResourceTemplate]] = {
   DbOp.DROP_AND_POPULATE_ANNOVAR_VARIANTS: [
     *AnnovarAnnotatedVariantConfig.all_resources,
   ],
+  DbOp.RESUME_POPULATE_ANNOVAR_VARIANTS: [
+    *AnnovarAnnotatedVariantConfig.all_resources,
+  ],
   DbOp.DROP_AND_POPULATE_CSQ_VARIANTS: [
+    *CsqAnnotatedVariantConfig.all_resources,
+  ],
+  DbOp.RESUME_POPULATE_CSQ_VARIANTS: [
     *CsqAnnotatedVariantConfig.all_resources,
   ],
   DbOp.DROP_AND_POPULATE_SNPEFF_VARIANTS: [
@@ -218,7 +224,10 @@ class DatabaseOperationPipeline(JobPipeline):
         "DROP_AND_POPULATE_ANNOVAR_VARIANTS",
         "DROP_AND_POPULATE_CSQ_VARIANTS",
         "DROP_AND_POPULATE_SNPEFF_VARIANTS",
-        "DROP_AND_POPULATE_VEP_VARIANTS"]:
+        "DROP_AND_POPULATE_VEP_VARIANTS",
+        "RESUME_POPULATE_ANNOVAR_VARIANTS",
+        "RESUME_POPULATE_CSQ_VARIANTS",
+        "RESUME_POPULATE_VEP_VARIANTS",]:
       op_specific_params = {
         'TIMEOUT':         '604800s',
         'MEMORY_LIMITS':   { 'memory': '32Gi', 'cpu': '8' },
