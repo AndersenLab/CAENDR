@@ -10,7 +10,9 @@ class DbOp(Enum):
   DROP_AND_POPULATE_WORMBASE_GENES        = 'DROP_AND_POPULATE_WORMBASE_GENES'
   DROP_AND_POPULATE_STRAIN_VARIANTS       = 'DROP_AND_POPULATE_STRAIN_VARIANTS'
   DROP_AND_POPULATE_ANNOVAR_VARIANTS      = 'DROP_AND_POPULATE_ANNOVAR_VARIANTS'
+  RESUME_POPULATE_ANNOVAR_VARIANTS        = 'RESUME_POPULATE_ANNOVAR_VARIANTS'
   DROP_AND_POPULATE_CSQ_VARIANTS          = 'DROP_AND_POPULATE_CSQ_VARIANTS'
+  RESUME_POPULATE_CSQ_VARIANTS            = 'RESUME_POPULATE_CSQ_VARIANTS'
   DROP_AND_POPULATE_SNPEFF_VARIANTS       = 'DROP_AND_POPULATE_SNPEFF_VARIANTS'
   DROP_AND_POPULATE_VEP_VARIANTS          = 'DROP_AND_POPULATE_VEP_VARIANTS'
   RESUME_POPULATE_VEP_VARIANTS            = 'RESUME_POPULATE_VEP_VARIANTS'
@@ -37,7 +39,9 @@ class DbOp(Enum):
       DbOp.DROP_AND_POPULATE_WORMBASE_GENES:        'Rebuild wormbase gene table from external sources',
       DbOp.DROP_AND_POPULATE_STRAIN_VARIANTS:       'Rebuild Strain Variant table from .csv.gz file',
       DbOp.DROP_AND_POPULATE_ANNOVAR_VARIANTS:      'Rebuild Strain Annovar Variant table from .csv.gz file',
+      DbOp.RESUME_POPULATE_ANNOVAR_VARIANTS:        'Continue populating Strain Annovar Variant table from .csv.gz file',
       DbOp.DROP_AND_POPULATE_CSQ_VARIANTS:          'Rebuild Strain CSQ Variant table from .csv.gz file',
+      DbOp.RESUME_POPULATE_CSQ_VARIANTS:            'Continue populating Strain CSQ Variant table from .csv.gz file',
       DbOp.DROP_AND_POPULATE_SNPEFF_VARIANTS:       'Rebuild Strain SnpEff Variant table from .csv.gz file',
       DbOp.DROP_AND_POPULATE_VEP_VARIANTS:          'Rebuild Strain VEP Variant table from .csv.gz file',
       DbOp.RESUME_POPULATE_VEP_VARIANTS:            'Continue populating Strain VEP Variant table from .csv.gz file',

@@ -230,6 +230,7 @@ class DatabaseOperationPipeline(JobPipeline):
         "RESUME_POPULATE_VEP_VARIANTS",]:
       op_specific_params = {
         'TIMEOUT':         '604800s',
+        'MAX_RETRIES':     0,
         'MEMORY_LIMITS':   { 'memory': '32Gi', 'cpu': '8' },
       }
     else:

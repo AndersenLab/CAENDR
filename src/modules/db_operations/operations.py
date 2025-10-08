@@ -98,7 +98,7 @@ def drop_and_populate_wormbase_genes(app, db, species, reload_files=True):
 
   # Drop relevant tables
   logger.info(f"Dropping tables...")
-  etl_manager.drop_tables( AnnovarAnnotatedVariant, StrainAnnotatedVariant, Homolog, species_list=species )
+  etl_manager.drop_tables( AnnovarAnnotatedVariant, CsqAnnotatedVariant, SnpEffAnnotatedVariant, VepAnnotatedVariant, species_list=species )
   etl_manager.clear_tables( WormbaseGeneSummary, WormbaseGene, species_list=species )
 
   # Fetch and load data using ETL Manager

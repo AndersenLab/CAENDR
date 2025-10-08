@@ -11,9 +11,6 @@ from caendr.utils.constants  import DEFAULT_BATCH_SIZE
 from caendr.utils.data       import batch_generator
 
 from sqlalchemy import func, literal_column
-from psycopg2 import OperationalError
-
-batch_retries = 3
 
 # Gather table configurations into a single dict
 TABLE_CONFIG = {
@@ -140,18 +137,9 @@ class ETLManager:
             # Load & insert table data in batches, to help reduce local memory footprint
             logger.info(f'Inserting data for {species.name} into table {config.table_name}...')
             for i, g in enumerate(batch_generator( config.parse_for_species(species) )):
-                retries = 0
                 logger.debug(f'Processing {species.name} batch {i} (rows {i * DEFAULT_BATCH_SIZE}-{(i+1) * DEFAULT_BATCH_SIZE})...')
-                while retries < batch_retries:
-                    try:
-                        self.db.session.bulk_insert_mappings(config.table, g)
-                        self.db.session.commit()
-                        break
-                    except OperationalError:
-                        retries += 1
-                        logger.debug(f"Encountered an operational error, starting retry {retries}.")
-                if retries == batch_retries:
-                    raise OperationalError("The database unexpectedly closed the connection, {batch_retries} retries failed to resolve the issue.")
+                self.db.session.bulk_insert_mappings(config.table, g)
+                self.db.session.commit()
                 logger.debug(f'Finished inserting {species.name} batch {i}.')
 
         # Print how many entries were added
@@ -179,12 +167,16 @@ class ETLManager:
                 continue
 
             # Find number of entries in table for species
-            current_count = query_count(config.table.query.where(table.__table__.c.species_name == species))
+            current_count = self.db.session.query(func.count(table.__table__.c.id)).filter(table.__table__.c.species_name == species.name).scalar()
+            logger.info(f"There are {current_count} entries in {config.table_name} for {species.name}")
 
             # Load & insert table data in batches, to help reduce local memory footprint
             logger.info(f'Inserting data for {species.name} into table {config.table_name}...')
             for i, g in enumerate(batch_generator( config.parse_for_species(species) )):
                 if i * DEFAULT_BATCH_SIZE < current_count:
+                    logger.debug(f'Skipping {species.name} batch {i} (rows {i * DEFAULT_BATCH_SIZE}-{(i+1) * DEFAULT_BATCH_SIZE})...')
+                    for j in g:
+                        continue
                     continue
                 logger.debug(f'Processing {species.name} batch {i} (rows {i * DEFAULT_BATCH_SIZE}-{(i+1) * DEFAULT_BATCH_SIZE})...')
                 self.db.session.bulk_insert_mappings(config.table, g)
