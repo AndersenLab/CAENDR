@@ -120,7 +120,7 @@ def parse_annovar_variant_annotation_data(species: Species, **files: LocalDatast
         # Create dict from header column names to row indices
         if idx == 0:
           logger.info(f'Column names in file "{file_name}" are: {", ".join(row)}')
-          column_header_map = { name: idx for idx, name in enumerate(row) }
+          column_header_map = { name.lower(): idx for idx, name in enumerate(row) }
           continue
 
         # If testing, finish early
@@ -144,7 +144,7 @@ def parse_annovar_variant_annotation_data(species: Species, **files: LocalDatast
           target_consequence = int(consequence[1:])
           consequence = None
 
-        divergent = row.get('divergent')
+        divergent = row.get('hdr')
         if divergent is not None:
           divergent = divergent == 'YES'
           
@@ -162,17 +162,17 @@ def parse_annovar_variant_annotation_data(species: Species, **files: LocalDatast
           'consequence':        consequence,
           'target_consequence': target_consequence,
           'gene_id':            get_row(row, 'wbgene', nullable=True),
-          'transcript':         row.get('transcript_name'),
+          'transcript':         row.get('transcript'),
 
-          'amino_acid_change':  row.get('AA')[2:],
+          'amino_acid_change':  row.get('aa')[2:],
           'strains':            row.get('strain'),
-          'blosum':             get_row(row, 'blosum_score',    nullable=True, map=int),
-          'grantham':           get_row(row, 'grantham_score',  nullable=True, map=int),
+          'blosum':             get_row(row, 'blosum', nullable=True, map=int),
+          'grantham':           get_row(row, 'grantham', nullable=True, map=int),
           'percent_protein':    get_row(row, 'percent_protein', nullable=True, map=float),
           'gene':               row.get('gene_name'),
           'divergent':          divergent,
           'variant_impact':     row.get('impact'),
-          'divergent':          row.get('divergent') == "YES",
+          'divergent':          divergent,
           'release':            species.release_sva,
         }
 
@@ -194,7 +194,7 @@ def parse_csq_variant_annotation_data(species: Species, **files: LocalDatastoreF
         # Create dict from header column names to row indices
         if idx == 0:
           logger.info(f'Column names in file "{file_name}" are: {", ".join(row)}')
-          column_header_map = { name: idx for idx, name in enumerate(row) }
+          column_header_map = { name.lower(): idx for idx, name in enumerate(row) }
           continue
 
         # If testing, finish early
@@ -218,7 +218,7 @@ def parse_csq_variant_annotation_data(species: Species, **files: LocalDatastoreF
           target_consequence = int(consequence[1:])
           consequence = None
 
-        divergent = row.get('divergent')
+        divergent = row.get('hdr')
         if divergent is not None:
           divergent = divergent == 'YES'
 
@@ -236,13 +236,13 @@ def parse_csq_variant_annotation_data(species: Species, **files: LocalDatastoreF
           'consequence':        consequence,
           'target_consequence': target_consequence,
           'gene_id':            get_row(row, 'wbgene', nullable=True),
-          'transcript':         row.get('transcript_name'),
+          'transcript':         row.get('transcript'),
 
-          'amino_acid_change':  row.get('AA'),
-          'dna_change':         row.get('DNAchange'),
+          'amino_acid_change':  row.get('aa'),
+          'dna_change':         row.get('dnachange'),
           'strains':            row.get('strain'),
-          'blosum':             get_row(row, 'blosum_score',    nullable=True, map=int),
-          'grantham':           get_row(row, 'grantham_score',  nullable=True, map=int),
+          'blosum':             get_row(row, 'blosum', nullable=True, map=int),
+          'grantham':           get_row(row, 'grantham', nullable=True, map=int),
           'percent_protein':    get_row(row, 'percent_protein', nullable=True, map=float),
           'gene':               row.get('gene_name'),
           'divergent':          divergent,
@@ -267,7 +267,7 @@ def parse_vep_variant_annotation_data(species: Species, **files: LocalDatastoreF
         # Create dict from header column names to row indices
         if idx == 0:
           logger.info(f'Column names in file "{file_name}" are: {", ".join(row)}')
-          column_header_map = { name: idx for idx, name in enumerate(row) }
+          column_header_map = { name.lower(): idx for idx, name in enumerate(row) }
           continue
 
         # If testing, finish early
@@ -291,7 +291,7 @@ def parse_vep_variant_annotation_data(species: Species, **files: LocalDatastoreF
           target_consequence = int(consequence[1:])
           consequence = None
 
-        divergent = row.get('divergent')
+        divergent = row.get('hdr')
         if divergent is not None:
           divergent = divergent == 'YES'
 
@@ -309,17 +309,17 @@ def parse_vep_variant_annotation_data(species: Species, **files: LocalDatastoreF
           'consequence':        consequence,
           'target_consequence': target_consequence,
           'gene_id':            get_row(row, 'wbgene', nullable=True),
-          'transcript':         row.get('transcript_name'),
+          'transcript':         row.get('transcript'),
 
-          'amino_acid_change':  row.get('AA'),
+          'amino_acid_change':  row.get('aa'),
           'strains':            row.get('strain'),
-          'blosum':             get_row(row, 'blosum_score',    nullable=True, map=int),
-          'grantham':           get_row(row, 'grantham_score',  nullable=True, map=int),
+          'blosum':             get_row(row, 'blosum', nullable=True, map=int),
+          'grantham':           get_row(row, 'grantham', nullable=True, map=int),
           'percent_protein':    get_row(row, 'percent_protein', nullable=True, map=float),
           'gene':               row.get('gene_name'),
           'divergent':          divergent,
           'variant_impact':     row.get('impact'),
-          'divergent':          row.get('divergent') == 'YES',
+          'divergent':          divergent,
           'release':            species.release_sva,
         }
 
@@ -341,7 +341,7 @@ def parse_snpeff_variant_annotation_data(species: Species, **files: LocalDatasto
         # Create dict from header column names to row indices
         if idx == 0:
           logger.info(f'Column names in file "{file_name}" are: {", ".join(row)}')
-          column_header_map = { name: idx for idx, name in enumerate(row) }
+          column_header_map = { name.lower(): idx for idx, name in enumerate(row) }
           continue
 
         # If testing, finish early
@@ -379,11 +379,11 @@ def parse_snpeff_variant_annotation_data(species: Species, **files: LocalDatasto
           'consequence':        consequence,
           'target_consequence': target_consequence,
           'gene_id':            get_row(row, 'wbgene', nullable=True),
-          'transcript':         row.get('transcript_name'),
+          'transcript':         row.get('transcript'),
 
-          'amino_acid_change':  row.get('AA'),
+          'amino_acid_change':  row.get('aa'),
           'strains':            row.get('strain'),
-          'grantham':           get_row(row, 'grantham_score',  nullable=True, map=int),
+          'grantham':           get_row(row, 'grantham',  nullable=True, map=int),
           'percent_protein':    get_row(row, 'percent_protein', nullable=True, map=float),
           'gene':               row.get('gene_name'),
           'locus':               row.get('locus'),

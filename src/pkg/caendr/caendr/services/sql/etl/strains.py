@@ -54,7 +54,7 @@ def fetch_andersen_strains(species: Species, STRAINS: LocalGoogleSheet):
       if k in ['sampling_date'] and v:
         record[k] = parser.parse(v)
 
-    if record['latitude'] and record['longitude']:
+    if record['latitude'] and record['longitude'] and ('elevation' not in record or not record['elevation']):
       # Round elevation
       elevation = fetch_elevation(record['latitude'], record['longitude'])
       if elevation:
@@ -64,6 +64,9 @@ def fetch_andersen_strains(species: Species, STRAINS: LocalGoogleSheet):
 
     # Set issue bools
     record["issues"] = record["issues"] == "TRUE"
+
+    # Set distribute bools
+    record["distribute"] = record["distribute"] == "TRUE"
 
     # Set isotype_ref_strain = FALSE if no isotype is assigned.
     if record['isotype'] in GOOGLE_SHEET_NULL_VALUES:

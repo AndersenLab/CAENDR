@@ -1,8 +1,10 @@
 import io
 import os
+import uuid
 import datetime
 from enum import Enum
 import requests
+import xml.etree.ElementTree as ET
 from typing import Optional, List
 from werkzeug.utils import secure_filename
 
@@ -21,11 +23,22 @@ from caendr.utils.env import get_env_var
 
 AWS_OPEN_DATA_BUCKET = get_env_var('AWS_OPEN_DATA_BUCKET')
 AWS_REGION = get_env_var('AWS_REGION')
-AWS_ACCESS_KEY_ID = get_secret('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = get_secret('AWS_SECRET_ACCESS_KEY')
+# AWS_ACCESS_KEY_ID = get_secret('AWS_ACCESS_KEY_ID')
+# AWS_SECRET_ACCESS_KEY = get_secret('AWS_SECRET_ACCESS_KEY')
+# AWS_ACCOUNT_ID = get_secret('AWS_ACCOUNT_ID')
 
-storageClient = client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
-
+# session_name = str(uuid.uuid4())
+# role_arn = f"arn:aws:iam::{AWS_ACCOUNT_ID}:role/caendr-openaccess-data-bucket-s3-full-access"
+# sts_client = client('sts', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+# assumed_role_object = sts_client.assume_role(RoleArn=role_arn, RoleSessionName=session_name)
+# credentials = assumed_role_object['Credentials']
+# storageClient = client(
+#   's3',
+#   aws_access_key_id=credentials['AccessKeyId'],
+#   aws_secret_access_key=credentials['SecretAccessKey'],
+#   aws_session_token=credentials['SessionToken']
+# )
+# storageClient = client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
 buffersize = 2 ** 20
 
 #
@@ -33,7 +46,7 @@ buffersize = 2 ** 20
 #
 
 class AWSBlob():
-  __buffersize = 10000000
+  __buffersize = buffersize
   
   def __init__(self, name = None, bucket = None, path = None):
     self.name = name
@@ -44,12 +57,25 @@ class AWSBlob():
     return self.name is not None
   
   def download_to_file(self, target_file):
-    response = storageClient.get_object(Bucket=self.bucket, Key=join_path(self.path))
-    buffer = response['body'].read(self.__buffersize)
-    while buffer:
-      target_file.write(buffer)
-      buffer = response['body'].read(self.__buffersize)
+    # response = storageClient.get_object(Bucket=self.bucket, Key=join_path(self.path))
+    # buffer = response['body'].read(self.__buffersize)
+    # while buffer:
+    #   target_file.write(buffer)
+    #   buffer = response['body'].read(self.__buffersize)
+    source_filename = "https://" + self.bucket + ".s3." + AWS_REGION + ".amazonaws.com/" + join_path(*path)
+    try:
+      with requests.get(source_filename, stream=True) as r:
+        r.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)
 
+        # Open the local file in binary write mode.
+        with open(target_file, 'wb') as f:
+          
+          # Iterate over the response content in chunks and write to the file.
+          for chunk in r.iter_content(chunk_size=buffersize):  # Adjust chunk_size as needed
+            f.write(chunk)
+
+    except requests.exceptions.RequestException as e:
+      print(f"Error downloading file: {e}")
 
 
 def join_path(*path: str, sep: str = '/'):
@@ -64,31 +90,51 @@ def join_path(*path: str, sep: str = '/'):
 
 def aws_get_blob(bucket_name: str, *path: str) -> dict:
   logger.debug(f'get_blob(bucket_name={bucket_name}, path={join_path(*path)})')
-  try:
-    blob = storageClient.head_object(Bucket=bucket_name, Key=join_path(*path))
-    blob = AWSBlob(name=blob, bucket=bucket_name, path=path)
-  except exceptions.ClientError:
-    blob = AWSBlob()
-  return blob
+  return AWSBlob(name=join_path(*path), bucket=bucket_name, path=path)
+  # try:
+  #   blob = storageClient.head_object(Bucket=bucket_name, Key=join_path(*path))
+  #   blob = AWSBlob(name=blob, bucket=bucket_name, path=path)
+  # except exceptions.ClientError:
+  #   blob = AWSBlob()
+  # return blob
 
 
 def aws_check_blob_exists(bucket_name: str, *path: str) -> bool:
   logger.debug(f'aws_check_blob_exists(bucket_name={bucket_name}, path={join_path(*path)})')
-  try:
-    blob = storageClient.head_object(Bucket=bucket_name, Key=join_path(*path))
-    return True
-  except exceptions.ClientError:
+  # try:
+    # blob = storageClient.head_object(Bucket=bucket_name, Key=join_path(*path))
+  #   return True
+  # except exceptions.ClientError:
+  #   return False
+  str_path = join_path(*path)
+  request = requests.get(f'https://{bucket_name}.s3.{AWS_REGION}.amazonaws.com/?prefix={str_path}&?list-type=2')
+  if request.status_code != 200:
+    logger.error(f"Request for contents of {bucket_name}/{str_path} returned status code {request.status_code}")
     return False
+  tree = ET.fromstring(request.content)
+  present = False
+  for i in range(len(tree)):
+    if str(tree[i]).split(' ')[1].endswith("Contents'"):
+      for j in range(len(tree[i])):
+        if str(tree[i][j]).split(' ')[1].endswith("Key'"):
+          if tree[i][j].text == str_path:
+            present = True
+          break
+  return present
   
 
 def aws_get_blob_if_exists(bucket_name: str, *path: str, fallback=None) -> Optional[dict]:
   '''
     Get the given blob if it exists, otherwise return the fallback value.
   '''
-  try:
-    blob = storageClient.head_object(Bucket=bucket_name, Key=join_path(*path))
-    return AWSBlob(name=blob, bucket=bucket_name, path=path)
-  except exceptions.ClientError:
+  # try:
+  #   blob = storageClient.head_object(Bucket=bucket_name, Key=join_path(*path))
+  #   return AWSBlob(name=blob, bucket=bucket_name, path=path)
+  # except exceptions.ClientError:
+  #   return fallback
+  if aws_check_blob_exists(bucket_name, *path):
+    return AWSBlob(name=join_path(*path), bucket=bucket_name, path=path)
+  else:
     return fallback
 
 
@@ -99,8 +145,30 @@ def aws_get_blob_list(bucket_name: str, *prefix: str, filter=None) -> List[dict]
   '''
 
   # Get all the blobs in the given bucket
-  items = storageClient.list_objects(Bucket=bucket_name, Prefix=join_path(*prefix))['Contents']
-  items = [AWSBlob(name=item['Key'], bucket=bucket_name, path=prefix + (item['Key'],)) for item in items]
+  str_prefix = join_path(*prefix)
+  items = []
+  finished = False
+  last_item = ""
+  while not finished:
+    request = requests.get(f'https://{bucket_name}.s3.{AWS_REGION}.amazonaws.com/?prefix={str_prefix}{last_item}&?list-type=2')
+    if request.status_code != 200:
+      logger.error(f"Request for contents of {bucket_name}/{str_prefix} returned status code {request.status_code}")
+      return None
+    tree = ET.fromstring(request.content)
+    for i in range(len(tree)):
+      key = str(tree[i]).split(' ')[1]
+      if key.endswith("IsTruncated'"):
+        finished = bool(tree[i].text)
+      if key.endswith("Contents'"):
+        for j in range(len(tree[i])):
+          if str(tree[i][j]).split(' ')[1].endswith("Key'"):
+            items.append(tree[i][j].text)
+    last_item = f"&?start-after={items[-1]}"
+  items = [item.split('/') for item in items]
+  items = [AWSBlob(name=join_path(*item), bucket=bucket_name, path=item) for item in items]
+
+  # items = storageClient.list_objects(Bucket=bucket_name, Prefix=join_path(*prefix))['Contents']
+  # items = [AWSBlob(name=item['Key'], bucket=bucket_name, path=prefix + (item['Key'],)) for item in items]
 
   # Apply the filter, if one was given
   if filter is not None:
@@ -163,7 +231,7 @@ def aws_generate_blob_uri(bucket: str, *path: str, schema: AWSBlobURISchema = AW
       schema = AWSBlobURISchema.PATH
 
     # Join all the non-empty entries in the provided path
-    path = '/'.join([ p for p in path if p ])
+    path = join_path(*path)
 
     # Raw path - return bucket and joined path
     if schema == AWSBlobURISchema.PATH:

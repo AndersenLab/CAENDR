@@ -10,9 +10,14 @@
 <table class="table table-hover table-condensed strain-table">
     <thead>
         <tr>
-            <th style="width: 200px;">
+            <th style="width: 100px;">
                 <span class="tooltip-item" data-toggle="tooltip" data-placement="bottom" title="Name of strain we distribute as a representative of an isotype.">
                             Strain
+                            </span>
+            </th>
+            <th style="width: 100px;">
+                <span class="tooltip-item">
+                            Release
                             </span>
             </th>
             <th style="width: 80%;">
@@ -31,6 +36,9 @@
                     {% else %}
                         {{ strain }}
                     {% endif %}
+                </td>
+                <td>
+                    <text>{{ strain.release }}</text>
                 </td>
                 <td>
                     {% if strain.issue_notes %}

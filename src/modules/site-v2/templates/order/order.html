@@ -292,7 +292,7 @@ $(document).ready(function() {
 
 function formFilled() {
     let filled = true;
-    $('#name, #email, #phone, #address, #city, #zipcode, #shipping_account').each(function() {
+    $('#name, #email, #phone, #address, #city, #zipcode').each(function() {
         if ($(this).val() == '' || !$('#eula').is(':checked')) {
             filled = false
         } else if ($(this).val() != '' && $('#shipping_service').val() != 'Flat Rate Shipping') {

@@ -350,9 +350,9 @@ function update_selected_strains() {
 
 /* CSV Download */
 
-async function downloadCSV(json_data) {
+async function downloadCSV(json_data, tool_id) {
   const csrfToken = "{{ form.csrf_token._value() }}";
-  const url = "{{ url_for('variant_annotation.download_csv') }}"
+  const url = "{{ url_for('variant_annotation.download_csv') }}" + tool_id
   const res = await fetch(url, {
     method: "POST",
     credentials: "include",
@@ -370,7 +370,7 @@ async function downloadCSV(json_data) {
     const link = document.createElement("a");
     link.href = window.URL.createObjectURL(blob);
     const interval = $('#interval').val()
-    link.download = `${ species['name'] }_${interval}_sva.csv`;
+    link.download = `${ species['name'] }_${tool_id}_${interval}_sva.csv`;
     link.click();
   } else {
     const err = await res.json()
@@ -382,7 +382,9 @@ async function downloadCSV(json_data) {
 
 function onDownload() {
   const jsonData = JSON.stringify({ ...result_data });
-  downloadCSV(jsonData);
+  const tool_id = $('#annotationSelect').val();
+  console.log(tool_id);
+  downloadCSV(jsonData, tool_id);
 }
 
 

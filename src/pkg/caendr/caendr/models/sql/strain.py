@@ -35,6 +35,7 @@ class Strain(DictSerializable, db.Model):
   issues = db.Column(db.Boolean(), nullable=True)
   issue_notes = db.Column(db.String(), nullable=True)
   elevation = db.Column(db.Float(), nullable=True)
+  distribute = db.Column(db.Boolean(), nullable=False)
   
   __tablename__ = "strain"
 
@@ -105,6 +106,7 @@ class Strain(DictSerializable, db.Model):
       'issue_notes',
       'isotype_ref_strain',
       'sequenced',               # "wgs_seq" in source data sheet
+      'distribute',
     ]
 
     # Get the list of columns, associated with their index in the ordered list

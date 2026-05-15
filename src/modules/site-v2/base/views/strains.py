@@ -151,7 +151,7 @@ def strains_data_csv(species_name, release_name, file_ext):
 def request_strains():
 
     try:
-      strain_listing = get_strains()
+      strain_listing = get_strains(distributed_only=True)
     except Exception:
       strain_listing = []
     try:
@@ -308,6 +308,8 @@ def order_page_index():
   if user and hasattr(user, 'email') and not form.email.data:
     form.email.data = user.email
 
+  logger.debug(get_blob(MODULE_SITE_BUCKET_PRIVATE_NAME, EULA_FILE_NAME).public_url)
+
   if not user and not cart_id:
     return render_template('order/order.html', **{
       'tool_alt_parent_breadcrumb': {"title": "Strain Catalog", "url": url_for('request_strains.request_strains')},
@@ -328,7 +330,7 @@ def order_page_index():
     species = item.get('species')
     item['species_short_name'] = Species.from_name(species).short_name
   totalPrice = sum(item['price'] for item in cart_items)
-
+  
   return render_template('order/order.html', **{
     'tool_alt_parent_breadcrumb': {"title": "Strain Catalog", "url": url_for('request_strains.request_strains')},
     'title': "Order Summary",

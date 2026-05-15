@@ -107,7 +107,7 @@ def query_strains(
 
 
 @rollback_on_error
-def get_strains(known_origin=False, issues=False):
+def get_strains(known_origin=False, issues=False, distributed_only=False):
   """
     Returns a list of strains;
 
@@ -126,6 +126,9 @@ def get_strains(known_origin=False, issues=False):
   if issues is False:
     result = result.filter(Strain.isotype != None)
     result = result.filter(Strain.issues == False)
+
+  if distributed_only is True:
+    result = result.filter(Strain.distribute == True)
 
   result = result.all()
   for strain in result:

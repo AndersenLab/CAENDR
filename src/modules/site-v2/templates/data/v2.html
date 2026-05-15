@@ -107,7 +107,7 @@
                                             <td></td>
                                             <td>
                                                 This <a href="{{ url_for('data_releases.strain_issues', species_name = species.get_slug(), release_version = release_version) }}">link</a>
-                                                contains all strain issues for this release
+                                                contains all strain issues up to this release
                                             </td>
                                         </tr>
                                         <tr>
@@ -254,8 +254,12 @@
                                                         'annovar_isotype_vcf_gz_tbi',
                                                         wi_prefix + '.annovar.isotype.vcf.gz.tbi'
                                                     ) }}
+                                                    {{ render_download_link(
+                                                        'annovar_isotype_csv_gz',
+                                                        wi_prefix + '.annovar.strain-annotation.csv.gz'
+                                                    ) }}
                                                 {% endif %}
-                                                {% if not files.get('annovar_isotype_vcf_gz') %}
+                                                {% if not files.get('annovar_isotype_vcf_gz') and not files.get('annovar_isotype_csv_gz') %}
                                                     This annotation is not available in this release.
                                                 {% endif %}
                                                         
@@ -270,8 +274,12 @@
                                                         'csq_isotype_vcf_gz_tbi',
                                                         wi_prefix + '.csq.isotype.vcf.gz.tbi'
                                                     ) }}
+                                                    {{ render_download_link(
+                                                        'csq_isotype_csv_gz',
+                                                        wi_prefix + '.csq.strain-annotation.csv.gz'
+                                                    ) }}
                                                 {% endif %}
-                                                {% if not files.get('csq_isotype_vcf_gz') %}
+                                                {% if not files.get('csq_isotype_vcf_gz') and not files.get('csq_isotype_csv_gz') %}
                                                     This annotation is not available in this release.
                                                 {% endif %}
                                                       
@@ -286,8 +294,12 @@
                                                         'snpeff_isotype_vcf_gz_tbi',
                                                         wi_prefix + '.snpeff.isotype.vcf.gz.tbi'
                                                     ) }}
+                                                    {{ render_download_link(
+                                                        'snpeff_isotype_csv_gz',
+                                                        wi_prefix + '.snpeff.strain-annotation.csv.gz'
+                                                    ) }}
                                                 {% endif %}
-                                                {% if not files.get('snpeff_isotype_vcf_gz') %}
+                                                {% if not files.get('snpeff_isotype_vcf_gz') and not files.get('snpeff_isotype_csv_gz') %}
                                                     This annotation is not available in this release.
                                                 {% endif %}
                                                       
@@ -302,8 +314,12 @@
                                                         'vep_isotype_vcf_gz_tbi',
                                                         wi_prefix + '.vep.isotype.vcf.gz.tbi'
                                                     ) }}
+                                                    {{ render_download_link(
+                                                        'vep_isotype_csv_gz',
+                                                        wi_prefix + '.vep.strain-annotation.csv.gz'
+                                                    ) }}
                                                 {% endif %}
-                                                {% if not files.get('vep_isotype_vcf_gz') %}
+                                                {% if not files.get('vep_isotype_vcf_gz') and not files.get('vep_isotype_csv_gz') %}
                                                     This annotation is not available in this release.
                                                 {% endif %}
                                                       

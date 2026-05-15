@@ -157,7 +157,7 @@ def query_position(tool_name, species_name=None):
 
 @variant_annotation_bp.route('/download/csv/',                   methods=['POST'])
 @variant_annotation_bp.route('/download/csv/<string:tool_name>', methods=['POST'])
-def download_csv(tool_name):
+def download_csv(tool_name=None):
   if tool_name is not None and tool_name in annotation_tools:
     annotationtool = annotation_tools[tool_name]
   else:

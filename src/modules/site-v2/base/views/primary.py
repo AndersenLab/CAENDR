@@ -85,3 +85,13 @@ def help_item(filename=""):
   title = "FAQ"
   return render_template('faq/faq.html', **locals())
 
+
+@primary_bp.route("/privacy")
+@cache.memoize(60*60)
+def privacy():
+  ''' Privacy Policy '''
+  files = ["privacy_policy"]
+  filename = "privacy_policy"
+  title = "Privacy Policy"
+  return render_template('privacy/privacy.html', **locals())
+
