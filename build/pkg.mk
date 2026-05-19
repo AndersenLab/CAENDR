@@ -22,7 +22,7 @@ venv: #~
 #~ Creates a virtual python environment and installs packages from 'requirements.txt'
 venv:
 	@echo -e "\n$(COLOR_B)Installing python virtualenv and requirements.txt...$(COLOR_N)"
-	virtualenv --python=python3 $(PKG_DIR)/venv; \
+	virtualenv --python=python3.13 $(PKG_DIR)/venv; \
 	$(PKG_DIR)/venv/bin/python -m pip install --upgrade pip; \
 	$(PKG_DIR)/venv/bin/python -m pip install -r $(PKG_DIR)/requirements.txt
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
