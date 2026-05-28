@@ -79,6 +79,26 @@ def strains_list():
           'strain_listing': get_strains()}
   return render_template('strain/list.html', **VARS)
 
+@strains_bp.route('/isotype_list/download')
+@cache.memoize(60*60)
+def get_strains_list():
+  """ Dump strain list of all wild isolates within the SQL database and a table of all strains """
+  strains = get_strains()
+
+  # Get list of strains for this species as set of rows for pandas
+  columns = ['species_name', 'strain', 'isotype', 'previous_names']
+  data = ( [ getattr(row, column) for column in columns ] for row in strains )
+
+  # Convert to a CSV/TSV file
+  output = convert_data_to_download_file(data, columns, file_ext="tsv")
+
+  # Stream the response as a file with the correct filename
+  file_format = get_file_format('tsv', valid_formats=['tsv'])
+  resp = Response(output, mimetype=file_format['mimetype'])
+  resp.headers['Content-Disposition'] = f'filename=isotype_strain_data.tsv'
+  return resp
+
+
 @strains_bp.route('/issues')
 @cache.memoize(60*60)
 def strains_issues():
