@@ -57,19 +57,6 @@ class MultiCheckboxField(SelectMultipleField):
   widget = widgets.ListWidget(prefix_label=False)
   option_widget = widgets.CheckboxInput() 
 
-class EmptyForm(FlaskForm):
-  pass
-
-class FileUploadForm(FlaskForm):
-  pass
-
-class HeritabilityForm(Form):
-  pass
-
-class VBrowserForm(FlaskForm):
-  pass
-
-
 class BasicLoginForm(FlaskForm):
   """ The simple username/password login form """
   username = StringField('Username', [Required(), Length(min=5, max=30)])
@@ -190,11 +177,6 @@ class FlexIntegerField(IntegerField):
     if val:
       val[0] = val[0].replace(",", "").replace(".", "")
     return super(FlexIntegerField, self).process_formdata(val)
-
-
-class StrainSelectField(SelectField):
-  def pre_validate(self, form):
-    pass
 
 
 class PairwiseIndelForm(Form):
