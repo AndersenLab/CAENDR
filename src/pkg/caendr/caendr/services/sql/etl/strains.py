@@ -57,8 +57,8 @@ def fetch_andersen_strains(species: Species, STRAINS: LocalGoogleSheet):
       elevation = fetch_elevation(record['latitude'], record['longitude'])
       if elevation:
         record['elevation'] = round(elevation)
-    if n % 50 == 0:
-      logger.debug(f"Loaded {n} strains")
+    # if n % 50 == 0:
+    #   logger.debug(f"Loaded {n} strains")
 
     # Set issue bools
     record["issues"] = record["issues"] == "TRUE"
@@ -71,6 +71,9 @@ def fetch_andersen_strains(species: Species, STRAINS: LocalGoogleSheet):
       record['isotype_ref_strain'] = False
       record['wgs_seq'] = False
 
+    # Set wgs_seq bools
+    record['wgs_seq'] = record['wgs_seq'] == "TRUE"
+
     # Skip strains that lack an isotype
     if record['isotype'] in GOOGLE_SHEET_NULL_VALUES and record['issues'] is False:
       continue
@@ -81,6 +84,7 @@ def fetch_andersen_strains(species: Species, STRAINS: LocalGoogleSheet):
 
     # set (python built-in) --> strain_set
     record['strain_set'] = record['set']
+    del record['set']
 
     # Remove space after comma delimiter
     if record['previous_names']:

@@ -1,3 +1,4 @@
+from multiprocessing.dummy import connection
 import os
 import shutil
 import csv
@@ -14,6 +15,7 @@ from caendr.utils.data       import batch_generator
 from caendr.services.cloud.postgresql import db
 
 from sqlalchemy import func, literal_column, select
+from sqlalchemy.sql import text
 
 # Gather table configurations into a single dict
 TABLE_CONFIG = {
@@ -169,12 +171,14 @@ class ETLManager:
         if species_list is None and config.replace_table:
             try:
                 logger.info(f'Loading {config.table_name} with COPY command (full table replacement)...')
-                data_generator = config.parse_for_all_species(species=None)  # Get a generator for all species at once, since we'll be replacing the whole table
+                data_generator = config.parse_for_all_species()  # Get a generator for all species at once, since we'll be replacing the whole table
                 fieldnames = [ column.name for column in table.__table__.columns ]
-                self.load_with_copy_from_generator(config.table_name, data_generator, fieldnames)
+                total_inserted = self.load_with_copy_from_generator(config.table_name, data_generator, fieldnames)
+                logger.info(f"Inserted {total_inserted} {config.table_name} records with batch inserts for species [{', '.join(species_list) if species_list else 'all species'}]")
+                return
             except Exception as e:
                 logger.error(f'COPY load failed for {config.table_name}, falling back to batch inserts: {e}', exc_info=True)
-                self.resume_load_table(table, species_list)
+                pass
 
         # If we can't use COPY (ie: we're only loading a subset of species, or the table is meant to be additive rather than replacing), use batch inserts
         data_generator = config.parse_for_all_species(species_list)
@@ -200,8 +204,8 @@ class ETLManager:
             defer_fks: Whether to defer FK constraints (default True)
             disable_indexes: Whether to disable indexes during insert (default False)
         '''
-        if defer_fks:
-            self.db.session.execute('SET CONSTRAINTS ALL DEFERRED')
+        # if defer_fks:
+        #     self.db.session.execute(text('SET CONSTRAINTS ALL DEFERRED'))
         
         batch = []
         total_inserted = 0
@@ -227,23 +231,25 @@ class ETLManager:
 
     def disable_indexes(self, table_name):
         '''Disable indexes on a table for faster bulk inserts.'''
-        try:
-            self.db.session.execute(f'ALTER TABLE {table_name} DISABLE TRIGGER ALL')
-            self.db.session.commit()
-            logger.info(f'Disabled indexes/triggers on {table_name}')
-        except Exception as e:
-            logger.warning(f'Could not disable indexes on {table_name}: {e}')
-
+        with self.db.engine.raw_connection() as connection:
+            cursor = connection.cursor()
+            try:
+                cursor.execute(f'ALTER TABLE {table_name} DISABLE TRIGGER ALL')
+                logger.info(f'Disabled indexes/triggers on {table_name}')
+            except Exception as e:
+                logger.warning(f'Could not disable indexes on {table_name}: {e}')
+        connection.close()
 
     def enable_indexes(self, table_name):
         '''Re-enable indexes on a table after bulk inserts.'''
-        try:
-            self.db.session.execute(f'ALTER TABLE {table_name} ENABLE TRIGGER ALL')
-            self.db.session.commit()
-            logger.info(f'Re-enabled indexes/triggers on {table_name}')
-        except Exception as e:
-            logger.warning(f'Could not re-enable indexes on {table_name}: {e}')
-
+        with self.db.engine.raw_connection() as connection:
+            cursor = connection.cursor()
+            try:
+                cursor.execute(f'ALTER TABLE {table_name} ENABLE TRIGGER ALL')
+                logger.info(f'Re-enabled indexes/triggers on {table_name}')
+            except Exception as e:
+                logger.warning(f'Could not re-enable indexes on {table_name}: {e}')
+        connection.close()
 
     def load_with_copy(self, table_name, csv_file_path, columns=None, disable_indexes_flag=True):
         '''
@@ -267,16 +273,18 @@ class ETLManager:
         
             with open(csv_file_path, 'r') as f:
                 copy_sql = f'COPY {table_name} {col_spec} FROM STDIN WITH (FORMAT csv, HEADER true, NULL \'\', ESCAPE E\'\\\')'
-                conn = self.db.engine.raw_connection()
-                cursor = conn.cursor()
-                try:
-                    cursor.copy_expert(copy_sql, f)
-                    conn.commit()
-                    rows_loaded = cursor.rowcount
-                    logger.info(f'COPY loaded {rows_loaded} rows into {table_name}')
-                finally:
-                    cursor.close()
-                    conn.close()
+                with self.db.engine.raw_connection() as connection:
+                    cursor = connection.cursor()
+                    try:
+                        cursor.execute(copy_sql, f)
+                        conn.commit()
+                        rows_loaded = cursor.rowcount
+                        logger.info(f'COPY loaded {rows_loaded} rows into {table_name}')
+                    except Exception as e:
+                        logger.error(f'COPY command failed for {table_name}: {e}', exc_info=True)
+                        connection.close()
+                        raise
+                connection.close()
         
             if disable_indexes_flag:
                 self.enable_indexes(table_name)
@@ -316,13 +324,16 @@ class ETLManager:
             logger.info(f'Loading from CSV into {table_name} using COPY')
             rows_loaded = self.load_with_copy(table_name, csv_file_path, fieldnames, disable_indexes_flag)
             
-            return rows_loaded
-    
-        finally:
-            # Clean up temporary CSV file
             if csv_file_path and os.path.exists(csv_file_path):
                 os.remove(csv_file_path)
                 logger.debug(f'Cleaned up temporary CSV file')
+            return rows_loaded
+    
+        except Exception as e:
+            if csv_file_path and os.path.exists(csv_file_path):
+                os.remove(csv_file_path)
+                logger.debug(f'Cleaned up temporary CSV file')
+            raise
 
 
     def rebuild_indexes(self, table_name):
@@ -389,10 +400,8 @@ class ETLManager:
                 tables (optional): List of tables to be dropped. Defaults to [] (ie: all tables)
         '''  
         if len(tables) == 0:
-            logger.info('Dropping all tables...')
             self.db.drop_all(app=self.app)
         else:
-            logger.info(f'Dropping tables: ${tables}')
             self.db.metadata.drop_all(bind=self.db.engine, checkfirst=True, tables=[ t.__table__ for t in tables ])
         self.db.session.commit()
 
@@ -402,10 +411,8 @@ class ETLManager:
             Create the given tables. If no tables are provided, creates all tables.
         '''
         if len(tables) == 0:
-            logger.info('Creating all tables...')
             self.db.create_all(app=self.app)
         else:
-            logger.info(f'Creating tables: ${tables}')
             self.db.metadata.create_all(bind=self.db.engine, tables=[ t.__table__ for t in tables ])
 
 

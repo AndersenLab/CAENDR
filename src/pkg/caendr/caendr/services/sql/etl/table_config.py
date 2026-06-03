@@ -126,11 +126,13 @@ class TableConfig():
       yield from config.parse_all(species)
 
 
-def parse_for_all_species(self, species_list):
+  def parse_for_all_species(self, species_list=None):
     '''
       Apply all parsing functions in this config to their associated files for each species in the list,
       yielding from each set in sequence.
     '''
+    if species_list is None:
+      species_list = Species.query_ds()
     for species in species_list:
       yield from self.parse_for_species(species)
 

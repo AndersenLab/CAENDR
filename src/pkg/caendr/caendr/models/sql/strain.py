@@ -29,17 +29,18 @@ class Strain(DictSerializable, db.Model):
   ambient_temp: Mapped[float | None] = mapped_column(Float())
   ambient_humidity: Mapped[float | None] = mapped_column(Float())
   associated_organism: Mapped[str | None] = mapped_column(String())
-  inbreeding_status: Mapped[str | None] = mapped_column(String())
+  inbreeding_state: Mapped[str | None] = mapped_column(String())
   sampled_by: Mapped[str | None] = mapped_column(String())
   isolated_by: Mapped[str | None] = mapped_column(String())
   sampling_date: Mapped[datetime | None] = mapped_column(DateTime())
-  sampling_date_comment: Mapped[str | None] = mapped_column(String())
+  sampling_date_comments: Mapped[str | None] = mapped_column(String())
   notes: Mapped[str | None] = mapped_column(String())
   strain_set: Mapped[str | None] = mapped_column(String())
   issues: Mapped[bool | None] = mapped_column(Boolean())
   issue_notes: Mapped[str | None] = mapped_column(String())
   elevation: Mapped[float | None] = mapped_column(Float())
   distribute: Mapped[bool] = mapped_column(Boolean())
+  wgs_seq: Mapped[bool] = mapped_column(Boolean())
 
   __tablename__ = "strain"
 
@@ -105,11 +106,11 @@ class Strain(DictSerializable, db.Model):
       'sampling_date',
       'sampling_date_comments',
       'notes',
-      'strain_set',              # "set" in source data sheet
+      'strain_set', # set in spreadsheet
       'issues',
       'issue_notes',
       'isotype_ref_strain',
-      'sequenced',               # "wgs_seq" in source data sheet
+      'wgs_seq',
       'distribute',
     ]
 

@@ -4,6 +4,8 @@ import os
 from gtfparse import read_gtf
 from caendr.services.logger import logger
 
+from caendr.models.datastore import Species
+from caendr.utils.local_files import LocalDatastoreFile
 from caendr.api.gene import remove_prefix
 from caendr.utils.bio import arm_or_center
 from caendr.utils.constants import CHROM_NUMERIC
