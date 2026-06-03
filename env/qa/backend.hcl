@@ -1,3 +1,3 @@
-bucket  = "mti-caendr-main-terraform-state"
+bucket  = "caendr-qa-terraform-state"
 #credentials = "terraform-service-account.json"
-prefix  = "terraform/state/main"
+prefix  = "terraform/state/qa"

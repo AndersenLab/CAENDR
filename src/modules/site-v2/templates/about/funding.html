@@ -2,15 +2,22 @@
 
 {% block content %}
 <div class="row">
+  <p>
+    CaeNDR thanks the following funding sources for directly supporting the ongoing and development costs for the organization, 
+    storage, and distribution of strains, genomic datasets, and analysis tools. CaeNDR also thanks the funding agencies who 
+    have supported individual researchers in the <em>Caenorhabditis</em> community who have contributed strains.
+  </p>
+</div>
+<div class="row">
 	{% for funder in funding_set %}
-  <div class="col-md-4 text-center" style="height:260px;">
+  <div class="col-md-6 text-center" style="height:310px;">
     <a href='{{ funder.url }}'>
       <figure class="figure" style="margin:30px;">
-          <img src="{{ ext_asset('img/funding/' + funder.image) }}" alt="{{ funder.name }}"/>
+        <img src="{{ ext_asset('img/funding/' + funder.image) }}" alt="{{ funder.name }}" style="height: 250px; width: auto;"/>
         <figcaption class="figure-caption small">{{ funder.description }}</figcaption>
       </figure>
     </a>
   </div>
-    {% endfor %}
+  {% endfor %}
 </div> {# /row #}
 {% endblock %}

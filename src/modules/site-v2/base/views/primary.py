@@ -1,8 +1,9 @@
-
-from flask import render_template, url_for, redirect, Blueprint
-from extensions import cache
+import os
+from flask import render_template, url_for, redirect, Blueprint, jsonify, flash
+from extensions import cache, compress
 
 from caendr.utils.file import get_dir_list_sorted
+from caendr.api.strain import get_strains
 
 primary_bp = Blueprint('primary', __name__)
 
@@ -11,15 +12,37 @@ primary_bp = Blueprint('primary', __name__)
 @cache.memoize(60*60)
 def primary():
   ''' Site home page '''
-  page_title = "Caenorhabditis elegans Natural Diversity Resource"
+
   # TODO: make news dynamic
   #files = sorted_files("base/static/content/news/")
-  VARS = {
-    'page_title': page_title,
+
+
+  return render_template('primary/home.html', **{
+    'page_title': 'Caenorhabditis elegans Natural Diversity Resource',
     #'files': files,
-    'fluid_container': True 
-  }
-  return render_template('primary/home.html', **VARS)
+    'fluid_container': True,
+  })
+
+@primary_bp.route('/version')
+@cache.memoize(60*60)
+def version():
+  version = os.environ.get("MODULE_VERSION", "n/a")
+  git_commit = os.environ.get("GIT_COMMIT", "n/a")
+  return jsonify({
+    'version': version,
+    'git_commit': git_commit
+  })
+
+
+@primary_bp.route('/strains')
+@cache.memoize(60*60*24)
+@compress.compressed()
+def get_strains_json():
+  try:
+    strain_listing = [ strain.to_json() for strain in get_strains() ]
+  except Exception:
+    strain_listing = []
+  return jsonify(strain_listing)
 
 
 @primary_bp.route("/Software")
@@ -27,6 +50,15 @@ def primary():
 def reroute_software():
   ''' This is a redirect due to a typo in the original CeNDR manuscript. Leave it. '''
   return redirect(url_for('primary.help_item', filename="Software"))
+
+
+@primary_bp.route("/strains/isotype_list")
+def reroute_isotype_list():
+  '''
+    This is a redirect for older Genome Mapping reports, which use an older version of this URL.
+  '''
+  return redirect(url_for('request_strains.strains_list'))
+
 
 
 @primary_bp.route("/news")
@@ -41,35 +73,25 @@ def news_item(filename=""):
   return render_template('news/news_item.html', **locals())
 
 
-@primary_bp.route("/help")
-@primary_bp.route("/help/<filename>/")
+@primary_bp.route("/faq")
+@primary_bp.route("/faq/<filename>/")
 @cache.memoize(60*60)
 def help_item(filename=""):
   ''' Help '''
   # TODO: make files dynamic
-  files = ["FAQ", "Genome-Browser", "Change-Log"]
+  files = ["FAQ"]
   if not filename:
     filename = "FAQ"
-  title = "Help"
-  subtitle = filename.replace("-", " ")
-  return render_template('primary/help.html', **locals())
+  title = "FAQ"
+  return render_template('faq/faq.html', **locals())
 
 
-@primary_bp.route('/outreach')
+@primary_bp.route("/privacy")
 @cache.memoize(60*60)
-def outreach():
-  title = "Outreach"
-  
-  # TODO: REPLACE THESE TEMPORARY ASSIGNMENTs
-  protocol_url = 'https://storage.googleapis.com/elegansvariation.org/static/protocols/SamplingIsolationC.elegansNaturalHabitat.pdf'
-  nematode_isolation_kit_form_url = 'http://docs.google.com/forms/d/15JXAQptqCSenZMyqHHOKQH1wJe7m0n8_Q0nHMe0eTUY/viewform?formkey=dERCQ1lsamU1ZFNtOGJJUkJqVzZOOVE6MQ#gid=0'
-  
-  return render_template('primary/outreach.html', **locals())
-
-
-@primary_bp.route('/contact-us')
-@cache.memoize(60*60)
-def contact():
-  title = "Contact Us"
-  return render_template('primary/contact.html', **locals())
+def privacy():
+  ''' Privacy Policy '''
+  files = ["privacy_policy"]
+  filename = "privacy_policy"
+  title = "Privacy Policy"
+  return render_template('privacy/privacy.html', **locals())
 

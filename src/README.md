@@ -5,7 +5,6 @@ This directory contains:
     * [Site](modules/site/README.md)
     * [API Pipeline Tasks](modules/api/pipeline-task/README.md)
     * [Database Operations](modules/db_operations/README.md)
-    * [Gene Browser Tracks](modules/gene_browser_tracks/README.md)
     * [Heritability](modules/heritability/README.md)
     * [Image Thumbnail Generator](modules/img_thumb_gen/README.md)
     * [Indel Primer](modules/indel_primer/README.md)

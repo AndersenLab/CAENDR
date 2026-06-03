@@ -1,4 +1,3 @@
-from itsdangerous import json
 from flask import Blueprint, jsonify
 import os
 
@@ -13,4 +12,5 @@ def test_fn():
 @base_bp.route('/version', methods=['GET'])
 def version():
   version = os.getenv("MODULE_VERSION", "n/a")
-  return jsonify({'version': version})
+  git_commit = os.getenv("GIT_COMMIT", "n/a")
+  return jsonify({'version': version, 'git_commit': git_commit})

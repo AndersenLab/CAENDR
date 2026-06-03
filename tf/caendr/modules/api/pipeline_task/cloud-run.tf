@@ -20,6 +20,15 @@ resource "google_cloud_run_service" "api_pipeline_task" {
       
       service_account_name = google_service_account.api_pipeline_task.email
     }
+
+    metadata {
+      annotations = {
+        "autoscaling.knative.dev/minScale" = var.module_api_pipeline_task_vars.cloudrun_min_scale,
+        "autoscaling.knative.dev/maxScale" = var.module_api_pipeline_task_vars.cloudrun_max_scale,
+        "run.googleapis.com/startup-cpu-boost" = true,
+        "run.googleapis.com/client-name" = "terraform"
+      }
+    }
   }
 
   traffic {

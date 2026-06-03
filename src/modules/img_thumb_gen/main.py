@@ -14,7 +14,10 @@ load_dotenv(dotenv_file)
 
 client = storage.Client()
 
-source_path = os.environ.get('MODULE_IMG_THUMB_GEN_SOURCE_PATH')
+source_path = os.environ.get('MODULE_IMG_THUMB_GEN_SOURCE_PATH', None)
+if source_path is None:
+  raise "Missing MODULE_IMG_THUMB_GEN_SOURCE_PATH"
+
 if source_path.endswith('/'):
   source_path = source_path[:-1]
 if source_path.startswith('/'):
@@ -24,8 +27,8 @@ prefix = '^' + source_path.replace('/','\/') + '\/.*'
 
 def generate_thumbnails(data, context):
   logger.info(f'Triggered by: bucket:{data["bucket"]}, name:{data["name"]}')
-  thumbnail_regex = f"{prefix}\.thumb.(jpg|jpeg)$"
-  image_regex = f"{prefix}\.(jpg|jpeg)$"
+  thumbnail_regex = f"\.thumb.(jpg|jpeg)$"
+  image_regex = f"\.(jpg|jpeg)$"
 
   # Only generate thumbnails for matching paths
   is_image = re.search(image_regex, data['name'])

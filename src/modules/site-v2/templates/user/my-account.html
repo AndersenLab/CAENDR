@@ -1,0 +1,72 @@
+{% extends "_layouts/default.html" %}
+{% from "_includes/macros.html" import render_field %}
+
+{% block content %}
+
+<div class="container">
+  <div class="col-9 mx-auto">
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <tr>
+          <td>Username</td>
+          <td>{{ user.username }}</td>
+        </tr>
+        <tr>
+          <td>Full Name</td>
+          <td>{{ user.full_name }}</td>
+        </tr>
+        <tr>
+          <td>Email</td>
+          <td>{{ user.email }}</td>
+        </tr>
+        <tr>
+          <td>Verified</td>
+          <td>{{ user.verified_email }}</td>
+        </tr>
+        <tr>
+          <td>Password</td>
+          <td>************</td>
+        </tr>
+        <tr>
+          <td>Roles</td>
+          <td>
+            {% for role in user.roles %}
+            <span class="label btn-nu">{{ role }}</span>
+            {% endfor %}
+          </td>
+        </tr>
+        <tr>
+          <td>User Type</td>
+          <td>{{ user.user_type }}</td>
+        </tr>
+        <tr>
+          <td>Registered </td>
+          <td>{% if user.created_on %}{{ user.created_on |date_format }}{% endif %}</td>
+        </tr>
+        <tr>
+          <td>Last Modified</td>
+          <td>{% if user.modified_on %}{{ user.modified_on |date_format }}{% endif %}</td>
+        </tr>
+        <tr>
+          <td>Last Login </td>
+          <td>{% if user.last_login %}{{ user.last_login |date_format }}{% endif %}</td>
+        </tr>
+      </table>
+    </div>
+    <div class="d-grid justify-content-center">
+      <button id='edit-btn' type='submit' class="btn btn-primary"
+        onClick='window.location.href="{{ url_for( "user.user_update" ) }}";' {% if user['user_type'] !='LOCAL' %}
+        disabled>
+        {% else %}
+        >
+        {% endif %}
+        <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+        Edit
+      </button>
+    </div>
+    <!-- /Row -->
+  </div>
+</div>
+<!-- /Container -->
+
+{% endblock %}

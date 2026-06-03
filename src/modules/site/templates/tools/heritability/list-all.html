@@ -61,7 +61,7 @@ table.dataTable thead .sorting {
                 </a>
               </td>
             {% endif %}
-            <td class='data-date' data-order="{{ item.created_on }}"> {{ item.created_on|date_format }} </td>
+            <td class='data-date' data-order="{{ item.created_on }}"> {% if item.created_on %} {{ item.created_on|date_format }} {% endif %} </td>
             <td class='data-owner'> {{ item.username }} </td>
           </tr>
         {% endfor %}

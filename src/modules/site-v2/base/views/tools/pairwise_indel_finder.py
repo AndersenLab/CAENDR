@@ -1,0 +1,223 @@
+from caendr.services.logger import logger
+from flask import Response, Blueprint, render_template, request, url_for, jsonify, redirect, flash, abort
+
+from base.forms import PairwiseIndelForm
+from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
+from base.utils.tools import list_reports, try_submit
+from base.utils.view_decorators import parse_job_id, validate_form
+
+from caendr.models.datastore import Species, IndelPrimerReport, DatasetRelease
+from caendr.models.job_pipeline import IndelFinderPipeline
+from caendr.services.dataset_release import get_dataset_release
+from caendr.services.cloud.aws_storage import AWSBlobURISchema
+from caendr.utils.bio import parse_chrom_interval
+from caendr.utils.constants import CHROM_NUMERIC
+from caendr.utils.data import get_file_format
+
+from caendr.services.indel_primer import (
+    query_indels_and_mark_overlaps,
+)
+
+
+
+# Tools blueprint
+pairwise_indel_finder_bp = Blueprint(
+  'pairwise_indel_finder', __name__, template_folder='tools'
+)
+
+
+
+## Page Endpoints
+
+@pairwise_indel_finder_bp.route('', methods=['GET'])
+@jwt_required()
+def pairwise_indel_finder():
+
+  # Construct variables and render template
+  return render_template('tools/pairwise_indel_finder/submit.html', **{
+
+    # Page info
+    "title": "Pairwise Indel Finder",
+    "form":  PairwiseIndelForm(request.form),
+    "tool_alt_parent_breadcrumb": {
+      "title": "Tools",
+      "url":   url_for('tools.tools')
+    },
+
+    # Data
+    "chroms":       CHROM_NUMERIC.keys(),
+    "species_list": Species.all(),
+
+    # Data locations
+    'fasta_url': DatasetRelease.get_fasta_filepath_template(schema=AWSBlobURISchema.HTTPS, gcp=False).get_string_safe(),
+
+    # List of Species class fields to expose to the template
+    # Optional - exposes all attributes if not provided
+    'species_fields': [
+      'name', 'short_name', 'project_num', 'wb_ver', 'release_latest',
+    ],
+
+    'latest_release_genomes': {
+      species_name: get_dataset_release(species['release_latest'])['genome'] for species_name, species in Species.all().items()
+    },
+
+    # String replacement tokens
+    # Maps token to the field in Species object it should be replaced with
+    'tokens': {
+      'WB':      'wb_ver',
+      'RELEASE': 'release_latest',
+      'PRJ':     'project_num',
+      'GENOME':  'fasta_genome',
+    },
+
+    # Misc
+    "fluid_container": True,
+  })
+
+
+
+@pairwise_indel_finder_bp.route('/all-results', methods=['GET'], endpoint='all_results')
+@pairwise_indel_finder_bp.route('/my-results',  methods=['GET'], endpoint='my_results')
+@jwt_required()
+def list_results():
+  show_all = request.endpoint.endswith('all_results')
+  user = get_current_user()
+
+  # Only show malformed Entities to admin users
+  filter_errs = not user_is_admin()
+
+  # Construct page
+  return render_template('tools/report-list.html', **{
+
+    # Page info
+    'title': ('All' if show_all else 'My') + ' Primer Reports',
+    'tool_alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools'), },
+
+    # User info
+    'user':  user,
+
+    # Tool info
+    'tool_name': 'pairwise_indel_finder',
+    'all_results': show_all,
+    'button_labels': {
+      'tool': 'New Primer Search',
+      'all':  'All User Results',
+      'user': 'My Primer Reports',
+    },
+
+    # Table info
+    'species_list': Species.all(),
+    'items': list_reports(IndelPrimerReport, None if show_all else user, filter_errs),
+  })
+
+
+
+@pairwise_indel_finder_bp.route("/query-indels", methods=["POST"])
+@jwt_required()
+@validate_form(PairwiseIndelForm)
+def query(form_data, no_cache=False):
+
+  # If either of the strains is missing, raise a 422 Unprocessable Entity error
+  if form_data.get('strain_1') is None or form_data.get('strain_2') is None:
+    return {}, 422
+
+  # Pass the form fields to the query function & return the result
+  return jsonify({ 'results': query_indels_and_mark_overlaps(**form_data) })
+
+
+
+@pairwise_indel_finder_bp.route('/submit', methods=["POST"])
+@jwt_required()
+@validate_form(None, from_json=True)
+def submit(form_data, no_cache=False):
+
+  # Try submitting the job & getting a JSON status message
+  response, code = try_submit(IndelPrimerReport.kind, get_current_user(), form_data, no_cache)
+
+  # If there was an error, flash it
+  if code != 200 and int(request.args.get('reloadonerror', 1)):
+    flash(response['message'], 'danger')
+
+  # Return the response
+  return jsonify( response ), code
+
+
+
+@pairwise_indel_finder_bp.route("/report/<report_id>",                     methods=['GET'])
+@pairwise_indel_finder_bp.route("/report/<report_id>/download/<file_ext>", methods=['GET'])
+@jwt_required()
+@parse_job_id(IndelFinderPipeline)
+def report(job: IndelFinderPipeline, data, result, file_ext=None):
+
+    # Validate file extension, if provided
+    if file_ext:
+      file_format = get_file_format(file_ext, valid_formats={'csv'})
+      if file_format is None:
+        abort(404)
+    else:
+      file_format = None
+
+    # Report is ready if result exists
+    ready = result is not None
+
+    # If the result is empty, make it an empty dict, for more straightforward field access in the rest of the function
+    if not ready:
+      result = {}
+
+    # Get indel interval
+    try:
+      interval = parse_chrom_interval(data['site'])
+      indel_start, indel_stop = interval['start'], interval['stop']
+    except ValueError:
+      logger.error(f'Invalid interval "{data["site"]}" for Indel Finder report {id}')
+      indel_start, indel_stop = None, None
+
+    # Extract the dataframe from the results
+    dataframe = result.get('dataframe', None)
+
+    # Update indel primer empty status
+    if ready:
+      job.report.empty = result['empty']  # TODO: 'empty' is no longer tracked as a prop. Should it be?
+      job.report.save()
+
+
+    # If a file format was specified, return a downloadable file with the results
+    # TODO: Set a better filename?
+    if file_format is not None:
+      if not ready:
+        abort(404)
+      resp = Response(result['format_table'].to_csv(sep=file_format['sep']), mimetype=file_format['mimetype'])
+      try:
+        resp.headers['Content-Disposition'] = f'filename={job.report["species"]}_{job.report["strain_1"]}_{job.report["strain_2"]}_{data["site"]}.{file_ext}'
+      except:
+        resp.headers['Content-Disposition'] = f'filename={job.report["id"]}.{file_ext}'
+      return resp
+
+
+    # Otherwise, return view page
+    return render_template("tools/pairwise_indel_finder/view.html", **{
+
+      # Page info
+      'title':    f"Indel Primer Results {data['site']}",
+      'subtitle': f"{data['strain_1']} | {data['strain_2']}",
+      'tool_alt_parent_breadcrumb': { "title": "Tools", "url": url_for('tools.tools') },
+
+      # GCP data info
+      'data_hash': job.report.data_hash,
+      'report_id': job.report.id,
+
+      # Job status
+      'empty': result.get('empty'),
+      'ready': ready,
+
+      # Data
+      'data':  data,
+      'indel_start': indel_start,
+      'indel_stop':  indel_stop,
+      # 'size': data['size'],
+
+      # Results
+      'result':       dataframe,
+      'records':      dataframe.to_dict('records') if (dataframe is not None) else None,
+      'format_table': result.get('format_table'),
+    })

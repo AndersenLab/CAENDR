@@ -1,62 +1,146 @@
 import os
+
 from caendr.services.logger import logger
+from caendr.utils.env import get_env_var, get_env_var_with_fallback
 
-from caendr.models.datastore import Entity
+from caendr.models.datastore import ReportEntity, HashableEntity, Species
+from caendr.services.dataset_release import get_dataset_release
 
 
-MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
-INDEL_REPORT_PATH_PREFIX = 'reports'
-INDEL_INPUT_FILE = 'input.json'
-INDEL_RESULT_FILE = 'results.tsv'
 
-class IndelPrimer(Entity):
+# Get environment variables
+SOURCE_FILENAME                = get_env_var('INDEL_PRIMER_SOURCE_FILENAME', as_template=True)
+SOURCE_FILEPATH                = get_env_var('INDEL_PRIMER_TOOL_PATH', as_template=True)
+
+
+
+class IndelPrimerReport(HashableEntity, ReportEntity):
+
+  #
+  # Class variables
+  #
+
   kind = 'indel_primer'
-  __bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
-  __blob_prefix = INDEL_REPORT_PATH_PREFIX
-  __input_file = INDEL_INPUT_FILE
-  __result_file = INDEL_RESULT_FILE
-  
-  def __init__(self, *args, **kwargs):
-    super(IndelPrimer, self).__init__(*args, **kwargs)
-    self.set_properties(**kwargs)
 
-  def set_properties(self, **kwargs):
-    props = self.get_props_set()
-    self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
-      
+  _report_display_name = 'Primer'
+
+  # Identify the report data by the data hash, inherited from the HashableEntity parent class
+  _data_id_field = 'data_hash'
+
+
+  #
+  # Path
+  #
+
+  # TODO: Indel primer results currently don't have subdirectories for container versions. Should they?
+  @property
+  def _report_prefix(self):
+    return '/'.join([ self._report_path_prefix(), self.container_name, self.get_data_id() ])
+
+
+  #
+  # Input & Output
+  #
+
+  _num_input_files = 1
+  _input_filename  = 'input.json'
+  _output_filename = 'results.tsv'
+
+
+  #
+  # Data Files
+  #
+
   @classmethod
-  def get_bucket_name(cls):
-    return cls.__bucket_name
-  
-  def get_blob_path(self):
-    return f'{self.__blob_prefix}/{self.container_name}/{self.data_hash}'
-  
-  def get_data_blob_path(self):
-    return f'{self.get_blob_path()}/{self.__input_file}'
-  
-  def get_result_blob_path(self):
-    return f'{self.get_blob_path()}/{self.__result_file}'
-  
+  def get_source_filename(cls, release):
+
+    # Validate release
+    if release is None:
+      raise ValueError('Please provide a release for Indel Primer source filename.')
+
+    # Fill in template with vars
+    return SOURCE_FILENAME.get_string(**{
+      'RELEASE': release,
+    })
+
+
+  @classmethod
+  def get_source_filepath(cls, species):
+
+    # Validate species
+    if species is None:
+      raise ValueError('Please provide a species for Indel Primer source filename.')
+    # elif species not in SPECIES_LIST.keys():
+    #   raise ValueError(f'Cannot construct Indel Primer filename for unknown species "{species}".')
+
+    # Fill in template with vars
+    return SOURCE_FILEPATH.get_string(**{
+      'SPECIES': species,
+    })
+
+
+  @staticmethod
+  def get_fasta_filepath(species, release = None, index = None, schema = None):
+    '''
+      Uses the provided release, or looks up the most recent release supporting Indel Primer
+      for the given species.
+
+      Equivalent to running `get_fasta_filepath_obj` on the appropriate DatasetRelease object.
+    '''
+
+    # Lookup desired species object
+    species_obj = Species.from_name(species)
+
+    # Default to the latest version defined for the species
+    if release is None:
+      release = species_obj['release_pif']
+
+    # Get DatasetRelease object and use to construct the FASTA filepath
+    release_obj = get_dataset_release(release)
+    return release_obj.get_fasta_filepath(index=index, schema=schema, gcp=True)
+
+
+  @staticmethod
+  def get_fasta_filename(species, release = None, index = None, include_extension = True):
+    '''
+      Uses the provided release, or looks up the most recent release supporting Indel Primer
+      for the given species.
+
+      Equivalent to running `get_fasta_filepath_obj` on the appropriate DatasetRelease object.
+    '''
+
+    # Lookup desired species object
+    species_obj = Species.from_name(species)
+
+    # Default to the latest version defined for the species
+    if release is None:
+      release = species_obj['release_pif']
+
+    # Get DatasetRelease object and use to construct the FASTA filepath
+    release_obj = get_dataset_release(release)
+    return release_obj.get_fasta_filename(index=index, include_extension=include_extension)
+
+
+  #
+  # Properties
+  #
 
   @classmethod
   def get_props_set(cls):
-    return {'id',
-            'site', 
-            'strain_1',
-            'strain_2',
-            'data_hash', 
-            'username',
-            'no_result',
-            'container_name',
-            'container_version',
-            'container_repo',
-            'operation_name',
-            'sv_bed_filename',
-            'sv_vcf_filename',
-            'status'}
-    
-  def __repr__(self):
-    if hasattr(self, 'id'):
-      return f"<{self.kind}:{self.id}>"
-    else:
-      return f"<{self.kind}:no-id>"
+    return {
+      *super().get_props_set(),
+
+      # # Status
+      # 'no_result',
+
+      # Query
+      'site',
+      'strain_1',
+      'strain_2',
+
+      # Versioning
+      'sv_bed_filename',
+      'sv_vcf_filename',
+      'species',
+      'release'
+    }

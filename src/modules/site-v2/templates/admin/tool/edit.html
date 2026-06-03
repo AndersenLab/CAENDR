@@ -14,7 +14,7 @@
     <div class='col-md-6'>
       <table class='table table-striped table-condensed'>
         <tr>{{ render_field(form.version) }}</td></tr>
-        <tr><td>Repository</td><td>{{ tool.repo }}</td></tr>
+        <tr><td>Repository</td><td>{{ tool.container_repo }}</td></tr>
         <tr><td>Container Name</td><td>{{ tool.container_name }}</td></tr>
         <tr><td>Created On</td><td>{{ tool.created_on|date_format }}</td></tr>
         <tr><td>Modified On</td><td>{{ tool.modified_on|date_format }}</td></tr>

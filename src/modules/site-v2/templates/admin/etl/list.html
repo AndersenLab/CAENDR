@@ -39,6 +39,9 @@
   .database-operation-status.submitted {
     background: rgba(213,225,231, 0.5);
   }
+  .database-operation-status.created {
+    background: rgba(213,225,231, 0.5);
+  }
   .database-operation-status.unknown {
     background: rgba(248,246,82,0.5);
   }
@@ -50,7 +53,7 @@
 {{ 
   render_dataTable_top_menu(
     actions = [
-      {'label':'New Operation', 'url':url_for('admin_etl_op.create_op'), 'classes':'btn btn-primary', 'style':'float:right;', 'icon': 'glyphicon glyphicon-plus' },
+      {'label':'New Operation', 'url':url_for('admin_etl_op.create_op'), 'classes':'btn btn-primary', 'style':'float:right; color: #FFFFFF;', 'icon': 'glyphicon glyphicon-plus' },
     ]
   ) 
 }}
@@ -86,7 +89,11 @@
               </a>
             </td>
             <td class='text-center'>
+              {% if ops.get('id') %}
               <a href="{{ url_for('admin_etl_op.view_op', id=ops['id']) }}">View</a>
+              {% else %}
+              -
+              {% endif %}
             </td>
           </tr>
         {% endfor %}

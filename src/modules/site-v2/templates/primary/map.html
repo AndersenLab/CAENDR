@@ -1,0 +1,359 @@
+
+<style>
+  #map {
+    height: 55vh;
+    z-index: 0;
+  }
+  
+  .zoomContainer {
+    position: relative;
+    z-index: 1000;
+  }
+
+  #zoomIn, #zoomIn:hover, #zoomIn:active {
+    border-color: var(--bs-gray-100);
+    border-bottom: 1px solid var(--bs-gray);
+    margin-bottom: 1px;
+  }
+  
+  #zoomOut:active {
+    border-color: var(--bs-gray-100)!important;
+  }
+
+  #zoomOut:disabled {
+    border-color: var(--bs-gray-100)!important;
+    color: #666!important;
+  }
+
+  .leaflet-control-zoom.leaflet-bar {
+    border: 0;
+  }
+  .leaflet-bar a {
+    background-color: var(--bs-primary);
+    color: var(--bs-white);
+  }
+
+  .leaflet-bar a:hover {
+    background-color: var(--bs-secondary);
+    color: var(--bs-white);
+  }
+
+  .leaflet-bar a.leaflet-disabled {
+    background-color: #6F85D9;
+    color: var(--bs-white);
+  }
+
+  .leaflet-popup-content-wrapper {
+    background-color: var(--bs-light);
+    color: var(--bs-black);
+    font-size: 1rem;
+    padding: .5em;
+  }
+
+  .leaflet-popup-tip {
+    background-color: var(--bs-light);
+  }
+
+  #strains > p {
+    text-align: center;
+  }
+
+  #selectSpecies {
+    position:absolute;
+    top: 1rem;
+    right: 0;
+    z-index: 1000;
+    padding: 15px;
+  }
+
+  .popup {
+    position:relative;
+    z-index: 2;
+  }
+
+  .popup ul {
+    list-style-type: none;
+    line-height: 1.75em;
+    padding:0;
+  }
+
+  .mobileSpeciesSelect {
+    z-index: 1000;
+    top: 1rem;
+    right: 1rem;
+  }
+
+  input.speciesCheckbox {
+    height:40px;
+    width:auto;
+  }
+
+  .leaflet-container a {
+    color: var(--bs-link-color)!important;
+  }
+
+</style>
+
+    <div class="position-relative" id="map" aria-hidden="true" tabindex="-1">
+      <div class="btn-group-vertical m-3 zoomContainer" role="group" aria-hidden="true">
+        <button class="btn text-bg-light d-none d-md-block" id="zoomIn" tabindex="-1"><i class="bi bi-plus-circle" aria-hidden="true"></i></button>
+        <button class="btn text-bg-light d-none d-md-block" id="zoomOut" tabindex="-1"><i class="bi bi-dash-circle" aria-hidden="true"></i></button>
+      </div>
+      <btn
+        class="position-absolute d-block d-md-none btn text-bg-light rounded-pill text-center mobileSpeciesSelect"
+        onclick="toggleSpecies();"><i class="bi bi-check-all me-1"></i> Species
+      </btn>
+      <div class="d-none d-md-block shadow-sm rounded-2 text-bg-light mt-5 mt-md-0 me-2 me-md-3 p-3" style="width:165px;"
+        id="selectSpecies">
+        <form id="strains" aria-hidden="true">
+          <p aria-hidden="true" tabindex="-1"><strong>Species:</strong></p>
+          <div class="d-flex justify-content-between mb-2">
+            <div class="form-check">
+              <input class="form-check-input" type='checkbox' name='filters' value='elegans_layer' id="elegansCheck" checked tabindex="-1">
+              <label class="form-check-label" for="elegansCheck"><i>C. elegans</i></label>
+            </div>
+            <img src='{{ ext_asset("img/icons/elegansMarkerOutline.png") }}' style="height:18px;width:auto;" alt="">
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <div class="form-check">
+              <input class="form-check-input" type='checkbox' name='filters' value='briggsae_layer' id="briggsaeCheck" tabindex="-1">
+              <label class="form-check-label" for="briggsaeCheck"><i> C. briggsae</i></label>
+            </div>
+            <img src='{{ ext_asset("img/icons/briggsaeMarkerOutline.png") }}' style="height:18px;width:auto;" alt="">
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <div class="form-check">
+              <input class="form-check-input" type='checkbox' name='filters' value='tropicalis_layer' id="tropicalisCheck" tabindex="-1">
+              <label class="form-check-label" for="tropicalisCheck"><i> C. tropicalis</i></label>
+            </div>
+            <img src='{{ ext_asset("img/icons/tropicalisMarkerOutline.png") }}'
+              style="height:18px;width:auto;" alt="">
+          </div>
+        </form>
+      </div>
+    </div>
+
+{% block script %}
+<script type="module">
+
+// Icons
+{% autoescape off %}
+const icon_elegans = L.icon({
+    iconUrl: '{{ ext_asset("img/icons/elegansMarkerOutline@2x.png") }}',
+    iconSize: [20, 30],
+    iconAnchor: [10, 30],
+    popupAnchor: [0, -15],
+});
+
+const icon_briggsae = L.icon({
+    iconUrl: '{{ ext_asset("img/icons/briggsaeMarkerOutline@2x.png") }}',
+    iconSize: [20, 30],
+    iconAnchor: [10, 30],
+    popupAnchor: [0, -15],
+});
+const icon_tropicalis = L.icon({
+    iconUrl: '{{ ext_asset("img/icons/tropicalisMarkerOutline@2x.png") }}',
+    iconSize: [20, 30],
+    iconAnchor: [10, 30],
+    popupAnchor: [0, -15],
+});
+
+
+const icon_hover = L.icon({
+    iconUrl: '{{ ext_asset("img/icons/hoverMarkerOutline.png") }}',
+    iconSize: [20, 30],
+    iconAnchor: [10, 30],
+    popupAnchor: [0, -15],
+});
+{% endautoescape %}
+
+const MB_ATTR = 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, METI, TomTom, 2012';
+const MB_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
+const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+const OSM_ATTRIB = '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+const northWest = L.latLng(100, 170);
+const southEast = L.latLng(-90, -170)
+const bounds = L.latLngBounds(northWest, southEast);
+
+const map = L.map('map', {renderer: L.canvas(), 
+                          minZoom:2, 
+                          maxZoom: 10,
+                          zoomSnap: .25,
+                          zoomDelta: .25,
+                          maxBounds: bounds,
+                          maxBoundsViscosity: 1.0, 
+                          scrollWheelZoom: false, 
+                          zoomControl: false,
+                          attributionControl: false,})
+                          .setView([30, -170], 2.5);
+L.tileLayer(MB_URL, {attribution: MB_ATTR, id: 'mapbox.streets', continuousWorld: false, worldCopyJump: false}).addTo(map);
+const strain_names = [];
+const elegans = [];
+const briggsae = [];
+const tropicalis = [];
+
+const Species = Object.freeze({
+  ELEGANS: 'Caenorhabditis elegans',
+  BRIGGSAE: 'Caenorhabditis briggsae',
+  TROPICALIS: 'Caenorhabditis tropicalis'
+});
+
+function naturalCompare(a, b) {
+  const ax = [], bx = [];
+  a = a.strain
+  b = b.strain
+
+  a.replace(/(\d+)|(\D+)/g, function(_, $1, $2) { ax.push([$1 || Infinity, $2 || ""]) });
+  b.replace(/(\d+)|(\D+)/g, function(_, $1, $2) { bx.push([$1 || Infinity, $2 || ""]) });
+  
+  while(ax.length && bx.length) {
+    const an = ax.shift();
+    const bn = bx.shift();
+    const nn = (an[0] - bn[0]) || an[1].localeCompare(bn[1]);
+    if(nn) return nn;
+  }
+
+  return ax.length - bx.length;
+}
+
+function set_marker_color (species) {
+  if (species === Species.ELEGANS) {
+    return icon_elegans;
+  }
+  if (species === Species.BRIGGSAE) {
+    return icon_briggsae;
+  }
+  if (species === Species.TROPICALIS) {
+    return icon_tropicalis;
+  }
+}
+
+function formatDate(date) {
+  return String(date).replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3")
+}
+$.getJSON('/strains', function(strain_info) {
+  strain_info.sort(naturalCompare)
+  strain_info.forEach(function(d) {
+    if (d.latitude) {
+      strain_names.push(d.strain);
+      const popup_content = `
+      <div class="popup">
+        <ul>
+          ${d.species ? `<li><strong>Species:</strong> <i>${d.species}</i></li>` : ''}
+          ${d.isotype ? `<li><strong>Isotype:</strong> <a href="../isotype/${d.isotype}">${d.isotype}</a></li>` : ''}
+          ${d.isotype_ref_strain ? `<li><strong>Reference Strain:</strong> ${d.isotype_ref_strain}</li>` : ''}
+          ${d.strain ? `<li><strong>Strains:</strong> ${d.strain}</li>` : ''}
+          ${d.previous_names ? `<li><strong>Alternative Names:</strong> ${d.previous_names}</li>` : ''}
+          ${d.release ? `<li><strong>Release Date:</strong> ${formatDate(d.release)}</li>` : ''}
+          ${d.substrate ? `<li><strong>Substrate:</strong> ${d.substrate}</li>` : ''}
+          ${d.substrate_temp ? `<li><strong>Substrate Temp (C):</strong> ${d.substrate_temp}</li>` : ''}
+          ${d.ambient_humidity ? `<li><strong>Ambient Humidity:</strong> ${d.ambient_humidity} </li>` : ''}
+          ${d.sampled_by ? `<li><strong>Sampled by:</strong> ${d.sampled_by}</li>` : ''}
+        </ul>
+      </div>`
+
+      const marker = L.marker([d.latitude, d.longitude], { keyboard: false, alt: "a marker showing the geographic location of a strain", icon: set_marker_color(d.species),
+                                                      species: d.species})
+                                                      .on('mouseover', function(){
+                                                        marker.setIcon(icon_hover)
+                                                      })
+                                                      .on('mouseout', function(){
+                                                        const original_icon = set_marker_color(d.species)
+                                                        marker.setIcon(original_icon)
+                                                      })
+      marker.bindPopup(popup_content)
+
+      if (marker.options.species === Species.ELEGANS) {
+        elegans.push(marker)
+      }
+      if (marker.options.species === Species.BRIGGSAE) {
+        briggsae.push(marker)
+      }
+      if (marker.options.species === Species.TROPICALIS) {
+        tropicalis.push(marker)
+      }
+    }
+  });
+
+  const slice_idx1 = elegans.length/3
+  const slice_idx2 = (elegans.length - slice_idx1)/2
+  const elegans1 = elegans.slice(0, slice_idx1)
+  const elegans2 = elegans.slice(slice_idx1, slice_idx2)
+  const elegans3 = elegans.slice(slice_idx2)
+  L.layerGroup(elegans1).addTo(map)
+  L.layerGroup(elegans2).addTo(map)
+  L.layerGroup(elegans3).addTo(map)
+
+
+  const elegans_layer = L.layerGroup(elegans)
+  const briggsae_layer = L.layerGroup(briggsae)
+  const tropicalis_layer = L.layerGroup(tropicalis)
+  const layers_obj = {
+    'elegans_layer': elegans_layer,
+    'briggsae_layer': briggsae_layer,
+    'tropicalis_layer': tropicalis_layer
+  }
+
+  let overlays = L.featureGroup().addLayer(elegans_layer).addTo(map);
+  
+
+  document.querySelector('#strains').addEventListener('click', e => {
+    if (e.target.tagName !== 'INPUT') return;
+    const input = e.target
+    const value = input.value;
+    const layer = layers_obj[value]
+    if (input.checked) {
+      overlays.addLayer(layer)
+    } else {
+      overlays.removeLayer(layer)
+    }
+  })
+})
+
+
+
+
+
+
+  // custom zoom
+  const zoomInButton = document.getElementById("zoomIn");
+  const zoomOutButton = document.getElementById("zoomOut");
+  const minMapZoom = map.getMinZoom();
+  let zoomLevel = map.getZoom();
+  zoomOutButton.disabled = true;
+
+  function zoomMapIn() {
+    map.zoomIn();
+    zoomLevel = (zoomLevel + 1);
+    disableButton();
+  }
+
+   function zoomMapOut() {
+    map.zoomOut();
+    zoomLevel = (zoomLevel - 1.75);
+    disableButton();
+  }
+
+  function disableButton() {
+    if (zoomLevel > minMapZoom) {
+      zoomOutButton.disabled = false;
+    } else {
+      zoomOutButton.disabled = true;
+    }
+  }
+
+  zoomInButton.addEventListener ("click", zoomMapIn);
+  zoomOutButton.addEventListener ("click", zoomMapOut);
+
+</script>
+
+<script>
+  //Toggle mobile species select visibility
+  function toggleSpecies() {
+  const selectSpecies = document.getElementById("selectSpecies");
+  selectSpecies.classList.toggle("d-none");
+}
+</script>
+
+{% endblock %}

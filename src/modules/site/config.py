@@ -1,4 +1,5 @@
 # Application Configuration
+import os
 from re import U
 from dotenv import dotenv_values
 from caendr.services.logger import logger
@@ -14,6 +15,8 @@ SECRETS_IDS = [
   'ELEVATION_API_KEY',
   'GOOGLE_CLIENT_ID',
   'GOOGLE_CLIENT_SECRET',
+  'AWS_ACCESS_KEY_ID',
+  'AWS_SECRET_ACCESS_KEY',
   'JWT_SECRET_KEY',
   'PASSWORD_PEPPER',
   'POSTGRES_DB_PASSWORD',
@@ -21,7 +24,7 @@ SECRETS_IDS = [
   'RECAPTCHA_PRIVATE_KEY',
   'SECRET_KEY',
   'MAILGUN_API_KEY',
-  'CC_EMAILS'
+  'CC_EMAILS',
 ]
 
 BOOL_PROPS = [
@@ -59,8 +62,9 @@ def get_config():
   config['json_encoder'] = json_encoder
 
   config['SQLALCHEMY_DATABASE_URI'] = get_db_conn_uri()
-  config['SQLALCHEMY_ENGINE_OPTIONS'] = { "pool_pre_ping": True, "pool_recycle": 300 }
-  config['SQLALCHEMY_POOL_TIMEOUT'] = get_db_timeout()
+  if not os.getenv("MODULE_DB_OPERATIONS_CONNECTION_TYPE") == 'file':
+    config['SQLALCHEMY_ENGINE_OPTIONS'] = { "pool_pre_ping": True, "pool_recycle": 300 }
+    config['SQLALCHEMY_POOL_TIMEOUT'] = get_db_timeout()
 
   # Load secret config values
   for id in SECRETS_IDS:

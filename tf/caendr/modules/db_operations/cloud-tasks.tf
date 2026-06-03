@@ -5,7 +5,7 @@ resource "google_cloud_tasks_queue" "db_op" {
 
   rate_limits {
     max_concurrent_dispatches = 1
-    max_dispatches_per_second = 0.001
+    max_dispatches_per_second = 1
   }
 
   retry_config {

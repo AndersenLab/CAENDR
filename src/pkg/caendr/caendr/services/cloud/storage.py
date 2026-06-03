@@ -3,15 +3,23 @@ import os
 import google.auth
 import google.auth.transport.requests as tr_requests
 import datetime
+from enum import Enum
+from typing import Optional, List
+from werkzeug.utils import secure_filename
+
+import json
+import pandas as pd
 
 from google.oauth2 import service_account
 from google.resumable_media.requests import ResumableUpload
 from google.cloud import storage
+from google.cloud.storage.blob import Blob
 from caendr.services.logger import logger
 
 from caendr.models.error import CloudStorageUploadError, NotFoundError
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.service_account import get_service_account_credentials
+from caendr.utils.data import unique_id
 
 GOOGLE_STORAGE_SERVICE_ACCOUNT_NAME = os.environ.get('GOOGLE_STORAGE_SERVICE_ACCOUNT_NAME')
 
@@ -24,47 +32,164 @@ def get_google_storage_credentials():
   return credentials
 
 
-def get_blob(bucket_name, blob_name):
-  logger.debug(f'get_blob(bucket_name={bucket_name}, blob_name={blob_name})')
-  bucket = storageClient.get_bucket(bucket_name)
-  return bucket.get_blob(blob_name)
+#
+# Check blobs
+#
+
+def join_path(*path: str, sep: str = '/'):
+  '''
+    Join a list of path elements into a single path.
+    Filters out empty elements, and strips the separator character (default `/`) before joining to avoid concatenating multiple separators.
+
+    If all elements are empty, results in an empty string.
+  '''
+  return sep.join([ p.strip(sep) for p in path if p ])
 
 
-def check_blob_exists(bucket_name, blob_name):
-  logger.debug(f'check_blob_exists(bucket_name={bucket_name}, blob_name={blob_name})')
+def get_blob(bucket_name: str, *path: str) -> Blob:
+  logger.debug(f'get_blob(bucket_name={bucket_name}, path={path})')
   bucket = storageClient.get_bucket(bucket_name)
-  blob = bucket.get_blob(blob_name)
+  return bucket.get_blob( join_path(*path) )
+
+
+def check_blob_exists(bucket_name: str, *path: str) -> bool:
+  logger.debug(f'check_blob_exists(bucket_name={bucket_name}, path={path})')
+  bucket = storageClient.get_bucket(bucket_name)
+  blob = bucket.get_blob( join_path(*path) )
   try:
     return blob.exists()
   except:
     return False
 
 
-def get_blob_list(bucket_name, prefix):
-  ''' Returns a list of all blobs with 'prefix' (directory) in 'bucket_name' '''
+def get_blob_if_exists(bucket_name: str, *path: str, fallback=None) -> Optional[Blob]:
+  '''
+    Get the given blob if it exists, otherwise return the fallback value.
+  '''
+  blob = get_blob(bucket_name, *path)
+  try:
+    if blob.exists():
+      return blob
+  except:
+    return fallback
+
+
+def get_blob_list(bucket_name: str, *prefix: str, filter=None) -> List[Blob]:
+  '''
+    Returns a list of all blobs with `prefix` (directory) in `bucket_name`.
+    If no `prefix` is provided (or all values are empty), lists all blobs in the bucket.
+  '''
+
+  # Get all the blobs in the given bucket
   bucket = storageClient.get_bucket(bucket_name)
-  items = bucket.list_blobs(prefix=prefix)
+  items = bucket.list_blobs(prefix=join_path(*prefix))
+
+  # Apply the filter, if one was given
+  if filter is not None:
+    items = [ b for b in items if filter(b) ]
+
+  # Return the items as a list
   return list(items)
 
 
-def generate_blob_url(bucket_name, blob_name, secure=True):
-  ''' Generates the public https URL for a blob '''
-  if secure:
-    return f"https://storage.googleapis.com/{bucket_name}/{blob_name}" 
-  else:
-    return f"http://storage.googleapis.com/{bucket_name}/{blob_name}" 
+#
+# Generate URIs
+#
+
+class BlobURISchema(Enum):
+  PATH   = ''
+  HTTP   = 'http://storage.googleapis.com/'
+  HTTPS  = 'https://storage.googleapis.com/'
+  GS     = 'gs://'
+  SIGNED = 'SIGNED'
+
+  @classmethod
+  def http(cls, secure: bool):
+    '''
+      Convenience method to get http(s) based on boolean.
+      If `secure` is True, returns HTTPS, else returns HTTP
+    '''
+    return cls.HTTPS if secure else cls.HTTP
+
+  @classmethod
+  def sign(cls, sign: bool, secure: bool = False):
+    '''
+      Convenience method to get signed URL based on boolean.
+      If `sign` is True, returns SIGNED,
+      Otherwise, if `secure` is True, returns HTTPS, else returns HTTP
+    '''
+    return cls.SIGNED if sign else cls.http(secure=secure)
 
 
+def generate_blob_uri(bucket: str, *path: str, schema: BlobURISchema = BlobURISchema.PATH, credentials=None, expiration=datetime.timedelta(minutes=15)):
+    '''
+      Generate a URI path for a blob.
 
-def download_blob_to_file(bucket_name, blob_name, filename):
-  ''' Downloads a blob and saves it locally '''   
+      Arguments:
+        bucket (`str`):
+          The source bucket for the blob.
+        *path (`str`):
+          Some number of strings comprising the path to the blob within the bucket.
+        schema (`BlobURISchema`):
+          Enum specifier for the format of the URI.
+          Default `BlobURISchema.PATH` -- see Return section below.
+        credentials:
+          If `BlobURISchema.SIGNED` is used, these are the credentials to sign with.
+          See `generate_download_signed_url_v4` for more info.
+        expiration:
+          If `BlobURISchema.SIGNED` is used, this is the expiration time for the URL.
+          See `generate_download_signed_url_v4` for more info.
+
+      Returns:
+        - If `schema` is `BlobURISchema.PATH`, a tuple of strings containing the bucket and the full path within the bucket. (i.e. joins the path).
+        - If any other schema is used, a single string comprising the full URI.
+    '''
+
+    # Use raw 'PATH' by default
+    if schema is None:
+      schema = BlobURISchema.PATH
+
+    # Join all the non-empty entries in the provided path
+    path = '/'.join([ p for p in path if p ])
+
+    # Raw path - return bucket and joined path
+    if schema == BlobURISchema.PATH:
+      return bucket, path
+
+    # Signed URL - forward relevant keyword args
+    if schema == BlobURISchema.SIGNED:
+      return generate_download_signed_url_v4(bucket, path, credentials=credentials, expiration=expiration)
+
+    # Otherwise, use the prefix from the enum
+    return f'{ schema.value }{ bucket }/{ path }'
+
+
+def generate_download_signed_url_v4(bucket_name, blob_name, credentials=None, expiration=datetime.timedelta(minutes=15)):
+  """Generates a v4 signed URL for downloading a blob. """
+  if credentials is None:
+    credentials = get_google_storage_credentials()
+
   bucket = storageClient.get_bucket(bucket_name)
-  blob = bucket.blob(blob_name)
-  if blob.exists():
-    blob.download_to_file(open(filename, 'wb'))
-    return filename
-  else:
-    raise NotFoundError()
+  try:
+    blob = bucket.blob(blob_name)
+    url = blob.generate_signed_url(
+      expiration=expiration,
+      method="GET",
+      credentials=credentials
+    )
+    return url
+
+  except Exception as inst:
+    logger.error(type(inst))
+    logger.error(inst.args)
+    logger.error(inst)
+    return None
+
+
+
+#
+# Upload
+#
 
 def upload_blob_from_file_object(bucket_name, file, blob_name):
   """Uploads a file to the bucket."""
@@ -138,25 +263,98 @@ def upload_blob_from_file_as_chunks(bucket_name: str, filename: str, blob_name: 
     
     logger.info(json_response)
     return json_response
-  
-  
-def generate_download_signed_url_v4(bucket_name, blob_name, credentials=None, expiration=datetime.timedelta(minutes=15)):
-  """Generates a v4 signed URL for downloading a blob. """
-  if credentials is None:
-    credentials = get_google_storage_credentials()
-    
-  bucket = storageClient.get_bucket(bucket_name)
-  try: 
-    blob = bucket.blob(blob_name)
-    url = blob.generate_signed_url(
-      expiration=expiration,
-      method="GET",
-      credentials=credentials
-    )
-    return url
 
-  except Exception as inst:
-    logger.error(type(inst))
-    logger.error(inst.args)
-    logger.error(inst)
+
+
+#
+# Download
+#
+
+def make_secure_filename(*options):
+  '''
+    Loop through a list of possible filenames, returning the first that's safe.
+    If no option in the list is safe, or if no options provided, returns a randomized (safe) string.
+  '''
+  for option in options:
+    try:
+      fname = secure_filename(option)
+      if fname:
+        return fname
+    except:
+      pass
+  return secure_filename(unique_id())
+
+
+def download_blob_to_file(bucket_name, *path, destination='', filename=None):
+  '''
+    Downloads a blob and saves it locally.
+
+    Validates the `filename` argument using Werkzeug `secure_filename`.
+    Does NOT validate `destination` the same way.
+
+    If you want to download a blob into a specific folder, use `destination`.
+    You'll have to make sure the path is secure.
+
+    Arguments:
+      - `bucket_name`: The name of the bucket where the blob is located
+      - `*path`: The path to the file within the bucket (incl. the filename itself)
+      - `destination`: The local folder to download the blob to. Optional.
+      - `filename`:
+          A local name for the downloaded blob. May be changed by Werkzeug `secure_filename`.
+          If not provided, uses the name of the file in datastore (i.e. the right-most component of the `path`).
+
+    Returns:
+      The local filepath / filename for the downloaded blob.
+      Note that this may be different from the passed filename, if that name was not secure.
+
+    Raises:
+      NotFoundError: The desired blob does not exist.
+  '''
+
+  # If no filename provided, try using the final component of blob path
+  target_filename = os.path.join(destination, make_secure_filename(filename, path[-1].split('/')[-1]))
+
+  # Retrieve the blob, throwing an error if it doesn't exist
+  blob = get_blob(bucket_name, *path)
+  if not (blob and blob.exists()):
+    raise NotFoundError('blob', {'bucket': bucket_name, 'name': join_path(*path)})
+
+  # Download the blob to a file and return the filename
+  blob.download_to_file(open(target_filename, 'wb'))
+  return target_filename
+
+
+def download_blob_as_json(blob, enc='utf-8'):
+  '''
+    Return the contents of a blob JSON file as a JSON object.
+
+    Arguments:
+      blob: The blob to read
+      enc (string): The encoding of the file
+  '''
+  return json.loads(blob.download_as_string().decode(enc))
+
+
+def download_blob_as_dataframe(blob, sep='\t', enc='utf-8', empty_as_none=True):
+  '''
+    Return the contents of a blob CSV file as a Pandas DataFrame.
+
+    Arguments:
+      blob: The blob to read
+      sep (string): The separator character to use when parsing
+      enc (string): The encoding of the file
+      empty_as_none (bool): If True, return an empty file as None instead of an empty DataFrame
+  '''
+
+  # Download the blob (safely)
+  try:
+    result = blob.download_as_string().decode(enc)
+  except Exception as ex:
+    raise TypeError() from ex
+
+  # Check for empty file
+  if empty_as_none and len(result) == 0:
     return None
+
+  # Convert to dataframe using desired separator
+  return pd.read_csv(io.StringIO(result), sep=sep)

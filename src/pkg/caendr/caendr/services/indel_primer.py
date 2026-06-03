@@ -1,42 +1,25 @@
 import tabix
-import os
-import json
-
 from cyvcf2 import VCF
 from caendr.services.logger import logger
 
-from caendr.models.error import EnvVarError
-from caendr.models.datastore import IndelPrimer
-from caendr.models.task import IndelPrimerTask
+from caendr.models.datastore import IndelPrimerReport, Species
 
-from caendr.services.cloud.secret import get_secret
-from caendr.services.cloud.datastore import query_ds_entities
-from caendr.services.cloud.task import add_task
-from caendr.services.cloud.storage import upload_blob_from_string, get_blob, check_blob_exists
-from caendr.services.tool_versions import get_current_container_version
+from caendr.services.cloud.storage import (
+    BlobURISchema,
+    download_blob_to_file,
+    generate_blob_uri,
+)
 
 from caendr.utils.constants import CHROM_NUMERIC
-from caendr.utils.data import unique_id
-
-MODULE_SITE_BUCKET_PRIVATE_NAME   = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
-INDEL_PRIMER_CONTAINER_NAME       = os.environ.get('INDEL_PRIMER_CONTAINER_NAME')
-INDEL_PRIMER_TASK_QUEUE_NAME      = os.environ.get('INDEL_PRIMER_TASK_QUEUE_NAME')
-MODULE_API_PIPELINE_TASK_URL_NAME = os.environ.get('MODULE_API_PIPELINE_TASK_URL_NAME')
+from caendr.utils.env import get_env_var
 
 
-SV_BED_FILENAME = os.environ.get('INDEL_PRIMER_SV_BED_FILENAME')
-SV_VCF_FILENAME = os.environ.get('INDEL_PRIMER_SV_VCF_FILENAME')
 
-if not SV_BED_FILENAME:
-  logger.debug("No value provided for INDEL_PRIMER_SV_BED_FILENAME")
-  raise EnvVarError()
-
-if not SV_VCF_FILENAME:
-  logger.debug("No value provided for INDEL_PRIMER_SV_VCF_FILENAME")
-  raise EnvVarError()
+MODULE_SITE_BUCKET_PRIVATE_NAME = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
+INDEL_PRIMER_CONTAINER_NAME     = get_env_var('INDEL_PRIMER_CONTAINER_NAME', can_be_none=True)
+INDEL_PRIMER_TOOL_PATH          = get_env_var('INDEL_PRIMER_TOOL_PATH')
 
 
-API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 
 # =========================== #
 #    pairwise_indel_finder    #
@@ -45,13 +28,6 @@ API_PIPELINE_TASK_URL = get_secret(MODULE_API_PIPELINE_TASK_URL_NAME)
 MIN_SV_SIZE = 50
 MAX_SV_SIZE = 500
 
-# Initial load of strain list from sv_data
-# This is run when the server is started.
-# NOTE: Tabix cannot make requests over https!
-SV_BED_URL = f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/tools/pairwise_indel_primer/{SV_BED_FILENAME}"
-SV_VCF_URL = f"http://storage.googleapis.com/{MODULE_SITE_BUCKET_PRIVATE_NAME}/tools/pairwise_indel_primer/{SV_VCF_FILENAME}"
-
-SV_STRAINS = VCF(SV_VCF_URL).samples
 SV_COLUMNS = [
     "CHROM",
     "START",
@@ -62,66 +38,84 @@ SV_COLUMNS = [
     "SIZE",
 ]
 
-STRAIN_CHOICES = [(x, x) for x in SV_STRAINS]
 CHROMOSOME_CHOICES = [(x, x) for x in CHROM_NUMERIC.keys()]
 COLUMNS = ["CHROM", "START", "STOP", "?", "TYPE", "STRAND", ""]
 
-def get_indel_primer(id):
-  return IndelPrimer(id)
 
 
-def get_sv_strains():
-  return SV_STRAINS
+def get_bed_url(species, release = None, secure = True):
+  release = release or Species.from_name(species).release_pif
+  filename = IndelPrimerReport.get_source_filename(release)
+  filepath = IndelPrimerReport.get_source_filepath(species)
+  return generate_blob_uri(
+    MODULE_SITE_BUCKET_PRIVATE_NAME, filepath, f'{filename}.bed.gz', schema = BlobURISchema.http(secure=secure)
+  )
+
+def get_vcf_url(species, release = None, secure = True):
+  release = release or Species.from_name(species).release_pif
+  filename = IndelPrimerReport.get_source_filename(release)
+  filepath = IndelPrimerReport.get_source_filepath(species)
+  return generate_blob_uri(
+    MODULE_SITE_BUCKET_PRIVATE_NAME, filepath, f'{filename}.vcf.gz', schema = BlobURISchema.http(secure=secure)
+  )
 
 
-def get_all_indel_primers():
-  logger.debug(f'Getting all indel primers...')
-  results = query_ds_entities(IndelPrimer.kind)
-  primers = [IndelPrimer(entity) for entity in results]
-  return sorted(primers, key=lambda x: x.created_on, reverse=True)
+def download_vcf_index_file(species, release = None):
+  '''
+    Download the VCF index file for the indel primer tool, keeping the same name used in datastore.
+  '''
+  filename = IndelPrimerReport.get_source_filename(release) + '.vcf.gz.csi'
+  filepath = IndelPrimerReport.get_source_filepath(species)
+  download_blob_to_file(MODULE_SITE_BUCKET_PRIVATE_NAME, filepath, filename)
 
 
-def get_user_indel_primers(username):
-  logger.debug(f'Getting all indel primers for user: username:{username}')
-  filters = [('username', '=', username)]
-  results = query_ds_entities(IndelPrimer.kind, filters=filters)
-  primers = [IndelPrimer(e) for e in results]
-  return sorted(primers, key=lambda x: x.created_on, reverse=True)
+def get_sv_strains(species, release = None):
+  logger.debug(f'get_sv_strains for {species}')
+
+  # Use the given release if provided, otherwise default to species value
+  release = release or Species.from_name(species).release_pif
+
+  # Compute and log the URL of the VCF file on GCP
+  vcf_url = get_vcf_url( species, release, secure=False )
+  logger.debug(f'get_sv_strains: reading strains from {vcf_url}')
+
+  # Explicitly download the index file
+  # IMPORTANT: This solves a memory allocation error in the cyvcf library
+  download_vcf_index_file(species, release)
+
+  # Read the list of strains from the vcf file
+  try:
+    return VCF( vcf_url ).samples
+  except Exception as ex:
+    logger.error(f'Error reading VCF file "{vcf_url}": {ex}')
+    raise
 
 
 def get_indel_primer_chrom_choices(): 
   return CHROMOSOME_CHOICES
   
   
-def get_indel_primer_strain_choices():
-  return STRAIN_CHOICES
+def get_indel_primer_strain_choices(species, release = None):
+  return [ (x, x) for x in get_sv_strains(species, release) ]
 
 
 def overlaps(s1, e1, s2, e2):
   return s1 <= s2 <= e1 or s2 <= s1 <= e2
-  
-
-def fetch_ip_data(ip: IndelPrimer):
-  return get_blob(ip.get_bucket_name(), ip.get_data_blob_path())
 
 
-def fetch_ip_result(ip: IndelPrimer):
-  return get_blob(ip.get_bucket_name(), ip.get_result_blob_path())
-
-
-def query_indels_and_mark_overlaps(strain_1, strain_2, chromosome, start, stop):
+def query_indels_and_mark_overlaps(species, strain_1, strain_2, chromosome, start, stop):
   results = []
-  strain_cmp = [strain_1,
-                strain_2]
-  tb = tabix.open(SV_BED_URL)
+  strain_cmp = [ strain_1, strain_2 ]
+
+  tb = tabix.open( get_bed_url(species, secure=False) )
   query = tb.query(chromosome, start, stop)
-  results = []
+
   for row in query:
     row = dict(zip(SV_COLUMNS, row))
     row["START"] = int(row["START"])
-    row["END"] = int(row["END"])
-    if row["STRAIN"] in strain_cmp and \
-      MIN_SV_SIZE <= int(row["SIZE"]) <= MAX_SV_SIZE:
+    row["END"]   = int(row["END"])
+
+    if row["STRAIN"] in strain_cmp and ( MIN_SV_SIZE <= int(row["SIZE"]) <= MAX_SV_SIZE ):
       row["site"] = f"{row['CHROM']}:{row['START']}-{row['END']} ({row['SVTYPE']})"
       results.append(row)
   
@@ -139,115 +133,3 @@ def query_indels_and_mark_overlaps(strain_1, strain_2, chromosome, start, stop):
     results = [x for x in results if x['overlap'] is False]
     return sorted(results, key=lambda x: (x["START"], x["END"]))
   return []
-
-
-def create_new_indel_primer(username, site, strain_1, strain_2, size, data_hash, no_cache=False):
-  logger.debug(f'''Creating new Indel Primer:
-    username:  "{username}"
-    site:      {site}
-    strain_1:  {strain_1}
-    strain_2:  {strain_2}
-    size:      {size}
-    data_hash: {data_hash}
-    cache:     {not no_cache}''')
-
-  # Check for existing indel primer matching data_hash & user
-  if not no_cache:
-    ips = query_ds_entities(IndelPrimer.kind, filters=[('data_hash', '=', data_hash)])
-    if ips and ips[0]:
-      ip = IndelPrimer(ips[0])
-      if ip.username == username:
-        return ip
-
-  # Compute unique ID for new Indel Primer entity
-  id = unique_id()
-  
-  # Load container version info 
-  c = get_current_container_version(INDEL_PRIMER_CONTAINER_NAME)
-  if c is None:
-    logger.error(f"Unable to find the container for [{INDEL_PRIMER_CONTAINER_NAME}]")
-    return 
-
-  # Create Indel Primer entity & upload to GCP
-  ip = IndelPrimer(id)
-  ip.set_properties(**{
-    'id':                id,
-    'username':          username,
-    'site':              site,
-    'strain_1':          strain_1,
-    'strain_2':          strain_2,
-    'size':              size,
-    'data_hash':         data_hash,
-    'container_repo':    c.repo,
-    'container_name':    c.container_name,
-    'container_version': c.container_tag,
-    'sv_bed_filename':   SV_BED_FILENAME,
-    'sv_vcf_filename':   SV_VCF_FILENAME,
-    'status':            'SUBMITTED',
-  })
-  ip.save()
-
-  # Check if there is already a result
-  if not no_cache:
-    if check_blob_exists(ip.get_bucket_name(), ip.get_result_blob_path()):
-      ip.status = 'COMPLETE'
-      ip.save()
-      return ip
-
-  # Collect data about this run
-  data = {
-    'site': site,
-    'strain_1': strain_1,
-    'strain_2': strain_2,
-    'size': size
-  }
-
-  # Upload data.tsv to google storage
-  bucket = ip.get_bucket_name()
-  blob = ip.get_data_blob_path()
-  upload_blob_from_string(bucket, json.dumps(data), blob)
-
-  # Schedule mapping in task queue
-  task = _create_indel_primer_task(ip)
-  payload = task.get_payload()
-  task = add_task(INDEL_PRIMER_TASK_QUEUE_NAME, f'{API_PIPELINE_TASK_URL}/task/start/{INDEL_PRIMER_TASK_QUEUE_NAME}', payload)
-
-  # If task couldn't be created, set Indel Primer status to ERROR
-  if not task:
-    ip.status = 'ERROR'
-    ip.save()
-
-  # Return resulting Indel Primer object
-  return ip
-
-
-def _create_indel_primer_task(ip):
-  """
-    Convert an Indel Primer object to an Indel Primer task.
-  """
-  return IndelPrimerTask(**{
-    'id':                ip.id,
-    'kind':              IndelPrimer.kind,
-    'username':          ip.username,
-    'site':              ip.site,
-    'strain_1':          ip.strain_1,
-    'strain_2':          ip.strain_2,
-    'data_hash':         ip.data_hash,
-    'container_repo':    ip.container_repo,
-    'container_name':    ip.container_name,
-    'container_version': ip.container_version,
-    'sv_bed_filename':   ip.sv_bed_filename,
-    'sv_vcf_filename':   ip.sv_vcf_filename,
-  })
-
-
-def update_indel_primer_status(id: str, status: str=None, operation_name: str=None):
-  logger.debug(f'update_indel_primer_status: id:{id} status:{status} operation_name:{operation_name}')
-  m = IndelPrimer(id)
-  if status:
-    m.set_properties(status=status)
-  if operation_name:
-    m.set_properties(operation_name=operation_name)
-    
-  m.save()
-  return m

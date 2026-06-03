@@ -1,0 +1,145 @@
+{% block custom_head %}
+
+<script src="https://cdn.plot.ly/plotly-3.0.1.min.js" charset="utf-8"></script>
+<style>
+</style>
+
+{% endblock %}
+
+{% block content %}
+<div>
+    <div id="pie_charts" style="height: 375px; width:100%"></div>
+    <div style="height: 10px"></div>
+    <div><p>* Laboratories that have contributed >5% of strains are highlighted in the charts above</p></div>
+</div>
+{% endblock %}
+
+{% block script %}
+
+<script>
+    var species_counts = {
+        'Caenorhabditis elegans': {},
+        'Caenorhabditis briggsae': {},
+        'Caenorhabditis tropicalis': {}
+    }
+    var species_totals = {
+        'Caenorhabditis elegans': 0,
+        'Caenorhabditis briggsae': 0,
+        'Caenorhabditis tropicalis': 0
+    }
+    
+    const data = {{ strain_listing|tojson|safe }}
+    if (data === null) {
+        console.error('Failed to retrieve strains.');
+    }
+    
+    data.forEach(function(d) {
+        let end = d.strain.search("[0-9]");
+        let lab = d.strain.substring(0, end);
+        if ( ! species_counts[d.species][lab] ) species_counts[d.species][lab] = 0;
+        species_counts[d.species][lab] += 1;
+        species_totals[d.species] += 1;
+    });
+
+    const labs = {{ contributor_labs|tojson|safe }}
+    
+    const species_names=["Caenorhabditis briggsae", "Caenorhabditis elegans", "Caenorhabditis tropicalis"];
+    var pie_data = [{}, {}, {}, {}];
+    pie_data[0]['values'] = [];
+    pie_data[0]['labels'] = [];
+    pie_data[0]['text'] = [];
+    pie_data[0]['domain'] = {x: [0, 0.0001], y: [0, .0001]};
+    pie_data[0]['type'] = 'pie';
+    pie_data[0]['sort'] = false;
+    pie_data[0]['hoverinfo'] = "text";
+    pie_data[0]['textinfo'] = "text";
+    for (var j=0; j<labs.length; j++) {
+        var add=false;
+        for (var i=0; i<3; i++) {
+            var species = species_names[i];
+            if (species_counts[species][labs[j][0]] && species_counts[species][labs[j][0]] / species_totals[species] >= 0.05) {add=true};
+        };
+        if (add){
+            pie_data[0]['values'].push(1);
+            pie_data[0]['text'].push("");
+            pie_data[0]['labels'].push(labs[j][1].split(' ')[1]);
+        };
+    };
+    pie_data[0]['values'].push(1);
+    pie_data[0]['labels'].push("Others");
+    labels = [];
+    // var contributors = {{ major_strain_contributors|sort(attribute="last_name") }};
+    const x = [0.25, 0.035, 0.465];
+    const y = [0, 0.465, 0.465];
+    for (var i=0; i<3; i++) {
+        var species = species_names[i];
+        pie_data[i+1]['values'] = [];
+        pie_data[i+1]['labels'] = [];
+        pie_data[i+1]['domain'] = {x: [x[i], x[i] + 0.5], y: [y[i], y[i] + 0.5]};
+        pie_data[i+1]['name'] = "C. " + species.split(' ')[1];
+        pie_data[i+1]['hoverinfo'] = "label+value";
+        pie_data[i+1]['hole'] = 0.6;
+        pie_data[i+1]['type'] = 'pie';
+        pie_data[i+1]['sort'] = false;
+        var total=0
+        for (var j=0; j<labs.length; j++) {
+            if (species_counts[species][labs[j][0]] && species_counts[species][labs[j][0]] / species_totals[species] >= 0.05) {
+                pie_data[i+1]['values'].push(species_counts[species][labs[j][0]]);
+                pie_data[i+1]['labels'].push(labs[j][1].split(' ')[1]);
+                total += species_counts[species][labs[j][0]];
+            };
+        };
+        pie_data[i+1]['values'].push(species_totals[species] - total);
+        pie_data[i+1]['labels'].push("Others");
+    };
+    var layout = {
+        annotations: [
+            {
+                font: {
+                    size: 12
+                },
+                showarrow: false,
+                text: 'C. elegans',
+                x: 0.225,
+                y: 0.725,
+                font: {style: "italic"}
+            },
+            {
+                font: {
+                    size: 12
+                },
+                showarrow: false,
+                text: 'C. briggsae',
+                x: 0.5,
+                y: 0.225,
+                font: {style: "italic"}
+            },
+            {
+                font: {
+                    size: 12
+                },
+                showarrow: false,
+                text: 'C. tropicalis',
+                x: 0.775,
+                y: 0.725,
+                font: {style: "italic"}
+            }
+        ],
+        margin: {"t": 0, "b": 0, "l": 0, "r": 0},
+        height: 375,
+        showlegend: true,
+        legend: {
+            x: .92,
+            xanchor: 'center',
+            y: 0,
+            yanchor: 'bottom',
+        },
+        grid: {rows: 2, columns: 2}
+    };
+
+    PIE_DIV = document.getElementById('pie_charts');
+    Plotly.newPlot(PIE_DIV, pie_data, layout);
+
+    </script>
+
+{% endblock %}

@@ -1,6 +1,10 @@
 import os
 from flask import Flask
 from dotenv import load_dotenv
+from caendr.utils.env import load_env
+
+load_env('.env')
+load_dotenv('module.env')
 
 from caendr.utils import monitor
 from caendr.blueprints import api_error_handler_bp
@@ -9,10 +13,6 @@ from routes.base import base_bp
 
 ENV = os.environ.get('FLASK_ENV', 'development')
 PORT = os.environ.get('PORT', 8080)
-
-
-dotenv_file = '.env'
-load_dotenv(dotenv_file)
 
 monitor.init_sentry("pipeline-task")
 

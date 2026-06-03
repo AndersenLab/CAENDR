@@ -19,13 +19,17 @@ variable "GOOGLE_CLOUDSQL_SERVICE_ACCOUNT_NAME" {}
 variable "MODULE_API_PIPELINE_TASK_CONTAINER_NAME" { }
 variable "MODULE_API_PIPELINE_TASK_CONTAINER_VERSION" { }
 variable "MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME" { }
+variable "MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME" { }
 variable "MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME" { }
 variable "MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME" { }
 variable "MODULE_API_PIPELINE_TASK_PUB_SUB_SUBSCRIPTION_NAME" { }
+variable "MODULE_API_PIPELINE_TASK_CLOUDRUN_MIN_SCALE" { }
+variable "MODULE_API_PIPELINE_TASK_CLOUDRUN_MAX_SCALE" { }
 
 
 # Site Module Variables
 variable "MODULE_SITE_CONTAINER_NAME" { type = string }
+variable "MODULE_SITE_CLOUDRUN_SA_NAME" { type = string }
 variable "MODULE_SITE_CONTAINER_VERSION" { type = string}
 variable "MODULE_SITE_SERVING_STATUS" { type = bool }
 variable "MODULE_SITE_BUCKET_ASSETS_NAME" { type = string }
@@ -37,11 +41,9 @@ variable "INDEL_PRIMER_TASK_QUEUE_NAME" { type = string }
 variable "HERITABILITY_TASK_QUEUE_NAME" { type = string } 
 variable "MODULE_API_PIPELINE_TASK_URL_NAME" { type = string }
 
-
-# Gene Browser Tracks
-variable "MODULE_GENE_BROWSER_TRACKS_CONTAINER_NAME" { type = string }
-variable "MODULE_GENE_BROWSER_TRACKS_CONTAINER_VERSION" { type = string }
-variable "MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME" { type = string }
+# Maintenance Module Variables
+variable "MODULE_MAINTENANCE_CONTAINER_NAME" { type = string }
+variable "MODULE_MAINTENANCE_CONTAINER_VERSION" { type = string }
 
 # DB-Operations Module Variables
 variable "MODULE_DB_OPERATIONS_CONTAINER_NAME" { type = string }
@@ -74,4 +76,6 @@ variable "JWT_SECRET_KEY" { sensitive = true }
 variable "PASSWORD_PEPPER" { sensitive = true }
 variable "MAILGUN_API_KEY" { sensitive = true }
 variable "CC_EMAILS" { sensitive = true }
+variable "CAENDR_API_SITE_ACCESS_TOKEN" { sensitive = true }
+variable "NO_REPLY_EMAIL" { sensitive = true }
 

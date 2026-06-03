@@ -23,7 +23,7 @@ LOAD_SECRET_TF_VAR=export $$(cat $(SECRET_ENV_FILE) | sed $(WHITESPACE_REGEX) | 
 TF_SELECT_WORKSPACE=(terraform workspace new $(ENV) || (echo "Switching to existing workspace \"$(ENV)\"" && terraform workspace select $(ENV)))
 
 all: help
-targets: configure cloud-resource-plan cloud-resource-deploy cloud-resource-destroy 
+targets: configure mac_configure cloud-resource-plan cloud-resource-deploy cloud-resource-destroy 
 
 .PHONY : targets
 .DEFAULT : help
@@ -104,6 +104,16 @@ endif
 	gcloud auth application-default login && \
 	gcloud auth configure-docker
 
+mac_configure:
+	brew install terraform
+	brew install google-cloud-sdk
+	brew install cloud-sql-Proxy
+
+	@echo -e "\n$(COLOR_B)Configuring Google Cloud SDK...$(COLOR_N)" && \
+	gcloud init && \
+	gcloud auth login && \
+	gcloud auth application-default login && \
+	gcloud auth configure-docker
 
 #~
 terraform-shell: #~
@@ -159,6 +169,19 @@ docker-daemon:
 	@echo "OK"
 
 #~
+cloud-resource-refresh: #~
+#~ Executes the generated terraform plan for deploying infrastructure described 
+#~ in ./env/[environment]/terraform including any service-specific terraform modules that are required
+cloud-resource-refresh: cloud-resource-init docker-daemon
+	@echo -e "\n$(COLOR_B)Deploying the Terraform cloud resource plan...$(COLOR_N)" && \
+	$(LOAD_GLOBAL_ENV) && $(LOAD_TF_VAR) && $(LOAD_SECRET_TF_VAR) && \
+	cd $(TF_PATH) && \
+	rm -rf tf_plan && \
+	$(TF_SELECT_WORKSPACE) && \
+	terraform apply -refresh-only -auto-approve
+	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
+
+#~
 cloud-resource-deploy: #~
 #~ Executes the generated terraform plan for deploying infrastructure described 
 #~ in ./env/[environment]/terraform including any service-specific terraform modules that are required
@@ -168,12 +191,41 @@ cloud-resource-deploy: cloud-resource-init docker-daemon
 	cd $(TF_PATH) && \
 	rm -rf tf_plan && \
 	$(TF_SELECT_WORKSPACE) && \
+	terraform apply -refresh-only -auto-approve &&  \
 	terraform plan -out tf_plan && \
 	$(MAKE) -C $(PROJECT_DIR) confirm --no-print-directory && \
 	terraform apply "tf_plan" 
 	@echo -e "$(COLOR_Y)GAE -- Login to GCP and delete all the older versions of GAE no longer in use!$(COLOR_N)\n"
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
+container-site-v2:
+	cd src/modules/site-v2 && make clean && (echo | make container)
+
+container-db-operations:
+	cd src/modules/site-v2 && make clean && (echo | make container) 
+
+container-api-pipeline:
+	cd src/modules/site-v2 && make clean && (echo | make container)
+
+#~
+containers: #~
+#~ Builds containers for the site-v2, db-operations, and api-pipeline
+containers: container-site-v2 container-db-operations container-api-pipeline
+
+
+publish-container-site-v2:
+	cd src/modules/site-v2 && make clean && (echo | make publish)
+
+publish-container-db-operations:
+	cd src/modules/site-v2 && make clean && (echo | make publish) 
+
+publish-container-api-pipeline:
+	cd src/modules/api/pipeline-task && make clean && (echo | make publish)
+
+#~
+publish-containers: #~
+#~ Publishes the containers for the site-v2, db-operations, and api-pipeline
+publish-containers: publish-container-site-v2 publish-container-db-operations publish-container-api-pipeline
 
 #~
 cloud-resource-destroy: #~

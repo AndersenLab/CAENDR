@@ -1,6 +1,6 @@
-# CAENDR
+# CaeNDR
 
-`CAENDR` is the code used to run the [_Caenorhabditis elegans_ Natural Diversity Resource](https://www.elegansvariation.org) website. 
+`CaeNDR` is the code used to run the [_Caenorhabditis elegans_ Natural Diversity Resource](https://www.caendr.org) website. 
 
 ## GCP Credentials
 
@@ -11,22 +11,60 @@ open -a Finder ~/.gcp
 ```
 The last line should open MacOS Finder on the `~/.gcp/` folder. Drop the `.json` service account file there. 
 
-## MacOS setup
+## MacOS setup - Requirements
 
-*Requirements*
+### Visual Studio Code
 
-* VS Code
-* Docker Mac (https://docs.docker.com/desktop/install/mac-install/) 
-* homebrew (install from https://brew.sh/)
+Download from https://code.visualstudio.com/
+Install the extension: "Python" (should have 96M downloads)
 
-Steps:
+
+### Docker Mac 
+
+Download from https://docs.docker.com/desktop/install/mac-install/
+
+### Homebrew
+
 ```
-brew update
-brew install python-devel
-brew install pyenv
+$ cd $HOME
+$ mkdir homebrew && curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C homebrew
 ```
 
-Edit your `~/.bash_profile` and add this to the bottom of the file. If the file doens't exist, create a new one. 
+Find out which shell you are using: 
+```
+echo $SHELL
+```
+
+If you see "bash" then update the `~/.bash_profile` in the next step. If you see `zsh` as your shell, then update the file `~/.zprofile`
+
+Add this line to the bottom of your file `~/.bash_profile`, or `.zprofile`.
+```
+export PATH=$HOME/homebrew/bin:$PATH
+```
+
+
+### Set terminal to run in x86_64 mode under Rosetta
+- Open Finder on your Mac
+- Navigate to Applications/Utilities/Terminal.app, 
+- Right-click/GetInfo
+- Enable the checkbox "Open with Rosetta". 
+- Close and reopen the terminal app. 
+- Inside Terminal, type;
+```
+$ arch
+```
+Expected result:
+```
+i386
+```
+
+### Install Dependencies:
+```
+arch -x86_64 brew  update
+arch -x86_64 brew install pyenv OpenSSL readline gettext xz
+```
+
+Edit your `~/.bash_profile` and add this to the bottom of the file. If the file `~/.bash_profile` doens't exist check if you are using a different shell (eg: zsh, etc). In that case you might need to edit the file `~/.zshrc` or `~/.zprofile`. 
 
 ```
 # if using bash, do 
@@ -62,55 +100,77 @@ virtualenv 20.13.0 from /Users/rbv218/.pyenv/versions/3.7.12/lib/python3.7/site-
 Open one terminal window and run:
 ```
 export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
-export ENV=main
+export ENV=development
 cd src/modules/site
 make clean
 make configure
 make cloud-sql-proxy-start
-
-# once you are done working on the PR, then stop the 
-make cloud-sql-proxy-stop
-# if this does not stop the container, do this: 
-docker ps
-(base) rbv218@imac:site{docs/developer-getting-started} $ docker ps
-CONTAINER ID   IMAGE                                            COMMAND                  CREATED          STATUS          PORTS                    NAMES
-75ef941c1e64   gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine   "/cloud_sql_proxy -i…"   29 minutes ago   Up 29 minutes   0.0.0.0:5432->5432/tcp   caendr-cloud-sql-proxy-1
-
-then stop the container manually with:
-$ docker kill 75ef941c1e64
- 
 ```
 
-Expected result:
+Check that the cloud-sql-proxy docker container is running:
 ```
 $ docker ps
-CONTAINER ID   IMAGE                                            COMMAND                  CREATED         STATUS         PORTS                    NAMES
-75ef941c1e64   gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine   "/cloud_sql_proxy -i…"   3 minutes ago   Up 3 minutes   0.0.0.0:5432->5432/tcp   caendr-cloud-sql-proxy-1
 ```
 
-*To make changes to the Legacy site (currently in production)*
-Open a second terminal window
+Expected Result:
 ```
-export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
-export ENV=main
-cd src/modules/site
-make configure
-make dot-env
-make venv
-code ../../..
+CONTAINER ID   IMAGE                                            COMMAND                  CREATED       STATUS        PORTS                    NAMES
+9413d4f448f0   gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine   "/cloud_sql_proxy -i…"   3 weeks ago   Up 23 hours   0.0.0.0:5432->5432/tcp   caendr-cloud-sql-proxy-1
 ```
+Please note that the CONTAINER_ID will be different on your machine. 
 
-*To make changes to the NEW site-v2 templates*
+Keep this docker container running while running the site below. 
+
+## To make changes to the NEW site-v2 templates*
 Open a second terminal window 
 ```
 export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
-export ENV=main
+export ENV=development
 cd src/modules/site-v2
 make configure
 make dot-env
 make venv
 code ../../..
 ```
+
+The last command will open Visual Studio Code at the root of the project. From the DEBUG->List of options, select "Run Site-v2 (requires a local Postgres instance or cloud-sql-proxy)" and click "Play'.
+
+## Stopping the Database Proxy
+
+Once you are done working on the site and no longer need the database, then close the connection:
+
+```
+make cloud-sql-proxy-stop
+```
+
+if this does not stop the container, do this: 
+```
+docker ps
+```
+
+Expected Result:
+```
+CONTAINER ID   IMAGE                                            COMMAND                  CREATED          STATUS          PORTS                    NAMES
+75ef941c1e64   gcr.io/cloudsql-docker/gce-proxy:1.28.1-alpine   "/cloud_sql_proxy -i…"   29 minutes ago   Up 29 minutes   0.0.0.0:5432->5432/tcp   caendr-cloud-sql-proxy-1
+```
+
+Find the CONTAINER_ID (first column) and stop the container manually with:
+```
+$ docker kill 75ef941c1e64
+```
+
+*To make changes to the Legacy site (currently in production)*
+Open a second terminal window
+```
+export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/NAME_OF_THE_SERVICE_ACCOUNT_FILE.json
+export ENV=development
+cd src/modules/site
+make configure
+make dot-env
+make venv
+code ../../..
+```
+
 
 
 ## Linux Setup
@@ -215,6 +275,21 @@ Open a terminal at the root of the project:
 Troubleshooting:
 * Even if ENV and GOOGLE_APPLICATION_CREDENTIALS are set correctly you will need to be [logged into gcloud and configure docker](#setting-the-environment-and-gcloud-login) to enable publishing containers to GCR since the service account does not have permissions to publish.
 * Sometimes after deployment of the full application the ext_assets folder will not copy to the GCP static bucket, but terraform state will reflect the correct bucket resources. You'll notice the CeNDR logo and worms video will not show up on the home page. Simply redeploy the full application and the assets should be correctly copied to the GCP static bucket, fixing the issue.
+* Deployment will not work if a virtual environment exists in `img_thumb_gen`, giving an error like the following:
+    ```
+    ╷
+    │ Error: Error while updating cloudfunction configuration: Error waiting for Updating CloudFunctions Function: Error code 14, message: The service has encountered an error during container import. Please try again later
+    │ 
+    │   with module.img_thumb_gen.google_cloudfunctions_function.generate_thumbnails,
+    │   on modules/img_thumb_gen/cloud-function.tf line 1, in resource "google_cloudfunctions_function" "generate_thumbnails":
+    │    1: resource "google_cloudfunctions_function" "generate_thumbnails" {
+    │ 
+    ╵
+    make: *** [cloud-resource-deploy] Error 1
+    ```
+  Remove the `venv` directory and try redeploying.
+* Due to a race condition, sometimes Terraform will attempt to access the new site image before it has been built and published to GCP. Manually publishing the image by running `make publish` in `src/modules/site` (or `src/modules/site-v2`), then deploying, should fix this issue.
+
 
 ## Deployment of Individual Components
 -------------------------------------------------------------------
@@ -224,7 +299,6 @@ Targeted deployment is under construction until isolated TF states can be establ
 * [Site](src/modules/api/pipeline-task/README.md)
 * [API Pipeline Tasks](src/modules/api/pipeline-task/README.md)
 * [Database Operations](src/modules/db_operations/README.md)
-* [Gene Browser Tracks](src/modules/gene_browser_tracks/README.md)
 * [Heritability](src/modules/heritability/README.md)
 * [Image Thumbnail Generator](src/modules/img_thumb_gen/README.md)
 * [Indel Primer](src/modules/indel_primer/README.md) -->
@@ -312,3 +386,35 @@ A: Install via homebrew:
 brew install postgresql
 ```
 
+Q:  I'm seeing this error when running `make venv` from the `src/modules/site-v2` folder: "_libintl_textdomain", referenced from:
+      _PyIntl_textdomain in libpython3.7m.a(_localemodule.o)
+      _PyIntl_textdomain in libpython3.7m.a(_localemodule.o)
+A: Install gettext
+```
+$ arch -x86_64 brew install gettext
+```
+
+Q: I'm seeing this error when runing `make venv` from the `src/modules/site-v2` folder: "ModuleNotFoundError: No module named 'readline'"
+A: 
+```
+$ arch -x86_64 brew install readline
+```
+
+Q: I'm seeing this error when running `make venv` from the `src/modules/site-v2` folder: 
+"ERROR: The Python ssl extension was not compiled. Missing the OpenSSL lib?"
+A: 
+```
+$ arch -x86_64 brew install openssl
+```
+
+
+Q: I get an `ImportError` when running the API in VSCode:
+```
+    ImportError: cannot import name 'Literal' from 'typing' (/Users/ ... /.pyenv/versions/3.7.12/lib/python3.7/typing.py)
+```
+
+A: The VSCode extension `debugpy`, version `v2024.12.0`, appears to break on Python 3.7 -- it's not clear if this is a bug, or intentional dropping of support for older versions.
+You can get around this by pinning your extension to `v2024.10.0` -- see [the VSCode docs](https://code.visualstudio.com/updates/v1_30#_install-previous-versions) for instructions.
+
+(If this is a bug, further updates to `debugpy` might fix this issue.  Keep an eye on it, and try the newest version if necessary.)
+ 

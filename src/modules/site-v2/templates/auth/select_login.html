@@ -12,23 +12,17 @@
 </div>
 
 <div class="row justify-content-center">
-    <div class="col-md-4 col-md-offset-4">
+    <div class="col-md-4">
 <br />
-<p style="text-align:center; position:relative;"><img src="{{ ext_asset('img/logo.png') }}" alt="CeNDR Logo"  style="margin-right:40px; max-height:150px; margin: auto; display: inline; margin:20px;" class=" img-responsive"/></p>
-
+<p class="text-center"><img src="/static/img/caeNDRLogo.png" alt="CaeNDR Logo" class="img-responsive mb-5" style="max-width:175px; height: auto;"/></p>
       <h1 class='text-center'>Select Login</h1>
       <hr />
         <br />
-        <div class="list-group register-collection">
-          <a href="{{ url_for('user.user_register') }}" class="list-group-item list-group-item-action"><i class='fa fa-user-plus'></i>  Register </a>
+        <div class="d-grid gap-3">
+          <a class="btn btn-secondary text-light fw-bold shadow-sm" type="button" href="{{ url_for('user.user_register') }}"><i class="bi bi-person-fill-add"></i> Register</a>
+          <a class="btn btn-secondary text-light fw-bold shadow-sm" type="button" href="{{ url_for('auth.basic_login') }}"><i class="bi bi-person-fill"></i> Username/Password</a>
+          <a class="btn btn-secondary text-light fw-bold shadow-sm" type="button" href="{{ url_for('google.login') }}"><i class="bi bi-google"></i> Google</a>
         </div>
-
-
-      <div class="list-group login-collection">
-          <a href="{{ url_for('auth.basic_login') }}" class="list-group-item list-group-item-action"><i class='fa fa-user'></i>  Username/Password </a>
-          <a href="{{ url_for('google.login') }}" class="list-group-item list-group-item-action"><i class='fab fa-google'></i> Google</a>
-    </div>
-
     </div>
   </div>
 

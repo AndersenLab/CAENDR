@@ -1,69 +1,132 @@
-import os
 from caendr.services.logger import logger
 
-from caendr.models.datastore import Entity
+from caendr.models.datastore       import HashableEntity, ReportEntity
+from caendr.models.status          import JobStatus
+from caendr.services.cloud.storage import BlobURISchema, check_blob_exists, get_blob_list
+from caendr.utils.env              import get_env_var
 
 
-MODULE_SITE_BUCKET_PRIVATE_NAME = os.environ.get('MODULE_SITE_BUCKET_PRIVATE_NAME')
-NEMASCAN_REPORT_PATH_PREFIX = 'reports'
-NEMASCAN_RESULT_PATH_INFIX = 'results'
-INPUT_DATA_PATH = 'tools/nemascan/input_data'
+PRIVATE_BUCKET_NAME = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
 REPORT_DATA_PREFIX = 'Reports/NemaScan_Report_'
-NEMASCAN_INPUT_FILE = 'data.tsv'
 
-class NemascanMapping(Entity):
+
+
+class NemascanReport(HashableEntity, ReportEntity):
+
+  #
+  # Class Variables
+  #
+
   kind = 'nemascan_mapping'
-  __bucket_name = MODULE_SITE_BUCKET_PRIVATE_NAME
-  __blob_prefix = NEMASCAN_REPORT_PATH_PREFIX
-  __result_infix = NEMASCAN_RESULT_PATH_INFIX
-  __input_data_path = INPUT_DATA_PATH
-  __input_file = NEMASCAN_INPUT_FILE
-  __report_path = REPORT_DATA_PREFIX
-  
-  def __init__(self, *args, **kwargs):
-    super(NemascanMapping, self).__init__(*args, **kwargs)
-    self.set_properties(**kwargs)
 
-  def set_properties(self, **kwargs):
-    props = self.get_props_set()
-    self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
-      
-  @classmethod
-  def get_bucket_name(cls):
-    return cls.__bucket_name
-  
-  def get_blob_path(self):
-    return f'{self.__blob_prefix}/{self.container_name}/{self.container_version}/{self.data_hash}'
-  
-  def get_data_blob_path(self):
-    return f'{self.get_blob_path()}/{self.__input_file}'
-  
-  def get_result_path(self):
-    return f'{self.get_blob_path()}/{self.__result_infix}'
+  _report_display_name = 'Genetic Mapping'
 
-  def get_report_blob_prefix(self):
-    return f'{self.get_result_path()}/{self.__report_path}'
-  
-  def get_input_data_path(self):
-    return f'{self.__input_data_path}'
+  # Identify the report data by the data hash, inherited from the HashableEntity parent class
+  _data_id_field = 'data_hash'
+
+
+  #
+  # Paths
+  #
+
+  # TODO: Move data files to Data bucket
+  @property
+  def _data_bucket(self) -> str:
+    return PRIVATE_BUCKET_NAME
+
+  # TODO: Standardize data prefix for all tools
+  @property
+  def _data_prefix(self):
+    return 'tools/nemascan/input_data'
+
+  @property
+  def _output_prefix(self):
+    return 'results'
+
+  def get_data_paths(self, schema: BlobURISchema):
+    return {
+      **super().get_data_paths(schema=schema),
+      'TRAIT_FILE': self.input_filepath(schema=schema),
+    }
+
+
+  #
+  # Input & Output
+  #
+
+  _num_input_files = 1
+  _input_filename  = 'data.tsv'
+
+  # Use report_path property to get the filename of the report within the output directory
+  @property
+  def _output_filename(self):
+    report_path   = self.report_path
+    report_prefix = self.output_directory(schema=BlobURISchema.PATH)[1]
+    if report_path and report_path.startswith(report_prefix):
+      report_path = report_path[len(report_prefix):].lstrip('/')
+    return report_path
+
+
+  ## Properties List ##
 
   @classmethod
   def get_props_set(cls):
-    return {'id',
-            'label', 
-            'trait', 
-            'data_hash', 
-            'username',
-            'email',
-            'report_path',
-            'container_name',
-            'container_version',
-            'container_repo',
-            'operation_name',
-            'status'}
-    
-  def __repr__(self):
-    if hasattr(self, 'id'):
-      return f"<{self.kind}:{self.id}>"
-    else:
-      return f"<{self.kind}:no-id>"
+    return {
+      *super().get_props_set(),
+
+      # Submission
+      'email',
+
+      # Query
+      'species',
+      'label',
+      'trait',
+    }
+
+  @classmethod
+  def get_props_set_meta(cls):
+    return {
+      *super().get_props_set_meta(),
+      'report_path',
+    }
+
+
+  ## Meta Properties ##
+
+  @property
+  def report_path(self):
+
+    # Check if this value has been cached already, and if so, make sure the file exists
+    path = self._get_meta_prop('report_path')
+    if path is not None:
+      if check_blob_exists(self._report_bucket, path):
+        return path
+      else:
+        logger.warn(f'Genetic Mapping report {self.id} lists its report path as "{path}", but this file does not exist. Recomputing...')
+
+    # If job threw an error, don't search for report path
+    if self['status'] == JobStatus.ERROR:
+      logger.warn(f'Trying to compute report path for Genetic Mapping report "{self.id}", but job returned an error. Returning None.')
+      return None
+
+    # Get a list of all files with this report's prefix
+    logger.debug(f'Looking for a Genetic Mapping HTML report for ID "{self.id}"')
+    result = get_blob_list( *self.output_directory(REPORT_DATA_PREFIX, schema=BlobURISchema.PATH) )
+
+    # Search the list for an HTML file, and return it if found
+    # Implicitly returns None if no such file is found
+    for file in result:
+      if file.name.endswith('.html'):
+        self._set_meta_prop('report_path', file.name)
+        return file.name
+
+
+  ## User Object ##
+
+  def set_user(self, user):
+    '''
+      Set user properties from a User object.
+      Sets username and email to match provided user.
+    '''
+    self['email'] = user['email']
+    return super().set_user(user)

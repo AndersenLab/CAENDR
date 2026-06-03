@@ -1,0 +1,400 @@
+{% extends "_layouts/default.html" %}
+
+{% block custom_head %}
+<style>
+#tags > li {
+    list-style-type: none;
+    line-height: 2rem;
+}
+.required::after {
+    content: "*";
+    color: red;
+}
+#info {
+        background-color: var(--bs-footerBg);
+        max-width: 650px;
+    }
+#info i {
+    color: #0719BC;
+    font-size: 1.5rem
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container px-5 pb-5">
+
+    {% from "_includes/macros.html" import render_field %}
+
+    <form id="form-submit" method="POST" enctype="multipart/form-data" data-value="{{trait_id}}">
+        {{ form.csrf_token }}
+        <div class="row my-5">
+            <h3 class="pb-3">{{'About You and Lab' if new_submission else 'About User and Lab'}}</h3>
+            <div class="col-md-4">{{ render_field(
+                form.email,
+                make_err_container=true,
+            ) }}</div>
+            <div class="col-md-4">{{ render_field(
+                form.institution,
+                make_err_container=true,
+            ) }}</div>
+            <div class="col-md-4">{{ render_field(
+                form.source_lab,
+                make_err_container=true,
+                has_popover=true,
+                content='Please enter your lab code as found at https://cgc.umn.edu/laboratories',
+            ) }}</div>
+        </div>
+        <hr>
+        <h3 class="pb-3">Trait Information</h3>
+        {% if new_submission %}
+        <div id="info" class="d-flex flex-row p-2 my-4 ">
+            <i class="bi bi-info-circle-fill p-3 align-self-center"></i>
+            <div>
+                <p class="mb-1"><strong>Step 1.</strong> Select species. This step is necessary to allow for file upload and preview.</p>
+                <p class="mb-1"><strong>Step 2.</strong> Upload your file to generate a preview.</p>
+                <p class="mb-1"><strong>Step 3.</strong> Verify the preview data to ensure that it meets the format requirements.</p>
+
+            </div>
+        </div>
+        {% endif %}
+        <div class="row my-5">
+            {% if new_submission %}
+            <div class="col-md-3">{{ render_field(form.species) }}</div>
+            <div class="col-md-3 d-flex">
+                {% call render_field(form.file, has_popover=true, content="Phenotype data should be organized into two columns (strain, trait value). Only tsv (tab-separated value) files are accepted now.") %}
+                {% endcall %}
+            </div>
+            <button class="col-md-2 btn btn-secondary text-light align-self-baseline" disabled style="height:2.3rem; margin-top:2rem" type="button" id="file-upload">Upload File</button>
+            {% else %}
+            <div class="col-md-6 table-responsive">
+                <h4>File Info</h4>
+                <table class="table table-bordered">
+                    <thead></thead>
+                    <tbody>
+                        <tr>
+                            <td>Species</td>
+                            <td>{{form.species.data|capitalize|replace('_', '. ')}}</td>
+                        </tr>
+                        <tr>
+                            <td>File Name:</td>
+                            <td>{{file.name}}</td>
+                        </tr>
+                        <tr>
+                            <td>Upload Date:</td>
+                            <td>{{file.created_on}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+            <div class="col-md-3 p-0 mx-4 d-none" id="file-container">
+                <h4>File Content</h4>
+                <div class="border border-1 rounded overflow-auto" style="height:30vh">
+                    <table class="table table-hover mb-0" id="file-content"></table>
+                </div>
+            </div>
+        </div>
+        <hr>
+        <div class="row my-5">
+            <div class="col-md-6">{{ render_field(
+                form.trait_name_user,
+                make_err_container=true,
+                has_popover=true,
+                content='This is the name used internally by your laboratory to refer to this trait. Please note that this name will not be shared publicly with other users and will only be displayed to you.'
+            ) }}</div>
+            <div class="col-md-6">{{ render_field(
+                form.trait_name_display_1,
+                make_err_container=true,
+                has_popover=true,
+                content='This name will be shared with other users in the phenotype database and will be used to represent your trait throughout the site. This name should be short (one word) and descriptive. The other display name fields can be used to provide additional description if needed.'
+            ) }}</div>
+        </div>
+        <div class="row my-5">
+            <div class="col-md-4">{{ render_field(
+                form.trait_name_display_2,
+                has_popover=true,
+                content='This field can be used to provide additional information that is important for the user to know about the trait.'
+            ) }}</div>
+            <div class="col-md-4">{{ render_field(
+                form.trait_name_display_3,
+                has_popover=true,
+                content='This field can be used to provide additional information that is important for the user to know about the trait.'
+            ) }}</div>
+            <div class="col-md-4">{{ render_field(
+                form.units,
+                make_err_container=true,
+            ) }}</div>
+        </div>
+        <div class="row my-5">
+            <div class="col-md-4">{{ render_field(
+                form.description_short,
+                make_err_container=true,
+                has_popover=true,
+                content='Please describe the trait in a few words, providing the information that is most important for other users who might want to perform an analysis using this trait.'
+            ) }}</div>
+            <div class="col-md-4">{{ render_field(
+                form.description_long,
+                make_err_container=true,
+                has_popover=true,
+                content='You can provide a longer description of the trait to provide additional useful information for other users who might want to perform an analysis using this trait.'
+            ) }}</div>
+            <div class="col-md-4">{{ render_field(
+                form.protocols,
+                make_err_container=true,
+                placeholder='https://www.protocols.io/'
+            ) }}</div>
+        </div>
+        <div class="row my-5">
+            <div class="col-md-4 text-break">{{ render_field(
+                form.tags,
+                has_popover=true,
+                content='Please select the best categories to describe your trait. Please note that at least one category is required.'
+            ) }}</div>
+            <div class="col-md-4">{{ render_field(
+                form.publication,
+                make_err_container=true,
+            ) }}</div>
+        </div>
+        {% if new_submission %}
+        <button type="submit" id="submit-trait" value="Submit Form" class="btn btn-secondary text-light disabled" aria-label="submit">Add Trait</button>
+        {% else %}
+        <button type="button" id="go-back" data-value="{{trait_id}}" class="btn btn-secondary text-light mx-5">Go back</button>
+        <button type="submit" id="update-trait" data-value="{{trait_id}}" class="btn btn-primary text-light mx-5">Save</button>
+        {% endif %}
+    </form>
+</div> <!-- /Container -->
+
+{% endblock %}
+
+{% block script %}
+
+<script>
+    {% include '_scripts/utils.js' %} {#/* defines: flash_message, flashErrorResponse */#}
+
+    const newSubmission = {{ new_submission|tojson }};
+    const phenotypes = {{ phenotype_values|tojson }};
+
+    const fieldList = [
+        {%- for key in form.data.keys() %}
+        {%- if len(form[key].validators) %}
+        "{{ key }}",
+        {%- endif %}
+        {%- endfor %}
+    ];
+
+    // Create the file content for display
+    const fileContent = () => {
+        const data = []
+        data.push({'col_1': 'Strain', 'col_2': 'Trait Value'})
+        for (row of phenotypes) {
+            data.push({'col_1': row.strain_name, 'col_2': row.trait_value})
+        }
+        return data
+    }
+
+    $(document).ready(function() {
+
+        // Update the page display if it's "Edit" page
+        if (!newSubmission) {
+            $('#email').prop('disabled', true)
+            display_file_content(fileContent())
+        }
+        
+        // Add 'required' class to labels
+        $('.label-group').each(function() {
+            const requiredSelector = $(this).next().attr('required') && $(this).find('label')
+
+            if (requiredSelector) {
+                requiredSelector.addClass('required')
+            }
+            if ($(this).children('label').text().includes('file')) {
+                $(this).children('label').addClass('required')
+            }
+        })
+
+        $('.form-control').on('change', function() {
+            if(formFilled()) {
+                $('#submit-trait').removeClass('disabled')
+            } else {
+                $('#submit-trait').addClass('disabled')
+            }
+        })
+
+        $('#go-back').on('click', function() {
+            const traitId = $(this).data('value');
+            {%- if return_to %}
+            const url = "{{ url_for('data.' + return_to, trait_id='ID') }}".replace('ID', traitId);
+            {%- else %}
+            const url = "{{ url_for('data.view_trait', trait_id='ID') }}".replace('ID', traitId);
+            {%- endif %}
+            window.location.href = url
+        })
+
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
+                }
+            }
+        });
+
+        $('#speciesSelect, #file').on('change', function() {
+            $('#file-upload').prop('disabled', !$('#speciesSelect').val() || !$('#file').val())
+        })
+
+        $('#file').on('change', function() {
+            $('#file-content').empty()
+            $('#file-container').addClass('d-none')
+        })
+
+        // Upload the file and display the content
+        $('#file-upload').on('click', function(e) {
+            e.preventDefault()
+            handleFileUpload()
+        })
+
+        function handleFileUpload() {
+            const file = $('#file')[0].files[0]
+            const species = $('#speciesSelect').val()
+            if (file && species) {
+                const formData = new FormData()
+                formData.append('file', file)
+                formData.append('species', species)
+                $.ajax({
+                    type: "POST",
+                    url: "{{ url_for('data.validate_and_parse_trait_file') }}",
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        $('.alert').remove()
+                        display_file_content(response)
+                    },
+                    error: function(error){
+                        console.error(error)
+                        $('#file-content').empty()
+                        $('#file-container').addClass('d-none')
+                        $('html').animate({
+                            scrollTop: $('body').offset().top
+                        }, 100);
+                        if (error.responseJSON && error.responseJSON.message) {
+                            $('.alert').remove()
+                            flash_message(error.responseJSON.message)
+                        }         
+                    }
+                })            
+            }
+        }
+
+        // Form submission
+        $('#form-submit').on('submit', function(e) {
+            e.preventDefault()
+
+            // Get form data
+            const formData = new FormData($('#form-submit')[0]);
+            const traitId = $(this).data('value');
+
+            // Compute the request endpoint values
+            {%- if new_submission %}
+            const requestURL  = "{{ url_for('data.submit_trait_form', trait_id='TRAIT_ID') }}".replace('TRAIT_ID', traitId);
+            const requestType = "POST";
+            {%- else %}
+            const requestURL  = "{{ url_for('data.edit_trait', trait_id='TRAIT_ID') }}".replace('TRAIT_ID', traitId);
+            const requestType = "PUT";
+            {%- endif %}
+
+            // Compute the URL to redirect to after a successful submission
+            {%- if return_to %}
+            const redirectURL = "{{ url_for('data.' + return_to, trait_id='TRAIT_ID') }}".replace('TRAIT_ID', traitId);
+            {%- else %}
+            const redirectURL = "{{ url_for('data.view_trait', trait_id='TRAIT_ID') }}".replace('TRAIT_ID', traitId);
+            {%- endif %}
+
+            // Perform the AJAX call
+            $.ajax({
+                url:  requestURL,
+                type: requestType,
+                data: formData,
+                contentType: false,
+                processData: false,
+
+                // On successful submission, redirect to the previous URL
+                success: function(response) {
+                    window.location.href = redirectURL;
+                },
+
+                // On error, flash errors and add individual messages to fields
+                error: function(error){
+                    $('.alert').remove()
+                    flashErrorResponse(error.responseJSON, 'There was an error submitting your trait.')
+
+                    // Loop through all fields that might have errors
+                    const errorDict = error.responseJSON.errors || {}
+                    fieldList.forEach((field) => {
+
+                        // Find the error container associated with the current field
+                        const field_el = $(`#${field}`);
+                        const err_container = field_el.closest('.form-group').find('.err-container');
+
+                        // If this field had error(s), display the error message(s)
+                        if (errorDict[field]) {
+                            err_container.text(errorDict[field].join(' '));
+                            err_container.show();
+                        }
+
+                        // Otherwise, hide and remove any previous message(s)
+                        else {
+                            err_container.text('');
+                            err_container.hide();
+                        }
+                    })
+                }
+            })
+        })
+
+
+        function display_file_content(file) {
+            $('#file-container').removeClass('d-none')
+            $('#file-content').empty()
+            // Create table header
+            const thead =  `<thead class="table-secondary align-middle" style="position:sticky;top:0;">
+                               <tr>
+                                 <th scope="col">${file[0].col_1}</th>
+                                 <th scope="col">${file[0].col_2}</th>
+                               </tr>
+                             </thead>`
+            $('#file-content').append(thead)
+
+            // Populate table with file content
+            let body = ''
+            for (let i = 1; i < file.length; i++) {
+                body += `<tr>
+                           <td>${file[i].col_1}</td>
+                           <td>${file[i].col_2}</td>
+                         </tr>`
+            }
+            $('#file-content').append(`<tbody>${body}</tbody>`)
+        }
+
+        function formFilled() {
+            let filled = true;
+            $('#username, #institution, #source_lab, #species, #trait_name_user, #trait_name_display_1, #description_short, #description_long').each(function() {
+                if ($(this).val() == '') {
+                    filled = false;
+                }
+            });
+            if (!$('input:checkbox:checked').length) {
+                filled = false;
+            }
+            if ($('#file').val() == '') {
+                filled = false;
+            }
+            return filled;
+        }
+    })
+
+</script>
+
+{% endblock %}

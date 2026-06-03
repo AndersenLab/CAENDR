@@ -1,0 +1,209 @@
+{% extends "_layouts/default.html" %}
+
+
+{% block content %}
+{% from "_includes/macros.html" import render_field %}
+
+
+<div class="row">
+  <label class="form-label" for="preview-alert">Preview</label>
+  {%- with dismissable   = false %}
+  {%- with alert_id      = 'preview-alert' %}
+  {%- with alert_classes = 'mt-3' %}
+  {% include '_includes/alert.html' %}
+  {%- endwith %}
+  {%- endwith %}
+  {%- endwith %}
+</div>
+
+<form id='form-submit' method="POST" action="{{ kind }}">
+  {{ form.csrf_token }}
+  <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">
+
+  <div class="row">
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+      <button id='save-btn' value="save-btn" type='submit' class="btn btn-primary btn-block">
+        <span class="glyphicon glyphicon-save" aria-hidden="true"></span> 
+        Save
+      </button>
+      <button id='cancel-btn' value="cancel-btn" type='button' class="btn btn-danger btn-block">
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class='col-4 mb-4'>{{ render_field(form.active, class_='form-check-input d-block') }}</div>
+    <div class='col-8 mb-4'>{{ render_field(form.style) }}</div>
+    <div class='mb-4'>{{ render_field(form.url_list) }}</div>
+
+    <label class="form-label" for="editor">Content</label>
+    <div id="editor"></div>
+  </div>
+
+</form>
+
+{% endblock %}
+
+
+{% block script %}
+
+<script>
+  {% include '_scripts/utils.js' %}       {#/* defines: flash_message */#}
+
+
+  // Declare the MD editor at the "global" scope, so we can get its contents from anywhere
+  let editor;
+
+  const alertClassMap = {
+    {%- for x in AnnouncementType %}
+    "{{ x.name }}": "{{ x.get_bootstrap_color() }}",
+    {%- endfor %}
+  };
+
+
+  function disableButton() {
+    const btn = document.getElementById('save-btn');
+    btn.disabled = true;
+    btn.innerText = 'Loading...'
+  }
+
+  function enableButton() {
+    const btn = document.getElementById('save-btn');
+    btn.disabled = false;
+    btn.innerText = 'Save'
+  }
+
+
+  function getFormData() {
+    // Get the fields from the form
+    const data = new FormData($('form#form-submit')[0]);
+
+    // Make the "active" checkmark a boolean
+    // Without this step, checked => "y" and unchecked isn't included
+    const active = $('form#form-submit #active')[0];
+    data.set('active', active.checked);
+
+    // Append the Markdown content to the form object
+    const md_content = editor.getMarkdown();
+    data.append('content', md_content);
+
+    // Return the form data
+    return data;
+  }
+
+
+  function updatePreview() {
+    const data = getFormData();
+    const preview = document.getElementById('preview-alert');
+
+    // Update the preview alert class
+    preview.classList.forEach((foo) => {
+      if (foo.startsWith('alert-')) {
+        preview.classList.remove(foo);
+      }
+    });
+    preview.classList.add(`alert-${ alertClassMap[ data.get('style') ] }`);
+
+    // Update the content
+    preview.innerHTML = editor.getHTML();
+  }
+
+
+  $(document).ready(function () {
+
+    // Markdown editor
+    const Editor = toastui.Editor;
+    editor = new Editor({
+      el: document.querySelector('#editor'),
+      height: '200px',
+      initialEditType: 'markdown',
+      previewStyle: 'vertical',
+      initialValue: `{{ announcement['content'] }}`,
+      toolbarItems: [
+        ['bold', 'italic', 'link'],
+      ],
+      events: {
+        // Update preview when content changes
+        change: () => updatePreview(),
+      },
+    });
+
+
+    // Initialize preview, then update when form changes
+    updatePreview();
+    $("#form-submit").on("change", function(e) {
+      updatePreview();
+    })
+
+
+    // Form Submission
+    $("#save-btn").on("click", function(e) {
+      e.preventDefault();
+      disableButton();
+
+      // Send the appropriate AJAX request
+      $.ajax({
+        {% if announcement %}
+        type: "PATCH",
+        url:  "{{ url_for('notifications.announcement', entity_id = announcement.name) }}",
+        {% else %}
+        type: "POST",
+        url:  "{{ url_for('notifications.announcement') }}",
+        {% endif %}
+        headers: {
+          'X-CSRF-TOKEN': "{{ form.csrf_token._value() }}",
+        },
+        processData: false,
+        contentType: false,
+        dataType:    'json',
+        data:        getFormData(),
+
+        // On success, redirect to list page
+        success: function(result) {
+          window.location = "{{ url_for('admin.announcements') }}";
+        },
+
+        // On failure, print error message
+        error: function(error) {
+          console.error('ERROR saving announcement: ', error)
+          const resp = error.responseJSON
+          if (resp && resp.message) {
+            flash_message(resp.message, resp.full_msg_link, resp.full_msg_body);
+          } else {
+            flash_message('There was a problem saving your announcement. Please try again later.');
+          }
+          enableButton();
+        }
+      });
+
+    });
+
+  });
+
+</script>
+
+
+<script type="module">
+
+  $(document).ready(function () {
+    $("#cancel-btn").on("click", function(e) {
+      e.preventDefault();
+      window.location = "{{ url_for('admin.announcements') }}";
+    });
+
+
+    // Prevent enter key from submitting form inside Markdown editor
+    // Primarily affects hyperlink insert popup
+    $('#editor').keydown(function(event) {
+      if (event.keyCode == 13) {
+        event.preventDefault();
+        return false;
+      }
+    });
+  });
+
+</script>
+
+{% endblock %}
+

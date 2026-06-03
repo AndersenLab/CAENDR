@@ -1,0 +1,419 @@
+{% block custom_head %}
+<style>
+.input-wrapper {
+position: relative;
+}
+.input-wrapper i {
+  position: absolute;
+  top: 20%;
+  right: 5px;
+  color: grey
+}
+
+#tagsFilter, #tags {
+    text-transform: capitalize;
+}
+
+label {
+    white-space: normal;
+    word-wrap: break-word;
+}
+</style>
+{% endblock %}
+
+
+{% set offcanvas_id = 'phenotype-offcanvas' %}
+
+
+{# Tabs #}
+<nav>
+    <div class="nav nav-tabs border-1" id="nav-tab" role="tablist">
+
+        <!-- Public Tabs -->
+        <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button"
+            role="tab" aria-controls="nav-home" aria-selected="true">Traits</button>
+        <button class="nav-link" id="nav-zhang-tab" data-bs-toggle="tab" data-bs-target="#nav-zhang" type="button"
+            role="tab" aria-controls="nav-zhang" aria-selected="false">Zhang et al. Traits</button>
+
+        {%- if phenotype_database_include_mtl_tab %}
+        <!-- Spacer -->
+        <div class="flex-grow-1"></div>
+
+        <!-- Private Tab(s) -->
+        <button class="nav-link" id="nav-mtl-tab" data-bs-toggle="tab" data-bs-target="#nav-mtl" type="button"
+            role="tab" aria-controls="nav-mtl" aria-selected="false">My Trait Library</button>
+        {%- endif %}
+    </div>
+</nav>
+{# /Tabs #}
+
+<div class="tab-content py-2" id="nav-tabContent">
+
+    {# Home Tab #}
+    <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+        <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}" />
+        {% include "_includes/phenotype-search-bar.html" %}
+        <div class="table-responsive">
+            <table class="table accordion p-0 text-center" id="tableAccordion">
+                <caption class="visually-hidden">A list of phenotype traits.</caption>
+                <thead class="table-secondary align-middle">
+                    <tr>
+                        <th scope="col" class="col-1 text-center dropdown-column" style="width:2% !important"></th>
+                        <th scope="col" class="col-1 py-4">Species</th>
+                        <th scope="col" class="col-1">Trait</th>
+                        <th scope="col" class="col-1">Short Description</th>
+                        <th scope="col" class="col-1">Source Lab</th>
+                        <th scope="col" class="col-1">Upload Date</th>
+                        <th scope="col" class="col-1">Categories</th>
+                        <th scope="col" class="col-1">Analyze</th>
+                    </tr>
+                </thead>
+                <tbody class="table-group-divider align-middle">
+                </tbody>
+            </table>
+        </div>
+        <nav class="d-flex justify-content-end" aria-label="Phenotype database table page navigation" id="tablePagination">
+            <ul class="pagination">   
+            </ul>
+        </nav>
+    </div>
+    {# /Home Tab #}
+
+    {# Zhang Tab #}
+    <div class="tab-pane fade" id="nav-zhang" role="tabpanel" aria-labelledby="nav-zhang-tab">
+        <div class="table-responsive">
+            <table class="table p-0 text-center w-100" id="zhangTraits">
+                <caption class="visually-hidden">A list of Zhang et al. traits.</caption>
+                <thead class="table-secondary align-middle">
+                    <tr>
+                        <th scope="col" class="py-4 text-center">Species</th>
+                        <th scope="col" class="text-center">Trait</th>
+                        <th scope="col" class="text-center">Description</th>
+                        <th scope="col" class="text-center">Upload Date</th>
+                        <th scope="col" class="text-center">View Full Details</th>
+                        <th scope="col" class="text-center">Analyze</th>
+                    </tr>
+                </thead>
+                <tbody class="table-group-divider align-middle">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {# /Zhang Tab #}
+
+    {%- if phenotype_database_include_mtl_tab %}
+    {# My Trait Library Tab #}
+    <div class="tab-pane fade" id="nav-mtl" role="tabpanel" aria-labelledby="nav-mtl-tab">
+        {%- with table_id = 'mtl-table' %}
+        {%- with trait_library_table_mode = 'select' %}
+        {%- with trait_library_table_select_link = analyze_link.replace("TRAIT_TAB", "mtl") %}
+        {% include "_includes/trait-library-table.html" %}
+        {%- endwith %}
+        {%- endwith %}
+        {%- endwith %}
+    </div>
+    {# /My Trait Library Tab #}
+    {%- endif %}
+</div>
+
+<!-- Offcanvas -->
+<div class="offcanvas offcanvas-end offcanvasPhenotype" tabindex="-1" id="{{ offcanvas_id }}"
+    aria-labelledby="{{ offcanvas_id }}-label">
+    {% include "_includes/phenotype-offcanvas-content.html" %}
+</div>
+{# /Offcanvas #}
+
+
+
+{% block script %}
+<script>
+    {% include '_scripts/utils.js' %}       {#/* defines: flash_message, format_date, first_letter_caps */#}
+    {% include '_scripts/trait_utils.js' %} {#/* defines: traitNameHTML, queryTraitByName */#}
+
+    $(document).ready(function() {
+
+        $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", "{{ form.csrf_token._value() }}")
+                }
+            }
+        });
+
+        // Render first load results
+        getResultsForPage(1, 1)
+
+        // Render Zhang table with Datatables
+        const zhangTable = $('#zhangTraits').DataTable( {
+            "processing": true,
+            "serverSide": true,
+            "ajax": "{{ url_for('api_trait.query_list_datatable_public', dataset='zhang') }}",
+            "ordering": false,
+            "columns": [
+                {
+                    "data": "species_name",
+                    "render": function(data, type, row) {
+                        return first_letter_caps(data).replace('_', '. ').italics();
+                    }
+                },
+                {"data": "trait_name_caendr"},
+                {
+                    "data": "description_long",
+                    // TODO: Should this be Markdown?
+                    // "render": function(data, type, row) {
+                    //     return markdownToHTML(data);
+                    // },
+                },
+                {
+                    "data": "created_on",
+                    "render": function(data, type, row) {
+                        return formatDate(data)
+                    }
+                },
+                {
+                    "render": function(data, type, row) {
+                        const d = JSON.stringify(row)
+                        return `<td>
+                            <div class="optionsToolbar">
+                            <a id="details" data-value='${d}' data-bs-toggle="offcanvas" data-bs-target="#{{ offcanvas_id }}" aria-controls="{{ offcanvas_id }}"
+                            href="#"><i class="bi bi-list-ul" aria-hidden="true"></i>Full Details</a>
+                            </div>
+                            </td>`
+                        }
+                },
+                {
+                    "data": "id",
+                    "render": function(data, type, row) {
+                        const url = '{{ analyze_link | safe }}'.replace("TRAIT_ID", data).replace("TRAIT_TAB", "zhang");
+                        return `
+                            <div id="trait-data-${data}" class="ps-3 pt-0">
+                                <a href='${url}'><i class="bi bi-arrow-right-circle-fill" aria-hidden="true"></i>Analyze</a>
+                            </div>`
+                    },
+                    "sClass": "optionsToolbar",
+                },
+            ]
+        });
+
+        // Fill out side bar for Zhang traits
+        $(document).on('click','#details', function() {
+            const trait = $(this).data('value')
+            fillOutModal(trait)
+        })
+
+        // Fetch data for a trait and fill out side bar for non-bulk traits
+        $(document).on('click','#traitDetails', function() {
+            const offcanvas_content = $('#{{ offcanvas_id }}-header, #{{ offcanvas_id }}-body');
+            const offcanvas_spinner = $('#{{ offcanvas_id }}-spinner');
+
+            // Show the loader
+            offcanvas_content.hide()
+            offcanvas_spinner.removeClass('d-none')
+
+            // Query data for the given trait
+            queryTraitByName($(this).data('value'), $('#csrf_token').val())
+
+                // On success, fill out and show the offcanvas content
+                .then((response) => {
+                    offcanvas_spinner.addClass('d-none')
+                    offcanvas_content.show()
+                    fillOutModal(response)
+                })
+
+                // On failure, close the offcanvas item and flash the error (if given)
+                .fail((error) => {
+                    console.error(error)
+                    $('#{{ offcanvas_id }} .btn-close').click()
+                    flashErrorResponse(error.responseJSON, 'There was a problem retrieving this trait. Please try again later.')
+                })
+            })
+
+
+        // Filter table by tag links
+        // Dispatches event for search bar to handle
+        $('#tableAccordion').on('click', '[id^="tagLink"]', function() {
+            const tagVal = $(this).data('value')
+            document.dispatchEvent(new CustomEvent('phenotype-table-update-tag', {
+                'detail': { tagVal },
+            }));
+        })
+
+        // Update the dropdown arrows when one is clicked
+        $('#tableAccordion').on('click', '.row-toggle', function() {
+            update_arrows('#tableAccordion .row-toggle');
+        })
+
+    })
+
+    // Update search based on search widget
+    document.addEventListener('phenotype-table-search', async ({detail}) => {
+        try {
+            const res = await sendPostRequest(detail)
+            return handlePostRequest(res)
+        } catch(err) {
+            console.error(err)
+            flash_message(`Failed to retrieve the list of traits: ${err.statusText}`)
+        }
+    });
+
+    async function sendPostRequest(data) {
+        const csrf_token = $("#csrf_token").val();
+
+        const resp = await fetch("{{ url_for('api_trait.query_list_sql_public', dataset='caendr') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                'X-CSRF-TOKEN': csrf_token
+            },
+            body: JSON.stringify({...data, csrf_token}),
+        })
+
+        if (resp.ok) {
+            const respData = await resp.json()
+            return respData
+        } else {
+            console.error(resp.statusText)
+            throw new Error
+        }
+    }
+
+    // Fill out table for non-bulk traits
+    function filterTable(arr) {
+        for (let i = 0; i < arr.length; i++) {
+            const speciesName = first_letter_caps(arr[i].species_name).replace('_', '. ').italics();
+            const traitID = arr[i].id
+            const createdOn = formatDate(arr[i].created_on)
+            let tagsHTML = ''
+            if (arr[i].tags !== null && arr[i].tags.length) {
+                const tags = arr[i].tags.split(', ')
+                for (let j = 0; j < tags.length; j++) {
+                    tagsHTML += `<div class="mb-3"><a role="button" class="btn btn-link" id="tagLink-${j+1}" data-value="${tags[j]}">${tags[j].replaceAll('/', ' • ')}</a></div>`
+                }
+            }
+
+            const url = '{{ analyze_link | safe }}'.replace("TRAIT_ID", traitID).replace("TRAIT_TAB", "home");
+
+            let html = `
+                    <tr class="py-3 dislayedRow">
+                        <td class="p-0 m-0 dropdown-column" style="width:2% !important">
+                            <button type="button" class="btn btn-link text-dark fw-normal d-block w-100 row-toggle"
+                                aria-expanded="false" aria-controls="collapse-${i+1}"
+                                data-bs-toggle="collapse" data-bs-target="#collapse-${i+1}"
+                                aria-label="Show more details for trait ${traitNameString(arr[i].trait_name_display_1, arr[i].trait_name_display_2, arr[i].trait_name_display_3)}"
+                            ><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+                        </td>
+                        <td>
+                            <em class="text-dark fw-normal">${speciesName}</em>
+                        </td>
+                        <td id="accordionHeading-${i+1}">
+                            ${traitNameHTML( arr[i].trait_name_display_1, arr[i].trait_name_display_2, arr[i].trait_name_display_3 )}
+                        </td>
+                        <td>${arr[i].description_short ? (arr[i].description_short + '.') : ''}</td>
+                        <td>${arr[i].source_lab}</td>
+                        <td>${createdOn}</td>
+                        <td class="d-flex-row flex-column" id="tags">${tagsHTML}</td>
+                        <td class="optionsToolbar">
+                            <div class="ps-3 pt-0" id="trait-data-${ traitID }"><a href='${url}'><i class="bi bi-arrow-right-circle-fill"
+                                        aria-hidden="true"></i>Analyze</a></div>
+                        </td>
+                    </tr>
+                    <tr id="collapse-${i+1}" class="text-start accordion-collapse collapse"
+                        aria-labelledby="accordionHeading-${i+1}" data-bs-parent="#tableAccordion">
+                        <td colspan="8" style="background-color: var(--bs-gray-200)">
+                            <div class="ms-5 pt-5 px-5 pb-2">
+                                <h3 class="h5 text-dark">Full Description</h3>
+                                <p>${arr[i].description_long}</p>
+                            </div>
+                            <div class="d-flex justify-content-end me-1 pb-3 optionsToolbar">
+                                <a data-bs-toggle="offcanvas" id="traitDetails" data-value="${ traitID }" data-bs-target="#{{ offcanvas_id }}"
+                                    aria-controls="{{ offcanvas_id }}" href=" #"><i class="bi bi-arrow-right"
+                                        aria-hidden="true"></i>View Full Details</a>
+                            </div>
+                        </td>
+                    </tr>
+            `
+            
+            $('#tableAccordion tbody').append(html)
+        }
+    }
+
+    function updatePagination(p) {
+        let html = ''
+        let prev = ''
+        if(p.has_prev) {
+            prev += `<a class="page-link" role="button" onClick="getResultsForPage(${p.prev_num}, ${p.current_page})">Previous</a>`
+        } else {
+            prev +=  '<a class="page-link disabled" href="#" tabindex="-1">Previous</a>'
+        }
+        html +=  `<li class="page-item">${prev}</li>`
+        for (let i = 0; i < p.total_pages; i++) {
+            const pageNum = i + 1
+            let iterPages = ''
+            if (pageNum == p.current_page) {
+                iterPages += `<li class="page-item active">
+                                  <a class="page-link" href="#">${pageNum}</a>
+                              </li>`
+            } else {
+                iterPages += `<li class="page-item">
+                                  <a class="page-link" role="button" onClick="getResultsForPage(${pageNum}, ${pageNum})">${pageNum}</a>
+                              </li>`
+            }
+            html += iterPages
+        }
+        let next = ''
+        if (p.has_next) {
+            next += `<a class="page-link" role="button" onClick="getResultsForPage(${p.next_num}, ${p.current_page})">Next</a>`
+        } else {
+            next += '<a class="page-link disabled" href="#" tabindex="-1">Next</a>'
+        }
+        html += `<li class="page-item">${next}</li>`
+        $('#tablePagination .pagination').append(html)
+
+    }
+
+    // Fetch data for given page
+    async function getResultsForPage(page, currentPage) {
+        const checkedTagsSelector = $(".filterCheckbox:checked")
+        let selectedTags = []
+        if (checkedTagsSelector.length) {
+            selectedTags = $(".filterCheckbox:checked").map(function() {
+                return $(this).val()
+            }).get()
+        }
+        const data = {
+            csrf_token: $('#csrf_token').val(), 
+            page: page, 
+            current_page: currentPage,
+            search_val: $("#traitsSearch").val(),
+            selected_tags: selectedTags
+        }
+        try {
+            const res = await sendPostRequest(data)
+            return handlePostRequest(res)
+        } catch(err) {
+            console.error(err)
+            flash_message(`Failed to retrieve the list of traits: ${err.statusText}`)
+        }
+    }
+
+    // Update Table and Pagination with response data
+    function handlePostRequest(resp) {
+        $('#tableAccordion tbody').empty()
+        filterTable(resp.data)
+        $('#tablePagination .pagination').empty()
+        updatePagination(resp.pagination)
+    }
+
+    function fillOutModal(trait) {
+        document.dispatchEvent(new CustomEvent('phenotype-offcanvas-content', {
+            detail: { offcanvas_id: '{{offcanvas_id}}', trait: trait },
+        }));
+    }
+
+    function update_arrows(selector) {
+      $(`${selector}[aria-expanded="true"]` ).html('<i class="bi bi-chevron-down"  aria-hidden="true"></i>');
+      $(`${selector}[aria-expanded="false"]`).html('<i class="bi bi-chevron-right" aria-hidden="true"></i>');
+    };
+
+</script>
+{% endblock %}

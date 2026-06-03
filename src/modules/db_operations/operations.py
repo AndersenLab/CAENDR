@@ -2,120 +2,334 @@ import os
 from caendr.services.cloud.postgresql import health_database_status
 from caendr.services.logger import logger
 
-from caendr.models.error import EnvVarError
-from caendr.models.sql import WormbaseGene, WormbaseGeneSummary, Strain, Homolog, StrainAnnotatedVariant
-from caendr.services.sql.db import (drop_tables,
-                                    backup_external_db,
-                                    DatasetManager)
-from caendr.services.sql.etl import (load_strains, 
-                                      load_genes_summary, 
-                                      load_genes, 
-                                      load_homologs,
-                                      load_orthologs,
-                                      load_strain_annotated_variants)
+from caendr.models.datastore import Species, PhenotypeReport
+from caendr.models.sql import DbOp, WormbaseGene, WormbaseGeneSummary, Strain, StrainAnnotatedVariant, AnnovarAnnotatedVariant, CsqAnnotatedVariant, SnpEffAnnotatedVariant, VepAnnotatedVariant, PhenotypeDatabase, PhenotypeMetadata
+from caendr.services.sql.db import backup_external_db
+from caendr.services.sql.etl import ETLManager
+
+from seed_trait_files import populate_andersenlab_trait_files
 
 
 
-def execute_operation(app, db, DB_OP):
-  WORMBASE_VERSION = os.environ.get('WORMBASE_VERSION')
-  STRAIN_VARIANT_ANNOTATION_VERSION = os.environ.get('STRAIN_VARIANT_ANNOTATION_VERSION')
-  
-  logger.info(f'Executing {DB_OP}: WORMBASE_VERSION:{WORMBASE_VERSION} STRAIN_VARIANT_ANNOTATION_VERSION:{STRAIN_VARIANT_ANNOTATION_VERSION}')
+def execute_operation(app, db, db_op: DbOp, species=None, reload_files=True):
+  logger.info(f'Executing {db_op.name}...')
 
-  if DB_OP == 'DROP_AND_POPULATE_ALL_TABLES':
-    if not WORMBASE_VERSION or not STRAIN_VARIANT_ANNOTATION_VERSION:
-      raise EnvVarError()
-    drop_and_populate_all_tables(app, db, WORMBASE_VERSION, STRAIN_VARIANT_ANNOTATION_VERSION)
-    
-  elif DB_OP == 'DROP_AND_POPULATE_STRAINS':
-    drop_and_populate_strains(app, db)
-    
-  elif DB_OP == 'DROP_AND_POPULATE_WORMBASE_GENES':
-    if not WORMBASE_VERSION:
-      raise EnvVarError()
-    drop_and_populate_wormbase_genes(app, db, WORMBASE_VERSION)
+  if db_op == DbOp.DROP_AND_POPULATE_ALL_TABLES:
+    drop_and_populate_all_tables(app, db, species, reload_files=reload_files)
 
-  elif DB_OP == 'DROP_AND_POPULATE_STRAIN_ANNOTATED_VARIANTS':
-    if not STRAIN_VARIANT_ANNOTATION_VERSION:
-      raise EnvVarError()
-    drop_and_populate_strain_annotated_variants(app, db, STRAIN_VARIANT_ANNOTATION_VERSION)
-  
-  elif DB_OP == 'TEST_ECHO':
+  elif db_op == DbOp.DROP_AND_POPULATE_STRAINS:
+    drop_and_populate_strains(app, db, species, reload_files=reload_files)
+
+  elif db_op == DbOp.DROP_AND_POPULATE_WORMBASE_GENES:
+    drop_and_populate_wormbase_genes(app, db, species, reload_files=reload_files)
+
+  elif db_op == DbOp.DROP_AND_POPULATE_STRAIN_VARIANTS:
+    drop_and_populate_strain_variants(app, db, species, reload_files=reload_files)
+
+  elif db_op == DbOp.DROP_AND_POPULATE_ANNOVAR_VARIANTS:
+    drop_and_populate_annovar_variants(app, db, species, reload_files=reload_files)
+
+  elif db_op == DbOp.RESUME_POPULATE_ANNOVAR_VARIANTS:
+    resume_populate_annovar_variants(app, db, species, reload_files=reload_files)
+
+  elif db_op == DbOp.DROP_AND_POPULATE_CSQ_VARIANTS:
+    drop_and_populate_csq_variants(app, db, species, reload_files=reload_files)
+
+  elif db_op == DbOp.RESUME_POPULATE_CSQ_VARIANTS:
+    resume_populate_csq_variants(app, db, species, reload_files=reload_files)
+
+  elif db_op == DbOp.DROP_AND_POPULATE_SNPEFF_VARIANTS:
+    drop_and_populate_snpeff_variants(app, db, species, reload_files=reload_files)
+
+  elif db_op == DbOp.DROP_AND_POPULATE_VEP_VARIANTS:
+    drop_and_populate_vep_variants(app, db, species, reload_files=reload_files)
+
+  elif db_op == DbOp.RESUME_POPULATE_VEP_VARIANTS:
+    resume_populate_vep_variants(app, db, species, reload_files=reload_files)
+
+  elif db_op == DbOp.DROP_AND_POPULATE_PHENOTYPE_DB:
+    drop_and_populate_phenotype_db(app, db, species, reload_files=reload_files)
+
+  elif db_op == DbOp.DROP_AND_POPULATE_PHENOTYPE_METADATA:
+    drop_and_populate_phenotype_metadata(app, db, species, reload_files=reload_files)
+
+  elif db_op == DbOp.DROP_AND_POPULATE_PHENOTYPES:
+    drop_and_populate_phenotypes(app, db, species, reload_files=reload_files)
+
+  elif db_op == DbOp.POPULATE_PHENOTYPES_DATASTORE:
+    populate_andersenlab_trait_files()
+
+  elif db_op == DbOp.TEST_ECHO:
     result, message = health_database_status()
     if not result:
       raise Exception(f"DB Connection is: { ('OK' if result else 'ERROR') }. {message}")
 
-  elif DB_OP == 'TEST_MOCK_DATA':
+  elif db_op == DbOp.TEST_MOCK_DATA:
     os.environ["USE_MOCK_DATA"] = "1"
     os.environ["MODULE_DB_OPERATIONS_CONNECTION_TYPE"] = "memory"
     logger.info("Using MOCK DATA")
-    drop_and_populate_all_tables(app, db, WORMBASE_VERSION, STRAIN_VARIANT_ANNOTATION_VERSION)
+    drop_and_populate_all_tables(app, db, species)
+
+  elif db_op == DbOp.RECOMPUTE_PHENOTYPE_REPORT_CACHED_NAMES:
+    PhenotypeReport.recompute_cached_display_names()
 
 
-def drop_and_populate_strains(app, db):
-  drop_tables(app, db, tables=[Strain.__table__])
-  load_strains(db)
+
+def drop_and_populate_strains(app, db, species, reload_files=True):
+
+  # Initialize ETL Manager
+  etl_manager = ETLManager(app, db, reload_files=reload_files)
+
+  # Drop relevant tables
+  etl_manager.clear_tables( Strain, species_list=species )
+
+  # Fetch and load data using ETL Manager
+  etl_manager.load_tables( Strain, species_list=species )
 
 
-def drop_and_populate_wormbase_genes(app, db, wb_ver: str):
-  logger.info(f"Running Drop and Populate wormbase genes with version: {wb_ver}")
+def drop_and_populate_wormbase_genes(app, db, species, reload_files=True):
 
-  dataset_manager = DatasetManager(wb_ver=wb_ver)
-  gene_gff_fname   = dataset_manager.fetch_external_db('GENE_GFF_URL', 'c_elegans')
-  gene_gtf_fname   = dataset_manager.fetch_external_db('GENE_GTF_URL', 'c_elegans')
-  gene_ids_fname   = dataset_manager.fetch_external_db('GENE_IDS_URL', 'c_elegans')
-  homologene_fname = dataset_manager.fetch_external_db('HOMOLOGENE_URL')
-  ortholog_fname   = dataset_manager.fetch_external_db('ORTHOLOG_URL', 'c_elegans')
+  # Print operation & species info
+  spec_strings = [ f'{key} (wb_ver = {val.wb_ver})' for key, val in Species.all().items() if (species is None or key in species) ]
+  logger.info(f'Dropping and populating wormbase genes. Species list: [ {", ".join(spec_strings)} ]')
 
-  drop_tables(app, db, tables=[Homolog.__table__, WormbaseGene.__table__])
-  drop_tables(app, db, tables=[WormbaseGeneSummary.__table__])
+  # Initialize ETL Manager
+  etl_manager = ETLManager(app, db, reload_files=reload_files)
 
-  load_genes_summary(db, gene_gff_fname)
-  load_genes(db, gene_gtf_fname, gene_ids_fname)
-  load_homologs(db, homologene_fname)
-  load_orthologs(db, ortholog_fname)
+  # Drop relevant tables
+  logger.info(f"Dropping tables...")
+  etl_manager.drop_tables( AnnovarAnnotatedVariant, CsqAnnotatedVariant, SnpEffAnnotatedVariant, VepAnnotatedVariant, species_list=species )
+  etl_manager.clear_tables( WormbaseGeneSummary, WormbaseGene, species_list=species )
+
+  # Fetch and load data using ETL Manager
+  logger.info("Loading wormbase genes...")
+  etl_manager.load_tables(WormbaseGeneSummary, WormbaseGene, species_list=species)
 
 
-def drop_and_populate_strain_annotated_variants(app, db, sva_ver: str):
-  dataset_manager = DatasetManager(sva_ver=sva_ver)
-  sva_fname = dataset_manager.fetch_internal_db('SVA_CSVGZ_URL')
-  db.session.commit()
+def drop_and_populate_strain_variants(app, db, species, reload_files=True):
+
+  # Print operation & species info
+  spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
+  logger.info(f'Dropping and populating strain variants. Species list: [ {", ".join(spec_strings)} ]')
+
+  # Initialize ETL Manager
+  etl_manager = ETLManager(app, db, reload_files=reload_files)
+
+  # Drop relevant table
   logger.info(f"Dropping table...")
-  drop_tables(app, db, tables=[StrainAnnotatedVariant.__table__])
+  etl_manager.clear_tables(StrainAnnotatedVariant, species_list=species)
+
+  # Fetch and load data using ETL Manager
   logger.info("Loading strain annotated variants...")
-  load_strain_annotated_variants(db, sva_fname)
+  etl_manager.load_tables(StrainAnnotatedVariant, species_list=species)
 
 
-def drop_and_populate_all_tables(app, db, wb_ver: str, sva_ver: str):
-  logger.info(f'Dropping and populating all tables - WORMBASE_VERSION: {wb_ver} STRAIN_VARIANT_ANNOTATION_VERSION: {sva_ver}')
+def drop_and_populate_annovar_variants(app, db, species, reload_files=True):
 
-  logger.info("[1/8] Downloading databases...eta ~0:15")
-  dataset_manager = DatasetManager(wb_ver=wb_ver, sva_ver=sva_ver)
-  gene_gff_fname   = dataset_manager.fetch_external_db('GENE_GFF_URL', 'c_elegans')
-  gene_gtf_fname   = dataset_manager.fetch_external_db('GENE_GTF_URL', 'c_elegans')
-  gene_ids_fname   = dataset_manager.fetch_external_db('GENE_IDS_URL', 'c_elegans')
-  homologene_fname = dataset_manager.fetch_external_db('HOMOLOGENE_URL')
-  ortholog_fname   = dataset_manager.fetch_external_db('ORTHOLOG_URL', 'c_elegans')
-  sva_fname        = dataset_manager.fetch_internal_db('SVA_CSVGZ_URL')
+  # Print operation & species info
+  spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
+  logger.info(f'Dropping and populating Annovar variants. Species list: [ {", ".join(spec_strings)} ]')
 
-  logger.info("[2/8] Dropping tables...eta ~0:01")
-  drop_tables(app, db)
+  # Initialize ETL Manager
+  etl_manager = ETLManager(app, db, reload_files=reload_files)
 
-  logger.info("[3/8] Load Strains...eta ~0:24")
-  load_strains(db)
+  # Drop relevant table
+  logger.info(f"Dropping table...")
+  etl_manager.clear_tables(AnnovarAnnotatedVariant, species_list=species)
 
-  logger.info("[4/8] Load genes summary...eta ~3:15")
-  load_genes_summary(db, gene_gff_fname)
+  # Fetch and load data using ETL Manager
+  logger.info("Loading Annovar annotated variants...")
+  etl_manager.load_tables(AnnovarAnnotatedVariant, species_list=species)
 
-  logger.info("[5/8] Load genes...eta ~12:37")
-  load_genes(db, gene_gtf_fname, gene_ids_fname)
 
-  logger.info("[6/8] Load Homologs...eta ~3:10")
-  load_homologs(db, homologene_fname)
+def resume_populate_annovar_variants(app, db, species, reload_files=True):
 
-  logger.info("[7/8] Load Horthologs...eta ~17:13")
-  load_orthologs(db, ortholog_fname)
+  # Print operation & species info
+  spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
+  logger.info(f'Resuming populating Annovar variants. Species list: [ {", ".join(spec_strings)} ]')
 
-  logger.info("[8/8] Load Strains Annotated Variants...eta ~26:47")
-  load_strain_annotated_variants(db, sva_fname)
-  
+  # Initialize ETL Manager
+  etl_manager = ETLManager(app, db, reload_files=reload_files)
+
+  # Fetch and load data using ETL Manager
+  logger.info("Loading Annovar annotated variants...")
+  etl_manager.resume_load_table(AnnovarAnnotatedVariant, species_list=species)
+
+
+def drop_and_populate_csq_variants(app, db, species, reload_files=True):
+
+  # Print operation & species info
+  spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
+  logger.info(f'Dropping and populating CSQ variants. Species list: [ {", ".join(spec_strings)} ]')
+
+  # Initialize ETL Manager
+  etl_manager = ETLManager(app, db, reload_files=reload_files)
+
+  # Drop relevant table
+  logger.info(f"Dropping table...")
+  etl_manager.clear_tables(CsqAnnotatedVariant, species_list=species)
+
+  # Fetch and load data using ETL Manager
+  logger.info("Loading CSQ annotated variants...")
+  etl_manager.load_tables(CsqAnnotatedVariant, species_list=species)
+
+
+def resume_populate_csq_variants(app, db, species, reload_files=True):
+
+  # Print operation & species info
+  spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
+  logger.info(f'Resuming populating CSQ variants. Species list: [ {", ".join(spec_strings)} ]')
+
+  # Initialize ETL Manager
+  etl_manager = ETLManager(app, db, reload_files=reload_files)
+
+  # Fetch and load data using ETL Manager
+  logger.info("Loading CSQ annotated variants...")
+  etl_manager.resume_load_table(CsqAnnotatedVariant, species_list=species)
+
+
+def drop_and_populate_snpeff_variants(app, db, species, reload_files=True):
+
+  # Print operation & species info
+  spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
+  logger.info(f'Dropping and populating SnpEff variants. Species list: [ {", ".join(spec_strings)} ]')
+
+  # Initialize ETL Manager
+  etl_manager = ETLManager(app, db, reload_files=reload_files)
+
+  # Drop relevant table
+  logger.info(f"Dropping table...")
+  etl_manager.clear_tables(SnpEffAnnotatedVariant, species_list=species)
+
+  # Fetch and load data using ETL Manager
+  logger.info("Loading SnpEff annotated variants...")
+  etl_manager.load_tables(SnpEffAnnotatedVariant, species_list=species)
+
+
+def drop_and_populate_vep_variants(app, db, species, reload_files=True):
+
+  # Print operation & species info
+  spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
+  logger.info(f'Dropping and populating VEP variants. Species list: [ {", ".join(spec_strings)} ]')
+
+  # Initialize ETL Manager
+  etl_manager = ETLManager(app, db, reload_files=reload_files)
+
+  # Drop relevant table
+  logger.info(f"Dropping table...")
+  etl_manager.clear_tables(VepAnnotatedVariant, species_list=species)
+
+  # Fetch and load data using ETL Manager
+  logger.info("Loading VEP annotated variants...")
+  etl_manager.load_tables(VepAnnotatedVariant, species_list=species)
+
+
+def resume_populate_vep_variants(app, db, species, reload_files=True):
+
+  # Print operation & species info
+  spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
+  logger.info(f'Resuming populating VEP variants. Species list: [ {", ".join(spec_strings)} ]')
+
+  # Initialize ETL Manager
+  etl_manager = ETLManager(app, db, reload_files=reload_files)
+
+  # Fetch and load data using ETL Manager
+  logger.info("Loading VEP annotated variants...")
+  etl_manager.resume_load_table(VepAnnotatedVariant, species_list=species)
+
+
+def drop_and_populate_phenotype_db(app, db, species, reload_files=True):
+
+  # Print operation & species info
+  spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
+  logger.info(f'Dropping and populating phenotype database. Species list: [ {", ".join(spec_strings)} ]')
+
+  # Initialize ETL Manager
+  etl_manager = ETLManager(app, db, reload_files=reload_files)
+
+  # Drop relevant table
+  logger.info(f"Dropping table...")
+  etl_manager.clear_tables(PhenotypeDatabase, species_list=species)
+
+  # Fetch and load data using ETL Manager
+  logger.info("Loading phenotypes...")
+  etl_manager.load_tables(PhenotypeDatabase, species_list=species)
+
+def drop_and_populate_phenotype_metadata(app, db, species, reload_files=True):
+
+  # Print operation & species info
+  spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
+  logger.info(f'Dropping and populating phenotype metadata. Species list: [ {", ".join(spec_strings)} ]')
+
+  # Initialize ETL Manager
+  etl_manager = ETLManager(app, db, reload_files=reload_files)
+
+  # Drop relevant table
+  logger.info(f"Dropping table...")
+  etl_manager.clear_tables(PhenotypeMetadata, species_list=species)
+
+  # Fetch and load data using ETL Manager
+  logger.info("Loading phenotypes...")
+  etl_manager.load_tables(PhenotypeMetadata, species_list=species)
+
+def drop_and_populate_phenotypes(app, db, species, reload_files=True):
+
+  # Print operation & species info
+  spec_strings = [ f'{key} (release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
+  logger.info(f'Dropping and populating phenotypes. Species list: [ {", ".join(spec_strings)} ]')
+
+  # Initialize ETL Manager
+  etl_manager = ETLManager(app, db, reload_files=reload_files)
+
+  # Drop relevant table
+  logger.info(f"Dropping table...")
+  etl_manager.clear_tables(PhenotypeMetadata, PhenotypeDatabase, species_list=species)
+
+  # Fetch and load data using ETL Manager
+  logger.info("Loading phenotypes...")
+  etl_manager.load_tables(PhenotypeMetadata, PhenotypeDatabase, species_list=species)
+
+
+def drop_and_populate_all_tables(app, db, species, reload_files=True):
+
+  # Print operation & species info
+  spec_strings = [ f'{key} (wb_ver = {val.wb_ver}, release_sva = {val.release_sva})' for key, val in Species.all().items() if (species is None or key in species) ]
+  logger.info(f'Dropping and populating all tables. Species list: [ {", ".join(spec_strings)} ]')
+
+  logger.info("[1/12] Downloading databases...eta ~0:15")
+  etl_manager = ETLManager(app, db, reload_files=reload_files)
+
+  logger.info("[2/12] Dropping tables...eta ~0:01")
+  etl_manager.clear_tables(species_list=species)
+
+  logger.info("[3/12] Load Strains...eta ~0:24")
+  etl_manager.load_tables(Strain, species_list=species)
+
+  logger.info("[4/12] Load genes summary...eta ~3:15")
+  etl_manager.load_tables(WormbaseGeneSummary, species_list=species)
+
+  logger.info("[5/12] Load genes...eta ~12:37")
+  etl_manager.load_tables(WormbaseGene, species_list=species)
+
+  logger.info("[6/12] Load Strains Annotated Variants...eta ~26:47")
+  etl_manager.load_tables(StrainAnnotatedVariant, species_list=species)
+
+  logger.info("[7/12] Load Annovar Annotated Variants...eta ~26:47")
+  etl_manager.load_tables(AnnovarAnnotatedVariant, species_list=species)
+
+  logger.info("[8/12] Load CSQ Annotated Variants...eta ~26:47")
+  etl_manager.load_tables(CsqAnnotatedVariant, species_list=species)
+
+  logger.info("[9/12] Load SnpEff Annotated Variants...eta ~26:47")
+  etl_manager.load_tables(SnpEffAnnotatedVariant, species_list=species)
+
+  logger.info("[10/12] Load VEP Annotated Variants...eta ~26:47")
+  etl_manager.load_tables(VepAnnotatedVariant, species_list=species)
+
+  logger.info("[11/12] Load Phenotype Database...")
+  # etl_manager.load_phenotype_db(db, species)
+  etl_manager.load_tables(PhenotypeDatabase, species_list=species)
+
+  logger.info("[12/12] Load Phenotype Metadata...")
+  # etl_manager.load_phenotype_db(db, species)
+  etl_manager.load_tables(PhenotypeMetadata, species_list=species)

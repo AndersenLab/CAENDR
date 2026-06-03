@@ -32,6 +32,17 @@
   <form id="form-submit" action="{{ url_for('mapping.submit_mapping_request') }}" method="post" onsubmit="disableButton()" class="form form-inline" enctype="multipart/form-data">
     <div class="form-group" style="width:100%">
 
+      <!-- Species dropdown -->
+      <div class="row">
+        <div class="col-lg-8 col-lg-offset-2 text-center">
+          <select name="species" id="species-selector" class="form-control input-margin" style="width:100%" onchange="update_species()">
+            {% for s in species_list %}
+              <option value="{{s}}">{{species_list[s]["short_name"]}}</option>
+            {% endfor %}
+          </select>
+        </div> {# /col #}
+      </div> {# /row #}
+
       <div class="row">
 
         <div class="col-lg-8 col-lg-offset-2 text-center">

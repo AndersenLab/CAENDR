@@ -24,7 +24,12 @@ resource "google_pubsub_subscription" "pipeline_task" {
   enable_message_ordering = "false"
 
   expiration_policy {
-    ttl = "2678400s"
+    ttl = ""
+  }
+
+  retry_policy {
+    minimum_backoff = "60s"
+    maximum_backoff = "300s"
   }
 
   message_retention_duration = "259200s"

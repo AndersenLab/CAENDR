@@ -1,0 +1,212 @@
+import os
+from typing import Type
+
+from caendr.services.logger import logger
+
+from base.utils.auth import get_current_user, user_is_admin
+
+from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
+
+from caendr.models.error import (
+    DataFormatError,
+    DataValidationError,
+    DuplicateDataError,
+    JobAlreadyScheduledError,
+    NotFoundError,
+    ReportLookupError,
+)
+from caendr.models.datastore    import User, ReportEntity
+from caendr.models.job_pipeline import JobPipeline, get_pipeline_class
+from caendr.services.cloud.secret import get_secret
+
+
+
+SUPPORT_EMAIL = get_secret('SUPPORT_EMAIL')
+
+
+def get_upload_err_msg(code):
+  CODE_TO_MSG = {
+    400: 'You must include a CSV file with your data to upload. If this message persists, try refreshing the page and re-uploading your file.',
+    500: f'There was a problem uploading your submission. Please try again. If this problem persists, please contact us at {SUPPORT_EMAIL}',
+  }
+  return CODE_TO_MSG.get(code, CODE_TO_MSG[500])
+
+
+def lookup_report(kind, reportId, user=None, validate_user=True) -> JobPipeline:
+  '''
+    Create a JobPipeline object representing the report with the given ID and kind.
+  '''
+
+  # If no user explicitly provided, default to current user
+  if validate_user and user is None:
+    user = get_current_user()
+
+  # Get & validate the job pipeline class from the provided kind
+  try:
+    JobPipelineClass = get_pipeline_class(kind=kind)
+  except Exception as ex:
+    logger.error(f'Error getting JobPipeline subclass: unknown kind "{kind}". Exception: {ex}')
+    if user_is_admin() or not validate_user:
+      raise ReportLookupError('Invalid report type.', 400)
+    else:
+      raise ReportLookupError('You do not have access to that report.', 401)
+
+  # Retrieve the report entity from datastore, or None if no entity with that ID exists
+  try:
+    job = JobPipelineClass.lookup(reportId)
+
+  # If no such report exists, show an error message
+  except NotFoundError:
+
+    # Let admins know the report doesn't exist
+    if user_is_admin() or not validate_user:
+      raise ReportLookupError('This is not a valid report URL.', 404)
+
+    # For all other users, display a default "no access" message
+    else:
+      raise ReportLookupError('You do not have access to that report.', 401)
+
+  # Log all other exceptions and show an error message
+  except Exception as ex:
+    logger.error(f'Error looking up report: {ex}')
+
+    # Let admins know something went wrong
+    if user_is_admin() or not validate_user:
+      raise ReportLookupError('Something went wrong.', 400)
+
+    # For all other users, display a default "no access" message
+    else:
+      raise ReportLookupError('You do not have access to that report.', 401)
+
+  # If the user doesn't have permission to view this report, show an error message
+  if validate_user and not (job.report.belongs_to_user(user) or user_is_admin()):
+    raise ReportLookupError('You do not have access to that report.', 401)
+
+  # If all checks passed, return the report entity
+  return job
+
+
+def try_submit(kind, user, data, no_cache):
+
+  try:
+    # Try creating the job
+    #   DuplicateDataError -> this user has already submitted this job
+    #   DataFormatError    -> there is an error in the input data
+    job = get_pipeline_class(kind=kind).create(user, data, no_cache=no_cache, valid_file_extensions=TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS)
+
+    # Schedule the job, if applicable
+    #   JobAlreadyScheduledError -> a job computing these results has already been scheduled
+    if job.is_schedulable:
+      job.schedule(no_cache=no_cache)
+
+    return {
+      'cached':    False,
+      'same_user': None,
+      'ready':     job.is_finished(),
+      'data_hash': job.report.data_hash,
+      'id':        job.report.id,
+    }, 200
+
+  # Duplicate job submission from this user
+  except DuplicateDataError as ex:
+    job = ex.handler
+
+    # Log the event
+    logger.debug(f'(CACHE HIT) User resubmitted duplicate {kind} data: id = {job.report.id}, data hash = {job.report.data_hash}, status = {job.report["status"]}')
+
+    # Return the matching entity
+    return {
+      'cached':    True,
+      'same_user': True,
+      'ready':     job.is_finished(),
+      'data_hash': job.report.data_hash,
+      'id':        job.report.id,
+      'message':   'You have already submitted this data file. Here\'s your previously generated report.',
+    }, 200
+
+  # Duplicate job submission from another user
+  except JobAlreadyScheduledError as ex:
+
+    # Log the event
+    logger.debug(f'(CACHE HIT) User submitted cached {kind} data: id = {job.report.id}, data hash = {job.report.data_hash}, status = {job.report["status"]}')
+
+    # Return the matching entity
+    return {
+      'cached':    True,
+      'same_user': False,
+      'ready':     job.is_finished(),
+      'data_hash': job.report.data_hash,
+      'id':        job.report.id,
+      'message':   'A matching report was found.',
+    }, 200
+
+  # Formatting error in uploaded data file
+  except DataFormatError as ex:
+
+    # Log the error
+    logger.error(f'Data formatting error in {kind} file upload: {ex.msg} (Line: {ex.line or "n/a"})')
+
+    # Construct user-friendly error message with optional line number
+    msg = f'There was an error with your file. { ex.msg }'
+    if ex.line is not None:
+      msg += f' (Line: { ex.line })'
+
+    # Return the error message
+    return {
+      'message': msg,
+      'full_msg_link': ex.full_msg_link,
+      'full_msg_body': ex.full_msg_body,
+    }, 400
+
+  # Validation error with submitted fields (not inside data file)
+  # These are errors that should be visible to the user
+  except DataValidationError as ex:
+    logger.error(f'Data validation error in {kind} submission: {ex.msg}')
+
+    # Construct user-friendly error message with optional line number
+    msg = f'There was an error with your submission. { ex.msg }'
+
+    # Return the error message
+    return { 'message': msg }, 400
+
+  # General error
+  # Not displayed to the user, since we don't know the content a priori
+  except Exception as ex:
+
+    # Get message and description, if they exist
+    msg  = getattr(ex, 'message',     '')
+    desc = getattr(ex, 'description', '')
+
+    # Log the full error
+    logger.error(f'Error submitting {kind} calculation. Message = "{msg}", Description = "{desc}". Full Error: {ex}')
+
+    # Return the error message
+    # TODO: Update this wording
+    return { 'message': "There was a problem submitting your request." }, 500
+
+
+
+def list_reports(ReportClass: Type[ReportEntity], user: User = None, filter_errs: bool = False):
+  '''
+    Get a list of reports, sorted by most recent.
+
+    Args:
+      - `ReportClass`: The report class type to query for.
+      username (str | None):
+        If provided, only return reports owned by the given user.
+      filter_errs (bool):
+        If True, skips all entities that throw an error when initializing.
+        If False, populates as many fields of those entities as possible.
+  '''
+
+  # Filter by username if provided, and log event accordingly
+  if user:
+    logger.debug(f'Getting all {ReportClass.get_report_display_name()} reports for user "{user.name}"...')
+    filters = [('username', '=', user.name)]
+  else:
+    logger.debug(f'Getting all {ReportClass.get_report_display_name()} reports...')
+    filters = []
+
+  # Get list of reports and filter by date
+  reports = ReportClass.query_ds(safe=not filter_errs, ignore_errs=filter_errs, filters=filters)
+  return ReportClass.sort_by_created_date(reports, reverse=True)

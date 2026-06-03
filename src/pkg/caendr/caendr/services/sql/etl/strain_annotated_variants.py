@@ -1,207 +1,420 @@
 import os
 import csv
-import re
 import gzip
-import shutil
+import re
 
 from caendr.services.logger import logger
 from sqlalchemy.sql.expression import null
 
-from caendr.models.sql import StrainAnnotatedVariant
-from caendr.services.sql.db import bulk_insert_with_batching, load_with_copy_from_generator, rebuild_indexes
+from caendr.models.datastore  import Species
+from caendr.utils.local_files import LocalDatastoreFile
 
 
-def load_strain_annotated_variants(db, sva_fname: str, use_copy: bool = True):
-  logger.info('Loading strain variant annotated csv')
-  sva_data = fetch_strain_variant_annotation_data(sva_fname)
-  logger.info('Inserting strain annotated variant data into database')
-  
-  if use_copy:
-    try:
-      total_inserted = load_with_copy_from_generator(
-        db,
-        'strain_annotated_variants',
-        sva_data,
-        fieldnames=[
-          'id', 'chrom', 'pos', 'ref_seq', 'alt_seq', 'consequence', 'target_consequence',
-          'gene_id', 'transcript', 'biotype', 'strand', 'amino_acid_change', 'dna_change',
-          'strains', 'blosum', 'grantham', 'percent_protein', 'gene', 'variant_impact',
-          'snpeff_impact', 'divergent', 'release'
-        ],
-        disable_indexes_flag=True
-      )
-      rebuild_indexes(db, 'strain_annotated_variants')
-      logger.info(f'Inserted {total_inserted} Strain Annotated Variants (using COPY command)')
-      return total_inserted
-    except Exception as e:
-      logger.warning(f'COPY command failed, falling back to batched inserts: {e}')
-      sva_data = fetch_strain_variant_annotation_data(sva_fname)
-  
-  total_inserted = bulk_insert_with_batching(
-    db, 
-    StrainAnnotatedVariant, 
-    sva_data, 
-    batch_size=50000,
-    defer_fks=True
-  )
-  logger.info(f'Inserted {total_inserted} Strain Annotated Variants')
-  return total_inserted
 
-
-def fetch_strain_variant_annotation_data(sva_gz_fname: str):
+def parse_strain_variant_annotation_data(species: Species, SVA_CSVGZ: LocalDatastoreFile):
   """
       Load strain variant annotation table data:
 
       CHROM,POS,REF,ALT,CONSEQUENCE,WORMBASE_ID,TRANSCRIPT,BIOTYPE,
       STRAND,AMINO_ACID_CHANGE,DNA_CHANGE,Strains,BLOSUM,Grantham,
-      Percent_Protein,GENE,VARIANT_IMPACT,SNPEFF_IMPACT,DIVERGENT,RELEASE
+      Percent_Protein,GENE,VARIANT_IMPACT,DIVERGENT,RELEASE
 
+      Expected sample headers/rows format:
+        Headers:
+          [
+            "CHROM",       "POS",            "REF",           "ALT",       "CONSEQUENCE",
+            "WORMBASE_ID", "TRANSCRIPT",     "BIOTYPE",       "STRAND",    "AMINO_ACID_CHANGE",
+            "DNA_CHANGE",  "Strains",        "BLOSUM",        "Grantham",  "Percent_Protein",
+            "GENE",        "VARIANT_IMPACT", "DIVERGENT",     "RELEASE"
+          ]
+        Rows:
+          ["I",3782,"G","A",NA,NA,NA,NA,NA,NA,NA,"",NA,NA,NA,NA,NA,NA,NA,NA]
+
+      Note: There used to be a column "SNPEFF_IMPACT" at index 17 (between "VARIANT_IMPACT"
+            and "DIVERGENT"). This column has been removed.
   """
-  logger.info('Extracting strain variant annotation .csv.gz file')
-  sva_fname = 'sva.csv'
-  with gzip.open(sva_gz_fname, 'rb') as f_in:
-    with open(sva_fname, 'wb') as f_out:
-      shutil.copyfileobj(f_in, f_out)
-  
-  logger.info('Parsing extracted strain variant annotation .csv file')
-  with open(sva_fname) as csv_file:
-    csv_reader = csv.reader(csv_file, delimiter=',')
+  logger.info('Parsing extracted strain variant annotation TSV file')
 
-    line_count = -1
-    for row in csv_reader:
-      if line_count == -1:
-        print(f'Column names are {", ".join(row)}')
-        line_count += 1
-      else:
-        line_count += 1
-        if os.getenv("USE_MOCK_DATA") and line_count > 10:
-          logger.warn("USE_MOCK_DATA Early Return!!!")    
-          return    
-        if line_count % 1000000 == 0:
-          logger.debug(f"Processed {line_count} lines")
+  column_header_map = {}
 
-        # expected sample headers/rows format
-        # Headers:
-        # ["CHROM","POS","REF","ALT","CONSEQUENCE","WORMBASE_ID","TRANSCRIPT","BIOTYPE","STRAND","AMINO_ACID_CHANGE","DNA_CHANGE","Strains","BLOSUM","Grantham","Percent_Protein","GENE","VARIANT_IMPACT","SNPEFF_IMPACT","DIVERGENT", "RELEASE"]
-        # Rows:
-        # ["I",3782,"G","A",NA,NA,NA,NA,NA,NA,NA,"",NA,NA,NA,NA,NA,NA,NA,NA]
+  # Loop through each line in the CSV file, indexed
+  with gzip.open(SVA_CSVGZ, mode='rt') as csv_file:
+    for idx, row in enumerate( csv.reader(csv_file, delimiter='\t') ):
+
+      # First line is column names - don't interpret as data
+      # Create dict from header column names to row indices
+      if idx == 0:
+        logger.info(f'Column names in file "{SVA_CSVGZ}" are: {", ".join(row)}')
+        column_header_map = { name: idx for idx, name in enumerate(row) }
+        continue
+
+      # If testing, finish early
+      if os.getenv("USE_MOCK_DATA") and idx > 10:
+        logger.warn("USE_MOCK_DATA Early Return!!!")
+        return
+
+      # Progress update
+      if idx % 1000000 == 0:
+        logger.debug(f"Processed {idx} lines")
+
+      # Map row to dict, using file headers as keys
+      row = {
+        header: row[column_header_map[header]] for header in column_header_map
+      }
+
+      target_consequence = None
+      consequence = row.get('CONSEQUENCE')
+      alt_target = re.match('^@[0-9]*$', consequence)
+      if alt_target:
+        target_consequence = int(consequence[1:])
+        consequence = None
+
+      # Yield the row as a dict
+      yield {
+
+        # These two fields form the primary key, i.e. the combination of both must be unique within the table
+        'id':                 idx,
+        'species_name':       species.name,
+
+        'chrom':              row['CHROM'],
+        'pos':                get_row(row, 'POS', map=int),
+        'ref_seq':            row.get('REF'),
+        'alt_seq':            row.get('ALT'),
+        'consequence':        consequence,
+        'target_consequence': target_consequence,
+        'gene_id':            get_row(row, 'WORMBASE_ID', nullable=True),
+        'transcript':         row.get('TRANSCRIPT'),
+        'biotype':            row.get('BIOTYPE'),
+
+        # strand takes a single character in the SQL schema, and can be nullable. Convert R's NA to NULL
+        'strand':             get_row(row, 'STRAND', nullable=True),
+
+        'amino_acid_change':  row.get('AMINO_ACID_CHANGE'),
+        'dna_change':         row.get('DNA_CHANGE'),
+        'strains':            row.get('Strains'),
+        'blosum':             get_row(row, 'BLOSUM',          nullable=True, map=int),
+        'grantham':           get_row(row, 'Grantham',        nullable=True, map=int),
+        'percent_protein':    get_row(row, 'Percent_Protein', nullable=True, map=float),
+        'gene':               row.get('GENE'),
+        'variant_impact':     row.get('VARIANT_IMPACT'),
+        'divergent':          row.get('DIVERGENT') == 'D',
+        'release':            row.get('RELEASE'),
+      }
+
+  # In Python, loop vars maintain their final value after the loop ends
+  print(f'Processed {idx} lines total for {species.name}')
+
+
+def parse_annovar_variant_annotation_data(species: Species, **files: LocalDatastoreFile):
+
+  logger.info(f'Parsing extracted Annovar variant annotation CSV file')
+
+  for file_name, file_path in files.items():
+    column_header_map = {}
+
+    # Loop through each line in the CSV file, indexed
+    with gzip.open(file_path, mode='rt') as csv_file:
+      for idx, row in enumerate( csv.reader(csv_file, delimiter=',') ):
+
+        # First line is column names - don't interpret as data
+        # Create dict from header column names to row indices
+        if idx == 0:
+          logger.info(f'Column names in file "{file_name}" are: {", ".join(row)}')
+          column_header_map = { name.lower(): idx for idx, name in enumerate(row) }
+          continue
+
+        # If testing, finish early
+        if os.getenv("USE_MOCK_DATA") and idx > 1000000:
+          logger.warn("USE_MOCK_DATA Early Return!!!")
+          return
+
+        # Progress update
+        if idx % 1000000 == 0:
+          logger.debug(f"Processed {idx} lines")
+
+        # Map row to dict, using file headers as keys
+        row = {
+          header: row[column_header_map[header]] for header in column_header_map
+        }
 
         target_consequence = None
-        consequence = row[4] if row[4] else None
-        pattern = '^@[0-9]*$'
-        alt_target = re.match(pattern, consequence)
+        consequence = row.get('consequence')
+        alt_target = re.match('^@[0-9]*$', consequence)
         if alt_target:
           target_consequence = int(consequence[1:])
           consequence = None
 
-        # strand takes a single character in the SQL schema, and can be nullable. Convert R's NA to NULL
-        strand = None if (not row[8] or row[8] == "NA") else row[8]
+        divergent = row.get('hdr')
+        if divergent is not None:
+          divergent = divergent == 'YES'
+          
+        # Yield the row as a dict
+        yield {
 
-        data = {
-          'id': line_count,
-          'chrom': row[0],
-          'pos': int(row[1]) if row[1] else None,
-          'ref_seq': row[2] if row[2] else None,
-          'alt_seq': row[3] if row[3] else None,
-          'consequence': consequence,
+          # These two fields form the primary key, i.e. the combination of both must be unique within the table
+          'id':                 idx,
+          'species_name':       species.name,
+
+          'chrom':              row['chrom'],
+          'pos':                get_row(row, 'pos', map=int),
+          'ref_seq':            row.get('ref'),
+          'alt_seq':            row.get('alt'),
+          'consequence':        consequence,
           'target_consequence': target_consequence,
-          'gene_id': row[5] if (row[5] and row[5] != "NA") else None,
-          'transcript': row[6] if row[6] else None,
-          'biotype': row[7] if row[7] else None,
-          'strand': strand,
-          'amino_acid_change': row[9] if row[9] else None,
-          'dna_change': row[10] if row[10] else None,
-          'strains': row[11] if row[11] else None,
-          'blosum': int(row[12]) if (row[12] and row[12] != "NA") else None,
-          'grantham': int(row[13]) if (row[13] and row[13] != "NA") else None,
-          'percent_protein': float(row[14]) if (row[14] and row[14] != "NA") else None,
-          'gene': row[15] if row[15] else None,
-          'variant_impact': row[16] if row[16] else None,
-          'snpeff_impact': row[17] if row[17] else None,
-          'divergent': True if row[18] == 'D' else False,
-          'release': row[19] if row[19] else None
+          'gene_id':            get_row(row, 'wbgene', nullable=True),
+          'transcript':         row.get('transcript'),
+
+          'amino_acid_change':  row.get('aa')[2:],
+          'strains':            row.get('strain'),
+          'blosum':             get_row(row, 'blosum', nullable=True, map=int),
+          'grantham':           get_row(row, 'grantham', nullable=True, map=int),
+          'percent_protein':    get_row(row, 'percent_protein', nullable=True, map=float),
+          'gene':               row.get('gene_name'),
+          'divergent':          divergent,
+          'variant_impact':     row.get('impact'),
+          'divergent':          divergent,
+          'release':            species.release_sva,
         }
-        
-        yield data
 
-  print(f'Processed {line_count} lines.')
-
+    # In Python, loop vars maintain their final value after the loop ends
+    print(f'Processed {idx} lines total for {file_name} {species.name}')
 
 
-def fetch_strain_variant_annotation_data(sva_gz_fname: str):
-  """
-      Load strain variant annotation table data:
+def parse_csq_variant_annotation_data(species: Species, **files: LocalDatastoreFile):
+  logger.info(f'Parsing extracted CSQ variant annotation CSV file')
 
-      CHROM,POS,REF,ALT,CONSEQUENCE,WORMBASE_ID,TRANSCRIPT,BIOTYPE,
-      STRAND,AMINO_ACID_CHANGE,DNA_CHANGE,Strains,BLOSUM,Grantham,
-      Percent_Protein,GENE,VARIANT_IMPACT,SNPEFF_IMPACT,DIVERGENT,RELEASE
+  for file_name, file_path in files.items():
+    column_header_map = {}
 
-  """
-  logger.info('Extracting strain variant annotation .csv.gz file')
-  sva_fname = 'sva.csv'
-  with gzip.open(sva_gz_fname, 'rb') as f_in:
-    with open(sva_fname, 'wb') as f_out:
-      shutil.copyfileobj(f_in, f_out)
-  
-  logger.info('Parsing extracted strain variant annotation .csv file')
-  with open(sva_fname) as csv_file:
-    csv_reader = csv.reader(csv_file, delimiter=',')
+    # Loop through each line in the CSV file, indexed
+    with gzip.open(file_path, mode='rt') as csv_file:
+      for idx, row in enumerate( csv.reader(csv_file, delimiter=',') ):
 
-    line_count = -1
-    for row in csv_reader:
-      if line_count == -1:
-        print(f'Column names are {", ".join(row)}')
-        line_count += 1
-      else:
-        line_count += 1
-        if os.getenv("USE_MOCK_DATA") and line_count > 10:
-          logger.warn("USE_MOCK_DATA Early Return!!!")    
-          return    
-        if line_count % 1000000 == 0:
-          logger.debug(f"Processed {line_count} lines")
+        # First line is column names - don't interpret as data
+        # Create dict from header column names to row indices
+        if idx == 0:
+          logger.info(f'Column names in file "{file_name}" are: {", ".join(row)}')
+          column_header_map = { name.lower(): idx for idx, name in enumerate(row) }
+          continue
 
-        # expected sample headers/rows format
-        # Headers:
-        # ["CHROM","POS","REF","ALT","CONSEQUENCE","WORMBASE_ID","TRANSCRIPT","BIOTYPE","STRAND","AMINO_ACID_CHANGE","DNA_CHANGE","Strains","BLOSUM","Grantham","Percent_Protein","GENE","VARIANT_IMPACT","SNPEFF_IMPACT","DIVERGENT", "RELEASE"]
-        # Rows:
-        # ["I",3782,"G","A",NA,NA,NA,NA,NA,NA,NA,"",NA,NA,NA,NA,NA,NA,NA,NA]
+        # If testing, finish early
+        if os.getenv("USE_MOCK_DATA") and idx > 10:
+          logger.warn("USE_MOCK_DATA Early Return!!!")
+          return
+
+        # Progress update
+        if idx % 1000000 == 0:
+          logger.debug(f"Processed {idx} lines")
+
+        # Map row to dict, using file headers as keys
+        row = {
+          header: row[column_header_map[header]] for header in column_header_map
+        }
 
         target_consequence = None
-        consequence = row[4] if row[4] else None
-        pattern = '^@[0-9]*$'
-        alt_target = re.match(pattern, consequence)
+        consequence = row.get('consequence')
+        alt_target = re.match('^@[0-9]*$', consequence)
         if alt_target:
           target_consequence = int(consequence[1:])
           consequence = None
 
-        # strand takes a single character in the SQL schema, and can be nullable. Convert R's NA to NULL
-        strand = None if (not row[8] or row[8] == "NA") else row[8]
+        divergent = row.get('hdr')
+        if divergent is not None:
+          divergent = divergent == 'YES'
 
-        data = {
-          'id': line_count,
-          'chrom': row[0],
-          'pos': int(row[1]) if row[1] else None,
-          'ref_seq': row[2] if row[2] else None,
-          'alt_seq': row[3] if row[3] else None,
-          'consequence': consequence,
+        # Yield the row as a dict
+        yield {
+
+          # These two fields form the primary key, i.e. the combination of both must be unique within the table
+          'id':                 idx,
+          'species_name':       species.name,
+
+          'chrom':              row['chrom'],
+          'pos':                get_row(row, 'pos', map=int),
+          'ref_seq':            row.get('ref'),
+          'alt_seq':            row.get('alt'),
+          'consequence':        consequence,
           'target_consequence': target_consequence,
-          'gene_id': row[5] if (row[5] and row[5] != "NA") else None,
-          'transcript': row[6] if row[6] else None,
-          'biotype': row[7] if row[7] else None,
-          'strand': strand,
-          'amino_acid_change': row[9] if row[9] else None,
-          'dna_change': row[10] if row[10] else None,
-          'strains': row[11] if row[11] else None,
-          'blosum': int(row[12]) if (row[12] and row[12] != "NA") else None,
-          'grantham': int(row[13]) if (row[13] and row[13] != "NA") else None,
-          'percent_protein': float(row[14]) if (row[14] and row[14] != "NA") else None,
-          'gene': row[15] if row[15] else None,
-          'variant_impact': row[16] if row[16] else None,
-          'snpeff_impact': row[17] if row[17] else None,
-          'divergent': True if row[18] == 'D' else False,
-          'release': row[19] if row[19] else None
-        }
-        
-        yield data
+          'gene_id':            get_row(row, 'wbgene', nullable=True),
+          'transcript':         row.get('transcript'),
 
-  print(f'Processed {line_count} lines.')
+          'amino_acid_change':  row.get('aa'),
+          'dna_change':         row.get('dnachange'),
+          'strains':            row.get('strain'),
+          'blosum':             get_row(row, 'blosum', nullable=True, map=int),
+          'grantham':           get_row(row, 'grantham', nullable=True, map=int),
+          'percent_protein':    get_row(row, 'percent_protein', nullable=True, map=float),
+          'gene':               row.get('gene_name'),
+          'divergent':          divergent,
+          'release':            species.release_sva,
+        }
+
+    # In Python, loop vars maintain their final value after the loop ends
+    print(f'Processed {idx} lines total for {file_name} {species.name}')
+
+
+def parse_vep_variant_annotation_data(species: Species, **files: LocalDatastoreFile):
+  logger.info(f'Parsing extracted VEP variant annotation CSV file')
+
+  for file_name, file_path in files.items():
+    column_header_map = {}
+
+    # Loop through each line in the CSV file, indexed
+    with gzip.open(file_path, mode='rt') as csv_file:
+      for idx, row in enumerate( csv.reader(csv_file, delimiter=',') ):
+
+        # First line is column names - don't interpret as data
+        # Create dict from header column names to row indices
+        if idx == 0:
+          logger.info(f'Column names in file "{file_name}" are: {", ".join(row)}')
+          column_header_map = { name.lower(): idx for idx, name in enumerate(row) }
+          continue
+
+        # If testing, finish early
+        if os.getenv("USE_MOCK_DATA") and idx > 10:
+          logger.warn("USE_MOCK_DATA Early Return!!!")
+          return
+
+        # Progress update
+        if idx % 1000000 == 0:
+          logger.debug(f"Processed {idx} lines")
+
+        # Map row to dict, using file headers as keys
+        row = {
+          header: row[column_header_map[header]] for header in column_header_map
+        }
+
+        target_consequence = None
+        consequence = row.get('consequence')
+        alt_target = re.match('^@[0-9]*$', consequence)
+        if alt_target:
+          target_consequence = int(consequence[1:])
+          consequence = None
+
+        divergent = row.get('hdr')
+        if divergent is not None:
+          divergent = divergent == 'YES'
+
+        # Yield the row as a dict
+        yield {
+
+          # These two fields form the primary key, i.e. the combination of both must be unique within the table
+          'id':                 idx,
+          'species_name':       species.name,
+
+          'chrom':              row['chrom'],
+          'pos':                get_row(row, 'pos', map=int),
+          'ref_seq':            row.get('ref'),
+          'alt_seq':            row.get('alt'),
+          'consequence':        consequence,
+          'target_consequence': target_consequence,
+          'gene_id':            get_row(row, 'wbgene', nullable=True),
+          'transcript':         row.get('transcript'),
+
+          'amino_acid_change':  row.get('aa'),
+          'strains':            row.get('strain'),
+          'blosum':             get_row(row, 'blosum', nullable=True, map=int),
+          'grantham':           get_row(row, 'grantham', nullable=True, map=int),
+          'percent_protein':    get_row(row, 'percent_protein', nullable=True, map=float),
+          'gene':               row.get('gene_name'),
+          'divergent':          divergent,
+          'variant_impact':     row.get('impact'),
+          'divergent':          divergent,
+          'release':            species.release_sva,
+        }
+
+    # In Python, loop vars maintain their final value after the loop ends
+    print(f'Processed {idx} lines total for {file_name} {species.name}')
+
+
+def parse_snpeff_variant_annotation_data(species: Species, **files: LocalDatastoreFile):
+  logger.info(f'Parsing extracted SnpEff variant annotation CSV file')
+
+  for file_name, file_path in files.items():
+    column_header_map = {}
+
+    # Loop through each line in the CSV file, indexed
+    with gzip.open(file_path, mode='rt') as csv_file:
+      for idx, row in enumerate( csv.reader(csv_file, delimiter=',') ):
+
+        # First line is column names - don't interpret as data
+        # Create dict from header column names to row indices
+        if idx == 0:
+          logger.info(f'Column names in file "{file_name}" are: {", ".join(row)}')
+          column_header_map = { name.lower(): idx for idx, name in enumerate(row) }
+          continue
+
+        # If testing, finish early
+        if os.getenv("USE_MOCK_DATA") and idx > 10:
+          logger.warn("USE_MOCK_DATA Early Return!!!")
+          return
+
+        # Progress update
+        if idx % 1000000 == 0:
+          logger.debug(f"Processed {idx} lines")
+
+        # Map row to dict, using file headers as keys
+        row = {
+          header: row[column_header_map[header]] for header in column_header_map
+        }
+
+        target_consequence = None
+        consequence = row.get('consequence')
+        alt_target = re.match('^@[0-9]*$', consequence)
+        if alt_target:
+          target_consequence = int(consequence[1:])
+          consequence = None
+
+        # Yield the row as a dict
+        yield {
+
+          # These two fields form the primary key, i.e. the combination of both must be unique within the table
+          'id':                 idx,
+          'species_name':       species.name,
+
+          'chrom':              row['chrom'],
+          'pos':                get_row(row, 'pos', map=int),
+          'ref_seq':            row.get('ref'),
+          'alt_seq':            row.get('alt'),
+          'consequence':        consequence,
+          'target_consequence': target_consequence,
+          'gene_id':            get_row(row, 'wbgene', nullable=True),
+          'transcript':         row.get('transcript'),
+
+          'amino_acid_change':  row.get('aa'),
+          'strains':            row.get('strain'),
+          'grantham':           get_row(row, 'grantham',  nullable=True, map=int),
+          'percent_protein':    get_row(row, 'percent_protein', nullable=True, map=float),
+          'gene':               row.get('gene_name'),
+          'locus':               row.get('locus'),
+          'variant_impact':     row.get('impact'),
+          'release':            species.release_sva,
+        }
+
+    # In Python, loop vars maintain their final value after the loop ends
+    print(f'Processed {idx} lines total for {file_name} {species.name}')
+
+
+def get_row(row, key, nullable=False, map=None):
+  '''
+    Get a column value from a row.
+
+    Arguments:
+      row (dict): The row as a dict.
+      key: The key to lookup in the row.
+      nullable (bool): Whether values in this row can be null ('NA'). Converts null values to None.
+      map (func): A mapping function to apply to all non-null values.
+  '''
+  val = row.get(key)
+
+  # Return early if value is null
+  # Maps R's 'NA' value to None, if applicable
+  if val is None or (nullable and (val == 'NA' or val == 'N/A')):
+    return None
+
+  # If mapping function provided and val exists, apply it
+  if map is not None:
+    return map(val)
+
+  return val
+

@@ -1,5 +1,6 @@
 import os
 import yaml
+from markupsafe import Markup
 
 from caendr.services.logger import logger
 from flask import (render_template,
@@ -10,7 +11,6 @@ from flask import (render_template,
                    Blueprint,
                    abort,
                    flash,
-                   Markup,
                    stream_with_context)
 
 from config import config

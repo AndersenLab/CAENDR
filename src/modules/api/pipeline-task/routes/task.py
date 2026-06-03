@@ -1,48 +1,25 @@
-from caendr.services.logger import logger
-import os
 import json
 
 from flask import Blueprint, jsonify, request
+from caendr.services.logger import logger
+from caendr.utils import monitor
 
-from pipelines.nemascan import start_nemascan_pipeline
-from pipelines.db_op import start_db_op_pipeline
-from pipelines.indel_primer import start_indel_primer_pipeline
-from pipelines.heritability import start_heritability_pipeline
-from pipelines.gene_browser_tracks import start_gene_browser_tracks_pipeline
+from pipelines.utils import update_status_safe, get_task_handler, get_runner_from_operation_name, load_json_from_request
 
-from caendr.models.datastore.nemascan_mapping import NemascanMapping
-from caendr.models.datastore.database_operation import DatabaseOperation
-from caendr.models.datastore.indel_primer import IndelPrimer
-from caendr.models.datastore.heritability_report import HeritabilityReport
-from caendr.models.datastore.gene_browser_tracks import GeneBrowserTracks
-
-from caendr.models.error import APIBadRequestError, APIInternalError
-from caendr.models.task import TaskStatus, NemaScanTask, DatabaseOperationTask, IndelPrimerTask, HeritabilityTask, GeneBrowserTracksTask
+from caendr.models.error import APIError, APIBadRequestError, APIInternalError, APIUnprocessableEntity
+from caendr.models.status import JobStatus
 from caendr.models.pub_sub import PubSubAttributes, PubSubMessage, PubSubStatus
 
 from caendr.services.cloud.task import update_task_status, verify_task_headers
-from caendr.services.cloud.pubsub import get_operation
-from caendr.services.cloud.lifesciences import create_pipeline_operation_record, update_pipeline_operation_record, update_all_linked_status_records
-
-from caendr.services.nemascan_mapping import update_nemascan_mapping_status
-from caendr.services.database_operation import update_db_op_status
-from caendr.services.indel_primer import update_indel_primer_status
-from caendr.services.heritability_report import update_heritability_report_status
-from caendr.services.gene_browser_tracks import update_gene_browser_track_status
+from caendr.services.cloud.pubsub import get_attribute, pubsub_endpoint
+from caendr.services.cloud.utils import get_operation_id_from_name, update_all_linked_status_records
 from caendr.services.persistent_logger import PersistentLogger
 
-from caendr.utils import monitor
+
 
 monitor.init_sentry("pipeline-task")
 
-INDEL_PRIMER_TASK_QUEUE_NAME = os.environ.get('INDEL_PRIMER_TASK_QUEUE_NAME')
-NEMASCAN_TASK_QUEUE_NAME = os.environ.get('NEMASCAN_TASK_QUEUE_NAME')
-HERITABILITY_TASK_QUEUE_NAME = os.environ.get('HERITABILITY_TASK_QUEUE_NAME')
-MODULE_DB_OPERATIONS_TASK_QUEUE_NAME = os.environ.get('MODULE_DB_OPERATIONS_TASK_QUEUE_NAME')
-MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME = os.environ.get('MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME')
-
 task_handler_bp = Blueprint('task_bp', __name__)
-
 
 
 
@@ -51,106 +28,98 @@ def start_task(task_route):
   queue, task = verify_task_headers(task_route)
   logger.info(f"Task: {queue}:{task}")
 
-  try:
-    payload = json.loads(request.data)
-  except:
-    raise APIBadRequestError('Failed to parse request body as valid JSON')
+  # Parse request payload
+  payload = load_json_from_request(request)
 
-  logger.info(f"Payload: {payload}")
-  handle_task(payload, task_route)
+  # Get the task ID from the payload
+  op_id = payload.get('id')
+  if op_id is None:
+    logger.error(f'Request body must define an operation ID. Payload: {payload}')
+    raise APIUnprocessableEntity('Request body must define an operation ID')
+
+  # Log the start of the task
+  call_id = f'TASK {op_id}'
+  logger.info(f'[{ call_id }] Starting job in queue { task_route }. Payload: {payload}')
+
+  # Try to create a task handler of the appropriate type
+  handler = get_task_handler(task_route, **payload)
+
+  # Run the job
+  try:
+    exec_id = handler.run(run_if_exists=True)
+    update_status_safe(handler, JobStatus.RUNNING, call_id)
+
+  # Intercept API errors to add task ID
+  except APIError as ex:
+    update_status_safe(handler, JobStatus.ERROR, call_id)
+    ex.set_call_id(call_id)
+    raise ex
+
+  # Wrap generic exceptions in an Internal Error class
+  except Exception as ex:
+    update_status_safe(handler, JobStatus.ERROR, call_id)
+    raise APIInternalError('Error occurred while creating job', call_id) from ex
 
   #return jsonify({'operation': op.id}), 200
   return jsonify({}), 200
 
-# Track the 'class' to create the task and the 'function' to initiate the pipeline
-def _get_task_metadata(queue_name):
-  mapping = {
-    NEMASCAN_TASK_QUEUE_NAME: {
-      'class': NemaScanTask,
-      'start_pipeline': start_nemascan_pipeline,
-      'update_status': update_nemascan_mapping_status
-    },
-    INDEL_PRIMER_TASK_QUEUE_NAME: {
-      'class': IndelPrimerTask,
-      'start_pipeline': start_indel_primer_pipeline,
-      'update_status': update_indel_primer_status
-    },
-    HERITABILITY_TASK_QUEUE_NAME: {
-      'class': HeritabilityTask,
-      'start_pipeline':start_heritability_pipeline,
-      'update_status': update_heritability_report_status
-    },
-    MODULE_DB_OPERATIONS_TASK_QUEUE_NAME: {
-      'class': DatabaseOperationTask,
-      'start_pipeline': start_db_op_pipeline,
-      'update_status': update_db_op_status
-    },
-    MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME: {
-      'class': GeneBrowserTracksTask,
-      'start_pipeline': start_gene_browser_tracks_pipeline,
-      'update_status': update_gene_browser_track_status
-    }
-  }
-  return mapping.get(queue_name, None)
-
-def handle_task(payload, task_route):
-  logger.info(f"Task: {task_route}")
-
-  task_metadata = _get_task_metadata(task_route)
-  task_class, start_pipeline, update_status = task_metadata.values()
-
-  if task_class is None:
-      raise APIBadRequestError("Invalid task route")
-
-  task = task_class(**payload)
-  response = start_pipeline(task)
-
-  persistent_logger = PersistentLogger(task_route)
-
-  # status = 'RUNNING'
-  status = TaskStatus.RUNNING
-  operation_name = ''
-  try:
-    op = create_pipeline_operation_record(task, response)
-    operation_name = op.operation
-  except Exception as e:
-    logger.error(e)
-    persistent_logger.log(e)
-    status = 'ERROR'
-
-  update_status(task.id, status=status, operation_name=operation_name)
 
 
 @task_handler_bp.route('/status', methods=['POST'])
+@pubsub_endpoint
 def update_task():
+
+  # Parse request payload
+  payload = load_json_from_request(request)
+  logger.info(f"[STATUS] Payload: {payload}")
+
+  # Marshall JSON to PubSubStatus object
+  # Get the task ID from the payload (raises an error if not provided)
+  operation_name = get_attribute(payload, "operation")
+
+  # String that identifies this API call, for debugging purposes
+  call_id = f'STATUS {get_operation_id_from_name(operation_name)}'
+
+  # Get a runner object and execution ID representing this job from the operation name
+  logger.debug(f"[{ call_id }] Retrieving the operation...")
   try:
-    try:
-      payload = json.loads(request.data)
-      logger.info(f"Task Status Payload: {payload}")
-    except Exception as e:
-      logger.error(e)
-      raise APIBadRequestError('Error parsing JSON payload')
+    runner, exec_id = get_runner_from_operation_name(operation_name)
 
-    # Marshall JSON to PubSubStatus object
-    try:
-      operation = payload.get('message').get("attributes").get("operation")
-    except Exception as e:
-      logger.error(e)
-      raise APIBadRequestError('Error parsing PubSub status message.')
+  # Intercept API errors to add task ID
+  except APIError as ex:
+    ex.set_call_id(call_id)
+    raise ex
 
-    try:
-      logger.debug("updating the pipeline operation record...")
-      op = update_pipeline_operation_record(operation)
+  # Wrap generic exceptions in an Internal Error class
+  except Exception as ex:
+    raise APIInternalError('Error getting pipeline runner', call_id) from ex
 
-      logger.debug(f"updating all linked status records for operation: {op}")
-      update_all_linked_status_records(op.operation_kind, operation)
-      logger.debug(operation)
-    except Exception as e:
-      logger.error(f"Unable to update pipeline record[s]: {e}")
-      raise APIInternalError(f"Error updating status records. Error: {e}")
+  # Make sure a job execution is specified
+  if exec_id is None:
+    raise APIBadRequestError('Operation name must specify a job execution.', call_id)
 
-  except Exception as error:
-    logger.error(f"Error updating records for operation. {type(error).__name__}: {str(error)}")
-    return jsonify({'error': f"{type(error).__name__}: {str(error)}" }), 500
 
-  return jsonify({'status': 'OK'}), 200
+  # Get the current status of the job, updating the PipelineOperation record implicitly
+  logger.debug(f"[{ call_id }] Checking the operation status and updating the PipelineOperation record...")
+  status = runner.check_status(exec_id)
+
+
+  # Update all linked report entities
+  try:
+    logger.debug(f"[{ call_id }] Updating all linked status records to status { status }...")
+    update_all_linked_status_records(runner, exec_id, status)
+
+  # Intercept API errors to add task ID
+  except APIError as ex:
+    ex.set_call_id(call_id)
+    raise ex
+
+  # Wrap generic exceptions in an Internal Error class
+  except Exception as ex:
+    raise APIInternalError(f"Error updating status record(s)", call_id) from ex
+
+
+  # If the job has finished or errored out, acknowledge the Pub/Sub message
+  # If the job is still running, don't acknowledge -- tells Pub/Sub to try the request again
+  # Return as bool value to be handled by pubsub_endpoint decorator
+  return status in JobStatus.FINISHED

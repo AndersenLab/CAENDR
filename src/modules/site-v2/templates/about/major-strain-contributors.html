@@ -1,0 +1,58 @@
+{% extends "_layouts/default.html" %}
+
+{% block custom_head %}
+<style>
+    .card img {
+        width: 150px;
+        height: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <p class="fs-4">
+            This resource would not exist if it were not for the amazing efforts of researchers who collect nematodes 
+            from nature. The nematode evolution community owes each of them a debt of gratitude for these efforts. 
+            CaeNDR would like to formally thank researchers who have collected wild nematodes and contributed them to 
+            this resource. Some of the collectors who have contributed the most strains through the combined sampling 
+            efforts of their research teams are shown below. Thank you to each of them for their efforts!
+        </p>
+    </div>
+    <!-- Map -->
+    <div class="col-md-6">
+        {% include "_includes/contributor_piechart.html" %}
+    </div>
+    <!-- /Map -->
+    <div class="row row-cols-1 row-cols-md-3">
+        {% for fr in major_strain_contributors|sort(attribute='last_name') %}
+        <!-- Card Column -->
+        <div class="col mb-3">
+            <div class="card p-0 pt-3 mt-5 h-100 shadow text-center cardBorderBottom" style="min-height:35vh;">
+                <img src="{{ fr.img_url }}" class="img-fluid rounded mb-3 mx-auto"
+                alt="{{ fr.first_name }} {{ fr.last_name }}">
+                <div class="card-body">
+                    <h3 class="h5 card-title"><a href="{{ fr.website }}" target="_blank">{{ fr.first_name }} {{
+                        fr.last_name }}</a></h3>
+                        <p class="card-text">
+                            <small>{{ fr.org }}</small>
+                        </p>
+                        {% if len(fr.funding) > 0 %}
+                        <p class="card-text">
+                            <small style="color:black; font-style: normal;">Funding</small>
+                            {% for source in fr.funding %}
+                            <small style="font-style: normal;"><br>{{ source }}</small>
+                            {% endfor %}
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <!-- /Card Column -->
+            {% endfor %}
+        </div>
+    <div class="row row-cols-12 row-cols-md-12" style="min-height: 30px;"></div>
+        <h2 class="pt-5 text-center">Thank you to these contributors!</h2>
+</div>
+{% endblock %}

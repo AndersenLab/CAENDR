@@ -26,7 +26,7 @@
             <td> {{ profile['first_name'] }} </td>
             <td> {{ profile['org'] }} </td>
             <td> {{ profile['email'] }} </td>
-            <td> {{ profile['prof_roles'] }} </td>
+            <td> {% for role in profile['prof_roles'] %}{{ role.code }}{% if loop.revindex0 > 0 %}, {% endif %}{% endfor %} </td>
             <td>
               <a href="{{ url_for('admin_profile.profile_edit', id=profile.id) }}"> 
                 Edit

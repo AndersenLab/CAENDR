@@ -12,8 +12,14 @@ locals {
     "source_bucket_name" = var.GOOGLE_CLOUD_SOURCE_BUCKET_NAME
   })
 
+  module_maintenance_vars = tomap({
+    "container_name" = var.MODULE_MAINTENANCE_CONTAINER_NAME,
+    "container_version" = var.MODULE_MAINTENANCE_CONTAINER_VERSION
+  })
+
   module_site_vars = tomap({
     "container_name" = var.MODULE_SITE_CONTAINER_NAME,
+    "cloudrun_site_sa_name" = var.MODULE_SITE_CLOUDRUN_SA_NAME,
     "container_version" = var.MODULE_SITE_CONTAINER_VERSION,
     "serving_status" = var.MODULE_SITE_SERVING_STATUS,
     "bucket_public_name" = var.MODULE_SITE_BUCKET_PUBLIC_NAME,
@@ -41,17 +47,13 @@ locals {
     "container_name" = var.MODULE_API_PIPELINE_TASK_CONTAINER_NAME,
     "container_version" = var.MODULE_API_PIPELINE_TASK_CONTAINER_VERSION,
     "work_bucket_name" = var.MODULE_API_PIPELINE_TASK_WORK_BUCKET_NAME,
+    "data_bucket_name" = var.MODULE_API_PIPELINE_TASK_DATA_BUCKET_NAME,
     "pipeline_task_sa_name" = var.MODULE_API_PIPELINE_TASK_SERVICE_ACCOUNT_NAME,
     "pub_sub_topic_name" = var.MODULE_API_PIPELINE_TASK_PUB_SUB_TOPIC_NAME,
-    "pub_sub_subscription_name" = var.MODULE_API_PIPELINE_TASK_PUB_SUB_SUBSCRIPTION_NAME
+    "pub_sub_subscription_name" = var.MODULE_API_PIPELINE_TASK_PUB_SUB_SUBSCRIPTION_NAME,
+    "cloudrun_min_scale" = var.MODULE_API_PIPELINE_TASK_CLOUDRUN_MIN_SCALE,
+    "cloudrun_max_scale" = var.MODULE_API_PIPELINE_TASK_CLOUDRUN_MAX_SCALE
   })
-
-  module_gene_browser_tracks_vars = tomap({
-    "container_name" = var.MODULE_GENE_BROWSER_TRACKS_CONTAINER_NAME,
-    "container_version" = var.MODULE_GENE_BROWSER_TRACKS_CONTAINER_VERSION,
-    "task_queue_name" = var.MODULE_GENE_BROWSER_TRACKS_TASK_QUEUE_NAME
-  })
-
 
   cloud_secret_vars = tomap({
     "ANDERSEN_LAB_STRAIN_SHEET" = sensitive(var.ANDERSEN_LAB_STRAIN_SHEET), 
@@ -66,7 +68,9 @@ locals {
     "SECRET_KEY" = sensitive(var.SECRET_KEY),
     "JWT_SECRET_KEY" = sensitive(var.JWT_SECRET_KEY), 
     "PASSWORD_PEPPER" = sensitive(var.PASSWORD_PEPPER), 
-    "MAILGUN_API_KEY" = sensitive(var.MAILGUN_API_KEY)
-    "CC_EMAILS" = sensitive(var.CC_EMAILS)
+    "MAILGUN_API_KEY" = sensitive(var.MAILGUN_API_KEY),
+    "CC_EMAILS" = sensitive(var.CC_EMAILS),
+    "CAENDR_API_SITE_ACCESS_TOKEN" = sensitive(var.CAENDR_API_SITE_ACCESS_TOKEN),
+    "NO_REPLY_EMAIL" = sensitive(var.NO_REPLY_EMAIL)
   })
 }

@@ -1,0 +1,80 @@
+{% extends "_layouts/default-nocontainer.html" %}
+
+{% block custom_head %}
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-around flex-wrap px-3 mt-5">
+  <div class="col-12 col-md-2 text-bg-light mb-5 py-5 px-3 rounded-2 shadow-sm overflow-auto d-print-none" style="max-height:500px">
+  <h2 class="text-dark">Your Results</h2>
+  <div class="d-grid gap-3 mt-5">
+    {% if data_download_url %}
+    <a class="btn btn-secondary text-light" href="{{ data_download_url }}" role="button">
+  {% else %}
+    <a class="btn btn-secondary text-light" href="" role="button" disabled>
+  {% endif %}
+      <span class="bi bi-arrow-down-circle-fill" aria-hidden="true"> </span> 
+       Download Input Data
+    </a>
+    <a class="btn btn-secondary text-light" href="{{ url_for('genetic_mapping.results', report_id=report_id) }}" role="button">
+      <span class="bi bi-list-task" aria-hidden="true"> </span> 
+       View Result Files
+    </a>
+    {% if report_url %}
+      <a class="btn btn-secondary text-light" href="{{ report_url }}" role="button">
+    {% else %}
+      <a class="btn btn-secondary text-light" href="" role="button" disabled>
+    {% endif %}
+        <span class="bi bi-bar-chart-fill" aria-hidden="true"> </span> 
+         Download Report
+      </a>
+      {% if report_url %}
+        <a target='_blank' class="btn btn-secondary text-light" href="{{ url_for('genetic_mapping.report_fullscreen', report_id=report_id) }}" role="button">
+      {% else %}
+        <a class="btn btn-secondary text-light" href="" role="button" disabled>
+      {% endif %}
+          <span class="bi bi-arrows-fullscreen" aria-hidden="true"> </span> 
+           View Fullscreen
+        </a>
+  </div>
+  </div>
+  <div class="col-12 col-md-9 overflow-auto">
+    <!-- Options Toolbar -->
+    <div class="d-flex flex-wrap justify-content-end col-12 text-end mb-3 optionsToolbar">
+      <div class="ps-3 pt-0">
+        <a href="{{ url_for('genetic_mapping.my_results') }}"><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to My Genetic Mapping Reports</a>
+      </div>
+  </div>
+  <!-- /Options Toolbar --> 
+  {% if mapping_status == 'COMPLETE' %}
+      <div id="report_frame">
+        {% if report_url %}
+        <iframe defer loading="lazy" src="{{ url_for('genetic_mapping.report_fullscreen', report_id=report_id) }}" frameborder=0 style="width:100%; height:100vh" title="Nemascan mapping report results"></iframe>
+
+        {% else %}
+        <div class="spinner">
+          <div class="bounce1"></div>
+          <div class="bounce2"></div>
+          <div class="bounce3"></div>
+        </div>
+        <small>
+          Last Update: <span id="last-update"></span>
+        </small>
+        {% endif %}
+
+{% elif mapping_status == 'ERROR' %}
+        <div class="col-9 alert alert-danger mt-5 mx-auto animate__animated animate__fadeInDown">
+          <p class="fs-2 text-center"><i class="bi bi-exclamation-circle-fill me-2" aria-hidden="true"></i></p>
+            <p class="lead">An error occurred while performing the genome-wide association mapping. Please verify that the data you provided matches the expected format.</p>
+        </div>
+{% else %}
+        <div class="col-9 alert alert-info mt-5 mx-auto animate__animated animate__fadeInDown">
+          <p class="fs-2 text-center"><i class="bi bi-exclamation-circle-fill me-2" aria-hidden="true"></i></p>
+            <p class="lead">The genome-wide association mapping is currently running - please check back in a few hours for results.</p>
+        </div>
+{% endif %}
+  </div>
+</div>
+<!-- /flex -->
+{% endblock %}

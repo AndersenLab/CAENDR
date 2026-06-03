@@ -1,6 +1,5 @@
 import os
 import json
-import googleapiclient.discovery
 import pandas as pd
 
 from datetime import datetime
@@ -8,25 +7,40 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.service_account import get_service_account_credentials
+from caendr.services.cloud.storage import get_blob
+from caendr.utils.env import get_env_var
 
-GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME = os.environ.get('GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME')
+from .discovery import use_service
 
 
-def authenticate_google_analytics():
-  """ Uses service account credentials to authorize access to google analytics """
+
+GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME = get_env_var('GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME')
+
+
+
+def get_analytics_credentials():
+  '''
+    Helper function to get the service account credentials that authorize access to Google Analytics
+  '''
   service_credentials = get_service_account_credentials(get_secret(GOOGLE_ANALYTICS_SERVICE_ACCOUNT_NAME))
   scope = ['https://www.googleapis.com/auth/analytics.readonly']
-  credentials = ServiceAccountCredentials.from_json_keyfile_dict(service_credentials, scope)
-  return googleapiclient.discovery.build('analyticsreporting', 'v4', credentials=credentials)
+  return ServiceAccountCredentials.from_json_keyfile_dict(service_credentials, scope)
 
+"""
+  The following function is deprecated due to migration of Universal Analytics to Google Analytics 4.
+  The function has been replaced with get_weekly_visits_ga4() function in "/src/pkg/caendr/caendr/services/cloud/google_analytics_4.py" file,
+  where it fetches data from GA4.
+  Also, the following function was used to produce analytics report for dates 2015/01/01 - 2023/03/31 to use it in Cumulative visits plot
+  The generated report is stored in the GCP buckets.
+"""
 
-def get_weekly_visits():
+@use_service('analyticsreporting', 'v4', credentials=get_analytics_credentials)
+def get_weekly_visits(SERVICE):
   """
       Get the number of weekly visitors
       Cached weekly
   """
-  ga = authenticate_google_analytics()
-  response = ga.reports().batchGet(
+  response = SERVICE.reports().batchGet(
     body={
       'reportRequests': [{
         'viewId': '117392266',
@@ -45,7 +59,7 @@ def get_weekly_visits():
     out.append({'date': date, 'count': row['metrics'][0]['values'][0]})
   df = pd.DataFrame(out) \
           .sort_values('date') \
-          .reindex(['date', 'count'], axis=1)
+          .reindex(['date', 'count'], axis=1)  
   df['count'] = df['count'].astype(int)
   df['count'] = df['count'].dropna().cumsum()
   return df

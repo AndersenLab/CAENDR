@@ -8,6 +8,7 @@ locals {
     "run.googleapis.com",
     "cloudfunctions.googleapis.com",
     "containerregistry.googleapis.com",
+    "artifactregistry.googleapis.com",
     "appengine.googleapis.com",
     "sqladmin.googleapis.com",
     "cloudbuild.googleapis.com",

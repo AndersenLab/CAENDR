@@ -1,57 +1,20 @@
 from dateutil import parser
 from caendr.services.logger import logger
 
-from caendr.services.elevation import get_elevation
-from caendr.services.cloud.sheets import get_google_sheet
-from caendr.services.cloud.secret import get_secret
-from caendr.models.sql import Strain
-from caendr.services.sql.db import bulk_insert_with_batching, load_with_copy_from_generator, rebuild_indexes
+from caendr.models.datastore  import Species
+from caendr.utils.local_files import LocalGoogleSheet
+from caendr.utils.constants   import GOOGLE_SHEET_NULL_VALUES
 
-ANDERSEN_LAB_STRAIN_SHEET = get_secret('ANDERSEN_LAB_STRAIN_SHEET')
 
 elevation_cache = {}
-NULL_VALS = ["None", "", "NA", None]
 
-def load_strains(db, use_copy: bool = True): 
-  logger.info('Loading strains...')
-  andersen_strains = fetch_andersen_strains()
-  
-  if use_copy:
-    try:
-      strains_list = list(andersen_strains)
-      if strains_list:
-        fieldnames = list(strains_list[0].keys())
-        strains_gen = (row for row in strains_list)
-        
-        total_inserted = load_with_copy_from_generator(
-          db,
-          'strain',
-          strains_gen,
-          fieldnames=fieldnames,
-          disable_indexes_flag=True
-        )
-        rebuild_indexes(db, 'strain')
-        logger.info(f"Inserted {total_inserted} strains (using COPY command)")
-        return total_inserted
-      else:
-        total_inserted = 0
-        logger.warning("No strains to load")
-    except Exception as e:
-      logger.warning(f'COPY command failed, falling back to batched inserts: {e}')
-      andersen_strains = fetch_andersen_strains()
-  
-  total_inserted = bulk_insert_with_batching(
-    db, 
-    Strain, 
-    andersen_strains, 
-    batch_size=10000,
-    defer_fks=True
-  )
-  logger.info(f"Inserted {total_inserted} strains")
-  return total_inserted
-  
-
+# Local get_elevation import because this module is now used in the site
+# (to check required files for database operations),
+# but DiskCache (imported by services.elevation) is not used in the site.
+# TODO: Fix, somehow... Do we even need DiskCache? We're already caching in this file
 def fetch_elevation(lat, lon):
+  from caendr.services.elevation import get_elevation
+
   key = f'{lat}_{lon}'
   elevation = elevation_cache.get(key, None)
   if not elevation:
@@ -62,7 +25,7 @@ def fetch_elevation(lat, lon):
   return elevation
 
 
-def fetch_andersen_strains():
+def fetch_andersen_strains(species: Species, STRAINS: LocalGoogleSheet):
   """
     Fetches latest strains from
     google sheet database.
@@ -72,22 +35,24 @@ def fetch_andersen_strains():
     - Strain sets are concatenated with ','
     - Fetches elevation for each strain
   """
-  WI = get_google_sheet(ANDERSEN_LAB_STRAIN_SHEET)
-  strain_records = WI.get_all_records()
+
+  # Get records from Google sheet
+  strain_records = STRAINS.fetch_resource().get_all_records()
+
   # Only take records with a release reported
-  strain_records = list(filter(lambda x: x.get('release') not in NULL_VALS, strain_records))
-  results = []
+  strain_records = list(filter(lambda x: x.get('release') not in GOOGLE_SHEET_NULL_VALUES, strain_records))
+
   for n, record in enumerate(strain_records):
     record = {k.lower(): v for k, v in record.items()}
     for k, v in record.items():
       # Set NA to None
-      if v in NULL_VALS:
+      if v in GOOGLE_SHEET_NULL_VALUES:
         v = None
         record[k] = v
       if k in ['sampling_date'] and v:
         record[k] = parser.parse(v)
 
-    if record['latitude'] and record['longitude']:
+    if record['latitude'] and record['longitude'] and ('elevation' not in record or not record['elevation']):
       # Round elevation
       elevation = fetch_elevation(record['latitude'], record['longitude'])
       if elevation:
@@ -98,13 +63,16 @@ def fetch_andersen_strains():
     # Set issue bools
     record["issues"] = record["issues"] == "TRUE"
 
+    # Set distribute bools
+    record["distribute"] = record["distribute"] == "TRUE"
+
     # Set isotype_ref_strain = FALSE if no isotype is assigned.
-    if record['isotype'] in NULL_VALS:
+    if record['isotype'] in GOOGLE_SHEET_NULL_VALUES:
       record['isotype_ref_strain'] = False
       record['wgs_seq'] = False
 
     # Skip strains that lack an isotype
-    if record['isotype'] in NULL_VALS and record['issues'] is False:
+    if record['isotype'] in GOOGLE_SHEET_NULL_VALUES and record['issues'] is False:
       continue
 
     # Fix strain reference
@@ -117,7 +85,9 @@ def fetch_andersen_strains():
     # Remove space after comma delimiter
     if record['previous_names']:
       record['previous_names'] = str(record['previous_names']).replace(", ", ",").strip()
-    results.append(record)
 
+    # Store the species name identifier
+    record['species_name'] = species.name
 
-  return results
+    # Yield the record to be appended to the db
+    yield record

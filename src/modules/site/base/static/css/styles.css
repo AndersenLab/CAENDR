@@ -272,7 +272,7 @@ td.isotype-item label {
   overflow-x: hidden;
 }
 
-#g-search-table td, th {
+#g-search-table td, #g-search-table th {
   width: 25%;
   width: 1px solid #999999;
 }
@@ -291,7 +291,7 @@ td.isotype-item label {
   overflow-x: hidden;
 }
 
-#v-search-table td, th {
+#v-search-table td, #v-search-table th {
   width: 40%;
   width: 1px solid #999999;
 }

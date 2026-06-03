@@ -1,5 +1,5 @@
 locals {
-  asset_path = abspath("${path.module}/../../../../src/modules/site/ext_assets")
+  asset_path = abspath("${path.module}/../../../../src/modules/site-v2/ext_assets")
   file_set = fileset(local.asset_path, "**")
   mime_types = {
     ".js": "text/javascript",

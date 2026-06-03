@@ -13,3 +13,12 @@ This directory contains the CAENDR python package. Installation requirements and
 - `services` - interacting with CAENDR resources
 - `services.cloud` - lower-level interaction directly with Google Cloud resources
 - `utils` - commonly used functions
+
+
+## Best Practices
+
+### Environment Variables
+To read in environment variables, use the `load_env` and `get_env_var` functions from `utils.env`:
+- Track whether an environment is loaded, and throw a more descriptive error if the code tries to load a variable before any environment is loaded
+- Handle missing environment variables and default values
+- Handle template strings

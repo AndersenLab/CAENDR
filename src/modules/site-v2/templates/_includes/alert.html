@@ -1,0 +1,17 @@
+{% if not dismissable is defined %}
+    {% set dismissable = true %}
+{% endif %}
+
+<div
+    {% if alert_id is defined %}id="{{alert_id}}"{% endif %}
+    class="container alert alert-{{ category }} {% if dismissable %}alert-dismissible{% endif %} fade show pt-3 my-5 fw-bold text-center {{ alert_classes }}"
+>
+    <div>
+        {%- if msg is defined %}
+        {{ msg | markdown }}
+        {%- endif %}
+    </div>
+    {%- if dismissable %}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    {%- endif %}
+</div>

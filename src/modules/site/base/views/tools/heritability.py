@@ -2,7 +2,6 @@ import io
 import re
 import os
 import pandas as pd
-import json
 import datetime
 from caendr.models.datastore.pipeline_operation import PipelineOperation
 
@@ -18,7 +17,7 @@ from caendr.services.logger import logger
 from datetime import datetime
 
 from base.forms import HeritabilityForm
-from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user
+from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user, user_is_admin
 
 from caendr.models.error import CachedDataError, DuplicateDataError
 from caendr.api.strain import get_strains
@@ -88,42 +87,47 @@ def heritability_user_results():
 @jwt_required()
 def submit_h2():
   user = get_current_user()
-  label = request.values['label']
-  columns = ["AssayNumber", "Strain", "TraitName", "Replicate", "Value"]
 
-  # Extract table data
-  data = json.loads(request.values['table_data'])
-  data = [x for x in data[1:] if x[0] is not None]
-  trait = data[0][2]
+  # Package data for this submission into an object
+  data = {
+    'label':      request.values['label'],
+    'table_data': request.values['table_data'],
+  }
 
-  data_tsv = convert_data_table_to_tsv(data, columns)
-
-  # Generate an ID for the data based on its hash
-  data_hash = get_object_hash(data, length=32)
-  logger.debug(data_hash)
-  id = unique_id()
+  # If user is admin, allow them to bypass cache with URL variable
+  no_cache = bool(user_is_admin() and request.args.get("nocache", False))
 
   try:
-    h = create_new_heritability_report(id, user.name, label, data_hash, trait, data_tsv)
-  except DuplicateDataError:
-      flash('Oops! It looks like you submitted that data already - redirecting to your list of Heritability Reports', 'danger')
-      return jsonify({'duplicate': True,
-              'data_hash': data_hash,
-              'id': id})
-  except CachedDataError:
-      flash('Oops! It looks like that data has already been submitted - redirecting to the saved results', 'danger')
-      return jsonify({'cached': True,
-                  'data_hash': data_hash,
-                  'id': id})
-  except Exception as ex:
-      flash("Oops! There was a problem submitting your request: {ex}", 'danger')
-      return jsonify({'duplicate': True,
-              'data_hash': data_hash,
-              'id': id})
+    h = create_new_heritability_report(user, data, no_cache = False)
+    return jsonify({
+      'started':   True,
+      'data_hash': h.data_hash,
+      'id':        h.id,
+    })
 
-  return jsonify({'started': True,
-                'data_hash': data_hash,
-                'id': id})
+  except DuplicateDataError as ex:
+    flash('Oops! It looks like you submitted that data already - redirecting to your list of Heritability Reports', 'danger')
+    return jsonify({
+      'duplicate': True,
+      'data_hash': ex.args[0].data_hash,
+      'id':        ex.args[0].id,
+    })
+
+  except CachedDataError as ex:
+    flash('Oops! It looks like that data has already been submitted - redirecting to the saved results', 'danger')
+    return jsonify({
+      'cached':    True,
+      'data_hash': ex.args[0].data_hash,
+      'id':        ex.args[0].id,
+    })
+
+  except Exception as ex:
+    flash(f"Oops! There was a problem submitting your request: {ex}", 'danger')
+    return jsonify({
+      'duplicate': True,
+      'data_hash': None,
+      'id':        None,
+    })
 
 
 @heritability_bp.route("/heritability/h2/<id>/logs")
@@ -166,21 +170,36 @@ def heritability_result(id):
   user = get_current_user()
   hr = get_heritability_report(id)
 
-  if not hr._exists:
-    flash('You do not have access to that report', 'danger')
-    abort(401)
-  if not (hr.username == user.name or 'admin' in user.roles):
+  # If no such report exists, show an error message
+  if hr is None:
+
+    # Let admins know the report doesn't exist
+    if user_is_admin():
+      flash('This report does not exist', 'danger')
+      abort(404)
+
+    # For all other users, display a default "no access" message
+    else:
+      flash('You do not have access to that report', 'danger')
+      abort(401)
+
+  # If the user doesn't have permission to view this report, show an error message
+  if not (hr.username == user.name or user_is_admin()):
     flash('You do not have access to that report', 'danger')
     abort(401)
 
   ready = False
-  data_url = generate_blob_url(hr.get_bucket_name(), hr.get_data_blob_path())
 
-  data_hash = hr.data_hash
+  # Get blob paths
+  # Used in code as well as templating(?)
   data_blob = hr.get_data_blob_path()
   result_blob = hr.get_result_blob_path()
-  data = get_blob(hr.get_bucket_name(), hr.get_data_blob_path())
-  result = get_blob(hr.get_bucket_name(), hr.get_result_blob_path())
+
+  data_hash = hr.data_hash
+  data_url = generate_blob_url(hr.get_bucket_name(), data_blob)
+
+  data   = get_blob(hr.get_bucket_name(), data_blob)
+  result = get_blob(hr.get_bucket_name(), result_blob)
 
   # get this dynamically from the bp
   # logs_url = f"/heritability/h2/{hr.id}/logs"

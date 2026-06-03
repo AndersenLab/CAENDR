@@ -6,17 +6,12 @@ ENV PYTHONUNBUFFERED True
 
 # Install production dependencies.
 RUN apt-get update && \
-    apt-get upgrade -y --no-install-recommends && \
     apt-get install -y --no-install-recommends \
       build-essential \
       libbz2-dev \
       libssl-dev \
       liblzma-dev \
       libz-dev \
-      python3-dev \
-      python3 \
-      python3-venv \
-      python3-virtualenv \
       tabix \
       libcurl4-openssl-dev \
       virtualenv && \
@@ -29,19 +24,30 @@ ENV APP_HOME /api_pipeline_task
 WORKDIR $APP_HOME
 
 # make venv
+RUN pip install virtualenv
+
 RUN virtualenv --python=python3 venv
 ENV VIRTUAL_ENV $APP_HOME/venv
 RUN python -m venv $VIRTUAL_ENV
 ENV PATH $VIRTUAL_ENV/bin:$PATH
 RUN python -m pip install --upgrade pip
 
+COPY requirements.txt .
+
+# Install python modules from requirements.txt
+RUN python -m pip install --no-cache-dir -r requirements.txt
+
+COPY caendr caendr
+
+RUN python -m pip install --no-cache-dir -e ./caendr
 
 # Copy local code to the container image.
 COPY . ./
 
-# Install python modules from requirements.txt
-RUN python -m pip install --no-cache-dir -r requirements.txt
-RUN python -m pip install --no-cache-dir -e ./caendr
+# Inject the git commit into the file $WORKDIR/module.env
+ARG GIT_COMMIT=GIT_COMMIT_NOT_AVAILABLE
+RUN echo "\n\n# GIT_COMMIT automatically added during the makefile build container" >> module.env
+RUN echo "GIT_COMMIT=$GIT_COMMIT" >> module.env
 
 # Run the web service on container startup. Here we use the gunicorn
 # webserver, with one worker process and 8 threads.

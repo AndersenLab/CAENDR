@@ -12,6 +12,8 @@ MODULE_ENV_FILE_GENERATED = $(MODULE_DIR)/.env
 MODULE_PKG_DIR = $(MODULE_DIR)/caendr
 PKG_SETUP_DIR = $(PROJECT_DIR)/src/pkg/caendr
 
+GIT_COMMIT:=$(shell git rev-parse --short HEAD)
+
 
 -include $(ENV_FILE)
 include $(MODULE_ENV_FILE)
@@ -67,7 +69,7 @@ venv: #~
 #~ from 'requirements.txt' and the caendr local package from source
 venv:
 	@echo -e "\n$(COLOR_B)Installing python virtualenv and requirements.txt...$(COLOR_N)"
-	virtualenv --python=python3 $(MODULE_DIR)/venv && \
+	virtualenv --python=python3.13 $(MODULE_DIR)/venv && \
 	$(MODULE_DIR)/venv/bin/python -m pip install --upgrade pip && \
 	$(MODULE_DIR)/venv/bin/python -m pip install -r $(MODULE_DIR)/requirements.txt
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
@@ -84,7 +86,7 @@ clean-venv:
 
 
 #~
-container: #~
+#container: #~
 #~ Removes the virtual environment and python cache, regenerates the module .env file, 
 #~ copies the code for the shared/caendr package into the module directory, and
 #~ builds the container for the module and tags it with the name and version from module.env
@@ -97,9 +99,9 @@ container-build:
 	$(MAKE) -C $(PKG_SETUP_DIR) clean --no-print-directory && \
 	cp -r $(PKG_SETUP_DIR) $(MODULE_DIR) && \
 	echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
-	
+
 	@echo -e "\n$(COLOR_B)Building container image...$(COLOR_N)" && \
-	docker buildx build --platform=linux/amd64 $(MODULE_DIR) -t gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${MODULE_NAME}:${MODULE_VERSION} && \
+	docker buildx build --pull --platform=linux/amd64 --build-arg GIT_COMMIT=$(GIT_COMMIT) $(MODULE_DIR) -t us-east4-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT_ID}/caendr-site-v2/${MODULE_NAME}:${MODULE_VERSION} && \
 	echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
 	@echo -e "\n$(COLOR_B)Removing local caendr package source copy$(COLOR_N)" && \
@@ -115,8 +117,8 @@ publish: container container-publish
 publish-auto: container-auto container-publish
 
 container-publish:
-	@echo -e "\n$(COLOR_B)Publishing container image to gcr...$(COLOR_N)"
-	docker push gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${MODULE_NAME}:${MODULE_VERSION}
+	@echo -e "\n$(COLOR_B)Publishing container image to the google artifact registry...$(COLOR_N)"
+	docker push us-east4-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT_ID}/caendr-site-v2/${MODULE_NAME}:${MODULE_VERSION}
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"
 
 
@@ -128,5 +130,5 @@ print-module-env: verify-env
 
 print-ver:
 	@echo -e "$(COLOR_P)****************************************************************************$(COLOR_N)"
-	@echo -e " CONTAINER: $(COLOR_W)gcr.io/${GOOGLE_CLOUD_PROJECT_ID}/${MODULE_NAME}:${MODULE_VERSION}$(COLOR_N)"
+	@echo -e " CONTAINER: $(COLOR_W)us-east4-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT_ID}/caendr-site-v2/${MODULE_NAME}:${MODULE_VERSION}$(COLOR_N)"
 	@echo -e "$(COLOR_P)****************************************************************************$(COLOR_N)"

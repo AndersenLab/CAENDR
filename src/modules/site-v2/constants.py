@@ -29,8 +29,30 @@ TABLE_COLORS = {
   "HIGH": 'danger'
 }
 
-REPORT_TYPES = [('V2', 'V2'), ('V1', 'V1'), ('V0', 'V0')]
-
 # TODO: REMOVE THESE
 REPORT_V1_FILE_LIST = ['methods.md']
 REPORT_V2_FILE_LIST = ['alignment_report.html', 'concordance_report.html', 'gatk_report.html', 'methods.md', 'reads_mapped_by_strain.tsv', 'release_notes.md']
+
+
+# TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS = { 'csv', 'tsv' }
+# TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS = { 'csv' }
+TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS = { 'tsv' }
+
+# List of tools that use an IGV genome browser
+# TODO: More general tool config objects? Store in GCP?
+GENOME_BROWSER_TOOLS = [
+  ('genome_browser', 'Genome Browser'),
+  ('pairwise_indel_finder', 'Pairwise Indel Finder'),
+]
+
+TRAIT_CATEGORY_OPTIONS = [
+  ('Growth/Physiology', 'Growth • Physiology'), 
+  ('Morphology/Development/Lineage/Cell type', 'Morphology • Development • Lineage • Cell type'), 
+  ('Behavior', 'Behavior'), 
+  ('Molecular', 'Molecular'), 
+  ('Stress response', 'Stress response'), 
+  ('Drug/Compound/Condition/Treatment', 'Drug • Compound • Condition • Treatment'), 
+  ('Ecology', 'Ecology'), 
+  ('Genomics', 'Genomics'), 
+  ('Reproduction', 'Reproduction')
+]

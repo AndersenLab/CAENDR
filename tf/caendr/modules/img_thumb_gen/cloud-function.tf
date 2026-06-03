@@ -6,7 +6,7 @@ resource "google_cloudfunctions_function" "generate_thumbnails" {
     event_type = "google.storage.object.finalize"
 
     failure_policy {
-      retry = "false"
+      retry = "true"
     }
 
     resource = "projects/${var.google_cloud_vars.project_id}/buckets/${google_storage_bucket.photos_bucket.name}"
@@ -26,7 +26,11 @@ resource "google_cloudfunctions_function" "generate_thumbnails" {
   timeout               = "60"
 
   depends_on = [ 
-    google_storage_bucket_object.source_zip 
+    google_storage_bucket_object.source_zip,
+    time_sleep.wait_30_seconds
   ]
+}
 
+resource "time_sleep" "wait_30_seconds" {
+  create_duration = "15s"
 }

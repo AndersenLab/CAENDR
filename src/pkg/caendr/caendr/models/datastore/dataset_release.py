@@ -1,136 +1,445 @@
 import os
-from string import Template
+from typing import Union, Tuple
+
 from caendr.services.logger import logger
 
-from caendr.models.datastore import Entity
-from caendr.services.cloud.storage import generate_blob_url, get_blob, check_blob_exists
+from caendr.api.gene import remove_prefix
+from caendr.models.datastore import Species, SpeciesEntity
+from caendr.models.error import NotFoundError
+from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, get_blob_list, check_blob_exists
+from caendr.services.cloud.aws_storage import AWSBlobURISchema, aws_generate_blob_uri, aws_get_blob_list, aws_check_blob_exists
+from caendr.utils.env import get_env_var, get_env_var_with_fallback
+from caendr.utils.tokens import TokenizedString
+
+
 
 V1_V2_Cutoff_Date = 20200101
 
-MODULE_SITE_BUCKET_PUBLIC_NAME = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME')
+DATASET_RELEASE_BUCKET_NAME = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
+DATASET_RELEASE_AWS_BUCKET_NAME = get_env_var('AWS_OPEN_DATA_BUCKET')
 
-class DatasetRelease(Entity):
+FASTA_FILENAME_TEMPLATE = get_env_var('FASTA_FILENAME_TEMPLATE', as_template=True)
+FASTA_EXTENSION_FILE    = get_env_var('FASTA_EXTENSION_FILE')
+FASTA_EXTENSION_INDEX   = get_env_var('FASTA_EXTENSION_INDEX')
+
+
+
+class ReportType():
+  __all_report_types = {}
+
+  def __init__(self, name, data_map, cutoff_date=None):
+    self.name = name
+    self.data_map = data_map
+    self.cutoff_date = cutoff_date
+
+    ReportType.__all_report_types[name] = self
+
+  @classmethod
+  def lookup(cls, name, fallback=None):
+    return cls.__all_report_types.get(name, fallback)
+
+  def __eq__(self, other):
+    if isinstance(other, str):
+      return self.name == other
+    elif isinstance(other, ReportType):
+      return self.name == other.name
+    else:
+      raise TypeError()
+
+  def get_data_map(self):
+    return self.data_map
+
+  def version_meets_cutoff(self, version):
+    return int(version) >= (self.cutoff_date or 0)
+
+  def __repr__(self):
+    return f"<ReportType:{getattr(self, 'name', 'no-name')}>"
+
+
+
+class DatasetRelease(SpeciesEntity):
   kind = "dataset_release"
-  __bucket_name = MODULE_SITE_BUCKET_PUBLIC_NAME
-  __blob_prefix = f'{kind}/c_elegans'
+  __bucket_name = DATASET_RELEASE_BUCKET_NAME
+  __aws_bucket_name = DATASET_RELEASE_AWS_BUCKET_NAME
+  __blob_prefix = kind + '/${SPECIES}'
+  __gcp_blob_prefix = 'tool_release_data/${SPECIES}'
 
-  def __init__(self, *args, **kwargs):
-    super(DatasetRelease, self).__init__(*args, **kwargs)
-  
-  def set_properties(self, **kwargs):
-    props = self.get_props_set()
-    self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
-    
-    if not self.report_type and int(self.version) > 0:
-      if int(self.version) < V1_V2_Cutoff_Date:
-        self.report_type = 'V1'
-      else:
-        self.report_type = 'V2'
+
+  def __repr__(self):
+    return f"<{self.kind}:{getattr(self, 'name', 'no-name')}>"
+
+
+  @staticmethod
+  def from_name(release_name=None, species_name=None):
+
+    # Make sure at least one argument is provided
+    if release_name is None and species_name is None:
+      raise ValueError('At least one of "release_name" and "species_name" must be provided.')
+
+    # If no release name provided, use species name to look up latest release for that species
+    if release_name is None:
+      species = Species.from_name(species_name)
+      release_name = species['release_latest']
+
+    # Look for a release object with the matching name in the datastore
+    release = DatasetRelease.get_ds(release_name)
+    if release is None:
+      raise NotFoundError(DatasetRelease, {'name': release_name})
+
+    if release['species'].name != species_name:
+      raise NotFoundError(DatasetRelease, {'name': release_name, 'species': species_name})
+
+    species = Species.from_name(species_name)
+
+    if release_name == species['release_latest']:
+      release.latest = True
+    else:
+      release.latest = False
+
+    return release
+
 
   @classmethod
   def get_props_set(cls):
-    return {'id',
-            'version', 
-            'wormbase_version',
-            'report_type',
-            'disabled',
-            'hidden'}
-    
+    return {
+      *super().get_props_set(),
+      'id',
+      'version',
+      'wormbase_version',
+      'genome',
+      'report_type',
+      'disabled',
+      'hidden',
+      'browser_tracks',      # List of browser tracks supported for this species & release, by name
+    }
+
+
+  @staticmethod
+  def generate_blob_uri(bucket, *path, schema=None, gcp=False):
+    if gcp:
+      return generate_blob_uri(bucket, *path, schema=schema)
+    else:
+      return aws_generate_blob_uri(bucket, *path, schema=schema)
+
+
+  @property
+  def report_type(self):
+    '''
+      The report format for this release.
+      If not set explicitly, it can also be calculated from the release version.
+    '''
+
+    # If set explicitly in object's dictionary, return that value
+    if self.__dict__['report_type']:
+      return ReportType.lookup(self.__dict__['report_type'])
+
+    # If not, try to compute from version
+    for report_type in DatasetRelease.all_report_types:
+      if report_type.version_meets_cutoff(self.version):
+        return report_type
+
+    # If all else fails, default to None
+    return None
+
+
+  @report_type.setter
+  def report_type(self, val):
+    # Save prop in object's local dictionary
+    if isinstance(val, ReportType):
+      self.__dict__['report_type'] = val.name
+    else:
+      self.__dict__['report_type'] = val
+
+
+  # Prop should default to empty list if not set
+  @property
+  def browser_tracks(self):
+    return self.__dict__.get('browser_tracks', [])
+
+  @browser_tracks.setter
+  def browser_tracks(self, val):
+
+    # Only allow list to be set
+    if not isinstance(val, list):
+      raise TypeError('Must set browser_tracks to a list.')
+
+    # Save prop in object's local dictionary
+    self.__dict__['browser_tracks'] = val
+
+
+  def _format_props_for_ds(self):
+    props = super()._format_props_for_ds()
+    props['report_type'] = props['report_type'].name
+    return props
+
+
+  #
+  # Modify supported browser tracks
+  #
+
+  def add_browser_track(self, track) -> bool:
+    '''
+      Add the given `BrowserTrackDefault` to the list of tracks supported
+      in this release.
+
+      Returns `True` if the operation changed this object,
+      i.e. if the track was not yet supported by this release.
+    '''
+    already_exists = track['display_name'] in self['browser_tracks']
+    self['browser_tracks'].append(track['display_name'])
+    return not already_exists
+
+  def remove_browser_track(self, track) -> bool:
+    '''
+      Remove the given `BrowserTrackDefault` from the list of tracks supported
+      in this release.
+
+      Returns `True` if the operation changed this object,
+      i.e. if the track was initially supported by this release.
+    '''
+    if track['display_name'] in self['browser_tracks']:
+      self['browser_tracks'].remove(track['display_name'])
+      return True
+    return False
+
+  def set_browser_track(self, track, value: bool) -> bool:
+    '''
+      Add or remove the given `BrowserTrackDefault` from the list of tracks
+      supported in this release, based on the given value.
+
+      Returns `True` if the operation changed this object.
+    '''
+    if value:
+      return self.add_browser_track(track)
+    else:
+      return self.remove_browser_track(track)
+
+
+
+
   @classmethod
-  def get_bucket_name(cls):
-    return cls.__bucket_name
-  
+  def get_bucket_name(cls, gcp=False):
+    if gcp:
+      return cls.__bucket_name
+    else:
+      return cls.__aws_bucket_name
+
   @classmethod
   def get_blob_prefix(cls):
     return cls.__blob_prefix
+  
+  @classmethod
+  def get_gcp_blob_prefix(cls):
+    return cls.__gcp_blob_prefix
 
-
-  def get_report_data_urls_map(self):
-    ''' Returns a dictionary of variable names for report data files mapped to their public urls in google storage '''
-    bucket_name=self.__bucket_name
-    blob_prefix=self.__blob_prefix
-    
-    logger.debug(f'get_report_data_urls_map(bucket_name={bucket_name}, blob_prefix={blob_prefix})')
-    
-    if self.report_type == 'V0':
-      return {}
-    elif self.report_type == 'V1':
-      release_files = V1_Data_Map()
-    elif self.report_type == 'V2':
-      release_files = V2_Data_Map()
+  @classmethod
+  def get_path_template(cls, gcp=False):
+    if gcp:
+      return TokenizedString(cls.get_gcp_blob_prefix())
     else:
+      return TokenizedString(cls.get_blob_prefix() + '/${RELEASE}')
+
+  def get_versioned_path_template(self):
+    return self.get_path_template().set_tokens(RELEASE = self['version'])
+
+
+
+  ## FASTA Filename ##
+
+  def fasta_template_params(self):
+    return {
+      'SPECIES': self['species'].name,
+      'RELEASE': self['version'],
+      'GENOME':  self['genome'],
+    }
+
+
+  @staticmethod
+  def get_fasta_filename_template(include_extension=True, index=False) -> TokenizedString:
+    '''
+      Get the FASTA file name template as a tokenized string.
+      Does not include any bucket / path information; see `get_fasta_filepath_template` for the full URI.
+
+      Arguments:
+        - `include_extension` (bool): Whether to include the file extension or not.
+        - `index` (bool):
+              If `True`, return the name of the index file, otherwise return the name of the full FASTA file.
+              Only applies if `include_extension` is `True`.
+    '''
+    ext = FASTA_EXTENSION_INDEX if index else FASTA_EXTENSION_FILE
+    return FASTA_FILENAME_TEMPLATE + (ext if include_extension else '')
+
+
+  def get_fasta_filename(self, include_extension=True, index=False):
+    '''
+      Get the filename for the FASTA file assocaited with this release.
+      Does not include any bucket / path information; see `get_fasta_filepath_template` for the full URI.
+
+      Arguments:
+        - `include_extension` (bool): Whether to include the file extension or not.
+        - `index` (bool):
+            If `True`, return the name of the index file, otherwise return the name of the full FASTA file.
+            Only applies if `include_extension` is `True`.
+    '''
+    return DatasetRelease.get_fasta_filename_template(include_extension=include_extension, index=index).get_string(**self.fasta_template_params())
+
+
+
+  ## FASTA File Path ##
+
+  @staticmethod
+  def get_fasta_filepath_template(index=False, schema=None, gcp=False):
+    '''
+      Get a URI path for FASTA files in the datastore, as one or more tokenized strings (depends on desired schema).
+    '''
+    # Get the template for the filename
+    filename_template = DatasetRelease.get_fasta_filename_template(include_extension=True, index=index)
+
+    # Combine with the the dataset release bucket & path to generate a URI
+    return TokenizedString.apply(
+      DatasetRelease.generate_blob_uri, DatasetRelease.get_bucket_name(gcp), DatasetRelease.get_path_template(gcp=gcp), filename_template, schema=schema, gcp=gcp
+    )
+
+
+  def get_fasta_filepath(self, index=False, schema=None, gcp=False) -> Union[str, Tuple[str, ...]]:
+    '''
+      Get a URI path for the FASTA file associated with this release.
+    '''
+    # Get the template for the full filepath
+    template = DatasetRelease.get_fasta_filepath_template(index=index, schema=schema, gcp=gcp)
+
+    # Fill in the tokens for singleton & tuple results
+    if isinstance(template, TokenizedString):
+      return template.get_string(**self.fasta_template_params())
+    else:
+      return tuple(
+        t.get_string(**self.fasta_template_params()) for t in template
+      )
+
+
+  def check_fasta_file_exists(self, gcp=False):
+    '''
+      Check whether this dataset release includes a FASTA file in the datastore.
+    '''
+    if gcp:
+      return check_blob_exists( *self.get_fasta_filepath(schema=BlobURISchema.PATH, gcp=gcp),  )
+    else:
+      return aws_check_blob_exists( *self.get_fasta_filepath(schema=AWSBlobURISchema.PATH, gcp=gcp),  )
+
+
+
+  ## Report URLs ##
+
+  def get_report_data_urls_map(self, species_name):
+    '''
+      Returns a dictionary of variable names for report data files mapped to their public urls in google storage
+    '''
+    bucket_name = self.__aws_bucket_name
+    blob_prefix = self.__blob_prefix
+
+    tokens = {
+      'RELEASE': self['version'],
+      'SPECIES': species_name,
+    }
+
+    logger.debug(f'get_report_data_urls_map(bucket_name={bucket_name}, blob_prefix={blob_prefix})')
+
+    # Check that the release has a valid report type
+    if self.report_type is None:
       return None
+
+    # Get the set of release files based on the report version
+    release_files = self.report_type.get_data_map()
+
+    # Get the set of available files for the release
+    release_path = TokenizedString.replace_string(f'{blob_prefix}/$RELEASE', **tokens)
+    available_files = {
+      remove_prefix(file.name, release_path + '/') for file in aws_get_blob_list(bucket_name, release_path)
+    }
+    available_files = {
+      file for file in available_files if not file.startswith('/strain') and not file.endswith('/')
+    }
 
     # for key, val in url_list.items:
     url_map_filtered = {}
-    for key, val in release_files.items():
-      t = Template(val)
-      blob_name = t.substitute(ver=self.version)
-      blob_path = f'{blob_prefix}/{blob_name}'
-      if check_blob_exists(bucket_name, blob_path):
-        url_map_filtered[key] = generate_blob_url(bucket_name, blob_path)
+    for key, blob_name in release_files.items():
+      blob_name = TokenizedString.replace_string(blob_name, **tokens)
+
+      if blob_name in available_files:
+        url_map_filtered[key] = aws_generate_blob_uri(bucket_name, release_path, blob_name, schema=AWSBlobURISchema.HTTPS)
       else:
-        logger.warning(f'Blob {blob_path} does not exist')
+        logger.warning(f'Blob {bucket_name}/{release_path}/{blob_name} does not exist')
     
     return url_map_filtered
   
 
-def V2_Data_Map():
-  return {
-    'release_notes': '$ver/release_notes.md',
-    'summary': '$ver/summary.md',
-    'methods': '$ver/methods.md',
-    'alignment_report': '$ver/alignment_report.html',
-    'gatk_report': '$ver/gatk_report.html',
-    'concordance_report': '$ver/concordance_report.html',
-    
-    'divergent_regions_strain_bed_gz': '$ver/divergent_regions_strain.$ver.bed.gz',
-    'divergent_regions_strain_bed': '$ver/divergent_regions_strain.$ver.bed',
+  V2 = ReportType('V2', {
+    'release_notes':                     'release_notes_v2.md',
+    'summary':                           'summary.md',
+    'methods':                           'methods.md',
+    'alignment_report':                  'alignment_report.html',
+    'gatk_report':                       'gatk_report.html',
+    'concordance_report':                'concordance_report.html',
 
-    'soft_filter_vcf_gz': '$ver/variation/WI.$ver.soft-filter.vcf.gz',
-    'soft_filter_vcf_gz_tbi': '$ver/variation/WI.$ver.soft-filter.vcf.gz.tbi',
-    'soft_filter_isotype_vcf_gz': '$ver/variation/WI.$ver.soft-filter.isotype.vcf.gz',
-    'soft_filter_isotype_vcf_gz_tbi': '$ver/variation/WI.$ver.soft-filter.isotype.vcf.gz.tbi',
-    'hard_filter_vcf_gz': '$ver/variation/WI.$ver.hard-filter.vcf.gz',
-    'hard_filter_vcf_gz_tbi': '$ver/variation/WI.$ver.hard-filter.vcf.gz.tbi',
-    'hard_filter_isotype_vcf_gz': '$ver/variation/WI.$ver.hard-filter.isotype.vcf.gz',
-    'hard_filter_isotype_vcf_gz_tbi': '$ver/variation/WI.$ver.hard-filter.isotype.vcf.gz.tbi',
-    'impute_isotype_vcf_gz': '$ver/variation/WI.$ver.impute.isotype.vcf.gz',
-    'impute_isotype_vcf_gz_tbi': '$ver/variation/WI.$ver.impute.isotype.vcf.gz.tbi',
-    
-    'hard_filter_min4_tree': '$ver/tree/WI.$ver.hard-filter.min4.tree',
-    'hard_filter_min4_tree_pdf': '$ver/tree/WI.$ver.hard-filter.min4.tree.pdf',
-    'hard_filter_isotype_min4_tree': '$ver/tree/WI.$ver.hard-filter.isotype.min4.tree',
-    'hard_filter_isotype_min4_tree_pdf': '$ver/tree/WI.$ver.hard-filter.isotype.min4.tree.pdf',
-    
-    'haplotype_png': '$ver/haplotype/haplotype.png',
-    'haplotype_pdf': '$ver/haplotype/haplotype.pdf',
-    'sweep_pdf': '$ver/haplotype/sweep.pdf',
-    'sweep_summary_tsv': '$ver/haplotype/sweep_summary.tsv'
-  }
+    'divergent_regions_strain_bed_gz':   'browser_tracks/${RELEASE}_${SPECIES}_divergent_regions_strain.bed.gz',
+    'divergent_regions_strain_bed':      'browser_tracks/${RELEASE}_${SPECIES}_divergent_regions_strain.bed',
 
+    'soft_filter_vcf_gz':                'variation/WI.$RELEASE.soft-filter.vcf.gz',
+    'soft_filter_vcf_gz_tbi':            'variation/WI.$RELEASE.soft-filter.vcf.gz.tbi',
+    'soft_filter_isotype_vcf_gz':        'variation/WI.$RELEASE.soft-filter.isotype.vcf.gz',
+    'soft_filter_isotype_vcf_gz_tbi':    'variation/WI.$RELEASE.soft-filter.isotype.vcf.gz.tbi',
+    'hard_filter_vcf_gz':                'variation/WI.$RELEASE.hard-filter.vcf.gz',
+    'hard_filter_vcf_gz_tbi':            'variation/WI.$RELEASE.hard-filter.vcf.gz.tbi',
+    'hard_filter_isotype_vcf_gz':        'variation/WI.$RELEASE.hard-filter.isotype.vcf.gz',
+    'hard_filter_isotype_vcf_gz_tbi':    'variation/WI.$RELEASE.hard-filter.isotype.vcf.gz.tbi',
+    'annovar_isotype_vcf_gz':            'variation/WI.$RELEASE.annovar.isotype.vcf.gz',
+    'annovar_isotype_vcf_gz_tbi':        'variation/WI.$RELEASE.annovar.isotype.vcf.gz.tbi',
+    'annovar_isotype_csv_gz':            'annotation/WI.$RELEASE.annovar.strain-annotation.csv.gz',
+    'csq_isotype_vcf_gz':                'variation/WI.$RELEASE.csq.isotype.vcf.gz',
+    'csq_isotype_vcf_gz_tbi':            'variation/WI.$RELEASE.csq.isotype.vcf.gz.tbi',
+    'csq_isotype_csv_gz':                'annotation/WI.$RELEASE.csq.strain-annotation.csv.gz',
+    'snpeff_isotype_vcf_gz':             'variation/WI.$RELEASE.snpeff.isotype.vcf.gz',
+    'snpeff_isotype_vcf_gz_tbi':         'variation/WI.$RELEASE.snpeff.isotype.vcf.gz.tbi',
+    'snpeff_isotype_csv_gz':             'annotation/WI.$RELEASE.snpeff.strain-annotation.csv.gz',
+    'vep_isotype_vcf_gz':                'variation/WI.$RELEASE.vep.isotype.vcf.gz',
+    'vep_isotype_vcf_gz_tbi':            'variation/WI.$RELEASE.vep.isotype.vcf.gz.tbi',
+    'vep_isotype_csv_gz':                'annotation/WI.$RELEASE.vep.strain-annotation.csv.gz',
+    'impute_isotype_vcf_gz':             'variation/WI.$RELEASE.impute.isotype.vcf.gz',
+    'impute_isotype_vcf_gz_tbi':         'variation/WI.$RELEASE.impute.isotype.vcf.gz.tbi',
 
-def V1_Data_Map():
-  return {
-    'summary': '$ver/summary.md',
-    'methods': '$ver/methods.md',
-    'haplotype_png_url': '$ver/haplotype/haplotype.png',
-    'haplotype_thumb_png_url': '$ver/haplotype/haplotype.thumb.png',
-    'tajima_d_png_url': '$ver/popgen/tajima_d.png',
-    'tajima_d_thumb_png_url': '$ver/popgen/tajima_d.thumb.png',
-    'genome_svg_url': '$ver/popgen/trees/genome.svg',
-    
-    'soft_filter_vcf_gz': '$ver/variation/WI.$ver.soft-filter.vcf.gz',
-    'hard_filter_vcf_gz': '$ver/variation/WI.$ver.hard-filter.vcf.gz',
-    'impute_vcf_gz': '$ver/variation/WI.$ver.impute.vcf.gz',
+    'hard_filter_min4_tree':             'tree/WI.$RELEASE.hard-filter.min4.tree',
+    'hard_filter_min4_tree_pdf':         'tree/WI.$RELEASE.hard-filter.min4.tree.pdf',
+    'hard_filter_isotype_min4_tree':     'tree/WI.$RELEASE.hard-filter.isotype.min4.tree',
+    'hard_filter_isotype_min4_tree_pdf': 'tree/WI.$RELEASE.hard-filter.isotype.min4.tree.pdf',
 
-    
-    'vcf_summary_url': '$ver/multiqc_bcftools_stats.json',
-    'phylo_url': '$ver/popgen/trees/genome.pdf'
-    
-  }
+    'haplotype_png':                     'haplotype/haplotype.png',
+    'haplotype_pdf':                     'haplotype/haplotype.pdf',
+    'sweep_pdf':                         'haplotype/sweep.pdf',
+    'sweep_summary_tsv':                 'haplotype/sweep_summary.tsv',
 
+    'transposon_calls':                  '${RELEASE}_${SPECIES}_transposon_calls.bed',
+    'genetic_map':                       '${SPECIES}_genetic_map.tsv',
+    'Isotype changelog':                 '${SPECIES}_isotype_differences.tsv',
+  }, cutoff_date=20200101)
 
-def V0_Data_Map():
-  return {}
-  
+  V1 = ReportType('V1', {
+    'summary':                 'summary.md',
+    'methods':                 'methods.md',
+
+    'haplotype_png_url':       'haplotype/haplotype.png',
+    'haplotype_thumb_png_url': 'haplotype/haplotype.thumb.png',
+    'tajima_d_png_url':        'popgen/tajima_d.png',
+    'tajima_d_thumb_png_url':  'popgen/tajima_d.thumb.png',
+    'genome_svg_url':          'popgen/trees/genome.svg',
+
+    'soft_filter_vcf_gz':      'variation/WI.$RELEASE.soft-filter.vcf.gz',
+    'hard_filter_vcf_gz':      'variation/WI.$RELEASE.hard-filter.vcf.gz',
+    'impute_vcf_gz':           'variation/WI.$RELEASE.impute.vcf.gz',
+
+    'vcf_summary_url':         'multiqc_bcftools_stats.json',
+    'phylo_url':               'popgen/trees/genome.pdf'
+  })
+
+  V0 = ReportType('V0', {})
+
+  all_report_types = [V2, V1, V0]

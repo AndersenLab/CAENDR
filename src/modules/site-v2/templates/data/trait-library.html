@@ -1,0 +1,30 @@
+{% extends "_layouts/default-nocontainer.html" %}
+{% block content %}
+
+<!-- Container -->
+<div class="container">
+
+    <!-- Description -->
+    <div class="col mt-3 mb-5"></div>
+    <!-- /Description -->
+
+    <!-- Button(s) -->
+    <div class="d-flex justify-content-end gap-3">
+        <a class="btn btn-secondary rounded-pill text-white" role="button" href="{{ url_for('data.submit_trait_form') }}">
+            <i class="bi bi-arrow-right-circle-fill me-1" aria-hidden="true"></i>Upload a New Trait
+        </a>
+    </div>
+    <!-- /Button(s) -->
+
+    <!-- Table -->
+    <div class="col mt-5">
+        {% with trait_library_table_mode = 'full' %}
+        {% include "_includes/trait-library-table.html" %}
+        {% endwith %}
+    </div>
+    <!-- /Table -->
+
+</div>
+<!-- /Container -->
+
+{% endblock %}

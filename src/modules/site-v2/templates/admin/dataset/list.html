@@ -28,7 +28,7 @@
         {% for dataset in datasets %}
           <tr>
             <td> {{ dataset['version'] }} </td>
-            <td> {{ dataset['report_type'] }} </td>
+            <td> {{ dataset['report_type'].name }} </td>
             <td> {{ dataset['wormbase_version'] }} </td>
             <td> {{ dataset['disabled'] }} </td>
             <td> {{ dataset['hidden'] }} </td>

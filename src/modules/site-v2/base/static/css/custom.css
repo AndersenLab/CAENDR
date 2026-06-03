@@ -1,0 +1,85 @@
+
+  /* Leaflet Map styles */
+  .leaflet-control-search.search-load .search-input {
+    background: url("{{ ext_asset('img/icons/loader.gif') }}") no-repeat center right #fff;
+  }
+  
+  .leaflet-control-search .search-button {
+    display:block;
+    float:left;
+    width:30px;
+    height:30px;  
+    background: url("{{ ext_asset('img/icons/search-icon.png') }}") no-repeat 4px 4px #fff;
+    border-radius:4px;
+  }
+  
+  .leaflet-control-search .search-button:hover {
+    background: url("{{ ext_asset('img/icons/search-icon.png') }}") no-repeat 4px -20px #fafafa;
+  }
+  
+  .leaflet-control-search .search-cancel {
+    display:block;
+    width:22px;
+    height:22px;
+    position:absolute;
+    right:28px;
+    margin:6px 0;
+    background: url("{{ ext_asset('img/icons/search-icon.png') }}") no-repeat 0 -46px;
+    text-decoration:none;
+    filter: alpha(opacity=80);
+    opacity: 0.8;   
+  }
+
+  /* Genome Browser */
+  .gbrowserTracks {
+    --disabled-color: #e9ecef;
+    --enabled-color:  #fff;
+    height: 15vh;
+    background-color: var(--disabled-color);
+    border: 1px solid #CFD4D9;
+  }
+  
+  /* Variant Annotation */
+    table.dataTable thead .sorting_asc {
+      background: url("//cdn.datatables.net/1.10.0/images/sort_asc.png") no-repeat center left;
+    }
+  
+    table.dataTable thead .sorting_desc {
+      background: url("//cdn.datatables.net/1.10.0/images/sort_desc.png") no-repeat center left;
+    }
+  
+    table.dataTable thead .sorting {
+      background: url("//cdn.datatables.net/1.10.0/images/sort_both.png") no-repeat center left;
+    }
+  
+    mark {
+      background-color: inherit;
+      font-size: 0.8rem;
+    }
+  
+    .hl-mark {
+      background-color: yellow;
+    }
+
+
+  /* Striped table rows in filterable table */
+  /* Modified from Bootstrap implementation of table-striped */
+  .table-striped-filterable .table-striped-row {
+    --bs-table-accent-bg: var(--bs-table-striped-bg);
+    color: var(--bs-table-striped-color);
+  }
+
+  /* Cards */
+  .card-header {
+    font-size: calc(var(--bs-body-font-size) * 1.125);
+  }
+
+
+  .navbar-dropdown-link-with-icon {
+    text-indent: -1.5rem;
+    margin-left: 1.5rem;
+  }
+
+  .navbar-dropdown-link-with-icon > i {
+    text-indent: 0;
+  }

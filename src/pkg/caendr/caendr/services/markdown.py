@@ -6,6 +6,7 @@ CONTENT_TYPES = {
 }
 
 
+# TODO: Replace with Entity.query_ds call?
 def get_all_markdown_content(keys_only=False):
   md_entities = query_ds_entities(Markdown.kind, keys_only=keys_only)
   return [Markdown(e.key.name) for e in md_entities]  

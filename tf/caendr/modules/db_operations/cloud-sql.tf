@@ -43,7 +43,7 @@ resource "google_sql_database_instance" "postgres_instance" {
     disk_autoresize        = "false"
     disk_autoresize_limit  = "0"
     disk_size              = "10"
-    disk_type              = "PD_HDD"
+    disk_type              = "PD_SSD"
 
     insights_config {
       query_insights_enabled  = "true"
@@ -67,12 +67,14 @@ resource "google_sql_database_instance" "postgres_instance" {
     }
 
     maintenance_window {
-      day  = "6"
+      day  = "3"
       hour = "5"
     }
 
     pricing_plan     = "PER_USE"
-    tier             = "db-g1-small"
+    # tier             = "db-g1-small"
+    # tier             = "db-custom-1-3840"
+    tier             = "db-custom-2-7680"
   }
 }
 

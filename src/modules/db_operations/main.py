@@ -1,38 +1,41 @@
-import os
-from re import T
 import traceback
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask
 from caendr.services.logger import logger
-from dotenv import load_dotenv
-from caendr.services.logger import logger
 import time
 import json
 from caendr.services.email import send_email
-from caendr.models.datastore.database_operation import DatabaseOperation
+from caendr.models.error import NotFoundError
 from caendr.utils import monitor
 from google.cloud import storage
 
-dotenv_file = '.env'
-load_dotenv(dotenv_file)
+from caendr.utils.env import load_env, get_env_var
+load_env('.env')
 
 monitor.init_sentry("db_operations")
 
+from caendr.models.datastore import DatabaseOperation, Species
+from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
 from caendr.services.cloud.postgresql import get_db_conn_uri, get_db_timeout, db, health_database_status
-from caendr.models.error import EnvVarError
+from caendr.services.cloud.secret import get_secret
 from operations import execute_operation
 
-MODULE_DB_OPERATIONS_BUCKET_NAME = os.environ.get('MODULE_DB_OPERATIONS_BUCKET_NAME')
-ETL_LOGS_BUCKET_NAME = os.environ.get('ETL_LOGS_BUCKET_NAME')
-EXTERNAL_DB_BACKUP_PATH = os.environ.get('EXTERNAL_DB_BACKUP_PATH')
-DB_OP = os.environ.get('DATABASE_OPERATION')
-EMAIL = os.environ.get('EMAIL', None)
-OPERATION_ID = os.environ.get('OPERATION_ID', None)
+from caendr.models.sql import DbOp
+
+
+# Load environment variables
+MODULE_DB_OPERATIONS_BUCKET_NAME = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
+ETL_LOGS_BUCKET_NAME             = get_env_var('ETL_LOGS_BUCKET_NAME')
+EXTERNAL_DB_BACKUP_PATH          = get_env_var('EXTERNAL_DB_BACKUP_PATH')
+DATABASE_OPERATION               = get_env_var('DATABASE_OPERATION')
+EMAIL                            = get_env_var('EMAIL',        can_be_none=True)
+OPERATION_ID                     = get_env_var('OPERATION_ID', can_be_none=True)
+
+NO_REPLY_EMAIL = get_secret('NO_REPLY_EMAIL')
 
 client = storage.Client()
 
-if not DB_OP or not MODULE_DB_OPERATIONS_BUCKET_NAME or not EXTERNAL_DB_BACKUP_PATH:
-  raise EnvVarError()
+
 
 def etl_operation_append_log(message = ""):
   if OPERATION_ID is None:
@@ -41,7 +44,7 @@ def etl_operation_append_log(message = ""):
 
   bucket = client.get_bucket(ETL_LOGS_BUCKET_NAME)
   filepath = f"logs/etl/{OPERATION_ID}/output"
-  uri = f"gs://{ETL_LOGS_BUCKET_NAME}/{filepath}"
+  uri = generate_blob_uri(ETL_LOGS_BUCKET_NAME, filepath, schema=BlobURISchema.GS)
 
   CRLF = "\n"
   blob = bucket.get_blob(filepath)
@@ -65,32 +68,70 @@ logger.info('Initializing Flask App')
 app = Flask(__name__)
 app.app_context().push()
 app.config['SQLALCHEMY_DATABASE_URI'] = get_db_conn_uri()
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = os.environ.get('SQLALCHEMY_TRACK_MODIFICATIONS', 'False').lower() == 'true'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = get_env_var('SQLALCHEMY_TRACK_MODIFICATIONS', False, var_type=bool)
 
-if not os.getenv("MODULE_DB_OPERATIONS_CONNECTION_TYPE"):
-  app.config['SQLALCHEMY_ENGINE_OPTIONS'] = { "pool_pre_ping": True, "pool_recycle": 300 }
+if not get_env_var("MODULE_DB_OPERATIONS_CONNECTION_TYPE", can_be_none=True):
+  app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_pre_ping": True,
+    "pool_recycle": 300,
+    "pool_reset_on_return": 'commit',
+  }
   app.config['SQLALCHEMY_POOL_TIMEOUT'] = get_db_timeout()
 
 logger.info('Initializing Flask SQLAlchemy')
 db.init_app(app)
 
 
+def parse_species_list(species_list):
+
+  # If nothing provided, return None
+  if not species_list:
+    return None
+
+  # Split on semicolons, strip whitespace, and validate that each element maps to a Species object
+  try:
+    l = [ s.strip() for s in species_list.split(';') if len(s.strip()) > 0 ]
+    for name in l:
+      Species.from_name(name)
+    return l
+
+  # Intercept Species not found errors to log
+  except NotFoundError as ex:
+    logger.error(f'Invalid species name in SPECIES_LIST: {ex}')
+    raise
+
+
 def run():
   start = time.perf_counter()
-  use_mock_data = os.getenv('USE_MOCK_DATA', False)
+  use_mock_data = get_env_var('USE_MOCK_DATA', False, var_type=bool)
+  reload_files  = get_env_var('RELOAD_FILES',  True,  var_type=bool)
+
+  # Parse database operation
+  try:
+    db_op = DbOp[DATABASE_OPERATION]
+  except:
+    logger.error(f'Unknown database operation {DATABASE_OPERATION}')
+
+  # Parse species list
+  species = parse_species_list( get_env_var('SPECIES_LIST', can_be_none=True) )
+  species_string = '[' + ', '.join(species) + ']' if species else 'all'
+
   text = ""
 
   try:
-    execute_operation(app, db, DB_OP)
+    execute_operation(app, db, db_op, species=species, reload_files=reload_files)
     text = text + f"\n\nStatus: OK"
-    text = text + f"\nOperation: {DB_OP}"
+    text = text + f"\nOperation: {db_op.name}"
     text = text + f"\nOperation ID: {OPERATION_ID}"
-    text = text + f"\nEnvironment: { os.getenv('ENV', 'n/a') }"
+    text = text + f"\nEnvironment: { get_env_var('ENV', 'n/a') }"
+    text = text + f"\nSpecies: {species_string}"
+
   except Exception as e:
     text = text + f"\nStatus: ERROR"
-    text = text + f"\nOperation: {DB_OP}"
+    text = text + f"\nOperation: {db_op.name}"
     text = text + f"\nOperation ID: {OPERATION_ID}"
-    text = text + f"\nEnvironment: { os.getenv('ENV', 'n/a') }"
+    text = text + f"\nEnvironment: { get_env_var('ENV', 'n/a') }"
+    text = text + f"\nSpecies: {species_string}"
     text = text + f"\n\nError: {e}\n{traceback.format_exc()}"
     logger.error(text)
 
@@ -112,10 +153,12 @@ def run():
 
   if EMAIL is not None:
     logger.info(f"Sending email to: {EMAIL}")
-    send_email({"from": "no-reply@elegansvariation.org",
-                    "to": EMAIL,
-                    "subject": f"ETL finished for operation: {DB_OP} in {elapsed} seconds",
-                    "text": text })
+    send_email({
+      "from": f'CaeNDR <{NO_REPLY_EMAIL}>',
+      "to": EMAIL,
+      "subject": f"ETL finished for operation: {db_op.name} in {elapsed} seconds",
+      "text": text,
+    })
 
 if __name__ == "__main__":
   try:    

@@ -1,0 +1,199 @@
+{% extends "_layouts/default-nocontainer.html" %}
+
+{% block content %}
+{% from "_includes/macros.html" import render_field %}
+
+<div class="container">
+    <div class="d-flex justify-content-around flex-wrap mb-5">
+        <!-- Description card -->
+        <div class="col-10 col-md-8 col-lg-4 mx-auto mt-4 mt-lg-0 mb-5 align-self-center">
+            <div class="card p-2 shadow descriptionCard cardBorderBottom">
+                <div class="card-body">
+                    <p class="card-text">
+                        This tool will calculate the broad-sense heritability for your trait of interest using a set of wild isolates. The broad-sense heritability is the amount of trait variance that comes from genetic differences in the assayed group of strains. Generally, it is the ratio of genetic variance to total (genetic plus environmental) variance. 
+                        <p>To obtain the best estimate of heritability, please measure a set of at least five wild strains in three independent assays. These assays should use different nematode growths, synchronizations, bacterial food preparations, and any other experimental condition. You should measure trait variance across as many different experimental conditions (in one block) as you would typically encounter in a large experiment.</p>
+                        <p>Broad- and narrow-sense heritability are calculated using scripts available <a href="https://github.com/AndersenLab/calc_heritability">here</a>.</p>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <!-- /Description Card -->
+        <!-- Tool -->
+        <div class="col-12 col-sm-10 col-md-8 col-lg-6 mx-auto mb-5">
+            <div class="card border-0 shadow text-center">
+                  <!-- Tab Menu -->
+                  <nav>
+                    <div class="nav nav-tabs text-bg-light p-1 pb-0" id="nav-tab" role="tablist">
+                      <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">New</button>
+                      <!-- Keep around for a while in case we need to add back -->
+                      <!-- <button class="nav-link" id="nav-linkOne-tab" data-bs-toggle="tab" data-bs-target="#nav-linkOne" type="button" role="tab" aria-controls="nav-linkOne" aria-selected="false">Example Data</button> -->
+                      <button class="nav-link disabled" id="nav-linkTwo-tab" type="button" role="tab" aria-controls="nav-linkTwo" aria-selected="false">Release Notes</button>
+                      <button class="nav-link" id="nav-linkThree-tab" type="button" role="tab" aria-selected="false"><a href="{{ url_for('heritability_calculator.my_results') }}">My Heritability Results</a></button>
+                    </div>
+                  </nav>
+                <div class="tab-content m-3" id="nav-tabContent">
+                    <!-- Tab 1 -->
+                    <div class="tab-pane fade show active px-1 px-lg-5 py-2 text-start toolContent" id="nav-home" role="tabpanel"
+                        aria-labelledby="nav-home-tab" tabindex="0">
+                        <p class="card-text">
+                        <h2 class="mb-4 text-center">New Calculation</h2>
+                        <!-- Input Form -->
+                        <form id='form-submit' enctype="multipart/form-data">
+                            {{ form.csrf_token }}
+                            <input hidden name="jwt_csrf_token" value="{{ jwt_csrf_token }}">
+                            <div class='mb-4'>{{ render_field(form.species) }}</div>
+                            <div class='mb-4'>{{ render_field(form.label, placeholder="Name your calculation.") }}</div>
+                            <div class="mb-4">
+                                {% call render_field(form.file) %}
+                                <!-- Info Button with Modal -->
+                                <button type="button" class="btn btn-secondary rounded-circle text-light text-center p-0 infoButton"
+                                    data-bs-toggle="modal" data-bs-target="#infoModal" aria-label="infoModalLabel">
+                                    <i class="bi bi-info lh-1" aria-hidden="true"></i>
+                                </button>
+                                <!-- Modal -->
+                                <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel"
+                                    aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h1 class="modal-title fs-5" id="infoModalLabel">File Format Information</h1>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                {% include "_includes/hcalculator-file-info.html" %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /Modal -->
+                                {% endcall %}
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" id="submit-btn" class="btn btn-secondary text-light"
+                                    aria-label="submit">Submit</button>
+                                <!-- Modal - to display after submitting -->
+                                <div class="modal fade" id="submit-modal" tabindex="-1" aria-labelledby="thankYouLabel"
+                                    aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h1 class="modal-title fs-5" id="thankYouLabel">Thank You</h1>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                
+                                                <p><i class="bi bi-clock-fill me-1 text-secondary fs-3"></i> Your report will be
+                                                    complete in about
+                                                    20 minutes</li>
+                                                </p>
+                                                <p><i class="bi bi-envelope-fill me-1 text-secondary fs-3"></i>You will receive an email
+                                                    when your
+                                                    report is complete.</p>
+                                                <p><i class="bi bi-journal me-1 text-secondary fs-3"></i>You may also check <a
+                                                        href="{{ url_for('heritability_calculator.my_results') }}">My
+                                                        Results</a> for updates.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /Modal -->
+                            </div>
+                        </form>
+                        </p>
+                        {%- include "_includes/ignore-cache-checkbox.html" %}
+                    </div>
+                    <!-- /Tab 1 -->
+                    <!-- Tab 2 -->
+                    <!-- Keep around for a while in case we need to add back -->
+                    <!-- <div class="tab-pane fade text-start px-5 py-2 toolContent" id="nav-linkOne" role="tabpanel"
+                        aria-labelledby="nav-linkOne-tab" tabindex="0">
+                        <p class="card-text">
+                        <h2 class="mb-4 text-center">Example Data</h2>
+                        <p>You may download the example data here.</p>
+                        <div class="d-grid mt-3">
+                            <a class="btn btn-secondary text-light" role="button" href="{{sample_data_url}}">Download Example Data</a>
+                        </div>
+                        </p>
+                    </div> -->
+                    <!-- /Tab 2 -->
+                </div>
+                <!-- /Tab Menu -->
+                </div>
+                </div>
+        <!-- /Tool -->
+        </div> <!-- /Flex -->
+</div> <!-- /Container -->
+{% endblock %}
+
+{% block script %}
+{% from "_scripts/submit-job.js" import def_submit_job %}
+{% from "_includes/macros.html" import update_species_field %}
+<script>
+{% include '_scripts/utils.js' %} {#/* defines: flashErrorResponse */#}
+
+{{ def_submit_job('heritability_calculator', true) }}
+
+
+function disableButton() {
+  const btn = document.getElementById('submit-btn');
+  btn.disabled  = true;
+  btn.innerText = 'Submitting...';
+}
+
+function enableButton() {
+  const btn = document.getElementById('submit-btn');
+  btn.disabled  = false;
+  btn.innerText = 'Submit';
+}
+
+function resetForm() {
+  document.getElementById('form-submit').reset();
+  const selector = document.getElementById("{{ form.species.elementId }}");
+  selector.value = '';
+  {{ update_species_field('selector') }}
+  enableButton();
+}
+
+// Submit result
+$("#form-submit").on("submit", function(e) {
+  e.preventDefault();
+  disableButton();
+
+  // Get form data
+  const data = new FormData($('form#form-submit')[0]);
+
+  submit_job(data, '#submit-modal')
+    // Reset the form after a successful (non-error) submission
+    .done((result) => {
+      resetForm();
+    })
+    // If file validation fails: flash the error, reset the file input, and re-enable the submit button
+    .fail((error) => {
+      flashErrorResponse(error.responseJSON, 'There was a problem with your submission. Please try again later.');
+      document.getElementById('{{ form.file.id }}').value = '';
+      enableButton();
+    })
+});
+
+$("#speciesSelect").on('change', function(){
+  if ($("#speciesSelect").val() !== '') {
+    $('#nav-linkTwo-tab').removeClass('disabled')
+  }
+})
+
+// Setting up Release Notes link
+$('#nav-linkTwo-tab').click(function() {
+    const species = $('#speciesSelect').val()
+    let url = "{{ url_for('data_releases.data_release_list', species_name='SPECIES') }}";
+    if (species) {
+        url = url.replace("SPECIES", species);
+    } else {
+        throw Error('No species selected.');
+    }
+    window.location.href = url;
+  });
+
+</script>
+{% endblock %}

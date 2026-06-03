@@ -12,35 +12,26 @@ NEMASCAN_NXF_CONTAINER_NAME = os.environ.get('NEMASCAN_NXF_CONTAINER_NAME')
 INDEL_PRIMER_CONTAINER_NAME = os.environ.get('INDEL_PRIMER_CONTAINER_NAME')
 HERITABILITY_CONTAINER_NAME = os.environ.get('HERITABILITY_CONTAINER_NAME')
 
-MODULE_GENE_BROWSER_TRACKS_CONTAINER_NAME = os.environ.get('MODULE_GENE_BROWSER_TRACKS_CONTAINER_NAME')
-MODULE_GENE_BROWSER_TRACKS_CONTAINER_VERSION = os.environ.get('MODULE_GENE_BROWSER_TRACKS_CONTAINER_VERSION')
 MODULE_DB_OPERATIONS_CONTAINER_NAME = os.environ.get('MODULE_DB_OPERATIONS_CONTAINER_NAME')
 MODULE_DB_OPERATIONS_CONTAINER_VERSION = os.environ.get('MODULE_DB_OPERATIONS_CONTAINER_VERSION')
 DOCKER_HUB_REPO_NAME = os.environ.get('DOCKER_HUB_REPO_NAME')
 GOOGLE_CLOUD_PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID')
 
-GCR_REPO_NAME = f'gcr.io/{GOOGLE_CLOUD_PROJECT_ID}'
+GCR_REPO_NAME = f'us-east4-docker.pkg.dev/{GOOGLE_CLOUD_PROJECT_ID}/caendr-site-v2'
 
 def get_available_version_tags(container):
   versions = []
-  if hasattr(container, 'container_registry') and container.container_registry == 'gcr':
-    versions = get_available_version_tags_gcr(container)
-  elif hasattr(container, 'container_registry') and container.container_registry == 'dockerhub':
-    versions = get_available_version_tags_dockerhub(container)
-  else:
-    logger.error("Unknown 'container_registry' value")
-
-  return versions
+  if hasattr(container, 'container_repo') and container.container_repo.startswith('us-east4-docker.pkg.dev/'):
+    return get_available_version_tags_gcr(container)
+  return get_available_version_tags_dockerhub(container)
 
 
 def get_available_version_tags_gcr(container):
-  container_name = container.name
-  versions = gcr_container_registry.get_container_versions(container_name)
-  return versions
+  return  gcr_container_registry.get_container_versions(container.name)
 
 
 def get_available_version_tags_dockerhub(container):
-  versions = get_container_versions(f'{container.repo}/{container.container_name}')
+  versions = get_container_versions(f'{container.container_repo}/{container.container_name}')
   versions = [ version['name'] for version in versions ]
   return versions
 
@@ -82,17 +73,13 @@ def get_all_containers():
   if not heritability._exists:
     heritability = create_default_container_version(HERITABILITY_CONTAINER_NAME)
     heritability.save()
-  
-  db_operations = create_default_container_version(MODULE_DB_OPERATIONS_CONTAINER_NAME, repo=GCR_REPO_NAME, tag=MODULE_DB_OPERATIONS_CONTAINER_VERSION)
-  
-  gene_browser_tracks = create_default_container_version(MODULE_GENE_BROWSER_TRACKS_CONTAINER_NAME, repo=GCR_REPO_NAME, tag=MODULE_GENE_BROWSER_TRACKS_CONTAINER_VERSION)
 
-  return [nemascan_nxf, indel_primer, heritability, db_operations, gene_browser_tracks]
+  db_operations = Container(MODULE_DB_OPERATIONS_CONTAINER_NAME)
+  if not db_operations._exists:
+    db_operations = create_default_container_version(MODULE_DB_OPERATIONS_CONTAINER_NAME, repo=GCR_REPO_NAME, tag=MODULE_DB_OPERATIONS_CONTAINER_VERSION)
+
+  return [nemascan_nxf, indel_primer, heritability, db_operations]
 
 
 def get_current_container_version(container_name: str):
-  filters =[('container_name', '=', container_name)]
-  e = query_ds_entities(Container.kind, filters=filters)
-  if e and e[0]:
-    logger.debug(e)
-    return Container(e[0])
+  return Container.get(container_name)

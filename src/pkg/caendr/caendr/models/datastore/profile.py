@@ -1,48 +1,176 @@
 import os
 
-from caendr.models.datastore import Entity
+from caendr.services.logger import logger
 
-MODULE_SITE_BUCKET_PUBLIC_NAME = os.environ.get('MODULE_SITE_BUCKET_PUBLIC_NAME')
+from caendr.utils.env import get_env_var, get_env_var_with_fallback
+
+from caendr.models.datastore import Entity
+from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
+
+MODULE_SITE_BUCKET_PHOTOS_NAME = get_env_var('MODULE_SITE_BUCKET_PHOTOS_NAME')
 PROFILE_PHOTO_PATH_PREFIX = 'profile/photos'
 
 
 class Profile(Entity):
   kind = 'profile'
-  __bucket_name = MODULE_SITE_BUCKET_PUBLIC_NAME
+  __bucket_name = MODULE_SITE_BUCKET_PHOTOS_NAME
   __blob_prefix = PROFILE_PHOTO_PATH_PREFIX
-  
-  def __init__(self, *args, **kwargs):
-    super(Profile, self).__init__(*args, **kwargs)
-    self.set_properties(**kwargs)
 
-  def set_properties(self, **kwargs):
-    props = self.get_props_set()
-    self.__dict__.update((k, v) for k, v in kwargs.items() if k in props)
-    if not hasattr(self, 'prof_roles'):
-      self.prof_roles = []
-      
   @classmethod
   def get_bucket_name(cls):
     return cls.__bucket_name
-  
+
   @classmethod
   def get_blob_prefix(cls):
     return cls.__blob_prefix
 
+
+  ## Roles ##
+
+  # Define local Profile Role class to track possible roles
+  class Role:
+    def __init__(self, code, display):
+      self.code    = code
+      self.display = display
+
+    # Validate a role object or role code string
+    @staticmethod
+    def validate(role):
+      if not isinstance(role, Profile.Role):
+        Profile.Role.lookup(role)
+
+    # Look up a role object by its code string
+    @staticmethod
+    def lookup(role_code):
+      for role in Profile.all_roles():
+        if role.code == role_code:
+          return role
+      raise TypeError(f'Could not find role with code "{role_code}"')
+
+  # Define profile roles
+  STAFF    = Role('staff',  'Staff')
+  COMMITEE = Role('sac',    'Scientific Advisory Committee')
+  COLLAB   = Role('collab', 'Collaborators')
+
+  @staticmethod
+  def all_roles():
+    """
+      Get a list of all Profile roles, in the order they should be displayed.
+    """
+    return [ Profile.STAFF, Profile.COMMITEE, Profile.COLLAB ]
+
+
+  ## Props ##
+
   @classmethod
   def get_props_set(cls):
-    return {'id',
-            'first_name', 
-            'last_name', 
-            'title', 
-            'org', 
-            'prof_roles',
-            'img_blob_path', 
-            'website',
-            'email'}
-    
-  def __repr__(self):
-    if hasattr(self, 'id'):
-      return f"<{self.kind}:{self.id}>"
-    else:
-      return f"<{self.kind}:no-id>"
+    return {
+      *super().get_props_set(),
+      'id',
+      'first_name',
+      'last_name',
+      'title',
+      'org',
+      'prof_roles',
+      'img_blob_path',
+      'website',
+      'email',
+      'strain_prefix',
+      'funding',
+    }
+
+
+  ## Special Properties ##
+  # Prop should default to empty string if not set
+  @property
+  def strain_prefix(self):
+    return self.__dict__.get('strain_prefix', "")
+  
+  @strain_prefix.setter
+  def strain_prefix(self, val):
+
+    # Only allow list to be set
+    if not isinstance(val, str):
+      raise TypeError('Must set strain_prefix to a string.')
+    self.__dict__['strain_prefix'] = val
+
+  # Prop should default to empty list if not set
+  @property
+  def funding(self):
+    return self.__dict__.get('funding', [])
+  
+  @funding.setter
+  def funding(self, val):
+
+    # Only allow list to be set
+    if not isinstance(val, list):
+      raise TypeError('Must set funding to a list.')
+    self.__dict__['funding'] = val
+
+  # Prop should default to empty list if not set
+  @property
+  def prof_roles(self):
+    return [
+      Profile.Role.lookup(role_code) for role_code in self.__dict__.get('prof_roles', [])
+    ]
+
+  @prof_roles.setter
+  def prof_roles(self, val):
+
+    # Only allow list to be set
+    if not isinstance(val, list):
+      raise TypeError('Must set prof_roles to a list.')
+
+    # Validate each role in the list
+    for role in val:
+      Profile.Role.validate(role)
+
+    # Save prop in object's local dictionary
+    # Make sure to save as code strings instead of Role objects
+    self.__dict__['prof_roles'] = [
+      role.code if isinstance(role, Profile.Role) else role
+        for role in val
+    ]
+
+
+
+  @property
+  def img_url(self):
+    '''
+      URL for profile image. Constructed from blob path, if one is provided.
+    '''
+    if self.img_blob_path:
+      return generate_blob_uri(Profile.get_bucket_name(), self.img_blob_path, schema=BlobURISchema.HTTPS)
+
+    return None
+
+  # Prop should default to empty list if not set
+  # @property
+  # def funding(self):
+  #   return self.__dict__.get('funding', [])
+
+
+  ## Querying ##
+
+  @classmethod
+  def query_ds_roles(cls, roles):
+
+    # Accept single role by converting to singleton array
+    if isinstance(roles, Profile.Role):
+      roles = [roles]
+
+    # Validate roles in query
+    for role in roles:
+      try:
+        Profile.Role.validate(role)
+      except TypeError as ex:
+        raise TypeError(f'Cannot query profiles for role "{role}": {ex}.')
+
+    # Log query
+    logger.debug(f'Retrieving {[role.code for role in roles]} profiles from datastore')
+
+    # Query by role(s)
+    # Filtering against a list property returns a result if any value in the list matches
+    return cls.query_ds(filters = [
+      ('prof_roles', '=', role.code) for role in roles
+    ])

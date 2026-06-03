@@ -1,0 +1,14 @@
+<!-- Page Title -->
+<div class="container-fluid">
+    <div class="row">
+        <div class="col ms-5 mb-1">
+            {% if request.blueprint %}
+                {% if title %}
+            <h1 class='page-title-txt'>{{ title }} {% if subtitle %} <small>{{ subtitle }}</small>{% endif %}</h2>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+<!-- /Container -->
+<!-- /Page Title -->
