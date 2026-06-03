@@ -5,18 +5,50 @@ from caendr.services.elevation import get_elevation
 from caendr.services.cloud.sheets import get_google_sheet
 from caendr.services.cloud.secret import get_secret
 from caendr.models.sql import Strain
+from caendr.services.sql.db import bulk_insert_with_batching, load_with_copy_from_generator, rebuild_indexes
 
 ANDERSEN_LAB_STRAIN_SHEET = get_secret('ANDERSEN_LAB_STRAIN_SHEET')
 
 elevation_cache = {}
 NULL_VALS = ["None", "", "NA", None]
 
-def load_strains(db): 
+def load_strains(db, use_copy: bool = True): 
   logger.info('Loading strains...')
   andersen_strains = fetch_andersen_strains()
-  db.session.bulk_insert_mappings(Strain, andersen_strains)
-  db.session.commit()
-  logger.info(f"Inserted {Strain.query.count()} strains")
+  
+  if use_copy:
+    try:
+      strains_list = list(andersen_strains)
+      if strains_list:
+        fieldnames = list(strains_list[0].keys())
+        strains_gen = (row for row in strains_list)
+        
+        total_inserted = load_with_copy_from_generator(
+          db,
+          'strain',
+          strains_gen,
+          fieldnames=fieldnames,
+          disable_indexes_flag=True
+        )
+        rebuild_indexes(db, 'strain')
+        logger.info(f"Inserted {total_inserted} strains (using COPY command)")
+        return total_inserted
+      else:
+        total_inserted = 0
+        logger.warning("No strains to load")
+    except Exception as e:
+      logger.warning(f'COPY command failed, falling back to batched inserts: {e}')
+      andersen_strains = fetch_andersen_strains()
+  
+  total_inserted = bulk_insert_with_batching(
+    db, 
+    Strain, 
+    andersen_strains, 
+    batch_size=10000,
+    defer_fks=True
+  )
+  logger.info(f"Inserted {total_inserted} strains")
+  return total_inserted
   
 
 def fetch_elevation(lat, lon):

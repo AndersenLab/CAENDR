@@ -8,19 +8,50 @@ from urllib.request import urlretrieve
 from tempfile import NamedTemporaryFile
 
 from caendr.models.sql import Homolog, WormbaseGeneSummary
-from caendr.services.sql.db import external_db_url_templates
+from caendr.services.sql.db import external_db_url_templates, bulk_insert_with_batching, load_with_copy_from_generator, rebuild_indexes
 
 C_ELEGANS_PREFIX = 'CELE_'
 C_ELEGANS_HOMOLOG_ID = 6239
 
 TAXON_ID_URL = external_db_url_templates['generic']['TAXON_ID_URL']
 
-def load_homologs(db, homologene_fname: str):
+def load_homologs(db, homologene_fname: str, use_copy: bool = True):
   logger.info('Loading homologenes from NIH homologene.data file')
   homologene = fetch_homologene(homologene_fname)
-  db.session.bulk_insert_mappings(Homolog, homologene)
-  db.session.commit()
-  logger.info(f'Inserted {Homolog.query.count()} Homologs')
+  
+  if use_copy:
+    try:
+      homologene_list = list(homologene)
+      if homologene_list:
+        fieldnames = list(homologene_list[0].keys())
+        homologene_gen = (row for row in homologene_list)
+        
+        total_inserted = load_with_copy_from_generator(
+          db,
+          'homolog',
+          homologene_gen,
+          fieldnames=fieldnames,
+          disable_indexes_flag=True
+        )
+        rebuild_indexes(db, 'homolog')
+        logger.info(f'Inserted {total_inserted} Homologs (using COPY command)')
+        return total_inserted
+      else:
+        total_inserted = 0
+        logger.warning("No homologs to load")
+    except Exception as e:
+      logger.warning(f'COPY command failed, falling back to batched inserts: {e}')
+      homologene = fetch_homologene(homologene_fname)
+  
+  total_inserted = bulk_insert_with_batching(
+    db, 
+    Homolog, 
+    homologene, 
+    batch_size=10000,
+    defer_fks=True
+  )
+  logger.info(f'Inserted {total_inserted} Homologs')
+  return total_inserted
 
 
 def fetch_taxon_ids():

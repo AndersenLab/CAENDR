@@ -1,6 +1,8 @@
 import os
 import datetime
 import shutil
+import csv
+import tempfile
 
 from caendr.services.logger import logger
 
@@ -333,4 +335,186 @@ def drop_tables(app, db, tables=None):
     logger.info(f'Creating tables: ${tables}')
     db.metadata.create_all(bind=db.engine, tables=tables)
   db.session.commit()
+
+
+def bulk_insert_with_batching(db, model_class, data_generator, batch_size=10000, 
+                               defer_fks=True, disable_indexes=False):
+  '''
+    Optimized bulk insert with batching, FK deferral, and optional index management.
+    
+    Args:
+      db: SQLAlchemy db instance
+      model_class: SQLAlchemy model class to insert into
+      data_generator: Generator or iterable yielding dictionaries to insert
+      batch_size: Number of records to insert per batch (default 10000)
+      defer_fks: Whether to defer FK constraints (default True)
+      disable_indexes: Whether to disable indexes during insert (default False)
+  '''
+  if defer_fks:
+    db.session.execute('SET CONSTRAINTS ALL DEFERRED')
+  
+  batch = []
+  total_inserted = 0
+  
+  for data in data_generator:
+    batch.append(data)
+    
+    if len(batch) >= batch_size:
+      db.session.bulk_insert_mappings(model_class, batch)
+      db.session.commit()
+      total_inserted += len(batch)
+      logger.info(f'Inserted {total_inserted} {model_class.__name__} records')
+      batch = []
+  
+  if batch:
+    db.session.bulk_insert_mappings(model_class, batch)
+    db.session.commit()
+    total_inserted += len(batch)
+    logger.info(f'Inserted {total_inserted} {model_class.__name__} records (final batch)')
+  
+  return total_inserted
+
+
+def disable_indexes(db, table_name):
+  '''Disable indexes on a table for faster bulk inserts.'''
+  try:
+    db.session.execute(f'ALTER TABLE {table_name} DISABLE TRIGGER ALL')
+    db.session.commit()
+    logger.info(f'Disabled indexes/triggers on {table_name}')
+  except Exception as e:
+    logger.warning(f'Could not disable indexes on {table_name}: {e}')
+
+
+def enable_indexes(db, table_name):
+  '''Re-enable indexes on a table after bulk inserts.'''
+  try:
+    db.session.execute(f'ALTER TABLE {table_name} ENABLE TRIGGER ALL')
+    db.session.commit()
+    logger.info(f'Re-enabled indexes/triggers on {table_name}')
+  except Exception as e:
+    logger.warning(f'Could not re-enable indexes on {table_name}: {e}')
+
+
+def load_with_copy(db, table_name, csv_file_path, columns=None, disable_indexes_flag=True):
+  '''
+    Load data using PostgreSQL COPY command (native binary transfer, fastest method).
+    
+    Args:
+      db: SQLAlchemy db instance
+      table_name: Name of table to load into
+      csv_file_path: Path to CSV file with data
+      columns: List of column names to load (optional, uses all if None)
+      disable_indexes_flag: Whether to disable indexes before load (default True)
+      
+    Returns:
+      Number of rows loaded
+  '''
+  try:
+    if disable_indexes_flag:
+      disable_indexes(db, table_name)
+    
+    col_spec = f'({", ".join(columns)})' if columns else ''
+    
+    with open(csv_file_path, 'r') as f:
+      copy_sql = f'COPY {table_name} {col_spec} FROM STDIN WITH (FORMAT csv, HEADER true, NULL \'\', ESCAPE E\'\\\')'
+      conn = db.engine.raw_connection()
+      cursor = conn.cursor()
+      try:
+        cursor.copy_expert(copy_sql, f)
+        conn.commit()
+        rows_loaded = cursor.rowcount
+        logger.info(f'COPY loaded {rows_loaded} rows into {table_name}')
+      finally:
+        cursor.close()
+        conn.close()
+    
+    if disable_indexes_flag:
+      enable_indexes(db, table_name)
+    
+    return rows_loaded
+    
+  except Exception as e:
+    logger.error(f'COPY command failed for {table_name}: {e}', exc_info=True)
+    raise
+
+
+def generator_to_csv(data_generator, csv_file_path, fieldnames):
+  '''
+    Convert a generator of dictionaries to CSV file for COPY command.
+    
+    Args:
+      data_generator: Generator yielding dictionaries
+      csv_file_path: Path where CSV will be written
+      fieldnames: List of column names
+      
+    Returns:
+      Number of rows written
+  '''
+  rows_written = 0
+  try:
+    with open(csv_file_path, 'w', newline='') as csvfile:
+      writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+      writer.writeheader()
+      
+      for row in data_generator:
+        writer.writerow(row)
+        rows_written += 1
+        
+        if rows_written % 100000 == 0:
+          logger.debug(f'Exported {rows_written} rows to CSV')
+    
+    logger.info(f'Exported {rows_written} total rows to CSV: {csv_file_path}')
+    return rows_written
+    
+  except Exception as e:
+    logger.error(f'Failed to write CSV: {e}', exc_info=True)
+    raise
+
+
+def load_with_copy_from_generator(db, table_name, data_generator, fieldnames, disable_indexes_flag=True):
+  '''
+    Complete pipeline: generator -> CSV -> COPY command.
+    Combines streaming data processing with native COPY for maximum performance.
+    
+    Args:
+      db: SQLAlchemy db instance
+      table_name: Name of table to load into
+      data_generator: Generator yielding dictionaries
+      fieldnames: List of column names
+      disable_indexes_flag: Whether to disable indexes before load (default True)
+      
+    Returns:
+      Number of rows loaded
+  '''
+  csv_file_path = None
+  try:
+    # Create temporary file
+    temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False)
+    csv_file_path = temp_file.name
+    temp_file.close()
+    
+    logger.info(f'Exporting data to temporary CSV: {csv_file_path}')
+    generator_to_csv(data_generator, csv_file_path, fieldnames)
+    
+    logger.info(f'Loading from CSV into {table_name} using COPY')
+    rows_loaded = load_with_copy(db, table_name, csv_file_path, fieldnames, disable_indexes_flag)
+    
+    return rows_loaded
+    
+  finally:
+    # Clean up temporary CSV file
+    if csv_file_path and os.path.exists(csv_file_path):
+      os.remove(csv_file_path)
+      logger.debug(f'Cleaned up temporary CSV file')
+
+
+def rebuild_indexes(db, table_name):
+  '''Rebuild/reindex a table after bulk operations for optimal query performance.'''
+  try:
+    logger.info(f'Starting index rebuild for {table_name}...')
+    db.session.execute(f'REINDEX TABLE {table_name}')
+    db.session.commit()
+    logger.info(f'Index rebuild completed for {table_name}')
+  except Exception as e:
+    logger.warning(f'Could not rebuild indexes on {table_name}: {e}')
 

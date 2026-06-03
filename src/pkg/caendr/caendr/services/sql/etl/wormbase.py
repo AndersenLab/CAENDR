@@ -9,31 +9,57 @@ from caendr.services.logger import logger
 from caendr.models.sql import WormbaseGeneSummary, WormbaseGene, Homolog
 from caendr.utils.bio import arm_or_center
 from caendr.utils.constants import CHROM_NUMERIC
+from caendr.services.sql.db import bulk_insert_with_batching, load_with_copy_from_generator, rebuild_indexes
 
 
 # https://github.com/phil-bergmann/2016_DLRW_brain/blob/3f69c945a40925101c58a3d77c5621286ad8d787/brain/data.py
 
-def load_genes_summary(db, gene_gff_fname: str):
+def load_genes_summary(db, gene_gff_fname: str, use_copy: bool = True):
   '''
     load_genes_summary [extracts gene summary from wormbase db file and loads it into the caendr db]
       Args:
         db (SQLAlchemy): [sqlalchemy db instance to insert into]
         gene_gff_fname (str): [path of downloaded wormbase gene gff file]
+        use_copy (bool): [whether to use COPY command for faster loading (default True)]
   '''  
   logger.info('Loading gene summary table')
   gene_summary = fetch_gene_gff_summary(gene_gff_fname)
-  db.session.bulk_insert_mappings(WormbaseGeneSummary, gene_summary)
-  db.session.commit()
-  logger.info(f"Inserted {WormbaseGeneSummary.query.count()} Wormbase Gene Summaries")
+  
+  if use_copy:
+    try:
+      total_inserted = load_with_copy_from_generator(
+        db,
+        'wormbase_gene_summary',
+        gene_summary,
+        fieldnames=['ID', 'biotype', 'sequence_name', 'chrom', 'start', 'end', 'locus', 'chrom_num', 'arm_or_center', 'gene_id_type', 'gene_id'],
+        disable_indexes_flag=True
+      )
+      rebuild_indexes(db, 'wormbase_gene_summary')
+      logger.info(f"Inserted {total_inserted} Wormbase Gene Summaries (using COPY command)")
+      return total_inserted
+    except Exception as e:
+      logger.warning(f'COPY command failed, falling back to batched inserts: {e}')
+      gene_summary = fetch_gene_gff_summary(gene_gff_fname)
+  
+  total_inserted = bulk_insert_with_batching(
+    db, 
+    WormbaseGeneSummary, 
+    gene_summary, 
+    batch_size=10000,
+    defer_fks=True
+  )
+  logger.info(f"Inserted {total_inserted} Wormbase Gene Summaries")
+  return total_inserted
   
   
-def load_genes(db, gene_gtf_gz_fname: str, gene_ids_fname: str):
+def load_genes(db, gene_gtf_gz_fname: str, gene_ids_fname: str, use_copy: bool = True):
   '''
     load_genes [extracts gene information from wormbase db files and loads it into the caendr db]
       Args:
         db (SQLAlchemy): [sqlalchemy db instance]
         gene_gtf_gz_fname (str): [path of downloaded wormbase gene gtf.gz file]
         gene_ids_fname (str): [path of downloaded wormbase gene IDs file]
+        use_copy (bool): [whether to use COPY command for faster loading (default True)]
   '''  
   logger.info('Extracting gene_gtf file')
   gene_gtf_fname = 'gene.gtf'
@@ -42,11 +68,51 @@ def load_genes(db, gene_gtf_gz_fname: str, gene_ids_fname: str):
       shutil.copyfileobj(f_in, f_out)
   logger.info('Done extracting gene_gtf file')
 
+
   logger.info('Loading gene table')
   genes = fetch_gene_gtf(gene_gtf_fname, gene_ids_fname)
-  db.session.bulk_insert_mappings(WormbaseGene, genes)
-  db.session.commit()
-  logger.info(f"Inserted {WormbaseGene.query.count()} Wormbase Genes")
+  
+  if use_copy:
+    try:
+      # Get fieldnames from first row
+      genes_list = list(genes)
+      if genes_list:
+        fieldnames = list(genes_list[0].keys())
+        # Create new generator from list
+        genes_gen = (row for row in genes_list)
+        
+        total_inserted = load_with_copy_from_generator(
+          db,
+          'wormbase_gene',
+          genes_gen,
+          fieldnames=fieldnames,
+          disable_indexes_flag=True
+        )
+        rebuild_indexes(db, 'wormbase_gene')
+        logger.info(f"Inserted {total_inserted} Wormbase Genes (using COPY command)")
+      else:
+        total_inserted = 0
+        logger.warning("No genes to load")
+    except Exception as e:
+      logger.warning(f'COPY command failed, falling back to batched inserts: {e}')
+      genes = fetch_gene_gtf(gene_gtf_fname, gene_ids_fname)
+      total_inserted = bulk_insert_with_batching(
+        db, 
+        WormbaseGene, 
+        genes, 
+        batch_size=10000,
+        defer_fks=True
+      )
+  else:
+    total_inserted = bulk_insert_with_batching(
+      db, 
+      WormbaseGene, 
+      genes, 
+      batch_size=10000,
+      defer_fks=True
+    )
+  
+  logger.info(f"Inserted {total_inserted} Wormbase Genes")
 
   results = db.session.query(WormbaseGene.feature, db.func.count(WormbaseGene.feature)) \
                             .group_by(WormbaseGene.feature) \
@@ -55,14 +121,43 @@ def load_genes(db, gene_gtf_gz_fname: str, gene_ids_fname: str):
   logger.info(f'Gene Summary: {result_summary}')
   
   
-def load_orthologs(db, ortholog_fname: str):
+def load_orthologs(db, ortholog_fname: str, use_copy: bool = True):
   logger.info('Loading orthologs from WormBase')
-  initial_count = Homolog.query.count()
   orthologs = fetch_orthologs(ortholog_fname)
-  db.session.bulk_insert_mappings(Homolog, orthologs)
-  db.session.commit()
-  total_records = Homolog.query.count() - initial_count
-  logger.info(f'Inserted {total_records} Orthologs')
+  
+  if use_copy:
+    try:
+      orthologs_list = list(orthologs)
+      if orthologs_list:
+        fieldnames = list(orthologs_list[0].keys())
+        orthologs_gen = (row for row in orthologs_list)
+        
+        total_inserted = load_with_copy_from_generator(
+          db,
+          'homolog',
+          orthologs_gen,
+          fieldnames=fieldnames,
+          disable_indexes_flag=True
+        )
+        rebuild_indexes(db, 'homolog')
+        logger.info(f'Inserted {total_inserted} Orthologs (using COPY command)')
+        return total_inserted
+      else:
+        total_inserted = 0
+        logger.warning("No orthologs to load")
+    except Exception as e:
+      logger.warning(f'COPY command failed, falling back to batched inserts: {e}')
+      orthologs = fetch_orthologs(ortholog_fname)
+  
+  total_inserted = bulk_insert_with_batching(
+    db, 
+    Homolog, 
+    orthologs, 
+    batch_size=10000,
+    defer_fks=True
+  )
+  logger.info(f'Inserted {total_inserted} Orthologs')
+  return total_inserted
 
 
 def get_gene_ids(gene_ids_fname: str):
