@@ -94,6 +94,7 @@ def genome_browser(region="III:11746923-11750250", query=None):
 
     # Data locations
     'fasta_url': DatasetRelease.get_fasta_filepath_template(schema=AWSBlobURISchema.HTTPS, gcp=False).get_string_safe(),
+    'index_url': DatasetRelease.get_fasta_filepath_template(schema=AWSBlobURISchema.HTTPS, gcp=False, index=True).get_string_safe(),
 
     # String replacement tokens
     # Maps token to the field in Species object it should be replaced with

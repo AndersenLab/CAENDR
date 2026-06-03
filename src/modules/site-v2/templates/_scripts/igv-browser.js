@@ -33,6 +33,7 @@ function create_or_update_browser(browser_div, browser_options, species) {
     "id":       species['name'],
     "name":     species['short_name'],
     "fastaURL": replace_tokens("{{ fasta_url }}"),
+    "indexURL": replace_tokens("{{ index_url }}"),
   }
 
   const browser = igv_browser;
