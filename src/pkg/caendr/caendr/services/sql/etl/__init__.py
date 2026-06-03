@@ -9,8 +9,9 @@ from caendr.models.datastore import Species
 from caendr.models.sql       import ALL_SQL_TABLES
 from caendr.utils.constants  import DEFAULT_BATCH_SIZE
 from caendr.utils.data       import batch_generator
+from caendr.services.cloud.postgresql import db
 
-from sqlalchemy import func, literal_column
+from sqlalchemy import func, literal_column, select
 
 # Gather table configurations into a single dict
 TABLE_CONFIG = {
@@ -30,11 +31,14 @@ TABLE_CONFIG = {
 
 
 def query_count(query):
-    ONE = literal_column("1")
-    counter = query.statement.with_only_columns([func.count(ONE)])
-    counter = counter.order_by(None)
-    return query.session.execute(counter).scalar()
+    return db.session.scalar(select(func.count()).select_from(query.subquery()))
+    # ONE = literal_column("1")
+    # counter = query.statement.with_only_columns(func.count(ONE))
+    # counter = counter.order_by(None)
+    # return db.session.execute(counter).scalar_one_or_none()
 
+def table_row_count(table):
+    return db.session.scalar(select(func.count()).select_from(table))
 
 class ETLManager:
 
@@ -167,7 +171,8 @@ class ETLManager:
                 continue
 
             # Find number of entries in table for species
-            current_count = self.db.session.query(func.count(table.__table__.c.id)).filter(table.__table__.c.species_name == species.name).scalar()
+            current_count = query_count(config.table.query.filter(table.__table__.c.species_name == species.name))
+            # current_count = select(func.count(table.__table__.c.id)).filter(table.__table__.c.species_name == species.name).scalar_one_or_none()
             logger.info(f"There are {current_count} entries in {config.table_name} for {species.name}")
 
             # Load & insert table data in batches, to help reduce local memory footprint
@@ -220,7 +225,7 @@ class ETLManager:
             Drops all rows for the given species from the given table.
         '''
         del_statement = table.__table__.delete().where(table.__table__.c.species_name == species)
-        self.db.engine.execute(del_statement)
+        self.db.session.execute(del_statement)
 
 
     def clear_tables(self, *tables, species_list = None):
@@ -253,13 +258,13 @@ class ETLManager:
 
             # Loop through tables in reverse order, so rows that depend on earlier tables are dropped first
             for table in tables[::-1]:
-                logger.info(f'Initial size of table { table.__tablename__ }: { table.query.count() }')
+                logger.info(f'Initial size of table { table.__tablename__ }: { table_row_count(table) }')
 
                 for species_name in species_list:
                     self.__drop_species_rows(table, species_name)
 
                 # Log size of table after drop
-                logger.info(f'Size of table { table.__tablename__ } after dropping [{", ".join(species_list)}]: { table.query.count() }')
+                logger.info(f'Size of table { table.__tablename__ } after dropping [{", ".join(species_list)}]: { table_row_count(table) }')
 
         # Commit changes
         self.db.session.commit()
@@ -303,13 +308,13 @@ class ETLManager:
 
             # Loop through tables in reverse order, so rows that depend on earlier tables are dropped first
             for table in tables[::-1]:
-                logger.info(f'Initial size of table { table.__tablename__ }: { table.query.count() }')
+                logger.info(f'Initial size of table { table.__tablename__ }: { table_row_count(table) }')
 
                 for species_name in species_list:
                     self.__drop_species_rows(table, species_name)
 
                 # Log size of table after drop
-                logger.info(f'Size of table { table.__tablename__ } after dropping [{", ".join(species_list)}]: { table.query.count() }')
+                logger.info(f'Size of table { table.__tablename__ } after dropping [{", ".join(species_list)}]: { table_row_count(table) }')
 
         # Commit changes
         self.db.session.commit()

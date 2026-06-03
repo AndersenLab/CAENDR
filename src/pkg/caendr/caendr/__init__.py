@@ -1,5 +1,5 @@
-import pkg_resources
-__version__ = pkg_resources.require("caendr")[0].version
+from importlib.metadata import version
+__version__ = version("caendr")
 
 
 from .utils.env import load_env

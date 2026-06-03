@@ -180,9 +180,10 @@ def register_template_filters(app):
     app.template_filter()(t_filter)
 
 def register_extensions(app):
-  markdown(app)
+  # markdown(app)
   cache.init_app(app, config={'CACHE_TYPE': 'base.utils.cache.datastore_cache'})
-  sqlalchemy.init_app(app)
+  db.init_app(app)
+  # sqlalchemy.init_app(app)
   # protect all routes (except the ones listed) from cross site request forgery
   csrf = CSRFProtect(app)
   csrf.exempt(auth_bp)

@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 from caendr.services.logger import logger
-from sqlalchemy import or_
+from sqlalchemy import or_, select
 from flask import request
 from datetime import timedelta
 
@@ -53,10 +53,10 @@ def query_strains(
       all_strain_names - Return list of all possible strain names (internal use).
       resolve_isotype - Use to search for strains and return their isotype
   """
-  query = Strain.query
-  
+  query = select(Strain)
+
   if release_version:
-    query = query.filter(Strain.release <= release_version)
+    query = query.where(Strain.release <= release_version)
 
   if strain_name or resolve_isotype:
     query = query.filter(
@@ -67,13 +67,10 @@ def query_strains(
         Strain.previous_names == strain_name,
         Strain.strain == strain_name
       )
-    ).first()
+    )
 
   elif isotype_name:
     query = query.filter(Strain.isotype == isotype_name)
-
-  else:
-    query = query
 
   if species is not None:
     if species in Species.all().keys():
@@ -87,23 +84,22 @@ def query_strains(
   if issues is False:
     query = query.filter(Strain.issues == False)
     query = query.filter(Strain.isotype != None)
-    query = query.all()
-  else:
-    query = query.all()
+
+  results = db.session.execute(query).scalars().all()
 
   if all_strain_names:
-    previous_strain_names = sum([x.previous_names.split(",") for x in query if x.previous_names], [])
-    results = [x.strain for x in query] + previous_strain_names
+    previous_strain_names = sum([x.previous_names.split(",") for x in results if x.previous_names], [])
+    results = [x.strain for x in results] + previous_strain_names
     return results
 
   if resolve_isotype:
-    if query:
+    if results:
       # LSJ1/LSJ2 prev. N2; So N2 needs to be specific.
       if strain_name == 'N2':
         return 'N2'
-      return query.isotype
+      return [x.isotype for x in results]
       
-  return query
+  return results
 
 
 @rollback_on_error
@@ -117,9 +113,12 @@ def get_strains(known_origin=False, issues=False, distributed_only=False):
         known_origin: Returns only strains with a known origin
         issues: Return only strains without issues
   """
-  ref_strain_list = Strain.query.filter(Strain.isotype_ref_strain == True).all()
+  ref_strain_list = db.session.execute(
+    select(Strain).where(Strain.isotype_ref_strain == True)
+  ).scalars().all()
+
   ref_strain_list = {x.isotype: x.strain for x in ref_strain_list}
-  result = Strain.query
+  result = select(Strain)
   if known_origin or 'origin' in request.path:
     result = result.filter(Strain.latitude != None)
 
@@ -130,7 +129,7 @@ def get_strains(known_origin=False, issues=False, distributed_only=False):
   if distributed_only is True:
     result = result.filter(Strain.distribute == True)
 
-  result = result.all()
+  result = db.session.execute(result).scalars().all()
   for strain in result:
     # Set an attribute for the reference strain of every strain
     strain.reference_strain = ref_strain_list.get(strain.isotype, None)

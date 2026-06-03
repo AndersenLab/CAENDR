@@ -5,6 +5,9 @@ from caendr.models.sql.dict_serializable import DictSerializable
 
 from caendr.models.status import PublishStatus
 
+from sqlalchemy import String, Boolean, DateTime
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 
 class PhenotypeMetadata(DictSerializable, db.Model):
   """
@@ -13,34 +16,36 @@ class PhenotypeMetadata(DictSerializable, db.Model):
       This table includes details such as species, description, source lab, and other additional 
       information.
   """
-  id = db.Column(db.String(), primary_key=True)
-  trait_name_user = db.Column(db.String(), nullable=True)
-  trait_name_caendr = db.Column(db.String())
-  trait_name_display_1 = db.Column(db.String())
-  trait_name_display_2 = db.Column(db.String())
-  trait_name_display_3 = db.Column(db.String())
-  species_name = db.Column(db.String())
-  wbgene_id = db.Column(db.String(), nullable=True)
-  description_short = db.Column(db.String(), nullable=True)
-  description_long = db.Column(db.Text(), nullable=True)
-  units = db.Column(db.String(), nullable=True)
-  publication = db.Column(db.String(), nullable=True)
-  protocols = db.Column(db.String(), nullable=True)
-  source_lab = db.Column(db.String())
-  institution = db.Column(db.String())
-  submitted_by = db.Column(db.String())
-  tags = db.Column(db.String(), nullable=True)
-  capture_date = db.Column(db.Date(), nullable=True)
-  created_on = db.Column(db.Date(), nullable=False)
-  modified_on = db.Column(db.Date())
-  dataset = db.Column(db.String(), nullable=True)
-  is_bulk_file = db.Column(db.Boolean(), nullable=False)
-  publish_status = db.Column(db.String, nullable=False)
-  phenotype_values = db.relationship(
-                      'PhenotypeDatabase', 
+  id: Mapped[str] = mapped_column(String(), primary_key=True)
+  trait_name_user: Mapped[str | None] = mapped_column(String())
+  trait_name_caendr: Mapped[str] = mapped_column(String())
+  trait_name_display_1: Mapped[str] = mapped_column(String())
+  trait_name_display_2: Mapped[str] = mapped_column(String())
+  trait_name_display_3: Mapped[str] = mapped_column(String())
+  species_name: Mapped[str] = mapped_column(String())
+  wbgene_id: Mapped[str | None] = mapped_column(String())
+  description_short: Mapped[str | None] = mapped_column(String())
+  description_long: Mapped[str | None] = mapped_column(String())
+  units: Mapped[str | None] = mapped_column(String())
+  publication: Mapped[str | None] = mapped_column(String())
+  protocols: Mapped[str | None] = mapped_column(String())
+  source_lab: Mapped[str] = mapped_column(String())
+  institution: Mapped[str] = mapped_column(String())
+  submitted_by: Mapped[str] = db.Column(String())
+  tags: Mapped[str | None] = db.Column(String())
+  capture_date: Mapped[datetime | None] = mapped_column(DateTime())
+  created_on: Mapped[datetime | None] = mapped_column(DateTime())
+  modified_on: Mapped[datetime | None] = db.Column(db.DateTime())
+  dataset: Mapped[str | None] =  mapped_column(String())
+  is_bulk_file: Mapped[bool | None] = mapped_column(Boolean())
+  publish_status: Mapped[str | None] = mapped_column(String)
+
+  phenotype_values = relationship(
+                      "PhenotypeDatabase",
                       backref='phenotype_db.metadata_id', 
                       primaryjoin='PhenotypeMetadata.id==PhenotypeDatabase.metadata_id', 
-                      lazy='select')
+                      lazy='select'
+                    )
 
   __tablename__ = 'phenotype_metadata'
 

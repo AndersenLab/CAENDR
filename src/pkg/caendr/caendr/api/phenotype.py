@@ -1,13 +1,13 @@
 import bleach
 from typing import Optional, Union, Iterable
 
-from sqlalchemy import or_
+from sqlalchemy import or_, select
 
 from caendr.models.datastore          import Species, User
 from caendr.models.status             import PublishStatus
 from caendr.models.sql                import PhenotypeMetadata
 from caendr.models.sql                import PhenotypeDatabase
-from caendr.services.cloud.postgresql import rollback_on_error
+from caendr.services.cloud.postgresql import rollback_on_error, db
 
 
 
@@ -34,7 +34,7 @@ def query_phenotype_metadata(
     """
 
     # Create the initial query
-    query = PhenotypeMetadata.query
+    query = db.select(PhenotypeMetadata)
 
     # Optionally query by bulk file
     if is_bulk_file is not None:
@@ -62,11 +62,13 @@ def get_all_traits_metadata():
   """
     Returns metadata for all traits
   """
-  return PhenotypeMetadata.query.all()
+  return db.session.execute(
+    db.select(PhenotypeMetadata)
+  ).scalars().all()
 
 
 def get_trait(trait_id):
-  return PhenotypeMetadata.query.get(trait_id)
+  return db.session.get(PhenotypeMetadata, trait_id)
 
 
 def order_trait_query_by_name(query):
@@ -233,7 +235,7 @@ def get_trait_categories(query = None):
 
   # Parse the list of tags from each row
   # `filter` with None removes all non-truthy values, i.e. empty tag sets
-  tags = filter(None, ( tr.get_tags() for tr in query ))
+  tags = filter(None, ( tr.get_tags() for tr in db.session.execute(query).scalars().all() ))
 
   # Flatten the list of lists into a set, and sort the result
   tags_list = { tg.title() for tr_tag in tags for tg in tr_tag }
@@ -246,7 +248,8 @@ def get_trait_categories(query = None):
 #
 
 def get_phenotype_values_for_trait(trait_id):
-  return PhenotypeMetadata.query.get(trait_id).phenotype_values
+  metadata = db.session.get(PhenotypeMetadata, trait_id)
+  return metadata.phenotype_values if metadata else None 
 
 
 #
@@ -254,30 +257,22 @@ def get_phenotype_values_for_trait(trait_id):
 #
 
 def get_traits_with_metadata(metadata_colmns: Optional[Iterable[str]] = None):
-  '''
-    Get all traits with metadata.
-  '''
-  query = PhenotypeDatabase.query
   if metadata_colmns:
-    
-    # Check if the metadata columns are valid
     valid_colmns = [col.name for col in PhenotypeMetadata.__table__.columns]
     for col in metadata_colmns:
       if col not in valid_colmns:
         raise ValueError(f'Invalid column name: {col}.')
     
-    # Join only with given metadata columns
-    query = query.with_entities(
+    return select(
       PhenotypeDatabase.trait_name,
       PhenotypeDatabase.strain_name,
       PhenotypeDatabase.trait_value,
       PhenotypeDatabase.metadata_id,
-      *metadata_colmns
+      *[getattr(PhenotypeMetadata, col) for col in metadata_colmns]
     ).join(
         PhenotypeMetadata,
         PhenotypeDatabase.metadata_id == PhenotypeMetadata.id
     )
   else:
-    # Join with all metadata columns
-    query = query.join(PhenotypeMetadata)
-  return query
+    return select(PhenotypeDatabase).join(PhenotypeMetadata)
+  

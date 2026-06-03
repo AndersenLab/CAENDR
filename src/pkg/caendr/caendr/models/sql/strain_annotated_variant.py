@@ -1,5 +1,5 @@
-import pandas as pd
-from sqlalchemy import and_
+from sqlalchemy import and_, String, Integer, Float, Boolean, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from caendr.services.cloud.postgresql import db
 from caendr.models.sql.dict_serializable import DictSerializable
@@ -15,7 +15,7 @@ class GeneralAnnotatedVariant(DictSerializable):
     if isinstance(interval, str):
       interval = parse_chrom_interval(interval)
     # Construct the query object from the given interval
-    query = cls.query.filter( and_(
+    query = db.select(cls).filter( and_(
       cls.chrom == interval['chrom'],
       cls.pos > interval['start'],
       cls.pos < interval['stop'],
@@ -30,7 +30,7 @@ class GeneralAnnotatedVariant(DictSerializable):
     if isinstance(position, str):
       position = parse_chrom_position(position)
     # Construct the query object from the given position
-    query = cls.query.filter( and_(
+    query = db.select(cls).filter( and_(
       cls.chrom == position['chrom'],
       cls.pos   == position['pos'],
     ) )
@@ -44,7 +44,7 @@ class GeneralAnnotatedVariant(DictSerializable):
     if species:
       query = query.filter( cls.species_name == species.name )
     # Convert query into a DataFrame
-    data_frame = convert_query_to_data_table(query, columns=columns)
+    data_frame = convert_query_to_data_table(query, columns=columns, db=db)
     try:
       result = data_frame[columns].dropna(how='all').fillna(value="").agg(list).to_dict()
     except ValueError:
@@ -59,31 +59,35 @@ class StrainAnnotatedVariant(GeneralAnnotatedVariant, db.Model):
       Genetic location, base pairs affected, consequences of reading, gene information, 
       strains affected, and severity of impact
   """
-  id = db.Column(db.Integer, primary_key=True)
-  species_name = db.Column(db.String(20), index=True, primary_key=True)
-  chrom = db.Column(db.String(7), index=True)
-  pos = db.Column(db.Integer(), index=True)
-  ref_seq = db.Column(db.String(), nullable=True)
-  alt_seq = db.Column(db.String(), nullable=True)
-  consequence = db.Column(db.String(), nullable=True)
-  target_consequence = db.Column(db.Integer(), nullable=True)
-  gene_id = db.Column(db.ForeignKey('wormbase_gene_summary.gene_id'), index=True, nullable=True)
-  transcript = db.Column(db.String(), index=True, nullable=True)
-  biotype = db.Column(db.String(), nullable=True)
-  strand = db.Column(db.String(1), nullable=True)
-  amino_acid_change = db.Column(db.String(), nullable=True)
-  dna_change = db.Column(db.String(), nullable=True)
-  strains = db.Column(db.String(), nullable=True)
-  blosum = db.Column(db.Integer(), nullable=True)
-  grantham = db.Column(db.Integer(), nullable=True)
-  percent_protein = db.Column(db.Float(), nullable=True)
-  gene = db.Column(db.String(), index=True, nullable=True)
-  variant_impact = db.Column(db.String(), nullable=True)
-  divergent = db.Column(db.Boolean(), nullable=True)
-  release = db.Column(db.String(), nullable=True)
+  id: Mapped[int] = mapped_column(Integer(), primary_key=True)
+  species_name: Mapped[str] = mapped_column(String(20), index=True, primary_key=True)
+  chrom: Mapped[str] = mapped_column(String(7), index=True)
+  pos: Mapped[int] = mapped_column(Integer(), index=True)
+  ref_seq: Mapped[str | None] = mapped_column(String())
+  alt_seq: Mapped[str | None] = mapped_column(String())
+  consequence: Mapped[str | None] = mapped_column(String())
+  target_consequence: Mapped[int | None] = mapped_column(Integer())
+  gene_id: Mapped[str | None] = mapped_column(ForeignKey('wormbase_gene_summary.gene_id'), index=True)
+  transcript: Mapped[str | None] = mapped_column(String(), index=True)
+  biotype: Mapped[str | None] = mapped_column(String())
+  strand: Mapped[str | None] = mapped_column(String(1))
+  amino_acid_change: Mapped[str | None] = mapped_column(String())
+  dna_change: Mapped[str | None] = mapped_column(String())
+  strains: Mapped[str | None] = mapped_column(String())
+  blosum: Mapped[int | None] = mapped_column(Integer())
+  grantham: Mapped[int | None] = mapped_column(Integer())
+  percent_protein: Mapped[float | None] = mapped_column(Float())
+  gene: Mapped[str | None] = mapped_column(String(), index=True)
+  variant_impact: Mapped[str | None] = mapped_column(String())
+  divergent: Mapped[bool | None] = mapped_column(Boolean())
+  release: Mapped[str | None] = mapped_column(String())
 
   __tablename__ = 'strain_annotated_variants'
-  __gene_summary__ = db.relationship("WormbaseGeneSummary", backref='strain_annotated_variants', lazy='joined')
+  __gene_summary__ = relationship(
+    "WormbaseGeneSummary",
+    backref='strain_annotated_variants',
+    lazy='joined'
+  )
 
   # List of columns to be checked by default
   _column_default_list = [
@@ -140,25 +144,25 @@ class StrainAnnotatedVariant(GeneralAnnotatedVariant, db.Model):
 
 
 class AnnovarAnnotatedVariant(GeneralAnnotatedVariant, db.Model):
-  id = db.Column(db.Integer, primary_key=True)
-  species_name = db.Column(db.String(20), index=True, primary_key=True)
-  chrom = db.Column(db.String(7), index=True)
-  pos = db.Column(db.Integer(), index=True)
-  ref_seq = db.Column(db.String(), nullable=True)
-  alt_seq = db.Column(db.String(), nullable=True)
-  consequence = db.Column(db.String(), nullable=True)
-  target_consequence = db.Column(db.Integer(), nullable=True)
-  gene_id = db.Column(db.ForeignKey('wormbase_gene_summary.gene_id'), index=True, nullable=True)
-  transcript = db.Column(db.String(), index=True, nullable=True)
-  amino_acid_change = db.Column(db.String(), nullable=True)
-  strains = db.Column(db.String(), nullable=True)
-  blosum = db.Column(db.Integer(), nullable=True)
-  grantham = db.Column(db.Integer(), nullable=True)
-  percent_protein = db.Column(db.Float(), nullable=True)
-  gene = db.Column(db.String(), index=True, nullable=True)
-  variant_impact = db.Column(db.String(), nullable=True)
-  divergent = db.Column(db.Boolean(), nullable=True)
-  release = db.Column(db.String(), nullable=True)
+  id: Mapped[int] = mapped_column(Integer(), primary_key=True)
+  species_name: Mapped[str] = mapped_column(String(20), index=True, primary_key=True)
+  chrom: Mapped[str] = mapped_column(String(7), index=True)
+  pos: Mapped[int] = mapped_column(Integer(), index=True)
+  ref_seq: Mapped[str | None] = mapped_column(String())
+  alt_seq: Mapped[str | None] = mapped_column(String())
+  consequence: Mapped[str | None] = mapped_column(String())
+  target_consequence: Mapped[int | None] = mapped_column(Integer())
+  gene_id: Mapped[str | None] = mapped_column(ForeignKey('wormbase_gene_summary.gene_id'), index=True)
+  transcript: Mapped[str | None] = mapped_column(String(), index=True)
+  amino_acid_change: Mapped[str | None] = mapped_column(String())
+  strains: Mapped[str | None] = mapped_column(String())
+  blosum: Mapped[int | None] = mapped_column(Integer())
+  grantham: Mapped[int | None] = mapped_column(Integer())
+  percent_protein: Mapped[float | None] = mapped_column(Float())
+  gene: Mapped[str | None] = mapped_column(String(), index=True)
+  variant_impact: Mapped[str | None] = mapped_column(String())
+  divergent: Mapped[bool | None] = mapped_column(Boolean())
+  release: Mapped[str | None] = mapped_column(String())
 
   __tablename__ = 'annovar_annotated_variants'
   __gene_summary__ = db.relationship("WormbaseGeneSummary", backref='annovar_annotated_variants', lazy='joined')
@@ -216,25 +220,25 @@ class AnnovarAnnotatedVariant(GeneralAnnotatedVariant, db.Model):
 
 
 class CsqAnnotatedVariant(GeneralAnnotatedVariant, db.Model):
-  id = db.Column(db.Integer, primary_key=True)
-  species_name = db.Column(db.String(20), index=True, primary_key=True)
-  chrom = db.Column(db.String(7), index=True)
-  pos = db.Column(db.Integer(), index=True)
-  ref_seq = db.Column(db.String(), nullable=True)
-  alt_seq = db.Column(db.String(), nullable=True)
-  consequence = db.Column(db.String(), nullable=True)
-  target_consequence = db.Column(db.Integer(), nullable=True)
-  gene_id = db.Column(db.ForeignKey('wormbase_gene_summary.gene_id'), index=True, nullable=True)
-  transcript = db.Column(db.String(), index=True, nullable=True)
-  amino_acid_change = db.Column(db.String(), nullable=True)
-  dna_change = db.Column(db.String(), nullable=True)
-  strains = db.Column(db.String(), nullable=True)
-  blosum = db.Column(db.Integer(), nullable=True)
-  grantham = db.Column(db.Integer(), nullable=True)
-  percent_protein = db.Column(db.Float(), nullable=True)
-  gene = db.Column(db.String(), index=True, nullable=True)
-  divergent = db.Column(db.Boolean(), nullable=True)
-  release = db.Column(db.String(), nullable=True)
+  id: Mapped[int] = mapped_column(Integer(), primary_key=True)
+  species_name: Mapped[str] = mapped_column(String(20), index=True, primary_key=True)
+  chrom: Mapped[str] = mapped_column(String(7), index=True)
+  pos: Mapped[int] = mapped_column(Integer(), index=True)
+  ref_seq: Mapped[str | None] = mapped_column(String())
+  alt_seq: Mapped[str | None] = mapped_column(String())
+  consequence: Mapped[str | None] = mapped_column(String())
+  target_consequence: Mapped[int | None] = mapped_column(Integer())
+  gene_id: Mapped[str | None] = mapped_column(ForeignKey('wormbase_gene_summary.gene_id'), index=True)
+  transcript: Mapped[str | None] = mapped_column(String(), index=True)
+  amino_acid_change: Mapped[str | None] = mapped_column(String())
+  dna_change: Mapped[str | None] = mapped_column(String())
+  strains: Mapped[str | None] = mapped_column(String())
+  blosum: Mapped[int | None] = mapped_column(Integer())
+  grantham: Mapped[int | None] = mapped_column(Integer())
+  percent_protein: Mapped[float | None] = mapped_column(Float())
+  gene: Mapped[str | None] = mapped_column(String(), index=True)
+  divergent: Mapped[bool | None] = mapped_column(Boolean())
+  release: Mapped[str | None] = mapped_column(String())
 
   __tablename__ = 'csq_annotated_variants'
   __gene_summary__ = db.relationship("WormbaseGeneSummary", backref='csq_annotated_variants', lazy='joined')
@@ -291,24 +295,24 @@ class CsqAnnotatedVariant(GeneralAnnotatedVariant, db.Model):
 
 
 class SnpEffAnnotatedVariant(GeneralAnnotatedVariant, db.Model):
-  id = db.Column(db.Integer, primary_key=True)
-  species_name = db.Column(db.String(20), index=True, primary_key=True)
-  chrom = db.Column(db.String(7), index=True)
-  pos = db.Column(db.Integer(), index=True)
-  ref_seq = db.Column(db.String(), nullable=True)
-  alt_seq = db.Column(db.String(), nullable=True)
-  consequence = db.Column(db.String(), nullable=True)
-  target_consequence = db.Column(db.Integer(), nullable=True)
-  gene_id = db.Column(db.ForeignKey('wormbase_gene_summary.gene_id'), index=True, nullable=True)
-  transcript = db.Column(db.String(), index=True, nullable=True)
-  amino_acid_change = db.Column(db.String(), nullable=True)
-  strains = db.Column(db.String(), nullable=True)
-  grantham = db.Column(db.Integer(), nullable=True)
-  percent_protein = db.Column(db.Float(), nullable=True)
-  gene = db.Column(db.String(), index=True, nullable=True)
-  locus = db.Column(db.String(), index=True, nullable=True)
-  variant_impact = db.Column(db.String(), nullable=True)
-  release = db.Column(db.String(), nullable=True)
+  id: Mapped[int] = mapped_column(Integer(), primary_key=True)
+  species_name: Mapped[str] = mapped_column(String(20), index=True, primary_key=True)
+  chrom: Mapped[str] = mapped_column(String(7), index=True)
+  pos: Mapped[int] = mapped_column(Integer(), index=True)
+  ref_seq: Mapped[str | None] = mapped_column(String())
+  alt_seq: Mapped[str | None] = mapped_column(String())
+  consequence: Mapped[str | None] = mapped_column(String())
+  target_consequence: Mapped[int | None] = mapped_column(Integer())
+  gene_id: Mapped[str | None] = mapped_column(ForeignKey('wormbase_gene_summary.gene_id'), index=True)
+  transcript: Mapped[str | None] = mapped_column(String(), index=True)
+  amino_acid_change: Mapped[str | None] = mapped_column(String())
+  strains: Mapped[str | None] = mapped_column(String())
+  grantham: Mapped[int | None] = mapped_column(Integer())
+  percent_protein: Mapped[float | None] = mapped_column(Float())
+  gene: Mapped[str | None] = mapped_column(String(), index=True)
+  locus: Mapped[str | None] = mapped_column(String(), index=True)
+  variant_impact: Mapped[str | None] = mapped_column(String())
+  release: Mapped[str | None] = mapped_column(String())
 
   __tablename__ = 'snpeff_annotated_variants'
   __gene_summary__ = db.relationship("WormbaseGeneSummary", backref='snpeff_annotated_variants', lazy='joined')
@@ -364,25 +368,25 @@ class SnpEffAnnotatedVariant(GeneralAnnotatedVariant, db.Model):
 
 
 class VepAnnotatedVariant(GeneralAnnotatedVariant, db.Model):
-  id = db.Column(db.Integer, primary_key=True)
-  species_name = db.Column(db.String(20), index=True, primary_key=True)
-  chrom = db.Column(db.String(7), index=True)
-  pos = db.Column(db.Integer(), index=True)
-  ref_seq = db.Column(db.String(), nullable=True)
-  alt_seq = db.Column(db.String(), nullable=True)
-  consequence = db.Column(db.String(), nullable=True)
-  target_consequence = db.Column(db.Integer(), nullable=True)
-  gene_id = db.Column(db.ForeignKey('wormbase_gene_summary.gene_id'), index=True, nullable=True)
-  transcript = db.Column(db.String(), index=True, nullable=True)
-  amino_acid_change = db.Column(db.String(), nullable=True)
-  strains = db.Column(db.String(), nullable=True)
-  blosum = db.Column(db.Integer(), nullable=True)
-  grantham = db.Column(db.Integer(), nullable=True)
-  percent_protein = db.Column(db.Float(), nullable=True)
-  gene = db.Column(db.String(), index=True, nullable=True)
-  variant_impact = db.Column(db.String(), nullable=True)
-  divergent = db.Column(db.Boolean(), nullable=True)
-  release = db.Column(db.String(), nullable=True)
+  id: Mapped[int] = mapped_column(Integer(), primary_key=True)
+  species_name: Mapped[str] = mapped_column(String(20), index=True, primary_key=True)
+  chrom: Mapped[str] = mapped_column(String(7), index=True)
+  pos: Mapped[int] = mapped_column(Integer(), index=True)
+  ref_seq: Mapped[str | None] = mapped_column(String())
+  alt_seq: Mapped[str | None] = mapped_column(String())
+  consequence: Mapped[str | None] = mapped_column(String())
+  target_consequence: Mapped[int | None] = mapped_column(Integer())
+  gene_id: Mapped[str | None] = mapped_column(ForeignKey('wormbase_gene_summary.gene_id'), index=True)
+  transcript: Mapped[str | None] = mapped_column(String(), index=True)
+  amino_acid_change: Mapped[str | None] = mapped_column(String())
+  strains: Mapped[str | None] = mapped_column(String())
+  blosum: Mapped[int | None] = mapped_column(Integer())
+  grantham: Mapped[int | None] = mapped_column(Integer())
+  percent_protein: Mapped[float | None] = mapped_column(Float())
+  gene: Mapped[str | None] = mapped_column(String(), index=True)
+  variant_impact: Mapped[str | None] = mapped_column(String())
+  divergent: Mapped[bool | None] = mapped_column(Boolean())
+  release: Mapped[str | None] = mapped_column(String())
 
   __tablename__ = 'vep_annotated_variants'
   __gene_summary__ = db.relationship("WormbaseGeneSummary", backref='vep_annotated_variants', lazy='joined')

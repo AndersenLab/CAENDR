@@ -26,7 +26,7 @@ def handle_exception(err):
 @api_error_handler_bp.app_errorhandler(APIBadRequestError.code)
 def error_bad_request(error):
   """ Return default JSON error message for unhandled Bad Request """
-  return APIError.default_handler(APIBadRequestError)
+  return APIError.default_handler(APIBadRequestError())
 
 @api_error_handler_bp.app_errorhandler(APIAuthError.code)
 def error_unauthorized(error):
@@ -36,14 +36,14 @@ def error_unauthorized(error):
 @api_error_handler_bp.app_errorhandler(APIDeniedError.code)
 def error_not_found(error):
   """ Return default JSON error message for unhandled Access Denied error """
-  return APIError.default_handler(APIDeniedError)
+  return APIError.default_handler(APIDeniedError())
 
 @api_error_handler_bp.app_errorhandler(APINotFoundError.code)
 def error_not_found(error):
   """ Return default JSON error message for unhandled Not Found error """
-  return APIError.default_handler(APINotFoundError)
+  return APIError.default_handler(APINotFoundError())
 
 @api_error_handler_bp.app_errorhandler(APIInternalError.code)
 def error_internal_server(error):
   """ Return default JSON error message for unhandled Internal Server error """
-  return APIError.default_handler(APIInternalError)
+  return APIError.default_handler(APIInternalError())

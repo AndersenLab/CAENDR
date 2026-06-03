@@ -10,7 +10,7 @@ def arm_or_center(chrom, pos):
       arm or center of a chromosome.
   """
   if chrom == 'MtDNA':
-      return None
+      return 'n/a'
   ca = CHROM_ARM_CENTER[chrom]
   ca = [x * 1000 for x in ca]
   c = 'arm'

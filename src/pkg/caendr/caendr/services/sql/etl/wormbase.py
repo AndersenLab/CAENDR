@@ -2,7 +2,7 @@ import csv
 import gzip
 import os
 
-from gtfparse import read_gtf_as_dataframe
+from gtfparse import read_gtf
 from caendr.services.logger import logger
 
 from caendr.api.gene import remove_prefix
@@ -42,11 +42,11 @@ def parse_gene_gtf(species: Species, GENE_GTF: LocalDatastoreFile, GENE_IDS: Loc
       This function fetches and parses the canonical geneset GTF
       and yields a dictionary for each row.
   """
-  gene_gtf = read_gtf_as_dataframe(GENE_GTF.__fspath__())
+  gene_gtf = read_gtf(GENE_GTF.__fspath__(), result_type='pandas')
   gene_ids = get_gene_ids(species, GENE_IDS)
 
   # Rename seqname to chrom
-  gene_gtf = gene_gtf.rename({'seqname': 'chrom'}, axis='columns')
+  gene_gtf = gene_gtf.rename(columns={'seqname': 'chrom'})
 
   # Add locus column
   gene_gtf = gene_gtf.assign(locus=[gene_ids.get(x) for x in gene_gtf.gene_id])
@@ -61,8 +61,8 @@ def parse_gene_gtf(species: Species, GENE_GTF: LocalDatastoreFile, GENE_IDS: Loc
   gene_gtf.gene_id = gene_gtf.gene_id.apply(lambda x: remove_prefix(remove_prefix(x, 'Gene:'), 'gene:'))
 
   # Convert empty markers to None
-  gene_gtf.frame = gene_gtf.frame.apply(lambda x: x if x != "." else None)
-  gene_gtf.exon_number = gene_gtf.exon_number.apply(lambda x: x if x != "" else None)
+  gene_gtf.frame = gene_gtf.frame.apply(lambda x: x if x != "." else "")
+  # gene_gtf.exon_number = gene_gtf.exon_number.apply(lambda x: x if str(x).isnumeric() else None)
 
   # Compute whether gene is on arm or center
   gene_gtf['arm_or_center'] = gene_gtf.apply(lambda row: arm_or_center(row['chrom'], row['pos']), axis=1)
@@ -72,6 +72,8 @@ def parse_gene_gtf(species: Species, GENE_GTF: LocalDatastoreFile, GENE_IDS: Loc
 
   # Loop through and yield all records
   for idx, row in enumerate(gene_gtf.to_dict('records')):
+    # Replace missing values with None
+    row = {k: (v if v != "" else None) for k, v in row.items()}
 
     # If testing, finish early
     if os.getenv('USE_MOCK_DATA') and idx > 10:
@@ -157,55 +159,3 @@ def parse_gene_gff_summary(species: Species, GENE_GFF: LocalDatastoreFile):
           yield gene
 
     logger.debug(f"Processed {idx} lines; {gene_count} genes total for {species.name}")
-
-
-def parse_orthologs(species, orthologs_fname: str):
-  """
-      LOADS (part of) homologs
-      Fetches orthologs from WormBase, to be stored in the homolog table.
-  """
-  csv_out = list(csv.reader(open(orthologs_fname, 'r'), delimiter='\t'))
-
-  # Initialize var to track matching ortholog genes
-  count = 0
-
-  # Loop through each line in the file
-  # TODO: idx is the number of lines processed, which is not the same as the number of records (as claimed in logger statement).
-  #       This likely doesn't matter, since it's not used in any actual data, but it's still technically not correct.
-  for idx, line in enumerate(csv_out):
-    size_of_line = len(line)
-
-    # Skip lines that don't specify an ortholog
-    if size_of_line < 2:
-      continue
-
-    # Update to next gene
-    elif size_of_line == 2:
-      wb_id, locus_name = line
-
-    # Parse ortholog
-    else:
-      ref = WormbaseGeneSummary.query.filter(WormbaseGeneSummary.gene_id == wb_id).first()
-
-      # If testing, finish early
-      if os.getenv("USE_MOCK_DATA") and idx > 10:
-        logger.warn("USE_MOCK_DATA Early Return!!!")
-        return
-
-      # Progress update
-      if idx % 10000 == 0:
-        logger.info(f'Processed {idx} records yielding {count} inserts')
-
-      # If gene matches, add it to the dataset
-      if ref:
-        count += 1
-        yield {
-          'gene_id':          wb_id,
-          'gene_name':        locus_name,
-          'homolog_species':  line[0],
-          'homolog_taxon_id': None,
-          'homolog_gene':     line[2],
-          'homolog_source':   line[3],
-          'is_ortholog':      line[0] == species.scientific_name,
-          'species_name':     species.name,
-        }

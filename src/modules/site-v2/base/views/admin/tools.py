@@ -1,5 +1,3 @@
-import re
-from distutils.version import StrictVersion
 from flask import Blueprint, render_template, url_for, request, redirect
 from caendr.services.logger import logger
 

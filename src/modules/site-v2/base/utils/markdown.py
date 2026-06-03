@@ -2,10 +2,11 @@ import bleach
 import os
 import markdown
 import requests
+from markupsafe import Markup
 
 from caendr.services.logger import logger
 from caendr.models.error import ExternalMarkdownRenderError
-from flask import Markup, render_template_string
+from flask import render_template_string
 
 
 def render_markdown_inline(content):

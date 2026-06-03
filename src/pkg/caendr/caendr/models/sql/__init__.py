@@ -1,6 +1,5 @@
 from .database_operation import DbOp
 
-from .homolog import Homolog
 from .strain_annotated_variant import StrainAnnotatedVariant, AnnovarAnnotatedVariant, CsqAnnotatedVariant, SnpEffAnnotatedVariant, VepAnnotatedVariant
 from .strain import Strain
 from .wormbase_gene import WormbaseGene

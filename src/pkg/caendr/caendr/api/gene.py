@@ -1,5 +1,6 @@
 from flask import request, Blueprint
-from caendr.models.sql import Homolog, WormbaseGeneSummary
+from caendr.models.sql import WormbaseGeneSummary
+from caendr.services.cloud.postgresql import db
 
 from sqlalchemy import and_, or_, func
 from caendr.services.logger import logger
@@ -46,23 +47,26 @@ def get_gene(query: str):
   query = request.args.get('query', query).lower()
 
   # First identify exact match
-  result = WormbaseGeneSummary.query.filter(
-    or_(
-      func.lower(WormbaseGeneSummary.locus)         == query,
-      func.lower(WormbaseGeneSummary.sequence_name) == query,
-      func.lower(WormbaseGeneSummary.gene_id)       == query
+  result = db.session.execute(
+    db.select(WormbaseGeneSummary).filter(
+      or_(
+        func.lower(WormbaseGeneSummary.locus)         == query,
+        func.lower(WormbaseGeneSummary.sequence_name) == query,
+        func.lower(WormbaseGeneSummary.gene_id)       == query
+      )
     )
-  ).first()
+  ).scalar_one_or_none()
 
   # If no exact match found, search for gene that starts with query
   if not result:
-    result = WormbaseGeneSummary.query.filter(
-      or_(
-        func.lower(WormbaseGeneSummary.locus).startswith(query),
-        func.lower(WormbaseGeneSummary.sequence_name).startswith(query),
-        func.lower(WormbaseGeneSummary.gene_id).startswith(query)
-      )
-    ).first()
+    db.session.execute(
+      db.select(WormbaseGeneSummary).filter(
+        or_(
+          func.lower(WormbaseGeneSummary.locus).startswith(query),
+          func.lower(WormbaseGeneSummary.sequence_name).startswith(query),
+          func.lower(WormbaseGeneSummary.gene_id).startswith(query)
+        )      )
+    ).scalar_one_or_none()
 
   return result
 
@@ -92,59 +96,14 @@ def search_genes(query: str, species: str = None, limit: int = 10):
     search = and_( search, func.lower(WormbaseGeneSummary.species_name) == species )
 
   # Create the main query
-  query = WormbaseGeneSummary.query.filter(search)
+  query = db.select(WormbaseGeneSummary).filter(search)
 
   # If a limit is provided, apply it
   if limit:
     query = query.limit(limit)
 
   # Map to JSON and return
-  return [ x.to_json() for x in query.all() ]
-
-
-def search_homologs(query: str, species: str = None):
-  """Query homolog
-
-  Query the homologs database and return C. elegans homologs.
-
-  Args:
-      query (str): Query string
-      species (str, optional): Limit query to one species. If not provided, will query all species.
-
-  Returns:
-      results (list): List of dictionaries describing the homolog.
-
-  """
-
-  # Extract query value from request or function argument
-  query = request.args.get('query', query).lower()
-
-  # Initialize search to match gene info with query
-  search = (func.lower(Homolog.homolog_gene)).startswith(query)
-
-  # If provided, add requirement that species matches
-  if species is not None:
-    search = and_( search, func.lower(Homolog.species_name) == species )
-
-  # Perform the query
-  results = Homolog.query.filter(search).limit(10).all()
-
-  # Map to JSON and return
-  results = [x.unnest().to_json() for x in results]
-  return results
-
-
-
-def combined_search(query: str):
-  """Combines homolog and gene searches
-  
-  Args:
-      query (str): Query string
-
-  Returns:
-      results (list): List of dictionaries describing the homolog.
-  """
-  return (search_genes(query) + search_homologs(query))[0:10]
+  return [ x.to_json() for x in db.session.execute(query).scalars().all() ]
 
 
 def gene_variants(query: str):
@@ -165,7 +124,6 @@ def gene_variants(query: str):
   return gene_variants
 
 
-
 def search_interval(gene: str):
   result = get_gene(gene)
   if result:
@@ -178,7 +136,6 @@ def search_interval(gene: str):
     }
   else:
     return {'error': 'not found'}
-
 
 
 def remove_prefix(val: str, prefix: str):

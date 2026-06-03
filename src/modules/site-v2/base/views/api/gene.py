@@ -2,23 +2,13 @@ from flask import request, Blueprint
 from caendr.services.logger import logger
 from extensions import cache
 
-from caendr.api.gene import search_genes, search_homologs, get_gene, remove_prefix, gene_symbol_sort_key
+from caendr.api.gene import search_genes, get_gene, remove_prefix, gene_symbol_sort_key
 from caendr.utils.json import jsonify_request
 from caendr.models.datastore import Species
 
 
 api_gene_bp = Blueprint('api_gene',
                         __name__)
-
-
-# @api_gene_bp.route('/search/homologene/<string:query>')
-# @cache.memoize(60*60)
-# @jsonify_request
-# def api_search_homologs(query=""):
-#   query = request.args.get('query') or query
-#   query = str(query).lower()
-#   species = request.args.get('species') or None
-#   return search_homologs(query, species=species)
 
 
 @api_gene_bp.route('/search/gene/<string:query>')
@@ -52,16 +42,6 @@ def api_search_genes(query=""):
   # Otherwise, apply the search, sort by gene symbol, and return the first 10 results
   gene_results = search_genes(query, species=species, limit=None)
   return sorted( gene_results, key=lambda x: gene_symbol_sort_key(x['gene_symbol']) )[:10]
-
-
-# @api_gene_bp.route('/search/<string:query>')
-# @cache.memoize(60*60)
-# @jsonify_request
-# def api_search_combined(query=""):
-#   query = request.args.get('query') or query
-#   query = str(query).lower()
-#   species = request.args.get('species') or None
-#   return (search_genes(query, species=species) + search_homologs(query, species=species))[0:10]
 
 
 @api_gene_bp.route('/search/interval/<string:gene>')

@@ -75,12 +75,12 @@ def coalesce(*values):
   return next((v for v in values if v is not None), None)
 
 
-def convert_query_to_data_table(query, columns):
+def convert_query_to_data_table(query, columns, db):
   """
     Convert a Flask SQLAlchemy query into a Pandas DataFrame.
   """
   return pd.DataFrame(
-    ({ col: getattr(row, col) for col in columns } for row in query.all()), columns=columns
+    ({ col: getattr(row, col) for col in columns } for row in db.session.execute(query).scalars().all()), columns=columns
   )
 
 

@@ -23,7 +23,7 @@ from caendr.models.datastore    import PhenotypeReport, Species
 from caendr.models.error        import NotFoundError
 from caendr.models.job_pipeline import PhenotypePipeline
 from caendr.models.trait        import Trait
-from caendr.utils.data          import get_file_format, convert_data_to_download_file, convert_query_to_data_table
+from caendr.utils.data          import get_file_format, convert_data_to_download_file
 
 
 

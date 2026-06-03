@@ -1,7 +1,7 @@
 from slugify import slugify
 from wtforms.validators import ValidationError
 from caendr.services.logger import logger
-from gcloud.exceptions import BadRequest
+from google.api_core.exceptions import BadRequest
 
 from caendr.services.cloud.datastore import get_ds_entity
 from caendr.utils.data import is_number, list_duplicates

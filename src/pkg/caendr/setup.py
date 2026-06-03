@@ -9,7 +9,9 @@ setup(
     'bleach==6.3.0',
     'cachelib==0.14.0',
     'cyvcf2==0.33.0',
+    'diskcache==5.6.3',
     'Flask==3.1.3',
+    'Flask-Markdown==0.3',
     'Flask_SQLAlchemy==3.1.1',
     'google-api-python-client==2.196.0',
     'google-cloud-appengine-logging==1.9.0',
@@ -35,6 +37,7 @@ setup(
     'pytabix==0.1',
     'importlib; python_version == "3.13.13"',
     'scipy==1.17.1',
+    'sentry-sdk',
     'Werkzeug==3.1.8'
   ],
 )

@@ -7,7 +7,6 @@ from flask import (render_template,
                    Blueprint,
                    abort,
                    flash,
-                   Markup,
                    stream_with_context,
                    jsonify,
                    make_response)

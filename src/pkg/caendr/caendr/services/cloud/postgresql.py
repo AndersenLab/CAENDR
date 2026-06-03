@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from caendr.services.logger import logger
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import text
 from sqlalchemy import create_engine, exc
 
 from caendr.services.cloud.secret import get_secret
@@ -91,7 +92,7 @@ def health_database_status():
     try:
         # to check database we will execute raw query
         session = Session()
-        session.execute('SELECT 1')
+        session.execute(text('SELECT 1'))
     except Exception as e:
         output = str(e)
         is_database_working = False

@@ -1,4 +1,3 @@
-from re import T
 import traceback
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask
