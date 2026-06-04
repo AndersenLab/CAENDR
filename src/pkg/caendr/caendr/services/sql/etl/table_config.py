@@ -132,8 +132,10 @@ class TableConfig():
       yielding from each set in sequence.
     '''
     if species_list is None:
-      species_list = Species.query_ds()
-    for species in species_list:
+      species_class_list = Species.all().values()
+    else:
+      species_class_list = [Species.all()[species_name] for species_name in species_list]
+    for species in species_class_list:
       yield from self.parse_for_species(species)
 
 

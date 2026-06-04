@@ -27,7 +27,7 @@ GOOGLE_CLOUDSQL_SERVICE_ACCOUNT_NAME = get_env_var('GOOGLE_CLOUDSQL_SERVICE_ACCO
 # Module Variables
 SOCKET_PATH   = get_env_var('MODULE_DB_OPERATIONS_SOCKET_PATH')
 INSTANCE_NAME = get_env_var('MODULE_DB_OPERATIONS_INSTANCE_NAME')
-DB_NAME       = get_env_var('MODULE_DB_OPERATIONS_DB_NAME')
+DB_NAME       = "postgres"#get_env_var('MODULE_DB_OPERATIONS_DB_NAME')
 DB_STAGE_NAME = get_env_var('MODULE_DB_OPERATIONS_DB_STAGE_NAME')
 DB_USER_NAME  = get_env_var('MODULE_DB_OPERATIONS_DB_USER_NAME')
 
@@ -62,8 +62,8 @@ def get_db_conn_uri():
 
         # If filename is provided, use it as the database
         if (target_file != None):
-            logger.info(f"SQLITE3 sqlite:///{target_file}")
-            return f"sqlite:///{target_file}"
+            logger.info(f"postgresql+psycopg2:///{target_file}")
+            return f"postgresql+psycopg2:///{target_file}"
 
         # Otherwise, create a new temp file
         else:
