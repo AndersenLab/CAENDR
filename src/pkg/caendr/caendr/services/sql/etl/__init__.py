@@ -6,7 +6,7 @@ import tempfile
 from logzero import logger
 
 # Local imports
-from .table_config import StrainConfig, WormbaseGeneSummaryConfig, WormbaseGeneConfig, StrainAnnotatedVariantConfig, AnnovarAnnotatedVariantConfig, CsqAnnotatedVariantConfig, SnpEffAnnotatedVariantConfig, VepAnnotatedVariantConfig, PhenotypeDatabaseConfig, PhenotypeMetadataConfig
+from .table_config import StrainConfig, WormbaseGeneSummaryConfig, WormbaseGeneConfig, AnnovarAnnotatedVariantConfig, CsqAnnotatedVariantConfig, SnpEffAnnotatedVariantConfig, VepAnnotatedVariantConfig, PhenotypeDatabaseConfig, PhenotypeMetadataConfig
 
 from caendr.models.datastore import Species
 from caendr.models.sql       import ALL_SQL_TABLES
@@ -23,7 +23,6 @@ TABLE_CONFIG = {
         StrainConfig,
         WormbaseGeneSummaryConfig,
         WormbaseGeneConfig,
-        StrainAnnotatedVariantConfig,
         AnnovarAnnotatedVariantConfig,
         CsqAnnotatedVariantConfig,
         SnpEffAnnotatedVariantConfig,

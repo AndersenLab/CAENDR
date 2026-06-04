@@ -2,27 +2,19 @@ import json
 import requests
 import os
 
-from flask import (request,
-                    jsonify,
-                    make_response,
-                    render_template,
-                    redirect,
+from flask import (render_template,
                     Blueprint,
-                    send_file,
-                    url_for,
-                    flash,
-                    abort)
+                    url_for)
 from caendr.services.logger import logger
 
 from config import config
 from extensions import cache
-from base.forms import VBrowserForm
 from base.utils.view_decorators import parse_species_and_release
 
 from caendr.api.strain import query_strains
 from caendr.models.datastore import DatasetRelease, Species, TraitFile
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
-from caendr.services.cloud.aws_storage import AWSBlobURISchema, aws_generate_blob_uri
+from caendr.services.cloud.aws_storage import AWSBlobURISchema
 from caendr.services.dataset_release import get_all_dataset_releases, get_browser_tracks_path
 from caendr.utils.env import get_env_var
 

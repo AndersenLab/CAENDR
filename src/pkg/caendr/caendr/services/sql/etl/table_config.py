@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from caendr.utils.env              import get_env_var, get_env_var_with_fallback
+from caendr.utils.env              import get_env_var
 from caendr.services.cloud.secret  import get_secret
 from caendr.services.logger        import logger
 
@@ -11,9 +11,8 @@ from .strain_annotated_variants    import parse_strain_variant_annotation_data, 
 from .phenotype_db                 import parse_phenotypedb_traits_data, parse_phenotypedb_bulk_trait_file
 from .phenotype_metadata           import parse_phenotype_metadata
 
-from caendr.models.sql             import Strain, WormbaseGeneSummary, WormbaseGene, StrainAnnotatedVariant, AnnovarAnnotatedVariant, CsqAnnotatedVariant, SnpEffAnnotatedVariant, VepAnnotatedVariant, PhenotypeDatabase, PhenotypeMetadata
+from caendr.models.sql             import Strain, WormbaseGeneSummary, WormbaseGene, AnnovarAnnotatedVariant, CsqAnnotatedVariant, SnpEffAnnotatedVariant, VepAnnotatedVariant, PhenotypeDatabase, PhenotypeMetadata
 from caendr.models.datastore       import Species, TraitFile
-from caendr.services.cloud.storage import BlobURISchema
 from caendr.models.datastore       import Species
 from caendr.utils.local_files      import ForeignResource, ForeignResourceTemplate, LocalDatastoreFileTemplate, LocalGoogleSheetTemplate
 from caendr.models.error           import ForeignResourceMissingError
@@ -34,7 +33,6 @@ PHENOTYPE_FILEPATH = get_env_var('MODULE_DB_OPERATIONS_PHENOTYPE_FILEPATH', as_t
 GENE_GFF_FILENAME    = get_env_var('GENE_GFF_FILENAME',  as_template=True)
 GENE_GTF_FILENAME    = get_env_var('GENE_GTF_FILENAME',  as_template=True)
 GENE_IDS_FILENAME    = get_env_var('GENE_IDS_FILENAME',  as_template=True)
-SVA_FILENAME         = get_env_var('SVA_CSVGZ_FILENAME', as_template=True)
 SVA_ANNOVAR_FILENAME = get_env_var('SVA_ANNOVAR_FILENAME', as_template=True)
 SVA_CSQ_FILENAME     = get_env_var('SVA_CSQ_FILENAME', as_template=True)
 SVA_SNPEFF_FILENAME  = get_env_var('SVA_SNPEFF_FILENAME', as_template=True)
@@ -166,15 +164,6 @@ WormbaseGeneConfig = TableConfig(
     LocalDatastoreFileTemplate( 'GENE_GTF', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_GTF_FILENAME ),
     LocalDatastoreFileTemplate( 'GENE_IDS', MODULE_DB_OPERATIONS_BUCKET_NAME, RELEASE_FILEPATH, GENE_IDS_FILENAME ),
   ),
-)
-
-StrainAnnotatedVariantConfig = TableConfig(
-  StrainAnnotatedVariant,
-  ParseConfig(
-    parse_strain_variant_annotation_data,
-    LocalDatastoreFileTemplate( 'SVA_CSVGZ', MODULE_DB_OPERATIONS_BUCKET_NAME, SVA_FILEPATH, SVA_FILENAME ),
-  ),
-  batch_size=50000,
 )
 
 AnnovarAnnotatedVariantConfig = TableConfig(

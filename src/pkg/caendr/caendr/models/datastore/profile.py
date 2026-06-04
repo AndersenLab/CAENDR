@@ -2,7 +2,7 @@ import os
 
 from caendr.services.logger import logger
 
-from caendr.utils.env import get_env_var, get_env_var_with_fallback
+from caendr.utils.env import get_env_var
 
 from caendr.models.datastore import Entity
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri

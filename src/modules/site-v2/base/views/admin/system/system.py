@@ -1,6 +1,6 @@
 from flask import (render_template,
                     Blueprint)
-from datetime import datetime, timezone
+from datetime import datetime
 from collections import defaultdict
 from typing import Dict, Iterable
 

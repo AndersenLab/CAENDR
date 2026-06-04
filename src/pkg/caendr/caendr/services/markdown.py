@@ -1,4 +1,4 @@
-from caendr.services.cloud.datastore import query_ds_entities, get_ds_entity
+from caendr.services.cloud.datastore import query_ds_entities
 from caendr.models.datastore import Markdown
 
 CONTENT_TYPES = {

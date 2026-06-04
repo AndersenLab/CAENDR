@@ -1,9 +1,9 @@
 from caendr.services.logger import logger
 
-from extensions import cache, compress
-from flask import render_template, request, url_for, redirect, Blueprint, abort, flash, jsonify
+from extensions import cache
+from flask import render_template, Blueprint, abort
 
-from caendr.api.strain import query_strains, get_strain_img_url
+from caendr.api.strain import query_strains
 from caendr.utils.json import dump_json
 from caendr.utils.env import get_env_var
 from caendr.models.sql import Strain

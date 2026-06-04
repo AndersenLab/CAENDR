@@ -1,8 +1,8 @@
 import re
 from datetime import datetime
 
-from sqlalchemy import and_, String, Integer, Float, DateTime, Boolean, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String, Integer, Float, DateTime, Boolean
+from sqlalchemy.orm import Mapped, mapped_column
 
 from caendr.services.cloud.postgresql import db
 from caendr.models.sql.dict_serializable import DictSerializable

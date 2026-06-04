@@ -4,7 +4,7 @@ import requests
 
 from datetime import datetime
 from caendr.services.logger import logger
-from flask import Flask, render_template, request, redirect, flash, g, session
+from flask import Flask, render_template, request, redirect, flash, g
 from flask_wtf.csrf import CSRFProtect
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -97,11 +97,9 @@ from base.views.api.api_data import api_data_bp
 
 # Extensions
 from extensions import (
-  markdown,
   cache,
   debug_toolbar,
   sslify,
-  sqlalchemy,
   jwt,
   compress
 )

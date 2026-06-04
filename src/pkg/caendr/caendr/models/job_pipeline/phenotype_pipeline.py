@@ -5,10 +5,10 @@ from .job_pipeline                 import JobPipeline
 from caendr.models.datastore       import PhenotypeReport
 
 # Services
-from caendr.models.error           import DataValidationError, EmptyReportDataError, EmptyReportResultsError
+from caendr.models.error           import DataValidationError, EmptyReportResultsError
 from caendr.models.status          import JobStatus
 from caendr.models.trait           import Trait
-from caendr.utils.data             import dataframe_cols_to_dict, get_object_hash, keyset_intersection, center_and_scale_data
+from caendr.utils.data             import get_object_hash, keyset_intersection, center_and_scale_data
 
 
 

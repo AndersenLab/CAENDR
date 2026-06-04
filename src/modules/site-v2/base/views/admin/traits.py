@@ -3,7 +3,6 @@ from flask import render_template, abort, Blueprint, redirect, url_for
 from caendr.api.phenotype   import get_trait_categories
 
 from caendr.services.logger import logger
-from caendr.utils.env       import get_env_var
 
 from base.forms             import EmptyForm
 from base.utils.auth        import admin_required

@@ -1,5 +1,3 @@
-import os
-import json
 import pandas as pd
 
 from datetime import datetime
@@ -7,7 +5,6 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.service_account import get_service_account_credentials
-from caendr.services.cloud.storage import get_blob
 from caendr.utils.env import get_env_var
 
 from .discovery import use_service

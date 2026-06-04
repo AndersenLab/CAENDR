@@ -6,9 +6,9 @@ from caendr.services.logger import logger
 from caendr.api.gene import remove_prefix
 from caendr.models.datastore import Species, SpeciesEntity
 from caendr.models.error import NotFoundError
-from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, get_blob_list, check_blob_exists
+from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, check_blob_exists
 from caendr.services.cloud.aws_storage import AWSBlobURISchema, aws_generate_blob_uri, aws_get_blob_list, aws_check_blob_exists
-from caendr.utils.env import get_env_var, get_env_var_with_fallback
+from caendr.utils.env import get_env_var
 from caendr.utils.tokens import TokenizedString
 
 

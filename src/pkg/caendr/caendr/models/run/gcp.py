@@ -1,4 +1,4 @@
-from   abc     import ABC, abstractmethod
+from   abc     import abstractmethod
 import backoff
 from   ssl     import SSLEOFError
 from   typing  import Optional
@@ -13,12 +13,11 @@ from caendr.utils.env       import get_env_var
 
 from caendr.models.datastore            import PipelineOperation, DatabaseOperation
 from caendr.models.error                import PipelineRunError, NotFoundError
-from caendr.models.report               import GCPReport
 from caendr.models.sql                  import DbOp
 from caendr.models.status               import JobStatus
 from caendr.models.lifesciences         import ServiceAccount, VirtualMachine, Resources, Action, Pipeline, Request
 from caendr.services.cloud.cloudrun     import create_job, run_job, get_job_execution_status
-from caendr.services.cloud.lifesciences import start_pipeline, get_pipeline_status
+from caendr.services.cloud.lifesciences import start_pipeline
 from caendr.services.cloud.pubsub       import publish_message
 from caendr.services.cloud.utils        import make_dns_name_safe, parse_operation_name
 

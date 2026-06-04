@@ -5,7 +5,6 @@ from caendr.services.logger import logger
 from caendr.utils.env import get_env_var
 
 from caendr.models.error import APIUnprocessableEntity
-from caendr.models.pub_sub import PubSubStatus, PubSubMessage, PubSubAttributes
 
 from .discovery import use_service
 

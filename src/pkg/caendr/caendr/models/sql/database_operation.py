@@ -8,7 +8,6 @@ class DbOp(Enum):
 
   DROP_AND_POPULATE_STRAINS               = 'DROP_AND_POPULATE_STRAINS'
   DROP_AND_POPULATE_WORMBASE_GENES        = 'DROP_AND_POPULATE_WORMBASE_GENES'
-  DROP_AND_POPULATE_STRAIN_VARIANTS       = 'DROP_AND_POPULATE_STRAIN_VARIANTS'
   DROP_AND_POPULATE_ANNOVAR_VARIANTS      = 'DROP_AND_POPULATE_ANNOVAR_VARIANTS'
   RESUME_POPULATE_ANNOVAR_VARIANTS        = 'RESUME_POPULATE_ANNOVAR_VARIANTS'
   DROP_AND_POPULATE_CSQ_VARIANTS          = 'DROP_AND_POPULATE_CSQ_VARIANTS'
@@ -37,7 +36,6 @@ class DbOp(Enum):
     titles = {
       DbOp.DROP_AND_POPULATE_STRAINS:               'Rebuild strain table from google sheet',
       DbOp.DROP_AND_POPULATE_WORMBASE_GENES:        'Rebuild wormbase gene table from external sources',
-      DbOp.DROP_AND_POPULATE_STRAIN_VARIANTS:       'Rebuild Strain Variant table from .csv.gz file',
       DbOp.DROP_AND_POPULATE_ANNOVAR_VARIANTS:      'Rebuild Strain Annovar Variant table from .csv.gz file',
       DbOp.RESUME_POPULATE_ANNOVAR_VARIANTS:        'Continue populating Strain Annovar Variant table from .csv.gz file',
       DbOp.DROP_AND_POPULATE_CSQ_VARIANTS:          'Rebuild Strain CSQ Variant table from .csv.gz file',

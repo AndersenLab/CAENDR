@@ -1,10 +1,7 @@
-import json
-
-from caendr.models.datastore.browser_track import BrowserTrackDefault, BrowserTrackTemplate
+from caendr.models.datastore.browser_track import BrowserTrackDefault
 from caendr.models.datastore import DatasetRelease, Species
 from flask import ( render_template,
                     Blueprint,
-                    jsonify,
                     url_for,
                     abort,
                   )

@@ -1,8 +1,8 @@
 # Flask imports
-from flask import Blueprint, render_template, url_for, request, redirect
+from flask import Blueprint, render_template, url_for, request
 
 # Site Module imports
-from base.utils.auth import admin_required, get_jwt, get_jwt_identity
+from base.utils.auth import admin_required, get_jwt
 from base.utils.view_decorators import parse_entity_id
 from base.forms import AdminGeneBrowserTracksForm, AdminEditBrowserTrackForm
 

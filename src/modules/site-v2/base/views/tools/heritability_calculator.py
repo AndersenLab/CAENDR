@@ -4,17 +4,16 @@ import datetime
 
 from flask import (flash,
                    request,
-                   redirect,
                    url_for,
                    jsonify,
                    render_template,
                    Blueprint,
-                   abort)
+                   )
 from caendr.services.logger import logger
 from datetime import datetime
 
 from base.forms import HeritabilityForm
-from base.utils.auth import jwt_required, admin_required, get_jwt, get_current_user, user_is_admin
+from base.utils.auth import jwt_required, get_jwt, get_current_user, user_is_admin
 from base.utils.tools import list_reports, try_submit
 from base.utils.view_decorators import parse_job_id, validate_form
 
@@ -22,10 +21,9 @@ from caendr.models.datastore import Species, HeritabilityReport
 from caendr.models.job_pipeline import HeritabilityPipeline
 from caendr.models.job_pipeline import HeritabilityPipeline
 from caendr.api.strain import get_strains
-from caendr.utils.data import unique_id, get_object_hash
+from caendr.utils.data import unique_id
 from caendr.utils.env import get_env_var
 from caendr.services.cloud.storage import generate_blob_uri, BlobURISchema
-from caendr.services.persistent_logger import PersistentLogger
 
 
 MODULE_SITE_BUCKET_ASSETS_NAME = get_env_var('MODULE_SITE_BUCKET_ASSETS_NAME')

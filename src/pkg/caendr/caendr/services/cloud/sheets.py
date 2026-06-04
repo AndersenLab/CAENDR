@@ -1,5 +1,4 @@
 import os
-import json
 import gspread
 import pandas as pd
 import requests
@@ -8,7 +7,6 @@ from typing import Iterable
 
 from io import StringIO
 from oauth2client.service_account import ServiceAccountCredentials
-from base64 import b64decode
 from caendr.services.logger import logger
 
 from caendr.utils.constants import GOOGLE_SHEET_NULL_VALUES

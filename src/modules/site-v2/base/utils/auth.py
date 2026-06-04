@@ -1,7 +1,7 @@
 import os
 from caendr.services.logger import logger
 from functools import wraps
-from datetime import timedelta, datetime, timezone
+from datetime import timedelta
 
 from flask import (request,
                   redirect,
@@ -17,10 +17,7 @@ from flask_jwt_extended import (create_access_token,
                                 unset_jwt_cookies,
                                 unset_access_cookies,
                                 get_jwt,
-                                get_jwt_identity,
-                                get_current_user,
                                 verify_jwt_in_request,
-                                jwt_required,
                                 decode_token)
 
 from caendr.models.datastore import User

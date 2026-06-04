@@ -1,6 +1,5 @@
 from flask import render_template, Blueprint, abort
 
-from config import config
 from base.forms      import AnnouncementForm
 from base.utils.auth import admin_required
 from base.utils.view_decorators import parse_entity_id

@@ -10,7 +10,6 @@ from caendr.models.status    import PublishStatus
 from caendr.models.sql       import PhenotypeMetadata, PhenotypeDatabase
 from caendr.models.error     import NotFoundError
 from caendr.utils.data       import dataframe_cols_to_dict
-from caendr.api.phenotype    import get_trait
 
 from caendr.services.cloud.postgresql import db
 

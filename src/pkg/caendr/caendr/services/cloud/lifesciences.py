@@ -3,8 +3,6 @@ import os
 from caendr.services.logger import logger
 
 from caendr.models.error import PipelineRunError
-from caendr.services.cloud.service_account import authenticate_google_service
-from caendr.utils.env import get_env_var
 from caendr.utils.json import get_json_from_class
 
 from .discovery import use_service

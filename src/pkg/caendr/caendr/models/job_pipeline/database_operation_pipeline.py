@@ -11,7 +11,7 @@ from caendr.models.task      import DatabaseOperationTask
 from caendr.models.datastore import Species
 from caendr.models.error     import DataFormatError, PreflightCheckError
 from caendr.models.sql       import DbOp
-from caendr.services.sql.etl import StrainConfig, WormbaseGeneConfig, WormbaseGeneSummaryConfig, StrainAnnotatedVariantConfig, AnnovarAnnotatedVariantConfig, CsqAnnotatedVariantConfig, SnpEffAnnotatedVariantConfig, VepAnnotatedVariantConfig, PhenotypeDatabaseConfig
+from caendr.services.sql.etl import StrainConfig, WormbaseGeneConfig, WormbaseGeneSummaryConfig, AnnovarAnnotatedVariantConfig, CsqAnnotatedVariantConfig, SnpEffAnnotatedVariantConfig, VepAnnotatedVariantConfig
 from caendr.utils.local_files import ForeignResourceTemplate
 from caendr.utils.env        import get_env_var
 
@@ -33,9 +33,6 @@ REQUIRED_RESOURCES: Dict[DbOp, List[ForeignResourceTemplate]] = {
     *CsqAnnotatedVariantConfig.all_resources,
     *SnpEffAnnotatedVariantConfig.all_resources,
     *VepAnnotatedVariantConfig.all_resources,
-  ],
-  DbOp.DROP_AND_POPULATE_STRAIN_VARIANTS: [
-    *StrainAnnotatedVariantConfig.all_resources,
   ],
   DbOp.DROP_AND_POPULATE_ANNOVAR_VARIANTS: [
     *AnnovarAnnotatedVariantConfig.all_resources,
@@ -66,7 +63,6 @@ REQUIRED_RESOURCES: Dict[DbOp, List[ForeignResourceTemplate]] = {
     *StrainConfig.all_resources,
     *WormbaseGeneConfig.all_resources,
     *WormbaseGeneSummaryConfig.all_resources,
-    *StrainAnnotatedVariantConfig.all_resources,
     *AnnovarAnnotatedVariantConfig.all_resources,
     *CsqAnnotatedVariantConfig.all_resources,
     *SnpEffAnnotatedVariantConfig.all_resources,

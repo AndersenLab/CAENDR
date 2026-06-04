@@ -1,5 +1,5 @@
 import os
-from flask import render_template, url_for, redirect, Blueprint, jsonify, flash
+from flask import render_template, url_for, redirect, Blueprint, jsonify
 from extensions import cache, compress
 
 from caendr.utils.file import get_dir_list_sorted

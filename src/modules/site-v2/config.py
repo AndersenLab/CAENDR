@@ -4,7 +4,7 @@ from re import U
 from caendr.services.logger import logger
 
 from caendr.services.cloud.secret import get_secret
-from caendr.services.cloud.postgresql import get_db_conn_uri, get_db_timeout, health_database_status
+from caendr.services.cloud.postgresql import get_db_conn_uri, get_db_timeout
 from caendr.utils.json import json_encoder
 from caendr.utils.env  import list_env_vars, convert_env_bool, convert_env_template
 

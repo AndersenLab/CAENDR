@@ -3,21 +3,17 @@ import json
 from caendr.services.logger import logger
 from flask import (
   Blueprint,
-  Response,
   abort,
   jsonify,
   request,
-  url_for,
 )
 
-from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
+from base.utils.auth import jwt_required, admin_required
 from base.utils.view_decorators import parse_entity_id, validate_form
 from base.forms import AdminEditBrowserTrackForm
 
 from caendr.models.datastore import BrowserTrackDefault, BrowserTrackTemplate, Species, DatasetRelease
-from caendr.models.error import NotFoundError, NonUniqueEntity
-from caendr.services.cloud.storage import BlobURISchema
-from caendr.utils.data import get_file_format
+from caendr.models.error import NotFoundError
 from caendr.utils.json import jsonify_request
 
 from constants import GENOME_BROWSER_TOOLS

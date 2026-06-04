@@ -6,7 +6,6 @@ from caendr.services.logger import logger
 
 from flask_wtf import FlaskForm, RecaptchaField, Form
 from wtforms import (StringField,
-                     DateField,
                      BooleanField,
                      TextAreaField,
                      IntegerField,
@@ -14,7 +13,6 @@ from wtforms import (StringField,
                      SelectMultipleField,
                      FileField,
                      widgets,
-                     FieldList,
                      HiddenField,
                      RadioField)
 
@@ -26,10 +24,9 @@ from wtforms.validators import (Length,
                                 Optional,
                                 ValidationError)
 from wtforms.fields import EmailField
-from wtforms.widgets import CheckboxInput
 
 
-from constants import PRICES, SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS, TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS, TRAIT_CATEGORY_OPTIONS, GENOME_BROWSER_TOOLS
+from constants import SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS, TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS, TRAIT_CATEGORY_OPTIONS, GENOME_BROWSER_TOOLS
 
 from caendr.services.profile import get_profile_role_form_options
 from caendr.services.user import get_user_role_form_options, get_local_user_by_email

@@ -9,7 +9,6 @@ from extensions import cache
 from base.forms import DonationForm
 from base.utils.auth import jwt_required, get_current_user
 
-from caendr.api.isotype import get_isotypes
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.sheets import add_to_order_ws
 from caendr.services.email import send_email, DONATION_SUBMISSION_EMAIL_TEMPLATE

@@ -4,7 +4,6 @@ import gzip
 import re
 
 from caendr.services.logger import logger
-from sqlalchemy.sql.expression import null
 
 from caendr.models.datastore  import Species
 from caendr.utils.local_files import LocalDatastoreFile

@@ -58,15 +58,6 @@ def query_phenotype_metadata(
     return query
 
 
-def get_all_traits_metadata():
-  """
-    Returns metadata for all traits
-  """
-  return db.session.execute(
-    db.select(PhenotypeMetadata)
-  ).scalars().all()
-
-
 def get_trait(trait_id):
   return db.session.get(PhenotypeMetadata, trait_id)
 

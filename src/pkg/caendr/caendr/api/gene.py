@@ -1,4 +1,4 @@
-from flask import request, Blueprint
+from flask import request
 from caendr.models.sql import WormbaseGeneSummary
 from caendr.services.cloud.postgresql import db
 
@@ -122,20 +122,6 @@ def gene_variants(query: str):
       # Filter ANN for annotations for gene
   #    row['ANN'] = [x for x in row['ANN'] if gene_record.gene_id == x['gene_id']]
   return gene_variants
-
-
-def search_interval(gene: str):
-  result = get_gene(gene)
-  if result:
-    return {
-      'result': [{
-        "chromosome": result.chrom,
-        'start':      result.start,
-        'end':        result.end,
-      }],
-    }
-  else:
-    return {'error': 'not found'}
 
 
 def remove_prefix(val: str, prefix: str):

@@ -7,16 +7,14 @@ from flask import (render_template,
                    Blueprint,
                    abort,
                    flash,
-                   stream_with_context,
                    jsonify,
                    make_response)
 
 from config import config
-from extensions import cache, compress
+from extensions import cache
 
-from caendr.api.strain import get_strains, query_strains, get_strain_sets, get_strain_img_url
+from caendr.api.strain import get_strains, query_strains, get_strain_sets
 from caendr.models.sql import Strain
-from caendr.utils.json import dump_json
 from caendr.utils.data import get_file_format, convert_data_to_download_file
 from caendr.utils.env import get_env_var
 from caendr.models.datastore import Species

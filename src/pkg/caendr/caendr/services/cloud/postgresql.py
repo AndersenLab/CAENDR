@@ -1,6 +1,3 @@
-from curses.ascii import alt
-import psycopg2
-import pg8000
 from contextlib import contextmanager
 
 from caendr.services.logger import logger

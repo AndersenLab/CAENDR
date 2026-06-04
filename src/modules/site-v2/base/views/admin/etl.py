@@ -6,7 +6,7 @@ from caendr.services.cloud.postgresql import health_database_status
 from caendr.services.logger import logger
 from flask import Blueprint, render_template, url_for, request, redirect, flash
 
-from base.utils.auth import admin_required, get_jwt, get_jwt_identity, get_current_user
+from base.utils.auth import admin_required, get_jwt, get_current_user
 from base.forms import AdminCreateDatabaseOperationForm
 
 from caendr.services.database_operation import get_all_db_ops, get_all_db_stats, get_etl_op, get_db_op_form_options

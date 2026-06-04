@@ -1,9 +1,8 @@
 import bleach
 from enum import Enum
 from functools import wraps
-import json
 
-from flask import request, Blueprint, abort, jsonify, url_for
+from flask import request, Blueprint, abort, url_for
 from caendr.services.logger import logger
 from extensions import cache, compress
 

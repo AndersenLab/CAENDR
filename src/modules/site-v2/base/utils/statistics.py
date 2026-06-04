@@ -8,7 +8,6 @@ from caendr.models.datastore.species import Species
 from caendr.models.sql import Strain
 from caendr.services.cloud.postgresql import db
 from caendr.services.cloud.datastore import query_ds_entities
-from caendr.services.user import get_num_registered_users
 from caendr.utils.plots import time_series_plot
 
 

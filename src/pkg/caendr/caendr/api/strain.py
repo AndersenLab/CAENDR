@@ -4,13 +4,12 @@ import os
 from caendr.services.logger import logger
 from sqlalchemy import or_, select
 from flask import request
-from datetime import timedelta
 
 from caendr.models.datastore import Species
 from caendr.models.error import BadRequestError
 from caendr.models.sql import Strain
 from caendr.services.cloud.postgresql import db, rollback_on_error
-from caendr.services.cloud.storage import get_blob, download_blob_to_file, upload_blob_from_file, get_google_storage_credentials, generate_blob_uri, BlobURISchema
+from caendr.services.cloud.storage import get_blob, download_blob_to_file, upload_blob_from_file
 from caendr.services.cloud.aws_storage import aws_generate_blob_uri, AWSBlobURISchema
 from caendr.utils.data import unique_id
 from caendr.utils.env import get_env_var

@@ -10,9 +10,7 @@ from caendr.services.logger import logger
 # CaeNDR package
 from caendr.models.datastore  import User, Container
 from caendr.models.error      import (
-  NotFoundError,
   DuplicateDataError,
-  DataFormatError,
   EmptyReportResultsError,
   UnschedulableJobTypeError,
   JobAlreadyScheduledError,

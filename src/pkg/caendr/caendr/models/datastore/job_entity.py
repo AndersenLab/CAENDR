@@ -1,7 +1,6 @@
 from caendr.services.logger import logger
 
 from caendr.models.datastore import StatusEntity, Container, PipelineOperation
-from caendr.models.status    import JobStatus
 from caendr.utils.data       import unique_id
 
 

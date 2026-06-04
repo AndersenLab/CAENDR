@@ -1,7 +1,7 @@
 from caendr.services.logger import logger
 from flask import Blueprint, jsonify
 
-from base.utils.auth import jwt_required, admin_required, get_current_user, user_is_admin
+from base.utils.auth import jwt_required
 
 from caendr.models.datastore      import Species
 from caendr.services.indel_primer import get_sv_strains as get_sv_strains_helper

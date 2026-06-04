@@ -25,7 +25,7 @@ from utils.primer_vcf import primer_vcf
 from utils.reference import *
 from utils.fasta import *
 import sys
-from clint.textui import colored, puts, puts_err, indent, progress
+from clint.textui import colored,  puts_err, indent
 import os
 import re
 

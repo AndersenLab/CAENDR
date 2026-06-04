@@ -1,14 +1,11 @@
 from datetime import datetime, timezone
 
-import os
-
 from flask import (redirect,
                    url_for,
                    session,
                    flash,
                    request,
-                   make_response,
-                   jsonify)
+                   make_response)
 from flask_dance.contrib.google import make_google_blueprint, google as google_fd
 from flask_dance.consumer import oauth_authorized
 

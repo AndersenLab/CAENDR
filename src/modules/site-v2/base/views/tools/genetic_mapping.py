@@ -1,12 +1,12 @@
 import os
 
 from caendr.services.logger import logger
-from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
+from flask import Blueprint, render_template, request, url_for, flash, abort
 from flask import jsonify
 
 from base.forms import MappingForm
 from base.utils.announcements import block_announcements
-from base.utils.auth  import get_jwt, jwt_required, admin_required, get_current_user, user_is_admin
+from base.utils.auth  import get_jwt, jwt_required, get_current_user, user_is_admin
 from base.utils.tools import list_reports, try_submit
 from base.utils.view_decorators import parse_job_id, validate_form
 

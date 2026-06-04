@@ -6,7 +6,7 @@ from .cloudrun     import get_job_execution_status
 from .lifesciences import get_pipeline_status
 
 from caendr.models.datastore         import HeritabilityReport, NemascanReport, get_entity_by_kind
-from caendr.models.error             import APINotFoundError, NotFoundError
+from caendr.models.error             import NotFoundError
 from caendr.models.status            import JobStatus
 from caendr.services.email           import send_email
 from caendr.services.cloud.datastore import query_ds_entities
