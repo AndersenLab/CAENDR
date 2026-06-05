@@ -70,6 +70,20 @@ def use_password_reset_token(token):
   return 
 
 
+def admin_required():
+  def wrapper(fn):
+    @wraps(fn)
+    def decorator(*args, **kwargs):
+      verify_jwt_in_request()
+      claims = get_jwt()
+      if claims["roles"] and ('admin' in claims["roles"]):
+        return fn(*args, **kwargs)
+      else:
+        return abort(401)
+    return decorator
+  return wrapper
+
+
 def unset_jwt():
   resp = make_response(redirect('/', 302))
   session["is_logged_in"] = False

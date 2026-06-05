@@ -9,6 +9,7 @@ from flask import (render_template,
                    flash,
                    jsonify,
                    make_response)
+from flask_jwt_extended import get_current_user, jwt_required
 
 from config import config
 from extensions import cache
@@ -36,7 +37,6 @@ from flask import render_template, request, url_for, redirect, Blueprint, abort,
 
 from config import config
 from base.forms import OrderForm, StrainListForm
-from base.utils.auth import jwt_required, get_current_user
 from caendr.utils.env import get_env_var
 
 from caendr.services.email import send_email, ORDER_SUBMISSION_EMAIL_TEMPLATE

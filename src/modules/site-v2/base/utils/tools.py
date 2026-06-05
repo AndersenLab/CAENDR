@@ -1,8 +1,9 @@
 from typing import Type
 
+from flask_jwt_extended import get_current_user
 from caendr.services.logger import logger
 
-from base.utils.auth import get_current_user, user_is_admin
+from base.utils.auth import user_is_admin
 
 from constants import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 

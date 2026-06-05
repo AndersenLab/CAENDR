@@ -2,10 +2,11 @@ import bleach
 from functools import wraps
 from typing    import Type
 
+from flask_jwt_extended import get_current_user
 from flask     import abort, redirect, request, url_for, flash, jsonify
 from flask_wtf import FlaskForm
 
-from base.utils.auth            import get_current_user, user_is_admin
+from base.utils.auth            import user_is_admin
 from base.utils.tools           import lookup_report, get_upload_err_msg
 from constants                  import TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS
 

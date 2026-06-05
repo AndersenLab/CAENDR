@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 
 from flask      import render_template, Blueprint, redirect, url_for, request, flash, jsonify, abort, send_file
+from flask_jwt_extended import get_current_user, jwt_required
 from extensions import cache
 from config     import config
 
@@ -20,7 +21,7 @@ from caendr.services.validate      import validate_file, StrainValidator, Number
 from caendr.utils.local_files      import LocalUploadFile
 from caendr.utils.env              import get_env_var
 from caendr.utils.data             import get_file_format
-from base.utils.auth               import jwt_required, get_current_user, user_is_admin, check_feature_flag
+from base.utils.auth               import user_is_admin, check_feature_flag
 from base.utils.trait              import add_trait, update_trait_metadata
 from base.utils.view_decorators    import parse_trait
 from base.forms                    import TraitSubmissionForm, EmptyForm, format_form_errors

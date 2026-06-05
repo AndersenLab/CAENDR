@@ -1,4 +1,5 @@
 import json
+from flask_jwt_extended import jwt_required
 
 from caendr.services.logger import logger
 from flask import (
@@ -8,7 +9,7 @@ from flask import (
   request,
 )
 
-from base.utils.auth import jwt_required, admin_required
+from base.utils.auth import admin_required
 from base.utils.view_decorators import parse_entity_id, validate_form
 from base.forms import AdminEditBrowserTrackForm
 

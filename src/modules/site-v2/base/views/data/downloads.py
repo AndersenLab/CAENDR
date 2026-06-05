@@ -1,6 +1,6 @@
 import os
 from flask import render_template, Blueprint, url_for, send_file, abort, Response, stream_with_context
-from base.utils.auth import jwt_required
+from flask_jwt_extended import jwt_required
 from extensions import cache
 
 from base.utils.view_decorators import parse_species, parse_species_and_release

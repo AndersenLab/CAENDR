@@ -1,8 +1,9 @@
 from caendr.services.logger import logger
 from flask import request, render_template, Blueprint, redirect, url_for, flash
+from flask_jwt_extended import get_current_user, get_jwt
 
 from base.forms import AdminEditUserForm
-from base.utils.auth import get_jwt, create_one_time_token, admin_required, get_current_user
+from base.utils.auth import create_one_time_token, admin_required
 
 from caendr.models.datastore import User
 from caendr.services.cloud.secret import get_secret

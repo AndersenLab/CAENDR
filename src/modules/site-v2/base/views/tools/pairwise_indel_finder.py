@@ -1,8 +1,9 @@
 from caendr.services.logger import logger
 from flask import Response, Blueprint, render_template, request, url_for, jsonify, flash, abort
+from flask_jwt_extended import jwt_required, get_current_user
 
 from base.forms import PairwiseIndelForm
-from base.utils.auth import jwt_required, get_current_user, user_is_admin
+from base.utils.auth import user_is_admin
 from base.utils.tools import list_reports, try_submit
 from base.utils.view_decorators import parse_job_id, validate_form
 

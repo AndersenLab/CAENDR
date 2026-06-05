@@ -11,12 +11,11 @@ from flask import (abort,
                   flash,
                   make_response,
                   Blueprint)
+from flask_jwt_extended import get_jwt_identity, jwt_required
 from slugify import slugify
 
 from base.forms import BasicLoginForm
-from base.utils.auth import (get_jwt_identity,
-                            jwt_required,
-                            assign_access_refresh_tokens,
+from base.utils.auth import (assign_access_refresh_tokens,
                             unset_jwt)
 
 from caendr.models.datastore import User

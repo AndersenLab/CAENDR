@@ -12,7 +12,7 @@ from caendr.services.logger import logger
 
 from extensions import cache
 
-from base.utils.statistics import cum_sum_strain_isotype, get_strain_collection_plot, get_mappings_summary_legacy, get_report_sumary_plot_legacy, get_weekly_visits_plot, get_num_registered_users
+from base.utils.statistics import cum_sum_strain_isotype, get_strain_collection_plot, get_mappings_summary_legacy, get_report_sumary_plot_legacy, get_weekly_visits_plot
 
 from caendr.api.strain import get_strains
 from caendr.api.isotype import get_isotypes
@@ -20,6 +20,7 @@ from caendr.models.datastore.species import Species
 from caendr.models.datastore.profile import Profile
 from caendr.services.cloud.google_analytics_4 import get_weekly_visits_ga4
 from caendr.services.publication import get_publications_html_df
+from caendr.services.user import get_num_registered_users
 from caendr.utils.data import load_yaml
 
 

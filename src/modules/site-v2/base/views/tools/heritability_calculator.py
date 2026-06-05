@@ -9,11 +9,12 @@ from flask import (flash,
                    render_template,
                    Blueprint,
                    )
+from flask_jwt_extended import jwt_required, get_jwt, get_current_user
 from caendr.services.logger import logger
 from datetime import datetime
 
 from base.forms import HeritabilityForm
-from base.utils.auth import jwt_required, get_jwt, get_current_user, user_is_admin
+from base.utils.auth import user_is_admin
 from base.utils.tools import list_reports, try_submit
 from base.utils.view_decorators import parse_job_id, validate_form
 

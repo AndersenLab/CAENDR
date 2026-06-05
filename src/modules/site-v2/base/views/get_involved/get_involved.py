@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, url_for, request, redirect
+from flask_jwt_extended import jwt_required, get_current_user
 from datetime import datetime, timezone
 from caendr.services.logger import logger
 
@@ -7,7 +8,6 @@ from config import config
 from extensions import cache
 
 from base.forms import DonationForm
-from base.utils.auth import jwt_required, get_current_user
 
 from caendr.services.cloud.secret import get_secret
 from caendr.services.cloud.sheets import add_to_order_ws

@@ -1,5 +1,6 @@
 from caendr.services.logger import logger
 from flask import request, render_template, Blueprint, redirect, url_for, flash, abort
+from flask_jwt_extended import jwt_required, get_jwt, get_current_user
 from slugify import slugify
 from datetime import datetime, timezone
 
@@ -11,7 +12,7 @@ from caendr.services.user import get_local_user_by_email
 from caendr.services.email import send_email, PASSWORD_RESET_EMAIL_TEMPLATE
 
 from base.forms import UserRegisterForm, UserUpdateForm, RecoverUserForm, PasswordResetForm, EmptyForm
-from base.utils.auth import jwt_required, get_jwt, get_current_user, assign_access_refresh_tokens, magic_link_required, create_one_time_token, use_password_reset_token, check_feature_flag
+from base.utils.auth import assign_access_refresh_tokens, magic_link_required, create_one_time_token, use_password_reset_token, check_feature_flag
 
 NO_REPLY_EMAIL  = get_secret('NO_REPLY_EMAIL')
 PASSWORD_PEPPER = get_secret('PASSWORD_PEPPER')

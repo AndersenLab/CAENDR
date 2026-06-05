@@ -3,10 +3,11 @@ from enum import Enum
 from functools import wraps
 
 from flask import request, Blueprint, abort, url_for
+from flask_jwt_extended import get_current_user, jwt_required
 from caendr.services.logger import logger
 from extensions import cache, compress
 
-from base.utils.auth import jwt_required, get_current_user, user_is_admin, admin_required
+from base.utils.auth import user_is_admin, admin_required
 from base.utils.view_decorators import parse_trait
 
 from caendr.api.phenotype import query_phenotype_metadata, get_trait, filter_trait_query, get_trait_categories
@@ -20,7 +21,6 @@ from caendr.models.status    import PublishStatus
 from caendr.models.trait     import Trait
 from caendr.models.sql       import PhenotypeMetadata
 from caendr.utils.json       import jsonify_request
-from base.utils.auth         import jwt_required
 
 
 api_trait_bp = Blueprint(

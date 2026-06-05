@@ -7,6 +7,7 @@ from flask import (render_template,
                     stream_with_context,
                     Response,
                     Blueprint)
+from flask_jwt_extended import jwt_required, get_current_user
 from extensions import cache
 from datetime   import date
 
@@ -15,7 +16,7 @@ from caendr.api.phenotype import get_traits_with_metadata, get_trait_categories
 from caendr.services.logger import logger
 
 from base.forms                 import EmptyForm
-from base.utils.auth            import jwt_required, get_current_user, user_is_admin, check_feature_flag_bp
+from base.utils.auth            import user_is_admin, check_feature_flag_bp
 from base.utils.tools           import list_reports, try_submit
 from base.utils.view_decorators import parse_job_id, validate_form
 
