@@ -101,7 +101,7 @@ def parse_strain_variant_annotation_data(species: Species, SVA_CSVGZ: LocalDatas
       }
 
   # In Python, loop vars maintain their final value after the loop ends
-  print(f'Processed {idx} lines total for {species.name}')
+  logger.info(f'Processed {idx} lines total for {species.name}')
 
 
 def parse_annovar_variant_annotation_data(species: Species, **files: LocalDatastoreFile):

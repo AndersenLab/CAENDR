@@ -35,10 +35,6 @@ def parse_phenotypedb_traits_data(species: Species, **files: LocalDatastoreFile)
           column_header_map = { name: idx for idx, name in enumerate(row) }
           continue
 
-        # Progress update
-        # if idx % 1000000 == 0:
-        #   logger.debug(f"Processed {idx} lines")
-
         # Get trait value for each strain
         strain_name = row[0]
         for header in column_header_map:

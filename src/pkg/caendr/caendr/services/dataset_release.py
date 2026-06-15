@@ -1,3 +1,4 @@
+from sqlalchemy import select
 from caendr.services.logger import logger
 
 from caendr.services.cloud.datastore import get_ds_entity, delete_ds_entity_by_ref
@@ -6,7 +7,10 @@ from caendr.models.datastore.browser_track import BrowserTrack
 from caendr.models.sql import Strain
 from caendr.models.datastore import Species
 from caendr.models.error import UnprocessableEntity, BadRequestError, NotFoundError
+from caendr.services.cloud.postgresql import db
 
+def query_count(query):
+  return db.session.scalar(select(func.count()).select_from(query.subquery()))
 
 def get_release_bucket():
   return DatasetRelease.get_bucket_name()
@@ -21,7 +25,6 @@ def get_browser_tracks_path(release_version=None):
 #       that mapping, passing keys_only in creates DatasetRelease objects missing almost all of their fields.
 def get_all_dataset_releases(keys_only=False, order=None, placeholder=True, species=None):
   ''' Returns a list of all Dataset Release entities in datastore as DatasetRelease objects '''
-  logger.debug(f'get_all_dataset_releases(keys_only={keys_only}, order={order})')
 
   # Query the db for all dataset releases
   releases = DatasetRelease.query_ds(keys_only=keys_only, order=order)
@@ -118,9 +121,9 @@ def get_release_summary(release: str):
           release - the data release
   """
   release = int(release)
-  strain_count = Strain.query.filter((Strain.release <= release) & (Strain.issues == False)).count()
-  strain_count_sequenced = Strain.query.filter((Strain.release <= release) & (Strain.issues == False) & (Strain.sequenced == True)).count()
-  isotype_count = Strain.query.with_entities(Strain.isotype).filter((Strain.isotype != None), (Strain.release <= release), (Strain.issues == False)).group_by(Strain.isotype).count()
+  strain_count = query_count(select(Strain).filter((Strain.release <= release) & (Strain.issues == False)))
+  strain_count_sequenced = query_count(select(Strain).filter((Strain.release <= release) & (Strain.issues == False) & (Strain.sequenced == True)))
+  isotype_count = query_count(select(Strain).with_entities(Strain.isotype).filter((Strain.isotype.isnot(None)), (Strain.release <= release), (Strain.issues == False)).group_by(Strain.isotype))
   project_num = Species.project_num
   
   return {

@@ -31,7 +31,7 @@ def error_bad_request(error):
 @api_error_handler_bp.app_errorhandler(APIAuthError.code)
 def error_unauthorized(error):
   """ Return default JSON error message for unhandled Authentication error """
-  return APIError.default_handler(APIAuthError)
+  return APIError.default_handler(APIAuthError())
 
 @api_error_handler_bp.app_errorhandler(APIDeniedError.code)
 def error_not_found(error):

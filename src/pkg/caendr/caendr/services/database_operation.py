@@ -21,15 +21,11 @@ MODULE_DB_OPERATIONS_CONTAINER_VERSION = get_env_var('MODULE_DB_OPERATIONS_CONTA
 
 # TODO: Should this return DatabaseOperation entity objects?
 def get_all_db_ops(keys_only=False, order=None, placeholder=True):
-  logger.debug(f'get_all_db_ops(keys_only={keys_only}, order={order})')
   ds_entities = query_ds_entities(DatabaseOperation.kind, keys_only=keys_only, order=order)
-  # logger.debug(ds_entities)
   return ds_entities
 
 def get_etl_op(op_id, keys_only=False, order=None, placeholder=True):
-  logger.debug(f'get_etl_op(op_id={op_id}, keys_only={keys_only}, order={order})')
   op = get_ds_entity(DatabaseOperation.kind, op_id)
-  logger.debug(op)
   return op
 
 

@@ -24,8 +24,8 @@ def gene_symbol_sort_key(key):
       Returns:
         A list used as a sorting key for the gene symbol.
     """
-    x = key.split('-')
     try:
+      x = key.split('-')
       return [ x[0], int(x[1]), *x[2:] ]
     except:
       return [ key ]
@@ -59,7 +59,7 @@ def get_gene(query: str):
 
   # If no exact match found, search for gene that starts with query
   if not result:
-    db.session.execute(
+    result = db.session.execute(
       db.select(WormbaseGeneSummary).filter(
         or_(
           func.lower(WormbaseGeneSummary.locus).startswith(query),

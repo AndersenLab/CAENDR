@@ -58,7 +58,7 @@ def get_db_conn_uri():
         target_file = get_env_var('MODULE_DB_OPERATIONS_CONNECTION_FILE', can_be_none=True)
 
         # If filename is provided, use it as the database
-        if (target_file != None):
+        if target_file is not None:
             logger.info(f"postgresql+psycopg2:///{target_file}")
             return f"postgresql+psycopg2:///{target_file}"
 

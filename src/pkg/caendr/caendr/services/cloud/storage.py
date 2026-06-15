@@ -56,9 +56,13 @@ def check_blob_exists(bucket_name: str, *path: str) -> bool:
   logger.debug(f'check_blob_exists(bucket_name={bucket_name}, path={path})')
   bucket = storageClient.get_bucket(bucket_name)
   blob = bucket.get_blob( join_path(*path) )
+  if blob is None:
+    logger.debug(f'Blob {bucket_name}/{join_path(*path)} does not exist.')
+    return False
   try:
     return blob.exists()
-  except:
+  except Exception as exc:
+    logger.debug(f'Error checking blob existence for {bucket_name}/{join_path(*path)}: {exc}', exc_info=True)
     return False
 
 
@@ -70,7 +74,8 @@ def get_blob_if_exists(bucket_name: str, *path: str, fallback=None) -> Optional[
   try:
     if blob.exists():
       return blob
-  except:
+  except Exception as exc:
+    logger.debug(f'Error checking blob existence for {bucket_name}/{join_path(*path)}: {exc}', exc_info=True)
     return fallback
 
 
@@ -280,7 +285,7 @@ def make_secure_filename(*options):
       fname = secure_filename(option)
       if fname:
         return fname
-    except:
+    except Exception:
       pass
   return secure_filename(unique_id())
 

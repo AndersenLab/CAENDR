@@ -33,12 +33,11 @@ class Trait():
   #
 
   def __init__(self, trait_id: str, trait_file: Optional[TraitFile] = None, trait_row: Optional[PhenotypeMetadata] = None):
-
     # Look up the trait row, or use the one that's provided
     if trait_row:
       self.sql_row = trait_row
     else:
-      self.sql_row = PhenotypeMetadata.query.get( trait_id )
+      self.sql_row = db.session.get(PhenotypeMetadata, trait_id)
       if self.sql_row is None:
         raise NotFoundError(PhenotypeMetadata, {'id': trait_id})
 
@@ -74,7 +73,7 @@ class Trait():
 
     # Special parsing to get the SQL row for a bulk file
     if trait_file['is_bulk_file']:
-      sql_row = PhenotypeMetadata.query.filter( PhenotypeMetadata.id.startswith(trait_file.name), PhenotypeMetadata.trait_name_caendr == trait_name ).one()
+      sql_row = db.select(PhenotypeMetadata).filter( PhenotypeMetadata.id.startswith(trait_file.name), PhenotypeMetadata.trait_name_caendr == trait_name ).scalar.one()
     else:
       sql_row = None
 
@@ -104,9 +103,8 @@ class Trait():
       Query the measurements of this trait as a Pandas dataframe.
       Resulting dataframe will have the columns `strain_name` and `trait_value`.
     '''
-    return pd.read_sql_query(
-      PhenotypeDatabase.query.filter( PhenotypeDatabase.metadata_id == self.trait_id ).statement, con=db.engine
-    )
+    query = db.select(PhenotypeDatabase).where( PhenotypeDatabase.metadata_id == self.trait_id )
+    return pd.read_sql_query(query, con=db.engine)
 
   def query_values_dict(self):
     '''
@@ -177,7 +175,7 @@ class Trait():
 
     # Try changing the status in the SQL table
     try:
-      PhenotypeMetadata.query.get(self.file.name).set_status(to_state)
+      db.session.get(PhenotypeMetadata, self.file.name).set_status(to_state)
 
     # If the datastore entity was updated but the SQL table wasn't, log a critical error
     # and continue propagating the error

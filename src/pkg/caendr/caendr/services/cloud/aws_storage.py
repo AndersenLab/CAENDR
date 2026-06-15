@@ -51,7 +51,7 @@ class AWSBlob():
     # while buffer:
     #   target_file.write(buffer)
     #   buffer = response['body'].read(self.__buffersize)
-    source_filename = "https://" + self.bucket + ".s3." + AWS_REGION + ".amazonaws.com/" + join_path(*path)
+    source_filename = "https://" + self.bucket + ".s3." + AWS_REGION + ".amazonaws.com/" + join_path(*self.path)
     try:
       with requests.get(source_filename, stream=True) as r:
         r.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)
@@ -64,7 +64,7 @@ class AWSBlob():
             f.write(chunk)
 
     except requests.exceptions.RequestException as e:
-      print(f"Error downloading file: {e}")
+      logger.error(f"Error downloading file: {e}")
 
 
 def join_path(*path: str, sep: str = '/'):
@@ -287,7 +287,7 @@ def aws_download_blob_to_file(bucket_name, *path, destination='', filename=None)
           f.write(chunk)
 
   except requests.exceptions.RequestException as e:
-    print(f"Error downloading file: {e}")
+    logger.error(f"Error downloading file: {e}")
 
   # # Retrieve the blob, throwing an error if it doesn't exist
   # blob = aws_get_blob(bucket_name, *path)

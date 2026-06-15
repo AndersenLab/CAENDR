@@ -52,13 +52,17 @@ def query_strains(
       all_strain_names - Return list of all possible strain names (internal use).
       resolve_isotype - Use to search for strains and return their isotype
   """
-  query = select(Strain)
+  stmt = select(Strain)
 
   if release_version:
-    query = query.where(Strain.release <= release_version)
+    stmt = stmt.where(Strain.release <= release_version)
 
+  # If searching for a specific strain name, return a single result
   if strain_name or resolve_isotype:
-    query = query.filter(
+    if resolve_isotype and not strain_name:
+      return None
+
+    stmt_specific = stmt.where(
       or_(
         Strain.previous_names.like(f"%{strain_name},%"),
         Strain.previous_names.like(f"%,{strain_name},"),
@@ -67,37 +71,42 @@ def query_strains(
         Strain.strain == strain_name
       )
     )
+    result_obj = db.session.execute(stmt_specific).scalars().first()
 
-  elif isotype_name:
-    query = query.filter(Strain.isotype == isotype_name)
+    if resolve_isotype:
+      if result_obj:
+        # LSJ1/LSJ2 prev. N2; So N2 needs to be specific.
+        if strain_name == 'N2':
+          return 'N2'
+        return result_obj.isotype
+      return None
+
+    return result_obj
+
+  # Otherwise build the full-list statement
+  if isotype_name:
+    stmt = stmt.where(Strain.isotype == isotype_name)
 
   if species is not None:
     if species in Species.all().keys():
-      query = query.filter(Strain.species_name == species)
+      stmt = stmt.where(Strain.species_name == species)
     else:
       raise BadRequestError(f'Unrecognized species ID "{species}".')
 
   if is_sequenced is True:
-    query = query.filter(Strain.sequenced == True)
+    stmt = stmt.where(Strain.sequenced == True)
 
   if issues is False:
-    query = query.filter(Strain.issues == False)
-    query = query.filter(Strain.isotype != None)
+    stmt = stmt.where(Strain.issues == False)
+    stmt = stmt.where(Strain.isotype != None)
 
-  results = db.session.execute(query).scalars().all()
+  results = db.session.execute(stmt).scalars().all()
 
   if all_strain_names:
     previous_strain_names = sum([x.previous_names.split(",") for x in results if x.previous_names], [])
     results = [x.strain for x in results] + previous_strain_names
     return results
 
-  if resolve_isotype:
-    if results:
-      # LSJ1/LSJ2 prev. N2; So N2 needs to be specific.
-      if strain_name == 'N2':
-        return 'N2'
-      return [x.isotype for x in results]
-      
   return results
 
 
@@ -116,17 +125,19 @@ def get_strains(known_origin=False, issues=False, distributed_only=False):
     select(Strain).where(Strain.isotype_ref_strain == True)
   ).scalars().all()
 
+  logger.debug(str([strain.sequenced for strain in ref_strain_list]))
+
   ref_strain_list = {x.isotype: x.strain for x in ref_strain_list}
   result = select(Strain)
   if known_origin or 'origin' in request.path:
-    result = result.filter(Strain.latitude != None)
+    result = result.where(Strain.latitude != None)
 
   if issues is False:
-    result = result.filter(Strain.isotype != None)
-    result = result.filter(Strain.issues == False)
+    result = result.where(Strain.isotype != None)
+    result = result.where(Strain.issues == False)
 
   if distributed_only is True:
-    result = result.filter(Strain.distribute == True)
+    result = result.where(Strain.distribute == True)
 
   result = db.session.execute(result).scalars().all()
   for strain in result:
@@ -139,12 +150,23 @@ def get_strains(known_origin=False, issues=False, distributed_only=False):
 @rollback_on_error
 def get_strain_sets():
   # TODO: change this to a sqlalchemy query instead
-  df = pd.read_sql_table(Strain.__tablename__, db.engine)
-  result = df[['strain_set', 'species_name', 'strain', 'isotype' ]].dropna(how='any') \
-                                        .groupby(['strain_set', 'species_name'])['strain'] \
-                                        .apply(list) \
-                                        .to_dict()  
-  return result
+  rows = db.session.execute(
+      select(
+          Strain.strain_set,
+          Strain.species_name,
+          Strain.strain,
+          Strain.isotype,
+      )
+      .where(Strain.strain_set.isnot(None))
+      .where(Strain.species_name.isnot(None))
+  ).all()
+
+  grouped = {}
+  for strain_set, species_name, strain, isotype in rows:
+    if strain is None or isotype is None:
+      continue
+    grouped.setdefault((strain_set, species_name), []).append(strain)
+  return grouped
 
 
 def get_strain_img_url(strain_name, species, thumbnail=True):
@@ -155,8 +177,10 @@ def get_strain_img_url(strain_name, species, thumbnail=True):
   })
 
   blob = get_blob(MODULE_SITE_BUCKET_PHOTOS_NAME, f"{path}/{strain_name}.jpg")
-  if blob and thumbnail:
-    blob = get_blob(MODULE_SITE_BUCKET_PHOTOS_NAME, f"{path}/{strain_name}.thumb.jpg")
+  if thumbnail and blob:
+    thumb = get_blob(MODULE_SITE_BUCKET_PHOTOS_NAME, f"{path}/{strain_name}.thumb.jpg")
+    if thumb:
+      blob = thumb
 
   try:
     return blob.public_url
@@ -175,9 +199,11 @@ def get_bam_bai_vcf_download_link(species, strain_name, ext, signed=False):
       signed (bool): Whether the generated URL should be signed. Defaults to False.
   '''
 
+  if ext not in PREFICES:
+    raise ValueError(f'Unsupported file extension: {ext}')
+
   bucket_name = AWS_OPEN_DATA_BUCKET
   file_prefix  = PREFICES[ext].get_string(SPECIES=species.name)
-  logger.debug(file_prefix)
 
   return aws_generate_blob_uri( bucket_name, file_prefix, f'{strain_name}.{ext}', schema=AWSBlobURISchema.HTTPS )
 

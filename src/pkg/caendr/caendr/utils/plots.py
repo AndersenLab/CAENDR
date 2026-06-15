@@ -10,6 +10,7 @@ import datetime
 import plotly
 import plotly.graph_objs as go
 import plotly.figure_factory as ff
+from caendr.services.logger import logger
 
 import numpy as np
 import pandas as pd
@@ -106,8 +107,8 @@ def time_series_plot(df, x_title=None, y_title=None, range=None, colors=COLORS, 
         }
 
         trace_set.append(go.Scatter(
-            x=df[df.columns[0]],
-            y=df[column],
+            x=list(df[df.columns[0]]),
+            y=list(df[column]),
             **style,
         ))
 

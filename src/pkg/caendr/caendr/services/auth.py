@@ -2,6 +2,7 @@ import os
 from functools import wraps
 from flask import request
 
+from caendr.services.logger import logger
 from caendr.services.cloud.secret import get_secret
 from caendr.models.error import APIAuthError
 
@@ -19,7 +20,7 @@ def authenticate(f):
   def __authenticate(*args, **kwargs):
     # Retrieve the authorization header from the request
     authHeader = request.headers.get("authorization")
-    if authHeader == None:
+    if authHeader is None:
       raise APIAuthError("Authorization header missing from request")
 
     # Compare the bearer token to the API secret in cloud secret store
@@ -27,7 +28,7 @@ def authenticate(f):
     try:
       is_authenticated = _verify_api_token(accessToken)
     except Exception as err:
-      print(err)
+      logger.error("Failed to retrieve secret from store", exc_info=err)
       raise APIAuthError("Failed to retrieve secret from store")
 
     # Confirm that the token is correct

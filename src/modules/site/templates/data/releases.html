@@ -1,39 +1,22 @@
-{% extends "_layouts/default.html" %} 
-
-{% block custom_head %}
-
-<style>
-#checkout.affix {
-  position: fixed;
-  top: 20px;
-  width: 136px;
-}
-body, html{
-  width: 100%;
-  height: 100%;
-}
-</style>
-
-{% endblock %}
-
+{% extends "_layouts/default.html" %}
 
 {% block content %}
 
 <div class="row">
-  <div class="col-md-12">
-    <ul class="nav nav-pills">
-      <h3>Releases</h3>
-      {% for RELEASE in RELEASES %}
-        <li {% if RELEASE.version == release_version %} class="active btn-nu" {% endif %}>
-          <a {% if RELEASE.disabled %} href="#" {% else %} href="{{ url_for('data_releases.data_releases', release_version = RELEASE.version) }}" {% endif %}>{{ RELEASE.version }}</a>
-        </li>
-      {% endfor %}
+  <div class="col my-5">
+    <h2><em>{{species.short_name}}</em> releases</h2>
+    <ul class="nav nav-pills p-4 mt-4 rounded shadow-sm text-bg-light">
+    {% for RELEASE in RELEASES %}
+      <li class="nav-item">
+        <a class="nav-link rounded-0 text-bg-light mx-1 {% if release_version == RELEASE.version %}active fw-bold{% endif %}" {% if RELEASE.disabled %} href="#" disabled {% else %}
+          href="{{ url_for('data_releases.data_release_list', species_name = species.get_slug(), release_version = RELEASE.version) }}"
+          {% endif %}>{{ RELEASE.version }}</a>
+      </li>
+    {% endfor %}
     </ul>
   </div>
 </div>
-<hr />
-<div>
-
+<!-- /Row -->
 
 {% if RELEASE.report_type == 'V0' %}
   {% include 'data/v0.html' %}
@@ -50,8 +33,10 @@ body, html{
 
 
 {% block script %}
-
 <script>
+{% include '_scripts/utils.js' %}  {#/* defines: force_download */#}
+
+
 $(document).ready(function() {
 
     (function($) {
@@ -69,6 +54,7 @@ $(document).ready(function() {
     }(jQuery));
 
 });
+
 
 $(document).ready(function() {
 
@@ -89,8 +75,5 @@ $(document).ready(function() {
 });
 
 
-
 </script>
-
 {% endblock %}
-

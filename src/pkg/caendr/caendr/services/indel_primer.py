@@ -105,6 +105,8 @@ def overlaps(s1, e1, s2, e2):
 
 def query_indels_and_mark_overlaps(species, strain_1, strain_2, chromosome, start, stop):
   results = []
+  if not strain_1 or not strain_2 or not chromosome or start is None or stop is None:
+    return results
   strain_cmp = [ strain_1, strain_2 ]
 
   tb = tabix.open( get_bed_url(species, secure=False) )

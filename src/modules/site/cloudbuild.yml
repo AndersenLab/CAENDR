@@ -1,0 +1,24 @@
+ steps:
+ # pull down the latest version of the image to speed up building
+ - name: 'us-east4-docker.pkg.dev/$PROJECT_ID/cloud-builders/docker'
+   entrypoint: 'bash'
+   args: ['-c', 'docker pull us-east4-docker.pkg.dev/$PROJECT_ID/caendr-site-v2/caendr-site-v2:latest || exit 0']
+ # Build the container image
+ - name: 'us-east4-docker.pkg.dev/$PROJECT_ID/cloud-builders/docker'
+   args: ['build', '-t', 'us-east4-docker.pkg.dev/$PROJECT_ID/caendr-site-v2/caendr-site-v2:latest', '-f', './src/modules/site/Dockerfile.cloudrun', '--cache-from', 'us-east4-docker.pkg.dev/$PROJECT_ID/caendr-site-v2/caendr-site-v2:latest',  '.']
+ # Push the container image to Container Registry
+ - name: 'us-east4-docker.pkg.dev/$PROJECT_ID/cloud-builders/docker'
+   args: ['push', 'us-east4-docker.pkg.dev/$PROJECT_ID/caendr-site-v2/caendr-site-v2:latest']
+ # Deploy container image to Cloud Run
+ - name: 'us-east4-docker.pkg.dev/$PROJECT_ID/google.com/cloudsdktool/cloud-sdk'
+   entrypoint: gcloud
+   args:
+   - 'run'
+   - 'deploy'
+   - 'caendr-site-v2'
+   - '--image'
+   - 'us-east4-docker.pkg.dev/$PROJECT_ID/caendr-site-v2/caendr-site-v2:latest'
+   - '--region'
+   - 'us-central1'
+ images:
+ - 'us-east4-docker.pkg.dev/$PROJECT_ID/caendr-site-v2/caendr-site-v2:latest'

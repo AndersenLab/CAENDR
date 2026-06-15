@@ -114,10 +114,6 @@ def parse_gene_gff_summary(species: Species, GENE_GFF: LocalDatastoreFile):
       # Convert the line from a tab-separated string into a list
       line = line.decode('utf-8').strip().split("\t")
 
-      # Progress update
-      # if idx % 1000000 == 0:
-      #   logger.debug(f"Processed {idx} lines;{gene_count} genes; {line[0]}:{line[4]}")
-
       # Only parse if line represents a gene from Wormbase
       if ('WormBase' in line[1] or 'AndersenLab' in line[1]) and 'gene' in line[2]:
 

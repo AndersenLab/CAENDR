@@ -342,8 +342,6 @@ class DatasetRelease(SpeciesEntity):
       'SPECIES': species_name,
     }
 
-    logger.debug(f'get_report_data_urls_map(bucket_name={bucket_name}, blob_prefix={blob_prefix})')
-
     # Check that the release has a valid report type
     if self.report_type is None:
       return None

@@ -85,7 +85,6 @@ def lookup_order(invoice_hash):
   """ Lookup an order by its hash """
   ws = get_google_order_sheet()
   find_row = ws.findall(invoice_hash)
-  print(ws)
   if len(find_row) > 0:
     row = ws.row_values(find_row[0].row)
     header_row = ws.row_values(1)

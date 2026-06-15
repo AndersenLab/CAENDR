@@ -193,6 +193,7 @@ class IndelFinderPipeline(JobPipeline):
     return ['python', '/indel_primer/main.py']
 
   def construct_environment(self):
+    logger.debug("Constructing environment variables for Indel Primer Pipeline...")
     result_bucket, result_blob = self.report.output_filepath(schema=BlobURISchema.PATH)
     return {
       **super().construct_environment(),

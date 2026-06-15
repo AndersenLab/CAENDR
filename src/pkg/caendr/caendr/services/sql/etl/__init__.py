@@ -169,7 +169,7 @@ class ETLManager:
             table.__table__.create(bind=self.db.engine)
 
         # Initialize a count for the number of entries added
-        initial_count = query_count(table.query)
+        initial_count = query_count(select(table))
         logger.info(f'Initial count for table {config.table_name}: {initial_count} entries')
 
         # Determine if table can be loaded with COPY command (ie: it will replace the entire table))
@@ -359,7 +359,7 @@ class ETLManager:
         config = TABLE_CONFIG[table.__tablename__]
 
         # Initialize a count for the number of entries added
-        initial_count = query_count(config.table.query)
+        initial_count = query_count(select(config.table))
         logger.info(f'Initial count for table {config.table_name}: {initial_count} entries')
 
         # Loop through the name & Species object for each species
@@ -370,7 +370,7 @@ class ETLManager:
                 continue
 
             # Find number of entries in table for species
-            current_count = query_count(config.table.query.filter(table.__table__.c.species_name == species.name))
+            current_count = query_count(select(config.table).filter(table.__table__.c.species_name == species.name))
             # current_count = select(func.count(table.__table__.c.id)).filter(table.__table__.c.species_name == species.name).scalar_one_or_none()
             logger.info(f"There are {current_count} entries in {config.table_name} for {species.name}")
 
@@ -388,7 +388,7 @@ class ETLManager:
                 logger.debug(f'Finished inserting {species.name} batch {i}.')
 
         # Print how many entries were added
-        total_records = query_count(config.table.query) - initial_count
+        total_records = query_count(select(config.table)) - initial_count
         logger.info(f'Inserted {total_records} entries into table {config.table_name}')
 
 
