@@ -6,7 +6,7 @@ import tempfile
 from logzero import logger
 
 # Local imports
-from .table_config import StrainConfig, WormbaseGeneSummaryConfig, WormbaseGeneConfig, AnnovarAnnotatedVariantConfig, CsqAnnotatedVariantConfig, SnpEffAnnotatedVariantConfig, VepAnnotatedVariantConfig, PhenotypeDatabaseConfig, PhenotypeMetadataConfig
+from .table_config import StrainConfig, WormbaseGeneSummaryConfig, WormbaseGeneConfig, VariantConfig, AnnovarAnnotatedVariantConfig, CsqAnnotatedVariantConfig, SnpEffAnnotatedVariantConfig, VepAnnotatedVariantConfig, PhenotypeDatabaseConfig, PhenotypeMetadataConfig
 
 from caendr.models.datastore import Species
 from caendr.models.sql       import ALL_SQL_TABLES
@@ -23,6 +23,7 @@ TABLE_CONFIG = {
         StrainConfig,
         WormbaseGeneSummaryConfig,
         WormbaseGeneConfig,
+        VariantConfig,
         AnnovarAnnotatedVariantConfig,
         CsqAnnotatedVariantConfig,
         SnpEffAnnotatedVariantConfig,
@@ -66,6 +67,11 @@ def generator_to_csv(data_generator, csv_file_path, fieldnames):
             for row in data_generator:
                 if uses_id and 'id' not in row:
                     row['id'] = rows_written
+                for key, value in row.items():
+                    # Reformat arrays if needed
+                    if type(value) == list:
+                        value = ",".join([f"{x}" for x in value])
+                        row[key] = '"{' + value + '}"'
                 writer.writerow(row)
                 rows_written += 1
         
@@ -249,8 +255,8 @@ class ETLManager:
             Number of rows loaded
         '''
         try:
-            if disable_indexes_flag:
-                self.__disable_indexes(table_name)
+            # if disable_indexes_flag:
+            #     self.__disable_indexes(table_name)
         
             col_spec = f'({", ".join(columns)})' if columns else ''
         
@@ -265,10 +271,10 @@ class ETLManager:
                     logger.error(f'COPY command failed for {table_name}: {e}', exc_info=True)
                     raise
             
-            if disable_indexes_flag:
-                self.__enable_indexes(table_name)
+            # if disable_indexes_flag:
+            #     self.__enable_indexes(table_name)
                 
-            self.__rebuild_indexes(table_name)
+            # self.__rebuild_indexes(table_name)
             self.db.session.commit()
         
         except Exception as e:
@@ -311,7 +317,7 @@ class ETLManager:
     
         except Exception as e:
             if csv_file_path and os.path.exists(csv_file_path):
-                os.remove(csv_file_path)
+                # os.remove(csv_file_path)
                 logger.debug(f'Cleaned up temporary CSV file')
             raise
 

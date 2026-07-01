@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+from numpy import int16
 
 from caendr.services.logger import logger
 from sqlalchemy import or_, select
@@ -125,8 +126,6 @@ def get_strains(known_origin=False, issues=False, distributed_only=False):
     select(Strain).where(Strain.isotype_ref_strain == True)
   ).scalars().all()
 
-  logger.debug(str([strain.sequenced for strain in ref_strain_list]))
-
   ref_strain_list = {x.isotype: x.strain for x in ref_strain_list}
   result = select(Strain)
   if known_origin or 'origin' in request.path:
@@ -145,6 +144,30 @@ def get_strains(known_origin=False, issues=False, distributed_only=False):
     strain.reference_strain = ref_strain_list.get(strain.isotype, None)
   result = sorted(result, key=lambda x: (x.species, x.to_sortable_isotype(x), x.to_sortable_strain(x)))
   return result
+
+
+@rollback_on_error
+def get_strain_index_dict():
+  """
+  Returns a dict of strains and their indices
+  """
+  stmt = select(Strain)
+  stmt = stmt.where(Strain.sequenced == True)
+  result = db.session.execute(stmt.order_by(Strain.strain)).scalars().all()
+  strain_indices = {strain.strain: i & 0xFFFF for i, strain in enumerate(result)}
+  return strain_indices
+
+
+@rollback_on_error
+def get_index_strain_dict():
+  """
+  Returns a dict of strains and their indices
+  """
+  stmt = select(Strain)
+  stmt = stmt.where(Strain.sequenced == True)
+  result = db.session.execute(stmt.order_by(Strain.strain)).scalars().all()
+  strain_indices = {i & 0xFFFF: strain.strain for i, strain in enumerate(result)}
+  return strain_indices
 
 
 @rollback_on_error

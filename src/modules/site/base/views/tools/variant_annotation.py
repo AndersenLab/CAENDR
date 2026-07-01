@@ -1,4 +1,5 @@
 import json
+import copy
 from caendr.services.logger import logger
 import pandas as pd
 from io import StringIO
@@ -17,8 +18,8 @@ from base.forms import VBrowserForm
 
 from caendr.api.isotype import get_distinct_isotypes
 from caendr.models.datastore import Species, AnnotationFile
-from caendr.models.error import NotFoundError
-from caendr.models.sql import AnnovarAnnotatedVariant, CsqAnnotatedVariant, VepAnnotatedVariant, SnpEffAnnotatedVariant
+from caendr.models.error import NotFoundError, MissingTokenError
+from caendr.models.sql import Variant, AnnovarAnnotatedVariant, CsqAnnotatedVariant, VepAnnotatedVariant, SnpEffAnnotatedVariant
 from caendr.services.dataset_release import get_latest_dataset_release_version
 from caendr.utils.bio import parse_chrom_interval, parse_chrom_position
 from caendr.utils.constants import CHROM_INTERVAL_REGEX
@@ -42,11 +43,16 @@ variant_annotation_bp = Blueprint(
 def variant_annotation():
 
   columns = {"": []}
+  variant_columns = Variant.get_column_details()
+  for col in variant_columns:
+    col['default_visibility'] = Variant.column_default_visibility(col)
   for name, tool in annotation_tools.items():
     tool_columns = tool.get_column_details()
     visibility_func = tool.column_default_visibility
     for col in tool_columns:
       col['default_visibility'] = visibility_func(col)
+    tool_columns += copy.deepcopy(variant_columns)
+    tool_columns.sort(key=lambda col: col['priority'])
     columns[name] = tool_columns
 
   # Organize distinct isotypes by species
@@ -105,7 +111,7 @@ def query_interval(tool_name, species_name=None):
     except NotFoundError:
       return abort(404)
   else:
-    species = None
+      return abort(404)
 
   # Parse the query interval, returning an empty response if invalid
   try:
@@ -141,7 +147,7 @@ def query_position(tool_name, species_name=None):
     except NotFoundError:
       return abort(404)
   else:
-    species = None
+    return abort(404)
 
   # Parse the query position, returning an empty response if invalid
   try:
@@ -164,7 +170,7 @@ def download_csv(tool_name=None):
     return make_response(jsonify({ "message": "CSV download failed." }), 500)
 
   # Load columns from StrainAnnotatedVariant class
-  columns = [ col['id'] for col in annotationtool.get_column_details() ]
+  columns = annotationtool.get_all_column_names()
   try:
     data = request.data.decode('utf-8')
     pd_obj = pd.read_json(StringIO(data))

@@ -2,10 +2,10 @@
 
 
 {% block custom_head %}
-    <link rel="stylesheet" href="//cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css" />
-    <script type="text/javascript" src="//cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.datatables.net/colreorder/1.5.3/css/colReorder.dataTables.min.css" />
-    <script type="text/javascript" src="https://cdn.datatables.net/colreorder/1.5.3/js/dataTables.colReorder.min.js"></script>
+    <link rel="stylesheet" href="//cdn.datatables.net/1.10.24/css/jquery.dataTables.css" />
+    <script type="text/javascript" src="//cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/colreorder/1.5.3/css/colReorder.dataTables.css" />
+    <script type="text/javascript" src="https://cdn.datatables.net/colreorder/1.5.3/js/dataTables.colReorder.js"></script>
     <style>
       #closeButton {
         display:none;
@@ -275,9 +275,10 @@ function update_annotation(annotation_id) {
   clear_interval_search();
 
   // Clear any previous variant data from the data table
-  clearDataTable();
+  // clearDataTable();
 
 
+  destroyDataTable();
   remake_data_table();
   init_data_table();
   select_default_columns();
@@ -383,7 +384,6 @@ async function downloadCSV(json_data, tool_id) {
 function onDownload() {
   const jsonData = JSON.stringify({ ...result_data });
   const tool_id = $('#annotationSelect').val();
-  console.log(tool_id);
   downloadCSV(jsonData, tool_id);
 }
 
@@ -630,15 +630,21 @@ function clearDataTable() {
   }
 }
 
-
+function destroyDataTable() {
+  if (dTable !== null) {
+    let table_div = $('#variant-table');
+    dTable.destroy();
+    table_div.empty();
+    dTable = null;
+    table_div.append('<caption class="visually-hidden">List of variant annotations</caption><thead><tr></tr></thead><tbody></tbody>')
+  }
+}
 
 /* Initialization - Helper functions */
 function remake_data_table() {
-  console.log("remaking data table");
+  // console.log("remaking data table");
   const tool_id = $('#annotationSelect').val();
   const columnList = all_columnList[tool_id];
-  console.log(tool_id);
-  console.log(columnList);
 
   $("#variant-table thead tr th").remove();
   thead = $("#variant-table thead tr");
@@ -648,25 +654,33 @@ function remake_data_table() {
   });
 
   var col_select = $("#col-select .form-group");
-  while (col_select[0].firstChild) {
+  while (col_select[0].childElementCount > 1) {
     col_select[0].removeChild(col_select[0].lastChild);
   }
-  col_select.append("<div class='fw-bold mb-3 col-entry'><input class='toggle-col-chk' type='checkbox' name='toggle_all_cols' id='toggle_all_cols' /><label id='toggle_all_cols_label' for='toggle_all_cols'> Select All</label></div>");
   columnList.map((col, idx) => {
     col_select.append("<div class='col-entry'><input class='toggle-col-chk' type='checkbox' name='toggle_" + col['id'] + "' id='toggle_" + col['id'] + "' data-column='" + col['id'] + "' /><label for='toggle_" + col['id'] + "'> " + col['name'] + " </label></div>");
   })
 
+  if (dTable !== null) {
+    set_column_listener();
+  }
+}
+
+function set_column_listener() {
   $(".toggle-col-chk").change(function() {
     const state = $(this).prop('checked');
     const colName = $(this).attr('data-column') + ':name';
     const column = dTable.column(colName);
+    if (state == false) {
+      $("#toggle_all_cols").prop("checked", false);
+    }
     column.visible(state);
     dTable.columns.adjust().draw();
   });
 }
 
 function init_data_table() {
-  console.log("initializing data table");
+  // console.log("initializing data table");
   const tool_id = $('#annotationSelect').val();
   const columnList = all_columnList[tool_id]; 
   const colDefs = columnList.map((col, idx) => {
@@ -705,6 +719,7 @@ function init_data_table() {
     setTimeout(highlight_selected_strains, 250);
   });
 
+  set_column_listener();
 }
 
 
@@ -714,6 +729,7 @@ function select_default_columns() {
   const columnList = all_columnList[tool_id];
 
   /* Set checkboxes */
+  $("#toggle_all_cols").prop("checked", false);
   columnList.forEach((col, idx) => {
     $( "#toggle_" + col.id ).prop("checked", col.default_visibility);
   });

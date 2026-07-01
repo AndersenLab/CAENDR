@@ -11,7 +11,7 @@ from caendr.models.task      import DatabaseOperationTask
 from caendr.models.datastore import Species
 from caendr.models.error     import DataFormatError, PreflightCheckError
 from caendr.models.sql       import DbOp
-from caendr.services.sql.etl import StrainConfig, WormbaseGeneConfig, WormbaseGeneSummaryConfig, AnnovarAnnotatedVariantConfig, CsqAnnotatedVariantConfig, SnpEffAnnotatedVariantConfig, VepAnnotatedVariantConfig
+from caendr.services.sql.etl import StrainConfig, WormbaseGeneConfig, WormbaseGeneSummaryConfig, VariantConfig, AnnovarAnnotatedVariantConfig, CsqAnnotatedVariantConfig, SnpEffAnnotatedVariantConfig, VepAnnotatedVariantConfig
 from caendr.utils.local_files import ForeignResourceTemplate
 from caendr.utils.env        import get_env_var
 
@@ -34,25 +34,19 @@ REQUIRED_RESOURCES: Dict[DbOp, List[ForeignResourceTemplate]] = {
     *SnpEffAnnotatedVariantConfig.all_resources,
     *VepAnnotatedVariantConfig.all_resources,
   ],
+  DbOp.DROP_AND_POPULATE_VARIANTS: [
+    *VariantConfig.all_resources,
+  ],
   DbOp.DROP_AND_POPULATE_ANNOVAR_VARIANTS: [
     *AnnovarAnnotatedVariantConfig.all_resources,
   ],
-  DbOp.RESUME_POPULATE_ANNOVAR_VARIANTS: [
-    *AnnovarAnnotatedVariantConfig.all_resources,
-  ],
   DbOp.DROP_AND_POPULATE_CSQ_VARIANTS: [
-    *CsqAnnotatedVariantConfig.all_resources,
-  ],
-  DbOp.RESUME_POPULATE_CSQ_VARIANTS: [
     *CsqAnnotatedVariantConfig.all_resources,
   ],
   DbOp.DROP_AND_POPULATE_SNPEFF_VARIANTS: [
     *SnpEffAnnotatedVariantConfig.all_resources,
   ],
   DbOp.DROP_AND_POPULATE_VEP_VARIANTS: [
-    *VepAnnotatedVariantConfig.all_resources,
-  ],
-  DbOp.RESUME_POPULATE_VEP_VARIANTS: [
     *VepAnnotatedVariantConfig.all_resources,
   ],
   DbOp.DROP_AND_POPULATE_PHENOTYPE_DB: [
@@ -63,6 +57,7 @@ REQUIRED_RESOURCES: Dict[DbOp, List[ForeignResourceTemplate]] = {
     *StrainConfig.all_resources,
     *WormbaseGeneConfig.all_resources,
     *WormbaseGeneSummaryConfig.all_resources,
+    *VariantConfig.all_resources,
     *AnnovarAnnotatedVariantConfig.all_resources,
     *CsqAnnotatedVariantConfig.all_resources,
     *SnpEffAnnotatedVariantConfig.all_resources,
@@ -217,13 +212,11 @@ class DatabaseOperationPipeline(JobPipeline):
         'MEMORY_LIMITS':   { 'memory': '512Mi', 'cpu': '1' },
       }
     elif self.report.get_data_id(as_str=True) in [
+        "DROP_AND_POPULATE_VARIANTS",
         "DROP_AND_POPULATE_ANNOVAR_VARIANTS",
         "DROP_AND_POPULATE_CSQ_VARIANTS",
         "DROP_AND_POPULATE_SNPEFF_VARIANTS",
-        "DROP_AND_POPULATE_VEP_VARIANTS",
-        "RESUME_POPULATE_ANNOVAR_VARIANTS",
-        "RESUME_POPULATE_CSQ_VARIANTS",
-        "RESUME_POPULATE_VEP_VARIANTS",]:
+        "DROP_AND_POPULATE_VEP_VARIANTS"]:
       op_specific_params = {
         'TIMEOUT':         '604800s',
         'MAX_RETRIES':     0,

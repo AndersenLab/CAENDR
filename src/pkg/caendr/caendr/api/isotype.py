@@ -28,7 +28,7 @@ def get_isotypes(known_origin=False, list_only=False, unique=False, species=None
       result = result.filter( Strain.species_name == species )
     if known_origin or 'origin' in request.path:
       result = result.filter(Strain.latitude.isnot(None))
-    result = db.session.execute(result.with_entities(Strain.isotype).distinct()).scalars().all()
+    result = db.session.execute(result.with_only_columns(Strain.isotype).distinct()).all()
     return [x.isotype for x in result]
 
   # Basic query for isotypes
@@ -42,7 +42,7 @@ def get_isotypes(known_origin=False, list_only=False, unique=False, species=None
   if known_origin or 'origin' in request.path:
     result = result.filter(Strain.latitude.isnot(None))
 
-  result = db.session.execute(result).scalars().all()
+  result = db.session.execute(result).all()
   if list_only:
     result = [x.isotype for x in result]
   return result
@@ -57,7 +57,7 @@ def get_distinct_isotypes(species=None):
   """
 
   # Perform the query for distinct isotypes
-  result = select(Strain).with_entities(Strain.isotype).filter(Strain.isotype.isnot(None)).distinct()
+  result = select(Strain).with_only_columns(Strain.isotype, Strain.strain).filter(Strain.isotype.isnot(None)).distinct()
 
   # Optionally limit to given species
   if species is not None:
@@ -65,7 +65,7 @@ def get_distinct_isotypes(species=None):
 
 
   # Map to list and return
-  result = db.session.execute(result).scalars().all()
+  result = db.session.execute(result).all()
   result = [ x.isotype for x in result ]
   return result
 

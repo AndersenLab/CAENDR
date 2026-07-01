@@ -118,7 +118,7 @@ def create_op():
 
   # Preflight check error: one or more required files are missing from cloud storage
   except PreflightCheckError as ex:
-    files_txt = ''.join([ f'<br />{filename}' for filename in ex.missing_files ])
+    files_txt = ''.join([ f'<br>{filename}' for filename in ex.missing_files ])
     flash(Markup(f'Could not submit job. Missing the following files:{files_txt}'), category='danger')
     return redirect(request.url)
 

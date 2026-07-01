@@ -71,11 +71,13 @@ fi
 echo "Publishing with tag '${tag}'";
 
 
-# # Clone git project
-# if [ -n "${reload_git}" ]; then
-#     rm -rf ./${NEMASCAN_SOURCE_GITHUB_REPO}
-# fi
-# git clone --depth 1 git@github.com:${NEMASCAN_SOURCE_GITHUB_ORG}/${NEMASCAN_SOURCE_GITHUB_REPO}.git
+# Clone git project
+if [ -n "${reload_git}" ]; then
+    rm -rf ./${NEMASCAN_SOURCE_GITHUB_REPO}
+fi
+if [ ! -e ${NEMASCAN_SOURCE_GITHUB_REPO} ]; then
+    git clone --depth 1 git@github.com:${NEMASCAN_SOURCE_GITHUB_ORG}/${NEMASCAN_SOURCE_GITHUB_REPO}.git
+fi
 
 
 # Build and push container

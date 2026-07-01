@@ -123,7 +123,7 @@ def get_release_summary(release: str):
   release = int(release)
   strain_count = query_count(select(Strain).filter((Strain.release <= release) & (Strain.issues == False)))
   strain_count_sequenced = query_count(select(Strain).filter((Strain.release <= release) & (Strain.issues == False) & (Strain.sequenced == True)))
-  isotype_count = query_count(select(Strain).with_entities(Strain.isotype).filter((Strain.isotype.isnot(None)), (Strain.release <= release), (Strain.issues == False)).group_by(Strain.isotype))
+  isotype_count = query_count(select(Strain).with_only_columns(Strain.isotype).filter((Strain.isotype.isnot(None)), (Strain.release <= release), (Strain.issues == False)).group_by(Strain.isotype))
   project_num = Species.project_num
   
   return {

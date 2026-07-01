@@ -20,7 +20,8 @@ from caendr.utils.local_files      import LocalUploadFile
 NEMASCAN_CONTAINER_NAME = get_env_var('NEMASCAN_NXF_CONTAINER_NAME')
 NEMASCAN_TASK_QUEUE_REGION = get_env_var('NEMASCAN_TASK_QUEUE_REGION')
 NEMASCAN_DATA_BUCKET = get_env_var('MODULE_SITE_BUCKET_PRIVATE_NAME')
-
+AWS_OPEN_DATA_BUCKET = get_env_var('AWS_OPEN_DATA_BUCKET')
+AWS_REGION = get_env_var('AWS_REGION')
 
 class NemascanPipeline(JobPipeline):
 
@@ -136,7 +137,7 @@ class NemascanPipeline(JobPipeline):
       'USERNAME':     self.report['username'],
       'EMAIL':        self.report['email'],
       'QUEUE_REGION': self.get_queue_region(),
-      'DATA_BUCKET':  self.get_data_bucket(),
+      'AWS_BUCKET':   f"https://{AWS_OPEN_DATA_BUCKET}.s3.{AWS_REGION}.amazonaws.com",
     }
 
   def construct_run_params(self):
