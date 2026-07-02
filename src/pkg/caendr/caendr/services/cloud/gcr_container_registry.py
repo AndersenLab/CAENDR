@@ -5,8 +5,6 @@ from shutil import which
 
 from caendr.services.logger import logger
 
-from caendr.utils.data import AltTemplate
-
 GOOGLE_CLOUD_PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID')
 
 GCR_REPO_NAME = f'us-east4-docker.pkg.dev/{GOOGLE_CLOUD_PROJECT_ID}/caendr-site-v2'

@@ -1,7 +1,5 @@
-import os
-
 from caendr.services.logger import logger
-from caendr.utils.env import get_env_var, get_env_var_with_fallback
+from caendr.utils.env import get_env_var
 
 from caendr.models.datastore import ReportEntity, HashableEntity, Species
 from caendr.services.dataset_release import get_dataset_release

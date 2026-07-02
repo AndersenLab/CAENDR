@@ -1,6 +1,6 @@
 from flask import (render_template,
                     Blueprint)
-from datetime import datetime, timezone
+from datetime import datetime
 from collections import defaultdict
 from typing import Dict, Iterable
 
@@ -59,6 +59,11 @@ def system_dashboard():
   disable_parent_breadcrumb = True
   instances = _get_instances()
   now = datetime.today()
+
+  module_name = os.getenv("MODULE_NAME", "n/a")
+  module_version = os.getenv("MODULE_VERSION", "n/a")
+  git_commit = os.getenv("GIT_COMMIT", "n/a")
+
 
   return render_template('admin/system/system.html', **locals())
 

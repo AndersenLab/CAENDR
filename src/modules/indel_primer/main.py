@@ -13,7 +13,7 @@ from caendr.utils.env import get_env_var, env_log_string
 
 logger.warning(get_env_var('USER_OWNED_ENTITY_CACHE_AGE_SECONDS'))
 
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE
 
 from caendr.utils import monitor
 from caendr.models.datastore import IndelPrimerReport

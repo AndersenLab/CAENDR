@@ -1,17 +1,20 @@
 from caendr.services.logger import logger
-from flask import request, render_template, Blueprint, redirect, url_for, flash
+from flask import request, render_template, Blueprint, redirect, url_for, flash, abort
+from flask_jwt_extended import jwt_required, get_jwt, get_current_user
 from slugify import slugify
 from datetime import datetime, timezone
 
+from caendr.api.phenotype import get_trait_categories
 from caendr.models.datastore import User
 from caendr.services.cloud.secret import get_secret
 from caendr.services.user import get_local_user_by_email
 
 from caendr.services.email import send_email, PASSWORD_RESET_EMAIL_TEMPLATE
 
-from base.forms import UserRegisterForm, UserUpdateForm, RecoverUserForm, PasswordResetForm
-from base.utils.auth import jwt_required, get_jwt, get_current_user, assign_access_refresh_tokens, magic_link_required, create_one_time_token, use_password_reset_token
+from base.forms import UserRegisterForm, UserUpdateForm, RecoverUserForm, PasswordResetForm, EmptyForm
+from base.utils.auth import assign_access_refresh_tokens, magic_link_required, create_one_time_token, use_password_reset_token, check_feature_flag
 
+NO_REPLY_EMAIL  = get_secret('NO_REPLY_EMAIL')
 PASSWORD_PEPPER = get_secret('PASSWORD_PEPPER')
 
 user_bp = Blueprint('user',
@@ -24,7 +27,7 @@ def user():
   """
       Redirect base route to the user profile page
   """
-  return redirect(url_for('user.user_profile'))
+  return redirect(url_for('user.user_account'))
 
 
 @user_bp.route("/register", methods=["GET", "POST"])
@@ -43,7 +46,7 @@ def user_register():
   user = User(id)
   user.set_properties(username=username, password=password, salt=PASSWORD_PEPPER, full_name=full_name, email=email, roles=roles, last_login=datetime.now(timezone.utc), user_type='LOCAL')
   user.save()
-  return assign_access_refresh_tokens(username, user.roles, url_for("user.user_profile"))
+  return assign_access_refresh_tokens(username, user.roles, url_for("user.user_account"))
   
 
 
@@ -70,9 +73,9 @@ def user_recover():
   password_reset_magic_link = url_for('user.user_reset_password', token=token, _external=True)
   try:
     send_email({
-      "from": "no-reply@elegansvariation.org",
+      "from": f'CaeNDR <{NO_REPLY_EMAIL}>',
       "to": [ email ],
-      "subject": "CeNDR Password Reset",
+      "subject": "CaeNDR Password Reset",
       "text": PASSWORD_RESET_EMAIL_TEMPLATE.format(email=email, password_reset_magic_link=password_reset_magic_link)
     })
     logger.info(f"Sent password reset email: {email}, link: {password_reset_magic_link}")
@@ -84,13 +87,21 @@ def user_recover():
   return redirect('/')
 
 
-@user_bp.route("/profile", methods=["GET"])
+@user_bp.route("/my-account", methods=["GET"])
 @jwt_required()
-def user_profile():
+def user_account():
   """ The User Account Profile """
-  title = 'Profile'
+  title = 'My Account'
   user = get_current_user()
-  return render_template('user/profile.html', **locals())
+  return render_template('user/my-account.html', **locals())
+
+
+@user_bp.route("/my-results", methods=["GET"])
+@jwt_required()
+def user_results():
+  title = 'My Results & Data'
+  user = get_current_user()
+  return render_template('user/my-results.html', **locals())
 
 
 @user_bp.route("/update", methods=["GET", "POST"])
@@ -110,7 +121,7 @@ def user_update():
   password = request.form.get('password')
   user.set_properties(email=email, full_name=full_name, password=password, salt=PASSWORD_PEPPER)
   user.save()
-  return redirect(url_for('user.user_profile'))
+  return redirect(url_for('user.user_account'))
 
 
 @user_bp.route("/password/reset", methods=["GET", "POST"])
@@ -134,5 +145,29 @@ def user_reset_password(user):
 
 
 
+#
+# Trait Library
+#
 
- 
+
+@user_bp.route('/my-trait-library', methods=['GET'])
+@jwt_required()
+@check_feature_flag('PHENOTYPE_DB_ENABLED')
+def my_trait_library():
+
+  # Get the list of unique tags
+  try:
+    categories = get_trait_categories()
+
+  except Exception as ex:
+    logger.error(f'Failed to retrieve the list of traits: {ex}')
+    abort(500, description='Failed to retrieve the list of traits')
+
+  return render_template('data/trait-library.html', **{
+    # Page info
+    'title': 'My Trait Library',
+
+    # Data
+    'categories': categories,
+    'form': EmptyForm(),
+  })

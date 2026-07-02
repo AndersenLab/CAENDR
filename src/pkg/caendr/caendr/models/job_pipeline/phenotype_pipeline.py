@@ -5,11 +5,12 @@ from .job_pipeline                 import JobPipeline
 from caendr.models.datastore       import PhenotypeReport
 
 # Services
-from caendr.models.error           import DataValidationError, EmptyReportDataError, EmptyReportResultsError
+from caendr.models.error           import DataValidationError, EmptyReportResultsError
 from caendr.models.status          import JobStatus
 from caendr.models.trait           import Trait
-from caendr.utils.data             import dataframe_cols_to_dict, get_object_hash, keyset_intersection, center_and_scale_data
+from caendr.utils.data             import get_object_hash, keyset_intersection, center_and_scale_data
 
+from caendr.services.logger import logger
 
 
 class PhenotypePipeline(JobPipeline):
@@ -115,7 +116,6 @@ class PhenotypePipeline(JobPipeline):
     '''
       Data should be provided as tuple of Pandas dataframe(s), with columns `strain_name` and `trait_value`.
     '''
-
     if data is None:
       raise EmptyReportResultsError(self.report.id)
 

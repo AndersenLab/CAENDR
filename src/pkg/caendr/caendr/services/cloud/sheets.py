@@ -1,5 +1,4 @@
 import os
-import json
 import gspread
 import pandas as pd
 import requests
@@ -8,7 +7,6 @@ from typing import Iterable
 
 from io import StringIO
 from oauth2client.service_account import ServiceAccountCredentials
-from base64 import b64decode
 from caendr.services.logger import logger
 
 from caendr.utils.constants import GOOGLE_SHEET_NULL_VALUES
@@ -87,7 +85,6 @@ def lookup_order(invoice_hash):
   """ Lookup an order by its hash """
   ws = get_google_order_sheet()
   find_row = ws.findall(invoice_hash)
-  print(ws)
   if len(find_row) > 0:
     row = ws.row_values(find_row[0].row)
     header_row = ws.row_values(1)

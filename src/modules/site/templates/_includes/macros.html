@@ -1,30 +1,100 @@
-{% macro render_field(field, form_prefix=None, form_suffix=None) %}
+{%- macro update_species_field(el, onchange=None) -%}
+  {{el}}.classList.toggle('fst-italic', {{el}}.value);
+  if ({{el}}.value && !{{el}}.options[0].value) {{el}}.options[0].disabled = true;
+  {% if onchange %}{{ onchange }}({{el}}.value);{% endif %}
+{%- endmacro -%}
+
+{% macro render_species_field(field, onchange=None) %}
+  {% set _ = kwargs.update({'aria-label': 'Choose species'})  %}
+  {{ field(class="form-control", onchange=update_species_field('this', onchange), required=true, **kwargs) }}
+  <script>
+    // Reset the selector every time the page is shown
+    // This includes from browser back/forward, and is necessary to reset species
+    addEventListener("pageshow", (event) => {
+      const selector = document.getElementById('{{ field.elementId }}');
+      selector.value = '';
+      {% if field.exclude_species %}
+      const exclude_species = [
+        {%- for v in field.exclude_species %}'{{v}}',{%- endfor -%}
+      ];
+      Array.from(selector.children).forEach(opt => {
+          opt.disabled = exclude_species.includes(opt.value);
+      })
+      {%- endif %}
+      {#/* toggle_input(selector.options[0], false); // Un-comment to disable "Choose" from start. Is this compatible with all browsers? */#}
+    });
+  </script>
+{% endmacro %}
+
+{%- macro update_annotation_field(el, onchange=None) -%}
+  {{el}}.classList.toggle('fst-italic', {{el}}.value);
+  if ({{el}}.value && !{{el}}.options[0].value) {{el}}.options[0].disabled = true;
+  {% if onchange %}{{ onchange }}({{el}}.value);{% endif %}
+{%- endmacro -%}
+
+{% macro render_annotation_field(field, onchange=None) %}
+  {% set _ = kwargs.update({'aria-label': 'Choose annotation tool'})  %}
+  {{ field(class="form-control", onchange=update_annotation_field('this', onchange), required=true, **kwargs) }}
+  <script>
+    // Reset the selector every time the page is shown
+    // This includes from browser back/forward, and is necessary to reset species
+    addEventListener("pageshow", (event) => {
+      const selector = document.getElementById('{{ field.elementId }}');
+      selector.value = '';
+      {#/* toggle_input(selector.options[0], false); // Un-comment to disable "Choose" from start. Is this compatible with all browsers? */#}
+    });
+  </script>
+{% endmacro %}
+
+{% macro render_field(field, form_prefix=None, form_suffix=None, make_err_container=false, has_popover=false, content=None) %}
   <div class="form-group {% if field.errors %}has-error{% endif %}">
-    {{ field.label }}
+    <div class="label-group d-flex">
+      {{ field.label(class='form-label') }}
+      {% if has_popover %}
+      <!-- Info Popover -->
+      <a class="btn btn-secondary rounded-circle infoButton mx-2" role="button" tabindex="0" data-bs-toggle="popover"
+      data-bs-trigger="focus" data-bs-title="More information"
+      data-bs-content="{{ content }}" aria-label="More information about {{ field.label.text }}"><i class="bi bi-info lh-1"
+          aria-hidden="true"></i></a>
+      <!-- /Info Popover -->
+      {% endif %}
+    </div>
     {% if form_prefix or form_suffix %}
     <div class="input-group">
-        {% endif %}
-        {% if form_prefix %}
-            <span class="input-group-addon">{{ form_prefix }}</span>
-        {% endif %}
-                {% if field.type == 'RadioField' %}
-                    {{ field(**kwargs) }}
-                {% else %}
-                    {{ field(class="form-control", **kwargs) }}
-                {% endif %}
-        {% if form_suffix %}
-            <span class="input-group-addon">{{ form_prefix }}</span>
-        {% endif %}
+    {% endif %}
+      {% if form_prefix %}<span class="input-group-addon">{{ form_prefix }}</span>{% endif %}
+      {% if field.type == 'RadioField' %}
+        {{ field(**kwargs) }}
+      {% elif field.type == 'BooleanField' %}
+        <div style="display: flex; align-items: center; gap: 1em;">
+          {{ field(**kwargs) }}
+          {% if field.description %}<label for="{{ field.id }}">{{ field.description }}</label>{% endif %}
+        </div>
+      {% elif field.type == 'FileField' %}
+        <div class="hstack gap-2 mb-4">
+          {{ field(class_="form-control", required=kwargs.get('required', field.flags.required), **kwargs) }}
+          {{ caller() }} {# Any HTML inside the {% call %} block is rendered here, inside this inner div #}
+        </div>
+      {% elif field.type == 'SpeciesSelectField' %}
+        {{ render_species_field(field, **kwargs) }}
+      {% elif field.type == 'AnnotationSelectField' %}
+        {{ render_annotation_field(field, **kwargs) }}
+      {% elif kwargs.get('required', false) %}
+        {{ field(class="form-control", required=kwargs.get('required', field.flags.required), **kwargs) }}
+      {% else %}
+        {{ field(class="form-control", **kwargs) }}
+      {% endif %}
+      {% if form_suffix %}<span class="input-group-addon">{{ form_prefix }}</span>{% endif %}
+
     {% if form_prefix or form_suffix %}
     </div>
     {% endif %}
-
     {% for error in field.errors %}
-        <p class='text-danger'>
-            {{ error|safe|e }}
-        </p>
+      <p class='text-danger'>{{ error|safe|e }}</p>
     {% endfor %}
-
+    {% if make_err_container %}
+      <p class='text-danger err-container'></p>
+    {% endif %}
 
   </div>
 {% endmacro %}
@@ -41,7 +111,7 @@
                 <td>{{ col }}</td>
                 {% endfor %}
             </tr>
-        </table>
+        </thead>
     {% endif %}
     <tbody>
     {% for row in rows %}
@@ -58,59 +128,94 @@
 
 
 {% macro render_dataTable_top_menu(pages=True, filter=True, actions=[]) %}
+<div class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-end text-end mb-5 optionsToolbar">
+      {% for action in actions %}
+      {% if not action.get('admin_only', False) or (action.get('admin_only', False) and session['is_admin']) %}
+      <div class="ps-3 pt-0">
+        <a class="{{ action.get('classes', '') }}" style="{{ action.get('style','') }}" href="{{ action.get('url') }}">
+          <span class="{{ action.get('icon', '') }}" aria-hidden="true"></span>
+          {{ action.get('label') }}
+        </a>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+</div>
+<!-- /Container -->
 
-<div class="row dataTables-menu-top">
-  <div class="col-md-2">
+<div class="row mb-5">
+  <div class="d-flex flex-row justify-content-between">
     {% if pages %}
-    <form class="form-inline">
-      <div class="form-group" style="text-align:center">
+    <div class="col-3">
         <label for="page-length"> Show: </label>
-        <select name="page-length" id="page-length" class="form-control">
+        <select name="page-length" id="page-length" class="form-select">
           <option value="5">5</option>
           <option value="10">10</option>
           <option value="25" selected>25</option>
           <option value="100">100</option>
         </select>
-      </div>
-    </form>
-    {% endif %}
-  </div> {# /col-md-2 #}
-  <div class="col-md-6">
-    {% for action in actions %}
-      {% if not action.get('admin_only', False) or (action.get('admin_only', False) and session['is_admin']) %}
-        <a 
-          class="{{ action.get('classes', '') }}"
-          style="{{ action.get('style','') }}"
-          href="{{ action.get('url') }}"
-        >
-        <span class="{{ action.get('icon', '') }}" aria-hidden="true"></span> 
-        {{ action.get('label') }}
-        </a>
-      {% endif %}
-    {% endfor %}
   </div>
-  <div class="col-md-4">
-    {% if filter %}
-    <input id="filter" type="text" class="form-control pull-right" placeholder="Search">
     {% endif %}
-  </div> {# /col-md-2 #}
+    <div class="col-3">
+    {% if filter %}
+    <label for="searchFilter"> <i class="bi bi-search fs-5"></i> Search: </label>
+    <input id="searchFilterfilter" type="text" class="form-control" placeholder="Search">
+    {% endif %}
+</div>
+</div>
+  <!-- /d-flex -->
 </div> {# /row #}
-
-
 {% endmacro %}
+
+
+{% macro render_dataTable_result_list_header(title, data_class=none, extra_classes='') %}
+<th scope="col" class='data-{% if data_class %}{{data_class}}{%else%}{{title|lower}}{%endif%} {{extra_classes}} bg-secondary bg-opacity-25'>{{title}}</th>
+{% endmacro%}
 
 
 
 {#
-  Parse the list of species into a JS object.
-  If species_fields is provided, only exposes these fields; otherwise, exposes all attributes.
+  Render a file for download in a dataset release.
+
+  If the file exists, creates an anchor element linked to it. If not, prints the filename and a message.
+  Requires a dict `files` to be defined, which contains the given file ID if the file exists. Recommended to do this using "import ... with context".
+
+  Arguments:
+    file_id (str): The key of the file in `files`, if it exists.
+    file_name (str): The name of the file (used to display & as the downloaded file name)
+    force_download (bool, optional): Whether to force a download of the file on click. Requires the function force_download to be included in order to work properly.
 #}
-{% macro unpack_species_list(species_list, species_fields) %}{
-  {% for name, species in species_list.items() %}
-    '{{ name }}': {
-      {% for key in ( species_fields or dict(species) ) %}
-        '{{ key }}': '{{ species[key] }}',
-      {% endfor %}
-    },
-  {% endfor %}
+{%- macro render_download_link(file_id, file_name, force_download=false, line_break=true) %}
+    {%- if files.get(file_id) -%}
+        <a href="{{ files.get(file_id) }}"
+            {%- if force_download %} onclick="force_download(event)" download="{{ file_name }}" {% endif -%}
+        >{{ file_name }}</a>
+    {%- else %}
+        {{ file_name }} is not included in this release
+    {%- endif %}
+    {%- if line_break %}<br />{% endif %}
+{%- endmacro %}
+
+
+{#
+  Render a block with one or more calls to `render_download_link`, or an error message if the fileset is undefined.
+#}
+{%- macro render_download_link_set(files) %}
+{%- if files %}
+  {{ caller() }}
+{%- else %}
+  <em>Unable to retrieve files.</em>
+{%- endif %}
+{%- endmacro %}
+
+
+{% macro unpack_annotation_list(annotation_list) %}{
+  {%- for name, annotation in annotation_list.items() %}
+  '{{ name }}': {
+    {% for key in dict(annotation) -%}
+      '{{ key }}': '{{ annotation[key] }}',
+    {% endfor -%}
+  },
+  {%- endfor %}
 }{% endmacro %}

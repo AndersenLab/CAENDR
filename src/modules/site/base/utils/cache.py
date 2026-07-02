@@ -1,6 +1,5 @@
 from time import time
 
-from config import config
 from caendr.services.cloud.datastore import delete_ds_entities_by_query
 from caendr.models.cache import DatastoreCache
 

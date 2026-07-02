@@ -3,7 +3,6 @@ from typing import Optional, Any
 
 from caendr.models.status import JobStatus
 
-from google.cloud.storage.blob     import Blob
 from caendr.services.cloud.storage import BlobURISchema
 
 

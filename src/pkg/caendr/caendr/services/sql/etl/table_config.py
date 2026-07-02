@@ -1,19 +1,18 @@
 from typing import Dict, List
 
-from caendr.utils.env              import get_env_var, get_env_var_with_fallback
+from caendr.utils.env              import get_env_var
 from caendr.services.cloud.secret  import get_secret
 from caendr.services.logger        import logger
 
 # Local imports
 from .strains                      import fetch_andersen_strains
 from .wormbase                     import parse_gene_gtf, parse_gene_gff_summary
-from .strain_annotated_variants    import parse_strain_variant_annotation_data, parse_annovar_variant_annotation_data, parse_csq_variant_annotation_data, parse_snpeff_variant_annotation_data, parse_vep_variant_annotation_data
+from .strain_annotated_variants    import parse_variant_data, parse_annovar_variant_annotation_data, parse_csq_variant_annotation_data, parse_snpeff_variant_annotation_data, parse_vep_variant_annotation_data
 from .phenotype_db                 import parse_phenotypedb_traits_data, parse_phenotypedb_bulk_trait_file
 from .phenotype_metadata           import parse_phenotype_metadata
 
-from caendr.models.sql             import Strain, WormbaseGeneSummary, WormbaseGene, StrainAnnotatedVariant, AnnovarAnnotatedVariant, CsqAnnotatedVariant, SnpEffAnnotatedVariant, VepAnnotatedVariant, PhenotypeDatabase, PhenotypeMetadata
+from caendr.models.sql             import Strain, WormbaseGeneSummary, WormbaseGene, Variant, AnnovarAnnotatedVariant, CsqAnnotatedVariant, SnpEffAnnotatedVariant, VepAnnotatedVariant, PhenotypeDatabase, PhenotypeMetadata
 from caendr.models.datastore       import Species, TraitFile
-from caendr.services.cloud.storage import BlobURISchema
 from caendr.models.datastore       import Species
 from caendr.utils.local_files      import ForeignResource, ForeignResourceTemplate, LocalDatastoreFileTemplate, LocalGoogleSheetTemplate
 from caendr.models.error           import ForeignResourceMissingError
@@ -34,7 +33,7 @@ PHENOTYPE_FILEPATH = get_env_var('MODULE_DB_OPERATIONS_PHENOTYPE_FILEPATH', as_t
 GENE_GFF_FILENAME    = get_env_var('GENE_GFF_FILENAME',  as_template=True)
 GENE_GTF_FILENAME    = get_env_var('GENE_GTF_FILENAME',  as_template=True)
 GENE_IDS_FILENAME    = get_env_var('GENE_IDS_FILENAME',  as_template=True)
-SVA_FILENAME         = get_env_var('SVA_CSVGZ_FILENAME', as_template=True)
+SVA_VARIANT_FILENAME = get_env_var('SVA_VARIANT_FILENAME', as_template=True)
 SVA_ANNOVAR_FILENAME = get_env_var('SVA_ANNOVAR_FILENAME', as_template=True)
 SVA_CSQ_FILENAME     = get_env_var('SVA_CSQ_FILENAME', as_template=True)
 SVA_SNPEFF_FILENAME  = get_env_var('SVA_SNPEFF_FILENAME', as_template=True)
@@ -59,7 +58,7 @@ class ParseConfig():
     Helper class to associate a parsing function with a set of files.
   '''
 
-  def __init__(self, parse, *files: ForeignResourceTemplate):
+  def __init__(self, parse, *files: ForeignResourceTemplate,):
     self.parse = parse
     self.files = files
 
@@ -96,10 +95,11 @@ class TableConfig():
     Bundle together configuration objects / functions for building a single SQL table.
   '''
 
-  def __init__(self, table, *parse_configs: ParseConfig):
+  def __init__(self, table, *parse_configs: ParseConfig, replace_table=True, batch_size=10000):
     self.table = table
     self._parse_configs = parse_configs
-
+    self.replace_table = replace_table
+    self.batch_size = batch_size
 
   @property
   def table_name(self):
@@ -124,6 +124,18 @@ class TableConfig():
     for config in self._parse_configs:
       yield from config.parse_all(species)
 
+
+  def parse_for_all_species(self, species_list=None):
+    '''
+      Apply all parsing functions in this config to their associated files for each species in the list,
+      yielding from each set in sequence.
+    '''
+    if species_list is None:
+      species_class_list = Species.all().values()
+    else:
+      species_class_list = [Species.all()[species_name] for species_name in species_list]
+    for species in species_class_list:
+      yield from self.parse_for_species(species)
 
 
 #
@@ -155,12 +167,13 @@ WormbaseGeneConfig = TableConfig(
   ),
 )
 
-StrainAnnotatedVariantConfig = TableConfig(
-  StrainAnnotatedVariant,
+VariantConfig = TableConfig(
+  Variant,
   ParseConfig(
-    parse_strain_variant_annotation_data,
-    LocalDatastoreFileTemplate( 'SVA_CSVGZ', MODULE_DB_OPERATIONS_BUCKET_NAME, SVA_FILEPATH, SVA_FILENAME ),
+    parse_variant_data,
+    LocalDatastoreFileTemplate( 'VARIANT', AWS_BUCKET_NAME, NEWSVA_FILEPATH, SVA_VARIANT_FILENAME, gcp=False ),
   ),
+  batch_size=50000,
 )
 
 AnnovarAnnotatedVariantConfig = TableConfig(
@@ -169,6 +182,7 @@ AnnovarAnnotatedVariantConfig = TableConfig(
     parse_annovar_variant_annotation_data,
     LocalDatastoreFileTemplate( 'ANNOVAR', AWS_BUCKET_NAME, NEWSVA_FILEPATH, SVA_ANNOVAR_FILENAME, gcp=False ),
   ),
+  batch_size=50000,
 )
 
 CsqAnnotatedVariantConfig = TableConfig(
@@ -177,6 +191,7 @@ CsqAnnotatedVariantConfig = TableConfig(
     parse_csq_variant_annotation_data,
     LocalDatastoreFileTemplate( 'CSQ', AWS_BUCKET_NAME, NEWSVA_FILEPATH, SVA_CSQ_FILENAME, gcp=False ),
   ),
+  batch_size=50000,
 )
 
 SnpEffAnnotatedVariantConfig = TableConfig(
@@ -185,6 +200,7 @@ SnpEffAnnotatedVariantConfig = TableConfig(
     parse_snpeff_variant_annotation_data,
     LocalDatastoreFileTemplate( 'SNPEFF', AWS_BUCKET_NAME, NEWSVA_FILEPATH, SVA_SNPEFF_FILENAME, gcp=False ),
   ),
+  batch_size=50000,
 )
 
 VepAnnotatedVariantConfig = TableConfig(
@@ -193,6 +209,7 @@ VepAnnotatedVariantConfig = TableConfig(
     parse_vep_variant_annotation_data,
     LocalDatastoreFileTemplate( 'VEP', AWS_BUCKET_NAME, NEWSVA_FILEPATH, SVA_VEP_FILENAME, gcp=False ),
   ),
+  batch_size=50000,
 )
 
 PhenotypeDatabaseConfig = TableConfig(
@@ -209,6 +226,7 @@ PhenotypeDatabaseConfig = TableConfig(
     parse_phenotypedb_traits_data,
     *LocalDatastoreFileTemplate.from_file_record_entities(TraitFile, filter = lambda tf: not tf.is_bulk_file),
   ),
+  replace_table=False,  # Don't replace the table when loading non-bulk files, since they are meant to be additive to the bulk file data already in the table 
 )
 
 PhenotypeMetadataConfig = TableConfig(

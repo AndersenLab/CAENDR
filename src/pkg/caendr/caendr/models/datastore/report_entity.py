@@ -11,10 +11,6 @@ from caendr.models.datastore import JobEntity, UserOwnedEntity
 from caendr.models.status    import JobStatus
 from caendr.models.datastore import Container, User
 
-# Services
-from caendr.services.cloud.storage import check_blob_exists
-
-
 
 class ReportEntity(JobEntity, UserOwnedEntity, GCPReport):
   '''

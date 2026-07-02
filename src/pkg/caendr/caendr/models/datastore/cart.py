@@ -1,5 +1,5 @@
 from caendr.models.datastore import DeletableEntity
-from caendr.models.error import NotFoundError, NonUniqueEntity
+from caendr.models.error import NotFoundError
 from caendr.utils.data import unique_id
 
 class PRICES:

@@ -1,5 +1,3 @@
-import os
-
 from caendr.utils.env import get_env_var
 
 from caendr.models.datastore import Entity

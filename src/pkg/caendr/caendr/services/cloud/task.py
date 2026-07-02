@@ -60,11 +60,11 @@ def add_task(queue, queue_region, url, payload, delay_seconds=None, task_name=No
 def verify_task_headers(task_route):
   """ Check headers to verify the task name and queue are present and queue is correct """
   task_name = request.headers.get("X-Cloudtasks-Taskname")
-  if task_name == None:
+  if task_name is None:
     raise APIBadRequestError("Missing X-Cloudtasks-Taskname header")
 
   queue_name = request.headers.get("X-Cloudtasks-Queuename")
-  if queue_name == None:
+  if queue_name is None:
     raise APIBadRequestError("Missing X-Cloudtasks-Queuename header")
   
   # Route must match task queue name

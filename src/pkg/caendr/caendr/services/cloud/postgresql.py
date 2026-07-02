@@ -1,11 +1,9 @@
-from curses.ascii import alt
-import psycopg2
-import pg8000
 from contextlib import contextmanager
 
 from caendr.services.logger import logger
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import text
 from sqlalchemy import create_engine, exc
 
 from caendr.services.cloud.secret import get_secret
@@ -30,7 +28,7 @@ DB_NAME       = get_env_var('MODULE_DB_OPERATIONS_DB_NAME')
 DB_STAGE_NAME = get_env_var('MODULE_DB_OPERATIONS_DB_STAGE_NAME')
 DB_USER_NAME  = get_env_var('MODULE_DB_OPERATIONS_DB_USER_NAME')
 
-DB_PASSWORD   = get_secret('POSTGRES_DB_PASSWORD')
+DB_PASSWORD   = get_secret('POSTGRES_DB_NEW_PASSWORD')
 
 
 
@@ -60,9 +58,9 @@ def get_db_conn_uri():
         target_file = get_env_var('MODULE_DB_OPERATIONS_CONNECTION_FILE', can_be_none=True)
 
         # If filename is provided, use it as the database
-        if (target_file != None):
-            logger.info(f"SQLITE3 sqlite:///{target_file}")
-            return f"sqlite:///{target_file}"
+        if target_file is not None:
+            logger.info(f"postgresql+psycopg2:///{target_file}")
+            return f"postgresql+psycopg2:///{target_file}"
 
         # Otherwise, create a new temp file
         else:
@@ -91,7 +89,7 @@ def health_database_status():
     try:
         # to check database we will execute raw query
         session = Session()
-        session.execute('SELECT 1')
+        session.execute(text('SELECT 1'))
     except Exception as e:
         output = str(e)
         is_database_working = False

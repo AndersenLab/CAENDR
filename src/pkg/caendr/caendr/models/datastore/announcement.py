@@ -3,7 +3,7 @@ from   enum import Enum
 import markdown
 import re
 
-from flask import Markup
+from markupsafe import Markup
 
 from caendr.models.datastore import DeletableEntity, OrderableEntity
 from caendr.utils.data       import unique_id
@@ -160,11 +160,7 @@ class Announcement(DeletableEntity, OrderableEntity):
         /foo*
         /foo*/bar
     '''
-    # Validate the above rules using Regex:
-    #   ^\/              First character is a forward slash '/'
-    #   [^\*]*           String of any length that doesn't include a '*' character
-    #   ((?<=\/)\*)?$    Optionally, last character may be '*', and if so previous character must be '/'
-    return bool(re.match('^\/[^\*]*((?<=\/)\*)?$', path))
+    return path.startswith("/") and ("*" not in path or path.endswith("/*"))
 
 
   def matches_path(self, path: str) -> bool:

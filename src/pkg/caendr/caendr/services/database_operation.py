@@ -6,7 +6,7 @@ from caendr.utils.env                 import get_env_var
 from caendr.models.datastore          import DatabaseOperation
 from caendr.models.sql                import DbOp, ALL_SQL_TABLES
 from caendr.services.cloud.datastore  import get_ds_entity, query_ds_entities
-from caendr.services.cloud.postgresql import rollback_on_error
+from caendr.services.cloud.postgresql import rollback_on_error, db
 
 
 MODULE_DB_OPERATIONS_BUCKET_NAME       = get_env_var('MODULE_DB_OPERATIONS_BUCKET_NAME')
@@ -21,15 +21,11 @@ MODULE_DB_OPERATIONS_CONTAINER_VERSION = get_env_var('MODULE_DB_OPERATIONS_CONTA
 
 # TODO: Should this return DatabaseOperation entity objects?
 def get_all_db_ops(keys_only=False, order=None, placeholder=True):
-  logger.debug(f'get_all_db_ops(keys_only={keys_only}, order={order})')
   ds_entities = query_ds_entities(DatabaseOperation.kind, keys_only=keys_only, order=order)
-  # logger.debug(ds_entities)
   return ds_entities
 
 def get_etl_op(op_id, keys_only=False, order=None, placeholder=True):
-  logger.debug(f'get_etl_op(op_id={op_id}, keys_only={keys_only}, order={order})')
   op = get_ds_entity(DatabaseOperation.kind, op_id)
-  logger.debug(op)
   return op
 
 
@@ -45,9 +41,8 @@ def count_table_rows(model) -> int:
     Uses a more complicated query that's more efficient for big tables.
     Rolls back SQLAlchemy errors automatically.
   '''
-  session   = model.query.session
-  statement = model.query.statement.with_only_columns([func.count()]).order_by(None)
-  return session.execute(statement).scalar()
+  statement = db.select(model).statement.with_only_columns([func.count()]).order_by(None)
+  return db.session.execute(statement).scalar_one_or_none()
 
 # NOTE: This was the old way of getting the table count. Deprecated for being overly complex and potentially unsafe.
 #       For some tables, it gives a slightly lower count than the direct query.count() method...

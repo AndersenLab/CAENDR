@@ -4,7 +4,6 @@ from base.forms import AdminEditProfileForm
 from base.utils.auth import get_jwt, admin_required
 
 from caendr.services.profile import get_profile, get_all_profiles, create_new_profile, delete_profile, update_profile, upload_profile_photo
-from caendr.models.datastore.profile import Profile
 
 
 admin_profile_bp = Blueprint('admin_profile',

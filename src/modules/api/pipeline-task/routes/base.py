@@ -1,4 +1,3 @@
-from itsdangerous import json
 from flask import Blueprint, jsonify
 import os
 

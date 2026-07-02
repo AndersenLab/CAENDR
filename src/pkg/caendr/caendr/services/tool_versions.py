@@ -1,10 +1,8 @@
 import os
 from caendr.services.logger import logger
-import urllib.parse
 
 from caendr.services.cloud.docker_hub import get_container_versions
 from caendr.services.cloud import gcr_container_registry
-from caendr.services.cloud.datastore import query_ds_entities
 from caendr.models.datastore import Container
 
 

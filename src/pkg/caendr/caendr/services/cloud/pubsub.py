@@ -5,7 +5,6 @@ from caendr.services.logger import logger
 from caendr.utils.env import get_env_var
 
 from caendr.models.error import APIUnprocessableEntity
-from caendr.models.pub_sub import PubSubStatus, PubSubMessage, PubSubAttributes
 
 from .discovery import use_service
 
@@ -23,7 +22,8 @@ def get_attribute(payload, key, can_be_none=False):
   # Get the list of attributes
   try:
     attributes = payload.get('message')['attributes']
-  except:
+  except Exception as exc:
+    logger.error(f'Error parsing PubSub message payload: {exc}', exc_info=True)
     raise APIUnprocessableEntity(f'Error parsing PubSub message: could not retrieve attributes')
 
   # Look up to provided key in the set of attributes

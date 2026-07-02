@@ -1,10 +1,7 @@
-from re import T
 import traceback
-from flask_sqlalchemy import SQLAlchemy
 from flask import Flask
 from caendr.services.logger import logger
 import time
-import json
 from caendr.services.email import send_email
 from caendr.models.error import NotFoundError
 from caendr.utils import monitor
@@ -17,7 +14,7 @@ monitor.init_sentry("db_operations")
 
 from caendr.models.datastore import DatabaseOperation, Species
 from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri
-from caendr.services.cloud.postgresql import get_db_conn_uri, get_db_timeout, db, health_database_status
+from caendr.services.cloud.postgresql import get_db_conn_uri, get_db_timeout, db
 from caendr.services.cloud.secret import get_secret
 from operations import execute_operation
 

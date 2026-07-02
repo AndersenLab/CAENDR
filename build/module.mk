@@ -69,7 +69,7 @@ venv: #~
 #~ from 'requirements.txt' and the caendr local package from source
 venv:
 	@echo -e "\n$(COLOR_B)Installing python virtualenv and requirements.txt...$(COLOR_N)"
-	virtualenv --python=python3 $(MODULE_DIR)/venv && \
+	virtualenv --python=python3.13 $(MODULE_DIR)/venv && \
 	$(MODULE_DIR)/venv/bin/python -m pip install --upgrade pip && \
 	$(MODULE_DIR)/venv/bin/python -m pip install -r $(MODULE_DIR)/requirements.txt
 	@echo -e "$(COLOR_G)DONE!$(COLOR_N)\n"

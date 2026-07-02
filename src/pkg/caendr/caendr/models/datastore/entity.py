@@ -1,7 +1,6 @@
 import json
 from datetime import datetime, timezone
 from enum     import Enum
-from typing   import Tuple
 
 from google.cloud import datastore
 from caendr.services.logger import logger

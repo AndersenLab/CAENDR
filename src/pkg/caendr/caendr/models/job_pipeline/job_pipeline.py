@@ -10,9 +10,7 @@ from caendr.services.logger import logger
 # CaeNDR package
 from caendr.models.datastore  import User, Container
 from caendr.models.error      import (
-  NotFoundError,
   DuplicateDataError,
-  DataFormatError,
   EmptyReportResultsError,
   UnschedulableJobTypeError,
   JobAlreadyScheduledError,
@@ -454,7 +452,6 @@ class JobPipeline(ABC):
 
     # Use the Report object to fetch the raw output
     raw_output = self.report.fetch_output()
-
     # If blob is desired or if no blob exists, return here
     if raw or raw_output is None:
       return raw_output

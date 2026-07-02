@@ -1,8 +1,10 @@
 import os
 
 from flask import request
+from sqlalchemy import select
 
 from caendr.models.sql import Strain
+from caendr.services.cloud.postgresql import db
 
 
 photos_bucket = os.environ.get("MODULE_SITE_BUCKET_PHOTOS_NAME")
@@ -21,10 +23,16 @@ def get_isotypes(known_origin=False, list_only=False, unique=False, species=None
   """
   # TODO: integrate these 2 legacy functions so the rest of the args are handled
   if unique:
-    return get_distinct_isotypes()
+    result = select(Strain).filter( Strain.isotype_ref_strain.is_(True) )
+    if species is not None:
+      result = result.filter( Strain.species_name == species )
+    if known_origin or 'origin' in request.path:
+      result = result.filter(Strain.latitude.isnot(None))
+    result = db.session.execute(result.with_only_columns(Strain.isotype).distinct()).all()
+    return [x.isotype for x in result]
 
   # Basic query for isotypes
-  result = Strain.query.filter( Strain.isotype_ref_strain == True ).order_by( Strain.isotype )
+  result = select(Strain).filter( Strain.isotype_ref_strain.is_(True) ).order_by( Strain.isotype )
 
   # Optionally limit to given species
   if species is not None:
@@ -32,9 +40,9 @@ def get_isotypes(known_origin=False, list_only=False, unique=False, species=None
 
   # Optionally limit to strains where origin is known
   if known_origin or 'origin' in request.path:
-    result = result.filter(Strain.latitude != None)
+    result = result.filter(Strain.latitude.isnot(None))
 
-  result = result.all()
+  result = db.session.execute(result).all()
   if list_only:
     result = [x.isotype for x in result]
   return result
@@ -49,13 +57,15 @@ def get_distinct_isotypes(species=None):
   """
 
   # Perform the query for distinct isotypes
-  result = Strain.query.with_entities(Strain.isotype).filter(Strain.isotype != None).distinct()
+  result = select(Strain).with_only_columns(Strain.isotype, Strain.strain).filter(Strain.isotype.isnot(None)).distinct()
 
   # Optionally limit to given species
   if species is not None:
     result = result.filter( Strain.species_name == species )
 
+
   # Map to list and return
-  result = [ x.isotype for x in result.all() ]
+  result = db.session.execute(result).all()
+  result = [ x.isotype for x in result ]
   return result
 

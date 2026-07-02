@@ -3,39 +3,37 @@ import pandas as pd
 import numpy as np
 from caendr.services.logger import logger
 
-
 from flask_wtf import FlaskForm, RecaptchaField, Form
 from wtforms import (StringField,
-                     DateField,
                      BooleanField,
                      TextAreaField,
                      IntegerField,
                      SelectField,
                      SelectMultipleField,
+                     FileField,
                      widgets,
-                     FieldList,
                      HiddenField,
                      RadioField)
 
 from wtforms.fields.simple import PasswordField
-from wtforms.validators import (Required, 
-                                Length, 
+from wtforms.validators import (Length, 
                                 Email, 
                                 DataRequired, 
                                 EqualTo, 
                                 Optional,
                                 ValidationError)
-from wtforms.fields.html5 import EmailField
+from wtforms.fields import EmailField
 
 
-from constants import PRICES, SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS, REPORT_TYPES
+from constants import SECTOR_OPTIONS, SHIPPING_OPTIONS, PAYMENT_OPTIONS, TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS, TRAIT_CATEGORY_OPTIONS, GENOME_BROWSER_TOOLS
 
 from caendr.services.profile import get_profile_role_form_options
 from caendr.services.user import get_user_role_form_options, get_local_user_by_email
 from caendr.services.database_operation import get_db_op_form_options
-from caendr.services.indel_primer import get_indel_primer_chrom_choices, get_indel_primer_strain_choices
+from caendr.services.indel_primer import get_indel_primer_chrom_choices
 from caendr.services.markdown import get_content_type_form_options
-from caendr.models.datastore import User, SPECIES_LIST
+from caendr.models.datastore import User, Species, DatasetRelease, AnnotationFile
+from caendr.models.datastore.announcement import AnnouncementType
 from caendr.api.strain import query_strains
 from base.forms.validators import (validate_duplicate_strain, 
                                    validate_duplicate_isotype, 
@@ -57,35 +55,88 @@ class MultiCheckboxField(SelectMultipleField):
   widget = widgets.ListWidget(prefix_label=False)
   option_widget = widgets.CheckboxInput() 
 
+
+class SpeciesSelectField(SelectField):
+  """
+    Special dropdown selector field for selecting a species.
+  """
+  type = 'SpeciesSelectField'
+  elementId = 'speciesSelect'
+
+  # Automatically validates that species choice is in this list
+  CHOICES = [(name, value.short_name) for name, value in Species.all().items()]
+
+  def __init__(self, exclude_species=[], **kwargs):
+    species_choices = SpeciesSelectField.CHOICES
+    self.exclude_species = exclude_species
+    return super().__init__('Species:', id=SpeciesSelectField.elementId, choices=[ ('', "Choose"), *species_choices ], **kwargs)
+
+class AnnotationSelectField(SelectField):
+  """
+  Special dropdown selector field for selecting an annotation tool.
+  """
+  type = 'AnnotationSelectField'
+  elementId = 'annotationSelect'
+
+  # Automatically validates that species choice is in this list
+  CHOICES = [(name, value.display_name) for name, value in AnnotationFile.all().items()]
+
+  def __init__(self, **kwargs):
+    annotation_choices = AnnotationSelectField.CHOICES
+    return super().__init__('Annotation Tool:', id=AnnotationSelectField.elementId, choices=[ ('', "Choose"), *annotation_choices ], **kwargs)
+
 class EmptyForm(FlaskForm):
   pass
 
-class FileUploadForm(FlaskForm):
-  pass
+class SpeciesSelectForm(FlaskForm):
+  """
+    Dummy form with just a species selector. Useful for tools/pages that need a species selector, but not a full form.
+  """
+  species = SpeciesSelectField()
 
-class HeritabilityForm(Form):
+class FileUploadForm(FlaskForm):
+  species = SpeciesSelectField()
+  label = StringField('Description:', validators=[DataRequired(message='You must include a description of your data.')])
+  file = FileField('Select file:', render_kw={'accept': ','.join({ f'.{ext}' for ext in TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS})})
+
+# class HeritabilityForm(FileUploadForm):
+class HeritabilityForm(FlaskForm):
+  species = SpeciesSelectField()
+  label = StringField('Description:', validators=[DataRequired(message='You must include a description of your data.')])
+  file = FileField('Select file:', render_kw={'accept': ','.join({ f'.{ext}' for ext in TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS})})
+
+class MappingForm(FileUploadForm):
   pass
 
 class VBrowserForm(FlaskForm):
-  pass
+  species = SpeciesSelectField()
+  annotationtool = AnnotationSelectField()
 
 
 class BasicLoginForm(FlaskForm):
   """ The simple username/password login form """
-  username = StringField('Username', [Required(), Length(min=5, max=30)])
-  password = PasswordField('Password', [Required(), Length(min=5, max=30)])
+  username = StringField('Username', [DataRequired(), Length(min=5, max=30)])
+  password = PasswordField('Password', [DataRequired(), Length(min=8, max=30)])
   recaptcha = RecaptchaField()
 
 class PasswordResetForm(FlaskForm):
   """ The password reset form """
-  password = PasswordField('New Password', [Required(), EqualTo('confirm_password', message='Passwords must match'), Length(min=12, max=30)])
-  confirm_password = PasswordField('Confirm New Password', [Required(), EqualTo('password', message='Passwords must match'), Length(min=12, max=30)])
+  password = PasswordField('New Password', [DataRequired(), EqualTo('confirm_password', message='Passwords must match'), Length(min=8, max=30)])
+  confirm_password = PasswordField('Confirm New Password', [DataRequired(), EqualTo('password', message='Passwords must match'), Length(min=8, max=30)])
   recaptcha = RecaptchaField()
 
 class RecoverUserForm(FlaskForm):
   """ The account recovery email form """
-  email = EmailField('Email Address', [Required(), Email(), Length(min=6, max=320)])
+  email = EmailField('Email Address', [DataRequired(), Email(), Length(min=6, max=320)])
   recaptcha = RecaptchaField()
+
+
+class AnnouncementForm(FlaskForm):
+  """ Edit form for site announcements """
+  active   = BooleanField('Active')
+  content  = StringField('Content', [Optional()])
+  url_list = TextAreaField('URL Patterns', [Optional()])
+  style    = SelectField('Style', [Optional()], choices=[(x.name, x.value) for x in AnnouncementType])
 
 class MarkdownForm(FlaskForm):
   """ markdown editing form """
@@ -93,16 +144,16 @@ class MarkdownForm(FlaskForm):
 
   title = StringField('Title', [Optional()])
   content = StringField('Content', [Optional()])
-  type = SelectField('Type', choices=_CONTENT_TYPES, validators=[Required()])
+  type = SelectField('Type', choices=_CONTENT_TYPES, validators=[DataRequired()])
 
 
 class UserRegisterForm(FlaskForm):
   """ Register as a new user with username/password """
-  username = StringField('Username', [Required(), Length(min=5, max=30)])
-  full_name = StringField('Full Name', [Required(), Length(min=5, max=50)])
-  email = EmailField('Email Address', [Required(), Email(), Length(min=6, max=320)])
-  password = PasswordField('Password', [Required(), EqualTo('confirm_password', message='Passwords must match'), Length(min=12, max=30)])
-  confirm_password = PasswordField('Confirm Password', [Required(), EqualTo('password', message='Passwords must match'), Length(min=12, max=30)])
+  username = StringField('Username', [DataRequired(), Length(min=5, max=30)])
+  full_name = StringField('Full Name', [DataRequired(), Length(min=5, max=50)])
+  email = EmailField('Email Address', [DataRequired(), Email(), Length(min=6, max=320)])
+  password = PasswordField('Password', [DataRequired(), EqualTo('confirm_password', message='Passwords must match'), Length(min=8, max=30)])
+  confirm_password = PasswordField('Confirm Password', [DataRequired(), EqualTo('password', message='Passwords must match'), Length(min=8, max=30)])
   recaptcha = RecaptchaField()
 
   def validate_username(form, field):
@@ -118,18 +169,18 @@ class UserRegisterForm(FlaskForm):
 
 class UserUpdateForm(FlaskForm):
   """ Modifies an existing users profile """
-  full_name = StringField('Full Name', [Required(), Length(min=5, max=50)])
-  email = EmailField('Email Address', [Required(), Email(), Length(min=6, max=50)])
-  password = PasswordField('Password', [Optional(), EqualTo('confirm_password', message='Passwords must match'), Length(min=5, max=30)])
-  confirm_password = PasswordField('Confirm Password', [Optional(), EqualTo('password', message='Passwords must match'), Length(min=5, max=30)])
+  full_name = StringField('Full Name', [DataRequired(), Length(min=5, max=50)])
+  email = EmailField('Email Address', [DataRequired(), Email(), Length(min=6, max=50)])
+  password = PasswordField('Password', [Optional(), EqualTo('confirm_password', message='Passwords must match'), Length(min=8, max=30)])
+  confirm_password = PasswordField('Confirm Password', [Optional(), EqualTo('password', message='Passwords must match'), Length(min=8, max=30)])
 
 
 class AdminEditUserForm(FlaskForm):
   """ A form for one or more roles """
   _USER_ROLES = get_user_role_form_options()
 
-  full_name = StringField('', [Required(), Length(min=5, max=50)])
-  email = EmailField('', [Required(), Email(), Length(min=6, max=50)])
+  full_name = StringField('', [DataRequired(), Length(min=5, max=50)])
+  email = EmailField('', [DataRequired(), Email(), Length(min=6, max=50)])
   roles = MultiCheckboxField('', choices=_USER_ROLES)
 
   def validate_roles(form, field):
@@ -140,48 +191,73 @@ class AdminEditProfileForm(FlaskForm):
   """ A form for updating individuals' public profile on the site """
   _PROFILE_ROLES = get_profile_role_form_options()
   
-  first_name = StringField('First Name', [Required(), Length(min=1, max=50)])
-  last_name = StringField('Last Name', [Required(), Length(min=1, max=50)])
-  title = StringField('Staff Title', [Optional(), Length(min=1, max=50)])
-  org = StringField('Organization', [Optional(), Length(min=1, max=50)])
-  email = StringField('Email', [Email(), Optional(), Length(min=3, max=100)])
-  website = StringField('Website', [Optional(), Length(min=3, max=200)])
+  first_name = StringField('First Name', [DataRequired(), Length(min=1, max=50)])
+  last_name = StringField('Last Name', [DataRequired(), Length(min=1, max=50)])
+  title = StringField('Staff Title', [Optional(), Length(max=50)])
+  org = StringField('Organization', [Optional(), Length(max=50)])
+  email = StringField('Email', [Email(), Optional(), Length(max=100)])
+  website = StringField('Website', [Optional(), Length(max=200)])
   prof_roles = MultiCheckboxField('Profile Pages', choices=_PROFILE_ROLES)
 
 
 class AdminCreateDatabaseOperationForm(FlaskForm):
   _ops = get_db_op_form_options()
   
-  db_op = SelectField('Database Operation', choices=_ops, validators=[Required()])
-  wormbase_version = IntegerField('Wormbase Version WS (ex: 276 -> WS276):', validators=[Optional()])
-  sva_version = IntegerField('Strain Variant Annotation Version (ex: 20210401 -> gs://caendr-db-bucket/strain_variant_annotation/c_elegans/WI.strain-annotation.bcsq.20210401.csv.gz)', validators=[Optional()])
-  note = StringField('Notes', [Optional(), Length(min=3, max=200)])
+  db_op = SelectField('Database Operation', choices=_ops, validators=[DataRequired()])
+  species = MultiCheckboxField('Species', choices=[(key, val.short_name) for key, val in Species.all().items()])
+  note = StringField('Notes', [Optional(), Length(max=200)])
 
 
 
 class AdminGeneBrowserTracksForm(FlaskForm):  
   wormbase_version = IntegerField('Wormbase Version WS (ex: 276 -> WS276):', validators=[Optional()])
-  note = StringField('Notes', [Optional(), Length(min=3, max=200)])
+  note = StringField('Notes', [Optional(), Length(max=200)])
 
+class AdminEditBrowserTrackForm(FlaskForm):
+  _AVAILABILITY = [
+    (species.name, f'<em>{species.short_name}</em> (Release: {species["release_latest"]})')
+      for species in Species.all().values()
+  ]
+
+  display_name  = StringField('Display Name', [Length(min=3, max=200)])
+  information   = StringField('Track Information', [Optional()])
+  filename      = StringField('Filename', [Length(min=3, max=200)])
+  checked       = BooleanField('Checked by Default in Genome Browser', description="Checked by Default")
+
+  availability  = MultiCheckboxField('Availability in Genome Browser', choices=_AVAILABILITY)
+  modify_availability  = BooleanField()
+
+  used_in_tools = MultiCheckboxField('Used in Tools', choices=GENOME_BROWSER_TOOLS)
+  modify_used_in_tools = BooleanField()
 
 class AdminEditToolContainerVersion(FlaskForm):
-  version = SelectField('Container Version Tag', validators=[Required()])
+  version = SelectField('Container Version Tag', validators=[DataRequired()])
   
 class DatasetReleaseForm(FlaskForm):
   """ A form for creating a data release """
-  version = IntegerField('Dataset Release Version', validators=[Required(message="Dataset release version (as an integer) is required (ex: 20210121)")])
-  wormbase_version = IntegerField('Wormbase Version WS:', validators=[Required(message="Wormbase version (as an integer) is required (ex: WS276 -> 276)")])
-  report_type = SelectField('Report Type', choices=REPORT_TYPES, validators=[Required()])
+  REPORT_TYPES = [(report_type.name, report_type.name) for report_type in DatasetRelease.all_report_types]
+  version = IntegerField('Dataset Release Version', validators=[DataRequired(message="Dataset release version (as an integer) is required (ex: 20210121)")])
+  wormbase_version = IntegerField('Wormbase Version WS:', validators=[DataRequired(message="Wormbase version (as an integer) is required (ex: WS276 -> 276)")])
+  report_type = SelectField('Report Type', choices=REPORT_TYPES, validators=[DataRequired()])
   disabled = BooleanField('Disabled')
   hidden = BooleanField('Hidden')
 
 
-class DonationForm(Form):
+class DollarIntegerField(IntegerField):
+  def process_formdata(self, valuelist):
+    if valuelist:
+        try:
+          self.data = int(valuelist[0].strip('$'))
+        except ValueError:
+          self.data = None
+          raise ValueError(self.gettext('Please enter without decimals or commas. For example 1, not 1.00'))
+
+class DonationForm(FlaskForm):
   """ The donation form """
-  name = StringField('Name', [Required(), Length(min=3, max=100)])
+  name = StringField('Name', [DataRequired(), Length(min=3, max=100)])
   address = TextAreaField('Address', [Length(min=10, max=200)])
   email = StringField('Email', [Email(), Length(min=3, max=100)])
-  total = IntegerField('Donation Amount')
+  total = DollarIntegerField('Donation Amount')
   recaptcha = RecaptchaField()
 
 
@@ -197,34 +273,37 @@ class StrainSelectField(SelectField):
     pass
 
 
-class PairwiseIndelForm(Form):
-  CHROMOSOME_CHOICES = get_indel_primer_chrom_choices()
-  SPECIES_CHOICES = [(name, value.short_name) for name, value in SPECIES_LIST.items()]
-  
-  species = SelectField('Species', choices=SPECIES_CHOICES, default="c_elegans", validators=[Required()])
-  strain_1 = StrainSelectField('Strain 1', choices=[], default="N2",     validators=[Required(), validate_uniq_strains])
-  strain_2 = StrainSelectField('Strain 2', choices=[], default="CB4856", validators=[Required()])
-  chromosome = SelectField('Chromosome', choices=CHROMOSOME_CHOICES, default="V", validators=[Required()])
-  start = FlexIntegerField('Start', default="6,271,913", validators=[Required(), validate_start_lt_stop])
-  stop = FlexIntegerField('Stop', default="6,272,025", validators=[Required()])
+class PairwiseIndelForm(FlaskForm):
+  CHROMOSOME_CHOICES = [('', ''), *get_indel_primer_chrom_choices()]
 
-  @classmethod
-  def default_strain_choices(cls):
-    return ("N2", "CB4856")
+  species = SpeciesSelectField(validators=[DataRequired()])
+  strain_1 = StrainSelectField('Strain 1:', choices=[], validators=[DataRequired(), validate_uniq_strains])
+  strain_2 = StrainSelectField('Strain 2:', choices=[], validators=[DataRequired()])
+  chromosome = SelectField('Chromosome:', choices=CHROMOSOME_CHOICES, validators=[DataRequired()])
+  start = FlexIntegerField('Start:', validators=[DataRequired(), validate_start_lt_stop])
+  stop  = FlexIntegerField('Stop:',  validators=[DataRequired()])
 
   
-class OrderForm(Form):
+class OrderForm(FlaskForm):
   """ The strain order form """
   sector = SelectField('Sector', choices=SECTOR_OPTIONS, default="academia")
-  name = StringField('Name', [Required(), Length(min=3, max=100)])
-  email = StringField('Email', [Email(), Length(min=3, max=100)])
-  address = TextAreaField('Address', [Length(min=10, max=200)])
+  name = StringField('Name', [DataRequired(), Length(min=3, max=100)])
+  email = StringField('Email', [Email(), Length(min=5, max=100)])
+  institution = StringField('Institution', [Length(max=50)])
+  building = StringField('Building, Room Number', [Length(max=50)])
+  address = StringField('Address', [Length(min=5, max=50)])
+  address2 = StringField('Address 2', [Length(max=50)])
+  city = StringField('City', [Length(min=4, max=50)])
+  state = StringField('State', [Length(min=2, max=20)])
+  zipcode = StringField('Zip Code', [Length(min=5, max=20)])
+  country = StringField('Country', [Length(min=5, max=20)])
   phone = StringField('Phone', [Length(min=3, max=35)])
   shipping_service = SelectField('Shipping', choices=SHIPPING_OPTIONS)
-  shipping_account = StringField('Account Number')
-  items = FieldList(HiddenField('item', [DataRequired()]))
+  shipping_account = StringField('UPS/FEDEX Account Number')
   payment = SelectField("Payment", choices=PAYMENT_OPTIONS)
-  comments = TextAreaField("Comments", [Length(min=0, max=300)])
+  comments = TextAreaField("Comments", [Length(max=300)])
+  version = StringField(HiddenField('version', [DataRequired()]))
+
   #recaptcha = RecaptchaField()
 
   def validate_shipping_account(form, field):
@@ -233,26 +312,6 @@ class OrderForm(Form):
       raise ValidationError("Please supply a shipping account number.")
     elif form.shipping_service.data == "Flat Rate Shipping" and field.data:
       raise ValidationError("No shipping account number is needed if you are using flat-rate shipping.")
-
-  def item_price(self):
-    """ Fetch item and its price """
-    for item in self.items:
-      if item.data == "set_divergent":
-        yield item.data, PRICES.DIVERGENT_SET
-      elif item.data.startswith("set"):
-        yield item.data, PRICES.STRAIN_SET
-      else:
-        yield item.data, PRICES.STRAIN
-    if self.shipping_service.data == "Flat Rate Shipping":
-      yield "Flat Rate Shipping", PRICES.SHIPPING
-
-  @property
-  def total(self):
-    """ Calculates the total price of the order """
-    total_price = 0
-    for item, price in self.item_price():
-      total_price += price
-    return total_price
 
 
 class TraitData(HiddenField):
@@ -299,11 +358,11 @@ class TraitData(HiddenField):
 # will prove useful in the future.
 class MappingSubmissionForm(Form):
   """ Form for mapping submission """
-  report_name = StringField('Report Name', [Required(),
+  report_name = StringField('Report Name', [DataRequired(),
                                             Length(min=1, max=50),
                                             validate_report_name_unique])
   is_public = RadioField('Release', choices=[('true', 'public'), ('false', 'private')])
-  description = TextAreaField('Description', [Length(min=0, max=1000)])
+  description = TextAreaField('Description', [Length(max=1000)])
   trait_data = TraitData(validators=[validate_row_length,
                                       validate_duplicate_strain,
                                       validate_duplicate_isotype,
@@ -315,5 +374,35 @@ class MappingSubmissionForm(Form):
                                       validate_missing_isotype,
                                       validate_strain_w_no_data,
                                       validate_data_exists])
+  
+
+class StrainListForm(FlaskForm):
+  species = SpeciesSelectField(validators=[DataRequired()])
+  
+  # class Meta:
+  #   csrf = True
+  #   csrf_class = SessionCSRF
+  #   csrf_secret = b"fdskjerntjkgreji23092309"
+
+  #   @property
+  #   def csrf_context(self):
+  #     return session
 
 
+class TraitSubmissionForm(FlaskForm):
+  """ The trait submission form """
+  file = FileField('Select file', render_kw={'accept': ','.join({ f'.{ext}' for ext in TOOL_INPUT_DATA_VALID_FILE_EXTENSIONS})})
+  species = SpeciesSelectField(validators=[DataRequired()])
+  trait_name_user = StringField('Internal Trait Name', validators=[DataRequired(), Length(min=3, max=100)])
+  trait_name_display_1 = StringField('Display Name 1', validators=[DataRequired(), Length(min=3, max=50)])
+  trait_name_display_2 = StringField('Display Name 2')
+  trait_name_display_3 = StringField('Display Name 3')
+  description_short = TextAreaField('Short Description', validators=[DataRequired(), Length(min=10, max=200)])
+  description_long = TextAreaField('Long Description', validators=[DataRequired(), Length(min=10)])
+  units = StringField('Unit of Measurement', validators=[Length(max=10)])
+  tags = MultiCheckboxField("Categories", choices=TRAIT_CATEGORY_OPTIONS, validators=[DataRequired()])
+  email = StringField('Email', validators=[Email(), DataRequired(), Length(min=3, max=50)])
+  institution = StringField('Institution', validators=[DataRequired(), Length(min=3, max=50)])
+  source_lab = StringField('Source Lab', validators=[DataRequired(), Length(min=1, max=4)])
+  protocols = TextAreaField('Protocols', validators=[Length(max=200)])
+  publication = TextAreaField('Publications', validators=[Length(max=200)])

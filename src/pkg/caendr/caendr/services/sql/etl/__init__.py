@@ -1,16 +1,21 @@
+from multiprocessing.dummy import connection
 import os
 import shutil
+import csv
+import tempfile
 from logzero import logger
 
 # Local imports
-from .table_config import StrainConfig, WormbaseGeneSummaryConfig, WormbaseGeneConfig, StrainAnnotatedVariantConfig, AnnovarAnnotatedVariantConfig, CsqAnnotatedVariantConfig, SnpEffAnnotatedVariantConfig, VepAnnotatedVariantConfig, PhenotypeDatabaseConfig, PhenotypeMetadataConfig
+from .table_config import StrainConfig, WormbaseGeneSummaryConfig, WormbaseGeneConfig, VariantConfig, AnnovarAnnotatedVariantConfig, CsqAnnotatedVariantConfig, SnpEffAnnotatedVariantConfig, VepAnnotatedVariantConfig, PhenotypeDatabaseConfig, PhenotypeMetadataConfig
 
 from caendr.models.datastore import Species
 from caendr.models.sql       import ALL_SQL_TABLES
 from caendr.utils.constants  import DEFAULT_BATCH_SIZE
 from caendr.utils.data       import batch_generator
+from caendr.services.cloud.postgresql import db
 
-from sqlalchemy import func, literal_column
+from sqlalchemy import func, literal_column, select, inspect
+from sqlalchemy.sql import text
 
 # Gather table configurations into a single dict
 TABLE_CONFIG = {
@@ -18,7 +23,7 @@ TABLE_CONFIG = {
         StrainConfig,
         WormbaseGeneSummaryConfig,
         WormbaseGeneConfig,
-        StrainAnnotatedVariantConfig,
+        VariantConfig,
         AnnovarAnnotatedVariantConfig,
         CsqAnnotatedVariantConfig,
         SnpEffAnnotatedVariantConfig,
@@ -30,10 +35,55 @@ TABLE_CONFIG = {
 
 
 def query_count(query):
-    ONE = literal_column("1")
-    counter = query.statement.with_only_columns([func.count(ONE)])
-    counter = counter.order_by(None)
-    return query.session.execute(counter).scalar()
+    return db.session.scalar(select(func.count()).select_from(query.subquery()))
+
+
+def table_row_count(table):
+    return db.session.scalar(select(func.count()).select_from(table))
+
+
+def generator_to_csv(data_generator, csv_file_path, fieldnames):
+    '''
+        Convert a generator of dictionaries to CSV file for COPY command.
+        
+        Args:
+        data_generator: Generator yielding dictionaries
+        csv_file_path: Path where CSV will be written
+        fieldnames: List of column names
+        
+        Returns:
+        Number of rows written
+    '''
+    if 'id' in fieldnames:
+        uses_id = True
+    else:
+        uses_id = False
+    rows_written = 0
+    try:
+        with open(csv_file_path, 'w', newline='') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore')
+            writer.writeheader()
+    
+            for row in data_generator:
+                if uses_id and 'id' not in row:
+                    row['id'] = rows_written
+                for key, value in row.items():
+                    # Reformat arrays if needed
+                    if type(value) == list:
+                        value = ",".join([f"{x}" for x in value])
+                        row[key] = '"{' + value + '}"'
+                writer.writerow(row)
+                rows_written += 1
+        
+                if rows_written % 100000 == 0:
+                    logger.debug(f'Exported {rows_written} rows to CSV')
+    
+        logger.info(f'Exported {rows_written} total rows to CSV: {csv_file_path}')
+        return rows_written
+    
+    except Exception as e:
+        logger.error(f'Failed to write CSV: {e}', exc_info=True)
+        raise
 
 
 class ETLManager:
@@ -95,7 +145,6 @@ class ETLManager:
         return 'tables: ' + ', '.join([ t.__tablename__ for t in tables ])
 
 
-
     #
     # Loading Tables
     #
@@ -109,13 +158,10 @@ class ETLManager:
             tables = self.all_tables()
 
         for table in tables:
-            self.load_table(table, species_list=species_list)
+            self.__load_table(table, species_list=species_list)
 
 
-    # Is this link still relevant?
-    # https://github.com/phil-bergmann/2016_DLRW_brain/blob/3f69c945a40925101c58a3d77c5621286ad8d787/brain/data.py
-
-    def load_table(self, table, species_list = None):
+    def __load_table(self, table, species_list = None):
         '''
             Load & insert data for a single SQL table.
         '''
@@ -123,28 +169,191 @@ class ETLManager:
         # Get config object for the table
         config = TABLE_CONFIG[table.__tablename__]
 
+        # If table does not exist, create it
+        if not inspect(self.db.engine).has_table(table.__tablename__):
+            logger.info(f'Table {table.__tablename__} does not exist, creating table...')
+            table.__table__.create(bind=self.db.engine)
+
         # Initialize a count for the number of entries added
-        initial_count = query_count(config.table.query)
+        initial_count = query_count(select(table))
         logger.info(f'Initial count for table {config.table_name}: {initial_count} entries')
 
-        # Loop through the name & Species object for each species
-        for species in Species.all().values():
+        # Determine if table can be loaded with COPY command (ie: it will replace the entire table))
+        if species_list is None and config.replace_table:
+            try:
+                logger.info(f'Loading {config.table_name} with COPY command (full table replacement)...')
+                data_generator = config.parse_for_all_species()  # Get a generator for all species at once, since we'll be replacing the whole table
+                fieldnames = [ column.name for column in table.__table__.columns ]
+                total_inserted = self.__load_with_copy_from_generator(config.table_name, data_generator, fieldnames, disable_indexes_flag=True)
+                logger.info(f"Inserted {total_inserted} {config.table_name} records with COPY for all species")
+                return
+            except Exception as e:
+                logger.error(f'COPY load failed for {config.table_name}, falling back to batch inserts: {e}', exc_info=True)
+                pass
 
-            # Skip any species not in the list
-            if species_list and species.name not in species_list:
-                continue
+        # If we can't use COPY (ie: we're only loading a subset of species, or the table is meant to be additive rather than replacing), use batch inserts
+        data_generator = config.parse_for_all_species(species_list)
+        total_inserted = self.__bulk_insert_with_batching(
+            table,
+            data_generator, 
+            batch_size=config.batch_size,
+            defer_fks=True,
+            disable_indexes=species_list is None and config.replace_table  # Disable indexes if we're replacing the whole table, since that will be faster than keeping them enabled during inserts and rebuilding after
+        )
+        logger.info(f"Inserted {total_inserted} {config.table_name} records with batch inserts for species [{', '.join(species_list) if species_list else 'all species'}]")
 
-            # Load & insert table data in batches, to help reduce local memory footprint
-            logger.info(f'Inserting data for {species.name} into table {config.table_name}...')
-            for i, g in enumerate(batch_generator( config.parse_for_species(species) )):
-                logger.debug(f'Processing {species.name} batch {i} (rows {i * DEFAULT_BATCH_SIZE}-{(i+1) * DEFAULT_BATCH_SIZE})...')
-                self.db.session.bulk_insert_mappings(config.table, g)
+
+    def __bulk_insert_with_batching(self, model_class, data_generator, batch_size=10000, 
+                                  defer_fks=True, disable_indexes=False):
+        '''
+            Optimized bulk insert with batching, FK deferral, and optional index management.
+            
+            Args:
+            model_class: SQLAlchemy model class to insert into
+            data_generator: Generator or iterable yielding dictionaries to insert
+            batch_size: Number of records to insert per batch (default 10000)
+            defer_fks: Whether to defer FK constraints (default True)
+            disable_indexes: Whether to disable indexes during insert (default False)
+        '''
+        # if defer_fks:
+        #     self.db.session.execute(text('SET CONSTRAINTS ALL DEFERRED'))
+        
+        batch = []
+        total_inserted = 0
+        
+        for data in data_generator:
+            batch.append(data)
+            
+            if len(batch) >= batch_size:
+                self.db.session.bulk_insert_mappings(model_class, batch)
                 self.db.session.commit()
-                logger.debug(f'Finished inserting {species.name} batch {i}.')
+                total_inserted += len(batch)
+                logger.info(f'Inserted {total_inserted} {model_class.__name__} records')
+                batch = []
+        
+        if batch:
+            self.db.session.bulk_insert_mappings(model_class, batch)
+            self.db.session.commit()
+            total_inserted += len(batch)
+            logger.info(f'Inserted {total_inserted} {model_class.__name__} records (final batch)')
+        
+        return total_inserted
 
-        # Print how many entries were added
-        total_records = query_count(config.table.query) - initial_count
-        logger.info(f'Inserted {total_records} entries into table {config.table_name}')
+
+    def __load_with_copy(self, table_name, csv_file_path, columns=None, disable_indexes_flag=False):
+        '''
+            Load data using PostgreSQL COPY command (native binary transfer, fastest method).
+            
+            Args:
+            db: SQLAlchemy db instance
+            table_name: Name of table to load into
+            csv_file_path: Path to CSV file with data
+            columns: List of column names to load (optional, uses all if None)
+            disable_indexes_flag: Whether to disable indexes before load (default True)
+            
+            Returns:
+            Number of rows loaded
+        '''
+        try:
+            # if disable_indexes_flag:
+            #     self.__disable_indexes(table_name)
+        
+            col_spec = f'({", ".join(columns)})' if columns else ''
+        
+            with open(csv_file_path, 'r') as f:
+                try:
+                    conn = self.db.engine.raw_connection()
+                    cursor = conn.cursor()
+                    copy_sql = f'COPY {table_name} FROM STDIN WITH (FORMAT csv, HEADER true, NULL \'\', ESCAPE E\'\\\\\')'
+                    cursor.copy_expert(sql=copy_sql, file=f)
+                    conn.commit()
+                except Exception as e:
+                    logger.error(f'COPY command failed for {table_name}: {e}', exc_info=True)
+                    raise
+            
+            # if disable_indexes_flag:
+            #     self.__enable_indexes(table_name)
+                
+            # self.__rebuild_indexes(table_name)
+            self.db.session.commit()
+        
+        except Exception as e:
+            logger.error(f'COPY command failed for {table_name}: {e}', exc_info=True)
+            raise
+
+
+    def __load_with_copy_from_generator(self, table_name, data_generator, fieldnames, disable_indexes_flag=True):
+        '''
+            Complete pipeline: generator -> CSV -> COPY command.
+            Combines streaming data processing with native COPY for maximum performance.
+            
+            Args:
+            db: SQLAlchemy db instance
+            table_name: Name of table to load into
+            data_generator: Generator yielding dictionaries
+            fieldnames: List of column names
+            disable_indexes_flag: Whether to disable indexes before load (default True)
+            
+            Returns:
+            Number of rows loaded
+        '''
+        csv_file_path = None
+        try:
+            # Create temporary file
+            temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False)
+            csv_file_path = temp_file.name
+            temp_file.close()
+            
+            logger.info(f'Exporting data to temporary CSV: {csv_file_path}')
+            rows = generator_to_csv(data_generator, csv_file_path, fieldnames)
+            
+            logger.info(f'Loading from CSV into {table_name} using COPY')
+            self.__load_with_copy(table_name, csv_file_path, fieldnames, disable_indexes_flag)
+
+            if csv_file_path and os.path.exists(csv_file_path):
+                os.remove(csv_file_path)
+                logger.debug(f'Cleaned up temporary CSV file')
+            return rows
+    
+        except Exception as e:
+            if csv_file_path and os.path.exists(csv_file_path):
+                # os.remove(csv_file_path)
+                logger.debug(f'Cleaned up temporary CSV file')
+            raise
+
+
+    def __disable_indexes(self, table_name):
+        '''Disable indexes on a table for faster bulk inserts.'''
+        with self.db.engine.raw_connection() as connection:
+            cursor = connection.cursor()
+            try:
+                cursor.execute(f'ALTER TABLE {table_name} DISABLE TRIGGER ALL')
+                logger.info(f'Disabled indexes/triggers on {table_name}')
+            except Exception as e:
+                logger.warning(f'Could not disable indexes on {table_name}: {e}')
+        connection.close()
+
+
+    def __enable_indexes(self, table_name):
+        '''Re-enable indexes on a table after bulk inserts.'''
+        with self.db.engine.raw_connection() as connection:
+            cursor = connection.cursor()
+            try:
+                cursor.execute(f'ALTER TABLE {table_name} ENABLE TRIGGER ALL')
+                logger.info(f'Re-enabled indexes/triggers on {table_name}')
+            except Exception as e:
+                logger.warning(f'Could not re-enable indexes on {table_name}: {e}')
+        connection.close()
+
+
+    def __rebuild_indexes(self, table_name):
+        '''Rebuild/reindex a table after bulk operations for optimal query performance.'''
+        try:
+            logger.info(f'Starting index rebuild for {table_name}...')
+            self.db.session.execute(text(f'REINDEX TABLE {table_name}'))
+            logger.info(f'Index rebuild completed for {table_name}')
+        except Exception as e:
+            logger.warning(f'Could not rebuild indexes on {table_name}: {e}')
 
 
     def resume_load_table(self, table, species_list = None):
@@ -156,7 +365,7 @@ class ETLManager:
         config = TABLE_CONFIG[table.__tablename__]
 
         # Initialize a count for the number of entries added
-        initial_count = query_count(config.table.query)
+        initial_count = query_count(select(config.table))
         logger.info(f'Initial count for table {config.table_name}: {initial_count} entries')
 
         # Loop through the name & Species object for each species
@@ -167,7 +376,8 @@ class ETLManager:
                 continue
 
             # Find number of entries in table for species
-            current_count = self.db.session.query(func.count(table.__table__.c.id)).filter(table.__table__.c.species_name == species.name).scalar()
+            current_count = query_count(select(config.table).filter(table.__table__.c.species_name == species.name))
+            # current_count = select(func.count(table.__table__.c.id)).filter(table.__table__.c.species_name == species.name).scalar_one_or_none()
             logger.info(f"There are {current_count} entries in {config.table_name} for {species.name}")
 
             # Load & insert table data in batches, to help reduce local memory footprint
@@ -184,43 +394,13 @@ class ETLManager:
                 logger.debug(f'Finished inserting {species.name} batch {i}.')
 
         # Print how many entries were added
-        total_records = query_count(config.table.query) - initial_count
+        total_records = query_count(select(config.table)) - initial_count
         logger.info(f'Inserted {total_records} entries into table {config.table_name}')
 
 
     #
     # Clearing Tables
     #
-
-
-    def __drop_all(self, *tables):
-        '''
-            Drop the given tables. If no tables are provided, drops all tables.
-        '''
-        if len(tables) == 0:
-            self.db.drop_all(app=self.app)
-        else:
-            # for t in tables:
-            #     truncate_stmt = f"TRUNCATE TABLE {t.__tablename__} RESTART IDENTITY CASCADE"
-            #     self.db.session.execute(truncate_stmt)
-            #     self.db.session.commit()
-            self.db.metadata.drop_all(bind=self.db.engine, checkfirst=True, tables=[ t.__table__ for t in tables ])
-
-    def __create_all(self, *tables):
-        '''
-            Create the given tables. If no tables are provided, creates all tables.
-        '''
-        if len(tables) == 0:
-            self.db.create_all(app=self.app)
-        else:
-            self.db.metadata.create_all(bind=self.db.engine, tables=[ t.__table__ for t in tables ])
-
-    def __drop_species_rows(self, table, species):
-        '''
-            Drops all rows for the given species from the given table.
-        '''
-        del_statement = table.__table__.delete().where(table.__table__.c.species_name == species)
-        self.db.engine.execute(del_statement)
 
 
     def clear_tables(self, *tables, species_list = None):
@@ -232,15 +412,13 @@ class ETLManager:
 
             Args:
                 *tables: List of tables to be cleared. If none are provided, clears all tables.
-                species_list: List of species to clear the rows of. If `None`, clears *all* rows from the given tables.
+                species_list: List of species to clear the rows of. If `None`, drops tables.
         '''
 
         # If dropping all species, can perform bulk drop/create operations
         if species_list is None:
             logger.info(f'Dropping { self.print_tables(*tables) }...')
-            self.__drop_all(*tables)
-            logger.info(f'Creating { self.print_tables(*tables) }...')
-            self.__create_all(*tables)
+            self.__drop_tables(*tables)
 
         # Otherwise, delete individual rows from tables
         else:
@@ -248,79 +426,43 @@ class ETLManager:
             if tables is None:
                 tables = self.all_tables()
 
-            # Make sure all tables exist
-            self.__create_all(*tables)
-
             # Loop through tables in reverse order, so rows that depend on earlier tables are dropped first
             for table in tables[::-1]:
-                logger.info(f'Initial size of table { table.__tablename__ }: { table.query.count() }')
-
-                for species_name in species_list:
-                    self.__drop_species_rows(table, species_name)
-
-                # Log size of table after drop
-                logger.info(f'Size of table { table.__tablename__ } after dropping [{", ".join(species_list)}]: { table.query.count() }')
+                if inspect(self.db.engine).has_table(table.__tablename__):
+                    logger.info(f'Initial size of table { table.__tablename__ }: { table_row_count(table) }')
+                    self.__truncate_table(table, species_list)
 
         # Commit changes
         self.db.session.commit()
 
+        if species_list is None:
+            for table in tables[::-1]:
+                if inspect(self.db.engine).has_table(table.__tablename__):
+                    logger.info(f'Size of table { table.__tablename__ } after dropping [{", ".join(species_list)}]: { table_row_count(table) }')
 
-    def clear_table(self, table, species_list = None):
-        '''
-            Clear rows from a table in the SQL db.
 
-            Args:
-                *tables: The table to be cleared.
-                species_list: List of species to clear the rows of. If `None`, clears *all* rows from the given table.
+    def __drop_tables(self, *tables):
         '''
-        return self.clear_tables([table], species_list=species_list)
-
-    def drop_tables(self, *tables, species_list = None):
-        '''
-            Drops rows from one or more tables in the SQL db.
+            Drops entire tables in the SQL db.
 
             Expects tables to be provided in dependency order:
             E.g., if table B contains a foreign key into table A, they should be provided as [... A, ..., B, ...]
 
             Args:
-                *tables: List of tables to be cleared. If none are provided, clears all tables.
-                species_list: List of species to clear the rows of. If `None`, clears *all* rows from the given tables.
+                *tables: List of tables to be dropped. If none are provided, drops all tables. If tables=[] (i.e., an empty list), drops all tables.
         '''
 
-        # If dropping all species, can perform bulk drop/create operations
-        if species_list is None:
-            logger.info(f'Dropping { self.print_tables(*tables) }...')
-            self.__drop_all(*tables)
-
-        # Otherwise, delete individual rows from tables
+        if len(tables) == 0:
+            self.db.drop_all(app=self.app)
         else:
-            logger.info(f'Dropping species [{", ".join(species_list)}] from { self.print_tables(*tables) }...')
-            if tables is None:
-                tables = self.all_tables()
-
-            # Make sure all tables exist
-            self.__create_all(*tables)
-
-            # Loop through tables in reverse order, so rows that depend on earlier tables are dropped first
-            for table in tables[::-1]:
-                logger.info(f'Initial size of table { table.__tablename__ }: { table.query.count() }')
-
-                for species_name in species_list:
-                    self.__drop_species_rows(table, species_name)
-
-                # Log size of table after drop
-                logger.info(f'Size of table { table.__tablename__ } after dropping [{", ".join(species_list)}]: { table.query.count() }')
-
-        # Commit changes
-        self.db.session.commit()
+            self.db.metadata.drop_all(bind=self.db.engine, checkfirst=True, tables=[ t.__table__ for t in tables ])
 
 
-    def drop_table(self, table, species_list = None):
+    def __truncate_table(self, table, species):
         '''
-            Clear rows from a table in the SQL db.
-
-            Args:
-                *tables: The table to be cleared.
-                species_list: List of species to clear the rows of. If `None`, clears *all* rows from the given table.
+            Truncates all rows for the given species from the given table.
         '''
-        return self.drop_tables([table], species_list=species_list)
+        del_statement = table.__table__.delete().where(table.__table__.c.species_name == species)
+        self.db.session.execute(del_statement)
+
+

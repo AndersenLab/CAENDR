@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.13-slim
 
 ENV PYTHONUNBUFFERED True
 
@@ -32,8 +32,9 @@ COPY caendr caendr
 RUN python -m pip install --no-cache-dir -r requirements.txt
 RUN python -m pip install --no-cache-dir -e ./caendr
 
-RUN wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O cloud_sql_proxy && \
-    chmod u+x cloud_sql_proxy 
+RUN wget https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.22.0/cloud-sql-proxy.linux.amd64 -O cloud-sql-proxy && \
+    chmod u+x cloud-sql-proxy
+RUN mkdir /cloudsql
 
 # Copy local code to the container image.
 COPY . ./

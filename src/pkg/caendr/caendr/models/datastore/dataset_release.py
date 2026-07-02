@@ -6,9 +6,9 @@ from caendr.services.logger import logger
 from caendr.api.gene import remove_prefix
 from caendr.models.datastore import Species, SpeciesEntity
 from caendr.models.error import NotFoundError
-from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, get_blob_list, check_blob_exists
+from caendr.services.cloud.storage import BlobURISchema, generate_blob_uri, check_blob_exists
 from caendr.services.cloud.aws_storage import AWSBlobURISchema, aws_generate_blob_uri, aws_get_blob_list, aws_check_blob_exists
-from caendr.utils.env import get_env_var, get_env_var_with_fallback
+from caendr.utils.env import get_env_var
 from caendr.utils.tokens import TokenizedString
 
 
@@ -341,8 +341,6 @@ class DatasetRelease(SpeciesEntity):
       'RELEASE': self['version'],
       'SPECIES': species_name,
     }
-
-    logger.debug(f'get_report_data_urls_map(bucket_name={bucket_name}, blob_prefix={blob_prefix})')
 
     # Check that the release has a valid report type
     if self.report_type is None:

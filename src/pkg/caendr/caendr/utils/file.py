@@ -18,7 +18,6 @@ def get_file_hash(path_or_file: os.PathLike, length=10):
   '''
     Generates the sha1 hash of a file's contents and returns the first 'length' characters.
   '''
-  logger.debug(path_or_file)
   BLOCKSIZE = 65536
   hasher = hashlib.sha1()
   with open(path_or_file, 'rb') as afile:

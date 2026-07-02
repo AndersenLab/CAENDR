@@ -63,6 +63,9 @@ def parse_phenotype_metadata(species: Species, **files: LocalDatastoreFile):
              'publish_status':       md['publish_status'].name,
             } 
     else:
+      if not(md['trait_name_caendr']):
+        md['trait_name_caendr'] = ("_".join([md[name] for name in ['trait_name_display_1', 'trait_name_display_2', 'trait_name_display_3'] if md[name] != ''])).replace(' ', '_')
+      
       yield {
         'id':                   file_name,
         'trait_name_caendr':    md['trait_name_caendr'],

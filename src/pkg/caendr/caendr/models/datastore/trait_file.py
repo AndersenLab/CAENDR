@@ -6,7 +6,7 @@ from logzero import logger
 from caendr.utils.env import get_env_var
 
 from caendr.models.datastore       import FileRecordEntity, PublishableEntity, SpeciesEntity, UserOwnedEntity
-from caendr.services.cloud.storage import BlobURISchema, join_path, generate_blob_uri
+from caendr.services.cloud.storage import BlobURISchema, join_path
 from caendr.utils.tokens           import TokenizedString
 
 
