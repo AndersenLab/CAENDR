@@ -1,4 +1,4 @@
-FROM gcr.io/google-appengine/python
+FROM python:3.13-slim
 
 ENV PYTHONUNBUFFERED True
 
@@ -23,8 +23,8 @@ RUN apt-get update && \
     libxmlsec1-openssl \
     make \
     pkg-config \
-    python3 \
     python3-venv \
+    python3-dev \
     python3-virtualenv \
     tabix \
     virtualenv \
@@ -39,11 +39,11 @@ WORKDIR $APP_HOME
 
 
 RUN mkdir /gcloud
-RUN cd /gcloud && curl -O "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-380.0.0-linux-x86_64.tar.gz" && tar xvzf google-cloud-sdk-380.0.0-linux-x86_64.tar.gz
+RUN cd /gcloud && curl -O "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-575.0.0-linux-x86_64.tar.gz" && tar xvzf google-cloud-sdk-575.0.0-linux-x86_64.tar.gz
 
 # make venv
 ENV VIRTUAL_ENV $APP_HOME/venv
-RUN virtualenv -p python3 $VIRTUAL_ENV
+RUN virtualenv -p python3.13 $VIRTUAL_ENV
 ENV PATH $VIRTUAL_ENV/bin:$PATH
 RUN python -m pip install --upgrade pip
 
@@ -63,4 +63,4 @@ RUN echo "\n\n# GIT_COMMIT automatically added during the makefile build contain
 RUN echo "GIT_COMMIT=$GIT_COMMIT" >> module.env
 
 CMD export $(cat .env | sed -e '/^\s*$/d' | sed -e '/^\#/d' | xargs) && \
-  gunicorn -b :$PORT --timeout=4800 main:app
+  $APP_HOME/venv/bin/gunicorn -b :$PORT --timeout=4800 main:app

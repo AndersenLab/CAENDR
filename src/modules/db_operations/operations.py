@@ -273,10 +273,11 @@ def drop_and_populate_all_tables(app, db, species, reload_files=True):
   logger.info("[10/12] Load VEP Annotated Variants...eta ~26:47")
   etl_manager.load_tables(VepAnnotatedVariant, species_list=species)
 
-  logger.info("[11/12] Load Phenotype Database...")
-  # etl_manager.load_phenotype_db(db, species)
-  etl_manager.load_tables(PhenotypeDatabase, species_list=species)
-
-  logger.info("[12/12] Load Phenotype Metadata...")
+  logger.info("[11/12] Load Phenotype Metadata...")
   # etl_manager.load_phenotype_db(db, species)
   etl_manager.load_tables(PhenotypeMetadata, species_list=species)
+
+  logger.info("[12/12] Load Phenotype Database...")
+  # etl_manager.load_phenotype_db(db, species)
+  etl_manager.load_tables(PhenotypeDatabase, species_list=species)
+  
