@@ -399,7 +399,7 @@ function process_gene_search() {
     const position = format_locus_string(gene["chrom"], gene["start"], gene["end"]);
     const link = `<a onclick="set_position('${position}')" link='${position}' class='ortholink'>${gene['gene_id']}</a>`;
     return [
-      gene['gene_symbol'],
+      gene['locus'],
       gene['sequence_name'],
       link,
     ]

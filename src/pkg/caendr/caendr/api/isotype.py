@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from caendr.models.sql import Strain
 from caendr.services.cloud.postgresql import db
+from caendr.services.logger import logger
 
 
 photos_bucket = os.environ.get("MODULE_SITE_BUCKET_PHOTOS_NAME")
@@ -23,26 +24,26 @@ def get_isotypes(known_origin=False, list_only=False, unique=False, species=None
   """
   # TODO: integrate these 2 legacy functions so the rest of the args are handled
   if unique:
-    result = select(Strain).filter( Strain.isotype_ref_strain.is_(True) )
+    result = select(Strain).where( Strain.isotype_ref_strain.is_(True) )
     if species is not None:
-      result = result.filter( Strain.species_name == species )
+      result = result.where( Strain.species_name == species )
     if known_origin or 'origin' in request.path:
-      result = result.filter(Strain.latitude.isnot(None))
-    result = db.session.execute(result.with_only_columns(Strain.isotype).distinct()).all()
+      result = result.where(Strain.latitude.isnot(None))
+    result = db.session.execute(result.with_only_columns(Strain.isotype).distinct()).scalars().all()
     return [x.isotype for x in result]
 
   # Basic query for isotypes
-  result = select(Strain).filter( Strain.isotype_ref_strain.is_(True) ).order_by( Strain.isotype )
+  result = select(Strain).where( Strain.isotype_ref_strain.is_(True) ).order_by( Strain.isotype )
 
   # Optionally limit to given species
   if species is not None:
-    result = result.filter( Strain.species_name == species )
+    result = result.where( Strain.species_name == species )
 
   # Optionally limit to strains where origin is known
   if known_origin or 'origin' in request.path:
-    result = result.filter(Strain.latitude.isnot(None))
+    result = result.where(Strain.latitude.isnot(None))
 
-  result = db.session.execute(result).all()
+  result = db.session.execute(result).scalars().all()
   if list_only:
     result = [x.isotype for x in result]
   return result

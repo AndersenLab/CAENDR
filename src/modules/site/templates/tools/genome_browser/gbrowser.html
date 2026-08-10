@@ -501,7 +501,7 @@ function process_gene_search() {
   run_gene_search(gene, species, gene_search_selectors, (i, row) => {
     link = ("chrom" in row) ? format_locus_string(row["chrom"], row["start"], row["end"]) : row["locus"];
     gene_name = `<a onclick="set_position('${link}')" link='${link}' class='ortholink'>${row["locus"]}</a>`;
-    return [ gene_name, row["gene_symbol"] ];
+    return [ gene_name, row["gene_id"] ];
   });
 }
 

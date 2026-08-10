@@ -8,6 +8,7 @@ from flask import ( render_template,
 from extensions import cache
 from base.forms import SpeciesSelectForm
 from caendr.services.cloud.aws_storage import AWSBlobURISchema
+from caendr.services.logger import logger
 
 from caendr.api.isotype import get_isotypes
 from caendr.services.dataset_release import get_dataset_release, get_latest_dataset_release_version

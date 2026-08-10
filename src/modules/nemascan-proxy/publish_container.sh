@@ -79,6 +79,10 @@ if [ ! -e ${NEMASCAN_SOURCE_GITHUB_REPO} ]; then
     git clone --depth 1 git@github.com:${NEMASCAN_SOURCE_GITHUB_ORG}/${NEMASCAN_SOURCE_GITHUB_REPO}.git
 fi
 
+# Update git info
+cd ${NEMASCAN_SOURCE_GITHUB_REPO} && \
+echo -e "repo\tbranch\tcommit\n$(git config --get remote.origin.url | sed s'/\.git//')\t$(git branch --show-current)\t$(git rev-parse HEAD)" > assets/git_info.tsv && \
+cd ..
 
 # Build and push container
 echo "Building container us-east4-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT_ID}/caendr-site-v2/${NEMASCAN_NXF_CONTAINER_NAME}:${tag}"

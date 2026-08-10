@@ -14,6 +14,7 @@ from caendr.models.status          import JobStatus
 from caendr.services.cloud.storage import download_blob_as_json, download_blob_as_dataframe, BlobURISchema
 from caendr.utils.data             import get_object_hash
 from caendr.utils.env              import get_env_var
+from caendr.services.logger        import logger
 
 
 INDEL_PRIMER_CONTAINER_NAME = get_env_var('INDEL_PRIMER_CONTAINER_NAME')

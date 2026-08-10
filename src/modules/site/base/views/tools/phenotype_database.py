@@ -74,6 +74,7 @@ def phenotype_database():
 
 @phenotype_database_bp.route('/download')
 @cache.memoize(60*60)
+@jwt_required()
 def download_csv():
   """
     Download All Phenotype Traits as CSV
@@ -94,7 +95,7 @@ def download_csv():
   def generate():
     yield file_format['sep'].join(columns) + '\n'
     try:
-      for row in db.session.execute(traits.execution_options(yield_per=100)).all():
+      for row in db.session.execute(traits.execution_options(yield_per=100000)):
         row = [getattr(row, column) for column in columns]
         yield file_format['sep'].join(map(str, row)) + '\n'
     except Exception as ex:

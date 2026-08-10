@@ -123,20 +123,21 @@ def get_strains(known_origin=False, issues=False, distributed_only=False):
         issues: Return only strains without issues
   """
   ref_strain_list = db.session.execute(
-    select(Strain).where(Strain.isotype_ref_strain == True)
-  ).scalars().all()
+    select(Strain).where(Strain.isotype_ref_strain.is_(True))
+    ).scalars().all()
 
   ref_strain_list = {x.isotype: x.strain for x in ref_strain_list}
+  
   result = select(Strain)
   if known_origin or 'origin' in request.path:
-    result = result.where(Strain.latitude != None)
+    result = result.where(Strain.latitude.isnot(None))
 
   if issues is False:
-    result = result.where(Strain.isotype != None)
-    result = result.where(Strain.issues == False)
+    result = result.where(Strain.isotype.isnot(None))
+    result = result.where(Strain.issues.is_(False))
 
   if distributed_only is True:
-    result = result.where(Strain.distribute == True)
+    result = result.where(Strain.distribute.isnot(False))
 
   result = db.session.execute(result).scalars().all()
   for strain in result:
@@ -182,12 +183,12 @@ def get_strain_sets():
       )
       .where(Strain.strain_set.isnot(None))
       .where(Strain.species_name.isnot(None))
+      .where(Strain.strain.isnot(None))
+      .where(Strain.isotype.isnot(None))
   ).all()
 
   grouped = {}
   for strain_set, species_name, strain, isotype in rows:
-    if strain is None or isotype is None:
-      continue
     grouped.setdefault((strain_set, species_name), []).append(strain)
   return grouped
 
